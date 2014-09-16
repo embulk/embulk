@@ -11,27 +11,24 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 public class ConfigSource
 {
-    private final DynamicModeler dynamicModeler;
-    private ModelRegistry modelRegistry;
+    private ModelManager modelManager;
 
     private final Map<String, String> configData;
 
-    public ConfigSource(ModelRegistry modelRegistry, Map<String, String> configData)
+    public ConfigSource(ModelManager modelManager, Map<String, String> configData)
     {
-        this.modelRegistry = modelRegistry;
+        this.modelManager = modelManager;
         this.configData = configData;
-        this.dynamicModeler = new DynamicModeler(modelRegistry);
     }
 
     // TODO ConfigSource merge(Map<String, String> data)
 
     public <T extends DynamicModel<T>> T load(Class<T> iface)
     {
-        return load(dynamicModeler.model(iface), iface);
+        return load(modelManager.getDynamicModeler().newModelInstance(iface), iface);
     }
 
     public <T> T load(T obj)
@@ -130,12 +127,7 @@ public class ConfigSource
     private Object convertConfigValue(String value, final Type type)
     {
         try {
-            return modelRegistry.getObjectMapper().readValue(value, new TypeReference<Object>() {
-                    public Type getType()
-                    {
-                        return type;
-                    }
-                });
+            return modelManager.getObjectMapper().readValue(value, new GenericTypeReference(type));
         } catch (IOException ex) {
             // must not happen
             throw new ConfigException(ex);

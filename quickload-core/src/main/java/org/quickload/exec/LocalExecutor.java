@@ -2,12 +2,12 @@ package org.quickload.exec;
 
 import java.util.List;
 import java.util.ArrayList;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.base.Function;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.ModelManager;
 import org.quickload.in.LocalFileCsvInput;
 import org.quickload.out.LocalFileCsvOutput;
 import org.quickload.spi.InputPlugin;
@@ -23,6 +23,8 @@ import org.quickload.spi.Report;
 public class LocalExecutor
         implements AutoCloseable
 {
+    private final ModelManager modelManager;
+
     private ConfigSource config;
     private InputPlugin in;
     private OutputPlugin out;
@@ -34,6 +36,11 @@ public class LocalExecutor
     private OutputTask outputTask;
 
     private List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
+
+    public LocalExecutor(ModelManager modelManager)
+    {
+        this.modelManager = modelManager;
+    }
 
     protected InputPlugin newInputPlugin()
     {
@@ -54,6 +61,25 @@ public class LocalExecutor
         outputTran = out.newOutputTransaction(config);
         inputTask = inputTran.getInputTask();
         outputTask = outputTran.getOutputTask(inputTask);
+        validateTransaction();
+    }
+
+    private void validateTransaction()
+    {
+        // InputTask and OutputTask must be serializable
+        try {
+            // TODO add ModelManager.serialize method
+            String serialized = modelManager.getObjectMapper().writeValueAsString(inputTask);
+            System.out.println("serialized input task: "+serialized);  // XXX
+        } catch (JsonProcessingException ex) {
+            throw new AssertionError(String.format("InputTask '%s' must be serializable", inputTask.getClass()), ex);
+        }
+        try {
+            String serialized = modelManager.getObjectMapper().writeValueAsString(outputTask);
+            System.out.println("serialized output task: "+serialized);  // XXX
+        } catch (JsonProcessingException ex) {
+            throw new AssertionError(String.format("OutputTask '%s' must be serializable", outputTask.getClass()), ex);
+        }
     }
 
     public void begin()

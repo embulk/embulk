@@ -6,28 +6,95 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationHandler;
-import javax.validation.Validation;
-import org.apache.bval.jsr303.ApacheValidationProvider;
+import java.lang.reflect.InvocationTargetException;
+import static java.lang.reflect.Modifier.isPublic;
+import com.google.common.base.Function;
 import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.collect.ImmutableMap;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class DynamicModeler
 {
-    private ModelValidator validator;
-    private ModelRegistry modelRegistry;
+    private final static Class[] proxyConstructorParams = { InvocationHandler.class };
+
+    private ModelManager modelManager;
 
     // TODO inject by guava
-    public DynamicModeler(ModelRegistry modelRegistry)
+    public DynamicModeler(ModelManager modelManager)
     {
-        this.validator = new ModelValidator(
-                Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
-        this.modelRegistry = modelRegistry;
+        this.modelManager = modelManager;
     }
 
-    public <T extends DynamicModel<T>> T model(Class<T> iface)
+    public <T extends DynamicModel<T>> InstanceFactory<T> model(final Class<T> iface)
     {
-        Object proxy = Proxy.newProxyInstance(iface.getClassLoader(), new Class<?>[] { iface },
-                new DynamicModelHandler(validator));
-        return (T) proxy;
+        Class<? extends T> proxyClass = (Class<? extends T>) Proxy.getProxyClass(iface.getClassLoader(), iface);
+        final InstanceFactory<T> factory = new InstanceFactory<T>(proxyClass);
+        modelManager.addModelSerDe(iface, new Function<SimpleModule, Void>() {
+            public Void apply(SimpleModule module)
+            {
+                Map<String, TypeReference<?>> fields = collectPersistentFields(iface);
+                module.addSerializer(iface, new DynamicModelSerializer(
+                        fields.keySet(), modelManager.getObjectMapper()));
+                module.addDeserializer(iface, new DynamicModelDeserializer(
+                        factory, fields, modelManager.getObjectMapper()));
+                return null;
+            }
+        });
+        return factory;
+    }
+
+    public <T extends DynamicModel<T>> T newModelInstance(Class<T> iface)
+    {
+        return model(iface).newInstance();
+    }
+
+    public class InstanceFactory <T extends DynamicModel<T>>
+    {
+        private final Class<?> proxyClass;
+
+        InstanceFactory(Class<? extends T> proxyClass)
+        {
+            this.proxyClass = proxyClass;
+        }
+
+        public T newInstance()
+        {
+            try {
+                return (T) proxyClass.getConstructor(proxyConstructorParams)
+                    .newInstance(new DynamicModelHandler(modelManager.getModelValidator()));
+            } catch (NoSuchMethodException e) {
+                throw new AssertionError(e);
+            } catch (IllegalAccessException e) {
+                throw new AssertionError(e);
+            } catch (InstantiationException e) {
+                throw new AssertionError(e);
+            } catch (InvocationTargetException e) {
+                throw new AssertionError(e);
+            }
+        }
+    }
+
+    private static Map<String, TypeReference<?>> collectPersistentFields(Class<?> iface)
+    {
+        ImmutableMap.Builder<String, TypeReference<?>> fields = ImmutableMap.builder();
+
+        // use all public getXxx methods
+        for (Method method : iface.getMethods()) {
+            if (!isPublic(method.getModifiers())) {
+                continue;
+            }
+
+            String methodName = method.getName();
+            if (!methodName.startsWith("get")) {
+                continue;
+            }
+
+            String attrName = methodName.substring(3);
+            fields.put(attrName, new GenericTypeReference(method.getGenericReturnType()));
+        }
+
+        return fields.build();
     }
 
     private static class DynamicModelHandler
@@ -98,11 +165,5 @@ public class DynamicModeler
                         String.format("Method '%s' expected %d argument but got %d arguments", methodName, expected, (args == null ? 0 : args.length)));
             }
         }
-    }
-
-    private interface XModel
-            extends DynamicModel <XModel>
-    {
-        public List<String> getPaths();
     }
 }

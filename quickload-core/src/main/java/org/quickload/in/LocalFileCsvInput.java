@@ -7,7 +7,6 @@ import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.DynamicModel;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Min;
 import org.quickload.spi.BasicInputPlugin;
 import org.quickload.spi.InputTask;
 import org.quickload.spi.Report;
@@ -25,9 +24,6 @@ public class LocalFileCsvInput
     {
         @Config("paths")
         public List<String> getPaths();
-
-        @Min(1)
-        public int getProcessorCount();
     }
 
     public static class Processor
