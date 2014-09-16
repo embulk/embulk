@@ -18,7 +18,7 @@ public class DynamicModeler
 {
     private final static Class[] proxyConstructorParams = { InvocationHandler.class };
 
-    private ModelManager modelManager;
+    private final ModelManager modelManager;
 
     // TODO inject by guava
     public DynamicModeler(ModelManager modelManager)
@@ -28,16 +28,16 @@ public class DynamicModeler
 
     public <T extends DynamicModel<T>> InstanceFactory<T> model(final Class<T> iface)
     {
-        Class<? extends T> proxyClass = (Class<? extends T>) Proxy.getProxyClass(iface.getClassLoader(), iface);
+        final Class<? extends T> proxyClass = (Class<? extends T>) Proxy.getProxyClass(iface.getClassLoader(), iface);
         final InstanceFactory<T> factory = new InstanceFactory<T>(proxyClass);
         modelManager.addModelSerDe(iface, new Function<SimpleModule, Void>() {
             public Void apply(SimpleModule module)
             {
-                Map<String, TypeReference<?>> fields = collectPersistentFields(iface);
-                module.addSerializer(iface, new DynamicModelSerializer(
-                        fields.keySet(), modelManager.getObjectMapper()));
+                Map<String, TypeReference<?>> attrs = collectAttributes(iface);
+                module.addSerializer(proxyClass, new DynamicModelSerializer(
+                        attrs.keySet(), modelManager.getObjectMapper()));
                 module.addDeserializer(iface, new DynamicModelDeserializer(
-                        factory, fields, modelManager.getObjectMapper()));
+                        factory, attrs, modelManager.getObjectMapper()));
                 return null;
             }
         });
@@ -75,9 +75,9 @@ public class DynamicModeler
         }
     }
 
-    private static Map<String, TypeReference<?>> collectPersistentFields(Class<?> iface)
+    private static Map<String, TypeReference<?>> collectAttributes(Class<?> iface)
     {
-        ImmutableMap.Builder<String, TypeReference<?>> fields = ImmutableMap.builder();
+        ImmutableMap.Builder<String, TypeReference<?>> attrs = ImmutableMap.builder();
 
         // use all public getXxx methods
         for (Method method : iface.getMethods()) {
@@ -89,12 +89,15 @@ public class DynamicModeler
             if (!methodName.startsWith("get")) {
                 continue;
             }
+            if (methodName.equals("get")) {
+                continue;
+            }
 
             String attrName = methodName.substring(3);
-            fields.put(attrName, new GenericTypeReference(method.getGenericReturnType()));
+            attrs.put(attrName, new GenericTypeReference(method.getGenericReturnType()));
         }
 
-        return fields.build();
+        return attrs.build();
     }
 
     private static class DynamicModelHandler
@@ -140,6 +143,11 @@ public class DynamicModeler
                     }
                 }
                 return false;
+
+            case "toString":
+                checkArgumentLength(args, 0, methodName);
+                // TODO
+                return this.toString();
 
             default:
                 if (methodName.startsWith("get")) {

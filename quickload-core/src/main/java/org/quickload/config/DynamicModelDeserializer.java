@@ -16,15 +16,15 @@ public class DynamicModelDeserializer <T extends DynamicModel<T>>
         extends JsonDeserializer<T>
 {
     private final InstanceFactory<T> factory;
-    private final Map<String, TypeReference<?>> fields;
+    private final Map<String, TypeReference<?>> attrs;
     private final ObjectMapper nestedObjectMapper;
 
     public DynamicModelDeserializer(InstanceFactory<T> factory,
-            Map<String, TypeReference<?>> fields,
+            Map<String, TypeReference<?>> attrs,
             ObjectMapper nestedObjectMapper)
     {
         this.factory = factory;
-        this.fields = fields;
+        this.attrs = attrs;
         this.nestedObjectMapper = nestedObjectMapper;
     }
 
@@ -39,12 +39,12 @@ public class DynamicModelDeserializer <T extends DynamicModel<T>>
         T instance = factory.newInstance();
 
         while (jp.nextToken() != JsonToken.END_OBJECT) {
-            String fieldName = jp.getCurrentName();
+            String attrName = jp.getCurrentName();
             jp.nextToken();
-            TypeReference<?> fieldType = fields.get(fieldName);
+            TypeReference<?> fieldType = attrs.get(attrName);
             if (fieldType != null) {
                 Object value = nestedObjectMapper.readValue(jp, fieldType);  // TODO ctx.getConfig?
-                instance.set(fieldName, value);
+                instance.set(attrName, value);
             } else {
                 jp.skipChildren();
             }

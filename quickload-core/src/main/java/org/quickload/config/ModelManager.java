@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 public class ModelManager
 {
     private final Set<Class<?>> registered;
-    private final SimpleModule module;
     private final ObjectMapper objectMapper;
 
     private final ModelValidator modelValidator;
@@ -20,8 +19,7 @@ public class ModelManager
     public ModelManager()
     {
         this.registered = new HashSet<Class<?>>();
-        this.module = new SimpleModule();
-        this.objectMapper = new ObjectMapper().findAndRegisterModules().registerModule(module);
+        this.objectMapper = new ObjectMapper().findAndRegisterModules();
 
         this.modelValidator = new ModelValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
@@ -33,7 +31,9 @@ public class ModelManager
         if (registered.contains(uniqueClass)) {
             return;
         }
+        SimpleModule module = new SimpleModule();
         generator.apply(module);
+        objectMapper.registerModule(module);
         registered.add(uniqueClass);
     }
 

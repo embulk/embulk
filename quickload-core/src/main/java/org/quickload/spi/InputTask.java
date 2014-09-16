@@ -6,6 +6,5 @@ public interface InputTask
 {
     // TODO getSchema
 
-    @Min(1)
     public int getProcessorCount();
 }

@@ -14,13 +14,13 @@ import org.quickload.config.DynamicModeler.InstanceFactory;
 public class DynamicModelSerializer <T extends DynamicModel<T>>
         extends JsonSerializer<T>
 {
-    private final Set<String> fieldNames;
+    private final Set<String> attrNames;
     private final ObjectMapper nestedObjectMapper;
 
-    public DynamicModelSerializer(Set<String> fieldNames,
+    public DynamicModelSerializer(Set<String> attrNames,
             ObjectMapper nestedObjectMapper)
     {
-        this.fieldNames = fieldNames;
+        this.attrNames = attrNames;
         this.nestedObjectMapper = nestedObjectMapper;
     }
 
@@ -28,6 +28,12 @@ public class DynamicModelSerializer <T extends DynamicModel<T>>
     public void serialize(T instance, JsonGenerator jgen, SerializerProvider provider)
             throws IOException, JsonProcessingException
     {
-        // TODO
+        jgen.writeStartObject();
+        for (String attrName : attrNames) {
+            Object value = instance.get(attrName);
+            jgen.writeFieldName(attrName);
+            nestedObjectMapper.writeValue(jgen, value);  // TODO provider.getConfig()?
+        }
+        jgen.writeEndObject();
     }
 }
