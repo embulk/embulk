@@ -3,7 +3,11 @@ package org.quickload.in;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.DynamicModel;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Min;
 import org.quickload.spi.BasicInputPlugin;
 import org.quickload.spi.InputTask;
 import org.quickload.spi.Report;
@@ -16,27 +20,14 @@ import org.quickload.spi.DynamicReport;
 public class LocalFileCsvInput
         extends BasicInputPlugin<LocalFileCsvInput.Task>
 {
-    public static class Task
-            implements InputTask
+    public interface Task
+            extends InputTask, DynamicModel<Task>
     {
-        private List<String> paths;
+        @Config("paths")
+        public List<String> getPaths();
 
-        Task()
-        {
-            paths = new ArrayList();
-            paths.add("test.csv");
-        }
-
-        public List<String> getPaths()
-        {
-            return paths;
-        }
-
-        @Override
-        public int getProcessorCount()
-        {
-            return paths.size();
-        }
+        @Min(1)
+        public int getProcessorCount();
     }
 
     public static class Processor
@@ -71,11 +62,12 @@ public class LocalFileCsvInput
     @Override
     public Task getInputTask(ConfigSource config)
     {
-        //Task b = config.configure(Task.class);
-        //b.getBasePath()
-        //b.set("paths", ...);
-        //return b.validate();
-        return new Task();
+        Task task = config.load(Task.class);
+        //task.getBasePath()
+        //task.set("paths", ...);
+        //return task.validate();
+        task.set("ProcessorCount", task.getPaths().size());
+        return task.validate();
     }
 
     @Override
