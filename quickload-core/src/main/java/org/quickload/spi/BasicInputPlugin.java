@@ -1,0 +1,97 @@
+package org.quickload.spi;
+
+import java.util.List;
+
+import org.quickload.config.ConfigSource;
+
+public abstract class BasicInputPlugin <T extends InputTask>
+        implements InputPlugin, InputTransaction
+{
+    private ConfigSource config;
+    private T task;
+
+    public BasicInputPlugin()
+    {
+    }
+
+    public abstract T getInputTask(ConfigSource config);
+
+    public abstract InputProcessor startInputProcessor(T task,
+            int processorIndex, OutputOperator op);
+
+    public void begin(T task)
+    {
+    }
+
+    public void commit(T task, List<Report> reports)
+    {
+    }
+
+    public void abort(T task)
+    {
+    }
+
+    /*
+     * InputTransaction
+     */
+    @Override
+    public T getInputTask()
+    {
+        task = getInputTask(config);
+        return task;
+    }
+
+    /*
+     * InputTransaction
+     */
+    @Override
+    public void begin()
+    {
+        begin(task);
+    }
+
+    /*
+     * InputTransaction
+     */
+    @Override
+    public void commit(List<Report> reports)
+    {
+        commit(task, reports);
+    }
+
+    /*
+     * InputTransaction
+     */
+    @Override
+    public void abort()
+    {
+        abort(task);
+    }
+
+    /*
+     * InputPlugin
+     */
+    @Override
+    public InputTransaction newInputTransaction(ConfigSource config)
+    {
+        this.config = config;
+        return this;
+    }
+
+    /*
+     * InputPlugin
+     */
+    public InputProcessor startProcessor(InputTask task,
+            int processorIndex, OutputOperator op)
+    {
+        return startInputProcessor((T) task, processorIndex, op);
+    }
+
+    /*
+     * InputPlugin
+     */
+    @Override
+    public void shutdown()
+    {
+    }
+}
