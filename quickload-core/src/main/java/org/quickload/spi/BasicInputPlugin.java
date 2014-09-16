@@ -14,9 +14,9 @@ public abstract class BasicInputPlugin <T extends InputTask>
     {
     }
 
-    public abstract T getInputTask(ConfigSource config);
+    public abstract T getTask(ConfigSource config);
 
-    public abstract InputProcessor startInputProcessor(T task,
+    public abstract InputProcessor startProcessor(T task,
             int processorIndex, OutputOperator op);
 
     public void begin(T task)
@@ -37,7 +37,7 @@ public abstract class BasicInputPlugin <T extends InputTask>
     @Override
     public T getInputTask()
     {
-        task = getInputTask(config);
+        task = getTask(config);
         return task;
     }
 
@@ -81,10 +81,10 @@ public abstract class BasicInputPlugin <T extends InputTask>
     /*
      * InputPlugin
      */
-    public InputProcessor startProcessor(InputTask task,
+    public InputProcessor startInputProcessor(InputTask task,
             int processorIndex, OutputOperator op)
     {
-        return startInputProcessor((T) task, processorIndex, op);
+        return startProcessor((T) task, processorIndex, op);
     }
 
     /*

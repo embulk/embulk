@@ -20,7 +20,7 @@ public abstract class FileOutputPlugin <T extends FileOutputTask>
         return null;  // TODO
     }
 
-    public OutputOperator openOutputOperator(T task, int processorIndex)
+    public OutputOperator openOperator(T task, int processorIndex)
     {
         BufferOperator op = openFileOutputOperator(task, processorIndex);
         return getFormatterPlugin(task.getFormatterType()).openOperator(task.getFormatterTask(), processorIndex, op);

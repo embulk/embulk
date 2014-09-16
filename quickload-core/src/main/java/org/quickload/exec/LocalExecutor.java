@@ -149,10 +149,10 @@ public class LocalExecutor
     public void start()
     {
         for (int procIndex=0; procIndex < inputTask.getProcessorCount(); procIndex++) {
-            OutputOperator outputOp = out.openOperator(outputTask, procIndex);
+            OutputOperator outputOp = out.openOutputOperator(outputTask, procIndex);
             try {
                 MonitoringOperator monitorOp = new MonitoringOperator(outputOp);
-                InputProcessor inputProc = in.startProcessor(inputTask, procIndex, monitorOp);
+                InputProcessor inputProc = in.startInputProcessor(inputTask, procIndex, monitorOp);
                 units.add(new ProcessingUnit(inputProc, outputOp, monitorOp));
             } catch (RuntimeException ex) {
                 try {

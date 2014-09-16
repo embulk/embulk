@@ -56,7 +56,7 @@ public class LocalFileCsvInput
     }
 
     @Override
-    public Task getInputTask(ConfigSource config)
+    public Task getTask(ConfigSource config)
     {
         Task task = config.load(Task.class);
         //task.getBasePath()
@@ -67,7 +67,7 @@ public class LocalFileCsvInput
     }
 
     @Override
-    public Processor startInputProcessor(Task task,
+    public Processor startProcessor(Task task,
             int processorIndex, OutputOperator op)
     {
         return new Processor(task, processorIndex, op);

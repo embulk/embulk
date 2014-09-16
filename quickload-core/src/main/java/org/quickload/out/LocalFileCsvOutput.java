@@ -48,7 +48,7 @@ public class LocalFileCsvOutput
     }
 
     @Override
-    public Task getOutputTask(ConfigSource config, InputTask input)
+    public Task getTask(ConfigSource config, InputTask input)
     {
         return new Task();
     }
@@ -59,7 +59,7 @@ public class LocalFileCsvOutput
     }
 
     @Override
-    public Operator openOutputOperator(Task task, int processorIndex)
+    public Operator openOperator(Task task, int processorIndex)
     {
         return new Operator();
     }

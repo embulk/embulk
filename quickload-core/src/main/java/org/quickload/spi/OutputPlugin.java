@@ -6,7 +6,7 @@ public interface OutputPlugin
 {
     public OutputTransaction newOutputTransaction(ConfigSource config);
 
-    public OutputOperator openOperator(OutputTask task, int processorIndex);
+    public OutputOperator openOutputOperator(OutputTask task, int processorIndex);
 
     public void shutdown();
 }

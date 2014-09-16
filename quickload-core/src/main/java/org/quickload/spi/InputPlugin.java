@@ -6,7 +6,7 @@ public interface InputPlugin
 {
     public InputTransaction newInputTransaction(ConfigSource config);
 
-    public InputProcessor startProcessor(InputTask task, int processorIndex, OutputOperator op);
+    public InputProcessor startInputProcessor(InputTask task, int processorIndex, OutputOperator op);
 
     public void shutdown();
 }

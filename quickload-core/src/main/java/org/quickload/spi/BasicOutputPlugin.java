@@ -10,9 +10,9 @@ public abstract class BasicOutputPlugin <T extends OutputTask>
     private ConfigSource config;
     private T task;
 
-    public abstract T getOutputTask(ConfigSource config, InputTask input);
+    public abstract T getTask(ConfigSource config, InputTask input);
 
-    public abstract OutputOperator openOutputOperator(T task, int processorIndex);
+    public abstract OutputOperator openOperator(T task, int processorIndex);
 
     public abstract void begin(T task);
 
@@ -26,7 +26,7 @@ public abstract class BasicOutputPlugin <T extends OutputTask>
     @Override
     public T getOutputTask(InputTask input)
     {
-        task = getOutputTask(config, input);
+        task = getTask(config, input);
         return task;
     }
 
@@ -68,9 +68,9 @@ public abstract class BasicOutputPlugin <T extends OutputTask>
     }
 
     @Override
-    public OutputOperator openOperator(OutputTask task, int processorIndex)
+    public OutputOperator openOutputOperator(OutputTask task, int processorIndex)
     {
-        return openOutputOperator((T) task, processorIndex);
+        return openOperator((T) task, processorIndex);
     }
 
     /*
