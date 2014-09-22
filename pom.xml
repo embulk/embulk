@@ -96,6 +96,12 @@
                 <artifactId>bval-jsr303</artifactId>
                 <version>0.5</version>
             </dependency>
+
+            <dependency>
+                <groupId>io.airlift</groupId>
+                <artifactId>slice</artifactId>
+                <version>0.7</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -1,6 +1,6 @@
 package org.quickload.spi;
 
-import org.quickload.page.Page;
+import org.quickload.record.Page;
 
 public abstract class AbstractOutputOperator
         implements OutputOperator

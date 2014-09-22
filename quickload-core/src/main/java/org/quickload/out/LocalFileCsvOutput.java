@@ -3,7 +3,7 @@ package org.quickload.out;
 import java.util.List;
 
 import org.quickload.config.ConfigSource;
-import org.quickload.page.Page;
+import org.quickload.record.Page;
 import org.quickload.spi.BasicOutputPlugin;
 import org.quickload.spi.InputTask;
 import org.quickload.spi.OutputTask;

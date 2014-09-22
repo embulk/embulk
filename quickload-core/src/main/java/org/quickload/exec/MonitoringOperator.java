@@ -1,6 +1,6 @@
 package org.quickload.exec;
 
-import org.quickload.page.Page;
+import org.quickload.record.Page;
 import org.quickload.spi.OutputOperator;
 import org.quickload.spi.Report;
 

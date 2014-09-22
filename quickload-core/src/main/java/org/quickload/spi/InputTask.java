@@ -1,10 +1,10 @@
 package org.quickload.spi;
 
-import javax.validation.constraints.Min;
+import org.quickload.record.Schema;
 
 public interface InputTask
 {
-    // TODO getSchema
+    public Schema getSchema();
 
     public int getProcessorCount();
 }
