@@ -1,13 +1,23 @@
 package org.quickload.cli;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Guice;
+import com.google.inject.Module;
+import com.google.inject.Injector;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
 import org.quickload.exec.LocalExecutor;
+import org.quickload.exec.ExecModule;
 
 public class QuickLoad {
     public static void main(String[] args) throws Exception
     {
+        ImmutableList.Builder<Module> modules = ImmutableList.builder();
+        modules.add(new ExecModule());
+
+        Injector injector = Guice.createInjector(modules.build());
+
         ModelManager modelManager = new ModelManager();
 
         ImmutableMap.Builder<String,String> builder = ImmutableMap.builder();

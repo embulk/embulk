@@ -43,10 +43,9 @@ public class RecordCursor
             return true;
         }
 
-        if (page != null) {
-            allocator.releasePage(page);
-            page = null;
-        }
+        allocator.releasePage(page);
+        page = null;
+
         return false;
     }
 
@@ -55,44 +54,18 @@ public class RecordCursor
         return page;
     }
 
-    public int getPayloadPosition(int dataOffset)
-    {
-        return position + payloadOffset + dataOffset;
-    }
-
     public boolean isNull(int columnIndex)
     {
         return (nullBitSet[columnIndex >>> 3] & (1 << (columnIndex & 7))) != 0;
     }
 
-    public byte getByte(int columnIndex)
+    public int getFixedLengthPosition(int columnIndex)
     {
-        return page.getByte(position + columnOffsets[columnIndex]);
+        return position + columnOffsets[columnIndex];
     }
 
-    public int getInt(int columnIndex)
+    public int getVariableLengthIndex(int columnIndex)
     {
         return page.getInt(position + columnOffsets[columnIndex]);
-    }
-
-    public long getLong(int columnIndex)
-    {
-        return page.getLong(position + columnOffsets[columnIndex]);
-    }
-
-    public float getFloat(int columnIndex)
-    {
-        return page.getFloat(position + columnOffsets[columnIndex]);
-    }
-
-    public double getDouble(int columnIndex)
-    {
-        return page.getDouble(position + columnOffsets[columnIndex]);
-    }
-
-    public String getString(int columnIndex)
-    {
-        int index = page.getInt(position + columnOffsets[columnIndex]);
-        return page.getStringReference(index);
     }
 }

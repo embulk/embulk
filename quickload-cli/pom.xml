@@ -18,6 +18,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.quickload</groupId>
             <artifactId>quickload-core</artifactId>
         </dependency>

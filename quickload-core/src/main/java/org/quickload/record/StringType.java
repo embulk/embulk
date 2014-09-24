@@ -9,6 +9,11 @@ public class StringType
     {
     }
 
+    public String getName()
+    {
+        return "string";
+    }
+
     @Override
     public Class<?> getJavaType()
     {
@@ -18,19 +23,31 @@ public class StringType
     @Override
     public byte getFixedStorageSize()
     {
-        return (byte) 4;
+        return Type.VARIABLE_LENGTH_INDEX_SIZE;
+    }
+
+    static String getStringValue(RecordCursor cursor, int columnIndex)
+    {
+        int index = cursor.getVariableLengthIndex(columnIndex);
+        return cursor.getPage().getStringReference(index);
+    }
+
+    static void setStringValue(RecordBuilder builder, int columnIndex, String value)
+    {
+        int index = builder.getPage().addStringReference(value);
+        builder.setVariableLengthIndex(columnIndex, index);
     }
 
     @Override
     public String getString(RecordCursor cursor, int columnIndex)
     {
-        return cursor.getString(columnIndex);
+        return getStringValue(cursor, columnIndex);
     }
 
     @Override
     public void setString(RecordBuilder builder, int columnIndex, String value)
     {
-        builder.setString(columnIndex, value);
+        setStringValue(builder, columnIndex, value);
     }
 
     @Override
@@ -39,7 +56,7 @@ public class StringType
         if (cursor.isNull(column.getIndex())) {
             consumer.setNull(column);
         } else {
-            consumer.setString(column, cursor.getString(column.getIndex()));
+            consumer.setString(column, getStringValue(cursor, column.getIndex()));
         }
     }
 
@@ -49,7 +66,7 @@ public class StringType
         producer.setString(column, new Setter(builder, column.getIndex()));
     }
 
-    public class Setter
+    public static class Setter
     {
         private final RecordBuilder builder;
         private final int columnIndex;
@@ -67,7 +84,7 @@ public class StringType
 
         public void setString(String value)
         {
-            builder.setString(columnIndex, value);
+            setStringValue(builder, columnIndex, value);
         }
     }
 }

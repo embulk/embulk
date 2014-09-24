@@ -53,58 +53,31 @@ public class RecordBuilder
         }
     }
 
+    public Page getPage()
+    {
+        return page;
+    }
+
     public void setNull(int columnIndex)
     {
         nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
     }
 
-    public void setByte(int columnIndex, byte value)
+    public int getFixedLengthPosition(int columnIndex)
     {
-        page.setByte(position + columnOffsets[columnIndex], value);
+        return position + columnOffsets[columnIndex];
     }
 
-    public void setShort(int columnIndex, short value)
+    public void setVariableLengthIndex(int columnIndex, int indexData)
     {
-        page.setShort(position + columnOffsets[columnIndex], value);
+        page.setInt(position + columnOffsets[columnIndex], indexData);
     }
 
-    public void setInt(int columnIndex, int value)
+    public int setVariableLengthIndex(int columnIndex, int indexData, int payloadSize)
     {
-        page.setInt(position + columnOffsets[columnIndex], value);
+        page.setInt(position + columnOffsets[columnIndex], indexData);
+        int offset = recordPayloadSize;
+        recordPayloadSize += payloadSize;
+        return offset;
     }
-
-    public void setLong(int columnIndex, long value)
-    {
-        page.setLong(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setFloat(int columnIndex, float value)
-    {
-        page.setFloat(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setDouble(int columnIndex, double value)
-    {
-        page.setDouble(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setString(int columnIndex, String value)
-    {
-        int index = page.addStringReference(value);
-        page.setInt(position + columnOffsets[columnIndex], index);
-    }
-
-    // TODO for custom types
-    //public int getPayloadDataOffset()
-    //{
-    //    return payloadOffset + recordPayloadSize;
-    //}
-
-    // TODO for custom types
-    //public Page addPayloadData(int size)
-    //{
-    //    // TODO check capacity
-    //    recordPayloadSize += size;
-    //    return page;
-    //}
 }

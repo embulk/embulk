@@ -9,6 +9,11 @@ public class DoubleType
     {
     }
 
+    public String getName()
+    {
+        return "double";
+    }
+
     @Override
     public Class<?> getJavaType()
     {
@@ -21,16 +26,26 @@ public class DoubleType
         return (byte) 8;
     }
 
+    static double getDoubleValue(RecordCursor cursor, int columnIndex)
+    {
+        return cursor.getPage().getDouble(cursor.getFixedLengthPosition(columnIndex));
+    }
+
+    static void setDoubleValue(RecordBuilder builder, int columnIndex, double value)
+    {
+        builder.getPage().setDouble(builder.getFixedLengthPosition(columnIndex), value);
+    }
+
     @Override
     public double getDouble(RecordCursor cursor, int columnIndex)
     {
-        return cursor.getDouble(columnIndex);
+        return getDoubleValue(cursor, columnIndex);
     }
 
     @Override
     public void setDouble(RecordBuilder builder, int columnIndex, double value)
     {
-        builder.setDouble(columnIndex, value);
+        setDoubleValue(builder, columnIndex, value);
     }
 
     @Override
@@ -39,7 +54,7 @@ public class DoubleType
         if (cursor.isNull(column.getIndex())) {
             consumer.setNull(column);
         } else {
-            consumer.setDouble(column, cursor.getDouble(column.getIndex()));
+            consumer.setDouble(column, getDoubleValue(cursor, column.getIndex()));
         }
     }
 
@@ -49,7 +64,7 @@ public class DoubleType
         producer.setDouble(column, new Setter(builder, column.getIndex()));
     }
 
-    public class Setter
+    public static class Setter
     {
         private final RecordBuilder builder;
         private final int columnIndex;
@@ -67,7 +82,7 @@ public class DoubleType
 
         public void setDouble(double value)
         {
-            builder.setDouble(columnIndex, value);
+            setDoubleValue(builder, columnIndex, value);
         }
     }
 }

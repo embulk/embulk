@@ -2,7 +2,9 @@ package org.quickload.out;
 
 import java.util.List;
 
+import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.DynamicModel;
 import org.quickload.record.Page;
 import org.quickload.spi.BasicOutputPlugin;
 import org.quickload.spi.InputTask;
@@ -15,15 +17,11 @@ public class LocalFileCsvOutput
         extends BasicOutputPlugin<LocalFileCsvOutput.Task>
 {
     // TODO use DynamicTask
-    public static class Task
-            implements OutputTask
+    public interface Task
+            extends OutputTask, DynamicModel<Task>
     {
-        private List<String> paths;
-
-        public List<String> getPaths()
-        {
-            return paths;
-        }
+        @Config("paths")
+        public List<String> getPaths();
     }
 
     public static class Operator
@@ -50,7 +48,8 @@ public class LocalFileCsvOutput
     @Override
     public Task getTask(ConfigSource config, InputTask input)
     {
-        return new Task();
+        Task task = config.load(Task.class);
+        return task.validate();
     }
 
     @Override

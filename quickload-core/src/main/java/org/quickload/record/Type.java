@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public interface Type
 {
+    public static final byte VARIABLE_LENGTH_INDEX_SIZE = (byte) 4;
+
     @JsonValue
     public String getName();
 

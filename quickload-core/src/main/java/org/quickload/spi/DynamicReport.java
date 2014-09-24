@@ -10,7 +10,7 @@ public class DynamicReport
     public static class Builder
             implements ReportBuilder
     {
-        private ImmutableMap.Builder<String, Object> builder;
+        private ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
 
         public Builder put(String key, Object value)
         {

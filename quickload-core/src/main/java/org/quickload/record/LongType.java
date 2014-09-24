@@ -9,6 +9,11 @@ public class LongType
     {
     }
 
+    public String getName()
+    {
+        return "long";
+    }
+
     @Override
     public Class<?> getJavaType()
     {
@@ -21,16 +26,26 @@ public class LongType
         return (byte) 8;
     }
 
+    static long getLongValue(RecordCursor cursor, int columnIndex)
+    {
+        return cursor.getPage().getLong(cursor.getFixedLengthPosition(columnIndex));
+    }
+
+    static void setLongValue(RecordBuilder builder, int columnIndex, long value)
+    {
+        builder.getPage().setLong(builder.getFixedLengthPosition(columnIndex), value);
+    }
+
     @Override
     public long getLong(RecordCursor cursor, int columnIndex)
     {
-        return cursor.getLong(columnIndex);
+        return getLongValue(cursor, columnIndex);
     }
 
     @Override
     public void setLong(RecordBuilder builder, int columnIndex, long value)
     {
-        builder.setLong(columnIndex, value);
+        setLongValue(builder, columnIndex, value);
     }
 
     @Override
@@ -39,7 +54,7 @@ public class LongType
         if (cursor.isNull(column.getIndex())) {
             consumer.setNull(column);
         } else {
-            consumer.setLong(column, cursor.getLong(column.getIndex()));
+            consumer.setLong(column, getLongValue(cursor, column.getIndex()));
         }
     }
 
@@ -49,7 +64,7 @@ public class LongType
         producer.setLong(column, new Setter(builder, column.getIndex()));
     }
 
-    public class Setter
+    public static class Setter
     {
         private final RecordBuilder builder;
         private final int columnIndex;
@@ -67,7 +82,7 @@ public class LongType
 
         public void setLong(long value)
         {
-            builder.setLong(columnIndex, value);
+            setLongValue(builder, columnIndex, value);
         }
     }
 }

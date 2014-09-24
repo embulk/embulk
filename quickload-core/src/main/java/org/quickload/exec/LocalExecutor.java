@@ -35,7 +35,7 @@ public class LocalExecutor
     private InputTask inputTask;
     private OutputTask outputTask;
 
-    private List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
+    private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
     public LocalExecutor(ModelManager modelManager)
     {

@@ -43,7 +43,7 @@ public class LocalFileCsvInput
         @Override
         public ReportBuilder runThread() throws Exception
         {
-            String path = task.getPaths().get(processorIndex);
+            //String path = task.getPaths().get(processorIndex);
             // ...
             return DynamicReport.builder();
         }
