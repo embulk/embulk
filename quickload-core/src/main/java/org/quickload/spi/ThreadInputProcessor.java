@@ -7,6 +7,16 @@ public abstract class ThreadInputProcessor
     protected final OutputOperator op;
     protected Report report;
 
+    public static ThreadInputProcessor start(OutputOperator op, final Function<OutputOperator, ReportBuilder> body)
+    {
+        return new ThreadInputProcessor(op) {
+            public ReportBuilder runThread()
+            {
+                return body.apply(op);
+            }
+        }.start();
+    }
+
     public ThreadInputProcessor(OutputOperator op)
     {
         this.op = op;
