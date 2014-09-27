@@ -4,10 +4,10 @@ public abstract class ThreadInputProcessor
         implements InputProcessor, Runnable
 {
     protected final Thread thread;
-    protected final Operator op;
+    protected final OutputOperator op;
     protected Report report;
 
-    public ThreadInputProcessor(Operator op)
+    public ThreadInputProcessor(OutputOperator op)
     {
         this.op = op;
         this.thread = new Thread(this);

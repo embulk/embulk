@@ -1,17 +1,12 @@
 package org.quickload.out;
 
-import java.util.List;
-
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.DynamicModel;
 import org.quickload.record.Page;
-import org.quickload.spi.BasicOutputPlugin;
-import org.quickload.spi.InputTask;
-import org.quickload.spi.OutputTask;
-import org.quickload.spi.Report;
-import org.quickload.spi.DynamicReport;
-import org.quickload.spi.AbstractOutputOperator;
+import org.quickload.spi.*;
+
+import java.util.List;
 
 public class LocalFileCsvOutput
         extends BasicOutputPlugin<LocalFileCsvOutput.Task>
@@ -27,10 +22,19 @@ public class LocalFileCsvOutput
     public static class Operator
             extends AbstractOutputOperator
     {
+        private final Task task;
+        private final int processorIndex;
+
+        Operator(Task task, int processorIndex) {
+            this.task = task;
+            this.processorIndex = processorIndex;
+        }
+
         @Override
         public void addPage(Page page)
         {
-            // TODO
+            int len = page.length();
+            // ...
         }
 
         @Override
@@ -60,7 +64,7 @@ public class LocalFileCsvOutput
     @Override
     public Operator openOperator(Task task, int processorIndex)
     {
-        return new Operator();
+        return new Operator(task, processorIndex);
     }
 
     @Override

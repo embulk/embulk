@@ -21,7 +21,8 @@ public class QuickLoad {
         ModelManager modelManager = new ModelManager();
 
         ImmutableMap.Builder<String,String> builder = ImmutableMap.builder();
-        builder.put("paths", "[\"a\",\"b\"]");
+        builder.put("paths", "[\"/tmp/csv_01.csv\",\"/tmp/csv_02.csv\"]");
+
         ConfigSource config = new ConfigSource(modelManager, builder.build());
 
         try (LocalExecutor exec = new LocalExecutor(modelManager)) {

@@ -1,9 +1,10 @@
 package org.quickload.record;
 
-import java.util.List;
-import java.util.ArrayList;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Page
 {
@@ -29,7 +30,7 @@ public class Page
     //
 
     private final Slice slice;
-    private final List<String> stringReferences;
+    private final List<String> stringReferences; // TODO ??
     private int length;
     // TODO private final List<byte[]> binaryReferences;
 
