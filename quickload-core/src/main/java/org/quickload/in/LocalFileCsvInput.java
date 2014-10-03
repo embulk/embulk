@@ -131,9 +131,14 @@ public class LocalFileCsvInput
     }
 
     @Override
-    public Processor startProcessor(Task task,
-            int processorIndex, OutputOperator op)
+    public ThreadInputProcessor startProcessor(final Task task,
+            final int processorIndex, final OutputOperator op)
     {
-        return new Processor(task, processorIndex, op);
+        return ThreadInputProcessor.start(op, new Function<OutputOperator, ReportBuilder>() {
+            public ReportBuilder apply(OutputOperator op)
+            {
+                // TODO body ported from Processor.runThread
+            }
+        });
     }
 }
