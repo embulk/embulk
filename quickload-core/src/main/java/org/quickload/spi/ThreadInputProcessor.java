@@ -1,5 +1,7 @@
 package org.quickload.spi;
 
+import com.google.common.base.Function;
+
 public abstract class ThreadInputProcessor
         implements InputProcessor, Runnable
 {
@@ -9,12 +11,20 @@ public abstract class ThreadInputProcessor
 
     public static ThreadInputProcessor start(OutputOperator op, final Function<OutputOperator, ReportBuilder> body)
     {
-        return new ThreadInputProcessor(op) {
+        ThreadInputProcessor proc = new ThreadInputProcessor(op) {
+            @Override
             public ReportBuilder runThread()
             {
                 return body.apply(op);
             }
-        }.start();
+
+            @Override
+            public InputProgress getProgress() {
+                return null;
+            }
+        };
+        proc.thread.start();
+        return proc;
     }
 
     public ThreadInputProcessor(OutputOperator op)
