@@ -7,19 +7,23 @@ import com.google.inject.Module;
 import com.google.inject.Injector;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
+import org.quickload.plugin.BuiltinPluginSourceModule;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.ExecModule;
+import org.quickload.exec.ExtensionServiceLoaderModule;
 
 public class QuickLoad {
     public static void main(String[] args) throws Exception
     {
         ImmutableList.Builder<Module> modules = ImmutableList.builder();
         modules.add(new ExecModule());
+        modules.add(new ExtensionServiceLoaderModule());
+        modules.add(new BuiltinPluginSourceModule());
 
         // TODO inject XxxManager
         Injector injector = Guice.createInjector(modules.build());
 
-        ModelManager modelManager = new ModelManager();
+        ModelManager modelManager = injector.getInstance(ModelManager.class);
 
         ImmutableMap.Builder<String,String> builder = ImmutableMap.builder();
         builder.put("in:paths", "[\"/tmp/csv_01.csv\",\"/tmp/csv_02.csv\"]");
