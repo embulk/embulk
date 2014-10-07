@@ -28,7 +28,7 @@ public class LocalFileCsvInput
         @Config("in:paths") // TODO temporarily added 'in:'
         public List<String> getPaths();
 
-        @Config("schema") // TODO temporarily added 'in:'
+        @Config("in:schema") // TODO temporarily added 'in:'
         public Schema getSchema();
     }
 

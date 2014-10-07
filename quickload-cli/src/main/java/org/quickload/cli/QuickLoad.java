@@ -30,7 +30,7 @@ public class QuickLoad {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         builder.put("in:paths", "[\"/tmp/csv_01.csv\",\"/tmp/csv_02.csv\"]");
         builder.put("out:paths", "[\"/tmp/output_csv_01.csv\",\"/tmp/output_csv_02.csv\"]");
-        builder.put("schema", "{\"columns\":[{\"index\":0,\"name\":\"date_code\",\"type\":\"string\"},{\"index\":1,\"name\":\"customer_code\",\"type\":\"long\"},{\"index\":2,\"name\":\"product_code\",\"type\":\"string\"},{\"index\":3,\"name\":\"employee_code\",\"type\":\"string\"}]}");
+        builder.put("in:schema", "{\"columns\":[{\"index\":0,\"name\":\"date_code\",\"type\":\"string\"},{\"index\":1,\"name\":\"customer_code\",\"type\":\"long\"},{\"index\":2,\"name\":\"product_code\",\"type\":\"string\"},{\"index\":3,\"name\":\"employee_code\",\"type\":\"string\"}]}");
         ConfigSource config = new ConfigSource(modelManager, builder.build());
 
         // TODO how can we load plugins?

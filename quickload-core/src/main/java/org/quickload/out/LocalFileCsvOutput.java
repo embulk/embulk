@@ -16,15 +16,13 @@ public class LocalFileCsvOutput
         extends BasicOutputPlugin<LocalFileCsvOutput.Task>
 { // TODO change superclass to FileOutputPlugin
 
-    // TODO use DynamicTask
     public interface Task
             extends OutputTask, DynamicModel<Task>
     { // TODO change superclass to FileOutputTask
         @Config("out:paths")
         public List<String> getPaths();
 
-        @Config("schema")
-        public Schema getSchema();
+        public Schema getOutputSchema();
     }
 
     public static class Operator
@@ -46,7 +44,8 @@ public class LocalFileCsvOutput
             // TODO ad-hoc
             String path = task.getPaths().get(processorIndex);
             // TODO manually create schema object now
-            Schema schema = task.getSchema();
+            //Schema schema = (Schema) task.get("out:schema");
+            Schema schema = task.getOutputSchema();
 
             // TODO simple implementation
 
@@ -106,6 +105,7 @@ public class LocalFileCsvOutput
     public Task getTask(ConfigSource config, InputTask input)
     {
         Task task = config.load(Task.class);
+        task.set("OutputSchema", input.getSchema());
         return task.validate();
     }
 
