@@ -33,10 +33,7 @@ public class Column
     }
 
     @JsonProperty("type")
-    public Type getType()
-    {
-        return type;
-    }
+    public Type getType() { return type; }
 
     public void consume(RecordCursor cursor, RecordConsumer consumer)
     {

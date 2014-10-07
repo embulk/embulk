@@ -7,9 +7,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import org.quickload.config.ModelManager;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class TypeManager
 {
     private final ModelManager models;
+    private final Map<String, Type> fromStringToTypeMap; // TODO inject?
 
     @Inject
     public TypeManager(ModelManager models)
@@ -22,12 +26,22 @@ public class TypeManager
                 return null;
             }
         });
+
+        this.fromStringToTypeMap = new HashMap<String, Type>();
+        regsterTypes();
+    }
+
+    private void regsterTypes() {
+        // TODO inject?
+        fromStringToTypeMap.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
+        fromStringToTypeMap.put(LongType.LONG.getName(), LongType.LONG);
+        fromStringToTypeMap.put(StringType.STRING.getName(), StringType.STRING);
     }
 
     public Type getType(String name)
     {
-        // TODO
-        return null;
+        // TODO if null?
+        return fromStringToTypeMap.get(name);
     }
 
     static class TypeDeserializer
