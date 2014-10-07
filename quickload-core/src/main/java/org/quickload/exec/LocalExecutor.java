@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.base.Function;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
 import org.quickload.in.LocalFileCsvInput;
@@ -37,6 +38,7 @@ public class LocalExecutor
 
     private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
+    @Inject
     public LocalExecutor(ModelManager modelManager)
     {
         this.modelManager = modelManager;

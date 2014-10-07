@@ -1,17 +1,17 @@
 package org.quickload.cli;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
-import com.google.inject.Module;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
-import org.quickload.plugin.BuiltinPluginSourceModule;
-import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.ExecModule;
-import org.quickload.record.TypeManager;
 import org.quickload.exec.ExtensionServiceLoaderModule;
+import org.quickload.exec.LocalExecutor;
+import org.quickload.plugin.BuiltinPluginSourceModule;
+import org.quickload.record.TypeManager;
 
 public class QuickLoad {
     public static void main(String[] args) throws Exception
@@ -24,9 +24,8 @@ public class QuickLoad {
         // TODO inject XxxManager
         Injector injector = Guice.createInjector(modules.build());
 
-        //ModelManager modelManager = new ModelManager(); // TODO should inject
         ModelManager modelManager = injector.getInstance(ModelManager.class);
-        TypeManager typeManager = new TypeManager(modelManager); // TODO should inject
+        injector.getInstance(TypeManager.class); // TODO we don't want the method call
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         builder.put("in:paths", "[\"/tmp/csv_01.csv\",\"/tmp/csv_02.csv\"]");
@@ -36,8 +35,7 @@ public class QuickLoad {
 
         // TODO how can we load plugins?
 
-        //LocalExecutor exec = injector.getInstance(LocalExecutor.class)
-        try (LocalExecutor exec = new LocalExecutor(modelManager)) {
+        try (LocalExecutor exec = injector.getInstance(LocalExecutor.class)) {
             exec.configure(config);
             exec.begin();
             exec.start();
