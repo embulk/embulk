@@ -9,8 +9,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
-import org.quickload.in.LocalFileCsvInput;
-import org.quickload.out.LocalFileCsvOutput;
+import org.quickload.in.LocalFileCsvInputPlugin;
+import org.quickload.out.LocalFileCsvOutputPlugin;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.InputTransaction;
@@ -46,12 +46,12 @@ public class LocalExecutor
 
     protected InputPlugin newInputPlugin()
     {
-        return new LocalFileCsvInput();  // TODO
+        return new LocalFileCsvInputPlugin();  // TODO
     }
 
     protected OutputPlugin newOutputPlugin()
     {
-        return new LocalFileCsvOutput();  // TODO
+        return new LocalFileCsvOutputPlugin();  // TODO
     }
 
     public void configure(ConfigSource config)

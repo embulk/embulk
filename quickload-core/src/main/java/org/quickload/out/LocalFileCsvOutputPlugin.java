@@ -12,8 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.List;
 
-public class LocalFileCsvOutput
-        extends BasicOutputPlugin<LocalFileCsvOutput.Task>
+public class LocalFileCsvOutputPlugin
+        extends BasicOutputPlugin<LocalFileCsvOutputPlugin.Task>
 { // TODO change superclass to FileOutputPlugin
 
     public interface Task

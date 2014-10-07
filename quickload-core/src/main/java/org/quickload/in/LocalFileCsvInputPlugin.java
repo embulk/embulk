@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-public class LocalFileCsvInput
-        extends BasicInputPlugin<LocalFileCsvInput.Task>
+public class LocalFileCsvInputPlugin
+        extends BasicInputPlugin<LocalFileCsvInputPlugin.Task>
 { // TODO change superclass to FileInputPlugin
 
     // TODO initialize page allocator object
