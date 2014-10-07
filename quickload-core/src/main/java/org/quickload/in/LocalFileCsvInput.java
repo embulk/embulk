@@ -12,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.List;
 
 public class LocalFileCsvInput
@@ -29,7 +28,7 @@ public class LocalFileCsvInput
         @Config("in:paths") // TODO temporarily added 'in:'
         public List<String> getPaths();
 
-        @Config("in:schema") // TODO temporarily added 'in:'
+        @Config("schema") // TODO temporarily added 'in:'
         public Schema getSchema();
     }
 
@@ -53,13 +52,7 @@ public class LocalFileCsvInput
                 // TODO body ported from Processor.runThread
                 // TODO ad-hoc
                 String path = task.getPaths().get(processorIndex);
-                //Schema schema = task.getSchema();
-                // TODO manually create schema object now
-                Schema schema = new Schema(Arrays.asList(
-                        new Column(0, "date_code", StringType.STRING),
-                        new Column(1, "customer_code", StringType.STRING),
-                        new Column(2, "product_code", StringType.STRING),
-                        new Column(3, "employee_code", StringType.STRING)));
+                Schema schema = task.getSchema();
 
                 // TODO simple implementation
 

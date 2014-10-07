@@ -7,8 +7,9 @@ import org.quickload.exec.BufferManager;
 import org.quickload.record.*;
 import org.quickload.spi.*;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 
 public class LocalFileCsvOutput
@@ -22,7 +23,7 @@ public class LocalFileCsvOutput
         @Config("out:paths")
         public List<String> getPaths();
 
-        @Config("out:schema")
+        @Config("schema")
         public Schema getSchema();
     }
 
@@ -45,11 +46,7 @@ public class LocalFileCsvOutput
             // TODO ad-hoc
             String path = task.getPaths().get(processorIndex);
             // TODO manually create schema object now
-            Schema schema = new Schema(Arrays.asList(
-                    new Column(0, "date_code", StringType.STRING),
-                    new Column(1, "customer_code", StringType.STRING),
-                    new Column(2, "product_code", StringType.STRING),
-                    new Column(3, "employee_code", StringType.STRING)));
+            Schema schema = task.getSchema();
 
             // TODO simple implementation
 
