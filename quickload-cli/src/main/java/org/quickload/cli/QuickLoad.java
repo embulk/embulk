@@ -7,20 +7,25 @@ import com.google.inject.Module;
 import com.google.inject.Injector;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
+import org.quickload.plugin.BuiltinPluginSourceModule;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.ExecModule;
 import org.quickload.record.TypeManager;
+import org.quickload.exec.ExtensionServiceLoaderModule;
 
 public class QuickLoad {
     public static void main(String[] args) throws Exception
     {
         ImmutableList.Builder<Module> modules = ImmutableList.builder();
         modules.add(new ExecModule());
+        modules.add(new ExtensionServiceLoaderModule());
+        modules.add(new BuiltinPluginSourceModule());
 
         // TODO inject XxxManager
         Injector injector = Guice.createInjector(modules.build());
 
-        ModelManager modelManager = new ModelManager(); // TODO should inject
+        //ModelManager modelManager = new ModelManager(); // TODO should inject
+        ModelManager modelManager = injector.getInstance(ModelManager.class);
         TypeManager typeManager = new TypeManager(modelManager); // TODO should inject
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
