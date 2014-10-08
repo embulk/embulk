@@ -4,7 +4,7 @@ import org.quickload.config.ConfigSource;
 
 public interface ParserPlugin
 {
-    public ParserTask getParserTask(ConfigSource confg);
+    public ParserTask getParserTask(ConfigSource config);
 
     public BufferOperator openOperator(ParserTask task, int processorIndex, OutputOperator op);
 
