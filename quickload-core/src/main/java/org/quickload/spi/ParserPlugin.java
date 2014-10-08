@@ -1,12 +1,8 @@
 package org.quickload.spi;
 
-import org.quickload.config.ConfigSource;
-
-public interface ParserPlugin
+public interface ParserPlugin<T extends ParserTask>
 {
-    public ParserTask getParserTask(ConfigSource config);
-
-    public BufferOperator openOperator(ParserTask task, int processorIndex, OutputOperator op);
+    public BufferOperator openOperator(T task, int processorIndex, OutputOperator op);
 
     public void shutdown();
 }

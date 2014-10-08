@@ -2,16 +2,16 @@ package org.quickload.spi;
 
 import com.google.common.base.Function;
 
-public abstract class ThreadInputProcessor
+public abstract class ThreadInputProcessor<T extends Operator>
         implements InputProcessor, Runnable
 {
     protected final Thread thread;
-    protected final OutputOperator op;
+    protected final T op;
     protected Report report;
 
-    public static ThreadInputProcessor start(OutputOperator op, final Function<OutputOperator, ReportBuilder> body)
+    public static <T extends Operator> ThreadInputProcessor start(T op, final Function<T, ReportBuilder> body)
     {
-        ThreadInputProcessor proc = new ThreadInputProcessor(op) {
+        ThreadInputProcessor<T> proc = new ThreadInputProcessor<T>(op) {
             @Override
             public ReportBuilder runThread()
             {
@@ -27,7 +27,7 @@ public abstract class ThreadInputProcessor
         return proc;
     }
 
-    public ThreadInputProcessor(OutputOperator op)
+    public ThreadInputProcessor(T op)
     {
         this.op = op;
         this.thread = new Thread(this);
