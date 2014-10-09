@@ -38,9 +38,10 @@ public class LocalFileCsvInputPlugin
         @Config("in:schema") // TODO temporarily added 'in:'
         public Schema getSchema();
 
-        public String getParserType();
+        @Config("ConfigExpression")
+        public String getConfigExpression(); // TODO for parser plugin
 
-        public ParserTask getParserTask();
+        public ParserTask getParserTask(); // TODO for parser plugin
     }
 
     @Override
@@ -49,8 +50,7 @@ public class LocalFileCsvInputPlugin
         Task task = config.load(Task.class);
         task.set("ProcessorCount", task.getPaths().size());
 
-        task.set("ConfigExpression", "anything"); // TODO
-        ParserTask parserTask = config.load(ParserTask.class);
+        MyParserTask parserTask = config.load(MyParserTask.class);
         parserTask.set("Schema", task.getSchema()); // TODO how to pass the schema object
 
         task.set("ParserTask", parserTask);
@@ -58,8 +58,8 @@ public class LocalFileCsvInputPlugin
         return task.validate();
     }
 
-    public interface ParserTask
-            extends org.quickload.spi.ParserTask, DynamicModel<ParserTask>
+    public interface MyParserTask
+            extends ParserTask, DynamicModel<MyParserTask>
     {
     }
 
