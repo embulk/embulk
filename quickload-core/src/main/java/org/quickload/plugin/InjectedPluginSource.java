@@ -31,12 +31,13 @@ public class InjectedPluginSource
     {
         private final String name;
 
-        public Task(String name)
+        @JsonCreator
+        public Task(@JsonProperty("name") String name)
         {
             this.name = name;
         }
 
-        @JsonProperty("injected")
+        @JsonProperty("name")
         public String getName()
         {
             return name;
