@@ -18,7 +18,6 @@ public abstract class FileInputPlugin <T extends FileInputTask>
 
     public ParserPlugin getParserPlugin(String configExpresssion)
     {
-        // return new CSVParserPlugin(...);
         return pluginManager.newPlugin(ParserPlugin.class, configExpresssion);
     }
 
