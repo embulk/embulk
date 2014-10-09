@@ -3,7 +3,7 @@ package org.quickload.spi;
 public interface FileInputTask
         extends InputTask
 {
-    public String getParserType();
+    public String getConfigExpression();
 
     public ParserTask getParserTask();
 }

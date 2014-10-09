@@ -32,7 +32,7 @@ public class PluginManager
         for (PluginSource source : sources) {
             try {
                 return source.newPlugin(iface, configExpression);
-            } catch (PluginSourceNotMatchException ex) {
+            } catch (PluginSourceNotMatchException e) {
             }
         }
 

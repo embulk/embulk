@@ -11,6 +11,7 @@ import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
 import org.quickload.in.LocalFileCsvInputPlugin;
 import org.quickload.out.LocalFileCsvOutputPlugin;
+import org.quickload.plugin.PluginManager;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.InputTransaction;
@@ -25,6 +26,7 @@ public class LocalExecutor
         implements AutoCloseable
 {
     private final ModelManager modelManager;
+    private final PluginManager pluginManager;
 
     private ConfigSource config;
     private InputPlugin in;
@@ -39,14 +41,15 @@ public class LocalExecutor
     private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
     @Inject
-    public LocalExecutor(ModelManager modelManager)
+    public LocalExecutor(ModelManager modelManager, PluginManager pluginManager)
     {
         this.modelManager = modelManager;
+        this.pluginManager = pluginManager;
     }
 
     protected InputPlugin newInputPlugin()
     {
-        return new LocalFileCsvInputPlugin();  // TODO
+        return new LocalFileCsvInputPlugin(pluginManager);  // TODO
     }
 
     protected OutputPlugin newOutputPlugin()

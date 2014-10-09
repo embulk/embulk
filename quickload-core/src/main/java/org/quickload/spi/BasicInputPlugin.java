@@ -3,15 +3,19 @@ package org.quickload.spi;
 import java.util.List;
 
 import org.quickload.config.ConfigSource;
+import org.quickload.plugin.PluginManager;
 
 public abstract class BasicInputPlugin <T extends InputTask>
         implements InputPlugin, InputTransaction
 {
+    protected PluginManager pluginManager;
+
     private ConfigSource config;
     private T task;
 
-    public BasicInputPlugin()
+    public BasicInputPlugin(PluginManager pluginManager)
     {
+        this.pluginManager = pluginManager;
     }
 
     public abstract T getTask(ConfigSource config);
