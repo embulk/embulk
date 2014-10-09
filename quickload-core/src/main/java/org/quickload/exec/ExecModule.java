@@ -15,6 +15,6 @@ public class ExecModule
     {
         Preconditions.checkNotNull(binder, "binder is null.");
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
-        binder.bind(TypeManager.class).in(Scopes.SINGLETON);
+        binder.bind(TypeManager.class).asEagerSingleton();
     }
 }

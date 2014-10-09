@@ -25,7 +25,6 @@ public class QuickLoad {
         Injector injector = Guice.createInjector(modules.build());
 
         ModelManager modelManager = injector.getInstance(ModelManager.class);
-        injector.getInstance(TypeManager.class); // TODO we don't want the method call
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         builder.put("in:paths", "[\"/tmp/csv_01.csv\",\"/tmp/csv_02.csv\"]");
