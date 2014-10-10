@@ -4,12 +4,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
-import org.quickload.in.LocalFileCsvInputPlugin;
-import org.quickload.out.LocalFileCsvOutputPlugin;
-import org.quickload.spi.CSVParserPlugin;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.ParserPlugin;
+import org.quickload.standards.CsvParserPlugin;
+import org.quickload.standards.LocalFileCsvInputPlugin;
+import org.quickload.standards.LocalFileCsvOutputPlugin;
 
 public class MyPluginModule implements Module
 {
@@ -17,7 +17,7 @@ public class MyPluginModule implements Module
     public void configure(Binder binder)
     {
         Preconditions.checkNotNull(binder, "binder is null.");
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("my")).to(CSVParserPlugin.class);
+        binder.bind(ParserPlugin.class).annotatedWith(Names.named("my")).to(CsvParserPlugin.class);
         binder.bind(InputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileCsvInputPlugin.class);
         binder.bind(OutputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileCsvOutputPlugin.class);
     }
