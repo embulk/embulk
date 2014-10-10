@@ -1,6 +1,7 @@
-package org.quickload.in;
+package org.quickload.standards;
 
 import com.google.common.base.Function;
+import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
@@ -20,6 +21,7 @@ import java.util.List;
 public class LocalFileCsvInputPlugin
         extends FileInputPlugin<LocalFileCsvInputPlugin.Task>
 {
+    @Inject
     public LocalFileCsvInputPlugin(PluginManager pluginManager)
     {
         super(pluginManager);

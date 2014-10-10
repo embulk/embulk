@@ -1,9 +1,11 @@
-package org.quickload.out;
+package org.quickload.standards;
 
+import com.google.inject.Inject;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.DynamicModel;
 import org.quickload.exec.BufferManager;
+import org.quickload.plugin.PluginManager;
 import org.quickload.record.Column;
 import org.quickload.record.Page;
 import org.quickload.record.PageAllocator;
@@ -26,6 +28,11 @@ import java.util.List;
 public class LocalFileCsvOutputPlugin
         extends BasicOutputPlugin<LocalFileCsvOutputPlugin.Task>
 { // TODO change superclass to FileOutputPlugin
+
+    @Inject
+    public LocalFileCsvOutputPlugin(PluginManager pluginManager)
+    {
+    }
 
     public interface Task
             extends OutputTask, DynamicModel<Task>

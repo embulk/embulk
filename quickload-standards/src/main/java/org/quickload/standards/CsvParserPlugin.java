@@ -1,16 +1,12 @@
-package org.quickload.spi;
+package org.quickload.standards;
 
-import org.quickload.buffer.Buffer;
-import org.quickload.exec.BufferManager;
 import org.quickload.record.Column;
 import org.quickload.record.DoubleType;
 import org.quickload.record.LongType;
-import org.quickload.record.PageAllocator;
-import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordBuilder;
 import org.quickload.record.RecordProducer;
 import org.quickload.record.Schema;
 import org.quickload.record.StringType;
+import org.quickload.spi.*;
 
 public class CsvParserPlugin<T extends ParserTask>
         implements ParserPlugin<T>
