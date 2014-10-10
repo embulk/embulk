@@ -26,5 +26,10 @@
             <groupId>org.quickload</groupId>
             <artifactId>quickload-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.quickload</groupId>
+            <artifactId>quickload-standards</artifactId>
+        </dependency>
     </dependencies>
 </project>
