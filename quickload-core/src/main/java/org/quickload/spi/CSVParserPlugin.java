@@ -12,7 +12,7 @@ import org.quickload.record.RecordProducer;
 import org.quickload.record.Schema;
 import org.quickload.record.StringType;
 
-public class CSVParserPlugin<T extends ParserTask>
+public class CsvParserPlugin<T extends ParserTask>
         implements ParserPlugin<T>
 {
     public BufferOperator openOperator(T task, int processorIndex, OutputOperator op)
