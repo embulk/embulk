@@ -7,10 +7,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.base.Function;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
+import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.DynamicModel;
 import org.quickload.config.ModelManager;
-import org.quickload.in.LocalFileCsvInputPlugin;
-import org.quickload.out.LocalFileCsvOutputPlugin;
 import org.quickload.plugin.PluginManager;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
@@ -40,6 +40,13 @@ public class LocalExecutor
 
     private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
+    public interface LocalPluginTask
+            extends PluginManager.PluginTask, DynamicModel<LocalPluginTask>
+    {
+        @Config("ConfigExpression")
+        public String getConfigExpression();
+    }
+
     @Inject
     public LocalExecutor(ModelManager modelManager, PluginManager pluginManager)
     {
@@ -47,21 +54,22 @@ public class LocalExecutor
         this.pluginManager = pluginManager;
     }
 
-    protected InputPlugin newInputPlugin()
+    protected InputPlugin newInputPlugin(String configExpression)
     {
-        return new LocalFileCsvInputPlugin(pluginManager);  // TODO
+        return pluginManager.newPlugin(InputPlugin.class, configExpression);
     }
 
-    protected OutputPlugin newOutputPlugin()
+    protected OutputPlugin newOutputPlugin(String configExpression)
     {
-        return new LocalFileCsvOutputPlugin();  // TODO
+        return pluginManager.newPlugin(OutputPlugin.class, configExpression);
     }
 
     public void configure(ConfigSource config)
     {
         this.config = config;
-        in = newInputPlugin();
-        out = newOutputPlugin();
+        LocalPluginTask task = config.load(LocalPluginTask.class);
+        in = newInputPlugin(task.getConfigExpression());
+        out = newOutputPlugin(task.getConfigExpression());
         inputTran = in.newInputTransaction(config);
         outputTran = out.newOutputTransaction(config);
         inputTask = inputTran.getInputTask();

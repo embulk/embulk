@@ -15,6 +15,11 @@ import org.quickload.config.ConfigException;
 
 public class PluginManager
 {
+    public static interface PluginTask
+    {
+        public String getConfigExpression();
+    }
+
     private final List<PluginSource> sources;
     private final Injector injector;
 

@@ -25,7 +25,7 @@ public class QuickLoad {
         modules.add(new ExecModule());
         modules.add(new ExtensionServiceLoaderModule());
         modules.add(new BuiltinPluginSourceModule());
-        modules.add(new MyPluginSettingsModule()); // TODO
+        modules.add(new MyPluginModule()); // TODO
         Injector injector = Guice.createInjector(modules.build());
 
         ModelManager modelManager = injector.getInstance(ModelManager.class);
