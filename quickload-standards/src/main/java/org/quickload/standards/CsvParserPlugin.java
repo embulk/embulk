@@ -21,7 +21,10 @@ public class CsvParserPlugin<T extends ParserTask>
         // TODO
     }
 
-    // TODO extends LineOperator
+    // TODO
+    /* To consider the design of the framework, CSVParser is implemented with LineOperator.
+     * But it should not be used.
+     */
     static class LineCSVOperator<T extends ParserTask> extends AbstractLineOperator<T>
     {
         public LineCSVOperator(Schema schema, int processorIndex, OutputOperator op)
