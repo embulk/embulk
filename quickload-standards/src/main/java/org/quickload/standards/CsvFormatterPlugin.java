@@ -21,10 +21,10 @@ public class CsvFormatterPlugin<T extends FormatterTask>
 
     static class CSVFormatterOutputOperator extends AbstractOutputOperator
     {
-        private Schema schema;
-        private int processorIndex;
-        private BufferOperator op;
-        private PageAllocator pageAllocator;
+        private final Schema schema;
+        private final int processorIndex;
+        private final BufferOperator op;
+        private PageAllocator pageAllocator; // TODO
 
         private CSVFormatterOutputOperator(Schema schema, int processorIndex, BufferOperator op)
         {
