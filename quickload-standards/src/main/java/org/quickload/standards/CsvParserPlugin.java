@@ -1,5 +1,7 @@
 package org.quickload.standards;
 
+import com.google.inject.Inject;
+import org.quickload.exec.BufferManager;
 import org.quickload.record.Column;
 import org.quickload.record.DoubleType;
 import org.quickload.record.LongType;
@@ -11,9 +13,19 @@ import org.quickload.spi.*;
 public class CsvParserPlugin<T extends ParserTask>
         implements ParserPlugin<T>
 {
-    public BufferOperator openOperator(T task, int processorIndex, OutputOperator op)
+    private final BufferManager bufferManager;
+
+    @Inject
+    public CsvParserPlugin(BufferManager bufferManager)
     {
-        return new LineCSVOperator(task.getSchema(), processorIndex, op);
+        this.bufferManager = bufferManager;
+    }
+
+    public BufferOperator openOperator(T task, int processorIndex,
+                                       OutputOperator op)
+    {
+        return new LineCSVOperator(task.getSchema(), processorIndex,
+                op, bufferManager);
     }
 
     public void shutdown()
@@ -27,9 +39,11 @@ public class CsvParserPlugin<T extends ParserTask>
      */
     static class LineCSVOperator<T extends ParserTask> extends AbstractLineOperator<T>
     {
-        public LineCSVOperator(Schema schema, int processorIndex, OutputOperator op)
+        @Inject
+        public LineCSVOperator(Schema schema, int processorIndex,
+                               OutputOperator op, BufferManager bufferManager)
         {
-            super(schema, processorIndex, op);
+            super(schema, processorIndex, op, bufferManager);
         }
 
         @Override

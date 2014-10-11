@@ -1,8 +1,8 @@
 package org.quickload.spi;
 
+import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.exec.BufferManager;
-import org.quickload.record.PageAllocator;
 import org.quickload.record.PageBuilder;
 import org.quickload.record.RecordBuilder;
 import org.quickload.record.Schema;
@@ -14,15 +14,18 @@ public abstract class AbstractLineOperator<T extends ParserTask>
     private final int processorIndex;
     private final OutputOperator op;
 
-    protected final PageAllocator pageAllocator; // TODO already declared in Plugin
+    protected final BufferManager bufferManager;
     protected final RecordBuilder recordBuilder;
 
-    public AbstractLineOperator(Schema schema, int processorIndex, OutputOperator op) {
+    @Inject
+    public AbstractLineOperator(Schema schema, int processorIndex, OutputOperator op,
+                                BufferManager bufferManager)
+    {
         this.schema = schema;
         this.processorIndex = processorIndex;
         this.op = op;
-        this.pageAllocator = new BufferManager();
-        PageBuilder pageBuilder = new PageBuilder(pageAllocator, schema, op);
+        this.bufferManager = bufferManager;
+        PageBuilder pageBuilder = new PageBuilder(bufferManager, schema, op);
         this.recordBuilder = pageBuilder.builder();
         this.recordBuilder.startRecord();
     }

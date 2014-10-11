@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.exec.BufferManager;
 import org.quickload.record.*;
@@ -8,10 +9,19 @@ import org.quickload.spi.*;
 public class CsvFormatterPlugin<T extends FormatterTask>
         implements FormatterPlugin<T>
 {
+    private final BufferManager bufferManager;
+
+    @Inject
+    public CsvFormatterPlugin(BufferManager bufferManager)
+    {
+        this.bufferManager = bufferManager;
+    }
+
     @Override
     public OutputOperator openOperator(T task, int processorIndex, BufferOperator op)
     {
-        return new CSVFormatterOutputOperator(task.getSchema(), processorIndex, op);
+        return new CSVFormatterOutputOperator(task.getSchema(), processorIndex,
+                op, bufferManager);
     }
 
     public void shutdown()
@@ -24,14 +34,15 @@ public class CsvFormatterPlugin<T extends FormatterTask>
         private final Schema schema;
         private final int processorIndex;
         private final BufferOperator op;
-        private PageAllocator pageAllocator; // TODO
+        private final BufferManager bufferManager;
 
-        private CSVFormatterOutputOperator(Schema schema, int processorIndex, BufferOperator op)
+        private CSVFormatterOutputOperator(Schema schema, int processorIndex,
+                                           BufferOperator op, BufferManager bufferManager)
         {
             this.schema = schema;
             this.processorIndex = processorIndex;
             this.op = op;
-            this.pageAllocator = new BufferManager(); // TODO
+            this.bufferManager = bufferManager;
         }
 
         @Override
@@ -40,7 +51,7 @@ public class CsvFormatterPlugin<T extends FormatterTask>
             // TODO simple implementation
             final StringBuilder sbuf = new StringBuilder(); // TODO
 
-            PageReader pageReader = new PageReader(pageAllocator, schema);
+            PageReader pageReader = new PageReader(bufferManager, schema);
             RecordCursor recordCursor = pageReader.cursor(page);
 
             while (recordCursor.next()) {
