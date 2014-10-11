@@ -1,6 +1,7 @@
-package org.quickload.spi;
+package org.quickload.standards;
 
 import com.google.common.base.Function;
+import org.quickload.spi.*;
 
 public abstract class ThreadInputProcessor<T extends Operator>
         implements InputProcessor, Runnable
