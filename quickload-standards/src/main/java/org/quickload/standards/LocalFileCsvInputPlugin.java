@@ -22,14 +22,12 @@ public class LocalFileCsvInputPlugin
         extends FileInputPlugin<LocalFileCsvInputPlugin.Task>
 {
     @Inject
-    public LocalFileCsvInputPlugin(PluginManager pluginManager)
-    {
+    public LocalFileCsvInputPlugin(PluginManager pluginManager) {
         super(pluginManager);
     }
 
     // TODO initialize page allocator object
     // TODO consider when the page allocator object is released?
-    private final PageAllocator pageAllocator = new BufferManager(); // TODO
 
     public interface Task
             extends FileInputTask, DynamicModel<Task>
@@ -60,6 +58,7 @@ public class LocalFileCsvInputPlugin
         return task.validate();
     }
 
+    // TODO is the declaration needed? ParserTask should implement DynamicModel??
     public interface MyParserTask
             extends ParserTask, DynamicModel<MyParserTask>
     {
@@ -67,33 +66,37 @@ public class LocalFileCsvInputPlugin
 
     // TODO port startFileInputProcessor
     @Override
-    public ThreadInputProcessor startFileInputProcessor(final Task task,
+    public InputProcessor startFileInputProcessor(final Task task,
             final int processorIndex, final BufferOperator op)
     {
         return ThreadInputProcessor.start(op, new Function<BufferOperator, ReportBuilder>() {
             public ReportBuilder apply(BufferOperator op) {
-
-                // TODO ad-hoc
-                String path = task.getPaths().get(processorIndex);
-
-                try {
-                    File file = new File(path);
-                    byte[] bytes = new byte[(int) file.length()]; // TODO ad-hoc
-
-                    int len, offset = 0;
-                    try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-                        while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
-                            offset += len;
-                        }
-                        Buffer buffer = new Buffer(bytes);
-                        op.addBuffer(buffer);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace(); // TODO
-                }
-
-                return DynamicReport.builder();
+                return readFile(task, processorIndex, op);
             }
         });
+    }
+
+    public static ReportBuilder readFile(Task task, int processorIndex, BufferOperator op)
+    {
+        // TODO ad-hoc
+        String path = task.getPaths().get(processorIndex);
+
+        try {
+            File file = new File(path);
+            byte[] bytes = new byte[(int) file.length()]; // TODO ad-hoc
+
+            int len, offset = 0;
+            try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+                while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
+                    offset += len;
+                }
+                Buffer buffer = new Buffer(bytes);
+                op.addBuffer(buffer);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // TODO
+        }
+
+        return DynamicReport.builder(); // TODO
     }
 }
