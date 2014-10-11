@@ -33,7 +33,7 @@ public class LocalFileCsvInputPlugin
 
     public interface Task
             extends FileInputTask, DynamicModel<Task>
-    { // TODO change superclass to FileInputTask
+    {
         @Config("in:paths") // TODO temporarily added 'in:'
         public List<String> getPaths();
 
@@ -41,9 +41,9 @@ public class LocalFileCsvInputPlugin
         public Schema getSchema();
 
         @Config("ConfigExpression")
-        public String getConfigExpression(); // TODO for parser plugin
+        public String getConfigExpression(); // TODO make it more intuitive
 
-        public ParserTask getParserTask(); // TODO for parser plugin
+        public ParserTask getParserTask();
     }
 
     @Override
@@ -53,7 +53,7 @@ public class LocalFileCsvInputPlugin
         task.set("ProcessorCount", task.getPaths().size());
 
         MyParserTask parserTask = config.load(MyParserTask.class);
-        parserTask.set("Schema", task.getSchema()); // TODO how to pass the schema object
+        parserTask.set("Schema", task.getSchema());
 
         task.set("ParserTask", parserTask);
 

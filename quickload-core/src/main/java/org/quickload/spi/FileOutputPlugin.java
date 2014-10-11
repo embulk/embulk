@@ -1,28 +1,22 @@
 package org.quickload.spi;
 
-import java.util.List;
-
-import org.quickload.config.ConfigSource;
+import org.quickload.plugin.PluginManager;
 
 public abstract class FileOutputPlugin <T extends FileOutputTask>
         extends BasicOutputPlugin<T>
 {
-    public abstract T getOutputTask(ConfigSource config, InputTask input);
+    public FileOutputPlugin(PluginManager pluginManager) { super(pluginManager); }
 
     public abstract BufferOperator openFileOutputOperator(T task, int processorIndex);
 
-    public abstract void commit(T task, List<Report> reports);
-
-    public abstract void abort(T task);
-
-    public FormatterPlugin getFormatterPlugin(String type)
+    public FormatterPlugin getFormatterPlugin(String configExpression)
     {
-        return null;  // TODO
+        return pluginManager.newPlugin(FormatterPlugin.class, configExpression);
     }
 
     public OutputOperator openOperator(T task, int processorIndex)
     {
         BufferOperator op = openFileOutputOperator(task, processorIndex);
-        return getFormatterPlugin(task.getFormatterType()).openOperator(task.getFormatterTask(), processorIndex, op);
+        return getFormatterPlugin(task.getConfigExpression()).openOperator(task.getFormatterTask(), processorIndex, op);
     }
 }

@@ -3,22 +3,36 @@ package org.quickload.spi;
 import java.util.List;
 
 import org.quickload.config.ConfigSource;
+import org.quickload.plugin.PluginManager;
 
 public abstract class BasicOutputPlugin <T extends OutputTask>
         implements OutputPlugin, OutputTransaction
 {
+    protected PluginManager pluginManager;
+
     private ConfigSource config;
     private T task;
+
+    public BasicOutputPlugin(PluginManager pluginManager)
+    {
+        this.pluginManager = pluginManager;
+    }
 
     public abstract T getTask(ConfigSource config, InputTask input);
 
     public abstract OutputOperator openOperator(T task, int processorIndex);
 
-    public abstract void begin(T task);
+    public void begin(T task)
+    {
+    }
 
-    public abstract void commit(T task, List<Report> reports);
+    public void commit(T task, List<Report> reports)
+    {
+    }
 
-    public abstract void abort(T task);
+    public void abort(T task)
+    {
+    }
 
     /*
      * OutputTransaction

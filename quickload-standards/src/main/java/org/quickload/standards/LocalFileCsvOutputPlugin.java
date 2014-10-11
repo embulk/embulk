@@ -1,6 +1,7 @@
 package org.quickload.standards;
 
 import com.google.inject.Inject;
+import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.DynamicModel;
@@ -13,12 +14,7 @@ import org.quickload.record.PageReader;
 import org.quickload.record.RecordConsumer;
 import org.quickload.record.RecordCursor;
 import org.quickload.record.Schema;
-import org.quickload.spi.AbstractOutputOperator;
-import org.quickload.spi.BasicOutputPlugin;
-import org.quickload.spi.DynamicReport;
-import org.quickload.spi.InputTask;
-import org.quickload.spi.OutputTask;
-import org.quickload.spi.Report;
+import org.quickload.spi.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -26,125 +22,73 @@ import java.io.PrintWriter;
 import java.util.List;
 
 public class LocalFileCsvOutputPlugin
-        extends BasicOutputPlugin<LocalFileCsvOutputPlugin.Task>
-{ // TODO change superclass to FileOutputPlugin
-
+        extends FileOutputPlugin<LocalFileCsvOutputPlugin.Task>
+{
     @Inject
-    public LocalFileCsvOutputPlugin(PluginManager pluginManager)
-    {
-    }
+    public LocalFileCsvOutputPlugin(PluginManager pluginManager) { super(pluginManager); }
 
     public interface Task
-            extends OutputTask, DynamicModel<Task>
-    { // TODO change superclass to FileOutputTask
+            extends FileOutputTask, DynamicModel<Task>
+    {
         @Config("out:paths")
-        public List<String> getPaths();
+        public List<String> getPaths(); // TODO temporarily
 
-        public Schema getOutputSchema();
+        public Schema getOutputSchema(); // TODO
+
+        @Config("ConfigExpression")
+        public String getConfigExpression();
+
+        public FormatterTask getFormatterTask();
     }
 
-    public static class Operator
-            extends AbstractOutputOperator
+    public interface MyFormatterTask
+            extends FormatterTask, DynamicModel<MyFormatterTask>
     {
-        private final Task task;
-        private final int processorIndex;
-        private final PageAllocator pageAllocator;
-
-        Operator(Task task, int processorIndex) {
-            this.task = task;
-            this.processorIndex = processorIndex;
-            this.pageAllocator = new BufferManager(); // TODO
-        }
-
-        @Override
-        public void addPage(Page page)
-        {
-            // TODO ad-hoc
-            String path = task.getPaths().get(processorIndex);
-            // TODO manually create schema object now
-            //Schema schema = (Schema) task.get("out:schema");
-            Schema schema = task.getOutputSchema();
-
-            // TODO simple implementation
-
-            PageReader pageReader = new PageReader(pageAllocator, schema);
-            RecordCursor recordCursor = pageReader.cursor(page);
-            File file = new File(path);
-
-            try (PrintWriter w = new PrintWriter(file)) {
-                // TODO writing data to the file
-
-                while (recordCursor.next()) {
-                    RecordConsumer recordConsumer = new RecordConsumer() {
-                        @Override
-                        public void setNull(Column column) {
-                            // TODO
-                        }
-
-                        @Override
-                        public void setLong(Column column, long value) {
-                            // TODO
-                        }
-
-                        @Override
-                        public void setDouble(Column column, double value) {
-                            // TODO
-                        }
-
-                        @Override
-                        public void setString(Column column, String value) {
-                            System.out.print(value);
-                            System.out.print(',');
-                            //w.append(value).append(',');
-                        }
-                    };
-                    schema.consume(recordCursor, recordConsumer);
-                    System.out.println();
-                    //w.append('\n');
-                }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void close() throws Exception
-        {
-        }
-
-        @Override
-        public Report completed()
-        {
-            return DynamicReport.builder().build(null);
-        }
     }
 
     @Override
-    public Task getTask(ConfigSource config, InputTask input)
+    public Task getTask(ConfigSource config, InputTask inputTask)
     {
         Task task = config.load(Task.class);
-        task.set("OutputSchema", input.getSchema());
+
+        MyFormatterTask formatterTask = config.load(MyFormatterTask.class);
+        formatterTask.set("Schema", inputTask.getSchema());
+
+        task.set("FormatterTask", formatterTask);
+
         return task.validate();
     }
 
-    @Override
-    public void begin(Task task)
+    public static class MyBufferOperator
+            extends AbstractBufferOperator
     {
+        private final Task task;
+        private final int processorIndex;
+
+        MyBufferOperator(Task task, int processorIndex) {
+            this.task = task;
+            this.processorIndex = processorIndex;
+        }
+
+        @Override
+        public void addBuffer(Buffer buffer) {
+            // TODO
+        }
+
+        @Override
+        public Report completed() {
+            return null; // TODO
+        }
+
+        @Override
+        public void close() throws Exception {
+            // TODO
+        }
     }
 
     @Override
-    public Operator openOperator(Task task, int processorIndex)
+    public BufferOperator openFileOutputOperator(final Task task, final int processorIndex)
     {
-        return new Operator(task, processorIndex);
-    }
-
-    @Override
-    public void commit(Task task, List<Report> reports)
-    {
-    }
-
-    @Override
-    public void abort(Task task)
-    {
+        return new MyBufferOperator(task, processorIndex);
     }
 }

@@ -2,11 +2,9 @@ package org.quickload.spi;
 
 import org.quickload.config.ConfigSource;
 
-public interface FormatterPlugin
+public interface FormatterPlugin<T extends FormatterTask>
 {
-    public FormatterTask getFormatterTask(ConfigSource confg, InputTask input);
-
-    public OutputOperator openOperator(FormatterTask task, int processorIndex, BufferOperator op);
+    public OutputOperator openOperator(T task, int processorIndex, BufferOperator op);
 
     public void shutdown();
 }
