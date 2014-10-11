@@ -5,20 +5,16 @@ import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.DynamicModel;
-import org.quickload.exec.BufferManager;
 import org.quickload.plugin.PluginManager;
-import org.quickload.record.Column;
-import org.quickload.record.Page;
-import org.quickload.record.PageAllocator;
-import org.quickload.record.PageReader;
-import org.quickload.record.RecordConsumer;
-import org.quickload.record.RecordCursor;
 import org.quickload.record.Schema;
-import org.quickload.spi.*;
+import org.quickload.spi.AbstractBufferOperator;
+import org.quickload.spi.BufferOperator;
+import org.quickload.spi.FileOutputPlugin;
+import org.quickload.spi.FileOutputTask;
+import org.quickload.spi.FormatterTask;
+import org.quickload.spi.InputTask;
+import org.quickload.spi.Report;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.List;
 
 public class LocalFileCsvOutputPlugin
@@ -59,6 +55,7 @@ public class LocalFileCsvOutputPlugin
         return task.validate();
     }
 
+    // TODO can be MyBufferOperator ported to standard library?
     public static class MyBufferOperator
             extends AbstractBufferOperator
     {
@@ -72,7 +69,9 @@ public class LocalFileCsvOutputPlugin
 
         @Override
         public void addBuffer(Buffer buffer) {
-            // TODO
+            // TODO write buffer to local files
+            List<String> paths = task.getPaths();
+            System.out.println(new String(buffer.get()));
         }
 
         @Override
