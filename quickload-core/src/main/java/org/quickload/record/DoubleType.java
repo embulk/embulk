@@ -26,26 +26,16 @@ public class DoubleType
         return (byte) 8;
     }
 
-    static double getDoubleValue(RecordCursor cursor, int columnIndex)
-    {
-        return cursor.getPage().getDouble(cursor.getFixedLengthPosition(columnIndex));
-    }
-
-    static void setDoubleValue(RecordBuilder builder, int columnIndex, double value)
-    {
-        builder.getPage().setDouble(builder.getFixedLengthPosition(columnIndex), value);
-    }
-
     @Override
     public double getDouble(RecordCursor cursor, int columnIndex)
     {
-        return getDoubleValue(cursor, columnIndex);
+        return cursor.getDouble(columnIndex);
     }
 
     @Override
     public void setDouble(RecordBuilder builder, int columnIndex, double value)
     {
-        setDoubleValue(builder, columnIndex, value);
+        builder.setDouble(columnIndex, value);
     }
 
     @Override
@@ -54,7 +44,7 @@ public class DoubleType
         if (cursor.isNull(column.getIndex())) {
             consumer.setNull(column);
         } else {
-            consumer.setDouble(column, getDoubleValue(cursor, column.getIndex()));
+            consumer.setDouble(column, cursor.getDouble(column.getIndex()));
         }
     }
 
@@ -82,7 +72,7 @@ public class DoubleType
 
         public void setDouble(double value)
         {
-            setDoubleValue(builder, columnIndex, value);
+            builder.setDouble(columnIndex, value);
         }
     }
 }

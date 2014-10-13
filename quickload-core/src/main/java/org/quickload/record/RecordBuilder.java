@@ -3,59 +3,77 @@ package org.quickload.record;
 import java.util.Arrays;
 
 public class RecordBuilder
+        implements AutoCloseable
 {
     private final PageAllocator allocator;
     private final PageOutput output;
     private final int[] columnOffsets;
-    private final int payloadOffset;
+    private final int fixedRecordSize;
 
-    private Page page = null;
-    private int position = 0;
+    private Page page;
+    private int count;
+    private int position;
     private final byte[] nullBitSet;
-    private int recordPayloadSize;
+    private int nextVariableLengthDataOffset;
 
-    RecordBuilder(PageAllocator allocator, Schema schema, PageOutput output)
+    public RecordBuilder(PageAllocator allocator, Schema schema, PageOutput output)
     {
         this.allocator = allocator;
         this.output = output;
         this.columnOffsets = Page.columnOffsets(schema);
-        this.payloadOffset = Page.payloadOffset(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
-    }
+        this.fixedRecordSize = 4 + nullBitSet.length + Page.totalColumnSize(schema);
 
-    public void startRecord()
-    {
-        if (page == null) {
-            page = allocator.allocatePage(payloadOffset);
-        }
-        recordPayloadSize = 0;
-        Arrays.fill(nullBitSet, (byte) 0);
+        this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
+        this.count = 0;
+        this.position = Page.PAGE_HEADER_SIZE;
     }
 
     public void addRecord()
     {
-        int recordSize = payloadOffset + recordPayloadSize;
-        page.setInt(position, recordSize);
+        // record header
+        page.setInt(position, nextVariableLengthDataOffset);  // nextVariableLengthDataOffset means record size
         page.setBytes(position + 4, nullBitSet);
-        position += recordSize;
-        if (page.capacity() < position + payloadOffset) {
-            flush();
-        }
+
+        count++;
+        this.position += nextVariableLengthDataOffset;
+        this.nextVariableLengthDataOffset = fixedRecordSize;
+        Arrays.fill(nullBitSet, (byte) 0);
     }
 
     public void flush()
     {
         if (page != null) {
-            page.limitLength(position);
+            // page header
+            page.setInt(0, count);
+
             output.addPage(page);
-            page = null;
-            position = 0;
+            this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
+            this.count = 0;
+            this.position = Page.PAGE_HEADER_SIZE;
         }
     }
 
-    public Page getPage()
+    @Override
+    public void close()
     {
-        return page;
+    }
+
+    private void flushAndTakeOverRemaingData()
+    {
+        if (page != null) {
+            // page header
+            page.setInt(0, count);
+
+            Page lastPage = page;
+
+            this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize + nextVariableLengthDataOffset);
+            page.setBytes(Page.PAGE_HEADER_SIZE, lastPage, position, nextVariableLengthDataOffset);
+            this.count = 0;
+            this.position = Page.PAGE_HEADER_SIZE;
+
+            output.addPage(lastPage);
+        }
     }
 
     public void setNull(int columnIndex)
@@ -63,21 +81,122 @@ public class RecordBuilder
         nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
     }
 
-    public int getFixedLengthPosition(int columnIndex)
+    public void setByte(int columnIndex, byte value)
     {
-        return position + columnOffsets[columnIndex];
+        page.setByte(position + columnOffsets[columnIndex], value);
     }
 
-    public void setVariableLengthIndex(int columnIndex, int indexData)
+    public void setShort(int columnIndex, short value)
     {
-        page.setInt(position + columnOffsets[columnIndex], indexData);
+        page.setShort(position + columnOffsets[columnIndex], value);
     }
 
-    public int setVariableLengthIndex(int columnIndex, int indexData, int payloadSize)
+    public void setInt(int columnIndex, int value)
     {
-        page.setInt(position + columnOffsets[columnIndex], indexData);
-        int offset = recordPayloadSize;
-        recordPayloadSize += payloadSize;
-        return offset;
+        page.setInt(position + columnOffsets[columnIndex], value);
+    }
+
+    public void setLong(int columnIndex, long value)
+    {
+        page.setLong(position + columnOffsets[columnIndex], value);
+    }
+
+    public void setFloat(int columnIndex, float value)
+    {
+        page.setFloat(position + columnOffsets[columnIndex], value);
+    }
+
+    public void setDouble(int columnIndex, double value)
+    {
+        page.setDouble(position + columnOffsets[columnIndex], value);
+    }
+
+    public int addStringReference(String value)
+    {
+        return page.addStringReference(value);
+    }
+
+    public int getVariableLengthDataOffset()
+    {
+        return nextVariableLengthDataOffset;
+    }
+
+    public VariableLengthDataWriter setVariableLengthData(int columnIndex, int intData)
+    {
+        // Page.VARIABLE_LENGTH_COLUMN_SIZE is 4 bytes
+        page.setInt(position + columnOffsets[columnIndex], intData);
+        return new VariableLengthDataWriter(nextVariableLengthDataOffset);
+    }
+
+    Page ensureVariableLengthDataCapacity(int requiredOffsetFromPosition)
+    {
+        if (page.length() < position + requiredOffsetFromPosition) {
+            flushAndTakeOverRemaingData();
+        }
+        return page;
+    }
+
+    public class VariableLengthDataWriter
+    {
+        private int offsetFromPosition;
+
+        VariableLengthDataWriter(int offsetFromPosition)
+        {
+            this.offsetFromPosition = offsetFromPosition;
+        }
+
+        public void writeByte(byte value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 1);
+            page.setByte(position + offsetFromPosition, value);
+            offsetFromPosition += 1;
+        }
+
+        public void writeShort(short value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 2);
+            page.setShort(position + offsetFromPosition, value);
+            offsetFromPosition += 2;
+        }
+
+        public void writeInt(int value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 4);
+            page.setInt(position + offsetFromPosition, value);
+            offsetFromPosition += 4;
+        }
+
+        public void writeLong(long value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 8);
+            page.setLong(position + offsetFromPosition, value);
+            offsetFromPosition += 8;
+        }
+
+        public void writeFloat(float value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 4);
+            page.setFloat(position + offsetFromPosition, value);
+            offsetFromPosition += 4;
+        }
+
+        public void writeDouble(double value)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + 8);
+            page.setDouble(position + offsetFromPosition, value);
+            offsetFromPosition += 8;
+        }
+
+        public void writeBytes(byte[] data)
+        {
+            writeBytes(data, 0, data.length);
+        }
+
+        public void writeBytes(byte[] data, int off, int len)
+        {
+            ensureVariableLengthDataCapacity(offsetFromPosition + len);
+            page.setBytes(position + offsetFromPosition, data, off, len);
+            offsetFromPosition += len;
+        }
     }
 }

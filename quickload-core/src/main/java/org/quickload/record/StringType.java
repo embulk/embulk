@@ -28,14 +28,16 @@ public class StringType
 
     static String getStringValue(RecordCursor cursor, int columnIndex)
     {
-        int index = cursor.getVariableLengthIndex(columnIndex);
-        return cursor.getPage().getStringReference(index);
+        int intData = cursor.getInt(columnIndex);
+        // TODO serialization mode?
+        return cursor.getStringReference(intData);
     }
 
     static void setStringValue(RecordBuilder builder, int columnIndex, String value)
     {
-        int index = builder.getPage().addStringReference(value);
-        builder.setVariableLengthIndex(columnIndex, index);
+        // TODO serialization mode?
+        int index = builder.addStringReference(value);
+        builder.setInt(columnIndex, index);
     }
 
     @Override

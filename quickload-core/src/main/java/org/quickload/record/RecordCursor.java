@@ -1,57 +1,68 @@
 package org.quickload.record;
 
 public class RecordCursor
+        implements AutoCloseable
 {
     private final PageAllocator allocator;
     private final int[] columnOffsets;
-    private final int payloadOffset;
+    private final int fixedRecordSize;
 
     private Page page;
+    private int count;
+    private int recordCount;
     private int position;
-    private int rowSize;
     private final byte[] nullBitSet;
 
     RecordCursor(PageAllocator allocator, Schema schema)
     {
         this.allocator = allocator;
         this.columnOffsets = Page.columnOffsets(schema);
-        this.payloadOffset = Page.payloadOffset(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
+        this.fixedRecordSize = 4 + nullBitSet.length + Page.totalColumnSize(schema);
     }
 
-    public void reset(Page page)
+    @Override
+    public void close()
     {
         if (this.page != null) {
             allocator.releasePage(page);
             this.page = null;
         }
+    }
+
+    public void reset(Page page)
+    {
+        close();
         this.page = page;
-        this.position = 0;
-        this.rowSize = 0;
+        this.count = 0;
+        this.recordCount = page.getInt(0);
+        this.position = Page.PAGE_HEADER_SIZE;
+    }
+
+    public int getRecordCount()
+    {
+        return recordCount;
     }
 
     public boolean next()
     {
-        if (page == null) {
+        if (page == null || recordCount <= count) {
             return false;
         }
 
-        position += rowSize;
-        if (position < page.length()) {
-            rowSize = page.getInt(position);
-            page.getBytes(position + 4, nullBitSet, 0, nullBitSet.length);
-            return true;
+        count++;
+        if (count > 0) {
+            int lastRecordSize = page.getInt(position);
+            position += lastRecordSize;
         }
+        page.getBytes(position + 4, nullBitSet, 0, nullBitSet.length);
 
-        allocator.releasePage(page);
-        page = null;
-
-        return false;
+        return true;
     }
 
-    public Page getPage()
+    public String getStringReference(int index)
     {
-        return page;
+        return page.getStringReference(index);
     }
 
     public boolean isNull(int columnIndex)
@@ -59,13 +70,101 @@ public class RecordCursor
         return (nullBitSet[columnIndex >>> 3] & (1 << (columnIndex & 7))) != 0;
     }
 
-    public int getFixedLengthPosition(int columnIndex)
+    public byte getByte(int columnIndex)
     {
-        return position + columnOffsets[columnIndex];
+        return page.getByte(position + columnOffsets[columnIndex]);
     }
 
-    public int getVariableLengthIndex(int columnIndex)
+    public short getShort(int columnIndex)
+    {
+        return page.getShort(position + columnOffsets[columnIndex]);
+    }
+
+    public int getInt(int columnIndex)
     {
         return page.getInt(position + columnOffsets[columnIndex]);
+    }
+
+    public long getLong(int columnIndex)
+    {
+        return page.getLong(position + columnOffsets[columnIndex]);
+    }
+
+    public float getFloat(int columnIndex)
+    {
+        return page.getFloat(position + columnOffsets[columnIndex]);
+    }
+
+    public double getDouble(int columnIndex)
+    {
+        return page.getDouble(position + columnOffsets[columnIndex]);
+    }
+
+    public VariableLengthDataReader getVariableLengthData(int columnIndex, int variableLengthDataOffset)
+    {
+        return new VariableLengthDataReader(variableLengthDataOffset);
+    }
+
+    public class VariableLengthDataReader
+    {
+        private int offsetFromPosition;
+
+        VariableLengthDataReader(int offsetFromPosition)
+        {
+            this.offsetFromPosition = offsetFromPosition;
+        }
+
+        public byte readByte()
+        {
+            byte value = page.getByte(position + offsetFromPosition);
+            offsetFromPosition += 1;
+            return value;
+        }
+
+        public short readShort()
+        {
+            short value = page.getShort(position + offsetFromPosition);
+            offsetFromPosition += 2;
+            return value;
+        }
+
+        public int readInt()
+        {
+            int value = page.getInt(position + offsetFromPosition);
+            offsetFromPosition += 4;
+            return value;
+        }
+
+        public long readLong()
+        {
+            long value = page.getLong(position + offsetFromPosition);
+            offsetFromPosition += 8;
+            return value;
+        }
+
+        public float readFloat()
+        {
+            float value = page.getFloat(position + offsetFromPosition);
+            offsetFromPosition += 4;
+            return value;
+        }
+
+        public double readDouble()
+        {
+            double value = page.getDouble(position + offsetFromPosition);
+            offsetFromPosition += 8;
+            return value;
+        }
+
+        public void readBytes(byte[] data)
+        {
+            readBytes(data, 0, data.length);
+        }
+
+        public void readBytes(byte[] data, int off, int len)
+        {
+            page.getBytes(position + offsetFromPosition, data, off, len);
+            offsetFromPosition += len;
+        }
     }
 }

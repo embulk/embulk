@@ -27,7 +27,6 @@ public abstract class AbstractLineOperator<T extends ParserTask>
         this.bufferManager = bufferManager;
         PageBuilder pageBuilder = new PageBuilder(bufferManager, schema, op);
         this.recordBuilder = pageBuilder.builder();
-        this.recordBuilder.startRecord();
     }
 
     @Override

@@ -8,15 +8,27 @@ import java.util.List;
 
 public class Page
 {
+    // PageHeader
+    // +---+
+    // | 4 |
+    // +---+
+    // count (number of records)
+
+    static final int PAGE_HEADER_SIZE = 4;
+
+    // PageBuilder.setVariableLengthData and PageReader.readVariableLengthData
+    // uses 4 bytes integer
+    static final int VARIABLE_LENGTH_COLUMN_SIZE = 4;
+
     ////
     //
     // Row
     // +---------------+------------+--------------------+------------------------+
     // | total-var-len | nul bitset | column header data | column var-len data... |
     // +---------------+------------+--------------------+------------------------+
-    //  |                                     | |                      |
-    //  +-------------------------------------+ +----------------------+
-    //           fixed row data size             variable row data size
+    //  |                                               | |                      |
+    //  +-----------------------------------------------+ +----------------------+
+    //                     fixed row data size             variable row data size
 
     // string:
     //   binary ref:       0 30-index (32-off 32-len)
@@ -31,25 +43,22 @@ public class Page
 
     private final Slice slice;
     private final List<String> stringReferences; // TODO ??
-    private int length;
     // TODO private final List<byte[]> binaryReferences;
 
-    Page(int capacity)
+    Page(int length)
     {
-        this.slice = Slices.allocate(capacity);
-        this.length = capacity;
+        this.slice = Slices.allocate(length);
         this.stringReferences = new ArrayList<String>();
     }
 
-    public static Page allocate(int capacity)
+    public static Page allocate(int length)
     {
-        return new Page(capacity);
+        return new Page(length);
     }
 
     public void clear()
     {
         stringReferences.clear();
-        length = slice.length();
     }
 
     static int nullBitSetSize(Schema schema)
@@ -62,7 +71,7 @@ public class Page
         return 4 + nullBitSetSize(schema);
     }
 
-    static int payloadOffset(Schema schema)
+    static int totalColumnSize(Schema schema)
     {
         return rowHeaderSize(schema) + schema.getFixedStorageSize();
     }
@@ -83,17 +92,7 @@ public class Page
 
     public int length()
     {
-        return length;
-    }
-
-    public int capacity()
-    {
         return slice.length();
-    }
-
-    void limitLength(int length)
-    {
-        this.length = length;
     }
 
     public byte getByte(int pos)
@@ -171,9 +170,14 @@ public class Page
         slice.setBytes(pos, src, 0, src.length);
     }
 
-    public void setBytes(int pos, byte[] src, int dstIndex, int length)
+    public void setBytes(int pos, byte[] src, int srcIndex, int length)
     {
-        slice.setBytes(pos, src, dstIndex, length);
+        slice.setBytes(pos, src, srcIndex, length);
+    }
+
+    public void setBytes(int pos, Page src, int srcIndex, int length)
+    {
+        slice.setBytes(pos, src.slice, srcIndex, length);
     }
 
     public String getStringReference(int index)
