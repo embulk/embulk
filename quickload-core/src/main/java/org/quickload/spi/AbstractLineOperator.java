@@ -4,18 +4,18 @@ import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.exec.BufferManager;
 import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordBuilder;
+import org.quickload.record.PageBuilder;
 import org.quickload.record.Schema;
 
 public abstract class AbstractLineOperator<T extends ParserTask>
-        extends AbstractBufferOperator implements LineOperator {
-
+        extends AbstractBufferOperator implements LineOperator
+{
     protected final Schema schema; // TODO type parameter is needed?
     private final int processorIndex;
     private final OutputOperator op;
 
     protected final BufferManager bufferManager;
-    protected final RecordBuilder recordBuilder;
+    protected final PageBuilder pageBuilder;
 
     @Inject
     public AbstractLineOperator(Schema schema, int processorIndex, OutputOperator op,
@@ -25,8 +25,7 @@ public abstract class AbstractLineOperator<T extends ParserTask>
         this.processorIndex = processorIndex;
         this.op = op;
         this.bufferManager = bufferManager;
-        PageBuilder pageBuilder = new PageBuilder(bufferManager, schema, op);
-        this.recordBuilder = pageBuilder.builder();
+        this.pageBuilder = new PageBuilder(bufferManager, schema, op);
     }
 
     @Override
@@ -55,15 +54,16 @@ public abstract class AbstractLineOperator<T extends ParserTask>
     public abstract void addLine(String line);
 
     @Override
-    public Report failed(Exception cause) {
-        return null; // TODO
+    public Report failed(Exception cause)
+    {
+        return op.failed(cause);
     }
 
     @Override
     public Report completed()
     {
-        recordBuilder.flush();
-        return null; // TODO
+        pageBuilder.flush();
+        return op.completed();
     }
 
     @Override

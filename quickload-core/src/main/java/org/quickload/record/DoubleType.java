@@ -33,7 +33,7 @@ public class DoubleType
     }
 
     @Override
-    public void setDouble(RecordBuilder builder, int columnIndex, double value)
+    public void setDouble(PageBuilder builder, int columnIndex, double value)
     {
         builder.setDouble(columnIndex, value);
     }
@@ -49,17 +49,17 @@ public class DoubleType
     }
 
     @Override
-    public void produce(RecordBuilder builder, RecordProducer producer, Column column)
+    public void produce(PageBuilder builder, RecordProducer producer, Column column)
     {
         producer.setDouble(column, new Setter(builder, column.getIndex()));
     }
 
     public static class Setter
     {
-        private final RecordBuilder builder;
+        private final PageBuilder builder;
         private final int columnIndex;
 
-        Setter(RecordBuilder builder, int columnIndex)
+        Setter(PageBuilder builder, int columnIndex)
         {
             this.builder = builder;
             this.columnIndex = columnIndex;

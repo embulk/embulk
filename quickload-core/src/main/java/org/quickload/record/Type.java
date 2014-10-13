@@ -23,15 +23,15 @@ public interface Type
 
     public String getString(RecordCursor cursor, int columnIndex);
 
-    public void produce(RecordBuilder builder, RecordProducer producer, Column column);
+    public void produce(PageBuilder builder, RecordProducer producer, Column column);
 
-    public void setNull(RecordBuilder builder, int columnIndex);
+    public void setNull(PageBuilder builder, int columnIndex);
 
-    public void setLong(RecordBuilder builder, int columnIndex, long value);
+    public void setLong(PageBuilder builder, int columnIndex, long value);
 
-    public void setDouble(RecordBuilder builder, int columnIndex, double value);
+    public void setDouble(PageBuilder builder, int columnIndex, double value);
 
-    public void setString(RecordBuilder builder, int columnIndex, String value);
+    public void setString(PageBuilder builder, int columnIndex, String value);
 
     // TODO binary
     // TODO timestamp
@@ -39,5 +39,5 @@ public interface Type
     // TODO map?
 
     // TODO
-    //public void copyTo(RecordCursor cursor, int srcColumnIndex, RecordBuilder dst, int dstColumnIndex);
+    //public void copyTo(RecordCursor cursor, int srcColumnIndex, PageBuilder dst, int dstColumnIndex);
 }

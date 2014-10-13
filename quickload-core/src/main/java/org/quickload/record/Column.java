@@ -40,7 +40,7 @@ public class Column
         type.consume(cursor, consumer, this);
     }
 
-    public void produce(RecordBuilder builder, RecordProducer producer)
+    public void produce(PageBuilder builder, RecordProducer producer)
     {
         type.produce(builder, producer, this);
     }

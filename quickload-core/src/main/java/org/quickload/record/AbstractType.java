@@ -8,7 +8,7 @@ public abstract class AbstractType
         return cursor.isNull(columnIndex);
     }
 
-    public void setNull(RecordBuilder builder, int columnIndex)
+    public void setNull(PageBuilder builder, int columnIndex)
     {
         builder.setNull(columnIndex);
     }
@@ -31,19 +31,19 @@ public abstract class AbstractType
         throw new RuntimeException("type mismatch");
     }
 
-    public void setLong(RecordBuilder builder, int columnIndex, long value)
+    public void setLong(PageBuilder builder, int columnIndex, long value)
     {
         // TODO exception class
         throw new RuntimeException("type mismatch");
     }
 
-    public void setDouble(RecordBuilder builder, int columnIndex, double value)
+    public void setDouble(PageBuilder builder, int columnIndex, double value)
     {
         // TODO exception class
         throw new RuntimeException("type mismatch");
     }
 
-    public void setString(RecordBuilder builder, int columnIndex, String value)
+    public void setString(PageBuilder builder, int columnIndex, String value)
     {
         // TODO exception class
         throw new RuntimeException("type mismatch");

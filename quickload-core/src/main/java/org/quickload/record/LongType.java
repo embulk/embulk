@@ -33,7 +33,7 @@ public class LongType
     }
 
     @Override
-    public void setLong(RecordBuilder builder, int columnIndex, long value)
+    public void setLong(PageBuilder builder, int columnIndex, long value)
     {
         builder.setLong(columnIndex, value);
     }
@@ -49,17 +49,17 @@ public class LongType
     }
 
     @Override
-    public void produce(RecordBuilder builder, RecordProducer producer, Column column)
+    public void produce(PageBuilder builder, RecordProducer producer, Column column)
     {
         producer.setLong(column, new Setter(builder, column.getIndex()));
     }
 
     public static class Setter
     {
-        private final RecordBuilder builder;
+        private final PageBuilder builder;
         private final int columnIndex;
 
-        private Setter(RecordBuilder builder, int columnIndex)
+        private Setter(PageBuilder builder, int columnIndex)
         {
             this.builder = builder;
             this.columnIndex = columnIndex;

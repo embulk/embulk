@@ -33,7 +33,7 @@ public class StringType
         return cursor.getStringReference(intData);
     }
 
-    static void setStringValue(RecordBuilder builder, int columnIndex, String value)
+    static void setStringValue(PageBuilder builder, int columnIndex, String value)
     {
         // TODO serialization mode?
         int index = builder.addStringReference(value);
@@ -47,7 +47,7 @@ public class StringType
     }
 
     @Override
-    public void setString(RecordBuilder builder, int columnIndex, String value)
+    public void setString(PageBuilder builder, int columnIndex, String value)
     {
         setStringValue(builder, columnIndex, value);
     }
@@ -63,17 +63,17 @@ public class StringType
     }
 
     @Override
-    public void produce(RecordBuilder builder, RecordProducer producer, Column column)
+    public void produce(PageBuilder builder, RecordProducer producer, Column column)
     {
         producer.setString(column, new Setter(builder, column.getIndex()));
     }
 
     public static class Setter
     {
-        private final RecordBuilder builder;
+        private final PageBuilder builder;
         private final int columnIndex;
 
-        Setter(RecordBuilder builder, int columnIndex)
+        Setter(PageBuilder builder, int columnIndex)
         {
             this.builder = builder;
             this.columnIndex = columnIndex;

@@ -62,7 +62,7 @@ public class Schema
         }
     }
 
-    public void produce(RecordBuilder builder, RecordProducer producer)
+    public void produce(PageBuilder builder, RecordProducer producer)
     {
         for(Column c : columns) {
             c.produce(builder, producer);

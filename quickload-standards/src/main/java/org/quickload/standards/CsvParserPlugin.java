@@ -66,8 +66,8 @@ public class CsvParserPlugin<T extends ParserTask>
                     setter.setString(lineValues[column.getIndex()]);
                 }
             };
-            schema.produce(recordBuilder, recordProducer);
-            recordBuilder.addRecord();
+            schema.produce(pageBuilder, recordProducer);
+            pageBuilder.addRecord();
         }
     }
 }
