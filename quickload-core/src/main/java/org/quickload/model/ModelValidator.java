@@ -1,4 +1,4 @@
-package org.quickload.config;
+package org.quickload.model;
 
 import java.util.Set;
 import javax.validation.Validator;
@@ -13,11 +13,11 @@ public class ModelValidator
         this.validator = validator;
     }
 
-    public <T extends DynamicModel<?>> void validateModel(T model) throws ConfigValidationException
+    public <T> void validateModel(T model) throws ModelValidationException
     {
         Set<ConstraintViolation<T>> violations = validator.validate(model);
         if (!violations.isEmpty()) {
-            throw new ConfigValidationException(violations);
+            throw new ModelValidationException(violations);
         }
     }
 }

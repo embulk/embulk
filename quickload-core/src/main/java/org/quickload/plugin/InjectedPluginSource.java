@@ -7,8 +7,9 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.quickload.config.ModelManager;
+import org.quickload.model.ModelManager;
 import org.quickload.config.ConfigException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * InjectedPluginSource loads plugins bound by Guice.
@@ -56,16 +57,14 @@ public class InjectedPluginSource
         this.injector = injector;
     }
 
-    public <T> T newPlugin(Class<T> iface, String configExpression) throws PluginSourceNotMatchException
+    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
     {
-        // TODO cache
-
         Task<T> task;
         try {
-            task = (Task<T>) modelManager.getObjectMapper().readValue(configExpression, Task.class);
-        } catch (IOException ex) {
+            task = (Task<T>) modelManager.readJsonObject(typeConfig, Task.class);
+        } catch (RuntimeException ex) {
             // TODO throw PluginSourceNotMatchException if injected field does not exist
-            throw new ConfigException(ex);
+            throw ex;
         }
 
         return injector.getInstance(Key.get(iface, Names.named(task.getName())));

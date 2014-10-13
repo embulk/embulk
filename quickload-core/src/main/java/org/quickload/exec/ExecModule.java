@@ -4,7 +4,7 @@ import com.google.inject.Module;
 import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
-import org.quickload.config.ModelManager;
+import org.quickload.model.ModelManager;
 import org.quickload.record.TypeManager;
 
 public class ExecModule

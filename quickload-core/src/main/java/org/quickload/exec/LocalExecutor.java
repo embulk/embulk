@@ -5,17 +5,18 @@ import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.base.Function;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
-import org.quickload.config.DynamicModel;
-import org.quickload.config.ModelManager;
+import org.quickload.model.ModelManager;
 import org.quickload.plugin.PluginManager;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.InputTransaction;
 import org.quickload.spi.OutputTransaction;
+import org.quickload.spi.Task;
 import org.quickload.spi.InputTask;
 import org.quickload.spi.OutputTask;
 import org.quickload.spi.InputProcessor;
@@ -41,10 +42,11 @@ public class LocalExecutor
     private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
     public interface LocalPluginTask
-            extends PluginManager.PluginTask, DynamicModel<LocalPluginTask>
+            extends Task
     {
+        // TODO
         @Config("ConfigExpression")
-        public String getConfigExpression();
+        public JsonNode getConfigExpression();
     }
 
     @Inject
@@ -54,14 +56,14 @@ public class LocalExecutor
         this.pluginManager = pluginManager;
     }
 
-    protected InputPlugin newInputPlugin(String configExpression)
+    protected InputPlugin newInputPlugin(JsonNode typeConfig)
     {
-        return pluginManager.newPlugin(InputPlugin.class, configExpression);
+        return pluginManager.newPlugin(InputPlugin.class, typeConfig);
     }
 
-    protected OutputPlugin newOutputPlugin(String configExpression)
+    protected OutputPlugin newOutputPlugin(JsonNode typeConfig)
     {
-        return pluginManager.newPlugin(OutputPlugin.class, configExpression);
+        return pluginManager.newPlugin(OutputPlugin.class, typeConfig);
     }
 
     public void configure(ConfigSource config)
@@ -82,15 +84,15 @@ public class LocalExecutor
         // InputTask and OutputTask must be serializable
         try {
             // TODO add ModelManager.serialize method
-            String serialized = modelManager.getObjectMapper().writeValueAsString(inputTask);
+            String serialized = modelManager.writeJson(inputTask);
             System.out.println("serialized input task: "+serialized);  // XXX
-        } catch (JsonProcessingException ex) {
+        } catch (RuntimeException ex) {
             throw new AssertionError(String.format("InputTask '%s' must be serializable", inputTask.getClass()), ex);
         }
         try {
-            String serialized = modelManager.getObjectMapper().writeValueAsString(outputTask);
+            String serialized = modelManager.writeJson(outputTask);
             System.out.println("serialized output task: "+serialized);  // XXX
-        } catch (JsonProcessingException ex) {
+        } catch (RuntimeException ex) {
             throw new AssertionError(String.format("OutputTask '%s' must be serializable", outputTask.getClass()), ex);
         }
     }

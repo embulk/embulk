@@ -5,21 +5,12 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import org.quickload.spi.InputPlugin;
-import org.quickload.spi.OutputPlugin;
-import org.quickload.spi.ParserPlugin;
-import org.quickload.spi.FormatterPlugin;
-import org.quickload.spi.ParserGuessPlugin;
-import org.quickload.spi.LineGuessPlugin;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.ConfigException;
+import org.quickload.spi.Task;
 
 public class PluginManager
 {
-    public static interface PluginTask
-    {
-        public String getConfigExpression();
-    }
-
     private final List<PluginSource> sources;
     private final Injector injector;
 
@@ -32,15 +23,15 @@ public class PluginManager
         this.injector = injector;
     }
 
-    public <T> T newPlugin(Class<T> iface, String configExpression)
+    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
     {
         for (PluginSource source : sources) {
             try {
-                return source.newPlugin(iface, configExpression);
+                return source.newPlugin(iface, typeConfig);
             } catch (PluginSourceNotMatchException e) {
             }
         }
 
-        throw new ConfigException("Plugin not found");  // TODO exception message should include configExpression in original format
+        throw new ConfigException("Plugin not found");  // TODO exception message should include typeConfig in original format
     }
 }

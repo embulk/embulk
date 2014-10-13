@@ -1,4 +1,4 @@
-package org.quickload.config;
+package org.quickload.model;
 
 import java.lang.reflect.Type;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -5,33 +5,28 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
-import org.quickload.config.ModelManager;
+import org.quickload.model.ModelManager;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class TypeManager
 {
-    private final ModelManager models;
     private final Map<String, Type> fromStringToTypeMap; // TODO inject?
 
     @Inject
-    public TypeManager(ModelManager models)
+    public TypeManager(ModelManager modelManager)
     {
-        this.models = models;
-        models.addModelSerDe(Type.class, new Function<SimpleModule, Void>() {
-            public Void apply(SimpleModule module)
-            {
-                module.addDeserializer(Type.class, new TypeDeserializer(TypeManager.this));
-                return null;
-            }
-        });
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Type.class, new TypeDeserializer(TypeManager.this));
+        modelManager.addObjectMapperModule(module);
 
         this.fromStringToTypeMap = new HashMap<String, Type>();
         regsterTypes();
     }
 
-    private void regsterTypes() {
+    private void regsterTypes()
+    {
         // TODO inject?
         fromStringToTypeMap.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
         fromStringToTypeMap.put(LongType.LONG.getName(), LongType.LONG);

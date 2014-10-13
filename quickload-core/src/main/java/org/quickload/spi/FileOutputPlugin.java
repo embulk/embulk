@@ -1,5 +1,6 @@
 package org.quickload.spi;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.plugin.PluginManager;
 
 public abstract class FileOutputPlugin <T extends FileOutputTask>
@@ -9,14 +10,16 @@ public abstract class FileOutputPlugin <T extends FileOutputTask>
 
     public abstract BufferOperator openFileOutputOperator(T task, int processorIndex);
 
-    public FormatterPlugin getFormatterPlugin(String configExpression)
+    public FormatterPlugin getFormatterPlugin(JsonNode typeConfig)
     {
-        return pluginManager.newPlugin(FormatterPlugin.class, configExpression);
+        return pluginManager.newPlugin(FormatterPlugin.class, typeConfig);
     }
 
     public OutputOperator openOperator(T task, int processorIndex)
     {
-        BufferOperator op = openFileOutputOperator(task, processorIndex);
-        return getFormatterPlugin(task.getConfigExpression()).openOperator(task.getFormatterTask(), processorIndex, op);
+        return null;
+        // TODO
+        //BufferOperator op = openFileOutputOperator(task, processorIndex);
+        //return getFormatterPlugin(task.getConfigExpression()).openOperator(task.getFormatterTask(), processorIndex, op);
     }
 }
