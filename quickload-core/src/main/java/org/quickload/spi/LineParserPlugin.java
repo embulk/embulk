@@ -1,23 +1,44 @@
 package org.quickload.spi;
 
+import org.quickload.config.Config;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.buffer.Buffer;
 
-public abstract class LineParserPlugin <T extends LineParserTask>
-        extends BasicParserPlugin<T>
+public abstract class LineParserPlugin
+        implements ParserPlugin
 {
-    public abstract T getTask(ConfigSource config);
+    public abstract TaskSource getLineParserTask(ProcConfig proc, ConfigSource config);
 
-    public abstract LineOperator openLineOperator(T task, int processorIndex, OutputOperator op);
+    public abstract LineOperator openLineOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, PageOperator next);
+
+    public interface ParserTask
+            extends Task
+    {
+        // TODO encoding, malformed input reporting behvior, etc.
+        @Config("encoding")/*, default = "utf8")*/
+        public String getEncoding();
+    }
 
     @Override
-    public BufferOperator openOperator(T task, int processorIndex, OutputOperator op)
+    public TaskSource getParserTask(ProcConfig proc, ConfigSource config)
     {
-        return new LineDecodeOperator(openLineOperator(task, processorIndex, op));
+        // TODO use ParserTask? is-a or has-a
+        return getLineParserTask(proc, config);
+    }
+
+    @Override
+    public BufferOperator openBufferOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, PageOperator next)
+    {
+        return new LineDecodeOperator(
+                openLineOperator(proc, taskSource, processorIndex, next));
     }
 
     public class LineDecodeOperator
-            extends AbstractOperator <LineOperator>
+            extends AbstractOperator<LineOperator>
             implements BufferOperator
     {
         public LineDecodeOperator(LineOperator next)

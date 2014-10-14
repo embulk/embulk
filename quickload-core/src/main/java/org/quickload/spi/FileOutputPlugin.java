@@ -1,23 +1,42 @@
 package org.quickload.spi;
 
+import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.quickload.config.Task;
+import org.quickload.config.Config;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.plugin.PluginManager;
 
-public abstract class FileOutputPlugin <T extends FileOutputTask>
-        extends BasicOutputPlugin<T>
+public abstract class FileOutputPlugin
+        extends BasicOutputPlugin
 {
+    protected final PluginManager pluginManager;  // TODO get from ProcTask?
     private FormatterPlugin formatter;
 
     public FileOutputPlugin(PluginManager pluginManager)
     {
-        super(pluginManager);
+        this.pluginManager = pluginManager;
     }
 
-    public abstract T getFileOutputTask(ConfigSource config, InputTask input,
-            FormatterTask formatterTask);
+    public abstract TaskSource getFileOutputTask(ProcTask proc, ConfigSource config);
 
-    public abstract BufferOperator openFileOutputOperator(T task, int processorIndex);
+    public abstract BufferOperator openBufferOutputOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex);
+
+    public interface OutputTask
+            extends Task
+    {
+        @Config("out:formatter_type") // TODO temporarily
+        @NotNull
+        public JsonNode getFormatterType();
+
+        public TaskSource getFormatterTask();
+        public void setFormatterTask(TaskSource task);
+
+        public TaskSource getFileOutputTask();
+        public void setFileOutputTask(TaskSource task);
+    }
 
     public FormatterPlugin newFormatterPlugin(JsonNode typeConfig)
     {
@@ -25,25 +44,23 @@ public abstract class FileOutputPlugin <T extends FileOutputTask>
     }
 
     @Override
-    protected Class<T> getTaskType()
+    public TaskSource getOutputTask(ProcTask proc, ConfigSource config)
     {
-        return (Class<T>) BasicPluginUtils.getTaskType(getClass(), "getFileOutputTask", ConfigSource.class, InputTask.class, FormatterTask.class);
+        OutputTask task = config.loadTask(OutputTask.class);
+        formatter = newFormatterPlugin(task.getFormatterType());
+        task.setFormatterTask(formatter.getFormatterTask(proc, config));
+        task.setFileOutputTask(getFileOutputTask(proc, config));
+        return config.dumpTask(task);
     }
 
     @Override
-    public T getTask(ConfigSource config, InputTask input)
+    public PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex)
     {
-        FileOutputTask task = config.load(FileOutputTask.class);
+        OutputTask task = taskSource.loadTask(OutputTask.class);
         formatter = newFormatterPlugin(task.getFormatterType());
-        return getFileOutputTask(config, input,
-                formatter.getFormatterTask(config, input));
-    }
-
-    public OutputOperator openOperator(T task, int processorIndex)
-    {
-        formatter = newFormatterPlugin(task.getFormatterType());
-        return formatter.openFormatterOperator(task.getFormatterTask(), processorIndex,
-                openFileOutputOperator(task, processorIndex));
+        return formatter.openPageOperator(proc, task.getFormatterTask(), processorIndex,
+                openBufferOutputOperator(proc, task.getFileOutputTask(), processorIndex));
     }
 
     @Override

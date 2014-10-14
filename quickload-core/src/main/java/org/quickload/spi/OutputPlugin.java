@@ -5,9 +5,10 @@ import org.quickload.config.TaskSource;
 
 public interface OutputPlugin
 {
-    public OutputTransaction newOutputTransaction(ConfigSource config);
+    public OutputTransaction newOutputTransaction();
 
-    public OutputOperator openOutputOperator(TaskSource taskSource, int processorIndex);
+    public PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex);
 
     public void shutdown();
 }

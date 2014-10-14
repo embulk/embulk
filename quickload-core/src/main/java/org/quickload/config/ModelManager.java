@@ -1,4 +1,4 @@
-package org.quickload.model;
+package org.quickload.config;
 
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
@@ -30,17 +30,17 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class ModelManager
 {
     private final ObjectMapper objectMapper;
-    private final ModelValidator modelValidator;
+    private final TaskValidator taskValidator;
 
     @Inject
     public ModelManager()
     {
         this.objectMapper = new ObjectMapper().findAndRegisterModules();
-        this.modelValidator = new ModelValidator(
+        this.taskValidator = new TaskValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
         SimpleModule modelModule = new SimpleModule();
-        modelModule.addSerializer(ModelAccessor.class, new AccessorSerializer());
+        modelModule.addSerializer(Task.class, new TaskSerializer());
         addObjectMapperModule(modelModule);
     }
 
@@ -50,14 +50,14 @@ public class ModelManager
         objectMapper.registerModule(module);
     }
 
-    public <T> T readModelAccessor(JsonNode json, Class<T> iface)
+    public <T extends Task> T readTask(JsonNode json, Class<T> iface)
     {
-        return readModelAccessor(json.traverse(), iface);
+        return readTask(json.traverse(), iface);
     }
 
-    public <T> T readModelAccessor(JsonParser json, Class<T> iface)
+    public <T extends Task> T readTask(JsonParser json, Class<T> iface)
     {
-        return readModelAccessor(json, iface, new Function<Method, Optional<String>>() {
+        return readTask(json, iface, new Function<Method, Optional<String>>() {
             public Optional<String> apply(Method method)
             {
                 return Optional.absent();
@@ -65,17 +65,17 @@ public class ModelManager
         });
     }
 
-    public <T> T readModelAccessor(JsonNode json, Class<T> iface,
+    public <T extends Task> T readTask(JsonNode json, Class<T> iface,
             Function<Method, Optional<String>> jsonKeyMapper)
     {
-        return readModelAccessor(json.traverse(), iface, jsonKeyMapper);
+        return readTask(json.traverse(), iface, jsonKeyMapper);
     }
 
-    public <T> T readModelAccessor(JsonParser json, Class<T> iface,
+    public <T extends Task> T readTask(JsonParser json, Class<T> iface,
             Function<Method, Optional<String>> jsonKeyMapper)
     {
         try {
-            return (T) new AccessorDeserializer(iface, jsonKeyMapper).deserialize(
+            return (T) new TaskDeserializer(iface, jsonKeyMapper).deserialize(
                     json, objectMapper.getDeserializationContext());
         } catch (IOException ex) {
             // TODO exception class
@@ -147,7 +147,7 @@ public class ModelManager
     static Map<String, FieldEntry> getterMappings(Class<?> iface, Function<Method, Optional<String>> jsonKeyMapper)
     {
         ImmutableMap.Builder<String, FieldEntry> builder = ImmutableMap.builder();
-        for (Map.Entry<String, Method> getter : ModelAccessorHandler.fieldGetters(iface).entrySet()) {
+        for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
             Method method = getter.getValue();
             String fieldName = getter.getKey();
             Type fieldType = method.getGenericReturnType();
@@ -157,13 +157,13 @@ public class ModelManager
         return builder.build();
     }
 
-    class AccessorDeserializer <T>
+    class TaskDeserializer <T>
             extends JsonDeserializer<T>
     {
         private final Class<T> iface;
         private final Map<String, FieldEntry> mappings;
 
-        public AccessorDeserializer(Class<T> iface, Function<Method, Optional<String>> jsonKeyMapper)
+        public TaskDeserializer(Class<T> iface, Function<Method, Optional<String>> jsonKeyMapper)
         {
             this.iface = iface;
             this.mappings = getterMappings(iface, jsonKeyMapper);
@@ -191,21 +191,21 @@ public class ModelManager
             }
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] { iface },
-                    new ModelAccessorHandler(iface, modelValidator, objects));
+                    new TaskInvocationHandler(iface, taskValidator, objects));
         }
     }
 
-    class AccessorSerializer
-            extends JsonSerializer<ModelAccessor>
+    class TaskSerializer
+            extends JsonSerializer<Task>
     {
         @Override
-        public void serialize(ModelAccessor value, JsonGenerator jgen, SerializerProvider provider)
+        public void serialize(Task value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException
         {
             if (value instanceof Proxy) {
                 Object handler = Proxy.getInvocationHandler(value);
-                if (handler instanceof ModelAccessorHandler) {
-                    ModelAccessorHandler h = (ModelAccessorHandler) handler;
+                if (handler instanceof TaskInvocationHandler) {
+                    TaskInvocationHandler h = (TaskInvocationHandler) handler;
                     Map<String, Object> objects = h.getObjects();
                     jgen.writeStartObject();
                     for (Map.Entry<String, Object> pair : objects.entrySet()) {
@@ -217,7 +217,7 @@ public class ModelManager
                 }
             }
             // TODO exception class & message
-            throw new UnsupportedOperationException("Serializing ModelAccessor is not supported");
+            throw new UnsupportedOperationException("Serializing Task is not supported");
         }
     }
 }

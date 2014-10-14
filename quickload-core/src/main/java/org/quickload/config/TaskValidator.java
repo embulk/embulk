@@ -1,23 +1,23 @@
-package org.quickload.model;
+package org.quickload.config;
 
 import java.util.Set;
 import javax.validation.Validator;
 import javax.validation.ConstraintViolation;
 
-public class ModelValidator
+public class TaskValidator
 {
     private final Validator validator;
 
-    public ModelValidator(Validator validator)
+    public TaskValidator(Validator validator)
     {
         this.validator = validator;
     }
 
-    public <T> void validateModel(T model) throws ModelValidationException
+    public <T> void validateModel(T model) throws TaskValidationException
     {
         Set<ConstraintViolation<T>> violations = validator.validate(model);
         if (!violations.isEmpty()) {
-            throw new ModelValidationException(violations);
+            throw new TaskValidationException(violations);
         }
     }
 }

@@ -1,18 +1,18 @@
 package org.quickload.exec;
 
 import org.quickload.record.Page;
-import org.quickload.spi.OutputOperator;
+import org.quickload.spi.PageOperator;
 import org.quickload.spi.Report;
 
 public class MonitoringOperator
-        implements OutputOperator
+        implements PageOperator
 {
-    private final OutputOperator next;
+    private final PageOperator next;
     private Report report;
     private boolean failed;
     private boolean completed;
 
-    public MonitoringOperator(OutputOperator next)
+    public MonitoringOperator(PageOperator next)
     {
         this.next = next;
     }

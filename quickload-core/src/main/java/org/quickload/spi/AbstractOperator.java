@@ -1,11 +1,11 @@
 package org.quickload.spi;
 
-public abstract class AbstractOperator <O extends Operator>
+public abstract class AbstractOperator <NextOperator extends Operator>
         implements Operator
 {
-    protected O next;
+    protected NextOperator next;
 
-    public AbstractOperator(O next)
+    public AbstractOperator(NextOperator next)
     {
         this.next = next;
     }

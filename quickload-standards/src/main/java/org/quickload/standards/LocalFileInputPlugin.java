@@ -5,6 +5,8 @@ import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.exec.BufferManager;
 import org.quickload.plugin.PluginManager;
@@ -18,7 +20,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public class LocalFileInputPlugin
-        extends FileInputPlugin<LocalFileInputPlugin.Task>
+        extends FileInputPlugin
 {
     @Inject
     public LocalFileInputPlugin(PluginManager pluginManager) {
@@ -27,8 +29,8 @@ public class LocalFileInputPlugin
 
     // TODO consider when the page allocator object is released?
 
-    public interface Task
-            extends FileInputTask
+    public interface PluginTask
+            extends Task
     {
         @Config("in:paths") // TODO temporarily added 'in:'
         @NotNull
@@ -36,28 +38,26 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public Task getFileInputTask(ConfigSource config, ParserTask parserTask)
+    public TaskSource getFileInputTask(ProcConfig proc, ConfigSource config)
     {
-        Task task = config.load(Task.class);
-        task.setProcessorCount(task.getPaths().size());
-        task.setSchema(parserTask.getSchema());
-        task.setParserTask(config.dumpTask(parserTask));
-        task.validate();
-        return task;
+        PluginTask task = config.loadTask(PluginTask.class);
+        proc.setProcessorCount(task.getPaths().size());
+        return config.dumpTask(task);
     }
 
     @Override
-    public InputProcessor startFileInputProcessor(final Task task,
-            final int processorIndex, final BufferOperator op)
+    public InputProcessor startFileInputProcessor(ProcTask proc,
+            TaskSource taskSource, final int processorIndex, final BufferOperator next)
     {
-        return ThreadInputProcessor.start(op, new Function<BufferOperator, ReportBuilder>() {
-            public ReportBuilder apply(BufferOperator op) {
-                return readFile(task, processorIndex, op);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
+            public ReportBuilder apply(BufferOperator next) {
+                return readFile(task, processorIndex, next);
             }
         });
     }
 
-    public static ReportBuilder readFile(Task task, int processorIndex, BufferOperator op)
+    public static ReportBuilder readFile(PluginTask task, int processorIndex, BufferOperator next)
     {
         // TODO ad-hoc
         String path = task.getPaths().get(processorIndex);
@@ -72,7 +72,7 @@ public class LocalFileInputPlugin
                     offset += len;
                 }
                 Buffer buffer = new Buffer(bytes);
-                op.addBuffer(buffer);
+                next.addBuffer(buffer);
             }
         } catch (Exception e) {
             e.printStackTrace(); // TODO

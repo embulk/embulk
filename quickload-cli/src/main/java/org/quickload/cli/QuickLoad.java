@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.quickload.config.ConfigSource;
-import org.quickload.model.ModelManager;
+import org.quickload.config.ModelManager;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;

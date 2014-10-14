@@ -1,4 +1,4 @@
-package org.quickload.model;
+package org.quickload.config;
 
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
@@ -9,17 +9,17 @@ import java.util.Set;
 import java.util.HashSet;
 import com.google.common.collect.ImmutableMap;
 
-class ModelAccessorHandler
+class TaskInvocationHandler
         implements InvocationHandler
 {
     private final Class<?> iface;
-    private final ModelValidator modelValidator;
+    private final TaskValidator taskValidator;
     private final Map<String, Object> objects;
 
-    public ModelAccessorHandler(Class<?> iface, ModelValidator modelValidator, Map<String, Object> objects)
+    public TaskInvocationHandler(Class<?> iface, TaskValidator taskValidator, Map<String, Object> objects)
     {
         this.iface = iface;
-        this.modelValidator = modelValidator;
+        this.taskValidator = taskValidator;
         this.objects = objects;
     }
 
@@ -54,8 +54,8 @@ class ModelAccessorHandler
 
     protected boolean invokeEquals(Object other)
     {
-        return (other instanceof ModelAccessorHandler) &&
-            objects.equals(((ModelAccessorHandler) other).objects);
+        return (other instanceof TaskInvocationHandler) &&
+            objects.equals(((TaskInvocationHandler) other).objects);
     }
 
     protected Object invokeGetter(Method method, String fieldName)
@@ -98,7 +98,7 @@ class ModelAccessorHandler
             return false;
 
         case "validate":
-            modelValidator.validateModel(proxy);
+            taskValidator.validateModel(proxy);
             return proxy;
 
         case "toString":

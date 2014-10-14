@@ -5,9 +5,10 @@ import org.quickload.config.TaskSource;
 
 public interface FormatterPlugin
 {
-    public FormatterTask getFormatterTask(ConfigSource config, InputTask input);
+    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config);
 
-    public OutputOperator openFormatterOperator(TaskSource taskSource, int processorIndex, BufferOperator op);
+    public PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, BufferOperator next);
 
     public void shutdown();
 }

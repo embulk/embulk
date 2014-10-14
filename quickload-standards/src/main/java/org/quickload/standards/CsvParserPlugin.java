@@ -14,7 +14,7 @@ import org.quickload.config.*;
 import org.quickload.spi.*;
 
 public class CsvParserPlugin
-        extends LineParserPlugin<CsvParserPlugin.Task>
+        extends LineParserPlugin
 {
     private final BufferManager bufferManager;
 
@@ -24,8 +24,8 @@ public class CsvParserPlugin
         this.bufferManager = bufferManager;
     }
 
-    public interface Task
-            extends LineParserTask
+    public interface PluginTask
+            extends Task
     {
         @Config("in:schema")
         @NotNull
@@ -33,18 +33,19 @@ public class CsvParserPlugin
     }
 
     @Override
-    public Task getTask(ConfigSource config)
+    public TaskSource getLineParserTask(ProcConfig proc, ConfigSource config)
     {
-        Task task = config.load(Task.class);
-        task.validate();
-        return task;
+        PluginTask task = config.loadTask(PluginTask.class);
+        proc.setSchema(task.getSchema());
+        return config.dumpTask(task);
     }
 
     @Override
-    public LineOperator openLineOperator(Task task, int processorIndex,
-            OutputOperator op)
+    public LineOperator openLineOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, PageOperator next)
     {
-        return new Operator(task.getSchema(), processorIndex, op);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        return new Operator(proc.getSchema(), processorIndex, next);
     }
 
     public void shutdown()
@@ -53,18 +54,18 @@ public class CsvParserPlugin
     }
 
     class Operator
-            extends AbstractOperator<OutputOperator>
+            extends AbstractOperator<PageOperator>
             implements LineOperator
     {
         private final Schema schema;
         private final PageBuilder pageBuilder;
 
         public Operator(Schema schema, int processorIndex,
-                OutputOperator op)
+                PageOperator next)
         {
-            super(op);
+            super(next);
             this.schema = schema;
-            this.pageBuilder = new PageBuilder(bufferManager, schema, op);
+            this.pageBuilder = new PageBuilder(bufferManager, schema, next);
         }
 
         @Override

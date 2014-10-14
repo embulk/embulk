@@ -3,12 +3,14 @@ package org.quickload.standards;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.exec.BufferManager;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.record.*;
 import org.quickload.spi.*;
 
 public class CsvFormatterPlugin
-        extends BasicFormatterPlugin<CsvFormatterPlugin.Task>
+        implements FormatterPlugin
 {
     private final BufferManager bufferManager;
 
@@ -18,25 +20,24 @@ public class CsvFormatterPlugin
         this.bufferManager = bufferManager;
     }
 
-    public interface Task
-            extends FormatterTask
+    public interface PluginTask
+            extends Task
     {
-        public void setSchema(Schema schema);
     }
 
     @Override
-    public Task getTask(ConfigSource source, InputTask input)
+    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
     {
-        Task task = source.load(Task.class);
-        task.setSchema(input.getSchema());
-        task.validate();
-        return task;
+        PluginTask task = config.loadTask(PluginTask.class);
+        return config.dumpTask(task);
     }
 
     @Override
-    public OutputOperator openOperator(Task task, int processorIndex, BufferOperator op)
+    public PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, BufferOperator next)
     {
-        return new Operator(task.getSchema(), processorIndex, op);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        return new PluginOperator(proc.getSchema(), processorIndex, next);
     }
 
     public void shutdown()
@@ -44,17 +45,17 @@ public class CsvFormatterPlugin
         // TODO
     }
 
-    class Operator
+    class PluginOperator
             extends AbstractOperator<BufferOperator>
-            implements OutputOperator
+            implements PageOperator
     {
         private final Schema schema;
         private final PageReader pageReader;
         private final int processorIndex;
 
-        private Operator(Schema schema, int processorIndex, BufferOperator op)
+        private PluginOperator(Schema schema, int processorIndex, BufferOperator next)
         {
-            super(op);
+            super(next);
             this.schema = schema;
             this.pageReader = new PageReader(bufferManager, schema);
             this.processorIndex = processorIndex;

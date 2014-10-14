@@ -4,29 +4,30 @@ import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
 import org.quickload.spi.BufferOperator;
 import org.quickload.spi.FileOutputPlugin;
-import org.quickload.spi.FileOutputTask;
-import org.quickload.spi.FormatterTask;
-import org.quickload.spi.InputTask;
+import org.quickload.spi.ProcTask;
 import org.quickload.spi.Report;
 import org.quickload.spi.FailedReport;
 
 import java.util.List;
 
 public class LocalFileOutputPlugin
-        extends FileOutputPlugin<LocalFileOutputPlugin.Task>
+        extends FileOutputPlugin
 {
     @Inject
-    public LocalFileOutputPlugin(PluginManager pluginManager) {
+    public LocalFileOutputPlugin(PluginManager pluginManager)
+    {
         super(pluginManager);
     }
 
-    public interface Task
-            extends FileOutputTask
+    public interface PluginTask
+            extends Task
     {
         @Config("out:paths")
         @NotNull
@@ -34,29 +35,29 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public Task getFileOutputTask(ConfigSource config, InputTask input,
-            FormatterTask formatterTask)
+    public TaskSource getFileOutputTask(ProcTask proc, ConfigSource config)
     {
-        Task task = config.load(Task.class);
-        task.setFormatterTask(config.dumpTask(formatterTask));
-        task.validate();
-        return task;
+        PluginTask task = config.loadTask(PluginTask.class);
+        return config.dumpTask(task);
     }
 
     @Override
-    public BufferOperator openFileOutputOperator(final Task task, final int processorIndex)
+    public BufferOperator openBufferOutputOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex)
     {
-        return new Operator(task, processorIndex);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        return new PluginOperator(task, processorIndex);
     }
 
-    // TODO can be Operator ported to standard library?
-    public class Operator
+    // TODO can be PluginOperator ported to standard library?
+    public static class PluginOperator
             implements BufferOperator
     {
-        private final Task task;
+        private final PluginTask task;
         private final int processorIndex;
 
-        Operator(Task task, int processorIndex) {
+        PluginOperator(PluginTask task, int processorIndex)
+        {
             this.task = task;
             this.processorIndex = processorIndex;
         }

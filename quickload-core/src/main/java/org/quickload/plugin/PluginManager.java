@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.ConfigException;
-import org.quickload.spi.Task;
 
 public class PluginManager
 {

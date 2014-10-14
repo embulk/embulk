@@ -1,14 +1,15 @@
 package org.quickload.plugin;
 
 import java.io.IOException;
+import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.quickload.model.ModelManager;
-import org.quickload.model.ModelAccessor;
+import org.quickload.config.ModelManager;
+import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,20 +31,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class InjectedPluginSource
         implements PluginSource
 {
-    public static class Task
+    public static class PluginSourceTask
     {
-        private final String name;
+        private final String injected;
 
         @JsonCreator
-        public Task(@JsonProperty("injected") String name)
+        public PluginSourceTask(
+                @JsonProperty("injected") String injected)
         {
-            this.name = name;
+            this.injected = injected;
         }
 
         @JsonProperty("injected")
-        public String getName()
+        public String getInjected()
         {
-            return name;
+            return injected;
         }
     }
 
@@ -61,14 +63,14 @@ public class InjectedPluginSource
 
     public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
     {
-        Task task;
+        PluginSourceTask task;
         try {
-            task = modelManager.readJsonObject(typeConfig, Task.class);
+            task = modelManager.readJsonObject(typeConfig, PluginSourceTask.class);
         } catch (RuntimeException ex) {
             // TODO throw PluginSourceNotMatchException if injected field does not exist
             throw ex;
         }
 
-        return injector.getInstance(Key.get(iface, Names.named(task.getName())));
+        return injector.getInstance(Key.get(iface, Names.named(task.getInjected())));
     }
 }

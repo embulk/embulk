@@ -1,10 +1,12 @@
 package org.quickload.spi;
 
 import java.util.List;
+import org.quickload.config.TaskSource;
+import org.quickload.config.ConfigSource;
 
 public interface OutputTransaction
 {
-    public OutputTask getOutputTask(InputTask input);
+    public TaskSource getOutputTask(ProcTask proc, ConfigSource config);
 
     public void begin();
 

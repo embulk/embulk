@@ -7,16 +7,16 @@ public abstract class ThreadInputProcessor<T extends Operator>
         implements InputProcessor, Runnable
 {
     protected final Thread thread;
-    protected final T op;
+    protected final T next;
     protected Report report;
 
-    public static <T extends Operator> ThreadInputProcessor start(T op, final Function<T, ReportBuilder> body)
+    public static <T extends Operator> ThreadInputProcessor start(T next, final Function<T, ReportBuilder> body)
     {
-        ThreadInputProcessor<T> proc = new ThreadInputProcessor<T>(op) {
+        ThreadInputProcessor<T> proc = new ThreadInputProcessor<T>(next) {
             @Override
             public ReportBuilder runThread()
             {
-                return body.apply(op);
+                return body.apply(next);
             }
 
             @Override
@@ -28,9 +28,9 @@ public abstract class ThreadInputProcessor<T extends Operator>
         return proc;
     }
 
-    public ThreadInputProcessor(T op)
+    public ThreadInputProcessor(T next)
     {
-        this.op = op;
+        this.next = next;
         this.thread = new Thread(this);
     }
 
@@ -41,9 +41,9 @@ public abstract class ThreadInputProcessor<T extends Operator>
     {
         try {
             ReportBuilder reportBuilder = runThread();
-            this.report = reportBuilder.build(op.completed());
+            this.report = reportBuilder.build(next.completed());
         } catch (Exception ex) {
-            this.report = new FailedReport(ex, op.failed(ex));
+            this.report = new FailedReport(ex, next.failed(ex));
         }
     }
 
@@ -63,6 +63,6 @@ public abstract class ThreadInputProcessor<T extends Operator>
     @Override
     public void close() throws Exception
     {
-        op.close();
+        next.close();
     }
 }

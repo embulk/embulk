@@ -5,9 +5,10 @@ import org.quickload.config.TaskSource;
 
 public interface ParserPlugin
 {
-    public ParserTask getParserTask(ConfigSource config);
+    public TaskSource getParserTask(ProcConfig proc, ConfigSource config);
 
-    public BufferOperator openParserOperator(TaskSource taskSource, int processorIndex, OutputOperator op);
+    public BufferOperator openBufferOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, PageOperator next);
 
     public void shutdown();
 }

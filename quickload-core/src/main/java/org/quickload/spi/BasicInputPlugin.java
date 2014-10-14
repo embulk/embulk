@@ -2,104 +2,40 @@ package org.quickload.spi;
 
 import java.util.List;
 import org.quickload.config.ConfigSource;
-import org.quickload.plugin.PluginManager;
 import org.quickload.config.TaskSource;
 
-public abstract class BasicInputPlugin <T extends InputTask>
+public abstract class BasicInputPlugin
         implements InputPlugin, InputTransaction
 {
-    protected PluginManager pluginManager;
+    @Override  // InputTransaction
+    public abstract TaskSource getInputTask(ProcConfig proc, ConfigSource config);
 
-    private ConfigSource config;
-    private T task;
-
-    public BasicInputPlugin(PluginManager pluginManager)
-    {
-        this.pluginManager = pluginManager;
-    }
-
-    public abstract T getTask(ConfigSource config);
-
-    public abstract InputProcessor startProcessor(T task,
-            int processorIndex, OutputOperator op);
-
-    public void begin(T task)
-    {
-    }
-
-    public void commit(T task, List<Report> reports)
-    {
-    }
-
-    public void abort(T task)
-    {
-    }
-
-    /*
-     * InputTransaction
-     */
-    @Override
-    public T getInputTask()
-    {
-        task = getTask(config);
-        return task;
-    }
-
-    /*
-     * InputTransaction
-     */
-    @Override
+    @Override  // InputTransaction
     public void begin()
     {
-        begin(task);
     }
 
-    /*
-     * InputTransaction
-     */
-    @Override
+    @Override  // InputTransaction
     public void commit(List<Report> reports)
     {
-        commit(task, reports);
     }
 
-    /*
-     * InputTransaction
-     */
-    @Override
+    @Override  // InputTransaction
     public void abort()
     {
-        abort(task);
     }
 
-    /*
-     * InputPlugin
-     */
-    @Override
-    public InputTransaction newInputTransaction(ConfigSource config)
+    @Override  // InputPlugin
+    public InputTransaction newInputTransaction()
     {
-        this.config = config;
         return this;
     }
 
-    protected Class<T> getTaskType()
-    {
-        return (Class<T>) BasicPluginUtils.getTaskType(getClass(), "getTask", ConfigSource.class);
-    }
+    @Override  // InputPlugin
+    public abstract InputProcessor startInputProcessor(ProcTask proc,
+            TaskSource taskSource, int processorIndex, PageOperator next);
 
-    /*
-     * InputPlugin
-     */
-    public InputProcessor startInputProcessor(TaskSource taskSource,
-            int processorIndex, OutputOperator op)
-    {
-        return startProcessor(taskSource.load(getTaskType()), processorIndex, op);
-    }
-
-    /*
-     * InputPlugin
-     */
-    @Override
+    @Override  // InputPlugin
     public void shutdown()
     {
     }

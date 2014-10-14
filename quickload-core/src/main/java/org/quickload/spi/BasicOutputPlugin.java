@@ -2,100 +2,40 @@ package org.quickload.spi;
 
 import java.util.List;
 import org.quickload.config.ConfigSource;
-import org.quickload.plugin.PluginManager;
 import org.quickload.config.TaskSource;
 
-public abstract class BasicOutputPlugin <T extends OutputTask>
+public abstract class BasicOutputPlugin
         implements OutputPlugin, OutputTransaction
 {
-    protected PluginManager pluginManager;
+    @Override  // OutputTransaction
+    public abstract TaskSource getOutputTask(ProcTask proc, ConfigSource config);
 
-    private ConfigSource config;
-    private T task;
-
-    public BasicOutputPlugin(PluginManager pluginManager)
-    {
-        this.pluginManager = pluginManager;
-    }
-
-    public abstract T getTask(ConfigSource config, InputTask input);
-
-    public abstract OutputOperator openOperator(T task, int processorIndex);
-
-    public void begin(T task)
-    {
-    }
-
-    public void commit(T task, List<Report> reports)
-    {
-    }
-
-    public void abort(T task)
-    {
-    }
-
-    /*
-     * OutputTransaction
-     */
-    @Override
-    public T getOutputTask(InputTask input)
-    {
-        task = getTask(config, input);
-        return task;
-    }
-
-    /*
-     * OutputTransaction
-     */
-    @Override
+    @Override  // OutputTransaction
     public void begin()
     {
-        begin(task);
     }
 
-    /*
-     * OutputTransaction
-     */
-    @Override
+    @Override  // OutputTransaction
     public void commit(List<Report> reports)
     {
-        commit(task, reports);
     }
 
-    /*
-     * OutputTransaction
-     */
-    @Override
+    @Override  // OutputTransaction
     public void abort()
     {
-        abort(task);
     }
 
-    /*
-     * OutputPlugin
-     */
-    @Override
-    public OutputTransaction newOutputTransaction(ConfigSource config)
+    @Override  // OutputPlugin
+    public OutputTransaction newOutputTransaction()
     {
-        this.config = config;
         return this;
     }
 
-    protected Class<T> getTaskType()
-    {
-        return (Class<T>) BasicPluginUtils.getTaskType(getClass(), "getTask", ConfigSource.class, InputTask.class);
-    }
+    @Override  // OutputPlugin
+    public abstract PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex);
 
-    @Override
-    public OutputOperator openOutputOperator(TaskSource taskSource, int processorIndex)
-    {
-        return openOperator(taskSource.load(getTaskType()), processorIndex);
-    }
-
-    /*
-     * OutputPlugin
-     */
-    @Override
+    @Override  // OutputPlugin
     public void shutdown()
     {
     }

@@ -1,31 +1,33 @@
 package org.quickload.standards;
 
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.record.Page;
 import org.quickload.record.Schema;
 import org.quickload.spi.*;
 
 public class MessagePackFormatterPlugin
-        extends BasicFormatterPlugin<MessagePackFormatterPlugin.Task>
+        implements FormatterPlugin
 {
-    public interface Task
-            extends FormatterTask
+    public interface PluginTask
+            extends Task
     {
-        public void setSchema(Schema schema);
     }
 
     @Override
-    public Task getTask(ConfigSource config, InputTask input)
+    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
     {
-        Task task = config.load(Task.class);
-        task.setSchema(input.getSchema());
-        return task;
+        PluginTask task = config.loadTask(PluginTask.class);
+        return config.dumpTask(task);
     }
 
     @Override
-    public OutputOperator openOperator(Task task, int processorIndex, BufferOperator op)
+    public PageOperator openPageOperator(ProcTask proc,
+            TaskSource taskSource, int processorIndex, BufferOperator next)
     {
-        return new Operator(task.getSchema(), processorIndex, op);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        return new PluginOperator(proc.getSchema(), processorIndex, next);
     }
 
     @Override
@@ -34,16 +36,16 @@ public class MessagePackFormatterPlugin
         // TODO
     }
 
-    class Operator
+    class PluginOperator
             extends AbstractOperator<BufferOperator>
-            implements OutputOperator
+            implements PageOperator
     {
         private final Schema schema;
         private final int processorIndex;
 
-        private Operator(Schema schema, int processorIndex, BufferOperator op)
+        private PluginOperator(Schema schema, int processorIndex, BufferOperator next)
         {
-            super(op);
+            super(next);
             this.schema = schema;
             this.processorIndex = processorIndex;
         }

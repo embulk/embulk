@@ -13,18 +13,19 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import org.quickload.model.ModelManager;
 
-public class TaskSerDe
+public class TaskSourceSerDe
 {
     @Inject
-    public TaskSerDe(ModelManager modelManager)
+    public TaskSourceSerDe(ModelManager modelManager)
     {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(TaskSource.class, new TaskSourceDeserializer(modelManager));
         module.addSerializer(TaskSource.class, new TaskSourceSerializer());
         modelManager.addObjectMapperModule(module);
     }
+
+    // TODO serde for ConfigSource
 
     private static class TaskSourceDeserializer
             extends JsonDeserializer<TaskSource>
@@ -56,7 +57,7 @@ public class TaskSerDe
         public void serialize(TaskSource value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException
         {
-            value.getSource().serialize(jgen, provider);
+            value.getData().serialize(jgen, provider);
         }
     }
 }

@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
-import org.quickload.model.ModelManager;
+import org.quickload.config.ModelManager;
 
 public class TypeManager
 {
