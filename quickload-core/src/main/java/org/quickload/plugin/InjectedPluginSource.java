@@ -8,6 +8,8 @@ import com.google.inject.name.Names;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.quickload.model.ModelManager;
+import org.quickload.model.ModelAccessor;
+import org.quickload.config.Config;
 import org.quickload.config.ConfigException;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -28,17 +30,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class InjectedPluginSource
         implements PluginSource
 {
-    public static class Task <T>
+    public static class Task
     {
         private final String name;
 
         @JsonCreator
-        public Task(@JsonProperty("name") String name)
+        public Task(@JsonProperty("injected") String name)
         {
             this.name = name;
         }
 
-        @JsonProperty("name")
+        @JsonProperty("injected")
         public String getName()
         {
             return name;
@@ -59,9 +61,9 @@ public class InjectedPluginSource
 
     public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
     {
-        Task<T> task;
+        Task task;
         try {
-            task = (Task<T>) modelManager.readJsonObject(typeConfig, Task.class);
+            task = modelManager.readJsonObject(typeConfig, Task.class);
         } catch (RuntimeException ex) {
             // TODO throw PluginSourceNotMatchException if injected field does not exist
             throw ex;

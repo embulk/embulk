@@ -1,9 +1,9 @@
 package org.quickload.spi;
 
 import java.util.List;
-
 import org.quickload.config.ConfigSource;
 import org.quickload.plugin.PluginManager;
+import org.quickload.config.TaskSource;
 
 public abstract class BasicInputPlugin <T extends InputTask>
         implements InputPlugin, InputTransaction
@@ -82,13 +82,18 @@ public abstract class BasicInputPlugin <T extends InputTask>
         return this;
     }
 
+    protected Class<T> getTaskType()
+    {
+        return (Class<T>) BasicPluginUtils.getTaskType(getClass(), "getTask", ConfigSource.class);
+    }
+
     /*
      * InputPlugin
      */
-    public InputProcessor startInputProcessor(InputTask task,
+    public InputProcessor startInputProcessor(TaskSource taskSource,
             int processorIndex, OutputOperator op)
     {
-        return startProcessor((T) task, processorIndex, op);
+        return startProcessor(taskSource.load(getTaskType()), processorIndex, op);
     }
 
     /*

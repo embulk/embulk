@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class ModelManager
@@ -32,7 +33,7 @@ public class ModelManager
     private final ModelValidator modelValidator;
 
     @Inject
-    public ModelManager(Set<Module> modules)
+    public ModelManager()
     {
         this.objectMapper = new ObjectMapper().findAndRegisterModules();
         this.modelValidator = new ModelValidator(
@@ -49,14 +50,14 @@ public class ModelManager
         objectMapper.registerModule(module);
     }
 
-    public <T> T readJsonObject(JsonNode json, Class<T> iface)
+    public <T> T readModelAccessor(JsonNode json, Class<T> iface)
     {
-        return readJsonObject(json.traverse(), iface);
+        return readModelAccessor(json.traverse(), iface);
     }
 
-    public <T> T readJsonObject(JsonParser json, Class<T> iface)
+    public <T> T readModelAccessor(JsonParser json, Class<T> iface)
     {
-        return readJsonObject(json, iface, new Function<Method, Optional<String>>() {
+        return readModelAccessor(json, iface, new Function<Method, Optional<String>>() {
             public Optional<String> apply(Method method)
             {
                 return Optional.absent();
@@ -64,18 +65,33 @@ public class ModelManager
         });
     }
 
-    public <T> T readJsonObject(JsonNode json, Class<T> iface,
+    public <T> T readModelAccessor(JsonNode json, Class<T> iface,
             Function<Method, Optional<String>> jsonKeyMapper)
     {
-        return readJsonObject(json.traverse(), iface, jsonKeyMapper);
+        return readModelAccessor(json.traverse(), iface, jsonKeyMapper);
     }
 
-    public <T> T readJsonObject(JsonParser json, Class<T> iface,
+    public <T> T readModelAccessor(JsonParser json, Class<T> iface,
             Function<Method, Optional<String>> jsonKeyMapper)
     {
         try {
             return (T) new AccessorDeserializer(iface, jsonKeyMapper).deserialize(
                     json, objectMapper.getDeserializationContext());
+        } catch (IOException ex) {
+            // TODO exception class
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public <T> T readJsonObject(JsonNode json, Class<T> klass)
+    {
+        return readJsonObject(json.traverse(), klass);
+    }
+
+    public <T> T readJsonObject(JsonParser json, Class<T> klass)
+    {
+        try {
+            return objectMapper.readValue(json, klass);
         } catch (IOException ex) {
             // TODO exception class
             throw new RuntimeException(ex);
@@ -92,16 +108,16 @@ public class ModelManager
         }
     }
 
-    //public <T> ObjectNode writeJsonObjectNode(T object)
-    //{
-    //    String json = writeJson(object);
-    //    try {
-    //        return (ObjectNode) objectMapper.readTree(json);
-    //    } catch (IOException ex) {
-    //        // TODO exception class
-    //        throw new RuntimeException(ex);
-    //    }
-    //}
+    public <T> ObjectNode writeJsonObjectNode(T object)
+    {
+        String json = writeJson(object);
+        try {
+            return (ObjectNode) objectMapper.readTree(json);
+        } catch (IOException ex) {
+            // TODO exception class
+            throw new RuntimeException(ex);
+        }
+    }
 
     private static class FieldEntry
     {

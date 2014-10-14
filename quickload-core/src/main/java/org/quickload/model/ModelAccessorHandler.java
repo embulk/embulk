@@ -72,6 +72,14 @@ class ModelAccessorHandler
         }
     }
 
+    public String invokeToString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append(iface.getName());
+        sb.append(objects);
+        return sb.toString();
+    }
+
     public Object invoke(Object proxy, Method method, Object[] args)
     {
         String methodName = method.getName();
@@ -95,8 +103,7 @@ class ModelAccessorHandler
 
         case "toString":
             checkArgumentLength(method, 0, methodName);
-            // TODO json?
-            return this.toString();
+            return invokeToString();
 
         default:
             {
@@ -110,6 +117,7 @@ class ModelAccessorHandler
                 if (fieldName != null) {
                     checkArgumentLength(method, 1, methodName);
                     invokeSetter(method, fieldName, args[0]);
+                    return this;
                 }
             }
         }

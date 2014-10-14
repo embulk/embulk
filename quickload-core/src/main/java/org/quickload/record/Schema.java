@@ -2,20 +2,19 @@ package org.quickload.record;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public class Schema
 {
     private final List<Column> columns;
 
     @JsonCreator
-    public Schema(
-            @JsonProperty("columns") List<Column> columns)
+    public Schema(List<Column> columns)
     {
         this.columns = columns;
     }
 
-    @JsonProperty("columns")
+    @JsonValue
     public List<Column> getColumns()
     {
         return columns;

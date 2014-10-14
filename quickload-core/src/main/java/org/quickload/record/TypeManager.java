@@ -1,14 +1,12 @@
 package org.quickload.record;
 
-import com.google.common.base.Function;
+import java.util.HashMap;
+import java.util.Map;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import org.quickload.model.ModelManager;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class TypeManager
 {

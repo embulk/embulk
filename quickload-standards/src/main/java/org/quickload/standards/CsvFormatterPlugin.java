@@ -3,11 +3,12 @@ package org.quickload.standards;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.exec.BufferManager;
+import org.quickload.config.ConfigSource;
 import org.quickload.record.*;
 import org.quickload.spi.*;
 
-public class CsvFormatterPlugin<T extends FormatterTask>
-        implements FormatterPlugin<T>
+public class CsvFormatterPlugin
+        extends BasicFormatterPlugin<CsvFormatterPlugin.Task>
 {
     private final BufferManager bufferManager;
 
@@ -17,11 +18,25 @@ public class CsvFormatterPlugin<T extends FormatterTask>
         this.bufferManager = bufferManager;
     }
 
-    @Override
-    public OutputOperator openOperator(T task, int processorIndex, BufferOperator op)
+    public interface Task
+            extends FormatterTask
     {
-        return new CSVFormatterOutputOperator(task.getSchema(), processorIndex,
-                op, bufferManager);
+        public void setSchema(Schema schema);
+    }
+
+    @Override
+    public Task getTask(ConfigSource source, InputTask input)
+    {
+        Task task = source.load(Task.class);
+        task.setSchema(input.getSchema());
+        task.validate();
+        return task;
+    }
+
+    @Override
+    public OutputOperator openOperator(Task task, int processorIndex, BufferOperator op)
+    {
+        return new Operator(task.getSchema(), processorIndex, op);
     }
 
     public void shutdown()
@@ -29,20 +44,20 @@ public class CsvFormatterPlugin<T extends FormatterTask>
         // TODO
     }
 
-    static class CSVFormatterOutputOperator extends AbstractOutputOperator
+    class Operator
+            extends AbstractOperator<BufferOperator>
+            implements OutputOperator
     {
         private final Schema schema;
+        private final PageReader pageReader;
         private final int processorIndex;
-        private final BufferOperator op;
-        private final BufferManager bufferManager;
 
-        private CSVFormatterOutputOperator(Schema schema, int processorIndex,
-                                           BufferOperator op, BufferManager bufferManager)
+        private Operator(Schema schema, int processorIndex, BufferOperator op)
         {
+            super(op);
             this.schema = schema;
+            this.pageReader = new PageReader(bufferManager, schema);
             this.processorIndex = processorIndex;
-            this.op = op;
-            this.bufferManager = bufferManager;
         }
 
         @Override
@@ -51,7 +66,6 @@ public class CsvFormatterPlugin<T extends FormatterTask>
             // TODO simple implementation
             final StringBuilder sbuf = new StringBuilder(); // TODO
 
-            PageReader pageReader = new PageReader(bufferManager, schema);
             RecordCursor recordCursor = pageReader.cursor(page);
 
             while (recordCursor.next()) {
@@ -80,7 +94,7 @@ public class CsvFormatterPlugin<T extends FormatterTask>
                 schema.consume(recordCursor, recordConsumer);
                 sbuf.append('\n');
             }
-            op.addBuffer(new Buffer(sbuf.toString().getBytes()));
+            next.addBuffer(new Buffer(sbuf.toString().getBytes()));
         }
 
         @Override

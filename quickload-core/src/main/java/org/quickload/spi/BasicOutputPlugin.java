@@ -1,9 +1,9 @@
 package org.quickload.spi;
 
 import java.util.List;
-
 import org.quickload.config.ConfigSource;
 import org.quickload.plugin.PluginManager;
+import org.quickload.config.TaskSource;
 
 public abstract class BasicOutputPlugin <T extends OutputTask>
         implements OutputPlugin, OutputTransaction
@@ -81,10 +81,15 @@ public abstract class BasicOutputPlugin <T extends OutputTask>
         return this;
     }
 
-    @Override
-    public OutputOperator openOutputOperator(OutputTask task, int processorIndex)
+    protected Class<T> getTaskType()
     {
-        return openOperator((T) task, processorIndex);
+        return (Class<T>) BasicPluginUtils.getTaskType(getClass(), "getTask", ConfigSource.class, InputTask.class);
+    }
+
+    @Override
+    public OutputOperator openOutputOperator(TaskSource taskSource, int processorIndex)
+    {
+        return openOperator(taskSource.load(getTaskType()), processorIndex);
     }
 
     /*

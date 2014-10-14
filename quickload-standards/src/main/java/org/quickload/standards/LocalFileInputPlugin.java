@@ -1,14 +1,13 @@
 package org.quickload.standards;
 
+import javax.validation.constraints.NotNull;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
-import org.quickload.config.DynamicModel;
 import org.quickload.exec.BufferManager;
 import org.quickload.plugin.PluginManager;
-import org.quickload.record.PageAllocator;
 import org.quickload.record.Schema;
 import org.quickload.spi.*;
 
@@ -18,53 +17,35 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-public class LocalFileCsvInputPlugin
-        extends FileInputPlugin<LocalFileCsvInputPlugin.Task>
+public class LocalFileInputPlugin
+        extends FileInputPlugin<LocalFileInputPlugin.Task>
 {
     @Inject
-    public LocalFileCsvInputPlugin(PluginManager pluginManager) {
+    public LocalFileInputPlugin(PluginManager pluginManager) {
         super(pluginManager);
     }
 
-    // TODO initialize page allocator object
     // TODO consider when the page allocator object is released?
 
     public interface Task
-            extends FileInputTask, DynamicModel<Task>
+            extends FileInputTask
     {
         @Config("in:paths") // TODO temporarily added 'in:'
+        @NotNull
         public List<String> getPaths();
-
-        @Config("in:schema") // TODO temporarily added 'in:'
-        public Schema getSchema();
-
-        @Config("ConfigExpression")
-        public String getConfigExpression(); // TODO make it more intuitive
-
-        public ParserTask getParserTask();
     }
 
     @Override
-    public Task getTask(ConfigSource config)
+    public Task getFileInputTask(ConfigSource config, ParserTask parserTask)
     {
         Task task = config.load(Task.class);
-        task.set("ProcessorCount", task.getPaths().size());
-
-        MyParserTask parserTask = config.load(MyParserTask.class);
-        parserTask.set("Schema", task.getSchema());
-
-        task.set("ParserTask", parserTask);
-
-        return task.validate();
+        task.setProcessorCount(task.getPaths().size());
+        task.setSchema(parserTask.getSchema());
+        task.setParserTask(config.dumpTask(parserTask));
+        task.validate();
+        return task;
     }
 
-    // TODO is the declaration needed? ParserTask should implement DynamicModel??
-    public interface MyParserTask
-            extends ParserTask, DynamicModel<MyParserTask>
-    {
-    }
-
-    // TODO port startFileInputProcessor
     @Override
     public InputProcessor startFileInputProcessor(final Task task,
             final int processorIndex, final BufferOperator op)

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.TaskSource;
 import org.quickload.model.ModelManager;
 import org.quickload.plugin.PluginManager;
 import org.quickload.spi.InputPlugin;
@@ -36,8 +37,9 @@ public class LocalExecutor
     private InputTransaction inputTran;
     private OutputTransaction outputTran;
 
-    private InputTask inputTask;
-    private OutputTask outputTask;
+    private int processorCount;
+    private TaskSource inputTaskSource;
+    private TaskSource outputTaskSource;
 
     private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
@@ -45,8 +47,12 @@ public class LocalExecutor
             extends Task
     {
         // TODO
-        @Config("ConfigExpression")
-        public JsonNode getConfigExpression();
+        @Config("in:type")
+        public JsonNode getInputType();
+
+        // TODO
+        @Config("out:type")
+        public JsonNode getOutputType();
     }
 
     @Inject
@@ -70,31 +76,25 @@ public class LocalExecutor
     {
         this.config = config;
         LocalPluginTask task = config.load(LocalPluginTask.class);
-        in = newInputPlugin(task.getConfigExpression());
-        out = newOutputPlugin(task.getConfigExpression());
+        in = newInputPlugin(task.getInputType());
+        out = newOutputPlugin(task.getOutputType());
         inputTran = in.newInputTransaction(config);
         outputTran = out.newOutputTransaction(config);
-        inputTask = inputTran.getInputTask();
-        outputTask = outputTran.getOutputTask(inputTask);
+        InputTask inputTask = inputTran.getInputTask();
+        OutputTask outputTask = outputTran.getOutputTask(inputTask);
+
+        processorCount = inputTask.getProcessorCount();
+        inputTaskSource = config.dumpTask(inputTask);
+        outputTaskSource = config.dumpTask(outputTask);
+
         validateTransaction();
     }
 
     private void validateTransaction()
     {
-        // InputTask and OutputTask must be serializable
-        try {
-            // TODO add ModelManager.serialize method
-            String serialized = modelManager.writeJson(inputTask);
-            System.out.println("serialized input task: "+serialized);  // XXX
-        } catch (RuntimeException ex) {
-            throw new AssertionError(String.format("InputTask '%s' must be serializable", inputTask.getClass()), ex);
-        }
-        try {
-            String serialized = modelManager.writeJson(outputTask);
-            System.out.println("serialized output task: "+serialized);  // XXX
-        } catch (RuntimeException ex) {
-            throw new AssertionError(String.format("OutputTask '%s' must be serializable", outputTask.getClass()), ex);
-        }
+        // TODO
+        System.out.println("input: "+inputTaskSource);
+        System.out.println("output: "+outputTaskSource);
     }
 
     public void begin()
@@ -163,11 +163,11 @@ public class LocalExecutor
 
     public void start()
     {
-        for (int procIndex=0; procIndex < inputTask.getProcessorCount(); procIndex++) {
-            OutputOperator outputOp = out.openOutputOperator(outputTask, procIndex);
+        for (int procIndex=0; procIndex < processorCount; procIndex++) {
+            OutputOperator outputOp = out.openOutputOperator(outputTaskSource, procIndex);
             try {
                 MonitoringOperator monitorOp = new MonitoringOperator(outputOp);
-                InputProcessor inputProc = in.startInputProcessor(inputTask, procIndex, monitorOp);
+                InputProcessor inputProc = in.startInputProcessor(inputTaskSource, procIndex, monitorOp);
                 units.add(new ProcessingUnit(inputProc, outputOp, monitorOp));
             } catch (RuntimeException ex) {
                 try {

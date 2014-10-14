@@ -9,7 +9,7 @@ import org.quickload.model.ModelAccessor;
 
 public class AbstractModelSource
 {
-    private final ModelManager modelManager;
+    protected final ModelManager modelManager;
     private final Function<Method, Optional<String>> jsonKeyMapper;
     protected final ObjectNode source;
 
@@ -29,9 +29,23 @@ public class AbstractModelSource
     public <T extends ModelAccessor> T load(Class<T> iface)
     {
         if (jsonKeyMapper == null) {
-            return modelManager.readJsonObject(source, iface);
+            return modelManager.readModelAccessor(source, iface);
         } else {
-            return modelManager.readJsonObject(source, iface, jsonKeyMapper);
+            return modelManager.readModelAccessor(source, iface, jsonKeyMapper);
         }
+    }
+
+    /**
+     * visible for TaskSerDe
+     */
+    ObjectNode getSource()
+    {
+        return source;
+    }
+
+    @Override
+    public String toString()
+    {
+        return source.toString();
     }
 }
