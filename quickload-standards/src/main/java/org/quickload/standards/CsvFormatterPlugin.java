@@ -93,6 +93,7 @@ public class CsvFormatterPlugin
                     }
                 };
                 schema.consume(recordCursor, recordConsumer);
+                sbuf.delete(sbuf.length() - 1, sbuf.length());
                 sbuf.append('\n');
             }
             next.addBuffer(new Buffer(sbuf.toString().getBytes()));
