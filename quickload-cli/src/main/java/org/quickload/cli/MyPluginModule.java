@@ -8,10 +8,7 @@ import org.quickload.spi.FormatterPlugin;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.ParserPlugin;
-import org.quickload.standards.CsvFormatterPlugin;
-import org.quickload.standards.CsvParserPlugin;
-import org.quickload.standards.LocalFileInputPlugin;
-import org.quickload.standards.LocalFileOutputPlugin;
+import org.quickload.standards.*;
 
 public class MyPluginModule implements Module
 {
@@ -22,6 +19,7 @@ public class MyPluginModule implements Module
         binder.bind(InputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileInputPlugin.class);
         binder.bind(OutputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileOutputPlugin.class);
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("my")).to(CsvParserPlugin.class);
-        binder.bind(FormatterPlugin.class).annotatedWith(Names.named("my")).to(CsvFormatterPlugin.class);
+        //binder.bind(FormatterPlugin.class).annotatedWith(Names.named("my")).to(CsvFormatterPlugin.class);
+        binder.bind(FormatterPlugin.class).annotatedWith(Names.named("my")).to(MessagePackFormatterPlugin.class);
     }
 }
