@@ -49,6 +49,8 @@ public class QuickLoad {
         formatterType.put("injected", "my");
         json.put("out:formatter_type", formatterType);
 
+        json.put("out:compress_type", "none");
+
         ArrayNode outPaths = js.arrayNode();
         outPaths.add("/tmp/output_csv_01.csv");
         outPaths.add("/tmp/output_csv_02.csv");

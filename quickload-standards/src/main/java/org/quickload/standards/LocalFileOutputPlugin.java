@@ -15,7 +15,14 @@ import org.quickload.spi.ProcTask;
 import org.quickload.spi.Report;
 import org.quickload.spi.FailedReport;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 public class LocalFileOutputPlugin
         extends FileOutputPlugin
@@ -32,6 +39,9 @@ public class LocalFileOutputPlugin
         @Config("out:paths")
         @NotNull
         public List<String> getPaths(); // TODO temporarily
+
+        @Config("out:compress_type")
+        public String getCompressType();
     }
 
     @Override
@@ -64,9 +74,43 @@ public class LocalFileOutputPlugin
 
         @Override
         public void addBuffer(Buffer buffer) {
-            // TODO write buffer to local files
-            List<String> paths = task.getPaths();
-            System.out.println(new String(buffer.get()));
+            // TODO simple implementation
+
+            String filePath = task.getPaths().get(processorIndex);
+            File file = new File(filePath);
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            try (OutputStream out = createFileOutputStream(file)) {
+                byte[] bytes = buffer.get();
+                out.write(bytes, 0, bytes.length);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("write file: " + filePath); // TODO debug message
+        }
+
+        private OutputStream createFileOutputStream(File file)
+                throws IOException
+        {
+            String compressType = task.getCompressType();
+            if (compressType == null) { // null is for 'none' mode
+                return new BufferedOutputStream(new FileOutputStream(file));
+            } else if (compressType.equals("none")) { // TODO
+                return new BufferedOutputStream(new FileOutputStream(file));
+            } else if (compressType.equals("gzip")) {
+                return new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+            } else {
+                throw new IOException("not supported yet");
+            }
         }
 
         @Override
