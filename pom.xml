@@ -23,6 +23,7 @@
         <module>quickload-core</module>
         <module>quickload-standards</module>
         <module>quickload-cli</module>
+        <module>quickload-http-server</module>
     </modules>
 
     <properties>
@@ -37,7 +38,7 @@
         <project.check.skip-findbugs>${project.check.skip-all}</project.check.skip-findbugs>
 
         <project.check.fail-all>true</project.check.fail-all>
-        <project.check.fail-dependency>${project.check.fail-all}</project.check.fail-dependency>
+        <project.check.fail-dependency>false</project.check.fail-dependency>
         <project.check.fail-dependency-version-check>${project.check.fail-all}</project.check.fail-dependency-version-check>
         <project.check.fail-findbugs>${project.check.fail-all}</project.check.fail-findbugs>
     </properties>
