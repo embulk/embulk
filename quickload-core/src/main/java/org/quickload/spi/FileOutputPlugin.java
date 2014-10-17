@@ -27,7 +27,7 @@ public abstract class FileOutputPlugin
     public interface OutputTask
             extends Task
     {
-        @Config("out:formatter_type") // TODO temporarily
+        @Config("out:formatter_type")
         @NotNull
         public JsonNode getFormatterType();
 
