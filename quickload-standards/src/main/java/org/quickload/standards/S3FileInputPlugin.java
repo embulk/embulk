@@ -61,14 +61,21 @@ public class S3FileInputPlugin extends FileInputPlugin {
         return config.dumpTask(task);
     }
 
-    private AmazonS3Client createClient(PluginTask task)
+    private AWSCredentials createAWSCredentials(PluginTask task)
     {
-        AWSCredentials credentials = new BasicAWSCredentials(
-                task.getAccessKeyId(), task.getSecretAccessKey());
+        return new BasicAWSCredentials(task.getAccessKeyId(),
+                task.getSecretAccessKey());
+    }
+
+    private AmazonS3Client createS3Client(PluginTask task)
+    {
+        AWSCredentials credentials = createAWSCredentials(task);
+
         ClientConfiguration cc = new ClientConfiguration();
         cc.setProtocol(Protocol.HTTP);
         cc.setMaxConnections(50);
         cc.setMaxErrorRetry(3);
+
         AmazonS3Client c = new AmazonS3Client(credentials, cc);
         c.setEndpoint(task.getEndpoint());
         return c;
@@ -78,7 +85,7 @@ public class S3FileInputPlugin extends FileInputPlugin {
     public InputProcessor startFileInputProcessor(ProcTask proc,
                                                   TaskSource taskSource, final int processorIndex, final BufferOperator next) {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
-        final AmazonS3Client s3Client = createClient(task);
+        final AmazonS3Client s3Client = createS3Client(task);
         return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
             public ReportBuilder apply(BufferOperator next) {
                 return readFile(task, processorIndex, s3Client, next);
@@ -93,11 +100,11 @@ public class S3FileInputPlugin extends FileInputPlugin {
         String key = task.getPaths().get(processorIndex);
         S3Object s3Object = s3Client.getObject(task.getBucket(), key);
         ObjectMetadata metadata = s3Object.getObjectMetadata();
-        System.out.println("file len: " + metadata.getContentLength());
 
         try {
             byte[] bytes = new byte[(int) metadata.getContentLength()]; // TODO ad-hoc
 
+            // TODO retry mechanism
             int len, offset = 0;
             try (InputStream in = new BufferedInputStream(s3Object.getObjectContent())) {
                 while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
