@@ -6,8 +6,18 @@ import org.quickload.exec.BufferManager;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
-import org.quickload.record.*;
-import org.quickload.spi.*;
+import org.quickload.record.Column;
+import org.quickload.record.Page;
+import org.quickload.record.PageReader;
+import org.quickload.record.RecordConsumer;
+import org.quickload.record.RecordCursor;
+import org.quickload.record.Schema;
+import org.quickload.spi.AbstractOperator;
+import org.quickload.spi.BufferOperator;
+import org.quickload.spi.FormatterPlugin;
+import org.quickload.spi.PageOperator;
+import org.quickload.spi.ProcTask;
+import org.quickload.spi.Report;
 
 public class CsvFormatterPlugin
         implements FormatterPlugin
