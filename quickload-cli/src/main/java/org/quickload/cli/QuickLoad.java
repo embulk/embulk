@@ -14,6 +14,7 @@ import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.plugin.BuiltinPluginSourceModule;
+import org.quickload.standards.StandardPluginModule;
 
 public class QuickLoad {
     public static void main(String[] args) throws Exception
@@ -22,7 +23,7 @@ public class QuickLoad {
         ObjectNode json = js.objectNode();
 
         ObjectNode inputType = js.objectNode();
-        inputType.put("injected", "in_local_file");
+        inputType.put("injected", "local_file");
         json.put("in:type", inputType);
 
         ArrayNode inPaths = js.arrayNode();
@@ -38,15 +39,15 @@ public class QuickLoad {
         json.put("in:schema", schema);
 
         ObjectNode parserType = js.objectNode();
-        parserType.put("injected", "my");
+        parserType.put("injected", "csv");
         json.put("in:parser_type", parserType);
 
         ObjectNode outputType = js.objectNode();
-        outputType.put("injected", "my");
+        outputType.put("injected", "local_file");
         json.put("out:type", outputType);
 
         ObjectNode formatterType = js.objectNode();
-        formatterType.put("injected", "my");
+        formatterType.put("injected", "msgpack");
         json.put("out:formatter_type", formatterType);
 
         json.put("out:compress_type", "none");
@@ -60,7 +61,7 @@ public class QuickLoad {
         modules.add(new ExecModule());
         modules.add(new ExtensionServiceLoaderModule());
         modules.add(new BuiltinPluginSourceModule());
-        modules.add(new MyPluginModule()); // TODO
+        modules.add(new StandardPluginModule());
         Injector injector = Guice.createInjector(modules.build());
 
         ModelManager modelManager = injector.getInstance(ModelManager.class);
