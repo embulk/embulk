@@ -22,7 +22,7 @@ public class QuickLoad {
         ObjectNode json = js.objectNode();
 
         ObjectNode inputType = js.objectNode();
-        inputType.put("injected", "my");
+        inputType.put("injected", "in_local_file");
         json.put("in:type", inputType);
 
         ArrayNode inPaths = js.arrayNode();

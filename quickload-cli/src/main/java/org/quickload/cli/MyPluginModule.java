@@ -16,7 +16,8 @@ public class MyPluginModule implements Module
     public void configure(Binder binder)
     {
         Preconditions.checkNotNull(binder, "binder is null.");
-        binder.bind(InputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileInputPlugin.class);
+        binder.bind(InputPlugin.class).annotatedWith(Names.named("in_local_file")).to(LocalFileInputPlugin.class);
+        //binder.bind(InputPlugin.class).annotatedWith(Names.named("in_s3_file")).to(S3FileInputPlugin.class);
         binder.bind(OutputPlugin.class).annotatedWith(Names.named("my")).to(LocalFileOutputPlugin.class);
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("my")).to(CsvParserPlugin.class);
         //binder.bind(FormatterPlugin.class).annotatedWith(Names.named("my")).to(CsvFormatterPlugin.class);
