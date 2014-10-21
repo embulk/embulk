@@ -1,17 +1,35 @@
 package org.quickload.buffer;
 
-public class Buffer
-{
-    // TODO
-    private byte[] buf;
+import java.nio.ByteBuffer;
 
-    public Buffer(byte[] buf)
-    {
-        this.buf = buf;
+public class Buffer {
+    public static Buffer allocate(int size) {
+        return new Buffer(ByteBuffer.allocate(size));
     }
 
-    public byte[] get()
+    private ByteBuffer bb;
+
+    public Buffer(ByteBuffer bb) {
+        this.bb = bb;
+    }
+
+    public int capacity()
     {
-        return buf;
+        return bb.capacity();
+    }
+
+    public void write(byte[] bytes, int index, int len)
+    {
+        bb.put(bytes, index, len);
+    }
+
+    public ByteBuffer getBuffer()
+    {
+        return bb;
+    }
+
+    public void flush()
+    {
+        bb.flip();
     }
 }

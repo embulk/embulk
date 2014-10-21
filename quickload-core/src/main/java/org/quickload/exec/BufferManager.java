@@ -1,5 +1,6 @@
 package org.quickload.exec;
 
+import org.quickload.buffer.Buffer;
 import org.quickload.record.Page;
 import org.quickload.record.PageAllocator;
 
@@ -16,5 +17,15 @@ public class BufferManager
     {
         // TODO cache
         //page.clear();
+    }
+
+    public Buffer allocateBuffer(int minimumCapacity)
+    {
+        return Buffer.allocate(minimumCapacity);
+    }
+
+    public void releaseBuffer(Buffer buf)
+    {
+        // TODO
     }
 }

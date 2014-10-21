@@ -140,7 +140,10 @@ public class MessagePackFormatterPlugin
                 }
             }
 
-            next.addBuffer(new Buffer(packer.toByteArray()));
+            byte[] bytes = packer.toByteArray();
+            Buffer buf = bufferManager.allocateBuffer(bytes.length); // TODO
+            buf.write(bytes, 0, bytes.length);
+            next.addBuffer(buf);
         }
 
         @Override

@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -87,7 +88,8 @@ public class LocalFileOutputPlugin
             }
 
             try (OutputStream out = createFileOutputStream(file)) {
-                byte[] bytes = buffer.get();
+                ByteBuffer buf = buffer.getBuffer();
+                byte[] bytes = buf.array(); // TODO
                 out.write(bytes, 0, bytes.length);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

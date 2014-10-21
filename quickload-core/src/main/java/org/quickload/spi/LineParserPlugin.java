@@ -6,6 +6,9 @@ import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.buffer.Buffer;
 
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+
 public abstract class LineParserPlugin
         implements ParserPlugin
 {
@@ -41,6 +44,9 @@ public abstract class LineParserPlugin
             extends AbstractOperator<LineOperator>
             implements BufferOperator
     {
+        private long lineNum = 0;
+        private StringBuilder sbuf;
+
         public LineDecodeOperator(LineOperator next)
         {
             super(next);
@@ -49,9 +55,21 @@ public abstract class LineParserPlugin
         public void addBuffer(Buffer buffer)
         {
             // TODO needs internal buffer
+            sbuf = new StringBuilder();
             // TODO use streaming decoder
-            for (String line : new String(buffer.get()).split("\n")) {
-                next.addLine(line);
+            Charset charset = Charset.forName("UTF-8");
+            CharBuffer cb = charset.decode(buffer.getBuffer());
+
+            for (int i = 0; i < cb.capacity(); i++) {
+                if (cb.get(i) != '\n') {
+                    sbuf.append(cb.get(i));
+                } else {
+                    if (sbuf.length() != 0) {
+                        lineNum++;
+                    }
+                    next.addLine(sbuf.toString());
+                    sbuf = new StringBuilder();
+                }
             }
         }
     }

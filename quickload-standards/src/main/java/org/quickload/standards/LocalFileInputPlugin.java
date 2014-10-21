@@ -22,9 +22,13 @@ import java.util.List;
 public class LocalFileInputPlugin
         extends FileInputPlugin
 {
+    protected final BufferManager bufferManager;
+
     @Inject
-    public LocalFileInputPlugin(PluginManager pluginManager) {
+    public LocalFileInputPlugin(BufferManager bufferManager, PluginManager pluginManager)
+    {
         super(pluginManager);
+        this.bufferManager = bufferManager;
     }
 
     // TODO consider when the page allocator object is released?
@@ -52,27 +56,45 @@ public class LocalFileInputPlugin
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
             public ReportBuilder apply(BufferOperator next) {
-                return readFile(task, processorIndex, next);
+                return readFile(task, processorIndex, bufferManager, next);
             }
         });
     }
 
-    public static ReportBuilder readFile(PluginTask task, int processorIndex, BufferOperator next)
+    public static ReportBuilder readFile(PluginTask task, int processorIndex,
+            BufferManager bufferManager, BufferOperator next)
     {
         // TODO ad-hoc
         String path = task.getPaths().get(processorIndex);
 
         try {
             File file = new File(path);
-            byte[] bytes = new byte[(int) file.length()]; // TODO ad-hoc
+            byte[] bytes = new byte[1024];
+            Buffer buf = bufferManager.allocateBuffer(128*1024); // TODO
 
-            int len, offset = 0;
+            int len = 0, offset = 0;
             try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-                while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
-                    offset += len;
+                while ((len = in.read(bytes)) > 0) {
+                    int rest = buf.capacity() - offset;
+                    if (rest >= len) {
+                        buf.write(bytes, 0, len);
+                        offset += len;
+                    } else {
+                        buf.write(bytes, 0, rest);
+                        buf.flush();
+                        next.addBuffer(buf);
+                        offset = 0;
+
+                        buf = bufferManager.allocateBuffer(128*1024); // TODO
+                        buf.write(bytes, rest, len - rest);
+                        offset += len - rest;
+                    }
                 }
-                Buffer buffer = new Buffer(bytes);
-                next.addBuffer(buffer);
+
+                if (offset > 0) {
+                    buf.flush();
+                    next.addBuffer(buf);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace(); // TODO

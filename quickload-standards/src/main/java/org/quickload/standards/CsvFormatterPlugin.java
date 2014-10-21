@@ -106,7 +106,11 @@ public class CsvFormatterPlugin
                 sbuf.delete(sbuf.length() - 1, sbuf.length());
                 sbuf.append('\n');
             }
-            next.addBuffer(new Buffer(sbuf.toString().getBytes()));
+
+            Buffer buf = bufferManager.allocateBuffer(sbuf.length()); // TODO
+            byte[] bytes = sbuf.toString().getBytes();
+            buf.write(bytes, 0, bytes.length);
+            next.addBuffer(buf);
         }
 
         @Override

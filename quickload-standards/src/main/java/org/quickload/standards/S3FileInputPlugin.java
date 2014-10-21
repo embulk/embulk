@@ -26,15 +26,18 @@ import org.quickload.spi.ReportBuilder;
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 
-public class S3FileInputPlugin extends FileInputPlugin {
+public class S3FileInputPlugin extends FileInputPlugin
+{
     @Inject
     public S3FileInputPlugin(PluginManager pluginManager) {
         super(pluginManager);
     }
 
-    public interface PluginTask extends Task {
+    public interface PluginTask extends Task
+    {
         @Config("in:endpoint")
         public String getEndpoint();
 
@@ -71,52 +74,59 @@ public class S3FileInputPlugin extends FileInputPlugin {
     {
         AWSCredentials credentials = createAWSCredentials(task);
 
-        ClientConfiguration cc = new ClientConfiguration();
-        cc.setProtocol(Protocol.HTTP);
-        cc.setMaxConnections(50);
-        cc.setMaxErrorRetry(3);
+        ClientConfiguration clientConfig = new ClientConfiguration();
+        clientConfig.setProtocol(Protocol.HTTP);
+        clientConfig.setMaxConnections(50);
+        clientConfig.setMaxErrorRetry(3);
 
-        AmazonS3Client c = new AmazonS3Client(credentials, cc);
-        c.setEndpoint(task.getEndpoint());
-        return c;
+        AmazonS3Client client = new AmazonS3Client(credentials, clientConfig);
+        client.setEndpoint(task.getEndpoint());
+        return client;
     }
 
     @Override
     public InputProcessor startFileInputProcessor(ProcTask proc,
-                                                  TaskSource taskSource, final int processorIndex, final BufferOperator next) {
+            TaskSource taskSource, final int processorIndex, final BufferOperator next)
+    {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
-        final AmazonS3Client s3Client = createS3Client(task);
+        final AmazonS3Client client = createS3Client(task);
         return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
             public ReportBuilder apply(BufferOperator next) {
-                return readFile(task, processorIndex, s3Client, next);
+                return readFile(client, task.getBucket(), task.getPaths().get(processorIndex), next);
             }
         });
     }
 
-    public static ReportBuilder readFile(PluginTask task, int processorIndex,
-                                         AmazonS3Client s3Client, BufferOperator next) {
-
-        // TODO ad-hoc
-        String key = task.getPaths().get(processorIndex);
-        S3Object s3Object = s3Client.getObject(task.getBucket(), key);
-        ObjectMetadata metadata = s3Object.getObjectMetadata();
+    public static ReportBuilder readFile(
+            AmazonS3Client client, String bucket, String key, BufferOperator next)
+    {
+        // TODO retry if metadata might be used
+        S3Object object = client.getObject(bucket, key);
+        ObjectMetadata metadata = object.getObjectMetadata();
 
         try {
-            byte[] bytes = new byte[(int) metadata.getContentLength()]; // TODO ad-hoc
+            ByteBuffer buf = ByteBuffer.allocate((int) metadata.getContentLength()); // TODO ad-hoc
 
             // TODO retry mechanism
+            /**
             int len, offset = 0;
-            try (InputStream in = new BufferedInputStream(s3Object.getObjectContent())) {
+            try (InputStream in = new BufferedInputStream(object.getObjectContent())) {
                 while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
                     offset += len;
                 }
                 Buffer buffer = new Buffer(bytes);
                 next.addBuffer(buffer);
             }
+             */
         } catch (Exception e) {
             e.printStackTrace(); // TODO
         }
 
         return DynamicReport.builder(); // TODO
+    }
+
+    public static class StatefulObjectInputStream
+    {
+// implemet as function, (int index, inputstream in)
     }
 }
