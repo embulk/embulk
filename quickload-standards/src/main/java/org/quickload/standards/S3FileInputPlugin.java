@@ -1,10 +1,12 @@
 package org.quickload.standards;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Function;
@@ -14,6 +16,7 @@ import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
+import org.quickload.exec.BufferManager;
 import org.quickload.plugin.PluginManager;
 import org.quickload.spi.BufferOperator;
 import org.quickload.spi.DynamicReport;
@@ -25,15 +28,20 @@ import org.quickload.spi.ReportBuilder;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
 public class S3FileInputPlugin extends FileInputPlugin
 {
+    protected final BufferManager bufferManager;
+
     @Inject
-    public S3FileInputPlugin(PluginManager pluginManager) {
+    public S3FileInputPlugin(BufferManager bufferManager, PluginManager pluginManager)
+    {
         super(pluginManager);
+        this.bufferManager = bufferManager;
     }
 
     public interface PluginTask extends Task
@@ -88,45 +96,93 @@ public class S3FileInputPlugin extends FileInputPlugin
     public InputProcessor startFileInputProcessor(ProcTask proc,
             TaskSource taskSource, final int processorIndex, final BufferOperator next)
     {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+
         final AmazonS3Client client = createS3Client(task);
+        final String bucket = task.getBucket();
+        final String key = task.getPaths().get(processorIndex);
         return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
             public ReportBuilder apply(BufferOperator next) {
-                return readFile(client, task.getBucket(), task.getPaths().get(processorIndex), next);
+                return readFile(client, bucket, key, next);
             }
         });
     }
 
-    public static ReportBuilder readFile(
-            AmazonS3Client client, String bucket, String key, BufferOperator next)
+    private ReportBuilder readFile(AmazonS3Client client, String bucket,
+             String key, BufferOperator next)
     {
         // TODO retry if metadata might be used
-        S3Object object = client.getObject(bucket, key);
-        ObjectMetadata metadata = object.getObjectMetadata();
+        long contentLength = client.getObjectMetadata(bucket, key).getContentLength();
+        System.out.println("## content length : " + contentLength);
 
-        try {
-            ByteBuffer buf = ByteBuffer.allocate((int) metadata.getContentLength()); // TODO ad-hoc
+        Buffer buf = bufferManager.allocateBuffer(128*1024);
 
-            // TODO retry mechanism
-            /**
-            int len, offset = 0;
-            try (InputStream in = new BufferedInputStream(object.getObjectContent())) {
-                while ((len = in.read(bytes, offset, bytes.length - offset)) > 0) {
-                    offset += len;
+        long pos = 0;
+        Opener opener = new Opener(client, bucket, key, contentLength);
+        while (true)
+        {
+            int len = 0, offset = 0;
+            byte[] bytes = new byte[1024];
+            try (InputStream in = new BufferedInputStream(opener.open(pos))) {
+                while ((len = in.read(bytes)) > 0) {
+                    pos += len;
+                    int rest = buf.capacity() - offset;
+                    if (rest >= len) {
+                        buf.write(bytes, 0, len);
+                        offset += len;
+                    } else {
+                        buf.write(bytes, 0, rest);
+                        buf.flush();
+                        next.addBuffer(buf);
+                        offset = 0;
+
+                        buf = bufferManager.allocateBuffer(128*1024); // TODO
+                        buf.write(bytes, rest, len - rest);
+                        offset += len - rest;
+                    }
                 }
-                Buffer buffer = new Buffer(bytes);
-                next.addBuffer(buffer);
+
+                if (offset > 0) {
+                    buf.flush();
+                    next.addBuffer(buf);
+                }
+
+                break;
+            } catch (RuntimeException e) {
+                if (e instanceof AmazonServiceException) {
+                    AmazonServiceException ase = (AmazonServiceException) e;
+                    // TODO retry mechanism
+                }
+            } catch (IOException e) {
+                // TODO
             }
-             */
-        } catch (Exception e) {
-            e.printStackTrace(); // TODO
+
+            // TODO retry wait and retry limit
         }
 
         return DynamicReport.builder(); // TODO
     }
 
-    public static class StatefulObjectInputStream
+    public static class Opener
     {
-// implemet as function, (int index, inputstream in)
+        private AmazonS3Client client;
+        private String bucket;
+        private String key;
+        private long contentLength;
+
+        public Opener(AmazonS3Client client, String bucket, String key, long contentLength)
+        {
+            this.client = client;
+            this.bucket = bucket;
+            this.key = key;
+            this.contentLength = contentLength;
+        }
+
+        public InputStream open(long pos)
+        {
+            GetObjectRequest request = new GetObjectRequest(bucket, key);
+            request.setRange(pos, contentLength);
+            return client.getObject(request).getObjectContent();
+        }
     }
 }
