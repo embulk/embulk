@@ -8,7 +8,6 @@ import org.quickload.spi.FormatterPlugin;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.ParserPlugin;
-import org.quickload.standards.*;
 
 public class StandardPluginModule implements Module
 {
