@@ -27,25 +27,27 @@ public class CsvParserPlugin
     public interface PluginTask
             extends Task
     {
-        @Config("in:schema")
-        @NotNull
+        @Config("in:schema")@NotNull
         public Schema getSchema();
+
+        @Config("in:column_header") // how to set default value??
+        public boolean getColumnHeader();
     }
 
     @Override
-    public TaskSource getLineParserTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getLineParserTask(ProcConfig procConfig, ConfigSource config)
     {
         PluginTask task = config.loadTask(PluginTask.class);
-        proc.setSchema(task.getSchema());
+        procConfig.setSchema(task.getSchema());
         return config.dumpTask(task);
     }
 
     @Override
-    public LineOperator openLineOperator(ProcTask proc,
+    public LineOperator openLineOperator(ProcTask procTask,
             TaskSource taskSource, int processorIndex, PageOperator next)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new Operator(proc.getSchema(), processorIndex, next);
+        return new Operator(procTask.getSchema(), task.getColumnHeader(), processorIndex, next);
     }
 
     public void shutdown()
@@ -53,49 +55,73 @@ public class CsvParserPlugin
         // TODO
     }
 
-    class Operator
-            extends AbstractOperator<PageOperator>
-            implements LineOperator
-    {
+    class Operator extends AbstractOperator<PageOperator>
+            implements LineOperator {
         private final Schema schema;
+        private final boolean hasColumnHeader;
         private final PageBuilder pageBuilder;
+        private final CSVRecordProducer recordProducer;
 
-        public Operator(Schema schema, int processorIndex,
-                PageOperator next)
-        {
+        private boolean alreadyReadColumnHeaderLine;
+
+        public Operator(Schema schema, boolean hasColumnHeader, int processorIndex,
+                        PageOperator next) {
             super(next);
             this.schema = schema;
+            this.hasColumnHeader = hasColumnHeader;
             this.pageBuilder = new PageBuilder(bufferManager, schema, next);
+            this.recordProducer = new CSVRecordProducer();
+
+            alreadyReadColumnHeaderLine = !hasColumnHeader;
         }
 
         @Override
-        public void addLine(String line)
-        {
-            final String[] lineValues = line.split(","); // TODO ad-hoc parsing
-            schema.produce(pageBuilder, new RecordProducer() {
-                @Override
-                public void setLong(Column column, LongType.Setter setter) {
-                    // TODO setter.setLong(Long.parseLong(lineValues[column.getIndex()]));
-                }
+        public void addLine(String line) {
+            if (!alreadyReadColumnHeaderLine) {
+                alreadyReadColumnHeaderLine = true;
+                return;
+            }
 
-                @Override
-                public void setDouble(Column column, DoubleType.Setter setter) {
-                    // TODO setter.setDouble(Double.parseDouble(lineValues[column.getIndex()]));
-                }
+            System.out.println("# line: " + line);
 
-                @Override
-                public void setString(Column column, StringType.Setter setter) {
-                    setter.setString(lineValues[column.getIndex()]);
-                }
-            });
+            recordProducer.setColumnStrings(line.split(",")); // TODO ad-hoc splitting
+            schema.produce(pageBuilder, recordProducer);
             pageBuilder.addRecord();
         }
 
         @Override
-        public Report completed()
-        {
+        public Report completed() {
             pageBuilder.flush();
             return super.completed();
+        }
+    }
+
+    static class CSVRecordProducer implements RecordProducer
+    {
+        private String[] columnStrings;
+
+        CSVRecordProducer()
+        {
+        }
+
+        public void setColumnStrings(String[] columnsStrings)
+        {
+            this.columnStrings = columnsStrings;
+        }
+
+        @Override
+        public void setLong(Column column, LongType.Setter setter) {
+            setter.setLong(Long.parseLong(columnStrings[column.getIndex()]));
+        }
+
+        @Override
+        public void setDouble(Column column, DoubleType.Setter setter) {
+            setter.setDouble(Double.parseDouble(columnStrings[column.getIndex()]));
+        }
+
+        @Override
+        public void setString(Column column, StringType.Setter setter) {
+            setter.setString(columnStrings[column.getIndex()]);
         }
     }
 }
