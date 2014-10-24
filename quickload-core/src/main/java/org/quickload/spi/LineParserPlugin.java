@@ -12,9 +12,9 @@ import java.nio.charset.Charset;
 public abstract class LineParserPlugin
         implements ParserPlugin
 {
-    public abstract TaskSource getLineParserTask(ProcConfig proc, ConfigSource config);
+    public abstract TaskSource getLineParserTask(ProcConfig procConfig, ConfigSource config);
 
-    public abstract LineOperator openLineOperator(ProcTask proc,
+    public abstract LineOperator openLineOperator(ProcTask procTask,
             TaskSource taskSource, int processorIndex, PageOperator next);
 
     public interface ParserTask
@@ -26,18 +26,18 @@ public abstract class LineParserPlugin
     }
 
     @Override
-    public TaskSource getParserTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getParserTask(ProcConfig procConfig, ConfigSource config)
     {
         // TODO use ParserTask? is-a or has-a
-        return getLineParserTask(proc, config);
+        return getLineParserTask(procConfig, config);
     }
 
     @Override
-    public BufferOperator openBufferOperator(ProcTask proc,
+    public BufferOperator openBufferOperator(ProcTask procTask,
             TaskSource taskSource, int processorIndex, PageOperator next)
     {
         return new LineDecodeOperator(
-                openLineOperator(proc, taskSource, processorIndex, next));
+                openLineOperator(procTask, taskSource, processorIndex, next));
     }
 
     public class LineDecodeOperator

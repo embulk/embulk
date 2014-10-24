@@ -49,18 +49,16 @@ public class S3FileInputPlugin extends FileInputPlugin
         @Config("in:endpoint")
         public String getEndpoint();
 
-        @Config("in:access_key_id")
+        @Config("in:access_key_id")@NotNull
         public String getAccessKeyId();
 
-        @Config("in:secret_access_key")
+        @Config("in:secret_access_key")@NotNull
         public String getSecretAccessKey();
 
-        @Config("in:bucket")
-        @NotNull
+        @Config("in:bucket")@NotNull
         public String getBucket();
 
-        @Config("in:paths")
-        @NotNull
+        @Config("in:paths")@NotNull
         public List<String> getPaths();
     }
 
@@ -84,11 +82,14 @@ public class S3FileInputPlugin extends FileInputPlugin
 
         ClientConfiguration clientConfig = new ClientConfiguration();
         clientConfig.setProtocol(Protocol.HTTP);
-        clientConfig.setMaxConnections(50);
-        clientConfig.setMaxErrorRetry(3);
+        clientConfig.setMaxConnections(50); // SDK default: 50
+        clientConfig.setMaxErrorRetry(3); // SDK default: 3
+        clientConfig.setSocketTimeout(8*60*1000); // SDK default: 50*1000
 
         AmazonS3Client client = new AmazonS3Client(credentials, clientConfig);
-        client.setEndpoint(task.getEndpoint());
+        if (task.getEndpoint() != null) {
+            client.setEndpoint(task.getEndpoint());
+        }
         return client;
     }
 
@@ -113,8 +114,6 @@ public class S3FileInputPlugin extends FileInputPlugin
     {
         // TODO retry if metadata might be used
         long contentLength = client.getObjectMetadata(bucket, key).getContentLength();
-        System.out.println("## content length : " + contentLength);
-
         Buffer buf = bufferManager.allocateBuffer(128*1024);
 
         long pos = 0;
