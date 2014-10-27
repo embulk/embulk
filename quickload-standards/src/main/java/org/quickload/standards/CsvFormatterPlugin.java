@@ -55,13 +55,13 @@ public class CsvFormatterPlugin
         // TODO
     }
 
-    class PluginOperator
-            extends AbstractOperator<BufferOperator>
+    class PluginOperator extends AbstractOperator<BufferOperator>
             implements PageOperator
     {
         private final Schema schema;
         private final PageReader pageReader;
         private final int processorIndex;
+        private final CSVRecordConsumer recordConsumer;
 
         private PluginOperator(Schema schema, int processorIndex, BufferOperator next)
         {
@@ -69,6 +69,7 @@ public class CsvFormatterPlugin
             this.schema = schema;
             this.pageReader = new PageReader(bufferManager, schema);
             this.processorIndex = processorIndex;
+            this.recordConsumer = new CSVRecordConsumer();
         }
 
         @Override
@@ -76,32 +77,11 @@ public class CsvFormatterPlugin
         {
             // TODO simple implementation
             final StringBuilder sbuf = new StringBuilder(); // TODO
+            recordConsumer.setStringBuilder(sbuf);
 
             RecordCursor recordCursor = pageReader.cursor(page);
 
             while (recordCursor.next()) {
-                RecordConsumer recordConsumer = new RecordConsumer()
-                {
-                    @Override
-                    public void setNull(Column column) {
-                        sbuf.append(',');
-                    }
-
-                    @Override
-                    public void setLong(Column column, long value) {
-                        sbuf.append(Long.toString(value)).append(',');
-                    }
-
-                    @Override
-                    public void setDouble(Column column, double value) {
-                        sbuf.append(Double.toString(value)).append(',');
-                    }
-
-                    @Override
-                    public void setString(Column column, String value) {
-                        sbuf.append(value).append(',');
-                    }
-                };
                 schema.consume(recordCursor, recordConsumer);
                 sbuf.delete(sbuf.length() - 1, sbuf.length());
                 sbuf.append('\n');
@@ -123,6 +103,44 @@ public class CsvFormatterPlugin
         public void close()
         {
             // TODO
+        }
+    }
+
+    static class CSVRecordConsumer implements RecordConsumer
+    {
+        private StringBuilder sbuf;
+
+        CSVRecordConsumer()
+        {
+        }
+
+        public void setStringBuilder(StringBuilder sbuf)
+        {
+            this.sbuf = sbuf;
+        }
+
+        @Override
+        public void setNull(Column column)
+        {
+            sbuf.append(',');
+        }
+
+        @Override
+        public void setLong(Column column, long value)
+        {
+            sbuf.append(Long.toString(value)).append(',');
+        }
+
+        @Override
+        public void setDouble(Column column, double value)
+        {
+            sbuf.append(Double.toString(value)).append(',');
+        }
+
+        @Override
+        public void setString(Column column, String value)
+        {
+            sbuf.append(value).append(',');
         }
     }
 }

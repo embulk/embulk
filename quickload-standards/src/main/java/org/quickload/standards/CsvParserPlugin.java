@@ -30,7 +30,7 @@ public class CsvParserPlugin
         @Config("in:schema")@NotNull
         public Schema getSchema();
 
-        @Config("in:column_header") // how to set default value??
+        @Config("in:column_header") // how to set default value?? TODO @Default("true")
         public boolean getColumnHeader();
     }
 
@@ -81,8 +81,6 @@ public class CsvParserPlugin
                 alreadyReadColumnHeaderLine = true;
                 return;
             }
-
-            System.out.println("# line: " + line);
 
             recordProducer.setColumnStrings(line.split(",")); // TODO ad-hoc splitting
             schema.produce(pageBuilder, recordProducer);

@@ -23,7 +23,6 @@
         <module>quickload-core</module>
         <module>quickload-standards</module>
         <module>quickload-cli</module>
-        <module>quickload-http-server</module>
     </modules>
 
     <properties>
