@@ -2,13 +2,17 @@ package org.quickload.spi;
 
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.Report;
+import org.quickload.queue.PageInput;
 
 public interface OutputPlugin
 {
-    public OutputTransaction newOutputTransaction();
+    public TaskSource getOutputTask(ProcTask proc, ConfigSource config);
 
-    public PageOperator openPageOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex);
+    public void runOutputTransaction(ProcTask proc,
+            ProcControl progress, TaskSource taskSource);
 
-    public void shutdown();
+    public Report runOutput(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            PageInput pageInput);
 }

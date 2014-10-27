@@ -7,8 +7,20 @@ import org.quickload.config.ConfigException;
 
 public class ProcConfig
 {
+    private final ProcResource resource;
     private Schema schema = null;
     private int processorCount = 0;
+
+    public ProcConfig(
+            ProcResource resource)
+    {
+        this.resource = resource;
+    }
+
+    public ProcResource getResource()
+    {
+        return resource;
+    }
 
     public Schema getSchema()
     {

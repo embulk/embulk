@@ -6,23 +6,17 @@ import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
-import org.quickload.plugin.PluginManager;
+import org.quickload.config.Report;
+import org.quickload.queue.BufferOutput;
 
 public abstract class FileInputPlugin
-        extends BasicInputPlugin
+        extends InputPlugin
 {
-    protected final PluginManager pluginManager;  // TODO get from ProcTask or ProcConfig?
-    private ParserPlugin parser;
-
-    public FileInputPlugin(PluginManager pluginManager)
-    {
-        this.pluginManager = pluginManager;
-    }
-
     public abstract TaskSource getFileInputTask(ProcConfig proc, ConfigSource config);
 
-    public abstract InputProcessor startFileInputProcessor(ProcTask proc,
-            TaskSource taskSource, int processorIndex, BufferOperator next);
+    public abstract Report runFileInput(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            BufferOutput bufferOutput);
 
     public interface InputTask
             extends Task
@@ -38,36 +32,35 @@ public abstract class FileInputPlugin
         public void setFileInputTask(TaskSource task);
     }
 
-    public ParserPlugin newParserPlugin(JsonNode typeConfig)
-    {
-        return pluginManager.newPlugin(ParserPlugin.class, typeConfig);
-    }
-
     @Override
     public TaskSource getInputTask(ProcConfig proc, ConfigSource config)
     {
         InputTask task = config.loadTask(InputTask.class);
-        parser = newParserPlugin(task.getParserType());
+        ParserPlugin parser = proc.getResource().newPlugin(ParserPlugin.class, task.getParserType());
         task.setParserTask(parser.getParserTask(proc, config));
         task.setFileInputTask(getFileInputTask(proc, config));
         return config.dumpTask(task);
     }
 
     @Override
-    public InputProcessor startInputProcessor(ProcTask proc,
-            TaskSource taskSource, int processorIndex, PageOperator next)
+    public void runInputTransaction(ProcTask proc,
+            ProcControl control, TaskSource taskSource)
     {
-        InputTask task = taskSource.loadTask(InputTask.class);
-        parser = newParserPlugin(task.getParserType());
-        return startFileInputProcessor(proc, task.getFileInputTask(), processorIndex,
-                parser.openBufferOperator(proc, task.getParserTask(), processorIndex, next));
+        control.run();
     }
 
-    @Override
-    public void shutdown()
+    public Report runInput(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            PageOutput pageOutput)
     {
-        if (parser != null) {
-            parser.shutdown();
-        }
+        InputTask task = taskSource.loadTask(InputTask.class);
+        ParserPlugin parser = proc.getResource().newPlugin(ParserPlugin.class, task.getParserType());
+        BufferQueue queue = proc.getResource().newBufferQueue();
+        parser.startParser(proc,
+                task.getParserTask, processorIndex,
+                queue.getBufferInput(), pageOutput);
+        return runFileInput(proc,
+                task.getFileInputTask(), processorIndex,
+                queue.getBufferOutput());
     }
 }
