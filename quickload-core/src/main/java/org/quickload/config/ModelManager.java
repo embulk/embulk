@@ -5,12 +5,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Set;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import com.google.inject.Inject;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -57,25 +57,20 @@ public class ModelManager
 
     public <T extends Task> T readTask(JsonParser json, Class<T> iface)
     {
-        return readTask(json, iface, new Function<Method, Optional<String>>() {
-            public Optional<String> apply(Method method)
-            {
-                return Optional.absent();
-            }
-        });
+        return readTask(json, iface, new FieldMapper());
     }
 
     public <T extends Task> T readTask(JsonNode json, Class<T> iface,
-            Function<Method, Optional<String>> jsonKeyMapper)
+            FieldMapper fieldMapper)
     {
-        return readTask(json.traverse(), iface, jsonKeyMapper);
+        return readTask(json.traverse(), iface, fieldMapper);
     }
 
     public <T extends Task> T readTask(JsonParser json, Class<T> iface,
-            Function<Method, Optional<String>> jsonKeyMapper)
+            FieldMapper fieldMapper)
     {
         try {
-            return (T) new TaskDeserializer(iface, jsonKeyMapper).deserialize(
+            return (T) new TaskDeserializer(iface, fieldMapper).deserialize(
                     json, objectMapper.getDeserializationContext());
         } catch (IOException ex) {
             // TODO exception class
@@ -123,11 +118,13 @@ public class ModelManager
     {
         private final String name;
         private final Type type;
+        private final Optional<String> defaultJsonString;
 
-        public FieldEntry(String name, Type type)
+        public FieldEntry(String name, Type type, Optional<String> defaultJsonString)
         {
             this.name = name;
             this.type = type;
+            this.defaultJsonString = defaultJsonString;
         }
 
         public String getName()
@@ -139,20 +136,26 @@ public class ModelManager
         {
             return type;
         }
+
+        public Optional<String> getDefaultJsonString()
+        {
+            return defaultJsonString;
+        }
     }
 
     /**
      * jsonKey = (name, type)
      */
-    static Map<String, FieldEntry> getterMappings(Class<?> iface, Function<Method, Optional<String>> jsonKeyMapper)
+    static Map<String, FieldEntry> getterMappings(Class<?> iface, FieldMapper fieldMapper)
     {
         ImmutableMap.Builder<String, FieldEntry> builder = ImmutableMap.builder();
         for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
             Method method = getter.getValue();
             String fieldName = getter.getKey();
             Type fieldType = method.getGenericReturnType();
-            String jsonKey = jsonKeyMapper.apply(method).or(fieldName);
-            builder.put(jsonKey, new FieldEntry(fieldName, fieldType));
+            String jsonKey = fieldMapper.getJsonKey(method).or(fieldName);
+            Optional<String> defaultJsonString = fieldMapper.getDefaultJsonString(method);
+            builder.put(jsonKey, new FieldEntry(fieldName, fieldType, defaultJsonString));
         }
         return builder.build();
     }
@@ -163,16 +166,18 @@ public class ModelManager
         private final Class<T> iface;
         private final Map<String, FieldEntry> mappings;
 
-        public TaskDeserializer(Class<T> iface, Function<Method, Optional<String>> jsonKeyMapper)
+        public TaskDeserializer(Class<T> iface, FieldMapper fieldMapper)
         {
             this.iface = iface;
-            this.mappings = getterMappings(iface, jsonKeyMapper);
+            this.mappings = getterMappings(iface, fieldMapper);
         }
 
         @Override
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
         {
             Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
+            HashMap<String, FieldEntry> unusedMappings = new HashMap<>(mappings);
+
             JsonToken current;
             current = jp.nextToken();
             if (current != JsonToken.START_OBJECT) {
@@ -187,8 +192,19 @@ public class ModelManager
                 } else {
                     Object value = objectMapper.readValue(jp, new GenericTypeReference(field.getType()));
                     objects.put(field.getName(), value);
+                    unusedMappings.remove(key);
                 }
             }
+
+            // set default values
+            for (Map.Entry<String, FieldEntry> unused : unusedMappings.entrySet()) {
+                FieldEntry field = unused.getValue();
+                if (field.getDefaultJsonString().isPresent()) {
+                    Object value = objectMapper.readValue(jp, new GenericTypeReference(field.getType()));
+                    objects.put(field.getName(), value);
+                }
+            }
+
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] { iface },
                     new TaskInvocationHandler(iface, taskValidator, objects));

@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 public @interface Config
 {
     String value();
-    // TODO default
-    String setMethod() default "";
+
+    String defaultValue() default "";
 }

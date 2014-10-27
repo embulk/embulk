@@ -2,13 +2,12 @@ package org.quickload.config;
 
 import java.lang.reflect.Method;
 import com.google.common.base.Optional;
-import com.google.common.base.Function;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TaskSource
 {
     protected final ModelManager modelManager;
-    private final Function<Method, Optional<String>> jsonKeyMapper;
+    private final FieldMapper fieldMapper;
     protected final ObjectNode data;
 
     public TaskSource(ModelManager modelManager, ObjectNode data)
@@ -17,19 +16,19 @@ public class TaskSource
     }
 
     protected TaskSource(ModelManager modelManager, ObjectNode data,
-            Function<Method, Optional<String>> jsonKeyMapper)
+            FieldMapper fieldMapper)
     {
         this.modelManager = modelManager;
         this.data = data;
-        this.jsonKeyMapper = jsonKeyMapper;
+        this.fieldMapper = fieldMapper;
     }
 
     public <T extends Task> T loadTask(Class<T> iface)
     {
-        if (jsonKeyMapper == null) {
+        if (fieldMapper == null) {
             return modelManager.readTask(data, iface);
         } else {
-            return modelManager.readTask(data, iface, jsonKeyMapper);
+            return modelManager.readTask(data, iface, fieldMapper);
         }
     }
 
