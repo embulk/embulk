@@ -10,18 +10,15 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
+import org.quickload.channel.BufferOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
-import org.quickload.plugin.PluginManager;
-import org.quickload.spi.BufferOperator;
-import org.quickload.spi.DynamicReport;
+import org.quickload.config.Report;
+import org.quickload.config.NullReport;
 import org.quickload.spi.FileInputPlugin;
-import org.quickload.spi.InputProcessor;
-import org.quickload.spi.ProcConfig;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.ReportBuilder;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
@@ -29,13 +26,9 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-public class S3FileInputPlugin extends FileInputPlugin
+public class S3FileInputPlugin
+        extends FileInputPlugin
 {
-    @Inject
-    public S3FileInputPlugin(PluginManager pluginManager) {
-        super(pluginManager);
-    }
-
     public interface PluginTask extends Task
     {
         @Config("in:endpoint")
@@ -57,7 +50,7 @@ public class S3FileInputPlugin extends FileInputPlugin
     }
 
     @Override
-    public TaskSource getFileInputTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getFileInputTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
@@ -85,21 +78,14 @@ public class S3FileInputPlugin extends FileInputPlugin
     }
 
     @Override
-    public InputProcessor startFileInputProcessor(ProcTask proc,
-            TaskSource taskSource, final int processorIndex, final BufferOperator next)
+    public Report runFileInput(ProcTask proc, TaskSource taskSource,
+            int processorIndex, BufferOutput bufferOutput)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final AmazonS3Client client = createS3Client(task);
-        return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
-            public ReportBuilder apply(BufferOperator next) {
-                return readFile(client, task.getBucket(), task.getPaths().get(processorIndex), next);
-            }
-        });
-    }
+        String bucket = task.getBucket();
+        String key = task.getPaths().get(processorIndex);
 
-    public static ReportBuilder readFile(
-            AmazonS3Client client, String bucket, String key, BufferOperator next)
-    {
         // TODO retry if metadata might be used
         S3Object object = client.getObject(bucket, key);
         ObjectMetadata metadata = object.getObjectMetadata();
@@ -115,14 +101,14 @@ public class S3FileInputPlugin extends FileInputPlugin
                     offset += len;
                 }
                 Buffer buffer = new Buffer(bytes);
-                next.addBuffer(buffer);
+                bufferOutput.add(buffer);
             }
              */
         } catch (Exception e) {
             e.printStackTrace(); // TODO
         }
 
-        return DynamicReport.builder(); // TODO
+        return new NullReport();
     }
 
     public static class StatefulObjectInputStream

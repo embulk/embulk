@@ -3,7 +3,6 @@ package org.quickload.record;
 public class RecordCursor
         implements AutoCloseable
 {
-    private final PageAllocator allocator;
     private final int[] columnOffsets;
     private final int fixedRecordSize;
 
@@ -13,9 +12,8 @@ public class RecordCursor
     private int position;
     private final byte[] nullBitSet;
 
-    RecordCursor(PageAllocator allocator, Schema schema)
+    RecordCursor(Schema schema)
     {
-        this.allocator = allocator;
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
         this.fixedRecordSize = 4 + nullBitSet.length + Page.totalColumnSize(schema);
@@ -25,7 +23,7 @@ public class RecordCursor
     public void close()
     {
         if (this.page != null) {
-            allocator.releasePage(page);
+            page.release();
             this.page = null;
         }
     }

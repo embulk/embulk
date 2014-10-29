@@ -7,42 +7,35 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
-import org.quickload.plugin.PluginManager;
+import org.quickload.config.Report;
+import org.quickload.config.NullReport;
+import org.quickload.config.FailedReport;
 import org.quickload.record.Schema;
-import org.quickload.spi.ProcConfig;
+import org.quickload.spi.ProcControl;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.ProcTaskSource;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
-import org.quickload.spi.InputTransaction;
-import org.quickload.spi.OutputTransaction;
-import org.quickload.spi.InputProcessor;
-import org.quickload.spi.PageOperator;
-import org.quickload.spi.Report;
+import org.quickload.spi.PluginThread;
+import org.quickload.channel.PageChannel;
 
 public class LocalExecutor
-        implements AutoCloseable
 {
-    private final PluginManager pluginManager;
+    private final Injector injector;
 
     private ConfigSource config;
     private InputPlugin in;
     private OutputPlugin out;
+    private TaskSource taskSource;
 
-    private InputTransaction inputTran;
-    private OutputTransaction outputTran;
-
-    private int processorCount;
-    private TaskSource inputTask;
-    private TaskSource outputTask;
-    private ProcTask procTask;
-
-    private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
+    //private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
     public interface ExecutorTask
             extends Task
@@ -57,28 +50,20 @@ public class LocalExecutor
         @NotNull
         public JsonNode getOutputType();
 
-        // TODO setProcTask
-        public int getProcessorCount();
-        public void setProcessorCount(int processorCount);
+        public ProcTaskSource getProcTask();
+        public void setProcTask(ProcTaskSource procTaskSource);
 
-        public Schema getSchema();
-        public void setSchema(Schema schema);
+        public TaskSource getInputTask();
+        public void setInputTask(TaskSource taskSource);
+
+        public TaskSource getOutputTask();
+        public void setOutputTask(TaskSource taskSource);
     }
 
     @Inject
-    public LocalExecutor(PluginManager pluginManager)
+    public LocalExecutor(Injector injector)
     {
-        this.pluginManager = pluginManager;
-    }
-
-    protected InputPlugin newInputPlugin(JsonNode typeConfig)
-    {
-        return pluginManager.newPlugin(InputPlugin.class, typeConfig);
-    }
-
-    protected OutputPlugin newOutputPlugin(JsonNode typeConfig)
-    {
-        return pluginManager.newPlugin(OutputPlugin.class, typeConfig);
+        this.injector = injector;
     }
 
     public void configure(ConfigSource config)
@@ -86,147 +71,114 @@ public class LocalExecutor
         this.config = config;
         ExecutorTask task = config.loadTask(ExecutorTask.class);
 
-        in = newInputPlugin(task.getInputType());
-        out = newOutputPlugin(task.getOutputType());
-        inputTran = in.newInputTransaction();
-        outputTran = out.newOutputTransaction();
+        ProcTask proc = new ProcTask(injector);
 
-        ProcConfig proc = new ProcConfig();
-        inputTask = inputTran.getInputTask(proc, config);
-        procTask = proc.getProcTask();
-        outputTask = outputTran.getOutputTask(procTask, config);
+        in = proc.newPlugin(InputPlugin.class, task.getInputType());
+        out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
 
-        task.setProcessorCount(procTask.getProcessorCount());
-        task.setSchema(procTask.getSchema());
+        task.setInputTask(in.getInputTask(proc, config));
+        task.setOutputTask(out.getOutputTask(proc, config));
+        task.setProcTask(proc.dump());
 
-        validateTransaction();
+        this.taskSource = config.dumpTask(task);
+
+        System.out.println("input: "+task.getInputTask());
+        System.out.println("output: "+task.getOutputTask());
     }
 
-    private void validateTransaction()
+    private static class ProcessContext
     {
-        // TODO
-        System.out.println("input: "+inputTask);
-        System.out.println("output: "+outputTask);
-    }
+        private final Report[] inputReports;
+        private final Report[] outputReports;
 
-    public void begin()
-    {
-        inputTran.begin();
-        outputTran.begin();
-    }
-
-    private static class ProcessingUnit
-    {
-        private final InputProcessor inputProc;
-        private final PageOperator outputOp;
-        private final MonitoringOperator monitorOp;
-        private Report inputReport;
-        private Report outputReport;
-
-        public ProcessingUnit(InputProcessor inputProc, PageOperator outputOp,
-                MonitoringOperator monitorOp)
+        public ProcessContext(int processorCount)
         {
-            this.inputProc = inputProc;
-            this.outputOp = outputOp;
-            this.monitorOp = monitorOp;
-        }
-
-        public void join() throws InterruptedException
-        {
-            this.inputReport = inputProc.join();
-            this.outputReport = monitorOp.getReport();
-        }
-
-        public Report getInputReport()
-        {
-            return inputReport;
-        }
-
-        public Report getOutputReport()
-        {
-            return outputReport;
-        }
-
-        public static Function<ProcessingUnit, Report> inputReportGetter()
-        {
-            return new Function<ProcessingUnit, Report>() {
-                public Report apply(ProcessingUnit unit)
-                {
-                    return unit.getInputReport();
-                }
-            };
-        }
-
-        public static Function<ProcessingUnit, Report> outputReportGetter()
-        {
-            return new Function<ProcessingUnit, Report>() {
-                public Report apply(ProcessingUnit unit)
-                {
-                    return unit.getOutputReport();
-                }
-            };
-        }
-
-        public void close() throws Exception
-        {
-            inputProc.close();
-        }
-    }
-
-    public void start()
-    {
-        for (int procIndex=0; procIndex < procTask.getProcessorCount(); procIndex++) {
-            PageOperator outputOp = out.openPageOperator(procTask, outputTask, procIndex);
-            try {
-                MonitoringOperator monitorOp = new MonitoringOperator(outputOp);
-                InputProcessor inputProc = in.startInputProcessor(procTask, inputTask, procIndex, monitorOp);
-                units.add(new ProcessingUnit(inputProc, outputOp, monitorOp));
-            } catch (RuntimeException ex) {
-                try {
-                    outputOp.close();
-                } catch (Exception suppressed) {
-                    ex.addSuppressed(suppressed);
-                }
-                throw ex;
+            this.inputReports = new Report[processorCount];
+            this.outputReports = new Report[processorCount];
+            for (int i=0; i < processorCount; i++) {
+                inputReports[i] = outputReports[i] = new NullReport();
             }
         }
 
-        // TODO start progress reporter thread
-    }
+        public void setInputReport(int processorIndex, Report report)
+        {
+            inputReports[processorIndex] = report;
+        }
 
-    public void join() throws InterruptedException
-    {
-        for (ProcessingUnit unit : units) {
-            unit.join();
+        public void setOutputReport(int processorIndex, Report report)
+        {
+            outputReports[processorIndex] = report;
+        }
+
+        public List<Report> getInputReports()
+        {
+            return ImmutableList.copyOf(inputReports);
+        }
+
+        public List<Report> getOutputReports()
+        {
+            return ImmutableList.copyOf(outputReports);
         }
     }
 
-    public void abort()
+    public void run()
     {
-        // TODO async thread safe method
+        final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+        final ProcTask proc = ProcTask.load(injector, task.getProcTask());
+        final ProcessContext context = new ProcessContext(proc.getProcessorCount());
 
-        outputTran.abort();
-        inputTran.abort();
+        in.runInputTransaction(proc, task.getInputTask(), new ProcControl() {
+            public List<Report> run()
+            {
+                out.runOutputTransaction(proc, task.getOutputTask(), new ProcControl() {
+                    public List<Report> run()
+                    {
+                        process(proc, task, context);
+                        return context.getOutputReports();
+                    }
+                });
+                return context.getInputReports();
+            }
+        });
     }
 
-    public void commit()
+    private static void process(final ProcTask proc, final ExecutorTask task, final ProcessContext context)
     {
-        // TODO check join() was already called
+        final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
+        final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
 
-        List<Report> inputReports = ImmutableList.copyOf(
-                Iterables.transform(units, ProcessingUnit.inputReportGetter()));
-        List<Report> outputReports = ImmutableList.copyOf(
-                Iterables.transform(units, ProcessingUnit.outputReportGetter()));
+        // TODO multi-threading
 
-        outputTran.commit(outputReports);
-        inputTran.commit(inputReports);
-    }
+        for (int i=0; i < proc.getProcessorCount(); i++) {
+            final int processorIndex = i;
 
-    @Override
-    public void close() throws Exception
-    {
-        for (ProcessingUnit unit : units) {
-            unit.close();
+            try (final PageChannel channel = proc.newPageChannel()) {
+                proc.startPluginThread(new PluginThread() {
+                    public void run()
+                    {
+                        try {
+                            // TODO return Report
+                            Report report = out.runOutput(proc, task.getOutputTask(),
+                                processorIndex, channel.getInput());
+                            context.setOutputReport(processorIndex, report);
+                        } catch (Exception ex) {
+                            context.setOutputReport(processorIndex, new FailedReport(ex));
+                        } finally {
+                            channel.completeConsumer();
+                        }
+                    }
+                });
+
+                try {
+                    Report report = in.runInput(proc, task.getInputTask(),
+                            processorIndex, channel.getOutput());
+                    channel.completeProducer();
+                    channel.join();
+                    context.setInputReport(processorIndex, report);
+                } catch (Exception ex) {
+                    context.setInputReport(processorIndex, new FailedReport(ex));
+                }
+            }
         }
     }
 }

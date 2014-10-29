@@ -5,28 +5,26 @@ import org.msgpack.MessagePack;
 import org.msgpack.packer.BufferPacker;
 import org.msgpack.packer.Packer;
 import org.quickload.buffer.Buffer;
+import org.quickload.buffer.BufferAllocator;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
-import org.quickload.exec.BufferManager;
-import org.quickload.record.*;
-import org.quickload.spi.AbstractOperator;
-import org.quickload.spi.BufferOperator;
+import org.quickload.record.Column;
+import org.quickload.record.Page;
+import org.quickload.record.PageReader;
+import org.quickload.record.RecordConsumer;
+import org.quickload.record.RecordCursor;
+import org.quickload.record.Schema;
+import org.quickload.channel.PageInput;
+import org.quickload.channel.BufferOutput;
 import org.quickload.spi.FormatterPlugin;
-import org.quickload.spi.PageOperator;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.Report;
 
 import java.io.IOException;
 
 public class MessagePackFormatterPlugin
         implements FormatterPlugin
 {
-    private final BufferManager bufferManager;
-
-    @Inject
-    public MessagePackFormatterPlugin(BufferManager bufferManager) { this.bufferManager = bufferManager; }
-
     public interface PluginTask
             extends Task
     {
@@ -40,48 +38,29 @@ public class MessagePackFormatterPlugin
     }
 
     @Override
-    public PageOperator openPageOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex, BufferOperator next)
+    public void runFormatter(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            PageInput pageInput, BufferOutput bufferOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new PluginOperator(proc.getSchema(), processorIndex, next);
-    }
+        Schema schema = proc.getSchema();
+        BufferAllocator bufferAllocator = proc.getBufferAllocator();
+        PageReader pageReader = new PageReader(schema);
+        MessagePack msgpack = new MessagePack();
 
-    @Override
-    public void shutdown()
-    {
-        // TODO
-    }
-
-    class PluginOperator
-            extends AbstractOperator<BufferOperator>
-            implements PageOperator
-    {
-        private final Schema schema;
-        private final PageReader pageReader;
-        private final int processorIndex;
-        private final MessagePack msgpack;
-
-        private PluginOperator(Schema schema, int processorIndex, BufferOperator next)
-        {
-            super(next);
-            this.schema = schema;
-            this.pageReader = new PageReader(bufferManager, schema);
-            this.processorIndex = processorIndex;
-            this.msgpack = new MessagePack();
-        }
-
-        @Override
-        public void addPage(Page page)
-        {
+        for (Page page : pageInput) {
             // TODO simple implementation
             final BufferPacker packer = msgpack.createBufferPacker(); // TODO
 
             RecordCursor recordCursor = pageReader.cursor(page);
 
             while (recordCursor.next()) {
-                RecordConsumer recordConsumer = new RecordConsumer()
-                {
+                try {
+                    packer.writeMapBegin(schema.getColumns().size());
+                } catch (IOException e) { // TODO better handling
+                    e.printStackTrace(); // TODO
+                }
+
+                schema.consume(recordCursor, new RecordConsumer() {
                     @Override
                     public void setNull(Column column)
                     {
@@ -129,11 +108,9 @@ public class MessagePackFormatterPlugin
                     {
                         packer.write(column.getName());
                     }
-                };
+                });
 
                 try {
-                    packer.writeMapBegin(schema.getColumns().size());
-                    schema.consume(recordCursor, recordConsumer);
                     packer.writeMapEnd();
                 } catch (IOException e) { // TODO better handling
                     e.printStackTrace(); // TODO
@@ -141,21 +118,9 @@ public class MessagePackFormatterPlugin
             }
 
             byte[] bytes = packer.toByteArray();
-            Buffer buf = bufferManager.allocateBuffer(bytes.length); // TODO
+            Buffer buf = bufferAllocator.allocateBuffer(bytes.length); // TODO
             buf.write(bytes, 0, bytes.length);
-            next.addBuffer(buf);
-        }
-
-        @Override
-        public Report completed()
-        {
-            return null; // TODO
-        }
-
-        @Override
-        public void close() throws Exception
-        {
-            // TODO
+            bufferOutput.add(buf);
         }
     }
 }

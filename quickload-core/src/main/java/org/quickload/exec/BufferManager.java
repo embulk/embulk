@@ -1,31 +1,23 @@
 package org.quickload.exec;
 
 import org.quickload.buffer.Buffer;
+import org.quickload.buffer.BufferAllocator;
 import org.quickload.record.Page;
 import org.quickload.record.PageAllocator;
 
 public class BufferManager
-        implements PageAllocator
+        implements PageAllocator, BufferAllocator
 {
-    public Page allocatePage(int minimumCapacity)
-    {
-        // TODO cache
-        return Page.allocate(Math.max(128*1024, minimumCapacity));
-    }
-
-    public void releasePage(Page page)
-    {
-        // TODO cache
-        //page.clear();
-    }
-
+    @Override
     public Buffer allocateBuffer(int minimumCapacity)
     {
         return Buffer.allocate(minimumCapacity);
     }
 
-    public void releaseBuffer(Buffer buf)
+    @Override
+    public Page allocatePage(int minimumCapacity)
     {
-        // TODO
+        // TODO cache
+        return Page.allocate(Math.max(128*1024, minimumCapacity));
     }
 }

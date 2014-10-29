@@ -1,7 +1,6 @@
 package org.quickload.standards;
 
 import javax.validation.constraints.NotNull;
-import com.google.inject.Inject;
 import org.quickload.exec.BufferManager;
 import org.quickload.record.Column;
 import org.quickload.record.DoubleType;
@@ -10,22 +9,22 @@ import org.quickload.record.RecordProducer;
 import org.quickload.record.Schema;
 import org.quickload.record.StringType;
 import org.quickload.record.PageBuilder;
-import org.quickload.config.*;
-import org.quickload.spi.*;
+import org.quickload.channel.BufferInput;
+import org.quickload.channel.PageOutput;
+import org.quickload.config.Config;
+import org.quickload.config.ConfigSource;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
+import org.quickload.spi.ParserPlugin;
+import org.quickload.spi.ProcTask;
+import org.quickload.spi.LineDecoder;
+import org.quickload.spi.LineDecoderTask;
 
 public class CsvParserPlugin
-        extends LineParserPlugin
+        implements ParserPlugin
 {
-    private final BufferManager bufferManager;
-
-    @Inject
-    public CsvParserPlugin(BufferManager bufferManager)
-    {
-        this.bufferManager = bufferManager;
-    }
-
     public interface PluginTask
-            extends Task
+            extends Task, LineDecoderTask
     {
         @Config("in:schema")
         @NotNull
@@ -33,44 +32,23 @@ public class CsvParserPlugin
     }
 
     @Override
-    public TaskSource getLineParserTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getParserTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setSchema(task.getSchema());
         return config.dumpTask(task);
     }
 
-    @Override
-    public LineOperator openLineOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex, PageOperator next)
+    public void runParser(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            BufferInput bufferInput, PageOutput pageOutput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new Operator(proc.getSchema(), processorIndex, next);
-    }
+        Schema schema = proc.getSchema();
+        LineDecoder decoder = new LineDecoder(bufferInput, task);
+        PageBuilder pageBuilder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput);
 
-    public void shutdown()
-    {
-        // TODO
-    }
-
-    class Operator
-            extends AbstractOperator<PageOperator>
-            implements LineOperator
-    {
-        private final Schema schema;
-        private final PageBuilder pageBuilder;
-
-        public Operator(Schema schema, int processorIndex,
-                PageOperator next)
-        {
-            super(next);
-            this.schema = schema;
-            this.pageBuilder = new PageBuilder(bufferManager, schema, next);
-        }
-
-        @Override
-        public void addLine(String line)
-        {
+        for (String line : decoder) {
             final String[] lineValues = line.split(","); // TODO ad-hoc parsing
             schema.produce(pageBuilder, new RecordProducer() {
                 @Override
@@ -90,12 +68,6 @@ public class CsvParserPlugin
             });
             pageBuilder.addRecord();
         }
-
-        @Override
-        public Report completed()
-        {
-            pageBuilder.flush();
-            return super.completed();
-        }
+        pageBuilder.flush();
     }
 }

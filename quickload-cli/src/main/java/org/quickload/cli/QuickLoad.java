@@ -67,12 +67,9 @@ public class QuickLoad {
         ModelManager modelManager = injector.getInstance(ModelManager.class);
         ConfigSource config = new ConfigSource(modelManager, json);
 
-        try (LocalExecutor exec = injector.getInstance(LocalExecutor.class)) {
-            exec.configure(config);
-            exec.begin();
-            exec.start();
-            exec.join();
-        }
+        LocalExecutor exec = injector.getInstance(LocalExecutor.class);
+        exec.configure(config);
+        exec.run();
     }
 
     private static ObjectNode column(JsonNodeFactory js,

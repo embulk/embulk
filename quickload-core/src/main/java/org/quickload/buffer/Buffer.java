@@ -2,7 +2,9 @@ package org.quickload.buffer;
 
 import java.nio.ByteBuffer;
 
-public class Buffer {
+public class Buffer
+        implements Allocated
+{
     public static Buffer allocate(int size) {
         return new Buffer(ByteBuffer.allocate(size));
     }
@@ -11,6 +13,11 @@ public class Buffer {
 
     public Buffer(ByteBuffer bb) {
         this.bb = bb;
+    }
+
+    public int length()
+    {
+        return bb.remaining();
     }
 
     public int capacity()
@@ -31,5 +38,9 @@ public class Buffer {
     public void flush()
     {
         bb.flip();
+    }
+
+    public void release()
+    {
     }
 }

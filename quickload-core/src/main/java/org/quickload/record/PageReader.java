@@ -4,9 +4,9 @@ public class PageReader
 {
     private final RecordCursor cursor;
 
-    public PageReader(PageAllocator allocator, Schema schema)
+    public PageReader(Schema schema)
     {
-        this.cursor = new RecordCursor(allocator, schema);
+        this.cursor = new RecordCursor(schema);
     }
 
     public RecordCursor cursor(Page page)

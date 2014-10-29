@@ -1,8 +1,7 @@
 package org.quickload.standards;
 
-import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
-import org.quickload.exec.BufferManager;
+import org.quickload.buffer.BufferAllocator;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
@@ -12,24 +11,14 @@ import org.quickload.record.PageReader;
 import org.quickload.record.RecordConsumer;
 import org.quickload.record.RecordCursor;
 import org.quickload.record.Schema;
-import org.quickload.spi.AbstractOperator;
-import org.quickload.spi.BufferOperator;
+import org.quickload.channel.PageInput;
+import org.quickload.channel.BufferOutput;
 import org.quickload.spi.FormatterPlugin;
-import org.quickload.spi.PageOperator;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.Report;
 
 public class CsvFormatterPlugin
         implements FormatterPlugin
 {
-    private final BufferManager bufferManager;
-
-    @Inject
-    public CsvFormatterPlugin(BufferManager bufferManager)
-    {
-        this.bufferManager = bufferManager;
-    }
-
     public interface PluginTask
             extends Task
     {
@@ -43,45 +32,23 @@ public class CsvFormatterPlugin
     }
 
     @Override
-    public PageOperator openPageOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex, BufferOperator next)
+    public void runFormatter(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            PageInput pageInput, BufferOutput bufferOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new PluginOperator(proc.getSchema(), processorIndex, next);
-    }
+        PageReader pageReader = new PageReader(proc.getSchema());
+        Schema schema = proc.getSchema();
+        BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
-    public void shutdown()
-    {
-        // TODO
-    }
+        final StringBuilder sbuf = new StringBuilder(); // TODO
 
-    class PluginOperator
-            extends AbstractOperator<BufferOperator>
-            implements PageOperator
-    {
-        private final Schema schema;
-        private final PageReader pageReader;
-        private final int processorIndex;
-
-        private PluginOperator(Schema schema, int processorIndex, BufferOperator next)
-        {
-            super(next);
-            this.schema = schema;
-            this.pageReader = new PageReader(bufferManager, schema);
-            this.processorIndex = processorIndex;
-        }
-
-        @Override
-        public void addPage(Page page)
-        {
+        for (Page page : pageInput) {
             // TODO simple implementation
-            final StringBuilder sbuf = new StringBuilder(); // TODO
 
             RecordCursor recordCursor = pageReader.cursor(page);
 
             while (recordCursor.next()) {
-                RecordConsumer recordConsumer = new RecordConsumer()
-                {
+                schema.consume(recordCursor, new RecordConsumer() {
                     @Override
                     public void setNull(Column column) {
                         sbuf.append(',');
@@ -101,28 +68,15 @@ public class CsvFormatterPlugin
                     public void setString(Column column, String value) {
                         sbuf.append(value).append(',');
                     }
-                };
-                schema.consume(recordCursor, recordConsumer);
+                });
                 sbuf.delete(sbuf.length() - 1, sbuf.length());
                 sbuf.append('\n');
             }
 
-            Buffer buf = bufferManager.allocateBuffer(sbuf.length()); // TODO
             byte[] bytes = sbuf.toString().getBytes();
+            Buffer buf = bufferAllocator.allocateBuffer(bytes.length); // TODO
             buf.write(bytes, 0, bytes.length);
-            next.addBuffer(buf);
-        }
-
-        @Override
-        public Report completed()
-        {
-            return null; // TODO
-        }
-
-        @Override
-        public void close()
-        {
-            // TODO
+            bufferOutput.add(buf);
         }
     }
 }

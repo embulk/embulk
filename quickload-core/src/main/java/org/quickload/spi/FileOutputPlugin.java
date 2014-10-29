@@ -1,28 +1,32 @@
 package org.quickload.spi;
 
+import java.util.concurrent.Future;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
-import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
-import org.quickload.plugin.PluginManager;
+import org.quickload.config.TaskSource;
+import org.quickload.config.Report;
+import org.quickload.channel.BufferChannel;
+import org.quickload.channel.BufferInput;
+import org.quickload.channel.PageInput;
 
 public abstract class FileOutputPlugin
-        extends BasicOutputPlugin
+        implements OutputPlugin
 {
-    protected final PluginManager pluginManager;  // TODO get from ProcTask?
-    private FormatterPlugin formatter;
-
-    public FileOutputPlugin(PluginManager pluginManager)
-    {
-        this.pluginManager = pluginManager;
-    }
-
     public abstract TaskSource getFileOutputTask(ProcTask proc, ConfigSource config);
 
-    public abstract BufferOperator openBufferOutputOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex);
+    @Override
+    public void runOutputTransaction(ProcTask proc, TaskSource taskSource,
+            ProcControl control)
+    {
+        control.run();
+    }
+
+    public abstract Report runFileOutput(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            BufferInput bufferInput);
 
     public interface OutputTask
             extends Task
@@ -38,36 +42,44 @@ public abstract class FileOutputPlugin
         public void setFileOutputTask(TaskSource task);
     }
 
-    public FormatterPlugin newFormatterPlugin(JsonNode typeConfig)
-    {
-        return pluginManager.newPlugin(FormatterPlugin.class, typeConfig);
-    }
-
     @Override
     public TaskSource getOutputTask(ProcTask proc, ConfigSource config)
     {
         OutputTask task = config.loadTask(OutputTask.class);
-        formatter = newFormatterPlugin(task.getFormatterType());
+        FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
         task.setFormatterTask(formatter.getFormatterTask(proc, config));
         task.setFileOutputTask(getFileOutputTask(proc, config));
         return config.dumpTask(task);
     }
 
     @Override
-    public PageOperator openPageOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex)
+    public Report runOutput(final ProcTask proc,
+            TaskSource taskSource, final int processorIndex,
+            final PageInput pageInput)
     {
-        OutputTask task = taskSource.loadTask(OutputTask.class);
-        formatter = newFormatterPlugin(task.getFormatterType());
-        return formatter.openPageOperator(proc, task.getFormatterTask(), processorIndex,
-                openBufferOutputOperator(proc, task.getFileOutputTask(), processorIndex));
-    }
+        final OutputTask task = taskSource.loadTask(OutputTask.class);
+        final FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
+        try (final BufferChannel channel = proc.newBufferChannel()) {
+            proc.startPluginThread(new PluginThread() {
+                public void run()
+                {
+                    try {
+                        formatter.runFormatter(proc,
+                                task.getFormatterTask(), processorIndex,
+                                pageInput, channel.getOutput());
+                    } finally {
+                        channel.completeConsumer();
+                    }
+                }
+            });
 
-    @Override
-    public void shutdown()
-    {
-        if (formatter != null) {
-            formatter.shutdown();
+            Report report = runFileOutput(proc,
+                    task.getFileOutputTask(), processorIndex,
+                    channel.getInput());
+            channel.completeProducer();
+            channel.join();
+
+            return report;  // TODO merge formatterReport
         }
     }
 }
