@@ -1,19 +1,18 @@
 package org.quickload.standards;
 
 import javax.validation.constraints.NotNull;
-import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.Report;
+import org.quickload.config.NullReport;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
-import org.quickload.spi.BufferOperator;
+import org.quickload.channel.BufferInput;
 import org.quickload.spi.FileOutputPlugin;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.Report;
-import org.quickload.spi.FailedReport;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -28,12 +27,6 @@ import java.util.zip.GZIPOutputStream;
 public class LocalFileOutputPlugin
         extends FileOutputPlugin
 {
-    @Inject
-    public LocalFileOutputPlugin(PluginManager pluginManager)
-    {
-        super(pluginManager);
-    }
-
     public interface PluginTask
             extends Task
     {
@@ -53,28 +46,12 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public BufferOperator openBufferOutputOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex)
+    public Report runFileOutput(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            BufferInput bufferInput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new PluginOperator(task, processorIndex);
-    }
-
-    // TODO can be PluginOperator ported to standard library?
-    public static class PluginOperator
-            implements BufferOperator
-    {
-        private final PluginTask task;
-        private final int processorIndex;
-
-        PluginOperator(PluginTask task, int processorIndex)
-        {
-            this.task = task;
-            this.processorIndex = processorIndex;
-        }
-
-        @Override
-        public void addBuffer(Buffer buffer) {
+        for (Buffer buffer : bufferInput) {
             // TODO simple implementation
 
             String filePath = task.getPaths().get(processorIndex);
@@ -87,7 +64,7 @@ public class LocalFileOutputPlugin
                 }
             }
 
-            try (OutputStream out = createFileOutputStream(file)) {
+            try (OutputStream out = createFileOutputStream(file, task)) {
                 ByteBuffer buf = buffer.getBuffer();
                 byte[] bytes = buf.array(); // TODO
                 out.write(bytes, 0, bytes.length);
@@ -100,36 +77,21 @@ public class LocalFileOutputPlugin
             System.out.println("write file: " + filePath); // TODO debug message
         }
 
-        private OutputStream createFileOutputStream(File file)
-                throws IOException
-        {
-            String compressType = task.getCompressType();
-            if (compressType == null) { // null is for 'none' mode
-                return new BufferedOutputStream(new FileOutputStream(file));
-            } else if (compressType.equals("none")) { // TODO
-                return new BufferedOutputStream(new FileOutputStream(file));
-            } else if (compressType.equals("gzip")) {
-                return new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-            } else {
-                throw new IOException("not supported yet");
-            }
-        }
+        return new NullReport();
+    }
 
-        @Override
-        public Report failed(Exception cause)
-        {
-            // TODO
-            return new FailedReport(null, null);
-        }
-
-        @Override
-        public Report completed() {
-            return null; // TODO
-        }
-
-        @Override
-        public void close() throws Exception {
-            // TODO
+    private OutputStream createFileOutputStream(File file, PluginTask task)
+        throws IOException
+    {
+        String compressType = task.getCompressType();
+        if (compressType == null) { // null is for 'none' mode
+            return new BufferedOutputStream(new FileOutputStream(file));
+        } else if (compressType.equals("none")) { // TODO
+            return new BufferedOutputStream(new FileOutputStream(file));
+        } else if (compressType.equals("gzip")) {
+            return new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+        } else {
+            throw new IOException("not supported yet");
         }
     }
 }

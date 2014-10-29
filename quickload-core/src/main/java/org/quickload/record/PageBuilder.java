@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 import java.util.Arrays;
+import org.quickload.channel.PageOutput;
 
 public class PageBuilder
 {
@@ -46,7 +47,7 @@ public class PageBuilder
             // page header
             page.setInt(0, count);
 
-            output.addPage(page);
+            output.add(page);
             this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
             this.count = 0;
             this.position = Page.PAGE_HEADER_SIZE;
@@ -66,7 +67,7 @@ public class PageBuilder
             this.count = 0;
             this.position = Page.PAGE_HEADER_SIZE;
 
-            output.addPage(lastPage);
+            output.add(lastPage);
         }
     }
 

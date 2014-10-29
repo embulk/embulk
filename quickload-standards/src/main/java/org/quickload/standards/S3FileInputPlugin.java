@@ -12,19 +12,16 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
+import org.quickload.buffer.BufferAllocator;
+import org.quickload.channel.BufferOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
-import org.quickload.exec.BufferManager;
-import org.quickload.plugin.PluginManager;
-import org.quickload.spi.BufferOperator;
-import org.quickload.spi.DynamicReport;
+import org.quickload.config.Report;
+import org.quickload.config.NullReport;
 import org.quickload.spi.FileInputPlugin;
-import org.quickload.spi.InputProcessor;
-import org.quickload.spi.ProcConfig;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.ReportBuilder;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
@@ -33,17 +30,9 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-public class S3FileInputPlugin extends FileInputPlugin
+public class S3FileInputPlugin
+        extends FileInputPlugin
 {
-    protected final BufferManager bufferManager;
-
-    @Inject
-    public S3FileInputPlugin(BufferManager bufferManager, PluginManager pluginManager)
-    {
-        super(pluginManager);
-        this.bufferManager = bufferManager;
-    }
-
     public interface PluginTask extends Task
     {
         @Config("in:endpoint")
@@ -63,7 +52,7 @@ public class S3FileInputPlugin extends FileInputPlugin
     }
 
     @Override
-    public TaskSource getFileInputTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getFileInputTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
@@ -94,27 +83,18 @@ public class S3FileInputPlugin extends FileInputPlugin
     }
 
     @Override
-    public InputProcessor startFileInputProcessor(ProcTask proc,
-            TaskSource taskSource, final int processorIndex, final BufferOperator next)
+    public Report runFileInput(ProcTask proc, TaskSource taskSource,
+            int processorIndex, BufferOutput bufferOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
-
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
         final AmazonS3Client client = createS3Client(task);
         final String bucket = task.getBucket();
         final String key = task.getPaths().get(processorIndex);
-        return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
-            public ReportBuilder apply(BufferOperator next) {
-                return readFile(client, bucket, key, next);
-            }
-        });
-    }
+        BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
-    private ReportBuilder readFile(AmazonS3Client client, String bucket,
-             String key, BufferOperator next)
-    {
         // TODO retry if metadata might be used
         long contentLength = client.getObjectMetadata(bucket, key).getContentLength();
-        Buffer buf = bufferManager.allocateBuffer(128*1024);
+        Buffer buf = bufferAllocator.allocateBuffer(128*1024);
 
         long pos = 0;
         Opener opener = new Opener(client, bucket, key, contentLength);
@@ -132,10 +112,10 @@ public class S3FileInputPlugin extends FileInputPlugin
                     } else {
                         buf.write(bytes, 0, rest);
                         buf.flush();
-                        next.addBuffer(buf);
+                        bufferOutput.add(buf);
                         offset = 0;
 
-                        buf = bufferManager.allocateBuffer(128*1024); // TODO
+                        buf = bufferAllocator.allocateBuffer(128*1024); // TODO
                         buf.write(bytes, rest, len - rest);
                         offset += len - rest;
                     }
@@ -143,7 +123,7 @@ public class S3FileInputPlugin extends FileInputPlugin
 
                 if (offset > 0) {
                     buf.flush();
-                    next.addBuffer(buf);
+                    bufferOutput.add(buf);
                 }
 
                 break;
@@ -159,7 +139,7 @@ public class S3FileInputPlugin extends FileInputPlugin
             // TODO retry wait and retry limit
         }
 
-        return DynamicReport.builder(); // TODO
+        return new NullReport();
     }
 
     public static class Opener

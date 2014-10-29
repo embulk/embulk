@@ -4,14 +4,18 @@ import javax.validation.constraints.NotNull;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
+import org.quickload.buffer.BufferAllocator;
 import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
-import org.quickload.exec.BufferManager;
+import org.quickload.config.Report;
+import org.quickload.config.NullReport;
+import org.quickload.channel.BufferOutput;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
-import org.quickload.spi.*;
+import org.quickload.spi.FileInputPlugin;
+import org.quickload.spi.ProcTask;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -22,17 +26,6 @@ import java.util.List;
 public class LocalFileInputPlugin
         extends FileInputPlugin
 {
-    protected final BufferManager bufferManager;
-
-    @Inject
-    public LocalFileInputPlugin(BufferManager bufferManager, PluginManager pluginManager)
-    {
-        super(pluginManager);
-        this.bufferManager = bufferManager;
-    }
-
-    // TODO consider when the page allocator object is released?
-
     public interface PluginTask
             extends Task
     {
@@ -42,7 +35,7 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public TaskSource getFileInputTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getFileInputTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
@@ -50,27 +43,19 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public InputProcessor startFileInputProcessor(ProcTask proc,
-            TaskSource taskSource, final int processorIndex, final BufferOperator next)
+    public Report runFileInput(ProcTask proc, TaskSource taskSource,
+            int processorIndex, BufferOutput bufferOutput)
     {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
-        return ThreadInputProcessor.start(next, new Function<BufferOperator, ReportBuilder>() {
-            public ReportBuilder apply(BufferOperator next) {
-                return readFile(task, processorIndex, bufferManager, next);
-            }
-        });
-    }
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
-    public static ReportBuilder readFile(PluginTask task, int processorIndex,
-            BufferManager bufferManager, BufferOperator next)
-    {
         // TODO ad-hoc
         String path = task.getPaths().get(processorIndex);
 
         try {
             File file = new File(path);
             byte[] bytes = new byte[1024];
-            Buffer buf = bufferManager.allocateBuffer(128*1024); // TODO
+            Buffer buf = bufferAllocator.allocateBuffer(128*1024); // TODO
 
             int len = 0, offset = 0;
             try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
@@ -82,10 +67,10 @@ public class LocalFileInputPlugin
                     } else {
                         buf.write(bytes, 0, rest);
                         buf.flush();
-                        next.addBuffer(buf);
+                        bufferOutput.add(buf);
                         offset = 0;
 
-                        buf = bufferManager.allocateBuffer(128*1024); // TODO
+                        buf = bufferAllocator.allocateBuffer(128*1024); // TODO
                         buf.write(bytes, rest, len - rest);
                         offset += len - rest;
                     }
@@ -93,13 +78,13 @@ public class LocalFileInputPlugin
 
                 if (offset > 0) {
                     buf.flush();
-                    next.addBuffer(buf);
+                    bufferOutput.add(buf);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace(); // TODO
         }
 
-        return DynamicReport.builder(); // TODO
+        return new NullReport();
     }
 }

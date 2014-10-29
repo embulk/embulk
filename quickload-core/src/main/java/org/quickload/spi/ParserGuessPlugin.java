@@ -4,7 +4,9 @@ import org.quickload.config.ConfigSource;
 
 public interface ParserGuessPlugin
 {
-    public ParserGuessOperator openLineGuessOperator(ConfigSource config);
+    // TODO
 
-    public void shutdown();
+    //public ParserGuessOperator openLineGuessOperator(ConfigSource config);
+
+    //public void shutdown();
 }

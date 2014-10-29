@@ -1,28 +1,31 @@
 package org.quickload.spi;
 
+import java.util.concurrent.Future;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
-import org.quickload.plugin.PluginManager;
+import org.quickload.config.Report;
+import org.quickload.channel.BufferChannel;
+import org.quickload.channel.BufferOutput;
+import org.quickload.channel.PageOutput;
 
 public abstract class FileInputPlugin
-        extends BasicInputPlugin
+        implements InputPlugin
 {
-    protected final PluginManager pluginManager;  // TODO get from ProcTask or ProcConfig?
-    private ParserPlugin parser;
+    public abstract TaskSource getFileInputTask(ProcTask proc, ConfigSource config);
 
-    public FileInputPlugin(PluginManager pluginManager)
+    @Override
+    public void runInputTransaction(ProcTask proc, TaskSource taskSource,
+            ProcControl control)
     {
-        this.pluginManager = pluginManager;
+        control.run();
     }
 
-    public abstract TaskSource getFileInputTask(ProcConfig proc, ConfigSource config);
-
-    public abstract InputProcessor startFileInputProcessor(ProcTask proc,
-            TaskSource taskSource, int processorIndex, BufferOperator next);
+    public abstract Report runFileInput(ProcTask proc, TaskSource taskSource,
+            int processorIndex, BufferOutput bufferOutput);
 
     public interface InputTask
             extends Task
@@ -38,36 +41,44 @@ public abstract class FileInputPlugin
         public void setFileInputTask(TaskSource task);
     }
 
-    public ParserPlugin newParserPlugin(JsonNode typeConfig)
-    {
-        return pluginManager.newPlugin(ParserPlugin.class, typeConfig);
-    }
-
     @Override
-    public TaskSource getInputTask(ProcConfig proc, ConfigSource config)
+    public TaskSource getInputTask(ProcTask proc, ConfigSource config)
     {
         InputTask task = config.loadTask(InputTask.class);
-        parser = newParserPlugin(task.getParserType());
+        ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
         task.setParserTask(parser.getParserTask(proc, config));
         task.setFileInputTask(getFileInputTask(proc, config));
         return config.dumpTask(task);
     }
 
     @Override
-    public InputProcessor startInputProcessor(ProcTask proc,
-            TaskSource taskSource, int processorIndex, PageOperator next)
+    public Report runInput(final ProcTask proc,
+            TaskSource taskSource, final int processorIndex,
+            final PageOutput pageOutput)
     {
-        InputTask task = taskSource.loadTask(InputTask.class);
-        parser = newParserPlugin(task.getParserType());
-        return startFileInputProcessor(proc, task.getFileInputTask(), processorIndex,
-                parser.openBufferOperator(proc, task.getParserTask(), processorIndex, next));
-    }
+        final InputTask task = taskSource.loadTask(InputTask.class);
+        final ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
+        try (final BufferChannel channel = proc.newBufferChannel()) {
+            proc.startPluginThread(new PluginThread() {
+                public void run()
+                {
+                    try {
+                        parser.runParser(proc,
+                                task.getParserTask(), processorIndex,
+                                channel.getInput(), pageOutput);
+                    } finally {
+                        channel.completeConsumer();
+                    }
+                }
+            });
 
-    @Override
-    public void shutdown()
-    {
-        if (parser != null) {
-            parser.shutdown();
+            Report report = runFileInput(proc,
+                    task.getFileInputTask(), processorIndex,
+                    channel.getOutput());
+            channel.completeProducer();
+            channel.join();
+
+            return report;
         }
     }
 }

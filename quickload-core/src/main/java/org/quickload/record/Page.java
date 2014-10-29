@@ -1,12 +1,13 @@
 package org.quickload.record;
 
-import io.airlift.slice.Slice;
-import io.airlift.slice.Slices;
-
 import java.util.ArrayList;
 import java.util.List;
+import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
+import org.quickload.buffer.Allocated;
 
 public class Page
+        implements Allocated
 {
     // PageHeader
     // +---+
@@ -190,5 +191,10 @@ public class Page
         int index = stringReferences.size();
         stringReferences.add(value);
         return index;
+    }
+
+    public void release()
+    {
+        // TODO
     }
 }

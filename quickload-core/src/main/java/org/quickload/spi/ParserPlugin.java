@@ -2,13 +2,14 @@ package org.quickload.spi;
 
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.channel.BufferInput;
+import org.quickload.channel.PageOutput;
 
 public interface ParserPlugin
 {
-    public TaskSource getParserTask(ProcConfig proc, ConfigSource config);
+    public TaskSource getParserTask(ProcTask proc, ConfigSource config);
 
-    public BufferOperator openBufferOperator(ProcTask proc,
-            TaskSource taskSource, int processorIndex, PageOperator next);
-
-    public void shutdown();
+    public void runParser(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            BufferInput bufferInput, PageOutput pageOutput);
 }
