@@ -67,4 +67,15 @@ public class Schema
             c.produce(builder, producer);
         }
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder sbuf = new StringBuilder();
+        sbuf.append(String.format(" Schema: %d columns", columns.size())).append('\n');
+        for (Column c : columns) {
+            sbuf.append("   " + c.toString()).append('\n');
+        }
+        return sbuf.toString();
+    }
 }
