@@ -19,6 +19,7 @@ public class RandomPageBuilderReaderTest
     private int rowSize = 10;
 
     protected BufferManager bufferManager;
+
     protected PageChannel channel;
 
     protected Schema schema;
@@ -26,10 +27,14 @@ public class RandomPageBuilderReaderTest
     protected PageBuilder builder;
     protected PageReader reader;
 
+    public RandomPageBuilderReaderTest() throws Exception
+    {
+        bufferManager = new BufferManager();
+    }
+
     @Before
     public void createResources() throws Exception
     {
-        bufferManager = new BufferManager();
         channel = new PageChannel(minCapacity);
 
         schema = new TestRandomSchemaGenerator().generate(schemaSize);
