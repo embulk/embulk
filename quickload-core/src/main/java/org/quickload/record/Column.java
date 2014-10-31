@@ -44,4 +44,10 @@ public class Column
     {
         type.produce(builder, producer, this);
     }
+
+    public String toString()
+    {
+        return String.format("Column(%d, %s, %s)",
+                getIndex(), getName(), getType().getName());
+    }
 }
