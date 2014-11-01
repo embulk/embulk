@@ -6,16 +6,16 @@ import java.util.Map;
 import java.util.Random;
 
 @Ignore
-public class RandomTestUtils {
+public class RandomSeedManager {
     protected long randomSeed;
     protected Random random;
 
-    public RandomTestUtils()
+    public RandomSeedManager()
     {
         this(getDefaultSeed());
     }
 
-    public RandomTestUtils(long randomSeed)
+    public RandomSeedManager(long randomSeed)
     {
         this.randomSeed = randomSeed;
         this.random = new Random(randomSeed);

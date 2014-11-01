@@ -2,21 +2,20 @@ package org.quickload.record;
 
 import org.junit.Ignore;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 @Ignore
-public class TestRandomRecordGenerator extends RandomTestUtils {
+public class TestRandomRecordGenerator
+{
+    private final RandomSeedManager randomSeedManager;
 
-    private final Schema schema;
-
-    public TestRandomRecordGenerator(Schema schema)
+    public TestRandomRecordGenerator(RandomSeedManager randomSeedManager)
     {
-        this.schema = schema;
+        this.randomSeedManager = randomSeedManager;
     }
 
-    public Iterable<Row> generate(final int size)
+    public Iterable<Row> generate(final Schema schema, final int size)
     {
         return new Iterable<Row>() {
             public Iterator<Row> iterator() {
@@ -58,9 +57,9 @@ public class TestRandomRecordGenerator extends RandomTestUtils {
     {
         Type type = column.getType();
         if (type.equals(LongType.LONG)) {
-            return random.nextLong();
+            return randomSeedManager.getRandom().nextLong();
         } else if (type.equals(DoubleType.DOUBLE)) {
-            return random.nextDouble();
+            return randomSeedManager.getRandom().nextDouble();
         } else if (type.equals(StringType.STRING)) {
             return "muga"; // TODO
         } else {

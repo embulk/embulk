@@ -7,7 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Ignore
-public class TestRandomSchemaGenerator extends RandomTestUtils {
+public class TestRandomSchemaGenerator
+{
+    private final RandomSeedManager randomSeedManager;
+
+    public TestRandomSchemaGenerator(RandomSeedManager randomSeedManager)
+    {
+        this.randomSeedManager = randomSeedManager;
+    }
 
     public Schema generate(final int size) throws Exception
     {
@@ -28,7 +35,7 @@ public class TestRandomSchemaGenerator extends RandomTestUtils {
 
     private Type generateType() throws Exception
     {
-        int index = random.nextInt(3);
+        int index = randomSeedManager.getRandom().nextInt(3);
         if (index == 0) {
             return LongType.LONG;
         } else if (index == 1) {

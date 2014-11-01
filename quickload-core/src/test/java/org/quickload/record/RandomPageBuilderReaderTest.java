@@ -1,8 +1,10 @@
 package org.quickload.record;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Module;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
@@ -19,6 +21,7 @@ public class RandomPageBuilderReaderTest
     private int rowSize = 10;
 
     protected BufferManager bufferManager;
+    protected RandomSeedManager randomSeedManager;
 
     protected PageChannel channel;
 
@@ -29,6 +32,7 @@ public class RandomPageBuilderReaderTest
 
     public RandomPageBuilderReaderTest() throws Exception
     {
+        randomSeedManager = new RandomSeedManager();
         bufferManager = new BufferManager();
     }
 
@@ -37,8 +41,8 @@ public class RandomPageBuilderReaderTest
     {
         channel = new PageChannel(minCapacity);
 
-        schema = new TestRandomSchemaGenerator().generate(schemaSize);
-        gen = new TestRandomRecordGenerator(schema);
+        schema = new TestRandomSchemaGenerator(randomSeedManager).generate(schemaSize);
+        gen = new TestRandomRecordGenerator(randomSeedManager);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);
     }
@@ -51,7 +55,7 @@ public class RandomPageBuilderReaderTest
 
     @Test
     public void testRandomData() throws Exception {
-        final List<Row> expected = ImmutableList.copyOf(gen.generate(rowSize));
+        final List<Row> expected = ImmutableList.copyOf(gen.generate(schema, rowSize));
 
         for (final Row record : expected) {
             schema.produce(builder, new RecordProducer()
