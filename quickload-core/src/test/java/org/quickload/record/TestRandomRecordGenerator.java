@@ -1,5 +1,6 @@
 package org.quickload.record;
 
+import com.google.inject.Inject;
 import org.junit.Ignore;
 
 import java.util.Iterator;
@@ -8,11 +9,12 @@ import java.util.List;
 @Ignore
 public class TestRandomRecordGenerator
 {
-    private final RandomSeedManager randomSeedManager;
+    private final RandomManager randomManager;
 
-    public TestRandomRecordGenerator(RandomSeedManager randomSeedManager)
+    @Inject
+    public TestRandomRecordGenerator(RandomManager randomManager)
     {
-        this.randomSeedManager = randomSeedManager;
+        this.randomManager = randomManager;
     }
 
     public Iterable<Row> generate(final Schema schema, final int size)
@@ -57,9 +59,9 @@ public class TestRandomRecordGenerator
     {
         Type type = column.getType();
         if (type.equals(LongType.LONG)) {
-            return randomSeedManager.getRandom().nextLong();
+            return randomManager.getRandom().nextLong();
         } else if (type.equals(DoubleType.DOUBLE)) {
-            return randomSeedManager.getRandom().nextDouble();
+            return randomManager.getRandom().nextDouble();
         } else if (type.equals(StringType.STRING)) {
             return "muga"; // TODO
         } else {

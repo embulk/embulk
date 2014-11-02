@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 
+import com.google.inject.Inject;
 import org.junit.Ignore;
 
 import java.util.ArrayList;
@@ -9,11 +10,12 @@ import java.util.List;
 @Ignore
 public class TestRandomSchemaGenerator
 {
-    private final RandomSeedManager randomSeedManager;
+    private final RandomManager randomManager;
 
-    public TestRandomSchemaGenerator(RandomSeedManager randomSeedManager)
+    @Inject
+    public TestRandomSchemaGenerator(RandomManager randomManager)
     {
-        this.randomSeedManager = randomSeedManager;
+        this.randomManager = randomManager;
     }
 
     public Schema generate(final int size) throws Exception
@@ -35,7 +37,7 @@ public class TestRandomSchemaGenerator
 
     private Type generateType() throws Exception
     {
-        int index = randomSeedManager.getRandom().nextInt(3);
+        int index = randomManager.getRandom().nextInt(3);
         if (index == 0) {
             return LongType.LONG;
         } else if (index == 1) {

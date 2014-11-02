@@ -6,32 +6,32 @@ import java.util.Map;
 import java.util.Random;
 
 @Ignore
-public class RandomSeedManager {
-    protected long randomSeed;
+public class RandomManager {
+    protected long seed;
     protected Random random;
 
-    public RandomSeedManager()
+    public RandomManager()
     {
         this(getDefaultSeed());
     }
 
-    public RandomSeedManager(long randomSeed)
+    public RandomManager(long seed)
     {
-        this.randomSeed = randomSeed;
-        this.random = new Random(randomSeed);
-        System.out.println(" Random seed: 0x"+Long.toHexString(randomSeed)+"L");
+        this.seed = seed;
+        this.random = new Random(seed);
+        System.out.println(" Random seed: 0x"+Long.toHexString(seed)+"L");
     }
 
     public long getRandomSeed()
     {
-        return randomSeed;
+        return seed;
     }
 
     public void setRandomSeed(long seed)
     {
         random.setSeed(seed);
-        this.randomSeed = seed;
-        System.out.println(" Set random seed: 0x"+Long.toHexString(randomSeed)+"L");
+        this.seed = seed;
+        System.out.println(" Set random seed: 0x"+Long.toHexString(this.seed)+"L");
     }
 
     public Random getRandom()

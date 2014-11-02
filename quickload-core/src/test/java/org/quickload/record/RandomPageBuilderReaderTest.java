@@ -1,11 +1,15 @@
 package org.quickload.record;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Module;
+import com.google.inject.*;
+import eu.fabiostrozzi.guicejunitrunner.GuiceJUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.quickload.TestExecModule;
+import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
 
@@ -14,26 +18,27 @@ import java.util.List;
 
 import static org.quickload.record.Assert.assertRowsEquals;
 
+@RunWith(GuiceJUnitRunner.class)
+@GuiceJUnitRunner.GuiceModules({ TestExecModule.class })
 public class RandomPageBuilderReaderTest
 {
     private final int minCapacity = 128*1024;
     private int schemaSize = 3;
     private int rowSize = 10;
 
+    @Inject
     protected BufferManager bufferManager;
-    protected RandomSeedManager randomSeedManager;
+    @Inject
+    protected RandomManager randomManager;
 
     protected PageChannel channel;
-
     protected Schema schema;
     protected TestRandomRecordGenerator gen;
     protected PageBuilder builder;
     protected PageReader reader;
 
-    public RandomPageBuilderReaderTest() throws Exception
+    public RandomPageBuilderReaderTest()
     {
-        randomSeedManager = new RandomSeedManager();
-        bufferManager = new BufferManager();
     }
 
     @Before
@@ -41,8 +46,8 @@ public class RandomPageBuilderReaderTest
     {
         channel = new PageChannel(minCapacity);
 
-        schema = new TestRandomSchemaGenerator(randomSeedManager).generate(schemaSize);
-        gen = new TestRandomRecordGenerator(randomSeedManager);
+        schema = new TestRandomSchemaGenerator(randomManager).generate(schemaSize);
+        gen = new TestRandomRecordGenerator(randomManager);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);
     }
