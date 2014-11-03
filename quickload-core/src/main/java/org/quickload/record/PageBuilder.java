@@ -35,11 +35,16 @@ public class PageBuilder
         // record header
         page.setInt(position, nextVariableLengthDataOffset);  // nextVariableLengthDataOffset means record size
         page.setBytes(position + 4, nullBitSet);
-
         count++;
+
         this.position += nextVariableLengthDataOffset;
         this.nextVariableLengthDataOffset = fixedRecordSize;
         Arrays.fill(nullBitSet, (byte) 0);
+
+        // flush if next record will not fit in this page
+        if (page.length() < position + nextVariableLengthDataOffset) {
+            flush();
+        }
     }
 
     public void flush()

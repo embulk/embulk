@@ -1,12 +1,8 @@
 package org.quickload.record;
 
-import com.google.inject.Inject;
-import org.junit.Ignore;
-
 import java.util.Iterator;
-import java.util.List;
+import com.google.inject.Inject;
 
-@Ignore
 public class RandomRecordGenerator
 {
     private final RandomManager randomManager;

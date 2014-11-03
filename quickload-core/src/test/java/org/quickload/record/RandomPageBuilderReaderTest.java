@@ -9,7 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.junit.runner.RunWith;
-import org.quickload.TestExecModule;
+import org.quickload.TestUtilityModule;
 import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
@@ -18,13 +18,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(GuiceJUnitRunner.class)
-@GuiceJUnitRunner.GuiceModules({ TestExecModule.class })
+@GuiceJUnitRunner.GuiceModules({ TestUtilityModule.class })
 public class RandomPageBuilderReaderTest
 {
     @Inject
     protected BufferManager bufferManager;
     @Inject
-    protected RandomManager randomManager;
+    protected RandomSchemaGenerator schemaGen;
+    @Inject
+    protected RandomRecordGenerator recordGen;
 
     protected PageChannel channel;
     protected Schema schema;
@@ -32,17 +34,11 @@ public class RandomPageBuilderReaderTest
     protected PageBuilder builder;
     protected PageReader reader;
 
-    public RandomPageBuilderReaderTest()
-    {
-    }
-
     @Before
     public void createResources() throws Exception
     {
-        channel = new PageChannel(128*1024);
-
-        schema = new RandomSchemaGenerator(randomManager).generate(3);
-        gen = new RandomRecordGenerator(randomManager);
+        channel = new PageChannel(64*1024*1024);
+        schema = schemaGen.generate(60);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);
     }
@@ -55,7 +51,7 @@ public class RandomPageBuilderReaderTest
 
     @Test
     public void testRandomData() throws Exception {
-        final List<Record> expected = ImmutableList.copyOf(gen.generate(schema, 10));
+        final List<Record> expected = ImmutableList.copyOf(recordGen.generate(schema, 5000));
 
         for (final Record record : expected) {
             schema.produce(builder, new RecordProducer()
@@ -122,5 +118,4 @@ public class RandomPageBuilderReaderTest
 
         assertEquals(expected, actual);
     }
-
 }

@@ -6,14 +6,18 @@ import com.google.inject.Scopes;
 import org.junit.Ignore;
 import org.quickload.exec.BufferManager;
 import org.quickload.record.RandomManager;
+import org.quickload.record.RandomRecordGenerator;
+import org.quickload.record.RandomSchemaGenerator;
 
 @Ignore
-public class TestExecModule
+public class TestUtilityModule
         implements Module
 {
     @Override
     public void configure(Binder binder) {
-        binder.bind(BufferManager.class).in(Scopes.SINGLETON);
-        binder.bind(RandomManager.class).in(Scopes.SINGLETON);
+        binder.bind(BufferManager.class);
+        binder.bind(RandomManager.class);
+        binder.bind(RandomRecordGenerator.class);
+        binder.bind(RandomSchemaGenerator.class);
     }
 }
