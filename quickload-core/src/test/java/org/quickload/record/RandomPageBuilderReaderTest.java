@@ -2,13 +2,13 @@ package org.quickload.record;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
-import eu.fabiostrozzi.guicejunitrunner.GuiceJUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.junit.runner.RunWith;
+import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestUtilityModule;
 import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;

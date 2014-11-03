@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 // GuiceJunitRunner.java, created by Fabio Strozzi on Mar 27, 2011
-package eu.fabiostrozzi.guicejunitrunner;
+//package eu.fabiostrozzi.guicejunitrunner;
+package org.quickload;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
