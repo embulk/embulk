@@ -7,6 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import org.junit.runner.RunWith;
 import org.quickload.TestExecModule;
 import org.quickload.buffer.Buffer;
@@ -15,8 +16,6 @@ import org.quickload.exec.BufferManager;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.quickload.record.Assert.assertRowsEquals;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ TestExecModule.class })
@@ -56,27 +55,27 @@ public class RandomPageBuilderReaderTest
 
     @Test
     public void testRandomData() throws Exception {
-        final List<Row> expected = ImmutableList.copyOf(gen.generate(schema, 10));
+        final List<Record> expected = ImmutableList.copyOf(gen.generate(schema, 10));
 
-        for (final Row record : expected) {
+        for (final Record record : expected) {
             schema.produce(builder, new RecordProducer()
             {
                 @Override
                 public void setLong(Column column, LongType.Setter setter)
                 {
-                    setter.setLong((Long) record.getRecord(column.getIndex()));
+                    setter.setLong((Long) record.getObject(column.getIndex()));
                 }
 
                 @Override
                 public void setDouble(Column column, DoubleType.Setter setter)
                 {
-                    setter.setDouble((Double) record.getRecord(column.getIndex()));
+                    setter.setDouble((Double) record.getObject(column.getIndex()));
                 }
 
                 @Override
                 public void setString(Column column, StringType.Setter setter)
                 {
-                    setter.setString((String) record.getRecord(column.getIndex()));
+                    setter.setString((String) record.getObject(column.getIndex()));
                 }
             });
             builder.addRecord();
@@ -84,11 +83,11 @@ public class RandomPageBuilderReaderTest
         builder.flush();
         channel.completeProducer();
 
-        List<Row> actual = new ArrayList<Row>();
+        List<Record> actual = new ArrayList<Record>();
         for (Page page : channel.getInput()) {
             try (RecordCursor cursor = reader.cursor(page)) {
                 while (cursor.next()) {
-                    final Object[] row = new Object[schema.getColumns().size()];
+                    final Object[] values = new Object[schema.getColumns().size()];
                     schema.consume(cursor, new RecordConsumer()
                     {
                         @Override
@@ -100,28 +99,28 @@ public class RandomPageBuilderReaderTest
                         @Override
                         public void setLong(Column column, long value)
                         {
-                            row[column.getIndex()] = value;
+                            values[column.getIndex()] = value;
                         }
 
                         @Override
                         public void setDouble(Column column, double value)
                         {
-                            row[column.getIndex()] = value;
+                            values[column.getIndex()] = value;
                         }
 
                         @Override
                         public void setString(Column column, String value)
                         {
-                            row[column.getIndex()] = value;
+                            values[column.getIndex()] = value;
                         }
                     });
-                    actual.add(new Row(row));
+                    actual.add(new Record(values));
                 }
             }
         }
         channel.completeConsumer();
 
-        assertRowsEquals(expected, actual);
+        assertEquals(expected, actual);
     }
 
 }

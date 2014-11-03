@@ -17,11 +17,11 @@ public class TestRandomRecordGenerator
         this.randomManager = randomManager;
     }
 
-    public Iterable<Row> generate(final Schema schema, final int size)
+    public Iterable<Record> generate(final Schema schema, final int size)
     {
-        return new Iterable<Row>() {
-            public Iterator<Row> iterator() {
-                return new Iterator<Row>() {
+        return new Iterable<Record>() {
+            public Iterator<Record> iterator() {
+                return new Iterator<Record>() {
                     private int count;
                     @Override
                     public boolean hasNext()
@@ -30,7 +30,7 @@ public class TestRandomRecordGenerator
                     }
 
                     @Override
-                    public Row next()
+                    public Record next()
                     {
                         count += 1;
                         return generateRow(schema.getColumns());
@@ -46,13 +46,13 @@ public class TestRandomRecordGenerator
         };
     }
 
-    private Row generateRow(List<Column> columns)
+    private Record generateRow(List<Column> columns)
     {
         Object[] raw = new Object[columns.size()];
         for (int j = 0; j < raw.length; j++) {
             raw[j] = generateRecord(columns.get(j));
         }
-        return new Row(raw);
+        return new Record(raw);
     }
 
     private Object generateRecord(Column column)

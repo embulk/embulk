@@ -1,52 +1,53 @@
 package org.quickload.record;
 
+import java.util.Arrays;
 import org.junit.Ignore;
 import com.google.common.base.Joiner;
 
 @Ignore
-public class Row {
+public class Record
+{
+    protected Object[] values;
 
-    protected Object[] records;
-
-    public Row(Object[] records)
+    public Record(Object[] values)
     {
-        this.records = records;
+        this.values = values;
     }
 
     public void prettyPrint()
     {
         // TODO
-        for (int i = 0; i < records.length; i++)
+        for (int i = 0; i < values.length; i++)
         {
-            System.out.print(records[i] + " ");
+            System.out.print(values[i] + " ");
         }
         System.out.println();
     }
 
     public int size()
     {
-        return records.length;
+        return values.length;
     }
 
-    public Object getRecord(int index)
+    public Object getObject(int index)
     {
-        return records[index];
+        return values[index];
     }
 
     public boolean equals(Object obj)
     {
-        if (! (obj instanceof Row)) {
+        if (! (obj instanceof Record)) {
             return false;
         }
-        Row row = (Row) obj;
-        return Arrays.equals(records, row.records);
+        Record record = (Record) obj;
+        return Arrays.equals(values, record.values);
     }
 
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
         sb.append("Record{");
-        Joiner.on(", ").appendTo(sb, records);
+        Joiner.on(", ").appendTo(sb, values);
         sb.append("}");
         return sb.toString();
     }
