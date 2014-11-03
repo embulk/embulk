@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 import org.junit.Ignore;
+import com.google.common.base.Joiner;
 
 @Ignore
 public class Row {
@@ -37,18 +38,16 @@ public class Row {
         if (! (obj instanceof Row)) {
             return false;
         }
-
         Row row = (Row) obj;
-        if (row.records.length != records.length) {
-            return false;
-        }
+        return Arrays.equals(records, row.records);
+    }
 
-        for (int i = 0; i < records.length; i++) {
-            if (row.records[i] != records[i]) {
-                return false;
-            }
-        }
-
-        return true;
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Record{");
+        Joiner.on(", ").appendTo(sb, records);
+        sb.append("}");
+        return sb.toString();
     }
 }

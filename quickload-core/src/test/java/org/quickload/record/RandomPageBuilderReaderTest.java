@@ -22,10 +22,6 @@ import static org.quickload.record.Assert.assertRowsEquals;
 @GuiceJUnitRunner.GuiceModules({ TestExecModule.class })
 public class RandomPageBuilderReaderTest
 {
-    private final int minCapacity = 128*1024;
-    private int schemaSize = 3;
-    private int rowSize = 10;
-
     @Inject
     protected BufferManager bufferManager;
     @Inject
@@ -44,9 +40,9 @@ public class RandomPageBuilderReaderTest
     @Before
     public void createResources() throws Exception
     {
-        channel = new PageChannel(minCapacity);
+        channel = new PageChannel(128*1024);
 
-        schema = new TestRandomSchemaGenerator(randomManager).generate(schemaSize);
+        schema = new TestRandomSchemaGenerator(randomManager).generate(3);
         gen = new TestRandomRecordGenerator(randomManager);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);
@@ -60,7 +56,7 @@ public class RandomPageBuilderReaderTest
 
     @Test
     public void testRandomData() throws Exception {
-        final List<Row> expected = ImmutableList.copyOf(gen.generate(schema, rowSize));
+        final List<Row> expected = ImmutableList.copyOf(gen.generate(schema, 10));
 
         for (final Row record : expected) {
             schema.produce(builder, new RecordProducer()

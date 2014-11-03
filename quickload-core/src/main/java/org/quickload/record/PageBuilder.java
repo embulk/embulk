@@ -22,11 +22,12 @@ public class PageBuilder
         this.output = output;
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
-        this.fixedRecordSize = 4 + nullBitSet.length + Page.totalColumnSize(schema);
+        this.fixedRecordSize = Page.rowHeaderSize(schema) + Page.totalColumnSize(schema);
 
         this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
         this.count = 0;
         this.position = Page.PAGE_HEADER_SIZE;
+        this.nextVariableLengthDataOffset = fixedRecordSize;
     }
 
     public void addRecord()

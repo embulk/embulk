@@ -4,7 +4,6 @@ public class RecordCursor
         implements AutoCloseable
 {
     private final int[] columnOffsets;
-    private final int fixedRecordSize;
 
     private Page page;
     private int count;
@@ -16,7 +15,6 @@ public class RecordCursor
     {
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
-        this.fixedRecordSize = 4 + nullBitSet.length + Page.totalColumnSize(schema);
     }
 
     @Override
@@ -48,11 +46,11 @@ public class RecordCursor
             return false;
         }
 
-        count++;
         if (count > 0) {
             int lastRecordSize = page.getInt(position);
             position += lastRecordSize;
         }
+        count++;
         page.getBytes(position + 4, nullBitSet, 0, nullBitSet.length);
 
         return true;

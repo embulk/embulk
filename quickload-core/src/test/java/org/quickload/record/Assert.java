@@ -19,9 +19,7 @@ public class Assert {
 
     public static void assertRowEquals(Row expected, Row actual)
     {
-        assertEquals(expected.size(), actual.size());
-        for (int i = 0; i < expected.size(); i ++) {
-            assertEquals(expected.getRecord(i), actual.getRecord(i));
-        }
+        //assertEquals(expected.size(), actual.size());
+        assertEquals(expected, actual);
     }
 }

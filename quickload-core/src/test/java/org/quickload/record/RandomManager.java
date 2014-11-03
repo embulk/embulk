@@ -47,6 +47,7 @@ public class RandomManager {
                 return Long.parseLong(s);
             }
         } catch (NumberFormatException e) {
+            System.out.println("RANDOM_SEED variable is wrong: "+e);
         }
 
         return new Random().nextLong();
