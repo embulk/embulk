@@ -20,6 +20,11 @@ public class Schema
         return columns;
     }
 
+    public int getColumnCount()
+    {
+        return columns.size();
+    }
+
     public Column getColumn(int index)
     {
         return columns.get(index);

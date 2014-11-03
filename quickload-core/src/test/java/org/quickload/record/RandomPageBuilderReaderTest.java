@@ -28,7 +28,7 @@ public class RandomPageBuilderReaderTest
 
     protected PageChannel channel;
     protected Schema schema;
-    protected TestRandomRecordGenerator gen;
+    protected RandomRecordGenerator gen;
     protected PageBuilder builder;
     protected PageReader reader;
 
@@ -41,8 +41,8 @@ public class RandomPageBuilderReaderTest
     {
         channel = new PageChannel(128*1024);
 
-        schema = new TestRandomSchemaGenerator(randomManager).generate(3);
-        gen = new TestRandomRecordGenerator(randomManager);
+        schema = new RandomSchemaGenerator(randomManager).generate(3);
+        gen = new RandomRecordGenerator(randomManager);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);
     }

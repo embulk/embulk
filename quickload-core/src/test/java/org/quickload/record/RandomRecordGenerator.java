@@ -7,33 +7,34 @@ import java.util.Iterator;
 import java.util.List;
 
 @Ignore
-public class TestRandomRecordGenerator
+public class RandomRecordGenerator
 {
     private final RandomManager randomManager;
 
     @Inject
-    public TestRandomRecordGenerator(RandomManager randomManager)
+    public RandomRecordGenerator(RandomManager randomManager)
     {
         this.randomManager = randomManager;
     }
 
-    public Iterable<Record> generate(final Schema schema, final int size)
+    public Iterable<Record> generate(final Schema schema, final int count)
     {
         return new Iterable<Record>() {
             public Iterator<Record> iterator() {
                 return new Iterator<Record>() {
-                    private int count;
+                    private int number;
+
                     @Override
                     public boolean hasNext()
                     {
-                        return size > count;
+                        return count > number;
                     }
 
                     @Override
                     public Record next()
                     {
-                        count += 1;
-                        return generateRow(schema.getColumns());
+                        number += 1;
+                        return generateRow(schema);
                     }
 
                     @Override
@@ -46,16 +47,16 @@ public class TestRandomRecordGenerator
         };
     }
 
-    private Record generateRow(List<Column> columns)
+    private Record generateRow(Schema schema)
     {
-        Object[] raw = new Object[columns.size()];
-        for (int j = 0; j < raw.length; j++) {
-            raw[j] = generateRecord(columns.get(j));
+        Object[] values = new Object[schema.getColumnCount()];
+        for (int j = 0; j < values.length; j++) {
+            values[j] = generateValue(schema.getColumn(j));
         }
-        return new Record(raw);
+        return new Record(values);
     }
 
-    private Object generateRecord(Column column)
+    private Object generateValue(Column column)
     {
         Type type = column.getType();
         if (type.equals(LongType.LONG)) {

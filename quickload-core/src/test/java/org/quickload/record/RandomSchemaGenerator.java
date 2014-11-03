@@ -1,41 +1,34 @@
 package org.quickload.record;
 
-
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import org.junit.Ignore;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Ignore
-public class TestRandomSchemaGenerator
+public class RandomSchemaGenerator
 {
     private final RandomManager randomManager;
 
     @Inject
-    public TestRandomSchemaGenerator(RandomManager randomManager)
+    public RandomSchemaGenerator(RandomManager randomManager)
     {
         this.randomManager = randomManager;
     }
 
-    public Schema generate(final int size) throws Exception
+    public Schema generate(final int size)
     {
-        List<Column> columns = new ArrayList<Column>(size);
+        ImmutableList.Builder<Column> columns = ImmutableList.builder();
         for (int i = 0; i < size; i++) {
             columns.add(generateColumn(i));
         }
 
-        Schema schema = new Schema(columns);
-        System.out.println(schema.toString());
-        return new Schema(columns);
+        return new Schema(columns.build());
     }
 
-    private Column generateColumn(int index) throws Exception
+    private Column generateColumn(int index)
     {
         return new Column(index, "c" + index, generateType());
     }
 
-    private Type generateType() throws Exception
+    private Type generateType()
     {
         int index = randomManager.getRandom().nextInt(3);
         if (index == 0) {
