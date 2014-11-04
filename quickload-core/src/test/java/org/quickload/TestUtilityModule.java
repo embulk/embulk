@@ -15,7 +15,6 @@ public class TestUtilityModule
 {
     @Override
     public void configure(Binder binder) {
-        binder.bind(BufferManager.class);
         binder.bind(RandomManager.class);
         binder.bind(RandomRecordGenerator.class);
         binder.bind(RandomSchemaGenerator.class);

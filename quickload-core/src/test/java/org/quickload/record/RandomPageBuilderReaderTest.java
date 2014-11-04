@@ -13,12 +13,13 @@ import org.quickload.TestUtilityModule;
 import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
+import org.quickload.exec.ExecModule;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(GuiceJUnitRunner.class)
-@GuiceJUnitRunner.GuiceModules({ TestUtilityModule.class })
+@GuiceJUnitRunner.GuiceModules({ ExecModule.class, TestUtilityModule.class })
 public class RandomPageBuilderReaderTest
 {
     @Inject
@@ -118,4 +119,6 @@ public class RandomPageBuilderReaderTest
 
         assertEquals(expected, actual);
     }
+
+
 }
