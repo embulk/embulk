@@ -61,16 +61,14 @@ public class InputOutputPluginComboTest {
         private static List<Record> expected;
 
         private ModelManager modelManager;
-        private BufferManager bufferManager;
         private RandomRecordGenerator recordGen;
         private RandomSchemaGenerator schemaGen;
 
         @Inject
-        public InputPluginMock(ModelManager modelManager, BufferManager bufferManager,
+        public InputPluginMock(ModelManager modelManager,
                 RandomRecordGenerator recordGen, RandomSchemaGenerator schemaGen)
         {
             this.modelManager = modelManager;
-            this.bufferManager = bufferManager;
             this.recordGen = recordGen;
             this.schemaGen = schemaGen;
         }
@@ -96,7 +94,7 @@ public class InputOutputPluginComboTest {
         {
             Schema schema = proc.getSchema();
             expected = ImmutableList.copyOf(recordGen.generate(schema, 5000));
-            PageBuilder builder = new PageBuilder(bufferManager, schema, pageOutput);
+            PageBuilder builder = new PageBuilder(proc.getPageAllocator(), schema, pageOutput);
             for (final Record record : expected) {
                 schema.produce(builder, new RecordProducer()
                 {
@@ -135,13 +133,11 @@ public class InputOutputPluginComboTest {
         private static List<Record> actual;
 
         private ModelManager modelManager;
-        private BufferManager bufferManager;
 
         @Inject
-        public OutputPluginMock(ModelManager modelManager, BufferManager bufferManager)
+        public OutputPluginMock(ModelManager modelManager)
         {
             this.modelManager = modelManager;
-            this.bufferManager = bufferManager;
         }
 
         @Override
