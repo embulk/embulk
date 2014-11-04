@@ -37,7 +37,7 @@ public class RandomPageBuilderReaderTest
     @Before
     public void createResources() throws Exception
     {
-        channel = new PageChannel(64*1024*1024);
+        channel = new PageChannel(Integer.MAX_VALUE);
         schema = schemaGen.generate(60);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
         reader = new PageReader(schema);

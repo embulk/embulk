@@ -3,7 +3,10 @@ package org.quickload.spi;
 import com.google.inject.Injector;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.TaskSource;
+import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigException;
+import org.quickload.config.Task;
+import org.quickload.config.ModelManager;
 import org.quickload.plugin.PluginManager;
 import org.quickload.exec.BufferManager;
 import org.quickload.buffer.BufferAllocator;
@@ -15,6 +18,7 @@ import org.quickload.channel.BufferChannel;
 public class ProcTask
 {
     private final Injector injector;
+    private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferManager bufferManager;
 
@@ -25,6 +29,7 @@ public class ProcTask
             Injector injector)
     {
         this.injector = injector;
+        this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferManager = injector.getInstance(BufferManager.class);
     }
@@ -61,6 +66,24 @@ public class ProcTask
     public static ProcTask load(Injector injector, ProcTaskSource taskSource)
     {
         return new ProcTask(injector, taskSource);
+    }
+
+    public <T extends Task> T loadConfig(ConfigSource config, Class<T> iface)
+    {
+        return config.loadModel(modelManager, iface);
+    }
+
+    public <T extends Task> T loadTask(TaskSource taskSource, Class<T> iface)
+    {
+        return taskSource.loadModel(modelManager, iface);
+    }
+
+    public TaskSource dumpTask(Task task)
+    {
+        task.validate();
+        return modelManager.readJsonObject(
+                modelManager.writeJsonObjectNode(task),
+                TaskSource.class);
     }
 
     public PageAllocator getPageAllocator()
