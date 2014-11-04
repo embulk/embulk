@@ -1,10 +1,9 @@
 package org.quickload.record;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.*;
+import com.google.inject.Inject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.junit.runner.RunWith;
@@ -36,7 +35,7 @@ public class RandomPageBuilderReaderTest
     protected PageReader reader;
 
     @Before
-    public void createResources() throws Exception
+    public void setup() throws Exception
     {
         channel = new PageChannel(Integer.MAX_VALUE);
         schema = schemaGen.generate(60);
@@ -45,7 +44,7 @@ public class RandomPageBuilderReaderTest
     }
 
     @After
-    public void destroyResources() throws Exception
+    public void destroy() throws Exception
     {
         channel.close();
     }

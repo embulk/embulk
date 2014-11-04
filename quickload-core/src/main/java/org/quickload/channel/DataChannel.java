@@ -197,6 +197,10 @@ public class DataChannel <E extends Allocated>
 
     public void add(E e)
     {
+        if (e == null) {
+            throw new NullPointerException();
+        }
+
         sync.lock();
         try {
             if (closed) {
