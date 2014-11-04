@@ -1,10 +1,8 @@
 package org.quickload.record;
 
 import java.util.Arrays;
-import org.junit.Ignore;
 import com.google.common.base.Joiner;
 
-@Ignore
 public class Record
 {
     protected Object[] values;

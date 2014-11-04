@@ -1,11 +1,8 @@
 package org.quickload.record;
 
-import org.junit.Ignore;
-
 import java.util.Map;
 import java.util.Random;
 
-@Ignore
 public class RandomManager {
     protected long seed;
     protected Random random;
