@@ -13,15 +13,16 @@ import com.google.common.base.Function;
 import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.buffer.BufferAllocator;
-import org.quickload.channel.BufferOutput;
+import org.quickload.channel.FileBufferOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.ProcControl;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
@@ -52,11 +53,15 @@ public class S3FileInputPlugin
     }
 
     @Override
-    public TaskSource getFileInputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
-        return config.dumpTask(task);
+
+        control.run(config.dumpTask(task));
+
+        return new NextConfig();
     }
 
     private AWSCredentials createAWSCredentials(PluginTask task)
@@ -84,7 +89,7 @@ public class S3FileInputPlugin
 
     @Override
     public Report runFileInput(ProcTask proc, TaskSource taskSource,
-            int processorIndex, BufferOutput bufferOutput)
+            int processorIndex, FileBufferOutput fileBufferOutput)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final AmazonS3Client client = createS3Client(task);
@@ -98,8 +103,7 @@ public class S3FileInputPlugin
 
         long pos = 0;
         Opener opener = new Opener(client, bucket, key, contentLength);
-        while (true)
-        {
+        while (true) {
             int len = 0, offset = 0;
             byte[] bytes = new byte[1024];
             try (InputStream in = new BufferedInputStream(opener.open(pos))) {
@@ -112,7 +116,7 @@ public class S3FileInputPlugin
                     } else {
                         buf.write(bytes, 0, rest);
                         buf.flush();
-                        bufferOutput.add(buf);
+                        fileBufferOutput.add(buf);
                         offset = 0;
 
                         buf = bufferAllocator.allocateBuffer(128*1024); // TODO
@@ -123,7 +127,7 @@ public class S3FileInputPlugin
 
                 if (offset > 0) {
                     buf.flush();
-                    bufferOutput.add(buf);
+                    fileBufferOutput.add(buf);
                 }
 
                 break;
@@ -138,8 +142,9 @@ public class S3FileInputPlugin
 
             // TODO retry wait and retry limit
         }
+        fileBufferOutput.addFile();
 
-        return new NullReport();
+        return new Report();
     }
 
     public static class Opener

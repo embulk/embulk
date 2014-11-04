@@ -14,8 +14,8 @@ import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.config.FailedReport;
 import org.quickload.record.Schema;
 import org.quickload.spi.ProcControl;
@@ -29,13 +29,6 @@ import org.quickload.channel.PageChannel;
 public class LocalExecutor
 {
     private final Injector injector;
-
-    private ConfigSource config;
-    private InputPlugin in;
-    private OutputPlugin out;
-    private TaskSource taskSource;
-
-    //private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
 
     public interface ExecutorTask
             extends Task
@@ -66,24 +59,52 @@ public class LocalExecutor
         this.injector = injector;
     }
 
-    public void configure(ConfigSource config)
+    private static class ControlContext
     {
-        this.config = config;
-        ExecutorTask task = config.loadTask(ExecutorTask.class);
+        private List<Report> inputReports;
+        private List<Report> outputReports;
+        private NextConfig inputNextConfig;
+        private NextConfig outputNextConfig;
 
-        ProcTask proc = new ProcTask(injector);
+        public List<Report> getInputReports()
+        {
+            return inputReports;
+        }
 
-        in = proc.newPlugin(InputPlugin.class, task.getInputType());
-        out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
+        public List<Report> getOutputReports()
+        {
+            return outputReports;
+        }
 
-        task.setInputTask(in.getInputTask(proc, config));
-        task.setOutputTask(out.getOutputTask(proc, config));
-        task.setProcTask(proc.dump());
+        public void setInputReports(List<Report> inputReports)
+        {
+            this.inputReports = inputReports;
+        }
 
-        this.taskSource = config.dumpTask(task);
+        public void setOutputReports(List<Report> outputReports)
+        {
+            this.outputReports = outputReports;
+        }
 
-        System.out.println("input: "+task.getInputTask());
-        System.out.println("output: "+task.getOutputTask());
+        public void setInputNextConfig(NextConfig inputNextConfig)
+        {
+            this.inputNextConfig = inputNextConfig;
+        }
+
+        public void setOutputNextConfig(NextConfig outputNextConfig)
+        {
+            this.outputNextConfig = outputNextConfig;
+        }
+
+        public NextConfig getInputNextConfig()
+        {
+            return inputNextConfig;
+        }
+
+        public NextConfig getOutputNextConfig()
+        {
+            return outputNextConfig;
+        }
     }
 
     private static class ProcessContext
@@ -96,7 +117,7 @@ public class LocalExecutor
             this.inputReports = new Report[processorCount];
             this.outputReports = new Report[processorCount];
             for (int i=0; i < processorCount; i++) {
-                inputReports[i] = outputReports[i] = new NullReport();
+                inputReports[i] = outputReports[i] = new Report();
             }
         }
 
@@ -121,29 +142,51 @@ public class LocalExecutor
         }
     }
 
-    public void run()
+    public NextConfig run(final ConfigSource config)
     {
-        final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
-        final ProcTask proc = ProcTask.load(injector, task.getProcTask());
-        final ProcessContext context = new ProcessContext(proc.getProcessorCount());
+        final ExecutorTask task = config.loadTask(ExecutorTask.class);
+        final ProcTask proc = new ProcTask(injector);
 
-        in.runInputTransaction(proc, task.getInputTask(), new ProcControl() {
-            public List<Report> run()
+        final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
+        final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
+
+        final ControlContext ctrlContext = new ControlContext();
+
+        NextConfig inputNextConfig = in.runInputTransaction(proc, config, new ProcControl() {
+            public List<Report> run(final TaskSource inputTask)
             {
-                out.runOutputTransaction(proc, task.getOutputTask(), new ProcControl() {
-                    public List<Report> run()
+                NextConfig outputNextConfig = out.runOutputTransaction(proc, config, new ProcControl() {
+                    public List<Report> run(final TaskSource outputTask)
                     {
-                        process(proc, task, context);
-                        return context.getOutputReports();
+                        task.setInputTask(inputTask);
+                        task.setOutputTask(outputTask);
+                        task.setProcTask(proc.dump());
+
+                        // TODO debug
+                        System.out.println("input: "+task.getInputTask());
+                        System.out.println("output: "+task.getOutputTask());
+
+                        ProcessContext procContext = new ProcessContext(proc.getProcessorCount());
+
+                        process(proc, proc.dumpTask(task), procContext);
+                        ctrlContext.setOutputReports(procContext.getOutputReports());
+                        ctrlContext.setInputReports(procContext.getInputReports());
+
+                        return ctrlContext.getOutputReports();
                     }
                 });
-                return context.getInputReports();
+                ctrlContext.setOutputNextConfig(outputNextConfig);
+                return ctrlContext.getInputReports();
             }
         });
+        ctrlContext.setInputNextConfig(inputNextConfig);
+
+        return ctrlContext.getInputNextConfig().putAll(ctrlContext.getOutputNextConfig());
     }
 
-    private static void process(final ProcTask proc, final ExecutorTask task, final ProcessContext context)
+    private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext procContext)
     {
+        final ExecutorTask task = proc.loadTask(taskSource, ExecutorTask.class);
         final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
         final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
 
@@ -160,9 +203,9 @@ public class LocalExecutor
                             // TODO return Report
                             Report report = out.runOutput(proc, task.getOutputTask(),
                                 processorIndex, channel.getInput());
-                            context.setOutputReport(processorIndex, report);
+                            procContext.setOutputReport(processorIndex, report);
                         } catch (Exception ex) {
-                            context.setOutputReport(processorIndex, new FailedReport(ex));
+                            procContext.setOutputReport(processorIndex, new FailedReport(ex));
                         } finally {
                             channel.completeConsumer();
                         }
@@ -174,9 +217,9 @@ public class LocalExecutor
                             processorIndex, channel.getOutput());
                     channel.completeProducer();
                     channel.join();
-                    context.setInputReport(processorIndex, report);
+                    procContext.setInputReport(processorIndex, report);
                 } catch (Exception ex) {
-                    context.setInputReport(processorIndex, new FailedReport(ex));
+                    procContext.setInputReport(processorIndex, new FailedReport(ex));
                 }
             }
         }

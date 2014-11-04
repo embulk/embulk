@@ -1,12 +1,13 @@
 package org.quickload.config;
 
 public class FailedReport
-        implements Report
+        extends Report
 {
     private final Exception cause;
 
     public FailedReport(Exception cause)
     {
+        super();
         this.cause = cause;
     }
 

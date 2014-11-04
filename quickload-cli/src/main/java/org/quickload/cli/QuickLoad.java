@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ModelManager;
+import org.quickload.config.NextConfig;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;
@@ -65,8 +66,9 @@ public class QuickLoad {
         ConfigSource config = new ConfigSource(modelManager, json);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
-        exec.configure(config);
-        exec.run();
+        NextConfig nextConfig = exec.run(config);
+
+        System.out.println("next config: "+nextConfig);
     }
 
     public static ImmutableList.Builder<Module> buildStandardModules(ImmutableList.Builder<Module> modules)

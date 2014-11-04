@@ -12,8 +12,9 @@ import org.quickload.exec.BufferManager;
 import org.quickload.buffer.BufferAllocator;
 import org.quickload.record.Schema;
 import org.quickload.record.PageAllocator;
-import org.quickload.channel.PageChannel;
 import org.quickload.channel.BufferChannel;
+import org.quickload.channel.FileBufferChannel;
+import org.quickload.channel.PageChannel;
 
 public class ProcTask
 {
@@ -127,6 +128,11 @@ public class ProcTask
     public BufferChannel newBufferChannel()
     {
         return new BufferChannel(32*1024*1024);  // TODO configurable buffer size
+    }
+
+    public FileBufferChannel newFileBufferChannel()
+    {
+        return new FileBufferChannel(32*1024*1024);  // TODO configurable buffer size
     }
 
     public PageChannel newPageChannel()

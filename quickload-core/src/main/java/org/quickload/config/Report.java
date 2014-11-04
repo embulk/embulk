@@ -1,5 +1,6 @@
 package org.quickload.config;
 
-public interface Report
+public class Report
+        extends DataSource
 {
 }

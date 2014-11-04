@@ -4,7 +4,8 @@ import org.quickload.buffer.Buffer;
 
 public class BufferOutput
 {
-    private final DataChannel<Buffer> channel;
+    protected final DataChannel<Buffer> channel;
+    protected long addedSize;
 
     BufferOutput(DataChannel<Buffer> channel)
     {
@@ -14,5 +15,11 @@ public class BufferOutput
     public void add(Buffer buffer)
     {
         channel.add(buffer);
+        addedSize += buffer.length();
+    }
+
+    public long getAddedSize()
+    {
+        return addedSize;
     }
 }

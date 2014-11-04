@@ -6,13 +6,14 @@ import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
-import org.quickload.channel.BufferInput;
+import org.quickload.channel.FileBufferInput;
 import org.quickload.spi.FileOutputPlugin;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.ProcControl;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -39,45 +40,52 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public TaskSource getFileOutputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control)
     {
         PluginTask task = config.loadTask(PluginTask.class);
-        return config.dumpTask(task);
+
+        control.run(config.dumpTask(task));
+
+        return new NextConfig();
     }
 
     @Override
     public Report runFileOutput(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            BufferInput bufferInput)
+            FileBufferInput fileBufferInput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        for (Buffer buffer : bufferInput) {
-            // TODO simple implementation
 
-            String filePath = task.getPaths().get(processorIndex);
-            File file = new File(filePath);
-            if (!file.exists()) {
-                try {
-                    file.createNewFile();
+        while (fileBufferInput.nextFile()) {
+            for (Buffer buffer : fileBufferInput) {
+                // TODO simple implementation
+
+                String filePath = task.getPaths().get(processorIndex);
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                try (OutputStream out = createFileOutputStream(file, task)) {
+                    ByteBuffer buf = buffer.getBuffer();
+                    byte[] bytes = buf.array(); // TODO
+                    out.write(bytes, 0, bytes.length);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
 
-            try (OutputStream out = createFileOutputStream(file, task)) {
-                ByteBuffer buf = buffer.getBuffer();
-                byte[] bytes = buf.array(); // TODO
-                out.write(bytes, 0, bytes.length);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("write file: " + filePath); // TODO debug message
             }
-
-            System.out.println("write file: " + filePath); // TODO debug message
         }
 
-        return new NullReport();
+        return new Report();
     }
 
     private OutputStream createFileOutputStream(File file, PluginTask task)

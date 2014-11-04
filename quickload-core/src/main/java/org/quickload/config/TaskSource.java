@@ -1,14 +1,11 @@
 package org.quickload.config;
 
-import java.lang.reflect.Method;
-import com.google.common.base.Optional;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TaskSource
+        extends DataSource<TaskSource>
 {
     protected final ModelManager modelManager;
-    private final FieldMapper fieldMapper;
-    protected final ObjectNode data;
 
     public TaskSource(ModelManager modelManager, ObjectNode data)
     {
@@ -18,18 +15,8 @@ public class TaskSource
     protected TaskSource(ModelManager modelManager, ObjectNode data,
             FieldMapper fieldMapper)
     {
+        super(data, fieldMapper);
         this.modelManager = modelManager;
-        this.data = data;
-        this.fieldMapper = fieldMapper;
-    }
-
-    public <T extends Task> T loadModel(ModelManager modelManager, Class<T> iface)
-    {
-        if (fieldMapper == null) {
-            return modelManager.readTask(data, iface);
-        } else {
-            return modelManager.readTask(data, iface, fieldMapper);
-        }
     }
 
     @Deprecated

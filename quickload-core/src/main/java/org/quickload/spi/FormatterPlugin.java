@@ -3,7 +3,7 @@ package org.quickload.spi;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
 import org.quickload.channel.PageInput;
-import org.quickload.channel.BufferOutput;
+import org.quickload.channel.FileBufferOutput;
 
 public interface FormatterPlugin
 {
@@ -11,5 +11,5 @@ public interface FormatterPlugin
 
     public void runFormatter(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            PageInput pageInput, BufferOutput bufferOutput);
+            PageInput pageInput, FileBufferOutput fileBufferOutput);
 }

@@ -11,17 +11,23 @@ import org.quickload.channel.BufferInput;
 public class LineDecoder
         implements Iterable<String>
 {
-    private final BufferInput input;
+    private final Iterable<Buffer> input;
 
-    public LineDecoder(BufferInput input, LineDecoderTask task)
+    public LineDecoder(Iterable<Buffer> input, LineDecoderTask task)
     {
         this.input = input;
     }
 
-    private class Ite
+    private static class Ite
             implements Iterator<String>
     {
+        private Iterator<Buffer> iterator;
         private LinkedList<String> lines = new LinkedList();
+
+        public Ite(Iterator<Buffer> iterator)
+        {
+            this.iterator = iterator;
+        }
 
         @Override
         public boolean hasNext()
@@ -51,10 +57,10 @@ public class LineDecoder
 
         private boolean readLines()
         {
-            Buffer buffer = input.poll();
-            if (buffer == null) {
+            if (!iterator.hasNext()) {
                 return false;
             }
+            Buffer buffer = iterator.next();
 
             // TODO needs internal buffer
             StringBuilder sbuf = new StringBuilder();
@@ -77,7 +83,7 @@ public class LineDecoder
 
     public Iterator<String> iterator()
     {
-        return new Ite();
+        return new Ite(input.iterator());
     }
 }
 
