@@ -49,7 +49,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class InputOutputPluginTest {
+public class InputOutputPluginComboTest {
 
     static class InputPluginMock implements InputPlugin
     {
