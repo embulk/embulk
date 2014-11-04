@@ -58,10 +58,7 @@ public class QuickLoad {
         json.put("out:paths", outPaths);
 
         ImmutableList.Builder<Module> modules = ImmutableList.builder();
-        modules.add(new ExecModule());
-        modules.add(new ExtensionServiceLoaderModule());
-        modules.add(new BuiltinPluginSourceModule());
-        modules.add(new StandardPluginModule());
+        buildStandardModules(modules);
         Injector injector = Guice.createInjector(modules.build());
 
         ModelManager modelManager = injector.getInstance(ModelManager.class);
@@ -72,11 +69,20 @@ public class QuickLoad {
         exec.run();
     }
 
+    public static ImmutableList.Builder<Module> buildStandardModules(ImmutableList.Builder<Module> modules)
+    {
+        modules.add(new ExecModule());
+        modules.add(new ExtensionServiceLoaderModule());
+        modules.add(new BuiltinPluginSourceModule());
+        modules.add(new StandardPluginModule());
+        return modules;
+    }
+
     private static ObjectNode column(JsonNodeFactory js,
             int index, String name, String type)
     {
         ObjectNode column = js.objectNode();
-        column.put("index", 0);
+        column.put("index", index);
         column.put("name", name);
         column.put("type", type);
         return column;
