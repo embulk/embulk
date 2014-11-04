@@ -2,7 +2,7 @@ package org.quickload.spi;
 
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
-import org.quickload.channel.BufferInput;
+import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 
 public interface ParserPlugin
@@ -11,5 +11,5 @@ public interface ParserPlugin
 
     public void runParser(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            BufferInput bufferInput, PageOutput pageOutput);
+            FileBufferInput fileBufferInput, PageOutput pageOutput);
 }

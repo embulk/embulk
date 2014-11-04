@@ -4,7 +4,7 @@ import org.quickload.record.Page;
 
 public class PageOutput
 {
-    private final DataChannel<Page> channel;
+    protected final DataChannel<Page> channel;
 
     PageOutput(DataChannel<Page> channel)
     {

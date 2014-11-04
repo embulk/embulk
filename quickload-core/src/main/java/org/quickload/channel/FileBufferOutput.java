@@ -10,13 +10,9 @@ public class FileBufferOutput
         super(channel);
     }
 
-    public void add(Buffer buffer)
-    {
-        channel.add(buffer);
-    }
-
     public void addFile()
     {
         channel.add(FileBufferChannel.END_OF_FILE);
+        addedSize = 0;
     }
 }

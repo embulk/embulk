@@ -6,16 +6,11 @@ import java.util.Iterator;
 public class PageInput
         implements Iterable<Page>
 {
-    private final DataChannel<Page> channel;
+    protected final DataChannel<Page> channel;
 
     PageInput(DataChannel<Page> channel)
     {
         this.channel = channel;
-    }
-
-    public Page poll()
-    {
-        return channel.poll();
     }
 
     @Override

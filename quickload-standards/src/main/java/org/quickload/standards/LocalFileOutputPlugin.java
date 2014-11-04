@@ -10,7 +10,7 @@ import org.quickload.config.Report;
 import org.quickload.config.NullReport;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
-import org.quickload.channel.BufferInput;
+import org.quickload.channel.FileBufferInput;
 import org.quickload.spi.FileOutputPlugin;
 import org.quickload.spi.ProcTask;
 
@@ -48,33 +48,36 @@ public class LocalFileOutputPlugin
     @Override
     public Report runFileOutput(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            BufferInput bufferInput)
+            FileBufferInput fileBufferInput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        for (Buffer buffer : bufferInput) {
-            // TODO simple implementation
 
-            String filePath = task.getPaths().get(processorIndex);
-            File file = new File(filePath);
-            if (!file.exists()) {
-                try {
-                    file.createNewFile();
+        while (fileBufferInput.nextFile()) {
+            for (Buffer buffer : fileBufferInput) {
+                // TODO simple implementation
+
+                String filePath = task.getPaths().get(processorIndex);
+                File file = new File(filePath);
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                try (OutputStream out = createFileOutputStream(file, task)) {
+                    ByteBuffer buf = buffer.getBuffer();
+                    byte[] bytes = buf.array(); // TODO
+                    out.write(bytes, 0, bytes.length);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
 
-            try (OutputStream out = createFileOutputStream(file, task)) {
-                ByteBuffer buf = buffer.getBuffer();
-                byte[] bytes = buf.array(); // TODO
-                out.write(bytes, 0, bytes.length);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("write file: " + filePath); // TODO debug message
             }
-
-            System.out.println("write file: " + filePath); // TODO debug message
         }
 
         return new NullReport();

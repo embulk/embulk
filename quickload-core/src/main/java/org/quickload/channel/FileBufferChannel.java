@@ -1,5 +1,6 @@
 package org.quickload.channel;
 
+import java.nio.ByteBuffer;
 import org.quickload.buffer.Buffer;
 
 public class FileBufferChannel
@@ -52,7 +53,7 @@ public class FileBufferChannel
     {
         private EndOfFileBuffer()
         {
-            super(null);
+            super(ByteBuffer.allocate(0));
         }
     }
 

@@ -8,8 +8,8 @@ import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
 import org.quickload.config.Report;
-import org.quickload.channel.BufferChannel;
-import org.quickload.channel.BufferInput;
+import org.quickload.channel.FileBufferChannel;
+import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageInput;
 
 public abstract class FileOutputPlugin
@@ -26,7 +26,7 @@ public abstract class FileOutputPlugin
 
     public abstract Report runFileOutput(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            BufferInput bufferInput);
+            FileBufferInput fileBufferInput);
 
     public interface OutputTask
             extends Task
@@ -59,7 +59,7 @@ public abstract class FileOutputPlugin
     {
         final OutputTask task = taskSource.loadTask(OutputTask.class);
         final FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
-        try (final BufferChannel channel = proc.newBufferChannel()) {
+        try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
             proc.startPluginThread(new PluginThread() {
                 public void run()
                 {

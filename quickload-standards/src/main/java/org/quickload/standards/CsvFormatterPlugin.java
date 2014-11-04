@@ -12,7 +12,7 @@ import org.quickload.record.RecordConsumer;
 import org.quickload.record.RecordCursor;
 import org.quickload.record.Schema;
 import org.quickload.channel.PageInput;
-import org.quickload.channel.BufferOutput;
+import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.FormatterPlugin;
 import org.quickload.spi.ProcTask;
 
@@ -34,7 +34,7 @@ public class CsvFormatterPlugin
     @Override
     public void runFormatter(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            PageInput pageInput, BufferOutput bufferOutput)
+            PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
         PageReader pageReader = new PageReader(proc.getSchema());
         Schema schema = proc.getSchema();
@@ -58,8 +58,9 @@ public class CsvFormatterPlugin
             byte[] bytes = sbuf.toString().getBytes();
             Buffer buf = bufferAllocator.allocateBuffer(bytes.length); // TODO
             buf.write(bytes, 0, bytes.length);
-            bufferOutput.add(buf);
+            fileBufferOutput.add(buf);
         }
+        fileBufferOutput.addFile();
     }
 
     static class CSVRecordConsumer implements RecordConsumer

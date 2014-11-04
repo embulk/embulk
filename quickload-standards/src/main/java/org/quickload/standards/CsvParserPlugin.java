@@ -9,7 +9,7 @@ import org.quickload.record.RecordProducer;
 import org.quickload.record.Schema;
 import org.quickload.record.StringType;
 import org.quickload.record.PageBuilder;
-import org.quickload.channel.BufferInput;
+import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
@@ -43,18 +43,20 @@ public class CsvParserPlugin
 
     public void runParser(ProcTask proc,
             TaskSource taskSource, int processorIndex,
-            BufferInput bufferInput, PageOutput pageOutput)
+            FileBufferInput fileBufferInput, PageOutput pageOutput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         Schema schema = proc.getSchema();
-        LineDecoder decoder = new LineDecoder(bufferInput, task);
+        LineDecoder decoder = new LineDecoder(fileBufferInput, task);
         PageBuilder pageBuilder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput);
         CSVRecordProducer recordProducer = new CSVRecordProducer(); // TODO where should be it initialized?
 
-        for (String line : decoder) {
-            recordProducer.setColumnStrings(line.split(",")); // TODO ad-hoc parsing
-            schema.produce(pageBuilder, recordProducer);
-            pageBuilder.addRecord();
+        while (fileBufferInput.nextFile()) {
+            for (String line : decoder) {
+                recordProducer.setColumnStrings(line.split(",")); // TODO ad-hoc parsing
+                schema.produce(pageBuilder, recordProducer);
+                pageBuilder.addRecord();
+            }
         }
         pageBuilder.flush();
     }

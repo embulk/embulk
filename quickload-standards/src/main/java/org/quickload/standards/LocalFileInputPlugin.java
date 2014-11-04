@@ -11,7 +11,7 @@ import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Report;
 import org.quickload.config.NullReport;
-import org.quickload.channel.BufferOutput;
+import org.quickload.channel.FileBufferOutput;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
 import org.quickload.spi.FileInputPlugin;
@@ -44,7 +44,7 @@ public class LocalFileInputPlugin
 
     @Override
     public Report runFileInput(ProcTask proc, TaskSource taskSource,
-            int processorIndex, BufferOutput bufferOutput)
+            int processorIndex, FileBufferOutput fileBufferOutput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         BufferAllocator bufferAllocator = proc.getBufferAllocator();
@@ -67,7 +67,7 @@ public class LocalFileInputPlugin
                     } else {
                         buf.write(bytes, 0, rest);
                         buf.flush();
-                        bufferOutput.add(buf);
+                        fileBufferOutput.add(buf);
                         offset = 0;
 
                         buf = bufferAllocator.allocateBuffer(128*1024); // TODO
@@ -78,11 +78,14 @@ public class LocalFileInputPlugin
 
                 if (offset > 0) {
                     buf.flush();
-                    bufferOutput.add(buf);
+                    fileBufferOutput.add(buf);
                 }
             }
+
+            fileBufferOutput.addFile();
+
         } catch (Exception e) {
-            e.printStackTrace(); // TODO
+            throw new RuntimeException(e);  // TODO
         }
 
         return new NullReport();
