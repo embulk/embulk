@@ -30,8 +30,6 @@ public class LocalExecutor
 {
     private final Injector injector;
 
-    //private final List<ProcessingUnit> units = new ArrayList<ProcessingUnit>();
-
     public interface ExecutorTask
             extends Task
     {
@@ -61,12 +59,58 @@ public class LocalExecutor
         this.injector = injector;
     }
 
+    private static class ControlContext
+    {
+        private List<Report> inputReports;
+        private List<Report> outputReports;
+        private NextConfig inputNextConfig;
+        private NextConfig outputNextConfig;
+
+        public List<Report> getInputReports()
+        {
+            return inputReports;
+        }
+
+        public List<Report> getOutputReports()
+        {
+            return outputReports;
+        }
+
+        public void setInputReports(List<Report> inputReports)
+        {
+            this.inputReports = inputReports;
+        }
+
+        public void setOutputReports(List<Report> outputReports)
+        {
+            this.outputReports = outputReports;
+        }
+
+        public void setInputNextConfig(NextConfig inputNextConfig)
+        {
+            this.inputNextConfig = inputNextConfig;
+        }
+
+        public void setOutputNextConfig(NextConfig outputNextConfig)
+        {
+            this.outputNextConfig = outputNextConfig;
+        }
+
+        public NextConfig getInputNextConfig()
+        {
+            return inputNextConfig;
+        }
+
+        public NextConfig getOutputNextConfig()
+        {
+            return outputNextConfig;
+        }
+    }
+
     private static class ProcessContext
     {
         private final Report[] inputReports;
         private final Report[] outputReports;
-        private NextConfig inputNextConfig;
-        private NextConfig outputNextConfig;
 
         public ProcessContext(int processorCount)
         {
@@ -96,26 +140,6 @@ public class LocalExecutor
         {
             return ImmutableList.copyOf(outputReports);
         }
-
-        public void setInputNextConfig(NextConfig inputNextConfig)
-        {
-            this.inputNextConfig = inputNextConfig;
-        }
-
-        public void setOutputNextConfig(NextConfig outputNextConfig)
-        {
-            this.outputNextConfig = outputNextConfig;
-        }
-
-        public NextConfig getInputNextConfig()
-        {
-            return inputNextConfig;
-        }
-
-        public NextConfig getOutputNextConfig()
-        {
-            return outputNextConfig;
-        }
     }
 
     public NextConfig run(final ConfigSource config)
@@ -126,7 +150,7 @@ public class LocalExecutor
         final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
         final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
 
-        final ProcessContext context = new ProcessContext(proc.getProcessorCount());
+        final ControlContext ctrlContext = new ControlContext();
 
         NextConfig inputNextConfig = in.runInputTransaction(proc, config, new ProcControl() {
             public List<Report> run(final TaskSource inputTask)
@@ -142,20 +166,25 @@ public class LocalExecutor
                         System.out.println("input: "+task.getInputTask());
                         System.out.println("output: "+task.getOutputTask());
 
-                        process(proc, proc.dumpTask(task), context);
-                        return context.getOutputReports();
+                        ProcessContext procContext = new ProcessContext(proc.getProcessorCount());
+
+                        process(proc, proc.dumpTask(task), procContext);
+                        ctrlContext.setOutputReports(procContext.getOutputReports());
+                        ctrlContext.setInputReports(procContext.getInputReports());
+
+                        return ctrlContext.getOutputReports();
                     }
                 });
-                context.setOutputNextConfig(outputNextConfig);
-                return context.getInputReports();
+                ctrlContext.setOutputNextConfig(outputNextConfig);
+                return ctrlContext.getInputReports();
             }
         });
-        context.setInputNextConfig(inputNextConfig);
+        ctrlContext.setInputNextConfig(inputNextConfig);
 
-        return context.getInputNextConfig().putAll(context.getOutputNextConfig());
+        return ctrlContext.getInputNextConfig().putAll(ctrlContext.getOutputNextConfig());
     }
 
-    private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext context)
+    private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext procContext)
     {
         final ExecutorTask task = proc.loadTask(taskSource, ExecutorTask.class);
         final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
@@ -174,9 +203,9 @@ public class LocalExecutor
                             // TODO return Report
                             Report report = out.runOutput(proc, task.getOutputTask(),
                                 processorIndex, channel.getInput());
-                            context.setOutputReport(processorIndex, report);
+                            procContext.setOutputReport(processorIndex, report);
                         } catch (Exception ex) {
-                            context.setOutputReport(processorIndex, new FailedReport(ex));
+                            procContext.setOutputReport(processorIndex, new FailedReport(ex));
                         } finally {
                             channel.completeConsumer();
                         }
@@ -188,9 +217,9 @@ public class LocalExecutor
                             processorIndex, channel.getOutput());
                     channel.completeProducer();
                     channel.join();
-                    context.setInputReport(processorIndex, report);
+                    procContext.setInputReport(processorIndex, report);
                 } catch (Exception ex) {
-                    context.setInputReport(processorIndex, new FailedReport(ex));
+                    procContext.setInputReport(processorIndex, new FailedReport(ex));
                 }
             }
         }
