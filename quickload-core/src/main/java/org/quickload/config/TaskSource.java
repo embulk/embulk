@@ -23,6 +23,16 @@ public class TaskSource
         this.fieldMapper = fieldMapper;
     }
 
+    public <T extends Task> T loadModel(ModelManager modelManager, Class<T> iface)
+    {
+        if (fieldMapper == null) {
+            return modelManager.readTask(data, iface);
+        } else {
+            return modelManager.readTask(data, iface, fieldMapper);
+        }
+    }
+
+    @Deprecated
     public <T extends Task> T loadTask(Class<T> iface)
     {
         if (fieldMapper == null) {
