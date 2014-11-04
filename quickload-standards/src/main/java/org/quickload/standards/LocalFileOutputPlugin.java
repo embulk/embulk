@@ -6,12 +6,14 @@ import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.spi.FileOutputPlugin;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.ProcControl;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -38,10 +40,14 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public TaskSource getFileOutputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control)
     {
         PluginTask task = config.loadTask(PluginTask.class);
-        return config.dumpTask(task);
+
+        control.run(config.dumpTask(task));
+
+        return new NextConfig();
     }
 
     @Override

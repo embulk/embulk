@@ -18,9 +18,11 @@ import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.ProcControl;
 
 import javax.validation.constraints.NotNull;
 import java.io.BufferedInputStream;
@@ -51,11 +53,15 @@ public class S3FileInputPlugin
     }
 
     @Override
-    public TaskSource getFileInputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control)
     {
         PluginTask task = config.loadTask(PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
-        return config.dumpTask(task);
+
+        control.run(config.dumpTask(task));
+
+        return new NextConfig();
     }
 
     private AWSCredentials createAWSCredentials(PluginTask task)

@@ -1,12 +1,13 @@
 package org.quickload.spi;
 
-import java.util.concurrent.Future;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.channel.FileBufferChannel;
 import org.quickload.channel.FileBufferOutput;
@@ -15,14 +16,8 @@ import org.quickload.channel.PageOutput;
 public abstract class FileInputPlugin
         implements InputPlugin
 {
-    public abstract TaskSource getFileInputTask(ProcTask proc, ConfigSource config);
-
-    @Override
-    public void runInputTransaction(ProcTask proc, TaskSource taskSource,
-            ProcControl control)
-    {
-        control.run();
-    }
+    public abstract NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control);
 
     public abstract Report runFileInput(ProcTask proc, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput);
@@ -42,13 +37,19 @@ public abstract class FileInputPlugin
     }
 
     @Override
-    public TaskSource getInputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runInputTransaction(final ProcTask proc, final ConfigSource config,
+            final ProcControl control)
     {
-        InputTask task = config.loadTask(InputTask.class);
-        ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
-        task.setParserTask(parser.getParserTask(proc, config));
-        task.setFileInputTask(getFileInputTask(proc, config));
-        return config.dumpTask(task);
+        return runFileInputTransaction(proc, config, new ProcControl() {
+            public List<Report> run(TaskSource taskSource)
+            {
+                InputTask task = proc.loadConfig(config, InputTask.class);
+                ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
+                task.setParserTask(parser.getParserTask(proc, config));
+                task.setFileInputTask(taskSource);
+                return control.run(proc.dumpTask(task));
+            }
+        });
     }
 
     @Override

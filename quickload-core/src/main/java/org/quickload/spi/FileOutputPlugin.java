@@ -1,12 +1,13 @@
 package org.quickload.spi;
 
-import java.util.concurrent.Future;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.channel.FileBufferChannel;
 import org.quickload.channel.FileBufferInput;
@@ -15,14 +16,8 @@ import org.quickload.channel.PageInput;
 public abstract class FileOutputPlugin
         implements OutputPlugin
 {
-    public abstract TaskSource getFileOutputTask(ProcTask proc, ConfigSource config);
-
-    @Override
-    public void runOutputTransaction(ProcTask proc, TaskSource taskSource,
-            ProcControl control)
-    {
-        control.run();
-    }
+    public abstract NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
+            ProcControl control);
 
     public abstract Report runFileOutput(ProcTask proc,
             TaskSource taskSource, int processorIndex,
@@ -43,13 +38,19 @@ public abstract class FileOutputPlugin
     }
 
     @Override
-    public TaskSource getOutputTask(ProcTask proc, ConfigSource config)
+    public NextConfig runOutputTransaction(final ProcTask proc, final ConfigSource config,
+            final ProcControl control)
     {
-        OutputTask task = config.loadTask(OutputTask.class);
-        FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
-        task.setFormatterTask(formatter.getFormatterTask(proc, config));
-        task.setFileOutputTask(getFileOutputTask(proc, config));
-        return config.dumpTask(task);
+        return runFileOutputTransaction(proc, config, new ProcControl() {
+            public List<Report> run(TaskSource taskSource)
+            {
+                OutputTask task = proc.loadConfig(config, OutputTask.class);
+                FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
+                task.setFormatterTask(formatter.getFormatterTask(proc, config));
+                task.setFileOutputTask(taskSource);
+                return control.run(proc.dumpTask(task));
+            }
+        });
     }
 
     @Override

@@ -1,7 +1,10 @@
 package org.quickload.config;
 
+import java.util.Map;
+import java.util.Iterator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class DataSource <T extends DataSource>
 {
@@ -69,5 +72,36 @@ public class DataSource <T extends DataSource>
     {
         data.put(fieldName, v);
         return (T) this;
+    }
+
+    public T putAll(DataSource other)
+    {
+        Iterator<Map.Entry<String, JsonNode>> fields = other.data.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            data.put(field.getKey(), field.getValue());
+        }
+        return (T) this;
+    }
+
+    @Override
+    public String toString()
+    {
+        return data.toString();
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof DataSource)) {
+            return false;
+        }
+        return data.equals(((DataSource) other).data);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return data.hashCode();
     }
 }
