@@ -7,7 +7,6 @@ import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
 import org.quickload.channel.FileBufferInput;
@@ -80,7 +79,7 @@ public class LocalFileOutputPlugin
             }
         }
 
-        return new NullReport();
+        return new Report();
     }
 
     private OutputStream createFileOutputStream(File file, PluginTask task)

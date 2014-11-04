@@ -15,7 +15,6 @@ import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.config.FailedReport;
 import org.quickload.record.Schema;
 import org.quickload.spi.ProcControl;
@@ -96,7 +95,7 @@ public class LocalExecutor
             this.inputReports = new Report[processorCount];
             this.outputReports = new Report[processorCount];
             for (int i=0; i < processorCount; i++) {
-                inputReports[i] = outputReports[i] = new NullReport();
+                inputReports[i] = outputReports[i] = new Report();
             }
         }
 

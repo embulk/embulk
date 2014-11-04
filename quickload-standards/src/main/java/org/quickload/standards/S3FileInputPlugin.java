@@ -19,7 +19,6 @@ import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.ProcTask;
 
@@ -139,7 +138,7 @@ public class S3FileInputPlugin
         }
         fileBufferOutput.addFile();
 
-        return new NullReport();
+        return new Report();
     }
 
     public static class Opener

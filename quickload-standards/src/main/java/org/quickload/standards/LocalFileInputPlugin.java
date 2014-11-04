@@ -10,7 +10,6 @@ import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Report;
-import org.quickload.config.NullReport;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.plugin.PluginManager;
 import org.quickload.record.Schema;
@@ -88,6 +87,6 @@ public class LocalFileInputPlugin
             throw new RuntimeException(e);  // TODO
         }
 
-        return new NullReport();
+        return new Report();
     }
 }
