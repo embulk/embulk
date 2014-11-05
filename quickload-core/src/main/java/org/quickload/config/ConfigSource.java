@@ -1,8 +1,13 @@
 package org.quickload.config;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import com.google.common.base.Optional;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class ConfigSource
         extends DataSource<ConfigSource>
@@ -34,10 +39,14 @@ public class ConfigSource
         super(data, fieldMapper);
     }
 
-    //public static ConfigSource fromJson(JsonParser parser)
-    //{
-    //TODO implement this method when necessary
-    //}
+    public static ConfigSource fromJson(JsonParser parser) throws IOException
+    {
+        JsonNode json = new ObjectMapper().readTree(parser);
+        if (!json.isObject()) {
+            throw new JsonMappingException("Expected object to deserialize ConfigSource but got "+json);
+        }
+        return fromJson((ObjectNode) json);
+    }
 
     public static ConfigSource fromJson(ObjectNode data)
     {

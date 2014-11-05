@@ -1,5 +1,6 @@
 package org.quickload.config;
 
+import javax.validation.constraints.NotNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,21 +72,44 @@ public class TestConfigSource
         assertEquals("sf", task.getString());
     }
 
-    @Test
-    public void testValidate()
+    private static interface ValidateFields
+            extends Task
     {
-        // TODO
+        @Config("in:valid")
+        @NotNull
+        public String getValid();
     }
 
     @Test
-    public void testDefaultValue()
+    public void testValidatePasses()
     {
-        // TODO
+        config.putString("in:valid", "data");
+        ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
+        task.validate();
+        assertEquals("data", task.getValid());
+    }
+
+    @Test(expected = TaskValidationException.class)
+    public void testNotNullValidateFails()
+    {
+        ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
+        task.validate();
+    }
+
+    // TODO test Min, Max, and other validations
+
+    private static interface SimpleFields
+            extends Task
+    {
+        @Config("in:type")
+        @NotNull
+        public String getType();
     }
 
     @Test
     public void testFromJson()
     {
+        String json = "{\"type\":\"test\"}";
         // TODO
     }
 }
