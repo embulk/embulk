@@ -1,10 +1,6 @@
 package org.quickload.channel;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.nio.ByteBuffer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -129,6 +125,6 @@ public class TestFileBufferChannel
     @Test(expected = UnsupportedOperationException.class)
     public void testIteratorRemoveIsUnsupported() throws Exception
     {
-        channel.iterator().remove();
+        input.iterator().remove();
     }
 }

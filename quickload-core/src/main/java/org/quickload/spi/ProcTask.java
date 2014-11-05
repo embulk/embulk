@@ -26,8 +26,7 @@ public class ProcTask
     private Schema schema;
     private int processorCount;
 
-    public ProcTask(
-            Injector injector)
+    public ProcTask(Injector injector)
     {
         this.injector = injector;
         this.modelManager = injector.getInstance(ModelManager.class);
