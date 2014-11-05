@@ -66,7 +66,7 @@ public class TestDataChannel
             public void run()
             {
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(100);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException("interrupted", ex);
                 }
