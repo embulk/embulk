@@ -19,7 +19,7 @@ import org.quickload.DurationWatch;
 
 public class TestDataChannel
 {
-    private DataChannel<Buffer> channel = new DataChannel<Buffer>(50);
+    private DataChannel<Buffer> channel;
 
     // to make sure methods won't be blocked for ever
     @Rule
@@ -31,6 +31,7 @@ public class TestDataChannel
     @Before
     public void setup() throws Exception
     {
+        channel = new DataChannel<Buffer>(Integer.MAX_VALUE);
     }
 
     @After
@@ -50,17 +51,17 @@ public class TestDataChannel
         }
     }
 
-    private static Buffer newBuffer()
+    static Buffer newBuffer()
     {
         return newBuffer(10);
     }
 
-    private static Buffer newBuffer(int size)
+    static Buffer newBuffer(int size)
     {
         return new Buffer(ByteBuffer.allocate(size));
     }
 
-    private void doLater(final Runnable op)
+    static void doLater(final Runnable op)
     {
         Thread t = new Thread(new Runnable() {
             public void run()

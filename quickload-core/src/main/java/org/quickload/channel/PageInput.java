@@ -13,6 +13,18 @@ public class PageInput
         this.channel = channel;
     }
 
+    //public static interface Listener
+    //        extends DataChannel.Listener <Page>
+    //{
+    //    public void add(Page e);
+    //}
+    //
+    //public void processByListener(Listener listener)
+    //{
+    //    channel.setListener(listener);
+    //    channel.join();
+    //}
+
     @Override
     public Iterator<Page> iterator()
     {

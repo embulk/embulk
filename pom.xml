@@ -193,6 +193,10 @@
                         </systemPropertyVariables>
                         <forkMode>${project.test.fork-mode}</forkMode>
                         <runOrder>random</runOrder>
+                        <configuration>
+                            <!-- http://dukesoftware00.blogspot.com/2012/08/jdk7-emma.html -->
+                            <argLine>-XX:-UseSplitVerifier</argLine>
+                        </configuration>
                     </configuration>
                 </plugin>
 
