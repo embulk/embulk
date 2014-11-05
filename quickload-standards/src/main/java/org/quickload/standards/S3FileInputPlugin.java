@@ -56,10 +56,10 @@ public class S3FileInputPlugin
     public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
             ProcControl control)
     {
-        PluginTask task = config.loadTask(PluginTask.class);
+        PluginTask task = proc.loadConfig(config, PluginTask.class);
         proc.setProcessorCount(task.getPaths().size());
 
-        control.run(config.dumpTask(task));
+        control.run(proc.dumpTask(task));
 
         return new NextConfig();
     }
@@ -91,7 +91,7 @@ public class S3FileInputPlugin
     public Report runFileInput(ProcTask proc, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = proc.loadTask(taskSource, PluginTask.class);
         final AmazonS3Client client = createS3Client(task);
         final String bucket = task.getBucket();
         final String key = task.getPaths().get(processorIndex);

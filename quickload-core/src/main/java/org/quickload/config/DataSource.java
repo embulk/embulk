@@ -21,6 +21,11 @@ public class DataSource <T extends DataSource>
         this(data, null);
     }
 
+    protected DataSource(FieldMapper fieldMapper)
+    {
+        this(new ObjectNode(JsonNodeFactory.instance), fieldMapper);
+    }
+
     protected DataSource(ObjectNode data, FieldMapper fieldMapper)
     {
         this.data = data;
@@ -34,6 +39,14 @@ public class DataSource <T extends DataSource>
         } else {
             return modelManager.readTask(data, iface, fieldMapper);
         }
+    }
+
+    /**
+     * visible for DataSourceSerDe
+     */
+    ObjectNode getSource()
+    {
+        return data;
     }
 
     // TODO getter methods, with default value and optional/requred flags

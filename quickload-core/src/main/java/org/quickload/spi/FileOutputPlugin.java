@@ -58,7 +58,7 @@ public abstract class FileOutputPlugin
             TaskSource taskSource, final int processorIndex,
             final PageInput pageInput)
     {
-        final OutputTask task = taskSource.loadTask(OutputTask.class);
+        final OutputTask task = proc.loadTask(taskSource, OutputTask.class);
         final FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
             proc.startPluginThread(new PluginThread() {

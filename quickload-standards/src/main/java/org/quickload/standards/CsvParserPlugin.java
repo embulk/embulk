@@ -36,16 +36,16 @@ public class CsvParserPlugin
     @Override
     public TaskSource getParserTask(ProcTask proc, ConfigSource config)
     {
-        PluginTask task = config.loadTask(PluginTask.class);
+        PluginTask task = proc.loadConfig(config, PluginTask.class);
         proc.setSchema(task.getSchema());
-        return config.dumpTask(task);
+        return proc.dumpTask(task);
     }
 
     public void runParser(ProcTask proc,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
         Schema schema = proc.getSchema();
         LineDecoder decoder = new LineDecoder(fileBufferInput, task);
         PageBuilder pageBuilder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput);

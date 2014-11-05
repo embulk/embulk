@@ -27,8 +27,8 @@ public class CsvFormatterPlugin
     @Override
     public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
     {
-        PluginTask task = config.loadTask(PluginTask.class);
-        return config.dumpTask(task);
+        PluginTask task = proc.loadConfig(config, PluginTask.class);
+        return proc.dumpTask(task);
     }
 
     @Override

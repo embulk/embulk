@@ -43,9 +43,9 @@ public class LocalFileOutputPlugin
     public NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
             ProcControl control)
     {
-        PluginTask task = config.loadTask(PluginTask.class);
+        PluginTask task = proc.loadConfig(config, PluginTask.class);
 
-        control.run(config.dumpTask(task));
+        control.run(proc.dumpTask(task));
 
         return new NextConfig();
     }
@@ -55,7 +55,7 @@ public class LocalFileOutputPlugin
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
 
         while (fileBufferInput.nextFile()) {
             for (Buffer buffer : fileBufferInput) {

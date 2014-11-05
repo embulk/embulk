@@ -62,8 +62,7 @@ public class QuickLoad {
         buildStandardModules(modules);
         Injector injector = Guice.createInjector(modules.build());
 
-        ModelManager modelManager = injector.getInstance(ModelManager.class);
-        ConfigSource config = new ConfigSource(modelManager, json);
+        ConfigSource config = ConfigSource.fromJson(json);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
         NextConfig nextConfig = exec.run(config);

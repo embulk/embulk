@@ -16,7 +16,7 @@ public class TypeManager
     public TypeManager(ModelManager modelManager)
     {
         SimpleModule module = new SimpleModule();
-        module.addDeserializer(Type.class, new TypeDeserializer(TypeManager.this));
+        module.addDeserializer(Type.class, new TypeDeserializer());
         modelManager.addObjectMapperModule(module);
 
         this.fromStringToTypeMap = new HashMap<String, Type>();
@@ -37,21 +37,18 @@ public class TypeManager
         return fromStringToTypeMap.get(name);
     }
 
-    static class TypeDeserializer
+    class TypeDeserializer
             extends FromStringDeserializer<Type>
     {
-        private final TypeManager typeManager;
-
-        public TypeDeserializer(TypeManager typeManager)
+        public TypeDeserializer()
         {
             super(Type.class);
-            this.typeManager = typeManager;
         }
 
         @Override
         protected Type _deserialize(String value, DeserializationContext context)
         {
-            return typeManager.getType(value);
+            return getType(value);
         }
     }
 }

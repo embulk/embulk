@@ -6,7 +6,7 @@ import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import org.quickload.config.ModelManager;
 import org.quickload.record.TypeManager;
-import org.quickload.config.TaskSourceSerDe;
+import org.quickload.config.DataSourceSerDe;
 
 public class ExecModule
         implements Module
@@ -17,7 +17,7 @@ public class ExecModule
         Preconditions.checkNotNull(binder, "binder is null.");
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(TypeManager.class).asEagerSingleton();
-        binder.bind(TaskSourceSerDe.class).asEagerSingleton();
+        binder.bind(DataSourceSerDe.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
     }
 }

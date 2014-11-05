@@ -57,7 +57,7 @@ public abstract class FileInputPlugin
             TaskSource taskSource, final int processorIndex,
             final PageOutput pageOutput)
     {
-        final InputTask task = taskSource.loadTask(InputTask.class);
+        final InputTask task = proc.loadTask(taskSource, InputTask.class);
         final ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
             proc.startPluginThread(new PluginThread() {

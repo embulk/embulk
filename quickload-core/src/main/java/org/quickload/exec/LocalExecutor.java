@@ -144,8 +144,8 @@ public class LocalExecutor
 
     public NextConfig run(final ConfigSource config)
     {
-        final ExecutorTask task = config.loadTask(ExecutorTask.class);
         final ProcTask proc = new ProcTask(injector);
+        final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
 
         final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
         final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
