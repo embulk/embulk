@@ -19,7 +19,7 @@ import java.util.List;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ ExecModule.class, TestUtilityModule.class })
-public class RandomPageBuilderReaderTest
+public class TestRandomPageBuilderReader
 {
     @Inject
     protected BufferManager bufferManager;
