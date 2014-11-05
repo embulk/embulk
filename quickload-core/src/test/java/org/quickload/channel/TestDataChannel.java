@@ -2,18 +2,41 @@ package org.quickload.channel;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.nio.ByteBuffer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import org.quickload.buffer.Buffer;
+import org.quickload.DurationWatch;
 
 public class TestDataChannel
 {
-    private DataChannel<Buffer> channel = new DataChannel<Buffer>(100);
+    private DataChannel<Buffer> channel = new DataChannel<Buffer>(50);
+
+    // to make sure methods won't be blocked for ever
+    @Rule
+    public Timeout globalTimeout = new Timeout(10000);
+
+    @Rule
+    public DurationWatch duration = new DurationWatch();
+
+    @Before
+    public void setup() throws Exception
+    {
+    }
+
+    @After
+    public void destroy() throws Exception
+    {
+    }
 
     private static class MockListener
             implements DataChannel.Listener<Buffer>
@@ -27,16 +50,6 @@ public class TestDataChannel
         }
     }
 
-    @Before
-    public void setup() throws Exception
-    {
-    }
-
-    @After
-    public void destroy() throws Exception
-    {
-    }
-
     private static Buffer newBuffer()
     {
         return newBuffer(10);
@@ -45,6 +58,23 @@ public class TestDataChannel
     private static Buffer newBuffer(int size)
     {
         return new Buffer(ByteBuffer.allocate(size));
+    }
+
+    private void doLater(final Runnable op)
+    {
+        Thread t = new Thread(new Runnable() {
+            public void run()
+            {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException("interrupted", ex);
+                }
+                op.run();
+            }
+        });
+        t.setDaemon(true);
+        t.start();
     }
 
     @Test
@@ -56,6 +86,71 @@ public class TestDataChannel
         channel.add(b2);
         assertTrue(channel.poll() == b1);
         assertTrue(channel.poll() == b2);
+    }
+
+    @Test
+    public void testIterator() throws Exception
+    {
+        Buffer b1 = newBuffer();
+        Buffer b2 = newBuffer();
+        channel.add(b1);
+        channel.add(b2);
+        channel.completeProducer();
+        Iterator<Buffer> ite = channel.iterator();
+        assertTrue(ite.hasNext());
+        assertTrue(ite.next() == b1);
+        assertTrue(ite.next() == b2);
+        assertFalse(ite.hasNext());
+    }
+
+    @Test
+    public void testIteratorHasNextBlocksUntilAdd() throws Exception
+    {
+        Iterator<Buffer> ite = channel.iterator();
+        final Buffer b1 = newBuffer();
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.add(b1);
+            }
+        });
+        assertTrue(ite.hasNext());
+        assertTrue(duration.runtimeMillis() > 50);
+    }
+
+    @Test
+    public void testIteratorNextBlocksUntilAdd() throws Exception
+    {
+        Iterator<Buffer> ite = channel.iterator();
+        final Buffer b1 = newBuffer();
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.add(b1);
+            }
+        });
+        assertTrue(ite.next() == b1);
+        assertTrue(duration.runtimeMillis() > 50);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testIteratorRemoveIsUnsupported() throws Exception
+    {
+        channel.iterator().remove();
+    }
+
+    @Test
+    public void testPollBlocksUntilAdd() throws Exception
+    {
+        final Buffer b1 = newBuffer();
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.add(b1);
+            }
+        });
+        assertTrue(channel.poll() == b1);
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
     @Test(expected = NullPointerException.class)
@@ -109,19 +204,41 @@ public class TestDataChannel
     @Test
     public void testMaxQueuedSizeBlocksConsumer() throws Exception
     {
-        // TODO
+        channel = new DataChannel(10);
+        channel.add(newBuffer(5));
+        channel.add(newBuffer(5));
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.poll();
+            }
+        });
+        channel.add(newBuffer(5));
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
     @Test
     public void testSetListenerReceivesNewElements() throws Exception
     {
-        // TODO
+        MockListener listener = new MockListener();
+        channel.setListener(listener);
+        Buffer b1 = newBuffer();
+        Buffer b2 = newBuffer();
+        channel.add(b1);
+        channel.add(b2);
+        assertEquals(Arrays.asList(b1, b2), listener.elements);
     }
 
     @Test
     public void testSetListenerConsumesExistentElements() throws Exception
     {
-        // TODO
+        Buffer b1 = newBuffer();
+        Buffer b2 = newBuffer();
+        channel.add(b1);
+        channel.add(b2);
+        MockListener listener = new MockListener();
+        channel.setListener(listener);
+        assertEquals(Arrays.asList(b1, b2), listener.elements);
     }
 
     @Test(expected = ChannelAsynchronousCloseException.class)
@@ -132,44 +249,97 @@ public class TestDataChannel
     }
 
     @Test
-    public void testIterator() throws Exception
-    {
-        // TODO
-    }
-
-    @Test
     public void testJoinBlocksUntilCompleteProducerAndConsumerClosed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.completeProducer();
+                channel.completeConsumer();
+            }
+        });
+        channel.join();
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
-    @Test
-    public void testJoinBlocksUntilClose() throws Exception
+    @Test(expected = ChannelAsynchronousCloseException.class)
+    public void testCompleteConsumerBeforeIncompleteConsumptionMakesJoinFailed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.add(newBuffer());
+                channel.completeProducer();
+                channel.completeConsumer();
+            }
+        });
+        channel.join();
     }
 
-    @Test
-    public void testCloseMakesBlockedJoinFailed() throws Exception
+    // TODO which is expected behavior?
+    //@Test(expected = ChannelAsynchronousCloseException.class)
+    //public void testCloseBeforeIncompleteConsumptionMakesJoinFailed() throws Exception
+    //{
+    //    doLater(new Runnable() {
+    //        public void run()
+    //        {
+    //            channel.add(newBuffer());
+    //            channel.completeProducer();
+    //            channel.close();
+    //        }
+    //    });
+    //    channel.join();
+    //}
+
+    @Test(expected = ChannelAsynchronousCloseException.class)
+    public void testAsyncCloseMakesBlockedJoinFailed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.close();
+            }
+        });
+        channel.join();
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
-    @Test
-    public void testCompleteConsumerMakesBlockedJoinFailed() throws Exception
+    @Test(expected = ChannelAsynchronousCloseException.class)
+    public void testAsyncCompleteConsumerMakesBlockedJoinFailed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.completeConsumer();
+            }
+        });
+        channel.join();
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
-    @Test
-    public void testCloseMakesBlockedPollFailed() throws Exception
+    @Test(expected = ChannelAsynchronousCloseException.class)
+    public void testAsyncCloseMakesBlockedPollFailed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.close();
+            }
+        });
+        channel.join();
+        assertTrue(duration.runtimeMillis() > 50);
     }
 
-    @Test
-    public void testCompleteConsumerMakesBlockedPollFailed() throws Exception
+    @Test(expected = ChannelAsynchronousCloseException.class)
+    public void testAsyncCompleteConsumerMakesBlockedPollFailed() throws Exception
     {
-        // TODO
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.completeConsumer();
+            }
+        });
+        channel.poll();
+        assertTrue(duration.runtimeMillis() > 50);
     }
 }
