@@ -99,34 +99,20 @@ public class S3FileInputPlugin
 
         // TODO retry if metadata might be used
         long contentLength = client.getObjectMetadata(bucket, key).getContentLength();
-        Buffer buf = bufferAllocator.allocateBuffer(128*1024);
+        Buffer buf = bufferAllocator.allocateBuffer(1024);
 
-        long pos = 0;
         Opener opener = new Opener(client, bucket, key, contentLength);
         while (true) {
-            int len = 0, offset = 0;
-            byte[] bytes = new byte[1024];
-            try (InputStream in = new BufferedInputStream(opener.open(pos))) {
-                while ((len = in.read(bytes)) > 0) {
-                    pos += len;
-                    int rest = buf.capacity() - offset;
-                    if (rest >= len) {
-                        buf.write(bytes, 0, len);
-                        offset += len;
-                    } else {
-                        buf.write(bytes, 0, rest);
-                        buf.flush();
+            try (InputStream in = new BufferedInputStream(opener.open(buf.limit()))) {
+                int len;
+                while ((len = in.read(buf.get(), buf.limit(), buf.capacity() - buf.limit())) >= 0) {
+                    buf.limit(buf.limit() + len);
+                    if (buf.capacity() - buf.limit() < 1024) {
                         fileBufferOutput.add(buf);
-                        offset = 0;
-
-                        buf = bufferAllocator.allocateBuffer(128*1024); // TODO
-                        buf.write(bytes, rest, len - rest);
-                        offset += len - rest;
+                        buf = bufferAllocator.allocateBuffer(1024);
                     }
                 }
-
-                if (offset > 0) {
-                    buf.flush();
+                if (buf.limit() > 0) {
                     fileBufferOutput.add(buf);
                 }
 

@@ -14,6 +14,7 @@ import org.quickload.buffer.Buffer;
 import org.quickload.DurationWatch;
 import static org.quickload.channel.TestDataChannel.doLater;
 import static org.quickload.channel.TestDataChannel.newBuffer;
+import static org.quickload.channel.TestDataChannel.newFilledBuffer;
 
 public class TestFileBufferChannel
 {
@@ -73,18 +74,18 @@ public class TestFileBufferChannel
     @Test
     public void testGetAddedFileSize()
     {
-        Buffer b1 = newBuffer(10);
-        Buffer b2 = newBuffer(20);
-        Buffer b3 = newBuffer(30);
+        Buffer b1 = newFilledBuffer(10);
+        Buffer b2 = newFilledBuffer(20);
+        Buffer b3 = newFilledBuffer(30);
 
         assertEquals(0, output.getAddedSize());
-        output.add(newBuffer(10));
+        output.add(newFilledBuffer(10));
         assertEquals(10, output.getAddedSize());
-        output.add(newBuffer(20));
+        output.add(newFilledBuffer(20));
         assertEquals(30, output.getAddedSize());
         output.addFile();
         assertEquals(0, output.getAddedSize());
-        output.add(newBuffer(40));
+        output.add(newFilledBuffer(40));
         assertEquals(40, output.getAddedSize());
     }
 

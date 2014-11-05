@@ -58,7 +58,14 @@ public class TestDataChannel
 
     static Buffer newBuffer(int size)
     {
-        return new Buffer(ByteBuffer.allocate(size));
+        return Buffer.allocate(size);
+    }
+
+    static Buffer newFilledBuffer(int size)
+    {
+        Buffer b = Buffer.allocate(size);
+        b.limit(size);
+        return b;
     }
 
     static void doLater(final Runnable op)

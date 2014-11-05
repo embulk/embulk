@@ -72,9 +72,7 @@ public class LocalFileOutputPlugin
                 }
 
                 try (OutputStream out = createFileOutputStream(file, task)) {
-                    ByteBuffer buf = buffer.getBuffer();
-                    byte[] bytes = buf.array(); // TODO
-                    out.write(bytes, 0, bytes.length);
+                    out.write(buffer.get(), 0, buffer.limit());
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

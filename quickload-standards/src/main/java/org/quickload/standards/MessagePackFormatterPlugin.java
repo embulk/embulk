@@ -5,7 +5,6 @@ import org.msgpack.MessagePack;
 import org.msgpack.packer.BufferPacker;
 import org.msgpack.packer.Packer;
 import org.quickload.buffer.Buffer;
-import org.quickload.buffer.BufferAllocator;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
@@ -43,7 +42,6 @@ public class MessagePackFormatterPlugin
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
         Schema schema = proc.getSchema();
-        BufferAllocator bufferAllocator = proc.getBufferAllocator();
         PageReader pageReader = new PageReader(schema);
         MessagePack msgpack = new MessagePack();
 
@@ -117,10 +115,7 @@ public class MessagePackFormatterPlugin
                 }
             }
 
-            byte[] bytes = packer.toByteArray();
-            Buffer buf = bufferAllocator.allocateBuffer(bytes.length); // TODO
-            buf.write(bytes, 0, bytes.length);
-            fileBufferOutput.add(buf);
+            fileBufferOutput.add(Buffer.wrap(packer.toByteArray()));
         }
         fileBufferOutput.addFile();
     }

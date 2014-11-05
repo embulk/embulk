@@ -6,9 +6,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
-import org.quickload.buffer.Allocated;
+import org.quickload.buffer.Buffer;
 
-public class DataChannel <E extends Allocated>
+public class DataChannel <E extends Buffer>
         implements AutoCloseable, Iterable<E>
 {
     public static interface Listener <E>
@@ -16,7 +16,7 @@ public class DataChannel <E extends Allocated>
         public void add(E e);
     }
 
-    private static class Ite <E extends Allocated>
+    private static class Ite <E extends Buffer>
             implements Iterator<E>
     {
         private DataChannel<E> channel;
@@ -181,7 +181,7 @@ public class DataChannel <E extends Allocated>
                 e = queue.poll();
             }
 
-            queuedSize -= e.length();
+            queuedSize -= e.capacity();
             queueCondition.signalAll();
             return e;
 
@@ -214,14 +214,14 @@ public class DataChannel <E extends Allocated>
                 listener.add(e);
                 e = null;
             } else {
-                int nextQueuedSize = queuedSize + e.length();
+                int nextQueuedSize = queuedSize + e.capacity();
                 while (nextQueuedSize > maxQueuedSize) {
                     try {
                         queueCondition.await();
                     } catch (InterruptedException ex) {
                         throw new ChannelInterruptedException(ex);
                     }
-                    nextQueuedSize = queuedSize + e.length();
+                    nextQueuedSize = queuedSize + e.capacity();
                     if (closed) {
                         throw new ChannelAsynchronousCloseException("Channel consumer already completed");
                     }

@@ -15,7 +15,7 @@ public class BufferOutput
     public void add(Buffer buffer)
     {
         channel.add(buffer);
-        addedSize += buffer.length();
+        addedSize += buffer.limit();
     }
 
     public long getAddedSize()

@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import java.io.IOException;
 import javax.validation.constraints.NotNull;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
@@ -60,36 +61,24 @@ public class LocalFileInputPlugin
         try {
             File file = new File(path);
             byte[] bytes = new byte[1024];
-            Buffer buf = bufferAllocator.allocateBuffer(128*1024); // TODO
+            Buffer buf = bufferAllocator.allocateBuffer(1024);
 
-            int len = 0, offset = 0;
             try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-                while ((len = in.read(bytes)) > 0) {
-                    int rest = buf.capacity() - offset;
-                    if (rest >= len) {
-                        buf.write(bytes, 0, len);
-                        offset += len;
-                    } else {
-                        buf.write(bytes, 0, rest);
-                        buf.flush();
+                int len;
+                while ((len = in.read(bytes)) >= 0) {
+                    buf.limit(buf.limit() + len);
+                    if (buf.capacity() - buf.limit() < 1024) {
                         fileBufferOutput.add(buf);
-                        offset = 0;
-
-                        buf = bufferAllocator.allocateBuffer(128*1024); // TODO
-                        buf.write(bytes, rest, len - rest);
-                        offset += len - rest;
+                        buf = bufferAllocator.allocateBuffer(1024);
                     }
                 }
-
-                if (offset > 0) {
-                    buf.flush();
+                if (buf.limit() > 0) {
                     fileBufferOutput.add(buf);
                 }
             }
-
             fileBufferOutput.addFile();
 
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);  // TODO
         }
 

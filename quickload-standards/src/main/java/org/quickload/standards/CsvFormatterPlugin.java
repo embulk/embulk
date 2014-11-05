@@ -1,7 +1,6 @@
 package org.quickload.standards;
 
 import org.quickload.buffer.Buffer;
-import org.quickload.buffer.BufferAllocator;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
@@ -38,7 +37,6 @@ public class CsvFormatterPlugin
     {
         PageReader pageReader = new PageReader(proc.getSchema());
         Schema schema = proc.getSchema();
-        BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
         StringBuilder sbuf = new StringBuilder();
         CSVRecordConsumer recordConsumer = new CSVRecordConsumer();
@@ -55,10 +53,8 @@ public class CsvFormatterPlugin
                 sbuf.append('\n');
             }
 
-            byte[] bytes = sbuf.toString().getBytes();
-            Buffer buf = bufferAllocator.allocateBuffer(bytes.length); // TODO
-            buf.write(bytes, 0, bytes.length);
-            fileBufferOutput.add(buf);
+            // TODO use LineEncoder
+            fileBufferOutput.add(Buffer.wrap(sbuf.toString().getBytes()));
         }
         fileBufferOutput.addFile();
     }
