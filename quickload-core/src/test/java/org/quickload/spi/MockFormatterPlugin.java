@@ -2,12 +2,11 @@ package org.quickload.spi;
 
 import java.util.List;
 import java.util.ArrayList;
-import com.google.inject.Inject;
-import org.quickload.config.TaskSource;
+import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
-import org.quickload.config.NextConfig;
-import org.quickload.config.Report;
+import org.quickload.config.TaskSource;
 import org.quickload.channel.PageInput;
+import org.quickload.channel.FileBufferOutput;
 import org.quickload.record.Schema;
 import org.quickload.record.RecordConsumer;
 import org.quickload.record.Page;
@@ -16,11 +15,17 @@ import org.quickload.record.RecordCursor;
 import org.quickload.record.Column;
 import org.quickload.record.Record;
 
-public class MockOutputPlugin
-        implements OutputPlugin
+public class MockFormatterPlugin
+        implements FormatterPlugin
 {
+    private final Iterable<? extends Iterable<Buffer>> files;
     private Schema schema;
     private List<Record> records;
+
+    public <F extends Iterable<Buffer>> MockFormatterPlugin(Iterable<F> files)
+    {
+        this.files = files;
+    }
 
     public Schema getSchema()
     {
@@ -32,15 +37,15 @@ public class MockOutputPlugin
         return records;
     }
 
-    public NextConfig runOutputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+
+    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
     {
-        control.run(new TaskSource());
-        return new NextConfig();
+        return new TaskSource();
     }
 
-    public Report runOutput(ProcTask proc, TaskSource taskSource,
-            int processorIndex, PageInput pageInput)
+    public void runFormatter(ProcTask proc,
+            TaskSource taskSource, int processorIndex,
+            PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
         records = new ArrayList<Record>();
         schema = proc.getSchema();
@@ -77,6 +82,12 @@ public class MockOutputPlugin
                 }
             }
         }
-        return new Report();
+
+        for (Iterable<Buffer> buffers : files) {
+            for (Buffer buffer : buffers) {
+                fileBufferOutput.add(buffer);
+            }
+            fileBufferOutput.addFile();
+        }
     }
 }
