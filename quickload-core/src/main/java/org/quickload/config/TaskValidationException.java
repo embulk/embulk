@@ -26,7 +26,11 @@ public class TaskValidationException
         sb.append("Configuration task validation failed.");
         for(ConstraintViolation<T> violation : violations) {
             sb.append(" ");
+            sb.append(violation.getPropertyPath());
+            sb.append(" ");
             sb.append(violation.getMessage());
+            sb.append(" but got ");
+            sb.append(violation.getInvalidValue());
         }
         return sb.toString();
     }

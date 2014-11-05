@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.Task;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.record.Schema;
@@ -21,12 +22,29 @@ public class MockParserPlugin
 {
     private final Schema schema;
     private final Iterable<Record> records;
+    private final Class<? extends Task> taskIface;
     private List<List<Buffer>> files;
 
     public MockParserPlugin(Schema schema, Iterable<Record> records)
     {
+        this(schema, records, Task.class);
+    }
+
+    public MockParserPlugin(Schema schema, Iterable<Record> records, Class<? extends Task> taskIface)
+    {
         this.schema = schema;
         this.records = records;
+        this.taskIface = taskIface;
+    }
+
+    public Schema getSchema()
+    {
+        return schema;
+    }
+
+    public Iterable<Record> getRecords()
+    {
+        return records;
     }
 
     public List<List<Buffer>> getFiles()
@@ -37,7 +55,7 @@ public class MockParserPlugin
     public TaskSource getParserTask(ProcTask proc, ConfigSource config)
     {
         proc.setSchema(schema);
-        return new TaskSource();
+        return proc.dumpTask(proc.loadConfig(config, taskIface));
     }
 
     public void runParser(ProcTask proc,

@@ -3,7 +3,8 @@ package org.quickload.record;
 import java.util.Map;
 import java.util.Random;
 
-public class RandomManager {
+public class RandomManager
+{
     protected long seed;
     protected Random random;
 

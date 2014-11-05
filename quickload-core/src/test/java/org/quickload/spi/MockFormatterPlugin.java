@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
+import org.quickload.config.Task;
 import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.record.Schema;
@@ -19,12 +20,24 @@ public class MockFormatterPlugin
         implements FormatterPlugin
 {
     private final Iterable<? extends Iterable<Buffer>> files;
+    private final Class<? extends Task> taskIface;
     private Schema schema;
     private List<Record> records;
 
     public <F extends Iterable<Buffer>> MockFormatterPlugin(Iterable<F> files)
     {
+        this(files, Task.class);
+    }
+
+    public <F extends Iterable<Buffer>, T extends Task> MockFormatterPlugin(Iterable<F> files, Class<T> taskIface)
+    {
         this.files = files;
+        this.taskIface = taskIface;
+    }
+
+    public Iterable<? extends Iterable<Buffer>> getFiles()
+    {
+        return files;
     }
 
     public Schema getSchema()
@@ -37,10 +50,9 @@ public class MockFormatterPlugin
         return records;
     }
 
-
     public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
     {
-        return new TaskSource();
+        return proc.dumpTask(proc.loadConfig(config, taskIface));
     }
 
     public void runFormatter(ProcTask proc,
