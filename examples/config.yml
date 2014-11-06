@@ -1,14 +1,13 @@
 in:type: {injected: local_file}
 in:parser_type: {injected: csv}
 in:paths:
-  - /tmp/csv_01.csv
-  - /tmp/csv_02.csv
+  - /tmp/sample.csv
 in:schema:
   - {index: 0, name: date_code, type: string}
   - {index: 1, name: customer_code, type: long}
   - {index: 2, name: product_code, type: string}
   - {index: 3, name: employee_code, type: string}
 out:type: {injected: local_file}
-out:formatter_type: {injected: msgpack}
+out:formatter_type: {injected: csv}
 out:compress_type: none
-out:paths: [/tmp/output_csv_01.csv, /tmp/output_csv_02.csv]
+out:paths: [/tmp/output_sample.csv]
