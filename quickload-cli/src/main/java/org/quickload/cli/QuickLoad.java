@@ -1,15 +1,13 @@
 package org.quickload.cli;
 
+import java.util.List;
+import java.io.File;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.quickload.config.ConfigSource;
-import org.quickload.config.ModelManager;
+import org.quickload.config.ConfigSources;
 import org.quickload.config.NextConfig;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
@@ -20,49 +18,17 @@ import org.quickload.standards.StandardPluginModule;
 public class QuickLoad {
     public static void main(String[] args) throws Exception
     {
-        JsonNodeFactory js = JsonNodeFactory.instance;
-        ObjectNode json = js.objectNode();
+        if (args.length == 0) {
+            System.out.println("usage: [-Dload.systemConfigKey=value...] <config.yml> [configKey=value...]");
+            return;
+        }
 
-        ObjectNode inputType = js.objectNode();
-        inputType.put("injected", "local_file");
-        json.put("in:type", inputType);
+        ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
 
-        ArrayNode inPaths = js.arrayNode();
-        inPaths.add("/tmp/csv_01.csv");
-        inPaths.add("/tmp/csv_02.csv");
-        json.put("in:paths", inPaths);
+        Injector injector = Guice.createInjector(getModules(systemConfig));
 
-        ArrayNode schema = js.arrayNode();
-        schema.add(column(js, 0, "date_code", "string"));
-        schema.add(column(js, 1, "customer_code", "long"));
-        schema.add(column(js, 2, "product_code", "string"));
-        schema.add(column(js, 3, "employee_code", "string"));
-        json.put("in:schema", schema);
-
-        ObjectNode parserType = js.objectNode();
-        parserType.put("injected", "csv");
-        json.put("in:parser_type", parserType);
-
-        ObjectNode outputType = js.objectNode();
-        outputType.put("injected", "local_file");
-        json.put("out:type", outputType);
-
-        ObjectNode formatterType = js.objectNode();
-        formatterType.put("injected", "msgpack");
-        json.put("out:formatter_type", formatterType);
-
-        json.put("out:compress_type", "none");
-
-        ArrayNode outPaths = js.arrayNode();
-        outPaths.add("/tmp/output_csv_01.csv");
-        outPaths.add("/tmp/output_csv_02.csv");
-        json.put("out:paths", outPaths);
-
-        ImmutableList.Builder<Module> modules = ImmutableList.builder();
-        buildStandardModules(modules);
-        Injector injector = Guice.createInjector(modules.build());
-
-        ConfigSource config = ConfigSource.fromJson(json);
+        File configPath = new File(args[0]);
+        ConfigSource config = ConfigSources.fromYamlFile(configPath);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
         NextConfig nextConfig = exec.run(config);
@@ -70,22 +36,13 @@ public class QuickLoad {
         System.out.println("next config: "+nextConfig);
     }
 
-    public static ImmutableList.Builder<Module> buildStandardModules(ImmutableList.Builder<Module> modules)
+    public static List<Module> getModules(ConfigSource systemConfig)
     {
-        modules.add(new ExecModule());
-        modules.add(new ExtensionServiceLoaderModule());
-        modules.add(new BuiltinPluginSourceModule());
-        modules.add(new StandardPluginModule());
-        return modules;
-    }
-
-    private static ObjectNode column(JsonNodeFactory js,
-            int index, String name, String type)
-    {
-        ObjectNode column = js.objectNode();
-        column.put("index", index);
-        column.put("name", name);
-        column.put("type", type);
-        return column;
+        ImmutableList.Builder<Module> builder = ImmutableList.builder();
+        builder.add(new ExecModule());
+        builder.add(new ExtensionServiceLoaderModule());
+        builder.add(new BuiltinPluginSourceModule());
+        builder.add(new StandardPluginModule());
+        return builder.build();
     }
 }
