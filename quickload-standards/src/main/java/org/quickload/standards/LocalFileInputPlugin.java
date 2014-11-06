@@ -55,32 +55,24 @@ public class LocalFileInputPlugin
         PluginTask task = proc.loadTask(taskSource, PluginTask.class);
         BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
-        // TODO ad-hoc
         String path = task.getPaths().get(processorIndex);
+        File file = new File(path);
 
-        try {
-            File file = new File(path);
-            byte[] bytes = new byte[1024];
-            Buffer buf = bufferAllocator.allocateBuffer(1024);
-
-            try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-                int len;
-                while ((len = in.read(bytes)) >= 0) {
-                    buf.limit(buf.limit() + len);
-                    if (buf.capacity() - buf.limit() < 1024) {
-                        fileBufferOutput.add(buf);
-                        buf = bufferAllocator.allocateBuffer(1024);
-                    }
-                }
-                if (buf.limit() > 0) {
-                    fileBufferOutput.add(buf);
+        try (InputStream in = new FileInputStream(file)) {
+            while (true) {
+                Buffer buffer = bufferAllocator.allocateBuffer(1024);
+                int len = in.read(buffer.get());
+                if (len < 0) {
+                    break;
+                } else if (len > 0) {
+                    buffer.limit(len);
+                    fileBufferOutput.add(buffer);
                 }
             }
-            fileBufferOutput.addFile();
-
         } catch (IOException e) {
             throw new RuntimeException(e);  // TODO
         }
+        fileBufferOutput.addFile();
 
         return new Report();
     }

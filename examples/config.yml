@@ -1,7 +1,8 @@
 in:type: {injected: local_file}
 in:parser_type: {injected: csv}
 in:paths:
-  - /tmp/sample.csv
+  - examples/sample.csv
+in:newline: LF
 in:schema:
   - {index: 0, name: date_code, type: string}
   - {index: 1, name: customer_code, type: long}
