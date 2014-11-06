@@ -14,12 +14,14 @@ import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.FormatterPlugin;
 import org.quickload.spi.ProcTask;
+import org.quickload.spi.LineEncoder;
+import org.quickload.spi.LineEncoderTask;
 
 public class CsvFormatterPlugin
         implements FormatterPlugin
 {
     public interface PluginTask
-            extends Task
+            extends LineEncoderTask
     {
     }
 
@@ -35,65 +37,51 @@ public class CsvFormatterPlugin
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
+        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+
         PageReader pageReader = new PageReader(proc.getSchema());
         Schema schema = proc.getSchema();
 
-        StringBuilder sbuf = new StringBuilder();
-        CSVRecordConsumer recordConsumer = new CSVRecordConsumer();
-        recordConsumer.setStringBuilder(sbuf); // TODO multiple sbuf
+        final LineEncoder encoder = new LineEncoder(proc.getBufferAllocator(), task, fileBufferOutput);
 
         for (Page page : pageInput) {
-            // TODO simple implementation
+            try (RecordCursor recordCursor = pageReader.cursor(page)) {
+                while (recordCursor.next()) {
+                    schema.consume(recordCursor, new RecordConsumer() {
+                        public void setNull(Column column)
+                        {
+                            addDelimiter(column);
+                        }
 
-            RecordCursor recordCursor = pageReader.cursor(page);
+                        public void setLong(Column column, long value)
+                        {
+                            addDelimiter(column);
+                            encoder.addText(Long.toString(value));
+                        }
 
-            while (recordCursor.next()) {
-                schema.consume(recordCursor, recordConsumer);
-                sbuf.delete(sbuf.length() - 1, sbuf.length());
-                sbuf.append('\n');
+                        public void setDouble(Column column, double value)
+                        {
+                            addDelimiter(column);
+                            encoder.addText(Double.toString(value));
+                        }
+
+                        public void setString(Column column, String value)
+                        {
+                            addDelimiter(column);
+                            encoder.addText(value);
+                        }
+
+                        private void addDelimiter(Column column)
+                        {
+                            if (column.getIndex() != 0) {
+                                encoder.addText(",");
+                            }
+                        }
+                    });
+                    encoder.addNewLine();
+                }
             }
-
-            // TODO use LineEncoder
-            fileBufferOutput.add(Buffer.wrap(sbuf.toString().getBytes()));
         }
         fileBufferOutput.addFile();
-    }
-
-    static class CSVRecordConsumer implements RecordConsumer
-    {
-        private StringBuilder sbuf;
-
-        CSVRecordConsumer()
-        {
-        }
-
-        public void setStringBuilder(StringBuilder sbuf)
-        {
-            this.sbuf = sbuf;
-        }
-
-        @Override
-        public void setNull(Column column)
-        {
-            sbuf.append(',');
-        }
-
-        @Override
-        public void setLong(Column column, long value)
-        {
-            sbuf.append(Long.toString(value)).append(',');
-        }
-
-        @Override
-        public void setDouble(Column column, double value)
-        {
-            sbuf.append(Double.toString(value)).append(',');
-        }
-
-        @Override
-        public void setString(Column column, String value)
-        {
-            sbuf.append(value).append(',');
-        }
     }
 }

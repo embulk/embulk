@@ -3,12 +3,12 @@ package org.quickload.spi;
 import org.quickload.config.Config;
 import org.quickload.config.Task;
 
-public interface LineDecoderTask
+public interface LineEncoderTask
         extends Task
 {
-    @Config(value="in:encoding", defaultValue="\"utf-8\"")
+    @Config(value="out:encoding", defaultValue="\"utf-8\"")
     public String getEncoding();
 
-    @Config(value="in:newline", defaultValue="\"CRLF\"")
+    @Config(value="out:newline", defaultValue="\"CRLF\"")
     public String getNewline();
 }
