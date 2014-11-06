@@ -52,13 +52,17 @@ public class TestLineDecoder
         }
     }
 
-    private static LineDecoder newDecoder(String encoding, String newline,
-            List<Buffer> buffers)
+    private static LineDecoder newDecoder(String encoding, String newline, List<Buffer> buffers)
     {
         return new LineDecoder(buffers, new TestTask(encoding, newline));
     }
 
-    private static List<Buffer> newBufferList(String encoding, String... sources) throws UnsupportedCharsetException
+    private static List<String> doDecode(String encoding, String newline, List<Buffer> buffers)
+    {
+        return ImmutableList.copyOf(newDecoder(encoding, newline, buffers));
+    }
+
+    private static List<Buffer> bufferList(String encoding, String... sources) throws UnsupportedCharsetException
     {
         Charset charset = Charset.forName(encoding);
 
@@ -74,9 +78,42 @@ public class TestLineDecoder
     @Test
     public void testDecodeBasicAscii() throws Exception
     {
-        LineDecoder decoder = newDecoder("utf-8", "LF",
-                newBufferList("utf-8", "test1\ntest2\ntest3\n"));
-        List<String> decoded = ImmutableList.copyOf(decoder);
+        List<String> decoded = doDecode("utf-8", "LF",
+                bufferList("utf-8", "test1\ntest2\ntest3\n"));
         assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
     }
+
+    @Test
+    public void testDecodeBasicAsciiCRLF() throws Exception
+    {
+        List<String> decoded = doDecode("utf-8", "CRLF",
+                bufferList("utf-8", "test1\r\ntest2\r\ntest3\r\n"));
+        assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
+    }
+
+    @Test
+    public void testDecodeBasicAsciiTail() throws Exception
+    {
+        List<String> decoded = doDecode("utf-8", "LF",
+                bufferList("utf-8", "test1"));
+        assertEquals(Arrays.asList("test1"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksLF() throws Exception
+    {
+        List<String> decoded = doDecode("utf-8", "LF",
+                bufferList("utf-8", "t", "1", "\n", "t", "2"));
+        assertEquals(Arrays.asList("t1", "t2"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksCRLF() throws Exception
+    {
+        List<String> decoded = doDecode("utf-8", "CRLF",
+                bufferList("utf-8", "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
+        assertEquals(Arrays.asList("t1", "t2", "t3"), decoded);
+    }
+
+    // TODO test multibytes
 }
