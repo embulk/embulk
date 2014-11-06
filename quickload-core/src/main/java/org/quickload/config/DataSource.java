@@ -1,7 +1,9 @@
 package org.quickload.config;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
+import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,6 +53,11 @@ public class DataSource <T extends DataSource>
 
     // TODO getter methods, with default value and optional/requred flags
 
+    public List<String> getFieldNames()
+    {
+        return ImmutableList.copyOf(data.fieldNames());
+    }
+
     public T putBoolean(String fieldName, boolean v)
     {
         data.put(fieldName, v);
@@ -84,6 +91,12 @@ public class DataSource <T extends DataSource>
     public T putString(String fieldName, String v)
     {
         data.put(fieldName, v);
+        return (T) this;
+    }
+
+    public T put(String fieldName, JsonNode v)
+    {
+        data.set(fieldName, v);
         return (T) this;
     }
 

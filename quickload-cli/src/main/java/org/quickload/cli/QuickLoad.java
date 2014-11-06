@@ -12,6 +12,7 @@ import org.quickload.config.NextConfig;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;
+import org.quickload.exec.GuessExecutor;
 import org.quickload.plugin.BuiltinPluginSourceModule;
 import org.quickload.standards.StandardPluginModule;
 
@@ -29,6 +30,10 @@ public class QuickLoad {
 
         File configPath = new File(args[0]);
         ConfigSource config = ConfigSources.fromYamlFile(configPath);
+
+        // TODO
+        //NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
+        //System.out.println("guessed: "+guessed);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
         NextConfig nextConfig = exec.run(config);

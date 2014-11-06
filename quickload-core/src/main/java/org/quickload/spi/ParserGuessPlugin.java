@@ -1,12 +1,12 @@
 package org.quickload.spi;
 
+import java.util.List;
+import org.quickload.config.NextConfig;
 import org.quickload.config.ConfigSource;
+import org.quickload.buffer.Buffer;
 
 public interface ParserGuessPlugin
 {
-    // TODO
-
-    //public ParserGuessOperator openLineGuessOperator(ConfigSource config);
-
-    //public void shutdown();
+    public NextConfig guess(ProcTask proc, ConfigSource config,
+            List<Buffer> samples);
 }
