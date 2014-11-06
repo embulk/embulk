@@ -13,12 +13,12 @@ import com.google.inject.Injector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.quickload.exec.ExecModule;
-import org.quickload.GuiceJUnitRunner;
 import org.quickload.config.ModelManager;
+import org.quickload.GuiceJUnitRunner;
+import org.quickload.TestRuntimeModule;
 
 @RunWith(GuiceJUnitRunner.class)
-@GuiceJUnitRunner.GuiceModules({ ExecModule.class })
+@GuiceJUnitRunner.GuiceModules({ TestRuntimeModule.class })
 public class TestTypeManager
 {
     @Inject

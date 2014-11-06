@@ -13,6 +13,7 @@ import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * InjectedPluginSource loads plugins bound by Guice.
@@ -63,9 +64,13 @@ public class InjectedPluginSource
 
     public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
     {
+        if (!typeConfig.isObject()) {
+            throw new PluginSourceNotMatchException();
+        }
+
         PluginSourceTask task;
         try {
-            task = modelManager.readJsonObject(typeConfig, PluginSourceTask.class);
+            task = modelManager.readJsonObject((ObjectNode) typeConfig, PluginSourceTask.class);
         } catch (RuntimeException ex) {
             // TODO throw PluginSourceNotMatchException if injected field does not exist
             throw ex;

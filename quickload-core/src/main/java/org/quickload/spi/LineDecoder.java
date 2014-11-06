@@ -3,6 +3,7 @@ package org.quickload.spi;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import org.quickload.buffer.Buffer;
@@ -12,11 +13,23 @@ public class LineDecoder
         implements Iterable<String>
 {
     private final Iterable<Buffer> input;
+    private int position;
+    private Buffer buffer;
 
     public LineDecoder(Iterable<Buffer> input, LineDecoderTask task)
     {
         this.input = input;
     }
+
+    //public String poll()
+    //{
+    //    if (buffer == null) {
+    //        if (!input.hasNext()) {
+    //            return null;
+    //        }
+    //        buffer = input.next();
+    //    }
+    //}
 
     private static class Ite
             implements Iterator<String>
@@ -66,7 +79,7 @@ public class LineDecoder
             StringBuilder sbuf = new StringBuilder();
             // TODO use streaming decoder
             Charset charset = Charset.forName("UTF-8");
-            CharBuffer cb = charset.decode(buffer.getBuffer());
+            CharBuffer cb = charset.decode(ByteBuffer.wrap(buffer.get(), 0, buffer.limit()));
 
             for (int i = 0; i < cb.capacity(); i++) {
                 if (cb.get(i) != '\n') {

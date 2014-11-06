@@ -22,10 +22,10 @@ import org.quickload.config.Report;
 import org.quickload.config.TaskValidationException;
 import org.quickload.record.Schema;
 import org.quickload.channel.FileBufferOutput;
-import org.quickload.exec.ExecModule;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.GuiceBinder;
 import org.quickload.TestUtilityModule;
+import org.quickload.TestRuntimeModule;
 import org.quickload.record.RandomSchemaGenerator;
 import org.quickload.record.RandomRecordGenerator;
 import org.quickload.plugin.MockPluginSource;
@@ -40,7 +40,7 @@ public class TestFileInputPlugin
     protected RandomRecordGenerator recordGen;
 
     @Rule
-    public GuiceBinder binder = new GuiceBinder(new ExecModule());
+    public GuiceBinder binder = new GuiceBinder(new TestRuntimeModule());
 
     private static interface TestParserTask
             extends Task

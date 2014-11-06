@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
@@ -50,7 +49,7 @@ public class ModelManager
         objectMapper.registerModule(module);
     }
 
-    public <T extends Task> T readTask(JsonNode json, Class<T> iface)
+    public <T extends Task> T readTask(ObjectNode json, Class<T> iface)
     {
         return readTask(json.traverse(), iface);
     }
@@ -60,7 +59,7 @@ public class ModelManager
         return readTask(json, iface, new FieldMapper());
     }
 
-    public <T extends Task> T readTask(JsonNode json, Class<T> iface,
+    public <T extends Task> T readTask(ObjectNode json, Class<T> iface,
             FieldMapper fieldMapper)
     {
         return readTask(json.traverse(), iface, fieldMapper);
@@ -78,7 +77,7 @@ public class ModelManager
         }
     }
 
-    public <T> T readJsonObject(JsonNode json, Class<T> klass)
+    public <T> T readJsonObject(ObjectNode json, Class<T> klass)
     {
         return readJsonObject(json.traverse(), klass);
     }
@@ -200,7 +199,7 @@ public class ModelManager
             for (Map.Entry<String, FieldEntry> unused : unusedMappings.entrySet()) {
                 FieldEntry field = unused.getValue();
                 if (field.getDefaultJsonString().isPresent()) {
-                    Object value = objectMapper.readValue(jp, new GenericTypeReference(field.getType()));
+                    Object value = objectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
                     objects.put(field.getName(), value);
                 }
             }

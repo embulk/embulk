@@ -11,11 +11,11 @@ import org.junit.runner.RunWith;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.quickload.exec.ExecModule;
 import org.quickload.GuiceJUnitRunner;
+import org.quickload.TestRuntimeModule;
 
 @RunWith(GuiceJUnitRunner.class)
-@GuiceJUnitRunner.GuiceModules({ ExecModule.class })
+@GuiceJUnitRunner.GuiceModules({ TestRuntimeModule.class })
 public class TestTaskSource
 {
     @Inject
