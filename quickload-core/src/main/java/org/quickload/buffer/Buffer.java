@@ -44,8 +44,13 @@ public class Buffer
 
     public static Buffer wrap(byte[] src)
     {
+        return wrap(src, src.length);
+    }
+
+    public static Buffer wrap(byte[] src, int limit)
+    {
         Buffer buffer = new Buffer(src);
-        buffer.limit(src.length);
+        buffer.limit(limit);
         return buffer;
     }
 
