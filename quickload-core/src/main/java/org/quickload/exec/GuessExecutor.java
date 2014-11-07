@@ -61,8 +61,7 @@ public class GuessExecutor
         GuessTask task = proc.loadConfig(config, GuessTask.class);
 
         // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-        ((ObjectNode) task.getInputConfig().get("parser")).set("type",
-                JsonNodeFactory.instance.objectNode().put("injected", "guess"));
+        ((ObjectNode) task.getInputConfig().get("parser")).put("type", "system_guess");
 
         // create FileInputPlugin
         final InputPlugin input = newInputPlugin(proc, task);

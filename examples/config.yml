@@ -1,9 +1,9 @@
 in:
-  type: {injected: local_file}
+  type: file
   paths:
     - examples/csv/
   parser:
-    type: {injected: csv}
+    type: csv
     newline: LF
     columns:
       - {name: date_code, type: string}
@@ -11,14 +11,14 @@ in:
       - {name: product_code, type: string}
       - {name: employee_code, type: string}
     file_decoders:
-      - type: {injected: gzip}
+      - type: gzip
 out:
-  type: {injected: local_file}
+  type: file
   directory: tmp/
   file_name: output
   file_ext: csv.gz
   formatter:
-    type: {injected: csv}
+    type: csv
     file_encoders:
-        - type: {injected: gzip}
-          level: 9
+      - type: gzip
+        level: 9

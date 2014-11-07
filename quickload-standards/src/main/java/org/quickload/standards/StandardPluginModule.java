@@ -19,7 +19,7 @@ public class StandardPluginModule implements Module
         Preconditions.checkNotNull(binder, "binder is null.");
 
         // input plugins
-        binder.bind(InputPlugin.class).annotatedWith(Names.named("local_file")).to(LocalFileInputPlugin.class);
+        binder.bind(InputPlugin.class).annotatedWith(Names.named("file")).to(LocalFileInputPlugin.class);
         binder.bind(InputPlugin.class).annotatedWith(Names.named("s3_file")).to(S3FileInputPlugin.class);
 
         // parser plugins
@@ -29,7 +29,7 @@ public class StandardPluginModule implements Module
         binder.bind(FileDecoderPlugin.class).annotatedWith(Names.named("gzip")).to(GzipFileDecoderPlugin.class);
 
         // output plugins
-        binder.bind(OutputPlugin.class).annotatedWith(Names.named("local_file")).to(LocalFileOutputPlugin.class);
+        binder.bind(OutputPlugin.class).annotatedWith(Names.named("file")).to(LocalFileOutputPlugin.class);
 
         // formatter plugins
         binder.bind(FormatterPlugin.class).annotatedWith(Names.named("csv")).to(CsvFormatterPlugin.class);

@@ -21,6 +21,6 @@ public class ExecModule
         binder.bind(TypeManager.class).asEagerSingleton();
         binder.bind(DataSourceSerDe.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("guess")).to(GuessExecutor.GuessParserPlugin.class);
+        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess")).to(GuessExecutor.GuessParserPlugin.class);
     }
 }

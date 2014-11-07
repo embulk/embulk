@@ -7,7 +7,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.quickload.config.ModelManager;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
@@ -32,24 +32,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class InjectedPluginSource
         implements PluginSource
 {
-    public static class PluginSourceTask
-    {
-        private final String injected;
-
-        @JsonCreator
-        public PluginSourceTask(
-                @JsonProperty("injected") String injected)
-        {
-            this.injected = injected;
-        }
-
-        @JsonProperty("injected")
-        public String getInjected()
-        {
-            return injected;
-        }
-    }
-
     private final ModelManager modelManager;
     private final Injector injector;
 
@@ -64,18 +46,14 @@ public class InjectedPluginSource
 
     public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
     {
-        if (!typeConfig.isObject()) {
+        if (!typeConfig.isTextual()) {
             throw new PluginSourceNotMatchException();
         }
-
-        PluginSourceTask task;
+        String name = typeConfig.asText();
         try {
-            task = modelManager.readJsonObject((ObjectNode) typeConfig, PluginSourceTask.class);
-        } catch (RuntimeException ex) {
-            // TODO throw PluginSourceNotMatchException if injected field does not exist
-            throw ex;
+            return injector.getInstance(Key.get(iface, Names.named(name)));
+        } catch (com.google.inject.ConfigurationException ex) {
+            throw new PluginSourceNotMatchException();
         }
-
-        return injector.getInstance(Key.get(iface, Names.named(task.getInjected())));
     }
 }
