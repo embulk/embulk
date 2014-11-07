@@ -54,12 +54,6 @@
 
             <dependency>
                 <groupId>org.quickload</groupId>
-                <artifactId>quickload-jruby</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.quickload</groupId>
                 <artifactId>quickload-standards</artifactId>
                 <version>${project.version}</version>
             </dependency>
