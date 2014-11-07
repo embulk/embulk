@@ -143,14 +143,12 @@ public class GuessExecutor
         {
             int sampleSize = 0;
             ImmutableList.Builder<Buffer> builder = ImmutableList.builder();
-            Iterator<Buffer> ite = fileBufferInput.iterator();
-            while (sampleSize < maxSampleSize) {
-                if (!ite.hasNext()) {
-                    break;
-                }
-                Buffer buffer = ite.next();
+            for (Buffer buffer : fileBufferInput) {
                 sampleSize += buffer.limit();
                 builder.add(buffer);
+                if (sampleSize >= maxSampleSize) {
+                    break;
+                }
             }
             if (sampleSize == 0) {
                 throw new RuntimeException("empty");

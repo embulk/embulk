@@ -1,5 +1,7 @@
 package org.quickload.record;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.After;
@@ -13,9 +15,6 @@ import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
 import org.quickload.exec.ExecModule;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ ExecModule.class, TestUtilityModule.class })
@@ -80,39 +79,8 @@ public class TestRandomPageBuilderReader
         channel.completeProducer();
 
         List<Record> actual = new ArrayList<Record>();
-        for (Page page : channel.getInput()) {
-            try (RecordCursor cursor = reader.cursor(page)) {
-                while (cursor.next()) {
-                    final Object[] values = new Object[schema.getColumns().size()];
-                    schema.consume(cursor, new RecordConsumer()
-                    {
-                        @Override
-                        public void setNull(Column column)
-                        {
-                            // TODO
-                        }
-
-                        @Override
-                        public void setLong(Column column, long value)
-                        {
-                            values[column.getIndex()] = value;
-                        }
-
-                        @Override
-                        public void setDouble(Column column, double value)
-                        {
-                            values[column.getIndex()] = value;
-                        }
-
-                        @Override
-                        public void setString(Column column, String value)
-                        {
-                            values[column.getIndex()] = value;
-                        }
-                    });
-                    actual.add(new Record(values));
-                }
-            }
+        for (Object[] values : Pages.toObjects(schema, channel.getInput())) {
+            actual.add(new Record(values));
         }
         channel.completeConsumer();
 

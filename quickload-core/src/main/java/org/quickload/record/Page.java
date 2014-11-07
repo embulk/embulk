@@ -61,6 +61,11 @@ public class Page
         return this;
     }
 
+    public int getRecordCount()
+    {
+        return getInt(0);
+    }
+
     public void clear()
     {
         stringReferences.clear();

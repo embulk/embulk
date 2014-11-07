@@ -6,13 +6,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigSources;
 import org.quickload.config.NextConfig;
+import org.quickload.record.Pages;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.GuessExecutor;
+import org.quickload.exec.PreviewExecutor;
+import org.quickload.exec.PreviewResult;
 import org.quickload.plugin.BuiltinPluginSourceModule;
 import org.quickload.jruby.JRubyScriptingModule;
 import org.quickload.standards.StandardPluginModule;
@@ -48,6 +52,12 @@ public class QuickLoad {
         // TODO
         //NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
         //System.out.println("guessed: "+guessed);
+
+        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
+        List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
+        String previewJson = new ObjectMapper().writeValueAsString(records);
+        System.out.println("preview schema: "+preview.getSchema());
+        System.out.println("preview records: "+previewJson);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
         NextConfig nextConfig = exec.run(config);

@@ -31,13 +31,8 @@ public class RecordCursor
         close();
         this.page = page;
         this.count = 0;
-        this.recordCount = page.getInt(0);
+        this.recordCount = page.getRecordCount();
         this.position = Page.PAGE_HEADER_SIZE;
-    }
-
-    public int getRecordCount()
-    {
-        return recordCount;
     }
 
     public boolean next()
