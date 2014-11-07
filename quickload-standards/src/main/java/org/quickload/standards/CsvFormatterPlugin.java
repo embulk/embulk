@@ -12,13 +12,13 @@ import org.quickload.record.RecordCursor;
 import org.quickload.record.Schema;
 import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
-import org.quickload.spi.FormatterPlugin;
+import org.quickload.spi.BasicFormatterPlugin;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.LineEncoder;
 import org.quickload.spi.LineEncoderTask;
 
 public class CsvFormatterPlugin
-        implements FormatterPlugin
+        extends BasicFormatterPlugin
 {
     public interface PluginTask
             extends LineEncoderTask
@@ -26,14 +26,14 @@ public class CsvFormatterPlugin
     }
 
     @Override
-    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
+    public TaskSource getBasicFormatterTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = proc.loadConfig(config, PluginTask.class);
         return proc.dumpTask(task);
     }
 
     @Override
-    public void runFormatter(ProcTask proc,
+    public void runBasicFormatter(ProcTask proc,
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {

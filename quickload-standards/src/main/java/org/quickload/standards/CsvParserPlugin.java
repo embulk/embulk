@@ -17,13 +17,13 @@ import org.quickload.config.ConfigDefault;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
-import org.quickload.spi.ParserPlugin;
+import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.LineDecoder;
 import org.quickload.spi.LineDecoderTask;
 
 public class CsvParserPlugin
-        implements ParserPlugin
+        extends BasicParserPlugin
 {
     public interface PluginTask
             extends Task, LineDecoderTask
@@ -38,14 +38,15 @@ public class CsvParserPlugin
     }
 
     @Override
-    public TaskSource getParserTask(ProcTask proc, ConfigSource config)
+    public TaskSource getBasicParserTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = proc.loadConfig(config, PluginTask.class);
         proc.setSchema(task.getSchemaConfig().toSchema());
         return proc.dumpTask(task);
     }
 
-    public void runParser(ProcTask proc,
+    @Override
+    public void runBasicParser(ProcTask proc,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput)
     {
