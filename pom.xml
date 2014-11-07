@@ -21,7 +21,6 @@
 
     <modules>
         <module>quickload-core</module>
-        <module>quickload-jruby</module>
         <module>quickload-standards</module>
         <module>quickload-cli</module>
     </modules>

@@ -1,11 +1,18 @@
 package org.quickload.standards;
 
+import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.FileVisitResult;
+import java.nio.file.attribute.BasicFileAttributes;
 import javax.validation.constraints.NotNull;
-import com.google.common.base.Function;
-import com.google.inject.Inject;
-import org.quickload.buffer.Buffer;
-import org.quickload.buffer.BufferAllocator;
+import com.google.common.collect.ImmutableList;
 import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
@@ -19,21 +26,18 @@ import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.ProcControl;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.List;
-
 public class LocalFileInputPlugin
         extends FileInputPlugin
 {
     public interface PluginTask
             extends Task
     {
-        @Config("in:paths") // TODO temporarily added 'in:'
+        @Config("in:paths")
         @NotNull
-        public List<String> getPaths();
+        public List<String> getPathPrefixes();
+
+        public List<String> getFiles();
+        public void setFiles(List<String> files);
     }
 
     @Override
@@ -41,11 +45,38 @@ public class LocalFileInputPlugin
             ProcControl control)
     {
         PluginTask task = proc.loadConfig(config, PluginTask.class);
-        proc.setProcessorCount(task.getPaths().size());
 
+        // list files recursively
+        try {
+            task.setFiles(listFiles(task));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);  // TODO exception class
+        }
+
+        // number of processors is same with number of files
+        proc.setProcessorCount(task.getFiles().size());
+
+        // run
         control.run(proc.dumpTask(task));
 
         return new NextConfig();
+    }
+
+    public List<String> listFiles(PluginTask task) throws IOException
+    {
+        final ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (String prefix : task.getPathPrefixes()) {
+            // TODO format path using timestamp
+            Files.walkFileTree(Paths.get(prefix), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
+                {
+                    builder.add(file.toString());
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
+        return builder.build();
     }
 
     @Override
@@ -53,26 +84,16 @@ public class LocalFileInputPlugin
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
         PluginTask task = proc.loadTask(taskSource, PluginTask.class);
-        BufferAllocator bufferAllocator = proc.getBufferAllocator();
 
-        String path = task.getPaths().get(processorIndex);
+        String path = task.getFiles().get(processorIndex);
         File file = new File(path);
 
         try (InputStream in = new FileInputStream(file)) {
-            while (true) {
-                Buffer buffer = bufferAllocator.allocateBuffer(1024);
-                int len = in.read(buffer.get());
-                if (len < 0) {
-                    break;
-                } else if (len > 0) {
-                    buffer.limit(len);
-                    fileBufferOutput.add(buffer);
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);  // TODO
+            FilePlugins.transferInputStream(proc.getBufferAllocator(),
+                    in, fileBufferOutput);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
-        fileBufferOutput.addFile();
 
         return new Report();
     }
