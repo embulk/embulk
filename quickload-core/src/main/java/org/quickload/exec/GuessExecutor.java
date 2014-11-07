@@ -55,8 +55,8 @@ public class GuessExecutor
         JsonNodeFactory js = JsonNodeFactory.instance;
         ObjectNode parserType = js.objectNode();
         parserType.put("injected", "guess");  // GuessExecutor.GuessParserPlugin injected by ExecModule.configure
-        config.put("in:parser_type", parserType);
-        config.putBoolean("in:guess", true);
+        config.set("in:parser_type", parserType);
+        config.setBoolean("in:guess", true);
 
         GuessTask task = proc.loadConfig(config, GuessTask.class);
         final InputPlugin input = proc.newPlugin(InputPlugin.class, task.getInputType());
@@ -127,7 +127,7 @@ public class GuessExecutor
             while (true) {
                 for (int i=0; i < guesses.size(); i++) {
                     ParserGuessPlugin guess = guesses.get(i);
-                    guessed.putAll(guess.guess(proc, config, samples));
+                    guessed.setAll(guess.guess(proc, config, samples));
                 }
                 int guessedSize = guessed.getFieldNames().size();
                 if (guessedSize <= startSize) {

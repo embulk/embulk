@@ -178,7 +178,7 @@ public class LocalExecutor
         });
         ctrlContext.setInputNextConfig(inputNextConfig);
 
-        return ctrlContext.getInputNextConfig().putAll(ctrlContext.getOutputNextConfig());
+        return ctrlContext.getInputNextConfig().setAll(ctrlContext.getOutputNextConfig());
     }
 
     private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext procContext)

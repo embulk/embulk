@@ -37,9 +37,6 @@ public class TestConfigSource
         @Config("in:boolean")
         public boolean getBoolean();
 
-        @Config("in:byte_array")
-        public byte[] getByteArray();
-
         @Config("in:double")
         public double getDouble();
 
@@ -54,18 +51,32 @@ public class TestConfigSource
     }
 
     @Test
+    public void testSetGet()
+    {
+        config.setBoolean("in:boolean", true);
+        config.setInt("in:int", 3);
+        config.setDouble("in:double", 0.2);
+        config.setLong("in:long", Long.MAX_VALUE);
+        config.setString("in:string", "sf");
+
+        assertEquals(true, config.getBoolean("in:boolean"));
+        assertEquals(3, config.getInt("in:int"));
+        assertEquals(0.2, config.getDouble("in:double"), 0.001);
+        assertEquals(Long.MAX_VALUE, config.getLong("in:long"));
+        assertEquals("sf", config.getString("in:string"));
+    }
+
+    @Test
     public void testLoadConfig()
     {
-        config.putBoolean("in:boolean", true);
-        config.putByteArray("in:byte_array", new byte[] { (byte) 0xff, (byte) 0xfe } );
-        config.putInt("in:int", 3);
-        config.putDouble("in:double", 0.2);
-        config.putLong("in:long", Long.MAX_VALUE);
-        config.putString("in:string", "sf");
+        config.setBoolean("in:boolean", true);
+        config.setInt("in:int", 3);
+        config.setDouble("in:double", 0.2);
+        config.setLong("in:long", Long.MAX_VALUE);
+        config.setString("in:string", "sf");
 
         TypeFields task = config.loadModel(modelManager, TypeFields.class);
         assertEquals(true, task.getBoolean());
-        assertArrayEquals(new byte[] { (byte) 0xff, (byte) 0xfe }, task.getByteArray());
         assertEquals(3, task.getInt());
         assertEquals(0.2, task.getDouble(), 0.001);
         assertEquals(Long.MAX_VALUE, task.getLong());
@@ -83,7 +94,7 @@ public class TestConfigSource
     @Test
     public void testValidatePasses()
     {
-        config.putString("in:valid", "data");
+        config.setString("in:valid", "data");
         ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
         task.validate();
         assertEquals("data", task.getValid());

@@ -78,8 +78,8 @@ public class TestFileInputPlugin
         ProcTask proc = new ProcTask(binder.getInjector());
 
         ConfigSource config = new ConfigSource()
-            .putString("in:parser_type", "dummy")
-            .putString("in:field", "frsyuki");
+            .setString("in:parser_type", "dummy")
+            .setString("in:field", "frsyuki");
 
         ParserTestFileInputPlugin plugin = binder.getInstance(ParserTestFileInputPlugin.class);
 

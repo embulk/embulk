@@ -51,56 +51,168 @@ public class DataSource <T extends DataSource>
         return data;
     }
 
-    // TODO getter methods, with default value and optional/requred flags
-
     public List<String> getFieldNames()
     {
         return ImmutableList.copyOf(data.fieldNames());
     }
 
-    public T putBoolean(String fieldName, boolean v)
+    public boolean getBoolean(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.isBoolean()) {
+            throw new ConfigException("Field "+fieldName+" must be a boolean");
+        }
+        return json.asBoolean();
+    }
+
+    public boolean getBoolean(String fieldName, boolean defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        if (!json.canConvertToInt()) {
+            throw new ConfigException("Field "+fieldName+" must be a boolean");
+        }
+        return json.asBoolean();
+    }
+
+    public int getInt(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.canConvertToInt()) {
+            throw new ConfigException("Field "+fieldName+" must be an integer and within 32-bit signed int");
+        }
+        return json.asInt();
+    }
+
+    public int getInt(String fieldName, int defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        if (!json.canConvertToInt()) {
+            throw new ConfigException("Field "+fieldName+" must be an integer and within 32-bit signed int");
+        }
+        return json.asInt();
+    }
+
+    public long getLong(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.canConvertToLong()) {
+            throw new ConfigException("Field "+fieldName+" must be an integer and within 64-bit signed int");
+        }
+        return json.asLong();
+    }
+
+    public long getLong(String fieldName, long defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        if (!json.canConvertToLong()) {
+            throw new ConfigException("Field "+fieldName+" must be an integer and within 64-bit signed int");
+        }
+        return json.asLong();
+    }
+
+    public double getDouble(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.isDouble()) {
+            throw new ConfigException("Field "+fieldName+" must be double");
+        }
+        return json.asDouble();
+    }
+
+    public double getDouble(String fieldName, double defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        if (!json.isDouble()) {
+            throw new ConfigException("Field "+fieldName+" must be double");
+        }
+        return json.asDouble();
+    }
+
+    public String getString(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.isTextual()) {
+            throw new ConfigException("Field "+fieldName+" must be a string");
+        }
+        return json.asText();
+    }
+
+    public String getString(String fieldName, String defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        if (!json.isTextual()) {
+            throw new ConfigException("Field "+fieldName+" must be a string");
+        }
+        return json.asText();
+    }
+
+    public T setBoolean(String fieldName, boolean v)
     {
         data.put(fieldName, v);
         return (T) this;
     }
 
-    public T putByteArray(String fieldName, byte[] v)
+    public T setInt(String fieldName, int v)
     {
         data.put(fieldName, v);
         return (T) this;
     }
 
-    public T putDouble(String fieldName, double v)
+    public T setLong(String fieldName, long v)
     {
         data.put(fieldName, v);
         return (T) this;
     }
 
-    public T putInt(String fieldName, int v)
+    public T setDouble(String fieldName, double v)
     {
         data.put(fieldName, v);
         return (T) this;
     }
 
-    public T putLong(String fieldName, long v)
+    public T setString(String fieldName, String v)
     {
         data.put(fieldName, v);
         return (T) this;
     }
 
-    public T putString(String fieldName, String v)
-    {
-        data.put(fieldName, v);
-        return (T) this;
-    }
-
-    public T put(String fieldName, JsonNode v)
+    public T set(String fieldName, JsonNode v)
     {
         data.set(fieldName, v);
         return (T) this;
     }
 
-    public T putAll(DataSource other)
+    public T setAll(DataSource other)
     {
         Iterator<Map.Entry<String, JsonNode>> fields = other.data.fields();
         while (fields.hasNext()) {

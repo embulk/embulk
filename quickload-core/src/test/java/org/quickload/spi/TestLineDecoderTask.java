@@ -37,8 +37,8 @@ public class TestLineDecoderTask
     {
         ProcTask proc = new ProcTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
-            .putString("in:encoding", "utf-16")
-            .putString("in:newline", "LF");
+            .setString("in:encoding", "utf-16")
+            .setString("in:newline", "LF");
         LineDecoderTask task = proc.loadConfig(config, LineDecoderTask.class);
         assertEquals("utf-16", task.getEncoding());
         assertEquals("LF", task.getNewline());
