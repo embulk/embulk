@@ -104,10 +104,10 @@ public class LineDecoder
                     // rewinding is insufficient to secure minium size. resizing.
                     // TODO limit maxmium possible line size to prevent OutOfMemoryError
                     CharBuffer nextLineBuffer = CharBuffer.allocate(lineBuffer.capacity() * 2);
+                    newlineSearchPosition -= lineBuffer.position();
                     nextLineBuffer.put(lineBuffer);
                     nextLineBuffer.flip();
                     lineBuffer = nextLineBuffer;
-                    newlineSearchPosition -= lineBuffer.position();
                 } else {
                     // rewinding
                     newlineSearchPosition -= lineBuffer.position();

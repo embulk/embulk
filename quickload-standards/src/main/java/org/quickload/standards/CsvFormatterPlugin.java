@@ -82,6 +82,7 @@ public class CsvFormatterPlugin
                 }
             }
         }
+        encoder.flush();
         fileBufferOutput.addFile();
     }
 }
