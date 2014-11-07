@@ -1,29 +1,22 @@
 package org.quickload.standards;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 import javax.validation.constraints.NotNull;
-import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.plugin.PluginManager;
-import org.quickload.record.Schema;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.spi.FileOutputPlugin;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.ProcControl;
-
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 public class LocalFileOutputPlugin
         extends FileOutputPlugin
@@ -31,12 +24,21 @@ public class LocalFileOutputPlugin
     public interface PluginTask
             extends Task
     {
-        @Config("out:paths")
+        @Config("out:directory")
         @NotNull
-        public List<String> getPaths(); // TODO temporarily
+        public String getDirectory();
 
-        @Config("out:compress_type")
-        public String getCompressType();
+        @Config("out:file_name")
+        @NotNull
+        public String getFileNameFormat();
+
+        @Config("out:file_ext")
+        @NotNull
+        public String getFileNameExtension();
+
+        // TODO support in FileInputPlugin and FileOutputPlugin
+        //@Config("out:compress_type")
+        //public String getCompressType();
     }
 
     @Override
@@ -57,47 +59,28 @@ public class LocalFileOutputPlugin
     {
         PluginTask task = proc.loadTask(taskSource, PluginTask.class);
 
+        // TODO format path using timestamp
+        String fileName = task.getFileNameFormat();
+
+        String pathPrefix = task.getDirectory() + File.separator + fileName;
+        String pathSuffix = task.getFileNameExtension();
+
+        int fileIndex = 0;
         while (fileBufferInput.nextFile()) {
-            for (Buffer buffer : fileBufferInput) {
-                // TODO simple implementation
-
-                String filePath = task.getPaths().get(processorIndex);
-                File file = new File(filePath);
-                if (!file.exists()) {
-                    try {
-                        file.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                try (OutputStream out = createFileOutputStream(file, task)) {
-                    out.write(buffer.get(), 0, buffer.limit());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                System.out.println("write file: " + filePath); // TODO debug message
+            String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
+            System.out.println("path: "+path);
+            File file = new File(path);
+            file.getParentFile().mkdirs();
+            try (OutputStream out = new FileOutputStream(file)) {
+                BufferPlugins.transferBufferInput(proc.getBufferAllocator(),
+                        fileBufferInput, out);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
+            System.out.println("file written: "+path);
+            fileIndex++;
         }
 
         return new Report();
-    }
-
-    private OutputStream createFileOutputStream(File file, PluginTask task)
-        throws IOException
-    {
-        String compressType = task.getCompressType();
-        if (compressType == null) { // null is for 'none' mode
-            return new BufferedOutputStream(new FileOutputStream(file));
-        } else if (compressType.equals("none")) { // TODO
-            return new BufferedOutputStream(new FileOutputStream(file));
-        } else if (compressType.equals("gzip")) {
-            return new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-        } else {
-            throw new IOException("not supported yet");
-        }
     }
 }

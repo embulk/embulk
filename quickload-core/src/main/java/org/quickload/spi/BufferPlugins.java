@@ -1,9 +1,11 @@
 package org.quickload.standards;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import org.quickload.buffer.Buffer;
 import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.BufferOutput;
+import org.quickload.channel.BufferInput;
 
 public class BufferPlugins
 {
@@ -22,6 +24,22 @@ public class BufferPlugins
                     output.add(buffer);
                     transferredSize += len;
                 }
+            }
+        } catch (Exception ex) {
+            throw new PartialTransferException(ex, transferredSize);
+        }
+        return transferredSize;
+    }
+
+    public static long transferBufferInput(BufferAllocator bufferAllocator,
+            BufferInput input, OutputStream output) throws PartialTransferException
+    {
+        long transferredSize = 0;
+        try {
+            for (Buffer buffer : input) {
+                output.write(buffer.get(), 0, buffer.limit());
+                transferredSize += buffer.limit();
+                buffer.release();
             }
         } catch (Exception ex) {
             throw new PartialTransferException(ex, transferredSize);

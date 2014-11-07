@@ -11,4 +11,6 @@ in:schema:
 out:type: {injected: local_file}
 out:formatter_type: {injected: csv}
 out:compress_type: none
-out:paths: [/tmp/output_sample.csv]
+out:directory: tmp/
+out:file_name: output
+out:file_ext: csv
