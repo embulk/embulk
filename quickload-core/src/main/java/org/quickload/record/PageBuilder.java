@@ -42,7 +42,7 @@ public class PageBuilder
         Arrays.fill(nullBitSet, (byte) 0);
 
         // flush if next record will not fit in this page
-        if (page.limit() < position + nextVariableLengthDataOffset) {
+        if (page.capacity() < position + nextVariableLengthDataOffset) {
             flush();
         }
     }
@@ -52,6 +52,7 @@ public class PageBuilder
         if (page != null) {
             // page header
             page.setInt(0, count);
+            page.limit(position);
 
             output.add(page);
             this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
@@ -131,7 +132,7 @@ public class PageBuilder
 
     Page ensureVariableLengthDataCapacity(int requiredOffsetFromPosition)
     {
-        if (page.limit() < position + requiredOffsetFromPosition) {
+        if (page.capacity() < position + requiredOffsetFromPosition) {
             flushAndTakeOverRemaingData();
         }
         return page;
