@@ -1,4 +1,4 @@
-package org.quickload.standards;
+package org.quickload.spi;
 
 public class PartialTransferException
         extends RuntimeException

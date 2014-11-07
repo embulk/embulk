@@ -21,6 +21,7 @@ import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.FileInputPlugin;
+import org.quickload.spi.FilePlugins;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.ProcControl;
 

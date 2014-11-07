@@ -1,16 +1,15 @@
 package org.quickload.standards;
 
+import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import javax.validation.constraints.NotNull;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
-import com.google.common.base.Function;
-import com.google.inject.Inject;
 import org.quickload.buffer.Buffer;
 import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.FileBufferOutput;
@@ -21,30 +20,16 @@ import org.quickload.config.TaskSource;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.spi.FileInputPlugin;
+import org.quickload.spi.FilePlugins;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.ProcControl;
-
-import javax.validation.constraints.NotNull;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.util.List;
 
 public class S3FileInputPlugin
         extends FileInputPlugin
 {
-    public interface PluginTask extends Task
+    public interface PluginTask
+            extends AWSCredentialsTask, AmazonS3Task
     {
-        @Config("in:endpoint")
-        public String getEndpoint();
-
-        @Config("in:access_key_id")@NotNull
-        public String getAccessKeyId();
-
-        @Config("in:secret_access_key")@NotNull
-        public String getSecretAccessKey();
-
         @Config("in:bucket")@NotNull
         public String getBucket();
 
@@ -64,26 +49,10 @@ public class S3FileInputPlugin
         return new NextConfig();
     }
 
-    private AWSCredentials createAWSCredentials(PluginTask task)
-    {
-        return new BasicAWSCredentials(task.getAccessKeyId(),
-                task.getSecretAccessKey());
-    }
-
     private AmazonS3Client createS3Client(PluginTask task)
     {
-        AWSCredentials credentials = createAWSCredentials(task);
-
-        ClientConfiguration clientConfig = new ClientConfiguration();
-        clientConfig.setProtocol(Protocol.HTTP);
-        clientConfig.setMaxConnections(50); // SDK default: 50
-        clientConfig.setMaxErrorRetry(3); // SDK default: 3
-        clientConfig.setSocketTimeout(8*60*1000); // SDK default: 50*1000
-
-        AmazonS3Client client = new AmazonS3Client(credentials, clientConfig);
-        if (task.getEndpoint() != null) {
-            client.setEndpoint(task.getEndpoint());
-        }
+        AWSCredentialsProvider credentials = AWSPlugins.getCredentialsProvider(task);
+        AmazonS3Client client = AWSPlugins.getS3Client(task, credentials);
         return client;
     }
 
@@ -91,68 +60,49 @@ public class S3FileInputPlugin
     public Report runFileInput(ProcTask proc, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
-        final PluginTask task = proc.loadTask(taskSource, PluginTask.class);
-        final AmazonS3Client client = createS3Client(task);
-        final String bucket = task.getBucket();
-        final String key = task.getPaths().get(processorIndex);
-        BufferAllocator bufferAllocator = proc.getBufferAllocator();
+        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+        AmazonS3Client client = createS3Client(task);
 
-        // TODO retry if metadata might be used
-        long contentLength = client.getObjectMetadata(bucket, key).getContentLength();
-        Buffer buf = bufferAllocator.allocateBuffer(1024);
+        String bucket = task.getBucket();
+        String key = task.getPaths().get(processorIndex);
 
-        Opener opener = new Opener(client, bucket, key, contentLength);
-        while (true) {
-            try (InputStream in = new BufferedInputStream(opener.open(buf.limit()))) {
-                int len;
-                while ((len = in.read(buf.get(), buf.limit(), buf.capacity() - buf.limit())) >= 0) {
-                    buf.limit(buf.limit() + len);
-                    if (buf.capacity() - buf.limit() < 1024) {
-                        fileBufferOutput.add(buf);
-                        buf = bufferAllocator.allocateBuffer(1024);
-                    }
-                }
-                if (buf.limit() > 0) {
-                    fileBufferOutput.add(buf);
-                }
-
-                break;
-            } catch (RuntimeException e) {
-                if (e instanceof AmazonServiceException) {
-                    AmazonServiceException ase = (AmazonServiceException) e;
-                    // TODO retry mechanism
-                }
-            } catch (IOException e) {
-                // TODO
-            }
-
-            // TODO retry wait and retry limit
+        ResumeOpener opener = new ResumeOpener(client, bucket, key);
+        try (InputStream in = opener.open(0)) {
+            FilePlugins.transferInputStream(proc.getBufferAllocator(), in, fileBufferOutput);
+            // TODO catch PartialTransferException and implement retry
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
-        fileBufferOutput.addFile();
 
         return new Report();
     }
 
-    public static class Opener
+    public static class ResumeOpener
     {
         private AmazonS3Client client;
         private String bucket;
         private String key;
         private long contentLength;
 
-        public Opener(AmazonS3Client client, String bucket, String key, long contentLength)
+        public ResumeOpener(AmazonS3Client client, String bucket, String key)
         {
             this.client = client;
             this.bucket = bucket;
             this.key = key;
-            this.contentLength = contentLength;
         }
 
         public InputStream open(long pos)
         {
             GetObjectRequest request = new GetObjectRequest(bucket, key);
-            request.setRange(pos, contentLength);
-            return client.getObject(request).getObjectContent();
+            if (pos > 0) {
+                request.setRange(pos, contentLength);
+            }
+            S3Object obj = client.getObject(request);
+            if (pos <= 0) {
+                // first call
+                contentLength = obj.getObjectMetadata().getContentLength();
+            }
+            return obj.getObjectContent();
         }
     }
 }

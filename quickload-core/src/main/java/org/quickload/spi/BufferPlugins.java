@@ -1,4 +1,4 @@
-package org.quickload.standards;
+package org.quickload.spi;
 
 import java.io.InputStream;
 import java.io.OutputStream;
