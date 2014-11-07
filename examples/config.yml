@@ -10,6 +10,8 @@ in:
       - {name: customer_code, type: long}
       - {name: product_code, type: string}
       - {name: employee_code, type: string}
+    file_decoders:
+      - type: {injected: gzip}
 out:
   type: {injected: local_file}
   directory: tmp/

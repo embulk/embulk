@@ -25,7 +25,7 @@ public abstract class BasicParserPlugin
     public interface ParserTask
             extends Task
     {
-        @Config("file_filters")
+        @Config("file_decoders")
         @ConfigDefault("[]")
         @NotNull
         public List<ConfigSource> getFileDecoderConfigs();
