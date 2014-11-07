@@ -18,11 +18,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.quickload</groupId>
-            <artifactId>quickload-jruby</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
