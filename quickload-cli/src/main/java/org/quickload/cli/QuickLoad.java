@@ -37,6 +37,7 @@ public class QuickLoad {
         modules.add(new ExtensionServiceLoaderModule());
         modules.add(new BuiltinPluginSourceModule());
         modules.add(new StandardPluginModule());
+        modules.add(new JRubyScriptingModule());
         modules.addAll(getAdditionalModules());
 
         Injector injector = Guice.createInjector(modules.build());
@@ -56,12 +57,6 @@ public class QuickLoad {
 
     protected Iterable<? extends Module> getAdditionalModules()
     {
-        ImmutableList.Builder<Module> builder = ImmutableList.builder();
-        builder.add(new ExecModule());
-        builder.add(new ExtensionServiceLoaderModule());
-        builder.add(new BuiltinPluginSourceModule());
-        builder.add(new StandardPluginModule());
-        builder.add(new JRubyScriptingModule());
-        return builder.build();
+        return ImmutableList.of();
     }
 }
