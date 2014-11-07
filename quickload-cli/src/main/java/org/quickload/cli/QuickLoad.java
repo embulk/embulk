@@ -20,6 +20,11 @@ import org.quickload.standards.StandardPluginModule;
 public class QuickLoad {
     public static void main(String[] args) throws Exception
     {
+        new QuickLoad().run(args);
+    }
+
+    public void run(final String[] args) throws Exception
+    {
         if (args.length == 0) {
             System.out.println("usage: [-Dload.systemConfigKey=value...] <config.yml> [configKey=value...]");
             return;
@@ -27,7 +32,14 @@ public class QuickLoad {
 
         ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
 
-        Injector injector = Guice.createInjector(getModules(systemConfig));
+        ImmutableList.Builder<Module> modules = ImmutableList.builder();
+        modules.add(new ExecModule());
+        modules.add(new ExtensionServiceLoaderModule());
+        modules.add(new BuiltinPluginSourceModule());
+        modules.add(new StandardPluginModule());
+        modules.addAll(getAdditionalModules());
+
+        Injector injector = Guice.createInjector(modules.build());
 
         File configPath = new File(args[0]);
         ConfigSource config = ConfigSources.fromYamlFile(configPath);
@@ -42,7 +54,7 @@ public class QuickLoad {
         System.out.println("next config: "+nextConfig);
     }
 
-    public static List<Module> getModules(ConfigSource systemConfig)
+    protected Iterable<? extends Module> getAdditionalModules()
     {
         ImmutableList.Builder<Module> builder = ImmutableList.builder();
         builder.add(new ExecModule());
