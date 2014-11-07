@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 import java.util.List;
+import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -71,6 +72,25 @@ public class Schema
         for(Column c : columns) {
             c.produce(builder, producer);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Schema)) {
+            return false;
+        }
+        Schema other = (Schema) obj;
+        return Objects.equal(columns, other.columns);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(columns);
     }
 
     @Override

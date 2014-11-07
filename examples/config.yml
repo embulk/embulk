@@ -5,11 +5,11 @@ in:
   parser:
     type: {injected: csv}
     newline: LF
-    schema:
-      - {index: 0, name: date_code, type: string}
-      - {index: 1, name: customer_code, type: long}
-      - {index: 2, name: product_code, type: string}
-      - {index: 3, name: employee_code, type: string}
+    columns:
+      - {name: date_code, type: string}
+      - {name: customer_code, type: long}
+      - {name: product_code, type: string}
+      - {name: employee_code, type: string}
 out:
   type: {injected: local_file}
   directory: tmp/

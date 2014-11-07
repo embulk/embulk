@@ -7,6 +7,7 @@ import org.quickload.record.DoubleType;
 import org.quickload.record.LongType;
 import org.quickload.record.RecordProducer;
 import org.quickload.record.Schema;
+import org.quickload.record.SchemaConfig;
 import org.quickload.record.StringType;
 import org.quickload.record.PageBuilder;
 import org.quickload.channel.FileBufferInput;
@@ -26,8 +27,9 @@ public class CsvParserPlugin
     public interface PluginTask
             extends Task, LineDecoderTask
     {
-        @Config("schema")@NotNull
-        public Schema getSchema();
+        @Config("columns")
+        @NotNull
+        public SchemaConfig getSchemaConfig();
 
         @Config("column_header") // how to set default value?? TODO @Default("true")
         public boolean getColumnHeader();
@@ -37,7 +39,7 @@ public class CsvParserPlugin
     public TaskSource getParserTask(ProcTask proc, ConfigSource config)
     {
         PluginTask task = proc.loadConfig(config, PluginTask.class);
-        proc.setSchema(task.getSchema());
+        proc.setSchema(task.getSchemaConfig().toSchema());
         return proc.dumpTask(task);
     }
 

@@ -1,5 +1,6 @@
 package org.quickload.record;
 
+import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -33,7 +34,10 @@ public class Column
     }
 
     @JsonProperty("type")
-    public Type getType() { return type; }
+    public Type getType()
+    {
+        return type;
+    }
 
     public void consume(RecordCursor cursor, RecordConsumer consumer)
     {
@@ -45,9 +49,31 @@ public class Column
         type.produce(builder, producer, this);
     }
 
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Column)) {
+            return false;
+        }
+        Column other = (Column) obj;
+        return Objects.equal(index, other.index) &&
+            Objects.equal(name, other.name) &&
+            Objects.equal(type, other.type);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(index, name, type);
+    }
+
+    @Override
     public String toString()
     {
-        return String.format("Column(%d, %s, %s)",
+        return String.format("Column{index:%d, name:%s, type:%s}",
                 getIndex(), getName(), getType().getName());
     }
 }
