@@ -21,3 +21,4 @@ out:
     type: {injected: csv}
     file_encoders:
         - type: {injected: gzip}
+          level: 9

@@ -19,14 +19,14 @@ public abstract class OutputStreamFileEncoderPlugin
 {
     public abstract TaskSource getFileEncoderTask(ProcTask proc, ConfigSource config);
 
-    public abstract OutputStream openOutputStream(OutputStream out) throws IOException;
+    public abstract OutputStream openOutputStream(ProcTask proc, TaskSource taskSource, OutputStream out) throws IOException;
 
     public void runFileEncoder(ProcTask proc,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, FileBufferOutput fileBufferOutput)
     {
         while (fileBufferInput.nextFile()) {
-            try (OutputStream out = openOutputStream(new BufferedOutputStream(new BufferOutputOutputStream(proc.getBufferAllocator(), fileBufferOutput)))) {
+            try (OutputStream out = openOutputStream(proc, taskSource, new BufferedOutputStream(new BufferOutputOutputStream(proc.getBufferAllocator(), fileBufferOutput)))) {
                 for (Buffer buffer : fileBufferInput) {
                     out.write(buffer.get(), 0, buffer.limit());
                 }

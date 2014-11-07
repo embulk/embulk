@@ -23,7 +23,8 @@ public class GzipFileDecoderPlugin
     }
 
     @Override
-    public InputStream openInputStream(InputStream in) throws IOException
+    public InputStream openInputStream(ProcTask proc, TaskSource taskSource,
+            InputStream in) throws IOException
     {
         return new GZIPInputStream(in);
     }

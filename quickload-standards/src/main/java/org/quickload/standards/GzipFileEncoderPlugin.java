@@ -2,8 +2,10 @@ package org.quickload.standards;
 
 import java.io.OutputStream;
 import java.io.IOException;
-import org.quickload.config.Task;
 import java.util.zip.GZIPOutputStream;
+import org.quickload.config.Task;
+import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.spi.ProcTask;
@@ -14,6 +16,9 @@ public class GzipFileEncoderPlugin
     public interface PluginTask
             extends Task
     {
+        @Config("level")
+        @ConfigDefault("6")
+        public int getLevel();
     }
 
     public TaskSource getFileEncoderTask(ProcTask proc, ConfigSource config)
@@ -23,8 +28,10 @@ public class GzipFileEncoderPlugin
     }
 
     @Override
-    public OutputStream openOutputStream(OutputStream out) throws IOException
+    public OutputStream openOutputStream(ProcTask proc, TaskSource task,
+            OutputStream out) throws IOException
     {
+        // TODO GZIPOutputStream doesn't support level option?
         return new GZIPOutputStream(out);
     }
 }

@@ -18,7 +18,7 @@ public abstract class InputStreamFileDecoderPlugin
 {
     public abstract TaskSource getFileDecoderTask(ProcTask proc, ConfigSource config);
 
-    public abstract InputStream openInputStream(InputStream in) throws IOException;
+    public abstract InputStream openInputStream(ProcTask proc, TaskSource taskSource, InputStream in) throws IOException;
 
     @Override
     public void runFileDecoder(ProcTask proc,
@@ -26,7 +26,7 @@ public abstract class InputStreamFileDecoderPlugin
             FileBufferInput fileBufferInput, FileBufferOutput fileBufferOutput)
     {
         while (fileBufferInput.nextFile()) {
-            try (InputStream in = openInputStream(new BufferInputInputStream(fileBufferInput.iterator()))) {
+            try (InputStream in = openInputStream(proc, taskSource, new BufferInputInputStream(fileBufferInput.iterator()))) {
                 FilePlugins.transferInputStream(proc.getBufferAllocator(),
                         in, fileBufferOutput);
             } catch (IOException ex) {
