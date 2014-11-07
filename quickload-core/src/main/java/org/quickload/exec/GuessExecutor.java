@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
@@ -86,10 +87,12 @@ public class GuessExecutor
         private interface PluginTask
                 extends Task
         {
-            @Config(value="guess_sample_size", defaultValue="32768")
+            @Config("guess_sample_size")
+            @ConfigDefault("32768")
             public int getSampleSize();
 
-            @Config(value="guess_plugins")
+            @Config("guess_plugins")
+            @ConfigDefault("[]")  // TODO require some plugins
             public List<JsonNode> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();

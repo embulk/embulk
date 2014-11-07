@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
@@ -43,7 +44,8 @@ public class PreviewExecutor
         @NotNull
         public ConfigSource getInputConfig();
 
-        @Config(value="preview_sample_rows", defaultValue="30")
+        @Config("preview_sample_rows")
+        @ConfigDefault("30")
         public int getSampleRows();
 
         public TaskSource getInputTask();

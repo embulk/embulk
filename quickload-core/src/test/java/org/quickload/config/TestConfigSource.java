@@ -100,8 +100,8 @@ public class TestConfigSource
         assertEquals("data", task.getValid());
     }
 
-    @Test(expected = TaskValidationException.class)
-    public void testNotNullValidateFails()
+    @Test(expected = ConfigException.class)
+    public void testDefaultValueValidateFails()
     {
         ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
         task.validate();

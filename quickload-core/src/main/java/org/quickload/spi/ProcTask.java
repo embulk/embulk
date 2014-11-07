@@ -70,7 +70,9 @@ public class ProcTask
 
     public <T extends Task> T loadConfig(ConfigSource config, Class<T> iface)
     {
-        return config.loadModel(modelManager, iface);
+        T t = config.loadModel(modelManager, iface);
+        t.validate();
+        return t;
     }
 
     public <T extends Task> T loadTask(TaskSource taskSource, Class<T> iface)
@@ -80,7 +82,6 @@ public class ProcTask
 
     public TaskSource dumpTask(Task task)
     {
-        task.validate();
         return modelManager.readJsonObject(
                 modelManager.writeJsonObjectNode(task),
                 TaskSource.class);

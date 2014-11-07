@@ -13,6 +13,7 @@ import org.quickload.record.PageBuilder;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
@@ -32,6 +33,7 @@ public class CsvParserPlugin
         public SchemaConfig getSchemaConfig();
 
         @Config("column_header") // how to set default value?? TODO @Default("true")
+        @ConfigDefault("false")
         public boolean getColumnHeader();
     }
 

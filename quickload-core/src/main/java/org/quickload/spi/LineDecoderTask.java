@@ -1,14 +1,17 @@
 package org.quickload.spi;
 
 import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.config.Task;
 
 public interface LineDecoderTask
         extends Task
 {
-    @Config(value="charset", defaultValue="\"utf-8\"")
+    @Config("charset")
+    @ConfigDefault("\"utf-8\"")
     public String getCharset();
 
-    @Config(value="newline", defaultValue="\"CRLF\"")
+    @Config("newline")
+    @ConfigDefault("\"CRLF\"")
     public String getNewline();
 }

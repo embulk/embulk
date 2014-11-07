@@ -44,9 +44,9 @@ public class ConfigSource
 
     private static Optional<String> configDefaultJsonValue(Method getterMethod)
     {
-        Config a = getterMethod.getAnnotation(Config.class);
-        if (a != null && !a.defaultValue().isEmpty()) {
-            return Optional.of(a.defaultValue());
+        ConfigDefault a = getterMethod.getAnnotation(ConfigDefault.class);
+        if (a != null && !a.value().isEmpty()) {
+            return Optional.of(a.value());
         } else {
             return Optional.absent();
         }

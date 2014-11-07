@@ -27,6 +27,11 @@ public class TestTaskSource
     public void setup() throws Exception
     {
         taskSource = new TaskSource();
+        taskSource.setBoolean("Boolean", false);
+        taskSource.setDouble("Double", 0.5);
+        taskSource.setInt("Int", 0);
+        taskSource.setLong("Long", 0);
+        taskSource.setString("String", "");
     }
 
     private static interface TypeFields
@@ -34,9 +39,6 @@ public class TestTaskSource
     {
         public boolean getBoolean();
         public void setBoolean(boolean v);
-
-        public byte[] getByteArray();
-        public void setByteArray(byte[] v);
 
         public double getDouble();
         public void setDouble(double v);
@@ -56,8 +58,6 @@ public class TestTaskSource
     {
         TypeFields task = taskSource.loadModel(modelManager, TypeFields.class);
         task.setBoolean(true);
-        // TODO byte[].equals doesn't work
-        //task.setByteArray(new byte[] { (byte) 0xff, (byte) 0xfe } );
         task.setDouble(0.2);
         task.setInt(3);
         task.setLong(Long.MAX_VALUE);

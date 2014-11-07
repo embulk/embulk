@@ -56,7 +56,7 @@ public class ModelManager
 
     public <T extends Task> T readTask(JsonParser json, Class<T> iface)
     {
-        return readTask(json, iface, new FieldMapper());
+        return readTask(json, iface, null);
     }
 
     public <T extends Task> T readTask(ObjectNode json, Class<T> iface,
@@ -71,6 +71,8 @@ public class ModelManager
         try {
             return (T) new TaskDeserializer(iface, fieldMapper).deserialize(
                     json, objectMapper.getDeserializationContext());
+        } catch (JsonMappingException ex) {
+            throw new ConfigException(ex);
         } catch (IOException ex) {
             // TODO exception class
             throw new RuntimeException(ex);
@@ -86,6 +88,8 @@ public class ModelManager
     {
         try {
             return objectMapper.readValue(json, klass);
+        } catch (JsonMappingException ex) {
+            throw new ConfigException(ex);
         } catch (IOException ex) {
             // TODO exception class
             throw new RuntimeException(ex);
@@ -152,8 +156,21 @@ public class ModelManager
             Method method = getter.getValue();
             String fieldName = getter.getKey();
             Type fieldType = method.getGenericReturnType();
-            String jsonKey = fieldMapper.getJsonKey(method).or(fieldName);
-            Optional<String> defaultJsonString = fieldMapper.getDefaultJsonString(method);
+
+            String jsonKey;
+            Optional<String> defaultJsonString;
+            if (fieldMapper == null) {
+                jsonKey = fieldName;
+                defaultJsonString = Optional.absent();
+            } else {
+                Optional<String> key = fieldMapper.getJsonKey(method);
+                if (!key.isPresent()) {
+                    // skip this field
+                    continue;
+                }
+                jsonKey = key.get();
+                defaultJsonString = fieldMapper.getDefaultJsonString(method);
+            }
             builder.put(jsonKey, new FieldEntry(fieldName, fieldType, defaultJsonString));
         }
         return builder.build();
@@ -201,6 +218,9 @@ public class ModelManager
                 if (field.getDefaultJsonString().isPresent()) {
                     Object value = objectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
                     objects.put(field.getName(), value);
+                } else {
+                    // required field
+                    throw new JsonMappingException("Field '"+unused.getKey()+"' is required but not set", jp.getCurrentLocation());
                 }
             }
 
