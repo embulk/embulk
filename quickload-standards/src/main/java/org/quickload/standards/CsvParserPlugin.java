@@ -26,10 +26,10 @@ public class CsvParserPlugin
     public interface PluginTask
             extends Task, LineDecoderTask
     {
-        @Config("in:schema")@NotNull
+        @Config("schema")@NotNull
         public Schema getSchema();
 
-        @Config("in:column_header") // how to set default value?? TODO @Default("true")
+        @Config("column_header") // how to set default value?? TODO @Default("true")
         public boolean getColumnHeader();
     }
 

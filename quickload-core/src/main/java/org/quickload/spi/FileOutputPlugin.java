@@ -26,9 +26,9 @@ public abstract class FileOutputPlugin
     public interface OutputTask
             extends Task
     {
-        @Config("out:formatter_type")
+        @Config("formatter")
         @NotNull
-        public JsonNode getFormatterType();
+        public ConfigSource getFormatterConfig();
 
         public TaskSource getFormatterTask();
         public void setFormatterTask(TaskSource task);
@@ -37,16 +37,22 @@ public abstract class FileOutputPlugin
         public void setFileOutputTask(TaskSource task);
     }
 
+    protected FormatterPlugin newFormatterPlugin(ProcTask proc, OutputTask task)
+    {
+        return proc.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get("type"));
+    }
+
     @Override
-    public NextConfig runOutputTransaction(final ProcTask proc, final ConfigSource config,
+    public NextConfig runOutputTransaction(final ProcTask proc, ConfigSource config,
             final ProcControl control)
     {
+        final OutputTask task = proc.loadConfig(config, OutputTask.class);
+
         return runFileOutputTransaction(proc, config, new ProcControl() {
             public List<Report> run(TaskSource taskSource)
             {
-                OutputTask task = proc.loadConfig(config, OutputTask.class);
-                FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
-                task.setFormatterTask(formatter.getFormatterTask(proc, config));
+                FormatterPlugin formatter = newFormatterPlugin(proc, task);
+                task.setFormatterTask(formatter.getFormatterTask(proc, task.getFormatterConfig()));
                 task.setFileOutputTask(taskSource);
                 return control.run(proc.dumpTask(task));
             }
@@ -59,7 +65,8 @@ public abstract class FileOutputPlugin
             final PageInput pageInput)
     {
         final OutputTask task = proc.loadTask(taskSource, OutputTask.class);
-        final FormatterPlugin formatter = proc.newPlugin(FormatterPlugin.class, task.getFormatterType());
+        final FormatterPlugin formatter = newFormatterPlugin(proc, task);
+
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
             proc.startPluginThread(new PluginThread() {
                 public void run()

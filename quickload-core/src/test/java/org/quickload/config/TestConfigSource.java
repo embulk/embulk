@@ -34,46 +34,46 @@ public class TestConfigSource
     private static interface TypeFields
             extends Task
     {
-        @Config("in:boolean")
+        @Config("boolean")
         public boolean getBoolean();
 
-        @Config("in:double")
+        @Config("double")
         public double getDouble();
 
-        @Config("in:int")
+        @Config("int")
         public int getInt();
 
-        @Config("in:long")
+        @Config("long")
         public long getLong();
 
-        @Config("in:string")
+        @Config("string")
         public String getString();
     }
 
     @Test
     public void testSetGet()
     {
-        config.setBoolean("in:boolean", true);
-        config.setInt("in:int", 3);
-        config.setDouble("in:double", 0.2);
-        config.setLong("in:long", Long.MAX_VALUE);
-        config.setString("in:string", "sf");
+        config.setBoolean("boolean", true);
+        config.setInt("int", 3);
+        config.setDouble("double", 0.2);
+        config.setLong("long", Long.MAX_VALUE);
+        config.setString("string", "sf");
 
-        assertEquals(true, config.getBoolean("in:boolean"));
-        assertEquals(3, config.getInt("in:int"));
-        assertEquals(0.2, config.getDouble("in:double"), 0.001);
-        assertEquals(Long.MAX_VALUE, config.getLong("in:long"));
-        assertEquals("sf", config.getString("in:string"));
+        assertEquals(true, config.getBoolean("boolean"));
+        assertEquals(3, config.getInt("int"));
+        assertEquals(0.2, config.getDouble("double"), 0.001);
+        assertEquals(Long.MAX_VALUE, config.getLong("long"));
+        assertEquals("sf", config.getString("string"));
     }
 
     @Test
     public void testLoadConfig()
     {
-        config.setBoolean("in:boolean", true);
-        config.setInt("in:int", 3);
-        config.setDouble("in:double", 0.2);
-        config.setLong("in:long", Long.MAX_VALUE);
-        config.setString("in:string", "sf");
+        config.setBoolean("boolean", true);
+        config.setInt("int", 3);
+        config.setDouble("double", 0.2);
+        config.setLong("long", Long.MAX_VALUE);
+        config.setString("string", "sf");
 
         TypeFields task = config.loadModel(modelManager, TypeFields.class);
         assertEquals(true, task.getBoolean());
@@ -86,7 +86,7 @@ public class TestConfigSource
     private static interface ValidateFields
             extends Task
     {
-        @Config("in:valid")
+        @Config("valid")
         @NotNull
         public String getValid();
     }
@@ -94,7 +94,7 @@ public class TestConfigSource
     @Test
     public void testValidatePasses()
     {
-        config.setString("in:valid", "data");
+        config.setString("valid", "data");
         ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
         task.validate();
         assertEquals("data", task.getValid());
@@ -112,7 +112,7 @@ public class TestConfigSource
     private static interface SimpleFields
             extends Task
     {
-        @Config("in:type")
+        @Config("type")
         @NotNull
         public String getType();
     }

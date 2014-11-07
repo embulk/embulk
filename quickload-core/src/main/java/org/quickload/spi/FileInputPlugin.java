@@ -25,9 +25,9 @@ public abstract class FileInputPlugin
     public interface InputTask
             extends Task
     {
-        @Config("in:parser_type") // TODO temporarily added 'in:'
+        @Config("parser")
         @NotNull
-        public JsonNode getParserType();
+        public ConfigSource getParserConfig();
 
         public TaskSource getParserTask();
         public void setParserTask(TaskSource source);
@@ -36,16 +36,22 @@ public abstract class FileInputPlugin
         public void setFileInputTask(TaskSource task);
     }
 
+    protected ParserPlugin newParserPlugin(ProcTask proc, InputTask task)
+    {
+        return proc.newPlugin(ParserPlugin.class, task.getParserConfig().get("type"));
+    }
+
     @Override
-    public NextConfig runInputTransaction(final ProcTask proc, final ConfigSource config,
+    public NextConfig runInputTransaction(final ProcTask proc, ConfigSource config,
             final ProcControl control)
     {
+        final InputTask task = proc.loadConfig(config, InputTask.class);
+
         return runFileInputTransaction(proc, config, new ProcControl() {
             public List<Report> run(TaskSource taskSource)
             {
-                InputTask task = proc.loadConfig(config, InputTask.class);
-                ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
-                task.setParserTask(parser.getParserTask(proc, config));
+                ParserPlugin parser = newParserPlugin(proc, task);
+                task.setParserTask(parser.getParserTask(proc, task.getParserConfig()));
                 task.setFileInputTask(taskSource);
                 return control.run(proc.dumpTask(task));
             }
@@ -58,7 +64,8 @@ public abstract class FileInputPlugin
             final PageOutput pageOutput)
     {
         final InputTask task = proc.loadTask(taskSource, InputTask.class);
-        final ParserPlugin parser = proc.newPlugin(ParserPlugin.class, task.getParserType());
+        final ParserPlugin parser = newParserPlugin(proc, task);
+
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
             proc.startPluginThread(new PluginThread() {
                 public void run()

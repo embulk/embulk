@@ -39,11 +39,11 @@ public class PreviewExecutor
     public interface PreviewTask
             extends Task
     {
-        @Config("in:type")
+        @Config("in")
         @NotNull
-        public JsonNode getInputType();
+        public ConfigSource getInputConfig();
 
-        @Config(value="preview:sample_rows", defaultValue="30")
+        @Config(value="preview_sample_rows", defaultValue="30")
         public int getSampleRows();
 
         public TaskSource getInputTask();
@@ -56,14 +56,18 @@ public class PreviewExecutor
         return preview(proc, config);
     }
 
+    protected InputPlugin newInputPlugin(ProcTask proc, PreviewTask task)
+    {
+        return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+    }
+
     public PreviewResult preview(final ProcTask proc, ConfigSource config)
     {
-        config.setBoolean("in:preview", true);
-
         final PreviewTask task = proc.loadConfig(config, PreviewTask.class);
-        final InputPlugin input = proc.newPlugin(InputPlugin.class, task.getInputType());
+        final InputPlugin input = newInputPlugin(proc, task);
+
         try {
-            input.runInputTransaction(proc, config, new ProcControl() {
+            input.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
                 public List<Report> run(final TaskSource inputTaskSource)
                 {
                     List<Page> pages;

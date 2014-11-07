@@ -47,16 +47,16 @@ public class LineDecoder
             this.newline = "\r";
             break;
         default:
-            throw new IllegalArgumentException("in:newline must be either of CRLF, LF, or CR");
+            throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR");
         }
 
         try {
-            this.decoder = Charset.forName(task.getEncoding())
+            this.decoder = Charset.forName(task.getCharset())
                 .newDecoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to in:encoding", ex);
+            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
         }
 
         this.lineBuffer = CharBuffer.allocate(INITIAL_DECODE_BUFFER_SIZE);

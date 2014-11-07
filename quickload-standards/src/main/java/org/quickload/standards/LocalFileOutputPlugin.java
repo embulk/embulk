@@ -25,20 +25,20 @@ public class LocalFileOutputPlugin
     public interface PluginTask
             extends Task
     {
-        @Config("out:directory")
+        @Config("directory")
         @NotNull
         public String getDirectory();
 
-        @Config("out:file_name")
+        @Config("file_name")
         @NotNull
         public String getFileNameFormat();
 
-        @Config("out:file_ext")
+        @Config("file_ext")
         @NotNull
         public String getFileNameExtension();
 
         // TODO support in FileInputPlugin and FileOutputPlugin
-        //@Config("out:compress_type")
+        //@Config("compress_type")
         //public String getCompressType();
     }
 

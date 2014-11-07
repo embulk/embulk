@@ -39,9 +39,9 @@ public class GuessExecutor
     public interface GuessTask
             extends Task
     {
-        @Config("in:type")
+        @Config("in")
         @NotNull
-        public JsonNode getInputType();
+        public ConfigSource getInputConfig();
     }
 
     public NextConfig run(ConfigSource config)
@@ -50,28 +50,33 @@ public class GuessExecutor
         return guess(proc, config);
     }
 
+    protected InputPlugin newInputPlugin(ProcTask proc, GuessTask task)
+    {
+        return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+    }
+
     public NextConfig guess(final ProcTask proc, ConfigSource config)
     {
-        JsonNodeFactory js = JsonNodeFactory.instance;
-        ObjectNode parserType = js.objectNode();
-        parserType.put("injected", "guess");  // GuessExecutor.GuessParserPlugin injected by ExecModule.configure
-        config.set("in:parser_type", parserType);
-        config.setBoolean("in:guess", true);
-
         GuessTask task = proc.loadConfig(config, GuessTask.class);
-        final InputPlugin input = proc.newPlugin(InputPlugin.class, task.getInputType());
+
+        // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
+        ((ObjectNode) task.getInputConfig().get("parser")).set("type",
+                JsonNodeFactory.instance.objectNode().put("injected", "guess"));
+
+        // create FileInputPlugin
+        final InputPlugin input = newInputPlugin(proc, task);
+
         try {
-            input.runInputTransaction(proc, config, new ProcControl() {
+            input.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
                 public List<Report> run(TaskSource inputTaskSource)
                 {
-                    // TODO validate proc.getProcessorCount > 0
                     input.runInput(proc, inputTaskSource, 0, null);
                     return null;
                 }
             });
             return new NextConfig();
         } catch (GuessedNoticeError guessed) {
-            return guessed.getGuessed();
+            return guessed.getGuessedParserConfig().setAll(config);
         }
     }
 
@@ -81,11 +86,11 @@ public class GuessExecutor
         private interface PluginTask
                 extends Task
         {
-            @Config(value="guess:sample_size", defaultValue="32768")
+            @Config(value="guess_sample_size", defaultValue="32768")
             public int getSampleSize();
 
-            @Config(value="guess:types")
-            public List<JsonNode> getGuessTypes();
+            @Config(value="guess_plugins")
+            public List<JsonNode> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();
             public void setConfigSource(ConfigSource config);
@@ -115,28 +120,28 @@ public class GuessExecutor
 
             // load guess plugins
             ImmutableList.Builder<ParserGuessPlugin> builder = ImmutableList.builder();
-            for (JsonNode guessType : task.getGuessTypes()) {
+            for (JsonNode guessType : task.getGuessPluginTypes()) {
                 ParserGuessPlugin guess = proc.newPlugin(ParserGuessPlugin.class, guessType);
                 builder.add(guess);
             }
             List<ParserGuessPlugin> guesses = builder.build();
 
             // repeat guessing
-            NextConfig guessed = new NextConfig();
-            int startSize = guessed.getFieldNames().size();
+            NextConfig guessedParserConfig = new NextConfig();
+            int configKeys = guessedParserConfig.getFieldNames().size();
             while (true) {
                 for (int i=0; i < guesses.size(); i++) {
                     ParserGuessPlugin guess = guesses.get(i);
-                    guessed.setAll(guess.guess(proc, config, sample));
+                    guessedParserConfig.setAll(guess.guess(proc, config, sample));  // TODO needs recursive merging?
                 }
-                int guessedSize = guessed.getFieldNames().size();
-                if (guessedSize <= startSize) {
+                int guessedConfigKeys = guessedParserConfig.getFieldNames().size();
+                if (guessedConfigKeys <= configKeys) {
                     break;
                 }
-                startSize = guessedSize;
+                configKeys = guessedConfigKeys;
             }
 
-            throw new GuessedNoticeError(guessed);
+            throw new GuessedNoticeError(guessedParserConfig);
         }
 
         public static Buffer getSample(FileBufferInput fileBufferInput, int maxSampleSize)
@@ -161,6 +166,22 @@ public class GuessExecutor
                 offset += buffer.limit();
             }
             return sample;
+        }
+    }
+
+    public static class GuessedNoticeError
+            extends Error
+    {
+        private final NextConfig guessedParserConfig;
+
+        public GuessedNoticeError(NextConfig guessedParserConfig)
+        {
+            this.guessedParserConfig = guessedParserConfig;
+        }
+
+        public NextConfig getGuessedParserConfig()
+        {
+            return guessedParserConfig;
         }
     }
 }

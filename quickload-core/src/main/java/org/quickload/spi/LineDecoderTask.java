@@ -6,9 +6,9 @@ import org.quickload.config.Task;
 public interface LineDecoderTask
         extends Task
 {
-    @Config(value="in:encoding", defaultValue="\"utf-8\"")
-    public String getEncoding();
+    @Config(value="charset", defaultValue="\"utf-8\"")
+    public String getCharset();
 
-    @Config(value="in:newline", defaultValue="\"CRLF\"")
+    @Config(value="newline", defaultValue="\"CRLF\"")
     public String getNewline();
 }

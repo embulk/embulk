@@ -30,18 +30,14 @@ public class LocalExecutor
     public interface ExecutorTask
             extends Task
     {
-        // TODO
-        @Config("in:type")
+        @Config("in")
         @NotNull
-        public JsonNode getInputType();
+        public ConfigSource getInputConfig();
 
         // TODO
-        @Config("out:type")
+        @Config("out")
         @NotNull
-        public JsonNode getOutputType();
-
-        public ProcTaskSource getProcTask();
-        public void setProcTask(ProcTaskSource procTaskSource);
+        public ConfigSource getOutputConfig();
 
         public TaskSource getInputTask();
         public void setInputTask(TaskSource taskSource);
@@ -139,27 +135,36 @@ public class LocalExecutor
         }
     }
 
-    public NextConfig run(final ConfigSource config)
+    protected InputPlugin newInputPlugin(ProcTask proc, ExecutorTask task)
+    {
+        return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+    }
+
+    protected OutputPlugin newOutputPlugin(ProcTask proc, ExecutorTask task)
+    {
+        return proc.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
+    }
+
+    public NextConfig run(ConfigSource config)
     {
         final ProcTask proc = new ProcTask(injector);
         final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
 
-        final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
-        final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
+        final InputPlugin in = newInputPlugin(proc, task);
+        final OutputPlugin out = newOutputPlugin(proc, task);
 
         final ControlContext ctrlContext = new ControlContext();
 
-        NextConfig inputNextConfig = in.runInputTransaction(proc, config, new ProcControl() {
+        NextConfig inputNextConfig = in.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
             public List<Report> run(final TaskSource inputTask)
             {
-                NextConfig outputNextConfig = out.runOutputTransaction(proc, config, new ProcControl() {
+                NextConfig outputNextConfig = out.runOutputTransaction(proc, task.getOutputConfig(), new ProcControl() {
                     public List<Report> run(final TaskSource outputTask)
                     {
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
-                        task.setProcTask(proc.dump());
 
-                        // TODO debug
+                        // TODO debug log; use logger
                         System.out.println("input: "+task.getInputTask());
                         System.out.println("output: "+task.getOutputTask());
 
@@ -184,8 +189,8 @@ public class LocalExecutor
     private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext procContext)
     {
         final ExecutorTask task = proc.loadTask(taskSource, ExecutorTask.class);
-        final InputPlugin in = proc.newPlugin(InputPlugin.class, task.getInputType());
-        final OutputPlugin out = proc.newPlugin(OutputPlugin.class, task.getOutputType());
+        final InputPlugin in = newInputPlugin(proc, task);
+        final OutputPlugin out = newOutputPlugin(proc, task);
 
         // TODO multi-threading
 

@@ -31,11 +31,11 @@ public class S3FileInputPlugin
     public interface PluginTask
             extends AWSCredentialsTask, AmazonS3Task
     {
-        @Config("in:bucket")
+        @Config("bucket")
         @NotNull
         public String getBucket();
 
-        @Config("in:paths")
+        @Config("paths")
         @NotNull
         public List<String> getPathPrefixes();
 

@@ -12,6 +12,7 @@ import org.junit.Rule;
 import org.junit.runner.RunWith;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
@@ -45,7 +46,7 @@ public class TestFileInputPlugin
     private static interface TestParserTask
             extends Task
     {
-        @Config("in:field")
+        @Config("field")
         public String getField();
     }
 
@@ -78,8 +79,10 @@ public class TestFileInputPlugin
         ProcTask proc = new ProcTask(binder.getInjector());
 
         ConfigSource config = new ConfigSource()
-            .setString("in:parser_type", "dummy")
-            .setString("in:field", "frsyuki");
+            .set("parser",
+                    new ConfigSource()
+                        .setString("field", "frsyuki")
+                        .setString("type", "dummy"));
 
         ParserTestFileInputPlugin plugin = binder.getInstance(ParserTestFileInputPlugin.class);
 

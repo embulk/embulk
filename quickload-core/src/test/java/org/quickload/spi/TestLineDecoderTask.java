@@ -28,7 +28,7 @@ public class TestLineDecoderTask
     {
         ProcTask proc = new ProcTask(binder.getInjector());
         LineDecoderTask task = proc.loadConfig(new ConfigSource(), LineDecoderTask.class);
-        assertEquals("utf-8", task.getEncoding());
+        assertEquals("utf-8", task.getCharset());
         assertEquals("CRLF", task.getNewline());
     }
 
@@ -37,10 +37,10 @@ public class TestLineDecoderTask
     {
         ProcTask proc = new ProcTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
-            .setString("in:encoding", "utf-16")
-            .setString("in:newline", "LF");
+            .setString("charset", "utf-16")
+            .setString("newline", "LF");
         LineDecoderTask task = proc.loadConfig(config, LineDecoderTask.class);
-        assertEquals("utf-16", task.getEncoding());
+        assertEquals("utf-16", task.getCharset());
         assertEquals("LF", task.getNewline());
     }
 }

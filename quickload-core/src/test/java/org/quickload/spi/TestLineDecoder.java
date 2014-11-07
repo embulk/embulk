@@ -25,19 +25,19 @@ public class TestLineDecoder
     public static class TestTask
             implements LineDecoderTask
     {
-        private final String encoding;
+        private final String charset;
         private final String newline;
 
-        public TestTask(String encoding, String newline)
+        public TestTask(String charset, String newline)
         {
-            this.encoding = encoding;
+            this.charset = charset;
             this.newline = newline;
         }
 
         @Override
-        public String getEncoding()
+        public String getCharset()
         {
-            return encoding;
+            return charset;
         }
 
         @Override
@@ -52,19 +52,19 @@ public class TestLineDecoder
         }
     }
 
-    private static LineDecoder newDecoder(String encoding, String newline, List<Buffer> buffers)
+    private static LineDecoder newDecoder(String charsetName, String newline, List<Buffer> buffers)
     {
-        return new LineDecoder(buffers, new TestTask(encoding, newline));
+        return new LineDecoder(buffers, new TestTask(charsetName, newline));
     }
 
-    private static List<String> doDecode(String encoding, String newline, List<Buffer> buffers)
+    private static List<String> doDecode(String charsetName, String newline, List<Buffer> buffers)
     {
-        return ImmutableList.copyOf(newDecoder(encoding, newline, buffers));
+        return ImmutableList.copyOf(newDecoder(charsetName, newline, buffers));
     }
 
-    private static List<Buffer> bufferList(String encoding, String... sources) throws UnsupportedCharsetException
+    private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException
     {
-        Charset charset = Charset.forName(encoding);
+        Charset charset = Charset.forName(charsetName);
 
         List<Buffer> buffers = new ArrayList<Buffer>();
         for (String source : sources) {

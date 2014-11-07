@@ -6,7 +6,7 @@ import org.quickload.config.Task;
 public interface AmazonS3Task
         extends Task
 {
-    @Config("in:endpoint")
+    @Config("endpoint")
     public String getEndpoint();
 
     // TODO timeout, etc

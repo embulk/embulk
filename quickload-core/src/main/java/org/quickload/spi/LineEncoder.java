@@ -23,9 +23,9 @@ public class LineEncoder
         this.output = output;
 
         try {
-            this.charset = Charset.forName(task.getEncoding());
+            this.charset = Charset.forName(task.getCharset());
         } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to out:encoding", ex);
+            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
         }
 
         switch (task.getNewline()) {
@@ -39,7 +39,7 @@ public class LineEncoder
             this.newline = "\r".getBytes(charset);
             break;
         default:
-            throw new IllegalArgumentException("out:newline must be either of CRLF, LF, or CR");
+            throw new IllegalArgumentException("out.formatter.newline must be either of CRLF, LF, or CR");
         }
     }
 

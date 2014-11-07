@@ -31,7 +31,7 @@ public class LocalFileInputPlugin
     public interface PluginTask
             extends Task
     {
-        @Config("in:paths")
+        @Config("paths")
         @NotNull
         public List<String> getPathPrefixes();
 

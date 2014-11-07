@@ -1,16 +1,19 @@
-in:type: {injected: local_file}
-in:parser_type: {injected: csv}
-in:paths:
-  - examples/csv/
-in:newline: LF
-in:schema:
-  - {index: 0, name: date_code, type: string}
-  - {index: 1, name: customer_code, type: long}
-  - {index: 2, name: product_code, type: string}
-  - {index: 3, name: employee_code, type: string}
-out:type: {injected: local_file}
-out:formatter_type: {injected: csv}
-out:compress_type: none
-out:directory: tmp/
-out:file_name: output
-out:file_ext: csv
+in:
+  type: {injected: local_file}
+  paths:
+    - examples/csv/
+  parser:
+    type: {injected: csv}
+    newline: LF
+    schema:
+      - {index: 0, name: date_code, type: string}
+      - {index: 1, name: customer_code, type: long}
+      - {index: 2, name: product_code, type: string}
+      - {index: 3, name: employee_code, type: string}
+out:
+  type: {injected: local_file}
+  directory: tmp/
+  file_name: output
+  file_ext: csv
+  formatter:
+    type: {injected: csv}

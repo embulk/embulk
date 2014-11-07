@@ -56,6 +56,24 @@ public class DataSource <T extends DataSource>
         return ImmutableList.copyOf(data.fieldNames());
     }
 
+    public JsonNode get(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        return json;
+    }
+
+    public JsonNode get(String fieldName, JsonNode defaultValue)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            return defaultValue;
+        }
+        return json;
+    }
+
     public boolean getBoolean(String fieldName)
     {
         JsonNode json = data.get(fieldName);
@@ -212,7 +230,12 @@ public class DataSource <T extends DataSource>
         return (T) this;
     }
 
-    public T setAll(DataSource other)
+    public T set(String fieldName, DataSource<?> v)
+    {
+        return set(fieldName, v.data);
+    }
+
+    public T setAll(DataSource<?> other)
     {
         Iterator<Map.Entry<String, JsonNode>> fields = other.data.fields();
         while (fields.hasNext()) {

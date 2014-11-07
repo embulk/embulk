@@ -7,11 +7,11 @@ import javax.validation.constraints.NotNull;
 public interface AWSCredentialsTask
         extends Task
 {
-    @Config("in:access_key_id")
+    @Config("access_key_id")
     @NotNull
     public String getAccessKeyId();
 
-    @Config("in:secret_access_key")
+    @Config("secret_access_key")
     @NotNull
     public String getSecretAccessKey();
 
