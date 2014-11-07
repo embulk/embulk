@@ -1,11 +1,16 @@
 package org.quickload.standards;
 
+import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.amazonaws.Protocol;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.ObjectListing;
 
 public class AWSPlugins
 {
@@ -42,5 +47,22 @@ public class AWSPlugins
         }
 
         return client;
+    }
+
+    public static List<String> listS3FilesByPrefix(AmazonS3Client client, String bucketName, String prefix)
+    {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        String lastKey = prefix;
+        do {
+            ListObjectsRequest req = new ListObjectsRequest(bucketName, prefix, lastKey, null, 1024);
+            ObjectListing ol = client.listObjects(req);
+            for(S3ObjectSummary s : ol.getObjectSummaries()) {
+                builder.add(s.getKey());
+            }
+            lastKey = ol.getNextMarker();
+        } while(lastKey != null);
+
+        return builder.build();
     }
 }
