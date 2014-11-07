@@ -25,7 +25,7 @@ public abstract class BasicFormatterPlugin
     public interface FormatterTask
             extends Task
     {
-        @Config("file_filters")
+        @Config("file_encoders")
         @ConfigDefault("[]")
         @NotNull
         public List<ConfigSource> getFileEncoderConfigs();

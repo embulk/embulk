@@ -16,6 +16,8 @@ out:
   type: {injected: local_file}
   directory: tmp/
   file_name: output
-  file_ext: csv
+  file_ext: csv.gz
   formatter:
     type: {injected: csv}
+    file_encoders:
+        - type: {injected: gzip}

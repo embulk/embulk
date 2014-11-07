@@ -29,12 +29,12 @@ public abstract class InputStreamFileDecoderPlugin
             try (InputStream in = openInputStream(new BufferInputInputStream(fileBufferInput.iterator()))) {
                 FilePlugins.transferInputStream(proc.getBufferAllocator(),
                         in, fileBufferOutput);
-                // skip remaining data
-                for (Buffer buffer : fileBufferInput) { }
             } catch (IOException ex) {
                 // TODO exception class
                 throw new RuntimeException(ex);
             }
+            // skip remaining data
+            for (Buffer buffer : fileBufferInput) { }
         }
     }
 
