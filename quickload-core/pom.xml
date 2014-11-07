@@ -4,7 +4,7 @@
 
     <parent>
         <groupId>org.quickload</groupId>
-        <artifactId>quickload-root</artifactId>
+        <artifactId>quickload-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 

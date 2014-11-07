@@ -8,18 +8,13 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>quickload-standards</artifactId>
-    <name>quickload-standards</name>
+    <artifactId>quickload-jruby</artifactId>
+    <name>quickload-jruby</name>
 
     <dependencies>
         <dependency>
             <groupId>org.quickload</groupId>
             <artifactId>quickload-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.quickload</groupId>
-            <artifactId>quickload-jruby</artifactId>
         </dependency>
 
         <dependency>
@@ -33,20 +28,8 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.msgpack</groupId>
-            <artifactId>msgpack</artifactId>
-            <version>0.6.7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
-            <version>1.5.2</version>
+            <groupId>org.jruby</groupId>
+            <artifactId>jruby-complete</artifactId>
         </dependency>
     </dependencies>
 </project>

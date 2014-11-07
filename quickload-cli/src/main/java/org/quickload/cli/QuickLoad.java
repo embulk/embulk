@@ -14,6 +14,7 @@ import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.GuessExecutor;
 import org.quickload.plugin.BuiltinPluginSourceModule;
+import org.quickload.jruby.JRubyScriptingModule;
 import org.quickload.standards.StandardPluginModule;
 
 public class QuickLoad {
@@ -48,6 +49,7 @@ public class QuickLoad {
         builder.add(new ExtensionServiceLoaderModule());
         builder.add(new BuiltinPluginSourceModule());
         builder.add(new StandardPluginModule());
+        builder.add(new JRubyScriptingModule());
         return builder.build();
     }
 }

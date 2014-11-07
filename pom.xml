@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.quickload</groupId>
-    <artifactId>quickload-root</artifactId>
+    <artifactId>quickload-parent</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -21,6 +21,7 @@
 
     <modules>
         <module>quickload-core</module>
+        <module>quickload-jruby</module>
         <module>quickload-standards</module>
         <module>quickload-cli</module>
     </modules>
@@ -30,6 +31,8 @@
         <project.build.targetJdk>1.7</project.build.targetJdk>
         <project.build.jvmsize>1024m</project.build.jvmsize>
         <project.test.fork-mode>once</project.test.fork-mode>
+
+        <dep.jruby.version>1.7.16.1</dep.jruby.version>
 
         <project.check.skip-all>false</project.check.skip-all>
         <project.check.skip-dependency>${project.check.skip-all}</project.check.skip-dependency>
@@ -47,6 +50,12 @@
             <dependency>
                 <groupId>org.quickload</groupId>
                 <artifactId>quickload-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.quickload</groupId>
+                <artifactId>quickload-jruby</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -128,6 +137,12 @@
                 <version>0.7</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.jruby</groupId>
+                <artifactId>jruby-complete</artifactId>
+                <version>${dep.jruby.version}</version>
+            </dependency>
+
             <!-- ==================== -->
             <!-- Testing dependencies -->
             <!-- ==================== -->
@@ -199,10 +214,7 @@
                         </systemPropertyVariables>
                         <forkMode>${project.test.fork-mode}</forkMode>
                         <runOrder>random</runOrder>
-                        <configuration>
-                            <!-- http://dukesoftware00.blogspot.com/2012/08/jdk7-emma.html -->
-                            <argLine>-XX:-UseSplitVerifier</argLine>
-                        </configuration>
+                        <argLine>-XX:-UseSplitVerifier</argLine>  <!-- http://dukesoftware00.blogspot.com/2012/08/jdk7-emma.html -->
                     </configuration>
                 </plugin>
 
