@@ -111,7 +111,7 @@ public class GuessExecutor
             final int maxSampleSize = task.getSampleSize();
             final ConfigSource config = task.getConfigSource();
 
-            List<Buffer> samples = getSamples(fileBufferInput, maxSampleSize);
+            Buffer sample = getSample(fileBufferInput, maxSampleSize);
 
             // load guess plugins
             ImmutableList.Builder<ParserGuessPlugin> builder = ImmutableList.builder();
@@ -127,7 +127,7 @@ public class GuessExecutor
             while (true) {
                 for (int i=0; i < guesses.size(); i++) {
                     ParserGuessPlugin guess = guesses.get(i);
-                    guessed.setAll(guess.guess(proc, config, samples));
+                    guessed.setAll(guess.guess(proc, config, sample));
                 }
                 int guessedSize = guessed.getFieldNames().size();
                 if (guessedSize <= startSize) {
@@ -139,9 +139,9 @@ public class GuessExecutor
             throw new GuessedNoticeError(guessed);
         }
 
-        public static List<Buffer> getSamples(FileBufferInput fileBufferInput, int maxSampleSize)
+        public static Buffer getSample(FileBufferInput fileBufferInput, int maxSampleSize)
         {
-            long sampleSize = 0;
+            int sampleSize = 0;
             ImmutableList.Builder<Buffer> builder = ImmutableList.builder();
             Iterator<Buffer> ite = fileBufferInput.iterator();
             while (sampleSize < maxSampleSize) {
@@ -155,7 +155,14 @@ public class GuessExecutor
             if (sampleSize == 0) {
                 throw new RuntimeException("empty");
             }
-            return builder.build();
+
+            Buffer sample = Buffer.allocate(sampleSize);
+            int offset = 0;
+            for (Buffer buffer : builder.build()) {
+                sample.setBytes(offset, buffer, 0, buffer.limit());
+                offset += buffer.limit();
+            }
+            return sample;
         }
     }
 }
