@@ -2,32 +2,21 @@ package org.quickload.cli;
 
 import java.util.List;
 import java.io.File;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigSources;
 import org.quickload.config.NextConfig;
 import org.quickload.record.Pages;
-import org.quickload.exec.ExecModule;
-import org.quickload.exec.ExtensionServiceLoaderModule;
+//import org.quickload.exec.QuickLoadService;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.GuessExecutor;
 import org.quickload.exec.PreviewExecutor;
 import org.quickload.exec.PreviewResult;
-import org.quickload.plugin.BuiltinPluginSourceModule;
-import org.quickload.jruby.JRubyScriptingModule;
-import org.quickload.standards.StandardPluginModule;
 
-public class QuickLoad {
+public class QuickLoad
+        extends QuickLoadService
+{
     public static void main(String[] args) throws Exception
-    {
-        new QuickLoad().run(args);
-    }
-
-    public void run(final String[] args) throws Exception
     {
         if (args.length == 0) {
             System.out.println("usage: [-Dload.systemConfigKey=value...] <config.yml> [configKey=value...]");
@@ -36,18 +25,17 @@ public class QuickLoad {
 
         ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
 
-        ImmutableList.Builder<Module> modules = ImmutableList.builder();
-        modules.add(new ExecModule());
-        modules.add(new ExtensionServiceLoaderModule());
-        modules.add(new BuiltinPluginSourceModule());
-        modules.add(new StandardPluginModule());
-        modules.add(new JRubyScriptingModule());
-        modules.addAll(getAdditionalModules());
+        new QuickLoad(systemConfig).run(args[0]);
+    }
 
-        Injector injector = Guice.createInjector(modules.build());
+    public QuickLoad(ConfigSource systemConfig)
+    {
+        super(systemConfig);
+    }
 
-        File configPath = new File(args[0]);
-        ConfigSource config = ConfigSources.fromYamlFile(configPath);
+    public void run(String configPath) throws Exception
+    {
+        ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
 
         // TODO
         //NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
@@ -64,9 +52,5 @@ public class QuickLoad {
 
         System.out.println("next config: "+nextConfig);
     }
-
-    protected Iterable<? extends Module> getAdditionalModules()
-    {
-        return ImmutableList.of();
-    }
 }
+
