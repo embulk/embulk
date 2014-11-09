@@ -21,13 +21,13 @@ public class Page
 
     ////
     //
-    // Row
+    // Record
     // +---------------+------------+--------------------+------------------------+
     // | total-var-len | nul bitset | column header data | column var-len data... |
     // +---------------+------------+--------------------+------------------------+
     //  |                                               | |                      |
     //  +-----------------------------------------------+ +----------------------+
-    //                     fixed row data size             variable row data size
+    //                     fixed record data size             variable record data size
 
     // string:
     //   binary ref:       0 30-index (32-off 32-len)
@@ -76,14 +76,14 @@ public class Page
         return (schema.size() + 7) / 8;
     }
 
-    static int rowHeaderSize(Schema schema)
+    static int recordHeaderSize(Schema schema)
     {
         return 4 + nullBitSetSize(schema);
     }
 
     static int totalColumnSize(Schema schema)
     {
-        return rowHeaderSize(schema) + schema.getFixedStorageSize();
+        return recordHeaderSize(schema) + schema.getFixedStorageSize();
     }
 
     static int[] columnOffsets(Schema schema)
@@ -91,7 +91,7 @@ public class Page
         int[] offsets = new int[schema.size()];
 
         if (!schema.isEmpty()) {
-            offsets[0] = rowHeaderSize(schema);
+            offsets[0] = recordHeaderSize(schema);
             for (int i=0; i < schema.size()-1; i++) {
                 offsets[i+1] = offsets[i] + schema.getColumnType(i).getFixedStorageSize();
             }

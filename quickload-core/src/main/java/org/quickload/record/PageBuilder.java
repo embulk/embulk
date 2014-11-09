@@ -22,7 +22,7 @@ public class PageBuilder
         this.output = output;
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
-        this.fixedRecordSize = Page.rowHeaderSize(schema) + Page.totalColumnSize(schema);
+        this.fixedRecordSize = Page.recordHeaderSize(schema) + Page.totalColumnSize(schema);
 
         this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
         this.count = 0;
