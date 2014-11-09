@@ -1,19 +1,10 @@
 package org.quickload.plugin;
 
-import java.io.IOException;
-import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import org.quickload.config.ModelManager;
-import org.quickload.config.Task;
-import org.quickload.config.Config;
-import org.quickload.config.ConfigException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * InjectedPluginSource loads plugins bound by Guice.
@@ -32,15 +23,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class InjectedPluginSource
         implements PluginSource
 {
-    private final ModelManager modelManager;
     private final Injector injector;
 
     @Inject
     public InjectedPluginSource(
-            ModelManager modelManager,
             Injector injector)
     {
-        this.modelManager = modelManager;
         this.injector = injector;
     }
 
