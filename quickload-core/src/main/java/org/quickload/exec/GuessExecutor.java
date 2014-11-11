@@ -148,30 +148,27 @@ public class GuessExecutor
 
         public static Buffer getSample(FileBufferInput fileBufferInput, int maxSampleSize)
         {
+            Buffer sample = Buffer.allocate(maxSampleSize);
             int sampleSize = 0;
-            ImmutableList.Builder<Buffer> builder = ImmutableList.builder();
+
             while (fileBufferInput.nextFile()) {
                 for (Buffer buffer : fileBufferInput) {
                     if (sampleSize >= maxSampleSize) {
                         // skip remaining all buffers so that FileInputPlugin.runInput doesn't
                         // throw exceptions at channel.join()
-                        buffer.release();
                     } else {
+                        sample.setBytes(sampleSize, buffer, 0, buffer.limit());
                         sampleSize += buffer.limit();
-                        builder.add(buffer);
                     }
+                    buffer.release();
                 }
             }
+
             if (sampleSize == 0) {
                 throw new RuntimeException("No input buffer to guess");  // TODO exception class
             }
+            sample.limit(sampleSize);
 
-            Buffer sample = Buffer.allocate(sampleSize);
-            int offset = 0;
-            for (Buffer buffer : builder.build()) {
-                sample.setBytes(offset, buffer, 0, buffer.limit());
-                offset += buffer.limit();
-            }
             return sample;
         }
     }
