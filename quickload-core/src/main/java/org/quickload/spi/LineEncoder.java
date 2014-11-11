@@ -43,6 +43,8 @@ public class LineEncoder
         }
     }
 
+    // TODO initialize and call LineFilterPlugin
+
     public void addNewLine()
     {
         // TODO optimize

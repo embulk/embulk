@@ -64,6 +64,8 @@ public class LineDecoder
         this.byteBuffer = EMPTY_BYTE_BUFFER;
     }
 
+    // TODO initialize and call LineFilterPlugin
+
     public String poll()
     {
         while (true) {
