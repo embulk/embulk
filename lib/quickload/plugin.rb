@@ -1,5 +1,6 @@
 
 module QuickLoad
+  require 'forwardable'
   require 'quickload/error'
   require 'quickload/plugin_registry'
   require 'quickload/bridge/guess'
@@ -132,5 +133,23 @@ module QuickLoad
     end
   end
 
-  Plugin = PluginManager.new
+  module Plugin
+    class <<self
+      INSTANCE = PluginManager.new
+
+      extend Forwardable
+
+      def_delegators 'INSTANCE',
+        :register_input, :new_input, :new_java_input,
+        :register_output, :new_output, :new_java_output,
+        :register_parser, :new_parser, :new_java_parser,
+        :register_formatter, :new_formatter, :new_java_formatter,
+        :register_decoder, :new_decoder, :new_java_decoder,
+        :register_encoder, :new_encoder, :new_java_encoder,
+        :register_guess, :new_guess, :new_java_guess
+    end
+
+    # QuickLoad::Plugin::Plugin
+    Plugin = self
+  end
 end

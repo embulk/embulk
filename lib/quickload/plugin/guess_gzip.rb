@@ -1,4 +1,5 @@
-module QuickLoad
+module QuickLoad::Plugin
+
   class GzipGuess
     Plugin.register_guess('gzip', self)
 
@@ -8,7 +9,8 @@ module QuickLoad
       if sample[0,2] == GZIP_HEADER
         return {"file_decoders" => [{"type" => "gzip"}]}
       end
-      return nil
+      return {}
     end
   end
+
 end
