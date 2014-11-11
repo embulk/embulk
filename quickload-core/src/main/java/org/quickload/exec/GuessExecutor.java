@@ -25,7 +25,7 @@ import org.quickload.record.Column;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.ParserPlugin;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.ParserGuessPlugin;
+import org.quickload.spi.GuessPlugin;
 import org.quickload.spi.ProcControl;
 
 public class GuessExecutor
@@ -128,19 +128,19 @@ public class GuessExecutor
             Buffer sample = getSample(fileBufferInput, maxSampleSize);
 
             // load guess plugins
-            ImmutableList.Builder<ParserGuessPlugin> builder = ImmutableList.builder();
+            ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
             for (JsonNode guessType : task.getGuessPluginTypes()) {
-                ParserGuessPlugin guess = proc.newPlugin(ParserGuessPlugin.class, guessType);
+                GuessPlugin guess = proc.newPlugin(GuessPlugin.class, guessType);
                 builder.add(guess);
             }
-            List<ParserGuessPlugin> guesses = builder.build();
+            List<GuessPlugin> guesses = builder.build();
 
             // repeat guessing
             NextConfig guessedParserConfig = new NextConfig();
             int configKeys = guessedParserConfig.getFieldNames().size();
             while (true) {
                 for (int i=0; i < guesses.size(); i++) {
-                    ParserGuessPlugin guess = guesses.get(i);
+                    GuessPlugin guess = guesses.get(i);
                     guessedParserConfig.setAll(guess.guess(proc, config, sample));  // TODO needs recursive merging?
                 }
                 int guessedConfigKeys = guessedParserConfig.getFieldNames().size();

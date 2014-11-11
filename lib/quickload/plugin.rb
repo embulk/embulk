@@ -96,11 +96,11 @@ module QuickLoad
     end
 
     def new_guess(type)
-      new_reverse_bridge(:guess, type, ParserGuessPlugin, Bridge::GuessPluginReverseBridge)
+      new_reverse_bridge(:guess, type, GuessPlugin, Bridge::GuessPluginReverseBridge)
     end
 
     def new_java_guess(type)
-      new_bridge(:guess, type, ParserGuessPlugin, Bridge::GuessPluginBridge)
+      new_bridge(:guess, type, GuessPlugin, Bridge::GuessPluginBridge)
     end
 
     private

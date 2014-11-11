@@ -17,7 +17,7 @@ import org.quickload.spi.FormatterPlugin;
 import org.quickload.spi.FileDecoderPlugin;
 import org.quickload.spi.FileEncoderPlugin;
 import org.quickload.spi.LineFilterPlugin;
-import org.quickload.spi.ParserGuessPlugin;
+import org.quickload.spi.GuessPlugin;
 
 public class JRubyPluginSource
         implements PluginSource
@@ -59,7 +59,7 @@ public class JRubyPluginSource
             category = "encoder";
         } else if (LineFilterPlugin.class.equals(iface)) {
             category = "line_filter";
-        } else if (ParserGuessPlugin.class.equals(iface)) {
+        } else if (GuessPlugin.class.equals(iface)) {
             category = "guess";
         } else {
             // unsupported plugin category

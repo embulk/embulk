@@ -5,7 +5,7 @@ module QuickLoad
     require 'quickload/bridge/data_source'
 
     class GuessPluginBridge
-      java_implements ParserGuessPlugin
+      java_implements GuessPlugin
 
       def initialize(rb)
         @rb = rb

@@ -48,6 +48,7 @@ module QuickLoad
 
   java_import 'org.quickload.spi.BasicFormatterPlugin'
   java_import 'org.quickload.spi.BasicParserPlugin'
+  java_import 'org.quickload.spi.GuessPlugin'
   java_import 'org.quickload.spi.FileDecoderPlugin'
   java_import 'org.quickload.spi.FileEncoderPlugin'
   java_import 'org.quickload.spi.FileInputPlugin'
@@ -61,12 +62,13 @@ module QuickLoad
   java_import 'org.quickload.spi.LineEncoder'
   java_import 'org.quickload.spi.LineEncoderTask'
   java_import 'org.quickload.spi.LineFilterPlugin'
+  java_import 'org.quickload.spi.LineGuessPlugin'
   java_import 'org.quickload.spi.OutputPlugin'
-  java_import 'org.quickload.spi.ParserGuessPlugin'
   java_import 'org.quickload.spi.ParserPlugin'
   java_import 'org.quickload.spi.PartialTransferException'
   java_import 'org.quickload.spi.PluginThread'
   java_import 'org.quickload.spi.ProcControl'
   java_import 'org.quickload.spi.ProcTask'
   java_import 'org.quickload.spi.ProcTaskSource'
+  java_import 'org.quickload.spi.TextGuessPlugin'
 end
