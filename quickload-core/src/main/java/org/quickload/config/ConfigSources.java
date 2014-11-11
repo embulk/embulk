@@ -16,16 +16,7 @@ public class ConfigSources
 {
     public static ConfigSource fromJson(JsonParser parser) throws IOException
     {
-        JsonNode json = new ObjectMapper().readTree(parser);
-        if (!json.isObject()) {
-            throw new JsonMappingException("Expected object to deserialize ConfigSource but got "+json);
-        }
-        return fromJson((ObjectNode) json);
-    }
-
-    public static ConfigSource fromJson(ObjectNode data)
-    {
-        return new ConfigSource(data.deepCopy());
+        return new ConfigSource(DataSource.parseJson(parser));
     }
 
     public static ConfigSource fromYamlFile(File path) throws IOException

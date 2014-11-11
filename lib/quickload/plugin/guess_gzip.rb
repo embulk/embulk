@@ -1,6 +1,7 @@
 module QuickLoad
   require 'quickload/java_imports'
   require 'quickload/bridge/buffer'
+  require 'quickload/bridge/data_source'
 
   class ParserGuessPluginBridge
     java_implements ParserGuessPlugin
@@ -13,8 +14,10 @@ module QuickLoad
     end
 
     def guess(proc, config, sample)
-      sample = QuickLoad::Bridge::BufferBridge.to_str(sample)
-      @instance.run(proc, config, sample)
+      sample = Bridge::BufferBridge.to_str(sample)
+      config = Bridge::DataSourceBridge.wrap(config)
+      next_config = @instance.run(proc, config, sample)
+      return Bridge::DataSourceBridge.to_java_next_config(next_config)
     end
 
     Plugin.register_guess('gzip', self)
@@ -23,11 +26,9 @@ module QuickLoad
 
     def run(proc, config, sample)
       if sample[0,2] == GZIP_HEADER
-        # TODO
-        {"parser" => {"file_decoders" => [{"type" => "gzip"}]}}
-        return NextConfig.new
+        return {"file_decoders" => [{"type" => "gzip"}]}
       end
-      NextConfig.new
+      return nil
     end
   end
 end

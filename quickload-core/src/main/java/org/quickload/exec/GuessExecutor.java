@@ -1,6 +1,7 @@
 package org.quickload.exec;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
 import javax.validation.constraints.NotNull;
@@ -74,9 +75,15 @@ public class GuessExecutor
                     return null;
                 }
             });
-            return new NextConfig();
+            return new NextConfig().setAll(config);
         } catch (GuessedNoticeError guessed) {
-            return guessed.getGuessedParserConfig().setAll(config);
+            NextConfig next = new NextConfig().setAll(config);
+            ObjectNode parserConfig = (ObjectNode) ((ObjectNode) next.get("in")).get("parser");
+            for (Map.Entry<String, JsonNode> field : guessed.getGuessedParserConfig().getFields()) {
+                // TODO recursive merge
+                parserConfig.set(field.getKey(), field.getValue());
+            }
+            return next;
         }
     }
 

@@ -1,32 +1,38 @@
 
-module QuickLoad::Bridge
-  class DataSourceBridge
-    def initialize(data_source)
-      @data_source = data_source
-    end
+module QuickLoad
+  module Bridge
+    require 'json'
 
-    def [](key)
-      # TODO
-    end
+    class DataSourceBridge < Hash
+      def initialize(java_class)
+        super()
+        @java_class = java_class
+      end
 
-    def []=(key, value)
-      # TODO
-    end
+      def self.wrap(data_source)
+        objectNode = JSON.parse(data_source.toString)  # TODO optimize
+        return new(data_source.class).merge!(objectNode)
+      end
 
-    def load(key, type, options={})
-      # TODO
-    end
+      def to_java
+        @java_class.new(DataSource.parseJson(self.to_json))
+      end
 
-    def store(key, type=nil)
-      # TODO
-    end
+      def self.to_java_config_source(hash)
+        ConfigSource.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+      end
 
-    def keys
-      @data_source.keys
-    end
+      def self.to_java_task_source(hash)
+        TaskSource.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+      end
 
-    def self.wrap(data_source)
-      DataSourceBridge.new(data_source)
+      def self.to_java_next_config(hash)
+        NextConfig.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+      end
+
+      def self.to_java_report(hash)
+        Report.new.stAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+      end
     end
   end
 end

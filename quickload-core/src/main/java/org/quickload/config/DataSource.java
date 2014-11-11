@@ -3,10 +3,14 @@ package org.quickload.config;
 import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
+import java.io.IOException;
 import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class DataSource <T extends DataSource>
 {
@@ -34,6 +38,24 @@ public class DataSource <T extends DataSource>
         this.fieldMapper = fieldMapper;
     }
 
+    public static ObjectNode parseJson(JsonParser jsonParser) throws IOException
+    {
+        JsonNode json = new ObjectMapper().readTree(jsonParser);
+        if (!json.isObject()) {
+            throw new JsonMappingException("Expected object to deserialize DataSource but got "+json);
+        }
+        return (ObjectNode) json;
+    }
+
+    public static ObjectNode parseJson(String jsonString) throws IOException
+    {
+        JsonNode json = new ObjectMapper().readTree(jsonString);
+        if (!json.isObject()) {
+            throw new JsonMappingException("Expected object to deserialize DataSource but got "+json);
+        }
+        return (ObjectNode) json;
+    }
+
     public <T extends Task> T loadModel(ModelManager modelManager, Class<T> iface)
     {
         if (fieldMapper == null) {
@@ -54,6 +76,16 @@ public class DataSource <T extends DataSource>
     public List<String> getFieldNames()
     {
         return ImmutableList.copyOf(data.fieldNames());
+    }
+
+    public Iterable<Map.Entry<String, JsonNode>> getFields()
+    {
+        return new Iterable() {
+            public Iterator<Map.Entry<String, JsonNode>> iterator()
+            {
+                return data.fields();
+            }
+        };
     }
 
     public JsonNode get(String fieldName)

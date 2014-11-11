@@ -51,4 +51,9 @@ public class ConfigSource
             return Optional.absent();
         }
     }
+
+    public ConfigSource deepCopy()
+    {
+        return new ConfigSource(data.deepCopy());
+    }
 }
