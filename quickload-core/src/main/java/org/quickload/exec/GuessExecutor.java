@@ -70,7 +70,7 @@ public class GuessExecutor
             input.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
                 public List<Report> run(TaskSource inputTaskSource)
                 {
-                    input.runInput(proc, inputTaskSource, 0, null);
+                    input.runInput(proc, inputTaskSource, 0, null);   // TODO add dummy PageOutput which throws "guess plugin works only with FileInputPlugin"
                     return null;
                 }
             });
@@ -91,7 +91,7 @@ public class GuessExecutor
             public int getSampleSize();
 
             @Config("guess_plugins")
-            @ConfigDefault("[]")  // TODO require some plugins
+            @ConfigDefault("[\"gzip\"]")  // TODO require some plugins
             public List<JsonNode> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();
@@ -150,15 +150,20 @@ public class GuessExecutor
         {
             int sampleSize = 0;
             ImmutableList.Builder<Buffer> builder = ImmutableList.builder();
-            for (Buffer buffer : fileBufferInput) {
-                sampleSize += buffer.limit();
-                builder.add(buffer);
+            while (fileBufferInput.nextFile()) {
+                for (Buffer buffer : fileBufferInput) {
+                    sampleSize += buffer.limit();
+                    builder.add(buffer);
+                    if (sampleSize >= maxSampleSize) {
+                        break;
+                    }
+                }
                 if (sampleSize >= maxSampleSize) {
                     break;
                 }
             }
             if (sampleSize == 0) {
-                throw new RuntimeException("empty");
+                throw new RuntimeException("No input records to guess");
             }
 
             Buffer sample = Buffer.allocate(sampleSize);

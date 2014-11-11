@@ -182,24 +182,6 @@
                 </plugin>
 
                 <plugin>
-                    <groupId>de.saumya.mojo</groupId>
-                    <artifactId>jruby-maven-plugin</artifactId>
-                    <version>1.0.6</version>
-                    <configuration>
-                        <generateJava>true</generateJava>
-                        <generatedJavaDirectory>target/generated-sources/jruby</generatedJavaDirectory>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <phase>process-resources</phase>
-                            <goals>
-                                <goal>compile</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>2.4</version>
