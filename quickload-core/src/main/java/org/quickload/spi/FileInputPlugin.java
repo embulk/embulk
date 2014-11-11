@@ -67,7 +67,7 @@ public abstract class FileInputPlugin
         final ParserPlugin parser = newParserPlugin(proc, task);
 
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
-            proc.startPluginThread(new PluginThread() {
+            PluginThread thread = proc.startPluginThread(new Runnable() {
                 public void run()
                 {
                     try {
@@ -80,13 +80,17 @@ public abstract class FileInputPlugin
                 }
             });
 
-            Report report = runFileInput(proc,
-                    task.getFileInputTask(), processorIndex,
-                    channel.getOutput());
-            channel.completeProducer();
-            channel.join();
+            try {
+                Report report = runFileInput(proc,
+                        task.getFileInputTask(), processorIndex,
+                        channel.getOutput());
+                channel.completeProducer();
+                channel.join();
 
-            return report;
+                return report;
+            } finally {
+                thread.joinAndThrow();
+            }
         }
     }
 }

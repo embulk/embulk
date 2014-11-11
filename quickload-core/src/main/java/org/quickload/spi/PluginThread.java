@@ -1,7 +1,67 @@
 package org.quickload.spi;
 
-public abstract class PluginThread
-        implements Runnable
+public class PluginThread
 {
-    public abstract void run();
+    public static PluginThread start(final Runnable runnable)
+    {
+        return new PluginThread(runnable);
+    }
+
+    private static class Runner
+            implements Runnable
+    {
+        private final Runnable runnable;
+        private RuntimeException runtimeException;
+        private Error error;
+
+        public Runner(Runnable runnable)
+        {
+            this.runnable = runnable;
+        }
+
+        public void run()
+        {
+            try {
+                runnable.run();
+            } catch (RuntimeException runtimeException) {
+                this.runtimeException = runtimeException;
+            } catch (Error error) {
+                this.error = error;
+            }
+        }
+
+        public void throwException()
+        {
+            if (runtimeException != null) {
+                throw runtimeException;
+            } else if (error != null) {
+                throw error;
+            }
+        }
+    }
+
+    private final Runner runner;
+    private final Thread thread;
+
+    private PluginThread(Runnable runnable)
+    {
+        this.runner = new Runner(runnable);
+        this.thread = new Thread(runner);
+        thread.start();
+    }
+
+    public void join()
+    {
+        try {
+            thread.join();
+        } catch (InterruptedException ex) {
+            throw new PluginInterruptedException(ex);
+        }
+    }
+
+    public void joinAndThrow()
+    {
+        join();
+        runner.throwException();
+    }
 }

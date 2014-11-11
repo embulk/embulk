@@ -70,6 +70,7 @@ public abstract class BasicFormatterPlugin
         final List<TaskSource> ftasks = task.getFileEncoderTasks();
 
         List<FileBufferChannel> channels = new ArrayList<FileBufferChannel>();
+        List<PluginThread> threads = new ArrayList<PluginThread>();
         FileBufferOutput nextOutput = fileBufferOutput;
         FileBufferChannel prevChannel = null;
         try {
@@ -82,7 +83,7 @@ public abstract class BasicFormatterPlugin
 
                 final FileBufferOutput fdecOutput = nextOutput;
                 final FileBufferChannel fdecOutputChannel = prevChannel;
-                proc.startPluginThread(new PluginThread() {
+                PluginThread thread = proc.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
@@ -101,6 +102,7 @@ public abstract class BasicFormatterPlugin
                         }
                     }
                 });
+                threads.add(thread);
 
                 prevChannel = fdecInputChannel;
                 nextOutput = fdecInputChannel.getOutput();
@@ -110,9 +112,15 @@ public abstract class BasicFormatterPlugin
                     task.getBasicFormatterTask(), processorIndex,
                     pageInput, nextOutput);
         } finally {
-            if (prevChannel != null) {
-                prevChannel.completeProducer();
-                prevChannel.join();
+            try {
+                if (prevChannel != null) {
+                    prevChannel.completeProducer();
+                    prevChannel.join();
+                }
+            } finally {
+                for (PluginThread thread : threads) {
+                    thread.joinAndThrow();
+                }
             }
         }
     }

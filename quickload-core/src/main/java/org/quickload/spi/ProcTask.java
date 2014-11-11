@@ -117,12 +117,12 @@ public class ProcTask
         return pluginManager.newPlugin(iface, typeConfig);
     }
 
-    public void startPluginThread(PluginThread runner)
+    public PluginThread startPluginThread(Runnable runnable)
     {
         // TODO use cached thread pool
         // TODO inject thread pool manager
         // TODO set thread name
-        new Thread(runner).start();
+        return PluginThread.start(runnable);
     }
 
     public BufferChannel newBufferChannel()

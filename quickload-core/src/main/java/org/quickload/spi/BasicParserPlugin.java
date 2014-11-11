@@ -70,6 +70,7 @@ public abstract class BasicParserPlugin
         final List<TaskSource> ftasks = task.getFileDecoderTasks();
 
         List<FileBufferChannel> channels = new ArrayList<FileBufferChannel>();
+        List<PluginThread> threads = new ArrayList<PluginThread>();
         FileBufferInput nextInput = fileBufferInput;
         FileBufferChannel prevChannel = null;
         try {
@@ -82,7 +83,7 @@ public abstract class BasicParserPlugin
 
                 final FileBufferInput fdecInput = nextInput;
                 final FileBufferChannel fdecInputChannel = prevChannel;
-                proc.startPluginThread(new PluginThread() {
+                PluginThread thread = proc.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
@@ -101,6 +102,7 @@ public abstract class BasicParserPlugin
                         }
                     }
                 });
+                threads.add(thread);
 
                 prevChannel = fdecOutputChannel;
                 nextInput = fdecOutputChannel.getInput();
@@ -110,9 +112,15 @@ public abstract class BasicParserPlugin
                     task.getBasicParserTask(), processorIndex,
                     nextInput, pageOutput);
         } finally {
-            if (prevChannel != null) {
-                prevChannel.completeConsumer();
-                prevChannel.join();
+            try {
+                if (prevChannel != null) {
+                    prevChannel.completeConsumer();
+                    prevChannel.join();
+                }
+            } finally {
+                for (PluginThread thread : threads) {
+                    thread.joinAndThrow();
+                }
             }
         }
     }

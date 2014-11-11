@@ -198,7 +198,7 @@ public class LocalExecutor
             final int processorIndex = i;
 
             try (final PageChannel channel = proc.newPageChannel()) {
-                proc.startPluginThread(new PluginThread() {
+                PluginThread thread = proc.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
@@ -222,6 +222,8 @@ public class LocalExecutor
                     procContext.setInputReport(processorIndex, report);
                 } catch (Exception ex) {
                     procContext.setInputReport(processorIndex, new FailedReport(ex));
+                } finally {
+                    thread.joinAndThrow();
                 }
             }
         }

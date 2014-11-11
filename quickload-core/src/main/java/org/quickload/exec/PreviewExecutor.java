@@ -74,7 +74,7 @@ public class PreviewExecutor
                 {
                     List<Page> pages;
                     try (final PageChannel channel = proc.newPageChannel()) {
-                        proc.startPluginThread(new PluginThread() {
+                        PluginThread thread = proc.startPluginThread(new Runnable() {
                             public void run()
                             {
                                 try {
@@ -85,9 +85,14 @@ public class PreviewExecutor
                             }
                         });
 
-                        pages = getSample(channel.getInput(), task.getSampleRows());
-                        channel.completeConsumer();
-                        channel.join();
+                        try {
+                            pages = getSample(channel.getInput(), task.getSampleRows());
+                            channel.completeConsumer();
+                            channel.join();
+                        } finally {
+                            // don't call joinAndThrow to ignore exceptions in InputPlugins
+                            thread.join();
+                        }
                     }
                     throw new PreviewedNoticeError(new PreviewResult(proc.getSchema(), pages));
                 }
@@ -110,8 +115,9 @@ public class PreviewExecutor
             }
         }
         if (sampleRows == 0) {
-            throw new RuntimeException("empty");
+            throw new RuntimeException("No input records to preview");  // TODO exception class
         }
+
         return builder.build();
     }
 }

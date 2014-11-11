@@ -68,7 +68,7 @@ public abstract class FileOutputPlugin
         final FormatterPlugin formatter = newFormatterPlugin(proc, task);
 
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
-            proc.startPluginThread(new PluginThread() {
+            PluginThread thread = proc.startPluginThread(new Runnable() {
                 public void run()
                 {
                     try {
@@ -81,13 +81,17 @@ public abstract class FileOutputPlugin
                 }
             });
 
-            Report report = runFileOutput(proc,
-                    task.getFileOutputTask(), processorIndex,
-                    channel.getInput());
-            channel.completeProducer();
-            channel.join();
+            try {
+                Report report = runFileOutput(proc,
+                        task.getFileOutputTask(), processorIndex,
+                        channel.getInput());
+                channel.completeProducer();
+                channel.join();
 
-            return report;  // TODO merge formatterReport
+                return report;  // TODO merge formatterReport
+            } finally {
+                thread.joinAndThrow();
+            }
         }
     }
 }
