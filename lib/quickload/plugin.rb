@@ -2,6 +2,7 @@
 module QuickLoad
   require 'quickload/error'
   require 'quickload/plugin_registry'
+  require 'quickload/bridge/guess'
 
   class PluginManager
     PLUGIN_CATEGORIES = %w[
@@ -33,7 +34,23 @@ module QuickLoad
       end
 
       def new_#{category}(type)
-        @registries[:#{category}].lookup(type).new
+        klass = @registries[:#{category}].lookup(type)
+        plugin = klass.new
+        if plugin.is_a?(ParserGuessPlugin)
+          Bridge::GuessPluginReverseBridge.new(plugin)
+        else
+          plugin
+        end
+      end
+
+      def new_java_#{category}(type)
+        klass = @registries[:#{category}].lookup(type)
+        plugin = klass.new
+        if plugin.is_a?(ParserGuessPlugin)
+          plugin
+        else
+          Bridge::GuessPluginBridge.new(plugin)
+        end
       end
       ]
     end

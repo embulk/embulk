@@ -66,7 +66,7 @@ public class JRubyPluginSource
             throw new PluginSourceNotMatchException("Plugin interface "+iface+" is not supported in JRuby");
         }
 
-        String methodName = "new_" + category;
+        String methodName = "new_java_" + category;
         try {
             return jruby.callMethod(rubyPluginManager, methodName, name, iface);
         } catch (InvokeFailedException ex) {
