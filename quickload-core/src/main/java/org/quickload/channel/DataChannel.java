@@ -159,7 +159,7 @@ public class DataChannel <E extends Buffer>
                 if (producerCompleted && queue.isEmpty()) {
                     return null;
                 }
-                throw new ChannelAsynchronousCloseException("Channel consumer already closed");
+                throw new ChannelAsynchronousCloseException("Channel already closed");
             }
 
             E e = queue.poll();
@@ -176,7 +176,7 @@ public class DataChannel <E extends Buffer>
                     if (producerCompleted && queue.isEmpty()) {
                         return null;
                     }
-                    throw new ChannelAsynchronousCloseException("Channel consumer already closed");
+                    throw new ChannelAsynchronousCloseException("Channel already closed");
                 }
                 e = queue.poll();
             }

@@ -4,7 +4,7 @@ import java.io.InputStream;
 import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.FileBufferOutput;
 
-public class FilePlugins
+public abstract class FilePlugins
 {
     /**
      * Calls BufferPlugins.transferInputStream. If it completes successfully,

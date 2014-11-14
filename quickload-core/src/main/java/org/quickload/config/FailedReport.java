@@ -3,15 +3,15 @@ package org.quickload.config;
 public class FailedReport
         extends Report
 {
-    private final Exception cause;
+    private final Throwable cause;
 
-    public FailedReport(Exception cause)
+    public FailedReport(Throwable cause)
     {
         super();
         this.cause = cause;
     }
 
-    public Exception getCause()
+    public Throwable getCause()
     {
         return cause;
     }

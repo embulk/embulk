@@ -67,8 +67,10 @@ public abstract class FileOutputPlugin
         final OutputTask task = proc.loadTask(taskSource, OutputTask.class);
         final FormatterPlugin formatter = newFormatterPlugin(proc, task);
 
+        PluginThread thread = null;
+        Throwable error = null;
         try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
-            PluginThread thread = proc.startPluginThread(new Runnable() {
+            thread = proc.startPluginThread(new Runnable() {
                 public void run()
                 {
                     try {
@@ -81,17 +83,19 @@ public abstract class FileOutputPlugin
                 }
             });
 
-            try {
-                Report report = runFileOutput(proc,
-                        task.getFileOutputTask(), processorIndex,
-                        channel.getInput());
-                channel.completeProducer();
-                channel.join();
+            Report report = runFileOutput(proc,
+                    task.getFileOutputTask(), processorIndex,
+                    channel.getInput());
+            channel.completeProducer();
+            channel.join();
 
-                return report;  // TODO merge formatterReport
-            } finally {
-                thread.joinAndThrow();
-            }
+            return report;  // TODO merge formatterReport
+
+        } catch (Throwable ex) {
+            error = ex;
+            return null;  // finally block throws an exception
+        } finally {
+            PluginThread.joinAndThrowNested(thread, error);
         }
     }
 }

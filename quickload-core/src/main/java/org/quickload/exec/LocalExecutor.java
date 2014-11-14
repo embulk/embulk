@@ -2,6 +2,7 @@ package org.quickload.exec;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -145,7 +146,16 @@ public class LocalExecutor
         return proc.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
     }
 
-    public NextConfig run(ConfigSource config)
+    public NextConfig run(final ConfigSource config)
+    {
+        try {
+            return doRun(config);
+        } catch (Throwable ex) {
+            throw PluginExecutors.propagePluginExceptions(ex);
+        }
+    }
+
+    private NextConfig doRun(ConfigSource config)
     {
         final ProcTask proc = new ProcTask(injector);
         final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
@@ -197,8 +207,10 @@ public class LocalExecutor
         for (int i=0; i < proc.getProcessorCount(); i++) {
             final int processorIndex = i;
 
+            PluginThread thread = null;
+            Throwable error = null;
             try (final PageChannel channel = proc.newPageChannel()) {
-                PluginThread thread = proc.startPluginThread(new Runnable() {
+                thread = proc.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
@@ -206,8 +218,9 @@ public class LocalExecutor
                             Report report = out.runOutput(proc, task.getOutputTask(),
                                 processorIndex, channel.getInput());
                             procContext.setOutputReport(processorIndex, report);
-                        } catch (Exception ex) {
+                        } catch (Throwable ex) {
                             procContext.setOutputReport(processorIndex, new FailedReport(ex));
+                            throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
                         } finally {
                             channel.completeConsumer();
                         }
@@ -220,11 +233,15 @@ public class LocalExecutor
                     channel.completeProducer();
                     channel.join();
                     procContext.setInputReport(processorIndex, report);
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                     procContext.setInputReport(processorIndex, new FailedReport(ex));
-                } finally {
-                    thread.joinAndThrow();
+                    throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
                 }
+
+            } catch (Throwable ex) {
+                error = ex;
+            } finally {
+                PluginThread.joinAndThrowNested(thread, error);
             }
         }
     }

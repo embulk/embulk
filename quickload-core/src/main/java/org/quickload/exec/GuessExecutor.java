@@ -50,7 +50,16 @@ public class GuessExecutor
         return proc.newPlugin(InputPlugin.class, guessInputConfig.get("type"));
     }
 
-    public NextConfig guess(final ProcTask proc, ConfigSource config)
+    public NextConfig guess(ProcTask proc, ConfigSource config)
+    {
+        try {
+            return doGuess(proc, config);
+        } catch (Throwable ex) {
+            throw PluginExecutors.propagePluginExceptions(ex);
+        }
+    }
+
+    private NextConfig doGuess(final ProcTask proc, ConfigSource config)
     {
         // repeat guessing upto 10 times
         NextConfig lastGuessed = new NextConfig();

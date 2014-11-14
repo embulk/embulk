@@ -7,7 +7,7 @@ import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.BufferOutput;
 import org.quickload.channel.BufferInput;
 
-public class BufferPlugins
+public abstract class BufferPlugins
 {
     public static long transferInputStream(BufferAllocator bufferAllocator,
             InputStream input, BufferOutput output) throws PartialTransferException
