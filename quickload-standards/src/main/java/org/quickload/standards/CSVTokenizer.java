@@ -29,7 +29,19 @@ public class CsvTokenizer implements Iterable<List<String>> {
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
-        newline = task.getNewline();
+        switch (task.getNewline()) { // TODO reuse setting of newline
+            case "CRLF":
+                newline = "\r\n";
+                break;
+            case "LF":
+                newline = "\n";
+                break;
+            case "CR":
+                newline = "\r";
+                break;
+            default:
+                throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR");
+        }
         surroundingSpacesNeedQuotes = false; // TODO
 
         this.decoder = decoder;
@@ -67,8 +79,8 @@ public class CsvTokenizer implements Iterable<List<String>> {
         for (String line : decoder) {
             currentLineNum++; // increment # of line
 
-            // skip empty line
-            if (line.isEmpty()) {
+            // if it finds empty lines with NORMAL_MODE, they should be skipped.
+            if (line.isEmpty() && state.equals(State.NORMAL_MODE)) {
                 continue;
             }
 
@@ -139,6 +151,8 @@ public class CsvTokenizer implements Iterable<List<String>> {
                 currentValue.setLength(0);
 
                 return currentRecord;
+            } else { // QUOTE_MODE
+                currentValue.append(newline);
             }
         }
 
