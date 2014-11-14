@@ -53,7 +53,7 @@ public class AWSPlugins
     {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-        String lastKey = prefix;
+        String lastKey = null;
         do {
             ListObjectsRequest req = new ListObjectsRequest(bucketName, prefix, lastKey, null, 1024);
             ObjectListing ol = client.listObjects(req);
