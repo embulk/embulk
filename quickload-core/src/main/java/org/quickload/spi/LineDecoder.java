@@ -47,7 +47,7 @@ public class LineDecoder
             this.newline = "\r";
             break;
         default:
-            throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR");
+            throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR but got '"+task.getNewline()+"'");
         }
 
         try {

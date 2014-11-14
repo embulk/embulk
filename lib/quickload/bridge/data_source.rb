@@ -15,23 +15,27 @@ module QuickLoad
       end
 
       def to_java
-        @java_class.new(DataSource.parseJson(self.to_json))
+        @java_class.new(Java::DataSource.parseJson(self.to_json))
       end
 
       def self.to_java_config_source(hash)
-        ConfigSource.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+        Java::ConfigSource.new.setAll(to_java_object_node(hash))
       end
 
       def self.to_java_task_source(hash)
-        TaskSource.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+        Java::TaskSource.new.setAll(to_java_object_node(hash))
       end
 
       def self.to_java_next_config(hash)
-        NextConfig.new.setAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+        Java::NextConfig.new.setAll(to_java_object_node(hash))
       end
 
       def self.to_java_report(hash)
-        Report.new.stAll(DataSource.new(DataSource.parseJson(hash.to_json)))
+        Java::Report.new.setAll(to_java_object_node(hash))
+      end
+
+      def self.to_java_object_node(hash)
+        Java::DataSource.parseJson(hash.to_json)
       end
     end
   end

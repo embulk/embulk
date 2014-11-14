@@ -13,6 +13,7 @@ public class PluginThread
         private final Runnable runnable;
         private RuntimeException runtimeException;
         private Error error;
+        private Throwable throwable;
 
         public Runner(Runnable runnable)
         {
@@ -27,6 +28,8 @@ public class PluginThread
                 this.runtimeException = runtimeException;
             } catch (Error error) {
                 this.error = error;
+            } catch (Throwable throwable) {
+                this.throwable = throwable;
             }
         }
 
@@ -36,6 +39,8 @@ public class PluginThread
                 throw runtimeException;
             } else if (error != null) {
                 throw error;
+            } else if (throwable != null) {
+                throw new PluginExecutionException(throwable);
             }
         }
     }

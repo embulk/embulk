@@ -17,4 +17,10 @@ public class Report
     {
         super(data);
     }
+
+    @Override
+    protected Report newInstance(ObjectNode data)
+    {
+        return new Report(data);
+    }
 }

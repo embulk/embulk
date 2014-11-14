@@ -3,6 +3,7 @@ module QuickLoad
   require 'forwardable'
   require 'quickload/error'
   require 'quickload/plugin_registry'
+  require 'quickload/java/imports'
   require 'quickload/bridge/guess'
 
   class PluginManager
@@ -19,11 +20,11 @@ module QuickLoad
     end
 
     def new_input(type)
-      new_reverse_bridge(:input, type, InputPlugin, Bridge::InputPluginReverseBridge)
+      new_reverse_bridge(:input, type, Java::InputPlugin, Bridge::InputPluginReverseBridge)
     end
 
     def new_java_input(type)
-      new_bridge(:input, type, InputPlugin, Bridge::InputPluginBridge)
+      new_bridge(:input, type, Java::InputPlugin, Bridge::InputPluginBridge)
     end
 
 
@@ -32,11 +33,11 @@ module QuickLoad
     end
 
     def new_output(type)
-      new_reverse_bridge(:output, type, OutputPlugin, Bridge::OutputPluginReverseBridge)
+      new_reverse_bridge(:output, type, Java::OutputPlugin, Bridge::OutputPluginReverseBridge)
     end
 
     def new_java_output(type)
-      new_bridge(:output, type, OutputPlugin, Bridge::OutputPluginBridge)
+      new_bridge(:output, type, Java::OutputPlugin, Bridge::OutputPluginBridge)
     end
 
 
@@ -45,11 +46,11 @@ module QuickLoad
     end
 
     def new_parser(type)
-      new_reverse_bridge(:parser, type, ParserPlugin, Bridge::ParserPluginReverseBridge)
+      new_reverse_bridge(:parser, type, Java::ParserPlugin, Bridge::ParserPluginReverseBridge)
     end
 
     def new_java_parser(type)
-      new_bridge(:parser, type, ParserPlugin, Bridge::BasicParserPluginBridge)
+      new_bridge(:parser, type, Java::ParserPlugin, Bridge::BasicParserPluginBridge)
     end
 
 
@@ -58,11 +59,11 @@ module QuickLoad
     end
 
     def new_formatter(type)
-      new_reverse_bridge(:formatter, type, FormatterPlugin, Bridge::FormatterPluginReverseBridge)
+      new_reverse_bridge(:formatter, type, Java::FormatterPlugin, Bridge::FormatterPluginReverseBridge)
     end
 
     def new_java_formatter(type)
-      new_bridge(:formatter, type, FormatterPlugin, Bridge::BasicFormatterPluginBridge)
+      new_bridge(:formatter, type, Java::FormatterPlugin, Bridge::BasicFormatterPluginBridge)
     end
 
 
@@ -71,11 +72,11 @@ module QuickLoad
     end
 
     def new_decoder(type)
-      new_reverse_bridge(:decoder, type, DecoderPlugin, Bridge::DecoderPluginReverseBridge)
+      new_reverse_bridge(:decoder, type, Java::DecoderPlugin, Bridge::DecoderPluginReverseBridge)
     end
 
     def new_java_decoder(type)
-      new_bridge(:decoder, type, DecoderPlugin, Bridge::DecoderPluginBridge)
+      new_bridge(:decoder, type, Java::DecoderPlugin, Bridge::DecoderPluginBridge)
     end
 
 
@@ -84,11 +85,11 @@ module QuickLoad
     end
 
     def new_encoder(type)
-      new_reverse_bridge(:encoder, type, EncoderPlugin, Bridge::EncoderPluginReverseBridge)
+      new_reverse_bridge(:encoder, type, Java::EncoderPlugin, Bridge::EncoderPluginReverseBridge)
     end
 
     def new_java_encoder(type)
-      new_bridge(:encoder, type, EncoderPlugin, Bridge::EncoderPluginBridge)
+      new_bridge(:encoder, type, Java::EncoderPlugin, Bridge::EncoderPluginBridge)
     end
 
 
@@ -97,11 +98,11 @@ module QuickLoad
     end
 
     def new_guess(type)
-      new_reverse_bridge(:guess, type, GuessPlugin, Bridge::GuessPluginReverseBridge)
+      new_reverse_bridge(:guess, type, Java::GuessPlugin, Bridge::GuessPluginReverseBridge)
     end
 
     def new_java_guess(type)
-      new_bridge(:guess, type, GuessPlugin, Bridge::GuessPluginBridge)
+      new_bridge(:guess, type, Java::GuessPlugin, Bridge::GuessPluginBridge)
     end
 
     private

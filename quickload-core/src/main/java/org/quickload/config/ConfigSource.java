@@ -32,6 +32,12 @@ public class ConfigSource
         super(data, fieldMapper);
     }
 
+    @Override
+    protected ConfigSource newInstance(ObjectNode data)
+    {
+        return new ConfigSource(data);
+    }
+
     private static Optional<String> configJsonKey(Method getterMethod)
     {
         Config a = getterMethod.getAnnotation(Config.class);
@@ -50,10 +56,5 @@ public class ConfigSource
         } else {
             return Optional.absent();
         }
-    }
-
-    public ConfigSource deepCopy()
-    {
-        return new ConfigSource(data.deepCopy());
     }
 }

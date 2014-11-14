@@ -37,8 +37,10 @@ public class QuickLoad
     {
         ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
 
+        // automatic guess
         NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
         System.out.println("guessed: "+guessed);
+        config.mergeRecursively(guessed);
 
         PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
         List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());

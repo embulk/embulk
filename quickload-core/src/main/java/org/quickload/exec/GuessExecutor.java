@@ -24,6 +24,7 @@ import org.quickload.record.Schema;
 import org.quickload.record.Column;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.ParserPlugin;
+import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.ProcTask;
 import org.quickload.spi.GuessPlugin;
 import org.quickload.spi.ProcControl;
@@ -38,57 +39,61 @@ public class GuessExecutor
         this.injector = injector;
     }
 
-    public interface GuessTask
-            extends Task
-    {
-        @Config("in")
-        @NotNull
-        public ConfigSource getInputConfig();
-    }
-
     public NextConfig run(ConfigSource config)
     {
         ProcTask proc = new ProcTask(injector);
         return guess(proc, config);
     }
 
-    protected InputPlugin newInputPlugin(ProcTask proc, GuessTask task)
+    protected InputPlugin newInputPlugin(ProcTask proc, ConfigSource guessInputConfig)
     {
-        return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+        return proc.newPlugin(InputPlugin.class, guessInputConfig.get("type"));
     }
 
     public NextConfig guess(final ProcTask proc, ConfigSource config)
     {
-        GuessTask task = proc.loadConfig(config, GuessTask.class);
+        // repeat guessing upto 10 times
+        NextConfig lastGuessed = new NextConfig();
+        for (int i=0; i < 10; i++) {
+            // include last-guessed config to run guess
+            ConfigSource guessConfig = config.deepCopy().mergeRecursively(lastGuessed);
 
-        // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-        ((ObjectNode) task.getInputConfig().get("parser")).put("type", "system_guess");
+            // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
+            ConfigSource guessInputConfig = guessConfig.getObject("in");
+            guessInputConfig.getObjectOrSetEmpty("parser").setString("type", "system_guess");
 
-        // create FileInputPlugin
-        final InputPlugin input = newInputPlugin(proc, task);
+            // run FileInputPlugin
+            final InputPlugin input = newInputPlugin(proc, guessInputConfig);
+            NextConfig guessed;
+            try {
+                input.runInputTransaction(proc, guessInputConfig, new ProcControl() {
+                    public List<Report> run(TaskSource inputTaskSource)
+                    {
+                        input.runInput(proc, inputTaskSource, 0, null);   // TODO add dummy PageOutput which throws "guess plugin works only with FileInputPlugin"
+                        return null;
+                    }
+                });
+                // unexpected
+                throw new AssertionError("Guess executor must throw GuessedNoticeError");
 
-        try {
-            input.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
-                public List<Report> run(TaskSource inputTaskSource)
-                {
-                    input.runInput(proc, inputTaskSource, 0, null);   // TODO add dummy PageOutput which throws "guess plugin works only with FileInputPlugin"
-                    return null;
-                }
-            });
-            return new NextConfig().setAll(config);
-        } catch (GuessedNoticeError guessed) {
-            NextConfig next = new NextConfig().setAll(config);
-            ObjectNode parserConfig = (ObjectNode) ((ObjectNode) next.get("in")).get("parser");
-            for (Map.Entry<String, JsonNode> field : guessed.getGuessedParserConfig().getFields()) {
-                // TODO recursive merge
-                parserConfig.set(field.getKey(), field.getValue());
+            } catch (GuessedNoticeError error) {
+                guessed = new NextConfig();
+                guessed.getObjectOrSetEmpty("in").set("parser", error.getGuessedParserConfig());
             }
-            return next;
+
+            // merge to the last-guessed config
+            NextConfig nextGuessed = lastGuessed.deepCopy();
+            lastGuessed.mergeRecursively(guessed);
+            if (lastGuessed.equals(nextGuessed)) {
+                // not changed
+                return lastGuessed;
+            }
         }
+        return lastGuessed;
     }
 
     public static class GuessParserPlugin
-            implements ParserPlugin
+            extends BasicParserPlugin
     {
         private interface PluginTask
                 extends Task
@@ -98,14 +103,15 @@ public class GuessExecutor
             public int getSampleSize();
 
             @Config("guess_plugins")
-            @ConfigDefault("[\"gzip\"]")  // TODO require some plugins
+            @ConfigDefault("[\"gzip\",\"newline\",\"csv\"]")  // TODO require some plugins
             public List<JsonNode> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();
             public void setConfigSource(ConfigSource config);
         }
 
-        public TaskSource getParserTask(ProcTask proc, ConfigSource config)
+        @Override
+        public TaskSource getBasicParserTask(ProcTask proc, ConfigSource config)
         {
             PluginTask task = proc.loadConfig(config, PluginTask.class);
 
@@ -117,15 +123,14 @@ public class GuessExecutor
             return proc.dumpTask(task);
         }
 
-        public void runParser(ProcTask proc,
+        @Override
+        public void runBasicParser(ProcTask proc,
                 TaskSource taskSource, int processorIndex,
                 FileBufferInput fileBufferInput, PageOutput pageOutput)
         {
             PluginTask task = proc.loadTask(taskSource, PluginTask.class);
             final int maxSampleSize = task.getSampleSize();
             final ConfigSource config = task.getConfigSource();
-
-            Buffer sample = getSample(fileBufferInput, maxSampleSize);
 
             // load guess plugins
             ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
@@ -135,19 +140,14 @@ public class GuessExecutor
             }
             List<GuessPlugin> guesses = builder.build();
 
-            // repeat guessing
+            // get samples
+            Buffer sample = getSample(fileBufferInput, maxSampleSize);
+
+            // guess
             NextConfig guessedParserConfig = new NextConfig();
-            int configKeys = guessedParserConfig.getFieldNames().size();
-            while (true) {
-                for (int i=0; i < guesses.size(); i++) {
-                    GuessPlugin guess = guesses.get(i);
-                    guessedParserConfig.setAll(guess.guess(proc, config, sample));  // TODO needs recursive merging?
-                }
-                int guessedConfigKeys = guessedParserConfig.getFieldNames().size();
-                if (guessedConfigKeys <= configKeys) {
-                    break;
-                }
-                configKeys = guessedConfigKeys;
+            for (int i=0; i < guesses.size(); i++) {
+                GuessPlugin guess = guesses.get(i);
+                guessedParserConfig.mergeRecursively(guess.guess(proc, config, sample));
             }
 
             throw new GuessedNoticeError(guessedParserConfig);

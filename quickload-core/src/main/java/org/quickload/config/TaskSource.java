@@ -17,4 +17,10 @@ public class TaskSource
     {
         super(data);
     }
+
+    @Override
+    protected TaskSource newInstance(ObjectNode data)
+    {
+        return new TaskSource(data);
+    }
 }
