@@ -66,7 +66,10 @@ public class CsvTokenizer implements Iterable<List<String>> {
         for (String line : decoder) {
             currentLineNum++; // increment # of line
 
-            // TODO handle empty lines
+            // skip empty line
+            if (line.isEmpty()) {
+                continue;
+            }
 
             // update the untokenized line
             currentLine.append(line);
