@@ -88,7 +88,7 @@ public abstract class FileOutputPlugin
                     channel.getInput());
             channel.completeConsumer();
             thread.join();
-            channel.join();  // throws if channel is not empty
+            channel.join();  // throws if channel is not fully consumed
 
             return report;  // TODO merge formatterReport
 

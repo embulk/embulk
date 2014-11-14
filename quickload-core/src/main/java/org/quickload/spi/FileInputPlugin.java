@@ -87,7 +87,7 @@ public abstract class FileInputPlugin
                     channel.getOutput());
             channel.completeProducer();
             thread.join();
-            channel.join();  // throws if channel is fully consumed
+            channel.join();  // throws if channel is not fully consumed
 
             return report;
 

@@ -97,7 +97,7 @@ public abstract class BasicFormatterPlugin
                             } finally {
                                 if (fdecOutputChannel != null) {
                                     fdecOutputChannel.completeProducer();
-                                    fdecOutputChannel.join();
+                                    fdecOutputChannel.join();  // throws if channel is not fully consumed
                                 }
                             }
                         }

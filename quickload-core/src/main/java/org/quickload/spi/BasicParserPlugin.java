@@ -97,7 +97,7 @@ public abstract class BasicParserPlugin
                             } finally {
                                 if (fdecInputChannel != null) {
                                     fdecInputChannel.completeConsumer();
-                                    fdecInputChannel.join();
+                                    fdecInputChannel.join();  // throws if channel is not fully consumed
                                 }
                             }
                         }
