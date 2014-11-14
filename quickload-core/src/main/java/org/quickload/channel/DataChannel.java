@@ -78,7 +78,7 @@ public class DataChannel <E extends Buffer>
         sync.lock();
         try {
             if (closed) {
-                throw new ChannelAsynchronousCloseException("Channel consumer already closed");
+                throw new ChannelAsynchronousCloseException("Channel already closed");
             }
 
             // ensure queue is empty because add() and complete() directly call consumer
@@ -124,7 +124,7 @@ public class DataChannel <E extends Buffer>
         try {
             while (!producerCompleted) {
                 if (closed) {
-                    throw new ChannelAsynchronousCloseException("Channel consumer already closed");
+                    throw new ChannelAsynchronousCloseException("Channel is closed but the data producer hasn't completed");
                 }
                 try {
                     joinProducerCondition.await();
@@ -142,7 +142,7 @@ public class DataChannel <E extends Buffer>
             }
 
             if (!queue.isEmpty()) {
-                throw new ChannelAsynchronousCloseException("Channel consumer closed afer consuming all data");
+                throw new ChannelAsynchronousCloseException("Channel is closed but not fully consumed by the data consumer");
             }
 
         } finally {

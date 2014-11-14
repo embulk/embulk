@@ -6,6 +6,8 @@ import org.quickload.buffer.Buffer;
 import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.BufferOutput;
 import org.quickload.channel.BufferInput;
+import org.quickload.channel.ChannelAsynchronousCloseException;
+import org.quickload.channel.ChannelInterruptedException;
 
 public abstract class BufferPlugins
 {
@@ -25,6 +27,10 @@ public abstract class BufferPlugins
                     transferredSize += len;
                 }
             }
+        } catch (ChannelInterruptedException ex) {
+            throw ex;  // deterministic exception
+        } catch (ChannelAsynchronousCloseException ex) {
+            throw ex;  // deterministic exception
         } catch (Exception ex) {
             throw new PartialTransferException(ex, transferredSize);
         }
@@ -41,6 +47,10 @@ public abstract class BufferPlugins
                 transferredSize += buffer.limit();
                 buffer.release();
             }
+        } catch (ChannelInterruptedException ex) {
+            throw ex;  // deterministic exception
+        } catch (ChannelAsynchronousCloseException ex) {
+            throw ex;  // deterministic exception
         } catch (Exception ex) {
             throw new PartialTransferException(ex, transferredSize);
         }

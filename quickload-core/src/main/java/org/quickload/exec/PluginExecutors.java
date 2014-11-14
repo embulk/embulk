@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.ArrayDeque;
 import com.google.common.base.Throwables;
 import org.quickload.channel.ChannelAsynchronousCloseException;
-import org.quickload.spi.PartialTransferException;
 
 public abstract class PluginExecutors
 {
@@ -42,6 +41,6 @@ public abstract class PluginExecutors
 
     private static boolean isHighPriorityException(Throwable ex)
     {
-        return !(ex instanceof ChannelAsynchronousCloseException || ex instanceof PartialTransferException);
+        return !(ex instanceof ChannelAsynchronousCloseException);
     }
 }
