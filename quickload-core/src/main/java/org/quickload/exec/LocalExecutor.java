@@ -231,7 +231,8 @@ public class LocalExecutor
                     Report report = in.runInput(proc, task.getInputTask(),
                             processorIndex, channel.getOutput());
                     channel.completeProducer();
-                    channel.join();
+                    thread.join();
+                    channel.join();  // throws if channel is fully consumed
                     procContext.setInputReport(processorIndex, report);
                 } catch (Throwable ex) {
                     procContext.setInputReport(processorIndex, new FailedReport(ex));

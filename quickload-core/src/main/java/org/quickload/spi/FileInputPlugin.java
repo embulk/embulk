@@ -86,7 +86,8 @@ public abstract class FileInputPlugin
                     task.getFileInputTask(), processorIndex,
                     channel.getOutput());
             channel.completeProducer();
-            channel.join();
+            thread.join();
+            channel.join();  // throws if channel is fully consumed
 
             return report;
 

@@ -78,7 +78,7 @@ public abstract class FileOutputPlugin
                                 task.getFormatterTask(), processorIndex,
                                 pageInput, channel.getOutput());
                     } finally {
-                        channel.completeConsumer();
+                        channel.completeProducer();
                     }
                 }
             });
@@ -86,8 +86,9 @@ public abstract class FileOutputPlugin
             Report report = runFileOutput(proc,
                     task.getFileOutputTask(), processorIndex,
                     channel.getInput());
-            channel.completeProducer();
-            channel.join();
+            channel.completeConsumer();
+            thread.join();
+            channel.join();  // throws if channel is not empty
 
             return report;  // TODO merge formatterReport
 

@@ -113,18 +113,18 @@ public abstract class BasicFormatterPlugin
                     task.getBasicFormatterTask(), processorIndex,
                     pageInput, nextOutput);
 
+            if (prevChannel != null) {
+                prevChannel.completeProducer();
+                prevChannel.join();
+            }
+            for (PluginThread thread : threads) {
+                thread.join();
+            }
+
         } catch (Throwable ex) {
             error = ex;
         } finally {
-            try {
-                if (prevChannel != null) {
-                    prevChannel.completeProducer();
-                    prevChannel.join();
-                }
-                // TODO exceptions by prevChannel.join() will be lost
-            } finally {
-                PluginThread.joinAndThrowNested(threads, error);
-            }
+            PluginThread.joinAndThrowNested(threads, error);
         }
     }
 }

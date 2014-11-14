@@ -113,18 +113,18 @@ public abstract class BasicParserPlugin
                     task.getBasicParserTask(), processorIndex,
                     nextInput, pageOutput);
 
+            if (prevChannel != null) {
+                prevChannel.completeConsumer();
+                prevChannel.join();
+            }
+            for (PluginThread thread : threads) {
+                thread.join();
+            }
+
         } catch (Throwable ex) {
             error = ex;
         } finally {
-            try {
-                if (prevChannel != null) {
-                    prevChannel.completeConsumer();
-                    prevChannel.join();
-                }
-                // TODO exceptions by prevChannel.join() will be lost
-            } finally {
-                PluginThread.joinAndThrowNested(threads, error);
-            }
+            PluginThread.joinAndThrowNested(threads, error);
         }
     }
 }
