@@ -50,6 +50,7 @@ public class CsvTokenizer implements Iterable<List<String>> {
         return currentLine.toString();
     }
 
+    // see http://tools.ietf.org/html/rfc4180
     private List<String> poll()
     {
         currentRecord.clear();
@@ -78,7 +79,7 @@ public class CsvTokenizer implements Iterable<List<String>> {
             }
 
             for (int i = 0; i < line.length(); i++) {
-                char c = line.charAt(i);
+                final char c = line.charAt(i);
 
                 if (state.equals(State.NORMAL_MODE)) {
                     if (c == delimiter) {
@@ -87,10 +88,10 @@ public class CsvTokenizer implements Iterable<List<String>> {
                         if (!surroundingSpacesNeedQuotes) {
                             appendSpaces(currentValue, potentialSpaces);
                         }
-                        // empty string "" is converted to null.
-                        currentRecord.add(currentValue.length() > 0 ?
-                                currentValue.toString() : null);
                         potentialSpaces = 0;
+
+                        currentRecord.add(currentValue.length() > 0 ?
+                                currentValue.toString() : null); // empty cell "" is converted to null.
                         currentValue.setLength(0);
                     } else if (c == ' ') {
                         potentialSpaces += 1;
@@ -115,6 +116,8 @@ public class CsvTokenizer implements Iterable<List<String>> {
                         currentValue.append(c);
                     }
                 } else { // QUOTE_MODE
+                    // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
+
                     if (c == quote) {
                         state = State.NORMAL_MODE;
                         // reset ready for next multi-line cell
@@ -129,9 +132,10 @@ public class CsvTokenizer implements Iterable<List<String>> {
                 if (!surroundingSpacesNeedQuotes) {
                     appendSpaces(currentValue, potentialSpaces);
                 }
-                currentRecord.add(currentValue.length() > 0 ?
-                        currentValue.toString() : null);
                 potentialSpaces = 0;
+
+                currentRecord.add(currentValue.length() > 0 ?
+                        currentValue.toString() : null); // empty cell "" is converted to null.
                 currentValue.setLength(0);
 
                 return currentRecord;
