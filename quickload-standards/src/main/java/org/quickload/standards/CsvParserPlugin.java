@@ -35,9 +35,15 @@ public class CsvParserPlugin extends BasicParserPlugin {
         PageBuilder builder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput);
 
         while (fileBufferInput.nextFile()) {
+            boolean skipHeaderLine = task.getHeaderLine();
             for (final List<String> record : tokenizer) {
                 if (record.size() != schema.getColumns().size()) {
                     throw new RuntimeException("not match"); // TODO fix the error handling
+                }
+
+                if (skipHeaderLine) {
+                    skipHeaderLine = false;
+                    continue;
                 }
 
                 schema.produce(builder, new RecordProducer()

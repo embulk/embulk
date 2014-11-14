@@ -15,9 +15,9 @@ public interface CsvParserTask
     @NotNull
     public SchemaConfig getSchemaConfig();
 
-    @Config("column_header") // how to set default value?? TODO @Default("true")
+    @Config("header_line") // how to set default value?? TODO @Default("true")
     @ConfigDefault("false")
-    public boolean getColumnHeader();
+    public boolean getHeaderLine();
 
     @Config("delimiter")
     @ConfigDefault("\",\"")
