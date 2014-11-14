@@ -10,9 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
-public class DataSource <T extends DataSource>
+public abstract class DataSource <T extends DataSource>
 {
     protected final ObjectNode data;
     protected final FieldMapper fieldMapper;
@@ -37,6 +38,8 @@ public class DataSource <T extends DataSource>
         this.data = data;
         this.fieldMapper = fieldMapper;
     }
+
+    protected abstract T newInstance(ObjectNode data);
 
     public static ObjectNode parseJson(JsonParser jsonParser) throws IOException
     {
@@ -104,6 +107,30 @@ public class DataSource <T extends DataSource>
             return defaultValue;
         }
         return json;
+    }
+
+    public T getObject(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            throw new ConfigException("Field "+fieldName+" is required but not set");
+        }
+        if (!json.isObject()) {
+            throw new ConfigException("Field "+fieldName+" must be an object");
+        }
+        return newInstance((ObjectNode) json);
+    }
+
+    public T getObjectOrSetEmpty(String fieldName)
+    {
+        JsonNode json = data.get(fieldName);
+        if (json == null) {
+            json = data.objectNode();
+            data.set(fieldName, json);
+        } else if (!json.isObject()) {
+            throw new ConfigException("Field "+fieldName+" must be an object");
+        }
+        return newInstance((ObjectNode) json);
     }
 
     public boolean getBoolean(String fieldName)
@@ -258,7 +285,7 @@ public class DataSource <T extends DataSource>
 
     public T set(String fieldName, JsonNode v)
     {
-        data.set(fieldName, v);
+        data.replace(fieldName, v);
         return (T) this;
     }
 
@@ -267,14 +294,52 @@ public class DataSource <T extends DataSource>
         return set(fieldName, v.data);
     }
 
-    public T setAll(DataSource<?> other)
+    public T setAll(ObjectNode object)
     {
-        Iterator<Map.Entry<String, JsonNode>> fields = other.data.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
             data.put(field.getKey(), field.getValue());
         }
         return (T) this;
+    }
+
+    public T setAll(DataSource<?> other)
+    {
+        return setAll(other.data);
+    }
+
+    public T deepCopy()
+    {
+        return newInstance(data.deepCopy());
+    }
+
+    public T mergeRecursively(DataSource<?> other)
+    {
+        mergeJsonObject(data, other.data);
+        return (T) this;
+    }
+
+    private static void mergeJsonObject(ObjectNode src, ObjectNode other)
+    {
+        Iterator<Map.Entry<String, JsonNode>> ite = other.fields();
+        while (ite.hasNext()) {
+            Map.Entry<String, JsonNode> pair = ite.next();
+            JsonNode s = src.get(pair.getKey());
+            JsonNode v = pair.getValue();
+            if (v.isObject() && s != null && s.isObject()) {
+                mergeJsonObject((ObjectNode) s, (ObjectNode) v);
+            } else if (v.isArray() && s != null && s.isArray()) {
+                mergeJsonArray((ArrayNode) s, (ArrayNode) v);
+            } else {
+                src.replace(pair.getKey(), v);
+            }
+        }
+    }
+
+    private static void mergeJsonArray(ArrayNode src, ArrayNode other)
+    {
+        src.addAll(other);
     }
 
     @Override

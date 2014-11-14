@@ -1,6 +1,6 @@
 require 'java'
 
-module QuickLoad
+module QuickLoad::Java
   java_import 'org.quickload.buffer.Buffer'
   java_import 'org.quickload.buffer.BufferAllocator'
 
