@@ -13,7 +13,6 @@ public abstract class PluginExecutors
     {
         LinkedList<Throwable> suppressed = findShallowestHighPriorityExceptions(ex);
         Throwable representative = suppressed.removeFirst();
-        System.out.println("list: "+suppressed);
         for (Throwable s : suppressed) {
             representative.addSuppressed(s);
         }
@@ -28,12 +27,10 @@ public abstract class PluginExecutors
         queue.add(ex);
         while (!queue.isEmpty()) {
             Throwable candidate = queue.remove();
-            System.out.println("candidate: "+candidate);
             if (isHighPriorityException(candidate)) {
                 suppressed.addFirst(candidate);
                 return suppressed;
             }
-            System.out.println("suppressed: "+candidate);
             suppressed.add(candidate);
             for (Throwable s : candidate.getSuppressed()) {
                 queue.add(s);
