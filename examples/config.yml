@@ -5,11 +5,11 @@ in:
   parser:
     type: csv
     #newline: LF
-    columns:
-      - {name: date_code, type: string}
-      - {name: customer_code, type: long}
-      - {name: product_code, type: string}
-      - {name: employee_code, type: string}
+    #columns:
+    #  - {name: date_code, type: string}
+    #  - {name: customer_code, type: long}
+    #  - {name: product_code, type: string}
+    #  - {name: employee_code, type: string}
     #file_decoders:
     #  - type: gzip
 out:

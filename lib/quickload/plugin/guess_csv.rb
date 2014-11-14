@@ -7,15 +7,50 @@ module QuickLoad::Plugin
       ",", "\t", "|"
     ]
 
+    QUOTE_CANDIDATES = [
+      "\"", "'"
+    ]
+
     def run(config, sample_lines)
       delim = guess_delimiter(sample_lines)
-      return {} unless delim
+      unless delim
+        # not CSV file
+        return {}
+      end
+
+      guessed = {"type"=>"csv", "delimiter"=>delim}
 
       # TODO guess quote chars
-      # TODO guess header-line
-      # TODO guess schema
 
-      return {"type"=>"csv", "delimiter"=>delim}
+      sample_records = sample_lines.map {|line| line.split(delim) }
+      first_types = guess_field_types(sample_records[0, 1])
+      other_types = guess_field_types(sample_records[1..-1])
+
+      if first_types.size <= 1 || other_types.size <= 1
+        # guess failed
+        return {}
+      end
+
+      unless config.has_key?("header_line")
+        guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != "string" })
+      end
+
+      unless config.has_key?("columns")
+        if guessed["header_line"] || config["header_line"]
+          column_names = sample_records.first
+        else
+          column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
+        end
+        schema = []
+        column_names.zip(other_types).each do |name,type|
+          if name && type
+            schema << {"name" => name, "type" => type}
+          end
+        end
+        guessed["columns"] = schema
+      end
+
+      return guessed
     end
 
     private
@@ -40,6 +75,58 @@ module QuickLoad::Plugin
       else
         return nil
       end
+    end
+
+    def guess_field_types(field_lines)
+      column_lines = []
+      field_lines.each do |fields|
+        fields.each_with_index {|field,i| (column_lines[i] ||= []) << guess_type(field) }
+      end
+      columns = column_lines.map do |types|
+        types.inject(nil) {|r,t| merge_type(r,t) }
+      end
+      return columns
+    end
+
+    def merge_type(type1, type2)
+      case type1
+      when nil
+        return type2
+
+      when "string"
+        return "string"
+
+      when "long"
+        if type2 == "double"
+          return "double"
+        elsif type2 == "long"
+          return "long"
+        else
+          return "string"
+        end
+
+      when "double"
+        if ["long", "double"].include?(type2)
+          return "double"
+        else
+          return "string"
+        end
+      end
+    end
+
+    def guess_type(str)
+      if str.to_i.to_s == str
+        return "long"
+      end
+
+      if str.include?('.')
+        a, b = str.split(".", 2)
+        if a.to_i.to_s == a && b.to_i.to_s == b
+          return "double"
+        end
+      end
+
+      return "string"
     end
 
     def array_sum(array)
