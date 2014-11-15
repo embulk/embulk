@@ -124,6 +124,9 @@ public abstract class BasicFormatterPlugin
         } catch (Throwable ex) {
             error = ex;
         } finally {
+            if (prevChannel != null) {
+                prevChannel.completeProducer();
+            }
             PluginThread.joinAndThrowNested(threads, error);
         }
     }

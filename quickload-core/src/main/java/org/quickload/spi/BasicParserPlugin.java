@@ -124,6 +124,9 @@ public abstract class BasicParserPlugin
         } catch (Throwable ex) {
             error = ex;
         } finally {
+            if (prevChannel != null) {
+                prevChannel.completeConsumer();
+            }
             PluginThread.joinAndThrowNested(threads, error);
         }
     }
