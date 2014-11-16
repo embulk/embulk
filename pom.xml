@@ -33,6 +33,9 @@
 
         <dep.jruby.version>1.7.16.1</dep.jruby.version>
 
+        <jacoco.execution.data.file>${project.build.directory}/coverage-reports/jacoco.exec</jacoco.execution.data.file>
+        <jacoco.report.directory>${project.reporting.outputDirectory}/coverage</jacoco.report.directory>
+
         <project.check.skip-all>false</project.check.skip-all>
         <project.check.skip-dependency>${project.check.skip-all}</project.check.skip-dependency>
         <project.check.skip-dependency-version-check>${project.check.skip-all}</project.check.skip-dependency-version-check>
@@ -206,7 +209,7 @@
                         </systemPropertyVariables>
                         <forkMode>${project.test.fork-mode}</forkMode>
                         <runOrder>random</runOrder>
-                        <argLine>-XX:-UseSplitVerifier</argLine>  <!-- http://dukesoftware00.blogspot.com/2012/08/jdk7-emma.html -->
+                        <argLine>${surefireArgLine}</argLine>
                     </configuration>
                 </plugin>
 
@@ -356,6 +359,36 @@
                         </execution>
                     </executions>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.7.2.201409121644</version>
+                    <executions>
+                        <!-- prepare JaCoCo runtime agent before unit test -->
+                        <execution>
+                            <id>pre-unit-test</id>
+                            <goals><goal>prepare-agent</goal></goals>
+                            <configuration>
+                                <destFile>${jacoco.execution.data.file}</destFile>
+                                <!-- pass property name to JaCoCo for surefire's argLine -->
+                                <propertyName>surefireArgLine</propertyName>
+                            </configuration>
+                        </execution>
+                        <!-- create report after unit test -->
+                        <execution>
+                            <id>post-unit-test</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                            <configuration>
+                                <dataFile>${jacoco.execution.data.file}</dataFile>
+                                <outputDirectory>${jacoco.report.directory}</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -417,6 +450,11 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
