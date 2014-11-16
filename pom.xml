@@ -33,9 +33,6 @@
 
         <dep.jruby.version>1.7.16.1</dep.jruby.version>
 
-        <jacoco.execution.data.file>${project.build.directory}/coverage-reports/jacoco.exec</jacoco.execution.data.file>
-        <jacoco.report.directory>${project.reporting.outputDirectory}/coverage</jacoco.report.directory>
-
         <project.check.skip-all>false</project.check.skip-all>
         <project.check.skip-dependency>${project.check.skip-all}</project.check.skip-dependency>
         <project.check.skip-dependency-version-check>${project.check.skip-all}</project.check.skip-dependency-version-check>
@@ -370,7 +367,6 @@
                             <id>pre-unit-test</id>
                             <goals><goal>prepare-agent</goal></goals>
                             <configuration>
-                                <destFile>${jacoco.execution.data.file}</destFile>
                                 <!-- pass property name to JaCoCo for surefire's argLine -->
                                 <propertyName>surefireArgLine</propertyName>
                             </configuration>
@@ -382,12 +378,18 @@
                             <goals>
                                 <goal>report</goal>
                             </goals>
-                            <configuration>
-                                <dataFile>${jacoco.execution.data.file}</dataFile>
-                                <outputDirectory>${jacoco.report.directory}</outputDirectory>
-                            </configuration>
+                            <!-- Need to use default JaCoCo file/directory for Coveralls plugin -->
                         </execution>
                     </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.eluder.coveralls</groupId>
+                    <artifactId>coveralls-maven-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <configuration>
+                        <repoToken>${coveralls.repo.token}</repoToken>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
