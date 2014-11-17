@@ -44,7 +44,7 @@ module QuickLoad
 
       def runFileInput(proc, taskSource, processorIndex, fileBufferOutput)
         task = TaskConfig.new(proc, DataSourceBridge.wrap(taskSource))
-        file_writer = FileWriter.new(task, fileBufferOutput)
+        file_writer = FileWriter.new(fileBufferOutput)
         report = process_files(task, processorIndex, file_writer)
         DataSourceBridge.to_java_report(report)
       end

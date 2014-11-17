@@ -6,8 +6,9 @@ module QuickLoad
   require 'quickload/java/imports'
   require 'quickload/bridge/guess_plugin'
 
-  require 'quickload/plugin/guess'
   require 'quickload/plugin/input'
+  require 'quickload/plugin/parser'
+  require 'quickload/plugin/guess'
 
   class PluginManager
     def initialize

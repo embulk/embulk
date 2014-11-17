@@ -3,7 +3,6 @@ module QuickLoad
 
   class FileWriter
     def initialize(task_config, fileBufferOutput)
-      proc = task_config.java_proc
       @fileBufferOutput = fileBufferOutput
     end
 
