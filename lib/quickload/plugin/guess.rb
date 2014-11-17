@@ -1,21 +1,22 @@
 module QuickLoad
   module Plugin
+    require 'quickload/bridge/guess_plugin'
 
     class Guess < Bridge::GuessPluginBridge
-      def run(config, sample_buffer)
-        raise "Guess#run(config, sample_buffer) is not implemented"
+      def guess_buffer(config, sample_buffer)
+        raise NotImplementedError, "Guess#guess_buffer(config, sample_buffer) must be implemented"
       end
     end
 
     class LineGuess < Bridge::LineGuessPluginBridge
-      def run(config, sample_lines)
-        raise "LineGuess#run(config, sample_lines) is not implemented"
+      def guess_lines(config, sample_lines)
+        raise NotImplementedError, "LineGuess#guess_lines(config, sample_lines) must be implemented"
       end
     end
 
     class TextGuess < Bridge::TextGuessPluginBridge
-      def run(config, sample_text)
-        raise "TextGuess#run(config, sample_text) is not implemented"
+      def guess_text(config, sample_text)
+        raise NotImplementedError, "TextGuess#guess_text(config, sample_text) must be implemented"
       end
     end
 

@@ -4,7 +4,10 @@ module QuickLoad
   require 'quickload/error'
   require 'quickload/plugin_registry'
   require 'quickload/java/imports'
-  require 'quickload/bridge/guess'
+  require 'quickload/bridge/guess_plugin'
+
+  require 'quickload/plugin/guess'
+  require 'quickload/plugin/input'
 
   class PluginManager
     def initialize
@@ -14,95 +17,93 @@ module QuickLoad
       end
     end
 
-
     def register_input(type, klass)
-      @registries[:input].register(type, klass)
+      register_plugin(:input, type, klass, Java::InputPlugin)
+    end
+
+    def register_output(type, klass)
+      register_plugin(:output, type, klass, Java::OutputPlugin)
+    end
+
+    def register_parser(type, klass)
+      register_plugin(:parser, type, klass, Java::ParserPlugin)
+    end
+
+    def register_formatter(type, klass)
+      register_plugin(:formatter, type, klass, Java::FormatterPlugin)
+    end
+
+    def register_decoder(type, klass)
+      register_plugin(:decoder, type, klass, Java::DecoderPlugin)
+    end
+
+    def register_encoder(type, klass)
+      register_plugin(:encoder, type, klass, Java::EncoderPlugin)
+    end
+
+    def register_guess(type, klass)
+      register_plugin(:guess, type, klass, Java::GuessPlugin,
+                     "Guess plugin #{klass} must inherit Guess, LineGuess, or TextGuess class")
     end
 
     def new_input(type)
-      new_reverse_bridge(:input, type, Java::InputPlugin, Bridge::InputPluginReverseBridge)
-    end
-
-    def new_java_input(type)
-      new_bridge(:input, type, Java::InputPlugin, Bridge::InputPluginBridge)
-    end
-
-
-    def register_output(type, klass)
-      @registries[:output].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java input plugins is not implemented yet"
     end
 
     def new_output(type)
-      new_reverse_bridge(:output, type, Java::OutputPlugin, Bridge::OutputPluginReverseBridge)
-    end
-
-    def new_java_output(type)
-      new_bridge(:output, type, Java::OutputPlugin, Bridge::OutputPluginBridge)
-    end
-
-
-    def register_parser(type, klass)
-      @registries[:parser].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java output plugins is not implemented yet"
     end
 
     def new_parser(type)
-      new_reverse_bridge(:parser, type, Java::ParserPlugin, Bridge::ParserPluginReverseBridge)
-    end
-
-    def new_java_parser(type)
-      new_bridge(:parser, type, Java::ParserPlugin, Bridge::BasicParserPluginBridge)
-    end
-
-
-    def register_formatter(type, klass)
-      @registries[:formatter].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java parser plugins is not implemented yet"
     end
 
     def new_formatter(type)
-      new_reverse_bridge(:formatter, type, Java::FormatterPlugin, Bridge::FormatterPluginReverseBridge)
-    end
-
-    def new_java_formatter(type)
-      new_bridge(:formatter, type, Java::FormatterPlugin, Bridge::BasicFormatterPluginBridge)
-    end
-
-
-    def register_decoder(type, klass)
-      @registries[:decoder].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java formatter plugins is not implemented yet"
     end
 
     def new_decoder(type)
-      new_reverse_bridge(:decoder, type, Java::DecoderPlugin, Bridge::DecoderPluginReverseBridge)
-    end
-
-    def new_java_decoder(type)
-      new_bridge(:decoder, type, Java::DecoderPlugin, Bridge::DecoderPluginBridge)
-    end
-
-
-    def register_encoder(type, klass)
-      @registries[:encoder].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java decoder plugins is not implemented yet"
     end
 
     def new_encoder(type)
-      new_reverse_bridge(:encoder, type, Java::EncoderPlugin, Bridge::EncoderPluginReverseBridge)
-    end
-
-    def new_java_encoder(type)
-      new_bridge(:encoder, type, Java::EncoderPlugin, Bridge::EncoderPluginBridge)
-    end
-
-
-    def register_guess(type, klass)
-      @registries[:guess].register(type, klass)
+      raise NotImplementedError, "Reverse bridge for Ruby of Java encoder plugins is not implemented yet"
     end
 
     def new_guess(type)
-      new_reverse_bridge(:guess, type, Java::GuessPlugin, Bridge::GuessPluginReverseBridge)
+      plugin = new_plugin(:guess, type)
+      unless plugin.respond_to?(:guess_buffer)
+        plugin.extend(Bridge::GuessPluginReverseBridge)
+      end
+      plugin
+    end
+
+    def new_java_input(type)
+      new_plugin(:input, type)
+    end
+
+    def new_java_output(type)
+      new_plugin(:output, type)
+    end
+
+    def new_java_parser(type)
+      new_plugin(:parser, type)
+    end
+
+    def new_java_formatter(type)
+      new_plugin(:formatter, type)
+    end
+
+    def new_java_decoder(type)
+      new_plugin(:decoder, type)
+    end
+
+    def new_java_encoder(type)
+      new_plugin(:encoder, type)
     end
 
     def new_java_guess(type)
-      new_bridge(:guess, type, Java::GuessPlugin, Bridge::GuessPluginBridge)
+      new_plugin(:guess, type)
     end
 
     private
@@ -115,22 +116,12 @@ module QuickLoad
       @registries[category].lookup(type).new
     end
 
-    def new_bridge(category, type, iface, bridge)
-      plugin = new_plugin(category, type)
-      if plugin.is_a?(iface)
-        plugin
-      else
-        bridge.new(plugin)
+    def register_plugin(category, type, klass, iface, message=nil)
+      unless klass < iface
+        message ||= "Plugin #{klass} must implement #{iface}"
+        raise message
       end
-    end
-
-    def new_reverse_bridge(category, type, iface, reverse_bridge)
-      plugin = new_plugin(category, type)
-      if plugin.is_a?(iface)
-        reverse_bridge.new(plugin)
-      else
-        plugin
-      end
+      @registries[category].register(type, klass)
     end
   end
 

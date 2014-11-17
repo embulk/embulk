@@ -11,7 +11,7 @@ module QuickLoad::Plugin
       "\"", "'"
     ]
 
-    def run(config, sample_lines)
+    def guess_lines(config, sample_lines)
       delim = guess_delimiter(sample_lines)
       unless delim
         # not CSV file
