@@ -34,6 +34,7 @@ module QuickLoad::Java
   java_import 'org.quickload.record.DoubleType'
   java_import 'org.quickload.record.LongType'
   java_import 'org.quickload.record.Page'
+  java_import 'org.quickload.record.PageBuilder'
   java_import 'org.quickload.record.PageAllocator'
   java_import 'org.quickload.record.PageReader'
   java_import 'org.quickload.record.Pages'

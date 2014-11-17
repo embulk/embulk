@@ -1,10 +1,9 @@
 module QuickLoad::Plugin
-  require 'quickload/plugin/guess'
 
   class NewlineGuess < TextGuess
     Plugin.register_guess('newline', self)
 
-    def run(config, sample_text)
+    def guess_text(config, sample_text)
       cr_count = sample_text.count("\r")
       lf_count = sample_text.count("\n")
       crlf_count = sample_text.count("\r\n")

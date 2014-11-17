@@ -116,7 +116,7 @@ public class LineDecoder
                     CharBuffer slice = lineBuffer.slice();
                     lineBuffer.position(0);
                     lineBuffer.limit(slice.limit());
-                    lineBuffer.put(lineBuffer.slice());
+                    lineBuffer.put(slice);
                     lineBuffer.flip();
                 }
             }

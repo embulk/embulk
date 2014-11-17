@@ -71,6 +71,7 @@ public abstract class BasicParserPlugin
 
         List<FileBufferChannel> channels = new ArrayList<FileBufferChannel>();
         List<PluginThread> threads = new ArrayList<PluginThread>();
+        Throwable error = null;
         FileBufferInput nextInput = fileBufferInput;
         FileBufferChannel prevChannel = null;
         try {
@@ -96,7 +97,7 @@ public abstract class BasicParserPlugin
                             } finally {
                                 if (fdecInputChannel != null) {
                                     fdecInputChannel.completeConsumer();
-                                    fdecInputChannel.join();
+                                    fdecInputChannel.join();  // throws if channel is not fully consumed
                                 }
                             }
                         }
@@ -111,17 +112,22 @@ public abstract class BasicParserPlugin
             runBasicParser(proc,
                     task.getBasicParserTask(), processorIndex,
                     nextInput, pageOutput);
-        } finally {
-            try {
-                if (prevChannel != null) {
-                    prevChannel.completeConsumer();
-                    prevChannel.join();
-                }
-            } finally {
-                for (PluginThread thread : threads) {
-                    thread.joinAndThrow();
-                }
+
+            if (prevChannel != null) {
+                prevChannel.completeConsumer();
+                prevChannel.join();
             }
+            for (PluginThread thread : threads) {
+                thread.join();
+            }
+
+        } catch (Throwable ex) {
+            error = ex;
+        } finally {
+            if (prevChannel != null) {
+                prevChannel.completeConsumer();
+            }
+            PluginThread.joinAndThrowNested(threads, error);
         }
     }
 }

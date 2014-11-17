@@ -63,7 +63,16 @@ public class PreviewExecutor
         return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
     }
 
-    public PreviewResult preview(final ProcTask proc, ConfigSource config)
+    public PreviewResult preview(ProcTask proc, ConfigSource config)
+    {
+        try {
+            return doPreview(proc, config);
+        } catch (Throwable ex) {
+            throw PluginExecutors.propagePluginExceptions(ex);
+        }
+    }
+
+    private PreviewResult doPreview(final ProcTask proc, ConfigSource config)
     {
         final PreviewTask task = proc.loadConfig(config, PreviewTask.class);
         final InputPlugin input = newInputPlugin(proc, task);
@@ -73,8 +82,9 @@ public class PreviewExecutor
                 public List<Report> run(final TaskSource inputTaskSource)
                 {
                     List<Page> pages;
+                    PluginThread thread = null;
                     try (final PageChannel channel = proc.newPageChannel()) {
-                        PluginThread thread = proc.startPluginThread(new Runnable() {
+                        thread = proc.startPluginThread(new Runnable() {
                             public void run()
                             {
                                 try {
@@ -85,14 +95,12 @@ public class PreviewExecutor
                             }
                         });
 
-                        try {
-                            pages = getSample(channel.getInput(), task.getSampleRows());
-                            channel.completeConsumer();
-                            channel.join();
-                        } finally {
-                            // don't call joinAndThrow to ignore exceptions in InputPlugins
-                            thread.join();
-                        }
+                        pages = getSample(channel.getInput(), task.getSampleRows());
+                        channel.completeConsumer();
+                        channel.join();
+                    } finally {
+                        // don't call joinAndThrow to ignore exceptions in InputPlugins
+                        thread.join();
                     }
                     throw new PreviewedNoticeError(new PreviewResult(proc.getSchema(), pages));
                 }

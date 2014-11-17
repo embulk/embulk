@@ -2,8 +2,9 @@
 module QuickLoad
   module Bridge
     require 'json'
+    require 'quickload/config_hash'
 
-    class DataSourceBridge < Hash
+    class DataSourceBridge < ConfigHash
       def initialize(java_class)
         super()
         @java_class = java_class

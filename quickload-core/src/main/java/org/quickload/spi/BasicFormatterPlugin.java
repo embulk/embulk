@@ -71,6 +71,7 @@ public abstract class BasicFormatterPlugin
 
         List<FileBufferChannel> channels = new ArrayList<FileBufferChannel>();
         List<PluginThread> threads = new ArrayList<PluginThread>();
+        Throwable error = null;
         FileBufferOutput nextOutput = fileBufferOutput;
         FileBufferChannel prevChannel = null;
         try {
@@ -96,7 +97,7 @@ public abstract class BasicFormatterPlugin
                             } finally {
                                 if (fdecOutputChannel != null) {
                                     fdecOutputChannel.completeProducer();
-                                    fdecOutputChannel.join();
+                                    fdecOutputChannel.join();  // throws if channel is not fully consumed
                                 }
                             }
                         }
@@ -111,17 +112,22 @@ public abstract class BasicFormatterPlugin
             runBasicFormatter(proc,
                     task.getBasicFormatterTask(), processorIndex,
                     pageInput, nextOutput);
-        } finally {
-            try {
-                if (prevChannel != null) {
-                    prevChannel.completeProducer();
-                    prevChannel.join();
-                }
-            } finally {
-                for (PluginThread thread : threads) {
-                    thread.joinAndThrow();
-                }
+
+            if (prevChannel != null) {
+                prevChannel.completeProducer();
+                prevChannel.join();
             }
+            for (PluginThread thread : threads) {
+                thread.join();
+            }
+
+        } catch (Throwable ex) {
+            error = ex;
+        } finally {
+            if (prevChannel != null) {
+                prevChannel.completeProducer();
+            }
+            PluginThread.joinAndThrowNested(threads, error);
         }
     }
 }

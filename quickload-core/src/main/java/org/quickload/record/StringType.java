@@ -35,9 +35,14 @@ public class StringType
 
     static void setStringValue(PageBuilder builder, int columnIndex, String value)
     {
-        // TODO serialization mode?
-        int index = builder.addStringReference(value);
-        builder.setInt(columnIndex, index);
+        if (value == null) {
+            // this is unnecessary check by design but exists for buggy plugins
+            builder.setNull(columnIndex);
+        } else {
+            // TODO serialization mode?
+            int index = builder.addStringReference(value);
+            builder.setInt(columnIndex, index);
+        }
     }
 
     @Override
