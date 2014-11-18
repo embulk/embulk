@@ -5,13 +5,9 @@ import java.sql.Timestamp;
 public class TimestampWriter
         extends TypeWriter
 {
-    private final PageBuilder builder;
-    private final Column column;
-
     public TimestampWriter(PageBuilder builder, Column column)
     {
-        this.builder = builder;
-        this.column = column;
+        super(builder, column);
     }
 
     public void writeNull()

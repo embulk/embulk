@@ -5,13 +5,9 @@ import java.sql.Timestamp;
 public class TimestampReader
         extends TypeReader
 {
-    private final PageReader reader;
-    private final Column column;
-
     public TimestampReader(PageReader reader, Column column)
     {
-        this.reader = reader;
-        this.column = column;
+        super(reader, column);
     }
 
     @Override

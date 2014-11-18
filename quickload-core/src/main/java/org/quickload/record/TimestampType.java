@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 public class TimestampType
         extends AbstractType
 {
-    public static final TimestampType TIMESTAMP = new TimestampType();
+    static final TimestampType TIMESTAMP = new TimestampType();
 
     private TimestampType()
     {
