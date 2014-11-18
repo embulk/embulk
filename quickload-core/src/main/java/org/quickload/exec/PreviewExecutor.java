@@ -57,7 +57,7 @@ public class PreviewExecutor
 
     public PreviewResult run(ConfigSource config)
     {
-        ProcTask proc = PluginExecutors.newProcTask(injector, systemConfig);
+        ProcTask proc = PluginExecutors.newProcTask(injector, config);
         return preview(proc, config);
     }
 

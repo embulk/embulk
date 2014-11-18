@@ -160,7 +160,7 @@ public class LocalExecutor
 
     private NextConfig doRun(ConfigSource config)
     {
-        final ProcTask proc = PluginExecutors.newProcTask(injector, systemConfig);
+        final ProcTask proc = PluginExecutors.newProcTask(injector, config);
         final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
 
         final InputPlugin in = newInputPlugin(proc, task);

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.quickload.record.Schema;
 import org.quickload.config.ConfigException;
 
+// "exec:" config loaded by PluginExecutors.newProcTask
 public class ProcConfig
 {
     protected Schema schema;

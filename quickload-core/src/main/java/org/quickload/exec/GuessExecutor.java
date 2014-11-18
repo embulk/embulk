@@ -44,7 +44,7 @@ public class GuessExecutor
 
     public NextConfig run(ConfigSource config)
     {
-        ProcTask proc = PluginExecutors.newProcTask(injector, systemConfig);
+        ProcTask proc = PluginExecutors.newProcTask(injector, config);
         return guess(proc, config);
     }
 

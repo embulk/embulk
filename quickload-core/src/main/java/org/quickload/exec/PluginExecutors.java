@@ -47,12 +47,13 @@ public abstract class PluginExecutors
         return !(ex instanceof ChannelAsynchronousCloseException);
     }
 
-    public static ProcTask newProcTask(Injector injector, ConfigSource systemConfig)
+    public static ProcTask newProcTask(Injector injector, ConfigSource config)
     {
         ProcTask proc = new ProcTask(injector);
-        proc.setUniqueTransactionName(systemConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
-        // TODO get default time zone from systemConfig
-        // TODO get start time from systemConfig
+        ConfigSource procConfig = config.getObjectOrSetEmpty("proc");
+        proc.setUniqueTransactionName(procConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
+        // TODO get default time zone from config
+        // TODO get start time from config
         return proc;
     }
 }
