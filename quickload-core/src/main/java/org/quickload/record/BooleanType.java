@@ -1,24 +1,24 @@
 package org.quickload.record;
 
-public class StringType
+public class BooleanType
         extends AbstractType
 {
-    public static final StringType STRING = new StringType();
+    public static final BooleanType BOOLEAN = new BooleanType();
 
-    private StringType()
+    private BooleanType()
     {
-        super("string", String.class, 4);
+        super("boolean", boolean.class, 1);
     }
 
     @Override
     public TypeWriter newWriter(PageBuilder builder, Column column)
     {
-        return new StringWriter(builder, column);
+        return new BooleanWriter(builder, column);
     }
 
     @Override
     public TypeReader newReader(PageReader reader, Column column)
     {
-        return new StringReader(reader, column);
+        return new BooleanReader(reader, column);
     }
 }

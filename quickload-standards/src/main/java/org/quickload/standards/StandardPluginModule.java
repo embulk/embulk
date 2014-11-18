@@ -33,7 +33,6 @@ public class StandardPluginModule implements Module
 
         // formatter plugins
         binder.bind(FormatterPlugin.class).annotatedWith(Names.named("csv")).to(CsvFormatterPlugin.class);
-        binder.bind(FormatterPlugin.class).annotatedWith(Names.named("msgpack")).to(MessagePackFormatterPlugin.class);
 
         // file encoder plugins
         binder.bind(FileEncoderPlugin.class).annotatedWith(Names.named("gzip")).to(GzipFileEncoderPlugin.class);

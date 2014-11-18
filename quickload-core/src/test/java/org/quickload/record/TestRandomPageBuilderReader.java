@@ -2,6 +2,7 @@ package org.quickload.record;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import org.junit.After;
@@ -31,7 +32,6 @@ public class TestRandomPageBuilderReader
     protected Schema schema;
     protected RandomRecordGenerator gen;
     protected PageBuilder builder;
-    protected PageReader reader;
 
     @Before
     public void setup() throws Exception
@@ -39,13 +39,13 @@ public class TestRandomPageBuilderReader
         channel = new PageChannel(Integer.MAX_VALUE);
         schema = schemaGen.generate(60);
         builder = new PageBuilder(bufferManager, schema, channel.getOutput());
-        reader = new PageReader(schema);
     }
 
     @After
     public void destroy() throws Exception
     {
         channel.close();
+        builder.close();
     }
 
     @Test
@@ -53,27 +53,32 @@ public class TestRandomPageBuilderReader
         final List<Record> expected = ImmutableList.copyOf(recordGen.generate(schema, 5000));
 
         for (final Record record : expected) {
-            schema.produce(builder, new RecordProducer()
-            {
-                @Override
-                public void setLong(Column column, LongType.Setter setter)
+            builder.addRecord(new RecordWriter() {
+                public void writeBoolean(Column column, BooleanWriter writer)
                 {
-                    setter.setLong((Long) record.getObject(column.getIndex()));
+                    writer.write((boolean) record.getObject(column.getIndex()));
                 }
 
-                @Override
-                public void setDouble(Column column, DoubleType.Setter setter)
+                public void writeLong(Column column, LongWriter writer)
                 {
-                    setter.setDouble((Double) record.getObject(column.getIndex()));
+                    writer.write((long) record.getObject(column.getIndex()));
                 }
 
-                @Override
-                public void setString(Column column, StringType.Setter setter)
+                public void writeDouble(Column column, DoubleWriter writer)
                 {
-                    setter.setString((String) record.getObject(column.getIndex()));
+                    writer.write((double) record.getObject(column.getIndex()));
+                }
+
+                public void writeString(Column column, StringWriter writer)
+                {
+                    writer.write((String) record.getObject(column.getIndex()));
+                }
+
+                public void writeTimestamp(Column column, TimestampWriter writer)
+                {
+                    writer.write((Timestamp) record.getObject(column.getIndex()));
                 }
             });
-            builder.addRecord();
         }
         builder.flush();
         channel.completeProducer();

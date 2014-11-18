@@ -7,72 +7,18 @@ public class LongType
 
     private LongType()
     {
-    }
-
-    public String getName()
-    {
-        return "long";
+        super("long", long.class, 8);
     }
 
     @Override
-    public Class<?> getJavaType()
+    public TypeWriter newWriter(PageBuilder builder, Column column)
     {
-        return long.class;
+        return new LongWriter(builder, column);
     }
 
     @Override
-    public byte getFixedStorageSize()
+    public TypeReader newReader(PageReader reader, Column column)
     {
-        return (byte) 8;
-    }
-
-    @Override
-    public long getLong(RecordCursor cursor, int columnIndex)
-    {
-        return cursor.getLong(columnIndex);
-    }
-
-    @Override
-    public void setLong(PageBuilder builder, int columnIndex, long value)
-    {
-        builder.setLong(columnIndex, value);
-    }
-
-    @Override
-    public void consume(RecordCursor cursor, RecordConsumer consumer, Column column)
-    {
-        if (cursor.isNull(column.getIndex())) {
-            consumer.setNull(column);
-        } else {
-            consumer.setLong(column, cursor.getLong(column.getIndex()));
-        }
-    }
-
-    @Override
-    public void produce(PageBuilder builder, RecordProducer producer, Column column)
-    {
-        producer.setLong(column, new Setter(builder, column.getIndex()));
-    }
-
-    public static class Setter
-    {
-        private final PageBuilder builder;
-        private final int columnIndex;
-
-        private Setter(PageBuilder builder, int columnIndex)
-        {
-            this.builder = builder;
-            this.columnIndex = columnIndex;
-        }
-
-        public void setNull()
-        {
-            builder.setNull(columnIndex);
-        }
-
-        public void setLong(long value)
-        {
-            builder.setLong(columnIndex, value);
-        }
+        return new LongReader(reader, column);
     }
 }

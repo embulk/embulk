@@ -39,16 +39,6 @@ public class Column
         return type;
     }
 
-    public void consume(RecordCursor cursor, RecordConsumer consumer)
-    {
-        type.consume(cursor, consumer, this);
-    }
-
-    public void produce(PageBuilder builder, RecordProducer producer)
-    {
-        type.produce(builder, producer, this);
-    }
-
     @Override
     public boolean equals(Object obj)
     {

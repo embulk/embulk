@@ -60,20 +60,6 @@ public class Schema
         return total;
     }
 
-    public void consume(RecordCursor cursor, RecordConsumer consumer)
-    {
-        for(Column c : columns) {
-            c.consume(cursor, consumer);
-        }
-    }
-
-    public void produce(PageBuilder builder, RecordProducer producer)
-    {
-        for(Column c : columns) {
-            c.produce(builder, producer);
-        }
-    }
-
     @Override
     public boolean equals(Object obj)
     {

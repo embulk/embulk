@@ -4,10 +4,12 @@ import java.util.Arrays;
 import org.quickload.channel.PageOutput;
 
 public class PageBuilder
+        implements AutoCloseable
 {
     private final PageAllocator allocator;
     private final PageOutput output;
     private final int[] columnOffsets;
+    private final TypeWriter[] typeWriters;
     private final int fixedRecordSize;
 
     private Page page;
@@ -23,11 +25,67 @@ public class PageBuilder
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
         this.fixedRecordSize = Page.recordHeaderSize(schema) + Page.totalColumnSize(schema);
+        this.typeWriters = new TypeWriter[schema.getColumnCount()];
+        for (Column column : schema.getColumns()) {
+            typeWriters[column.getIndex()] = column.getType().newWriter(this, column);
+        }
 
         this.page = allocator.allocatePage(Page.PAGE_HEADER_SIZE + fixedRecordSize);
         this.count = 0;
         this.position = Page.PAGE_HEADER_SIZE;
         this.nextVariableLengthDataOffset = fixedRecordSize;
+    }
+
+    public void setNull(int columnIndex)
+    {
+        nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
+    }
+
+    // for TypeWriter
+    int getOffset(int columnIndex)
+    {
+        return position + columnOffsets[columnIndex];
+    }
+
+    // for TypeWriter
+    Page getPage()
+    {
+        return page;
+    }
+
+    //// TODO implement if useful
+    //public void setBooleanColumn(int columnIndex, boolean value)
+    //{
+    //    ((BooleanWriter) typeWriters[columnIndex]).write(value);
+    //}
+
+    //public void setLongColumn(int columnIndex, long value)
+    //{
+    //}
+
+    //public void setDoubleColumn(int columnIndex, double value)
+    //{
+    //}
+
+    //public void setStringColumn(int columnIndex, String value)
+    //{
+    //}
+
+    //public void setTimestampColumn(int columnIndex, Timestamp value)
+    //{
+    //}
+
+    public void visitColumns(RecordWriter visitor)
+    {
+        for (TypeWriter writer : typeWriters) {
+            writer.callRecordWriter(visitor);
+        }
+    }
+
+    public void addRecord(RecordWriter visitor)
+    {
+        visitColumns(visitor);
+        addRecord();
     }
 
     public void addRecord()
@@ -49,7 +107,7 @@ public class PageBuilder
 
     public void flush()
     {
-        if (page != null) {
+        if (page != null && count > 0) {
             // page header
             page.setInt(0, count);
             page.limit(position);
@@ -61,6 +119,27 @@ public class PageBuilder
         }
     }
 
+    @Override
+    public void close()
+    {
+        // similar to flush but doesn't allocate next page
+        if (page != null) {
+            if (count > 0) {
+                // page header
+                page.setInt(0, count);
+                page.limit(position);
+
+                output.add(page);
+            } else {
+                page.release();
+            }
+            page = null;
+            this.count = 0;
+            this.position = Page.PAGE_HEADER_SIZE;
+        }
+    }
+
+    /* TODO for variable-length types
     private void flushAndTakeOverRemaingData()
     {
         if (page != null) {
@@ -76,46 +155,6 @@ public class PageBuilder
 
             output.add(lastPage);
         }
-    }
-
-    public void setNull(int columnIndex)
-    {
-        nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
-    }
-
-    public void setByte(int columnIndex, byte value)
-    {
-        page.setByte(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setShort(int columnIndex, short value)
-    {
-        page.setShort(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setInt(int columnIndex, int value)
-    {
-        page.setInt(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setLong(int columnIndex, long value)
-    {
-        page.setLong(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setFloat(int columnIndex, float value)
-    {
-        page.setFloat(position + columnOffsets[columnIndex], value);
-    }
-
-    public void setDouble(int columnIndex, double value)
-    {
-        page.setDouble(position + columnOffsets[columnIndex], value);
-    }
-
-    public int addStringReference(String value)
-    {
-        return page.addStringReference(value);
     }
 
     public int getVariableLengthDataOffset()
@@ -201,4 +240,5 @@ public class PageBuilder
             offsetFromPosition += len;
         }
     }
+    */
 }

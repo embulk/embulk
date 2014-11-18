@@ -26,9 +26,11 @@ public class TypeManager
     private void regsterTypes()
     {
         // TODO inject?
-        fromStringToTypeMap.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
+        fromStringToTypeMap.put(BooleanType.BOOLEAN.getName(), BooleanType.BOOLEAN);
         fromStringToTypeMap.put(LongType.LONG.getName(), LongType.LONG);
+        fromStringToTypeMap.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
         fromStringToTypeMap.put(StringType.STRING.getName(), StringType.STRING);
+        fromStringToTypeMap.put(TimestampType.TIMESTAMP.getName(), TimestampType.TIMESTAMP);
     }
 
     public Type getType(String name)

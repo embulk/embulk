@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import java.sql.Timestamp;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
@@ -7,8 +8,7 @@ import org.quickload.config.ConfigSource;
 import org.quickload.record.Column;
 import org.quickload.record.Page;
 import org.quickload.record.PageReader;
-import org.quickload.record.RecordConsumer;
-import org.quickload.record.RecordCursor;
+import org.quickload.record.RecordReader;
 import org.quickload.record.Schema;
 import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
@@ -38,48 +38,54 @@ public class CsvFormatterPlugin
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
         PluginTask task = proc.loadTask(taskSource, PluginTask.class);
-
-        PageReader pageReader = new PageReader(proc.getSchema());
-        Schema schema = proc.getSchema();
-
         final LineEncoder encoder = new LineEncoder(proc.getBufferAllocator(), task, fileBufferOutput);
 
-        for (Page page : pageInput) {
-            try (RecordCursor recordCursor = pageReader.cursor(page)) {
-                while (recordCursor.next()) {
-                    schema.consume(recordCursor, new RecordConsumer() {
-                        public void setNull(Column column)
-                        {
-                            addDelimiter(column);
-                        }
+        try (PageReader reader = new PageReader(proc.getSchema(), pageInput)) {
+            while (reader.nextRecord()) {
+                reader.visitColumns(new RecordReader() {
+                    public void readNull(Column column)
+                    {
+                        addDelimiter(column);
+                    }
 
-                        public void setLong(Column column, long value)
-                        {
-                            addDelimiter(column);
-                            encoder.addText(Long.toString(value));
-                        }
+                    public void readBoolean(Column column, boolean value)
+                    {
+                        addDelimiter(column);
+                        encoder.addText(Boolean.toString(value));
+                    }
 
-                        public void setDouble(Column column, double value)
-                        {
-                            addDelimiter(column);
-                            encoder.addText(Double.toString(value));
-                        }
+                    public void readLong(Column column, long value)
+                    {
+                        addDelimiter(column);
+                        encoder.addText(Long.toString(value));
+                    }
 
-                        public void setString(Column column, String value)
-                        {
-                            addDelimiter(column);
-                            encoder.addText(value);
-                        }
+                    public void readDouble(Column column, double value)
+                    {
+                        addDelimiter(column);
+                        encoder.addText(Double.toString(value));
+                    }
 
-                        private void addDelimiter(Column column)
-                        {
-                            if (column.getIndex() != 0) {
-                                encoder.addText(",");
-                            }
+                    public void readString(Column column, String value)
+                    {
+                        addDelimiter(column);
+                        encoder.addText(value);
+                    }
+
+                    public void readTimestamp(Column column, Timestamp value)
+                    {
+                        addDelimiter(column);
+                        encoder.addText(value.toString());  // TODO fromatting timestamp needs timezone
+                    }
+
+                    private void addDelimiter(Column column)
+                    {
+                        if (column.getIndex() != 0) {
+                            encoder.addText(",");
                         }
-                    });
-                    encoder.addNewLine();
-                }
+                    }
+                });
+                encoder.addNewLine();
             }
         }
         encoder.flush();
