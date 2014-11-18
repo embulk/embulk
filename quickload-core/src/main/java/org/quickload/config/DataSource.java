@@ -316,6 +316,16 @@ public abstract class DataSource <T extends DataSource>
         }
     }
 
+    public static ArrayNode arrayNode()
+    {
+        return JsonNodeFactory.instance.arrayNode();
+    }
+
+    public static ObjectNode objectNode()
+    {
+        return JsonNodeFactory.instance.objectNode();
+    }
+
     private static void mergeJsonArray(ArrayNode src, ArrayNode other)
     {
         src.addAll(other);

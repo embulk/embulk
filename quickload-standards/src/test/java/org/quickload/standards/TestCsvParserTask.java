@@ -10,7 +10,10 @@ import org.quickload.config.ConfigException;
 import org.quickload.config.ConfigSource;
 import org.quickload.record.ColumnConfig;
 import org.quickload.record.SchemaConfig;
+import org.quickload.record.Types;
 import org.quickload.spi.ExecTask;
+import static org.quickload.config.DataSource.arrayNode;
+import static org.quickload.config.DataSource.objectNode;
 
 public class TestCsvParserTask
 {
@@ -27,8 +30,11 @@ public class TestCsvParserTask
     {
         ExecTask exec = new ExecTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
-                .set("columns", SchemaConfig.columns(js(),
-                        ColumnConfig.column(js(), "date_code", "string")));
+                .set("columns", arrayNode()
+                        .add(objectNode()
+                            .put("name", "date_code")
+                            .put("type", "string"))
+                        );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
         assertEquals("utf-8", task.getCharset());
@@ -57,8 +63,11 @@ public class TestCsvParserTask
                 .setBoolean("header_line", true)
                 .setString("delimiter", "\t")
                 .setString("quote", "\\")
-                .set("columns", SchemaConfig.columns(js(),
-                        ColumnConfig.column(js(), "date_code", "string")));
+                .set("columns", arrayNode()
+                        .add(objectNode()
+                            .put("name", "date_code")
+                            .put("type", "string"))
+                        );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
         assertEquals("utf-16", task.getCharset());

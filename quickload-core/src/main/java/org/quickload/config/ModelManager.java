@@ -86,4 +86,14 @@ public class ModelManager
             throw Throwables.propagate(ex);
         }
     }
+
+    public ConfigSource writeAsConfigSource(Object object)
+    {
+        String json = writeAsJsonString(object);
+        try {
+            return new ConfigSource((ObjectNode) objectMapper.readTree(json));
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
+    }
 }

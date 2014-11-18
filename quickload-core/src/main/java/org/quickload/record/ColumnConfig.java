@@ -66,12 +66,4 @@ public class ColumnConfig
         return String.format("ColumnConfig[%s, %s]",
                 getName(), getType());
     }
-
-    public static ObjectNode column(JsonNodeFactory js, String name, String type)
-    {
-        ObjectNode column = js.objectNode();
-        column.put("name", name);
-        column.put("type", type);
-        return column;
-    }
 }

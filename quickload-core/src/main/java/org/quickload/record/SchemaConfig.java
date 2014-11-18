@@ -1,7 +1,7 @@
 package org.quickload.record;
 
 import java.util.List;
-
+import java.util.Arrays;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -54,12 +54,14 @@ public class SchemaConfig
         return Objects.hashCode(columns);
     }
 
-    public static ArrayNode columns(JsonNodeFactory js, ObjectNode... columns)
-    {
-        ArrayNode array = js.arrayNode();
-        for (ObjectNode c : columns) {
-            array.add(c);
-        }
-        return array;
-    }
+    //public static ConfigSource schemaConfigSource(ColumnConfig... columns)
+    //{
+    //    return schemaConfigSource(ImmutableList.of(columns));
+    //}
+
+    //public static ConfigSource schemaConfigSource(List<ColumnConfig> columns)
+    //{
+    //    SchemaConfig config = new SchemaConfig(Arrays.asList(columns));
+    //    return new ModelManager().writeAsConfigSource(config);
+    //}
 }
