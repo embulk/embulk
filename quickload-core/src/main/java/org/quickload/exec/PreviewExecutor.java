@@ -30,11 +30,14 @@ import org.quickload.spi.ProcControl;
 public class PreviewExecutor
 {
     private final Injector injector;
+    private final ConfigSource systemConfig;
 
     @Inject
-    public PreviewExecutor(Injector injector)
+    public PreviewExecutor(Injector injector,
+            @ForSystemConfig ConfigSource systemConfig)
     {
         this.injector = injector;
+        this.systemConfig = systemConfig;
     }
 
     public interface PreviewTask
@@ -54,7 +57,7 @@ public class PreviewExecutor
 
     public PreviewResult run(ConfigSource config)
     {
-        ProcTask proc = new ProcTask(injector);
+        ProcTask proc = PluginExecutors.newProcTask(injector, config);
         return preview(proc, config);
     }
 
