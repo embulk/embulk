@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import org.quickload.GuiceBinder;
+import org.quickload.TestRuntimeBinder;
 import org.quickload.TestRuntimeModule;
 import org.quickload.config.ConfigException;
 import org.quickload.config.ConfigSource;
@@ -17,18 +17,13 @@ import static org.quickload.config.DataSource.objectNode;
 
 public class TestCsvParserTask
 {
-    private static JsonNodeFactory js()
-    {
-        return JsonNodeFactory.instance;
-    }
-
     @Rule
-    public GuiceBinder binder = new GuiceBinder(new TestRuntimeModule());
+    public TestRuntimeBinder binder = new TestRuntimeBinder();
 
     @Test
     public void checkDefaultValues()
     {
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource()
                 .set("columns", arrayNode()
                         .add(objectNode()
@@ -47,7 +42,7 @@ public class TestCsvParserTask
     @Test(expected = ConfigException.class)
     public void checkColumnsRequired()
     {
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource();
 
         exec.loadConfig(config, CsvParserTask.class);
@@ -56,7 +51,7 @@ public class TestCsvParserTask
     @Test
     public void checkLoadConfig()
     {
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource()
                 .setString("charset", "utf-16")
                 .setString("newline", "LF")
