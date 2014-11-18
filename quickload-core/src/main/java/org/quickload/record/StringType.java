@@ -3,7 +3,7 @@ package org.quickload.record;
 public class StringType
         extends AbstractType
 {
-    public static final StringType STRING = new StringType();
+    static final StringType STRING = new StringType();
 
     private StringType()
     {

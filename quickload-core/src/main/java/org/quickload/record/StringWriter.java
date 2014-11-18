@@ -3,13 +3,9 @@ package org.quickload.record;
 public class StringWriter
         extends TypeWriter
 {
-    private final PageBuilder builder;
-    private final Column column;
-
     public StringWriter(PageBuilder builder, Column column)
     {
-        this.builder = builder;
-        this.column = column;
+        super(builder, column);
     }
 
     public void writeNull()

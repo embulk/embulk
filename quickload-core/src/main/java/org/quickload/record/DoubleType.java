@@ -3,7 +3,7 @@ package org.quickload.record;
 public class DoubleType
         extends AbstractType
 {
-    public static final DoubleType DOUBLE = new DoubleType();
+    static final DoubleType DOUBLE = new DoubleType();
 
     private DoubleType()
     {

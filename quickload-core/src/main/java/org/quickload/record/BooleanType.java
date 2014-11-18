@@ -3,7 +3,7 @@ package org.quickload.record;
 public class BooleanType
         extends AbstractType
 {
-    public static final BooleanType BOOLEAN = new BooleanType();
+    static final BooleanType BOOLEAN = new BooleanType();
 
     private BooleanType()
     {

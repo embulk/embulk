@@ -3,13 +3,9 @@ package org.quickload.record;
 public class DoubleReader
         extends TypeReader
 {
-    private final PageReader reader;
-    private final Column column;
-
     public DoubleReader(PageReader reader, Column column)
     {
-        this.reader = reader;
-        this.column = column;
+        super(reader, column);
     }
 
     @Override

@@ -3,7 +3,7 @@ package org.quickload.record;
 public class LongType
         extends AbstractType
 {
-    public static final LongType LONG = new LongType();
+    static final LongType LONG = new LongType();
 
     private LongType()
     {
