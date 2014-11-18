@@ -3,49 +3,32 @@ package org.quickload.record;
 public abstract class AbstractType
         implements Type
 {
-    public boolean isNull(RecordCursor cursor, int columnIndex)
+    private final String name;
+    private final Class<?> javaType;
+    private byte fixedStorageSize;
+
+    protected AbstractType(String name, Class<?> javaType, int fixedStorageSize)
     {
-        return cursor.isNull(columnIndex);
+        this.name = name;
+        this.javaType = javaType;
+        this.fixedStorageSize = (byte) fixedStorageSize;
     }
 
-    public void setNull(PageBuilder builder, int columnIndex)
+    @Override
+    public String getName()
     {
-        builder.setNull(columnIndex);
+        return name;
     }
 
-    public long getLong(RecordCursor cursor, int columnIndex)
+    @Override
+    public Class<?> getJavaType()
     {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
+        return javaType;
     }
 
-    public double getDouble(RecordCursor cursor, int columnIndex)
+    @Override
+    public byte getFixedStorageSize()
     {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
-    }
-
-    public String getString(RecordCursor cursor, int columnIndex)
-    {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
-    }
-
-    public void setLong(PageBuilder builder, int columnIndex, long value)
-    {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
-    }
-
-    public void setDouble(PageBuilder builder, int columnIndex, double value)
-    {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
-    }
-
-    public void setString(PageBuilder builder, int columnIndex, String value)
-    {
-        // TODO exception class
-        throw new RuntimeException("type mismatch");
+        return fixedStorageSize;
     }
 }

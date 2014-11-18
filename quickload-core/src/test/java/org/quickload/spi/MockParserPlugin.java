@@ -2,6 +2,7 @@ package org.quickload.spi;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.sql.Timestamp;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
@@ -10,11 +11,13 @@ import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.record.Schema;
 import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordProducer;
+import org.quickload.record.RecordWriter;
 import org.quickload.record.Column;
-import org.quickload.record.LongType;
-import org.quickload.record.DoubleType;
-import org.quickload.record.StringType;
+import org.quickload.record.BooleanWriter;
+import org.quickload.record.LongWriter;
+import org.quickload.record.DoubleWriter;
+import org.quickload.record.StringWriter;
+import org.quickload.record.TimestampWriter;
 import org.quickload.record.Record;
 
 public class MockParserPlugin
@@ -70,25 +73,35 @@ public class MockParserPlugin
             }
             files.add(buffers);
         }
-        PageBuilder builder = new PageBuilder(proc.getPageAllocator(), schema, pageOutput);
-        for (final Record record : records) {
-            schema.produce(builder, new RecordProducer() {
-                public void setLong(Column column, LongType.Setter setter)
-                {
-                    setter.setLong((long) record.getObject(column.getIndex()));
-                }
+        try (PageBuilder builder = new PageBuilder(proc.getPageAllocator(), schema, pageOutput)) {
+            for (final Record record : records) {
+                builder.addRecord(new RecordWriter() {
+                    public void writeBoolean(Column column, BooleanWriter writer)
+                    {
+                        writer.write((boolean) record.getObject(column.getIndex()));
+                    }
 
-                public void setDouble(Column column, DoubleType.Setter setter)
-                {
-                    setter.setDouble((double) record.getObject(column.getIndex()));
-                }
+                    public void writeLong(Column column, LongWriter writer)
+                    {
+                        writer.write((long) record.getObject(column.getIndex()));
+                    }
 
-                public void setString(Column column, StringType.Setter setter)
-                {
-                    setter.setString((String) record.getObject(column.getIndex()));
-                }
-            });
+                    public void writeDouble(Column column, DoubleWriter writer)
+                    {
+                        writer.write((double) record.getObject(column.getIndex()));
+                    }
+
+                    public void writeString(Column column, StringWriter writer)
+                    {
+                        writer.write((String) record.getObject(column.getIndex()));
+                    }
+
+                    public void writeTimestamp(Column column, TimestampWriter writer)
+                    {
+                        writer.write((Timestamp) record.getObject(column.getIndex()));
+                    }
+                });
+            }
         }
-        builder.flush();
     }
 }

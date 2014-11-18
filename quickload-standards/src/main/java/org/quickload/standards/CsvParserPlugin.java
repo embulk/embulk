@@ -1,16 +1,20 @@
 package org.quickload.standards;
 
+import java.sql.Timestamp;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
 import org.quickload.record.Column;
-import org.quickload.record.DoubleType;
-import org.quickload.record.LongType;
 import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordProducer;
+import org.quickload.record.RecordWriter;
 import org.quickload.record.Schema;
-import org.quickload.record.StringType;
+import org.quickload.record.BooleanWriter;
+import org.quickload.record.LongWriter;
+import org.quickload.record.DoubleWriter;
+import org.quickload.record.StringWriter;
+import org.quickload.record.TimestampWriter;
+import org.quickload.record.StringWriter;
 import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.LineDecoder;
 import org.quickload.spi.ProcTask;
@@ -32,43 +36,54 @@ public class CsvParserPlugin extends BasicParserPlugin {
         Schema schema = proc.getSchema();
         CsvParserTask task = proc.loadTask(taskSource, CsvParserTask.class);
         CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
-        PageBuilder builder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput);
+        try (PageBuilder builder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput)) {
+            while (fileBufferInput.nextFile()) {
+                boolean skipHeaderLine = task.getHeaderLine();
+                for (final List<String> record : tokenizer) {
+                    if (record.size() != schema.getColumns().size()) {
+                        throw new RuntimeException("not match"); // TODO fix the error handling
+                    }
 
-        while (fileBufferInput.nextFile()) {
-            boolean skipHeaderLine = task.getHeaderLine();
-            for (final List<String> record : tokenizer) {
-                if (record.size() != schema.getColumns().size()) {
-                    throw new RuntimeException("not match"); // TODO fix the error handling
+                    if (skipHeaderLine) {
+                        skipHeaderLine = false;
+                        continue;
+                    }
+
+                    builder.addRecord(new RecordWriter() {
+                        // TODO null column string
+                        public void writeBoolean(Column column, BooleanWriter writer)
+                        {
+                            writer.write(Boolean.parseBoolean(record.get(column.getIndex())));
+                        }
+
+                        public void writeLong(Column column, LongWriter writer)
+                        {
+                            writer.write(Long.parseLong(record.get(column.getIndex())));
+                        }
+
+                        public void writeDouble(Column column, DoubleWriter writer)
+                        {
+                            writer.write(Double.parseDouble(record.get(column.getIndex())));
+                        }
+
+                        public void writeString(Column column, StringWriter writer)
+                        {
+                            writer.write(record.get(column.getIndex()));
+                        }
+
+                        public void writeTimestamp(Column column, TimestampWriter writer)
+                        {
+                            // TODO timestamp parsing needs strptime format and default time zone
+                            long msec = Long.parseLong(record.get(column.getIndex()));
+                            int nsec = 0;
+                            Timestamp value = new Timestamp(msec);
+                            value.setNanos(nsec);
+                            writer.write(value);
+                        }
+                    });
+                    builder.addRecord();
                 }
-
-                if (skipHeaderLine) {
-                    skipHeaderLine = false;
-                    continue;
-                }
-
-                schema.produce(builder, new RecordProducer()
-                {
-                    @Override
-                    public void setLong(Column column, LongType.Setter setter)
-                    {
-                        setter.setLong(Long.parseLong(record.get(column.getIndex())));
-                    }
-
-                    @Override
-                    public void setDouble(Column column, DoubleType.Setter setter)
-                    {
-                        setter.setDouble(Double.parseDouble(record.get(column.getIndex())));
-                    }
-
-                    @Override
-                    public void setString(Column column, StringType.Setter setter)
-                    {
-                        setter.setString(record.get(column.getIndex()));
-                    }
-                });
-                builder.addRecord();
             }
         }
-        builder.flush();
     }
 }
