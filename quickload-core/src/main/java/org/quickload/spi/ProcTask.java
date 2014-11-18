@@ -9,7 +9,6 @@ import org.quickload.config.ModelManager;
 import org.quickload.plugin.PluginManager;
 import org.quickload.exec.BufferManager;
 import org.quickload.buffer.BufferAllocator;
-import org.quickload.record.Schema;
 import org.quickload.record.PageAllocator;
 import org.quickload.channel.BufferChannel;
 import org.quickload.channel.FileBufferChannel;
@@ -32,7 +31,7 @@ public class ProcTask
         this.bufferManager = injector.getInstance(BufferManager.class);
     }
 
-    private ProcTask(Injector injector, ProcConfig procConfig)
+    public ProcTask(Injector injector, ProcConfig procConfig)
     {
         this(injector);
         set(procConfig);

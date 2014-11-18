@@ -9,6 +9,7 @@ public class ProcConfig
 {
     protected Schema schema;
     protected int processorCount;
+    protected String uniqueTransactionName;
 
     public ProcConfig()
     {
@@ -17,10 +18,12 @@ public class ProcConfig
     @JsonCreator
     public void ProcConfig(
             @JsonProperty("schema") Schema schema,
-            @JsonProperty("processorCount") int processorCount)
+            @JsonProperty("processorCount") int processorCount,
+            @JsonProperty("uniqueTransactionName") String uniqueTransactionName)
     {
         this.schema = schema;
         this.processorCount = processorCount;
+        this.uniqueTransactionName = uniqueTransactionName;
     }
 
     // for ProcTask
@@ -50,6 +53,17 @@ public class ProcConfig
     public void setProcessorCount(int processorCount)
     {
         this.processorCount = processorCount;
+    }
+
+    @JsonProperty("uniqueTransactionName")
+    public String getUniqueTransactionName()
+    {
+        return uniqueTransactionName;
+    }
+
+    public void setUniqueTransactionName(String uniqueTransactionName)
+    {
+        this.uniqueTransactionName = uniqueTransactionName;
     }
 
     public void validate()

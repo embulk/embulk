@@ -32,16 +32,19 @@ import org.quickload.spi.ProcControl;
 public class GuessExecutor
 {
     private final Injector injector;
+    private final ConfigSource systemConfig;
 
     @Inject
-    public GuessExecutor(Injector injector)
+    public GuessExecutor(Injector injector,
+            @ForSystemConfig ConfigSource systemConfig)
     {
         this.injector = injector;
+        this.systemConfig = systemConfig;
     }
 
     public NextConfig run(ConfigSource config)
     {
-        ProcTask proc = new ProcTask(injector);
+        ProcTask proc = PluginExecutors.newProcTask(injector, systemConfig);
         return guess(proc, config);
     }
 

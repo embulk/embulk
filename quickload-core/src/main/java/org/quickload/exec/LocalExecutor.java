@@ -27,6 +27,7 @@ import org.quickload.channel.PageChannel;
 public class LocalExecutor
 {
     private final Injector injector;
+    private final ConfigSource systemConfig;
 
     public interface ExecutorTask
             extends Task
@@ -48,9 +49,11 @@ public class LocalExecutor
     }
 
     @Inject
-    public LocalExecutor(Injector injector)
+    public LocalExecutor(Injector injector,
+            @ForSystemConfig ConfigSource systemConfig)
     {
         this.injector = injector;
+        this.systemConfig = systemConfig;
     }
 
     private static class ControlContext
@@ -157,13 +160,15 @@ public class LocalExecutor
 
     private NextConfig doRun(ConfigSource config)
     {
-        final ProcTask proc = new ProcTask(injector);
+        final ProcTask proc = PluginExecutors.newProcTask(injector, systemConfig);
         final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
 
         final InputPlugin in = newInputPlugin(proc, task);
         final OutputPlugin out = newOutputPlugin(proc, task);
 
         final ControlContext ctrlContext = new ControlContext();
+
+        // TODO create and use ProcTaskBuilder to set default values
 
         NextConfig inputNextConfig = in.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
             public List<Report> run(final TaskSource inputTask)

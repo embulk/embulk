@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import org.quickload.config.ConfigSource;
+import org.quickload.exec.SystemConfigModule;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.ExtensionServiceLoaderModule;
 import org.quickload.plugin.BuiltinPluginSourceModule;
@@ -18,6 +19,7 @@ public class QuickLoadService
     public QuickLoadService(ConfigSource systemConfig)
     {
         ImmutableList.Builder<Module> modules = ImmutableList.builder();
+        modules.add(new SystemConfigModule(systemConfig));
         modules.add(new ExecModule());
         modules.add(new ExtensionServiceLoaderModule());
         modules.add(new BuiltinPluginSourceModule());

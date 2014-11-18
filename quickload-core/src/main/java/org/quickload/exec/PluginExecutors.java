@@ -5,7 +5,10 @@ import java.util.Queue;
 import java.util.LinkedList;
 import java.util.ArrayDeque;
 import com.google.common.base.Throwables;
+import com.google.inject.Injector;
+import org.quickload.config.ConfigSource;
 import org.quickload.channel.ChannelAsynchronousCloseException;
+import org.quickload.spi.ProcTask;
 
 public abstract class PluginExecutors
 {
@@ -42,5 +45,14 @@ public abstract class PluginExecutors
     private static boolean isHighPriorityException(Throwable ex)
     {
         return !(ex instanceof ChannelAsynchronousCloseException);
+    }
+
+    public static ProcTask newProcTask(Injector injector, ConfigSource systemConfig)
+    {
+        ProcTask proc = new ProcTask(injector);
+        proc.setUniqueTransactionName(systemConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
+        // TODO get default time zone from systemConfig
+        // TODO get start time from systemConfig
+        return proc;
     }
 }
