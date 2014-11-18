@@ -16,27 +16,15 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 public abstract class DataSource <T extends DataSource>
 {
     protected final ObjectNode data;
-    protected final FieldMapper fieldMapper;
 
     public DataSource()
     {
         this(new ObjectNode(JsonNodeFactory.instance));
     }
 
-    public DataSource(ObjectNode data)
-    {
-        this(data, null);
-    }
-
-    protected DataSource(FieldMapper fieldMapper)
-    {
-        this(new ObjectNode(JsonNodeFactory.instance), fieldMapper);
-    }
-
-    protected DataSource(ObjectNode data, FieldMapper fieldMapper)
+    protected DataSource(ObjectNode data)
     {
         this.data = data;
-        this.fieldMapper = fieldMapper;
     }
 
     protected abstract T newInstance(ObjectNode data);
@@ -59,17 +47,8 @@ public abstract class DataSource <T extends DataSource>
         return (ObjectNode) json;
     }
 
-    public <T extends Task> T loadModel(ModelManager modelManager, Class<T> iface)
-    {
-        if (fieldMapper == null) {
-            return modelManager.readTask(data, iface);
-        } else {
-            return modelManager.readTask(data, iface, fieldMapper);
-        }
-    }
-
     /**
-     * visible for DataSourceSerDe
+     * visible for DataSourceSerDe, ModelManager
      */
     ObjectNode getSource()
     {

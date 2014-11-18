@@ -37,23 +37,19 @@ public class ProcTask
         set(procConfig);
     }
 
-    public <T extends Task> T loadConfig(ConfigSource config, Class<T> iface)
+    public <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)
     {
-        T t = config.loadModel(modelManager, iface);
-        t.validate();
-        return t;
+        return modelManager.readTaskConfig(config, taskType);
     }
 
-    public <T extends Task> T loadTask(TaskSource taskSource, Class<T> iface)
+    public <T extends Task> T loadTask(TaskSource taskSource, Class<T> taskType)
     {
-        return taskSource.loadModel(modelManager, iface);
+        return modelManager.readObject(taskSource, taskType);
     }
 
     public TaskSource dumpTask(Task task)
     {
-        return modelManager.readJsonObject(
-                modelManager.writeJsonObjectNode(task),
-                TaskSource.class);
+        return modelManager.writeAsTaskSource(task);
     }
 
     public PageAllocator getPageAllocator()

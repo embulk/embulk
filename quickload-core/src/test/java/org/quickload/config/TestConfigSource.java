@@ -75,7 +75,7 @@ public class TestConfigSource
         config.setLong("long", Long.MAX_VALUE);
         config.setString("string", "sf");
 
-        TypeFields task = config.loadModel(modelManager, TypeFields.class);
+        TypeFields task = modelManager.readTaskConfig(config, TypeFields.class);
         assertEquals(true, task.getBoolean());
         assertEquals(3, task.getInt());
         assertEquals(0.2, task.getDouble(), 0.001);
@@ -95,7 +95,7 @@ public class TestConfigSource
     public void testValidatePasses()
     {
         config.setString("valid", "data");
-        ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
+        ValidateFields task = modelManager.readTaskConfig(config, ValidateFields.class);
         task.validate();
         assertEquals("data", task.getValid());
     }
@@ -103,7 +103,7 @@ public class TestConfigSource
     @Test(expected = ConfigException.class)
     public void testDefaultValueValidateFails()
     {
-        ValidateFields task = config.loadModel(modelManager, ValidateFields.class);
+        ValidateFields task = modelManager.readTaskConfig(config, ValidateFields.class);
         task.validate();
     }
 

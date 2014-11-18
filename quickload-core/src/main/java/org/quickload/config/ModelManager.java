@@ -8,9 +8,10 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
-import com.google.inject.Inject;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
+import com.google.inject.Inject;
+import com.google.common.base.Throwables;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -18,102 +19,123 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.deser.Deserializers;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+import com.fasterxml.jackson.databind.cfg.ContextAttributes;
 
 public class ModelManager
 {
     private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper2;
     private final TaskValidator taskValidator;
 
     @Inject
     public ModelManager()
     {
         this.objectMapper = new ObjectMapper().findAndRegisterModules();
+        this.objectMapper2 = new ObjectMapper().findAndRegisterModules();
         this.taskValidator = new TaskValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
         SimpleModule modelModule = new SimpleModule();
+        //modelModule.addDeserializer(Task.class, new TaskDeserializer());
         modelModule.addSerializer(Task.class, new TaskSerializer());
         addObjectMapperModule(modelModule);
+        addObjectMapperModule(new TaskDeserializerModule());
     }
 
     // TODO inject by Set<Module> because this is not thread-safe?
     public void addObjectMapperModule(Module module)
     {
         objectMapper.registerModule(module);
+        objectMapper2.registerModule(module);
     }
 
-    public <T extends Task> T readTask(ObjectNode json, Class<T> iface)
+    public <T> T readObject(DataSource<?> json, Class<T> valueType)
     {
-        return readTask(json.traverse(), iface);
+        return readObject(json.getSource().traverse(), valueType);
     }
 
-    public <T extends Task> T readTask(JsonParser json, Class<T> iface)
-    {
-        return readTask(json, iface, null);
-    }
-
-    public <T extends Task> T readTask(ObjectNode json, Class<T> iface,
-            FieldMapper fieldMapper)
-    {
-        return readTask(json.traverse(), iface, fieldMapper);
-    }
-
-    public <T extends Task> T readTask(JsonParser json, Class<T> iface,
-            FieldMapper fieldMapper)
+    public <T> T readObject(JsonParser json, Class<T> valueType)
     {
         try {
-            return (T) new TaskDeserializer(iface, fieldMapper).deserialize(
-                    json, objectMapper.getDeserializationContext());
-        } catch (JsonMappingException ex) {
-            throw new ConfigException(ex);
-        } catch (IOException ex) {
-            // TODO exception class
-            throw new RuntimeException(ex);
+            ContextAttributes attr = ContextAttributes.getEmpty().withSharedAttribute("org.quickload.config.FieldMapper", null);
+            return objectMapper.reader(attr).readValue(json, valueType);
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 
-    public <T> T readJsonObject(ObjectNode json, Class<T> klass)
+    public <T extends Task> T readTaskConfig(DataSource<?> json, Class<T> taskType)
     {
-        return readJsonObject(json.traverse(), klass);
+        return readTaskConfig(json.getSource().traverse(), taskType);
     }
 
-    public <T> T readJsonObject(JsonParser json, Class<T> klass)
+    public <T extends Task> T readTaskConfig(JsonParser json, Class<T> taskType)
     {
+        T t;
         try {
-            return objectMapper.readValue(json, klass);
-        } catch (JsonMappingException ex) {
+            ContextAttributes attr = ContextAttributes.getEmpty().withSharedAttribute("org.quickload.config.FieldMapper", configFieldMapper);
+            t = objectMapper2.reader(attr).readValue(json, taskType);
+        } catch (Exception ex) {
             throw new ConfigException(ex);
-        } catch (IOException ex) {
-            // TODO exception class
-            throw new RuntimeException(ex);
         }
+        t.validate();
+        return t;
     }
 
-    public <T> String writeJson(T object)
+    private static final FieldMapper configFieldMapper = new FieldMapper() {
+        @Override
+        public Optional<String> getJsonKey(Method getterMethod)
+        {
+            Config a = getterMethod.getAnnotation(Config.class);
+            if (a != null) {
+                return Optional.of(a.value());
+            } else {
+                return Optional.absent();
+            }
+        }
+
+        @Override
+        public Optional<String> getDefaultJsonString(Method getterMethod)
+        {
+            ConfigDefault a = getterMethod.getAnnotation(ConfigDefault.class);
+            if (a != null && !a.value().isEmpty()) {
+                return Optional.of(a.value());
+            } else {
+                return Optional.absent();
+            }
+        }
+    };
+
+    public String writeAsJsonString(Object object)
     {
         try {
             return objectMapper.writeValueAsString(object);
-        } catch (IOException ex) {
-            // TODO exception class
-            throw new RuntimeException(ex);
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 
-    public <T> ObjectNode writeJsonObjectNode(T object)
+    public TaskSource writeAsTaskSource(Object object)
     {
-        String json = writeJson(object);
+        String json = writeAsJsonString(object);
         try {
-            return (ObjectNode) objectMapper.readTree(json);
-        } catch (IOException ex) {
-            // TODO exception class
-            throw new RuntimeException(ex);
+            return new TaskSource((ObjectNode) objectMapper.readTree(json));
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 
@@ -176,11 +198,54 @@ public class ModelManager
         return builder.build();
     }
 
+    class TaskDeserializers
+            extends Deserializers.Base
+    {
+        @Override
+        public JsonDeserializer<?> findBeanDeserializer(JavaType type, DeserializationConfig config,
+                BeanDescription beanDesc) throws JsonMappingException
+        {
+            Class<?> raw = type.getRawClass();
+            if (Task.class.isAssignableFrom(raw)) {
+                return new TaskDeserializer(raw);
+            }
+            return super.findBeanDeserializer(type, config, beanDesc);
+        }
+    }
+
+    class TaskDeserializerModule
+        extends Module // can't use just SimpleModule, due to generic types
+    {
+        @Override
+        public String getModuleName()
+        {
+            return "quickload.TaskDeserializerModule";
+        }
+
+        @Override
+        public Version version()
+        {
+            return Version.unknownVersion();
+        }
+
+        @Override
+        public void setupModule(SetupContext context)
+        {
+            context.addDeserializers(new TaskDeserializers());
+        }
+    }
+
     class TaskDeserializer <T>
             extends JsonDeserializer<T>
+            implements ContextualDeserializer
     {
-        private final Class<T> iface;
+        private final Class<?> iface;
         private final Map<String, FieldEntry> mappings;
+
+        public TaskDeserializer(Class<T> iface)
+        {
+            this(iface, null);
+        }
 
         public TaskDeserializer(Class<T> iface, FieldMapper fieldMapper)
         {
@@ -195,11 +260,16 @@ public class ModelManager
             HashMap<String, FieldEntry> unusedMappings = new HashMap<>(mappings);
 
             JsonToken current;
-            current = jp.nextToken();
-            if (current != JsonToken.START_OBJECT) {
-                throw new JsonMappingException("Expected object to deserialize "+iface, jp.getCurrentLocation());
+            //current = jp.nextToken();
+            current = jp.getCurrentToken();
+            if (current == JsonToken.START_OBJECT) {
+                current = jp.nextToken();
             }
-            while (jp.nextToken() != JsonToken.END_OBJECT) {
+            //if (current != JsonToken.START_OBJECT) {
+            //    throw new JsonMappingException("Expected object to deserialize "+iface, jp.getCurrentLocation());
+            //}
+            //while (jp.nextToken() != JsonToken.END_OBJECT) {
+            for (; current != JsonToken.END_OBJECT; current = jp.nextToken()) {
                 String key = jp.getCurrentName();
                 current = jp.nextToken();
                 FieldEntry field = mappings.get(key);
@@ -227,6 +297,13 @@ public class ModelManager
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] { iface },
                     new TaskInvocationHandler(iface, taskValidator, objects));
+        }
+
+        @Override
+        public JsonDeserializer<?> createContextual(DeserializationContext context, BeanProperty property) throws JsonMappingException
+        {
+            FieldMapper mapper = (FieldMapper) context.getAttribute("org.quickload.config.FieldMapper");
+            return new TaskDeserializer(iface, mapper);
         }
     }
 
