@@ -10,7 +10,7 @@ import org.quickload.config.ConfigException;
 import org.quickload.config.ConfigSource;
 import org.quickload.record.ColumnConfig;
 import org.quickload.record.SchemaConfig;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 
 public class TestCsvParserTask
 {
@@ -25,12 +25,12 @@ public class TestCsvParserTask
     @Test
     public void checkDefaultValues()
     {
-        ProcTask proc = new ProcTask(binder.getInjector());
+        ExecTask exec = new ExecTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
                 .set("columns", SchemaConfig.columns(js(),
                         ColumnConfig.column(js(), "date_code", "string")));
 
-        CsvParserTask task = proc.loadConfig(config, CsvParserTask.class);
+        CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
         assertEquals("utf-8", task.getCharset());
         assertEquals("CRLF", task.getNewline());
         assertEquals(false, task.getHeaderLine());
@@ -41,16 +41,16 @@ public class TestCsvParserTask
     @Test(expected = ConfigException.class)
     public void checkColumnsRequired()
     {
-        ProcTask proc = new ProcTask(binder.getInjector());
+        ExecTask exec = new ExecTask(binder.getInjector());
         ConfigSource config = new ConfigSource();
 
-        proc.loadConfig(config, CsvParserTask.class);
+        exec.loadConfig(config, CsvParserTask.class);
     }
 
     @Test
     public void checkLoadConfig()
     {
-        ProcTask proc = new ProcTask(binder.getInjector());
+        ExecTask exec = new ExecTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
                 .setString("charset", "utf-16")
                 .setString("newline", "LF")
@@ -60,7 +60,7 @@ public class TestCsvParserTask
                 .set("columns", SchemaConfig.columns(js(),
                         ColumnConfig.column(js(), "date_code", "string")));
 
-        CsvParserTask task = proc.loadConfig(config, CsvParserTask.class);
+        CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
         assertEquals("utf-16", task.getCharset());
         assertEquals("LF", task.getNewline());
         assertEquals(true, task.getHeaderLine());
