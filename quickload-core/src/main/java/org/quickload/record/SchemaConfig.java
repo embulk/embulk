@@ -1,6 +1,10 @@
 package org.quickload.record;
 
 import java.util.List;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -48,5 +52,14 @@ public class SchemaConfig
     public int hashCode()
     {
         return Objects.hashCode(columns);
+    }
+
+    public static ArrayNode columns(JsonNodeFactory js, ObjectNode... columns)
+    {
+        ArrayNode array = js.arrayNode();
+        for (ObjectNode c : columns) {
+            array.add(c);
+        }
+        return array;
     }
 }
