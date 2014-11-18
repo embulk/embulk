@@ -6,6 +6,6 @@ import org.quickload.buffer.Buffer;
 
 public interface GuessPlugin
 {
-    public NextConfig guess(ProcTask proc, ConfigSource config,
+    public NextConfig guess(ExecTask exec, ConfigSource config,
             Buffer sample);
 }

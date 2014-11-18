@@ -53,14 +53,14 @@ public class TestFileInputPlugin
     private static class ParserTestFileInputPlugin
                 extends FileInputPlugin
     {
-        public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+        public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
         {
             control.run(new TaskSource());
             return new NextConfig();
         }
 
-        public Report runFileInput(ProcTask proc, TaskSource taskSource,
+        public Report runFileInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput)
         {
             return new Report();
@@ -76,7 +76,7 @@ public class TestFileInputPlugin
                 TestParserTask.class);
         binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class, parser));
 
-        ProcTask proc = new ProcTask(binder.getInjector());
+        ExecTask exec = new ExecTask(binder.getInjector());
 
         ConfigSource config = new ConfigSource()
             .set("parser",
@@ -86,13 +86,13 @@ public class TestFileInputPlugin
 
         ParserTestFileInputPlugin plugin = binder.getInstance(ParserTestFileInputPlugin.class);
 
-        MockProcControl control = new MockProcControl();
-        plugin.runInputTransaction(proc, config, control);
+        MockExecControl control = new MockExecControl();
+        plugin.runInputTransaction(exec, config, control);
 
         FileInputPlugin.InputTask inputTask =
-            proc.loadTask(control.getTaskSource(), FileInputPlugin.InputTask.class);
+            exec.loadTask(control.getTaskSource(), FileInputPlugin.InputTask.class);
         TestParserTask parserTask =
-            proc.loadTask(inputTask.getParserTask(), TestParserTask.class);
+            exec.loadTask(inputTask.getParserTask(), TestParserTask.class);
 
         assertEquals("frsyuki", parserTask.getField());
     }

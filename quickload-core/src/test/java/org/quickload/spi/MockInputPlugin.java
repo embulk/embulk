@@ -30,17 +30,17 @@ public class MockInputPlugin
         this.records = records;
     }
 
-    public NextConfig runInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+    public NextConfig runInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
     {
         control.run(new TaskSource());
         return new NextConfig();
     }
 
-    public Report runInput(ProcTask proc, TaskSource taskSource,
+    public Report runInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, PageOutput pageOutput)
     {
-        try (PageBuilder builder = new PageBuilder(proc.getPageAllocator(), schema, pageOutput)) {
+        try (PageBuilder builder = new PageBuilder(exec.getPageAllocator(), schema, pageOutput)) {
             for (final Record record : records) {
                 builder.addRecord(new RecordWriter() {
                     public void writeBoolean(Column column, BooleanWriter writer)

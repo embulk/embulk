@@ -7,16 +7,16 @@ module QuickLoad
     require 'quickload/record_writer'
 
     class ParserPluginBridge < Java::BasicParserPlugin
-      def getBasicParserTask(proc, config)
+      def getBasicParserTask(exec, config)
         config = DataSourceBridge.wrap(config)
-        task = TaskConfig.new(proc)
+        task = TaskConfig.new(exec)
         configure(config, task)
-        proc.setSchema(Bridge::Schema.new(task.columns).to_java)
+        exec.setSchema(Bridge::Schema.new(task.columns).to_java)
         DataSourceBridge.to_java_task_source(task)
       end
 
-      def runBasicParser(proc, taskSource, processorIndex, fileBufferInput, pageOutput)
-        task = TaskConfig.new(proc, DataSourceBridge.wrap(taskSource))
+      def runBasicParser(exec, taskSource, processorIndex, fileBufferInput, pageOutput)
+        task = TaskConfig.new(exec, DataSourceBridge.wrap(taskSource))
         file_reader = FileReader.new(fileBufferInput)
         record_writer = RecordWriter.new(task, pageOutput)
         process(task, processorIndex, file_reader, record_writer)

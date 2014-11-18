@@ -22,8 +22,8 @@ import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.FilePlugins;
-import org.quickload.spi.ProcTask;
-import org.quickload.spi.ProcControl;
+import org.quickload.spi.ExecTask;
+import org.quickload.spi.ExecControl;
 
 public class S3FileInputPlugin
         extends FileInputPlugin
@@ -44,19 +44,19 @@ public class S3FileInputPlugin
     }
 
     @Override
-    public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+    public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
     {
-        PluginTask task = proc.loadConfig(config, PluginTask.class);
+        PluginTask task = exec.loadConfig(config, PluginTask.class);
 
         // list files recursively
         task.setFiles(listFiles(task));
 
         // number of processors is same with number of files
-        proc.setProcessorCount(task.getFiles().size());
+        exec.setProcessorCount(task.getFiles().size());
 
         // run
-        control.run(proc.dumpTask(task));
+        control.run(exec.dumpTask(task));
 
         return new NextConfig();
     }
@@ -83,10 +83,10 @@ public class S3FileInputPlugin
     }
 
     @Override
-    public Report runFileInput(ProcTask proc, TaskSource taskSource,
+    public Report runFileInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
-        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
         AmazonS3Client client = createS3Client(task);
 
         String bucket = task.getBucket();
@@ -94,7 +94,7 @@ public class S3FileInputPlugin
 
         ResumeOpener opener = new ResumeOpener(client, bucket, key);
         try (InputStream in = opener.open(0)) {
-            FilePlugins.transferInputStream(proc.getBufferAllocator(), in, fileBufferOutput);
+            FilePlugins.transferInputStream(exec.getBufferAllocator(), in, fileBufferOutput);
             // TODO catch PartialTransferException and implement retry
         } catch (IOException ex) {
             throw new RuntimeException(ex);

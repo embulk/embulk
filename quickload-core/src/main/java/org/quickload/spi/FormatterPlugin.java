@@ -7,9 +7,9 @@ import org.quickload.channel.FileBufferOutput;
 
 public interface FormatterPlugin
 {
-    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config);
+    public TaskSource getFormatterTask(ExecTask exec, ConfigSource config);
 
-    public void runFormatter(ProcTask proc,
+    public void runFormatter(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput);
 }

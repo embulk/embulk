@@ -11,22 +11,22 @@ import org.quickload.buffer.BufferAllocator;
 import org.quickload.channel.BufferOutput;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.FileBufferOutput;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 import org.quickload.spi.FileEncoderPlugin;
 
 public abstract class OutputStreamFileEncoderPlugin
         implements FileEncoderPlugin
 {
-    public abstract TaskSource getFileEncoderTask(ProcTask proc, ConfigSource config);
+    public abstract TaskSource getFileEncoderTask(ExecTask exec, ConfigSource config);
 
-    public abstract OutputStream openOutputStream(ProcTask proc, TaskSource taskSource, OutputStream out) throws IOException;
+    public abstract OutputStream openOutputStream(ExecTask exec, TaskSource taskSource, OutputStream out) throws IOException;
 
-    public void runFileEncoder(ProcTask proc,
+    public void runFileEncoder(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, FileBufferOutput fileBufferOutput)
     {
         while (fileBufferInput.nextFile()) {
-            try (OutputStream out = openOutputStream(proc, taskSource, new BufferedOutputStream(new BufferOutputOutputStream(proc.getBufferAllocator(), fileBufferOutput)))) {
+            try (OutputStream out = openOutputStream(exec, taskSource, new BufferedOutputStream(new BufferOutputOutputStream(exec.getBufferAllocator(), fileBufferOutput)))) {
                 for (Buffer buffer : fileBufferInput) {
                     out.write(buffer.get(), 0, buffer.limit());
                 }

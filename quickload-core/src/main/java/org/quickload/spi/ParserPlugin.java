@@ -7,9 +7,9 @@ import org.quickload.channel.PageOutput;
 
 public interface ParserPlugin
 {
-    public TaskSource getParserTask(ProcTask proc, ConfigSource config);
+    public TaskSource getParserTask(ExecTask exec, ConfigSource config);
 
-    public void runParser(ProcTask proc,
+    public void runParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput);
 }

@@ -10,21 +10,21 @@ public abstract class LineGuessPlugin
         implements GuessPlugin
 {
     @Override
-    public NextConfig guess(ProcTask proc, ConfigSource config,
+    public NextConfig guess(ExecTask exec, ConfigSource config,
             Buffer sample)
     {
         LineDecoderTask task;
         try {
-            task = proc.loadConfig(config, LineDecoderTask.class);
+            task = exec.loadConfig(config, LineDecoderTask.class);
         } catch (Exception ex) {
             return new NextConfig();
         }
 
         LineDecoder decoder = new LineDecoder(ImmutableList.of(sample), task);
         List<String> lines = ImmutableList.copyOf(decoder);
-        return guessLines(proc, config, lines);
+        return guessLines(exec, config, lines);
     }
 
-    public abstract NextConfig guessLines(ProcTask proc, ConfigSource config,
+    public abstract NextConfig guessLines(ExecTask exec, ConfigSource config,
             List<String> lines);
 }

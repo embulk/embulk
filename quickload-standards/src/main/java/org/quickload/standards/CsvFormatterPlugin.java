@@ -13,7 +13,7 @@ import org.quickload.record.Schema;
 import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.BasicFormatterPlugin;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 import org.quickload.spi.LineEncoder;
 import org.quickload.spi.LineEncoderTask;
 
@@ -26,21 +26,21 @@ public class CsvFormatterPlugin
     }
 
     @Override
-    public TaskSource getBasicFormatterTask(ProcTask proc, ConfigSource config)
+    public TaskSource getBasicFormatterTask(ExecTask exec, ConfigSource config)
     {
-        PluginTask task = proc.loadConfig(config, PluginTask.class);
-        return proc.dumpTask(task);
+        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        return exec.dumpTask(task);
     }
 
     @Override
-    public void runBasicFormatter(ProcTask proc,
+    public void runBasicFormatter(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
-        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
-        final LineEncoder encoder = new LineEncoder(proc.getBufferAllocator(), task, fileBufferOutput);
+        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
+        final LineEncoder encoder = new LineEncoder(exec.getBufferAllocator(), task, fileBufferOutput);
 
-        try (PageReader reader = new PageReader(proc.getSchema(), pageInput)) {
+        try (PageReader reader = new PageReader(exec.getSchema(), pageInput)) {
             while (reader.nextRecord()) {
                 reader.visitColumns(new RecordReader() {
                     public void readNull(Column column)

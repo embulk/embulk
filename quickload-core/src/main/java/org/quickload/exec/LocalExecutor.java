@@ -16,9 +16,9 @@ import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
 import org.quickload.config.FailedReport;
 import org.quickload.record.Schema;
-import org.quickload.spi.ProcControl;
-import org.quickload.spi.ProcTask;
-import org.quickload.spi.ProcConfig;
+import org.quickload.spi.ExecControl;
+import org.quickload.spi.ExecTask;
+import org.quickload.spi.ExecConfig;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
@@ -139,14 +139,14 @@ public class LocalExecutor
         }
     }
 
-    protected InputPlugin newInputPlugin(ProcTask proc, ExecutorTask task)
+    protected InputPlugin newInputPlugin(ExecTask exec, ExecutorTask task)
     {
-        return proc.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+        return exec.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
     }
 
-    protected OutputPlugin newOutputPlugin(ProcTask proc, ExecutorTask task)
+    protected OutputPlugin newOutputPlugin(ExecTask exec, ExecutorTask task)
     {
-        return proc.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
+        return exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
     }
 
     public NextConfig run(final ConfigSource config)
@@ -160,20 +160,20 @@ public class LocalExecutor
 
     private NextConfig doRun(ConfigSource config)
     {
-        final ProcTask proc = PluginExecutors.newProcTask(injector, config);
-        final ExecutorTask task = proc.loadConfig(config, ExecutorTask.class);
+        final ExecTask exec = PluginExecutors.newExecTask(injector, config);
+        final ExecutorTask task = exec.loadConfig(config, ExecutorTask.class);
 
-        final InputPlugin in = newInputPlugin(proc, task);
-        final OutputPlugin out = newOutputPlugin(proc, task);
+        final InputPlugin in = newInputPlugin(exec, task);
+        final OutputPlugin out = newOutputPlugin(exec, task);
 
         final ControlContext ctrlContext = new ControlContext();
 
-        // TODO create and use ProcTaskBuilder to set default values
+        // TODO create and use ExecTaskBuilder to set default values
 
-        NextConfig inputNextConfig = in.runInputTransaction(proc, task.getInputConfig(), new ProcControl() {
+        NextConfig inputNextConfig = in.runInputTransaction(exec, task.getInputConfig(), new ExecControl() {
             public List<Report> run(final TaskSource inputTask)
             {
-                NextConfig outputNextConfig = out.runOutputTransaction(proc, task.getOutputConfig(), new ProcControl() {
+                NextConfig outputNextConfig = out.runOutputTransaction(exec, task.getOutputConfig(), new ExecControl() {
                     public List<Report> run(final TaskSource outputTask)
                     {
                         task.setInputTask(inputTask);
@@ -183,11 +183,11 @@ public class LocalExecutor
                         System.out.println("input: "+task.getInputTask());
                         System.out.println("output: "+task.getOutputTask());
 
-                        ProcessContext procContext = new ProcessContext(proc.getProcessorCount());
+                        ProcessContext execContext = new ProcessContext(exec.getProcessorCount());
 
-                        process(proc, proc.dumpTask(task), procContext);
-                        ctrlContext.setOutputReports(procContext.getOutputReports());
-                        ctrlContext.setInputReports(procContext.getInputReports());
+                        process(exec, exec.dumpTask(task), execContext);
+                        ctrlContext.setOutputReports(execContext.getOutputReports());
+                        ctrlContext.setInputReports(execContext.getInputReports());
 
                         return ctrlContext.getOutputReports();
                     }
@@ -201,30 +201,30 @@ public class LocalExecutor
         return ctrlContext.getInputNextConfig().setAll(ctrlContext.getOutputNextConfig());
     }
 
-    private final void process(final ProcTask proc, final TaskSource taskSource, final ProcessContext procContext)
+    private final void process(final ExecTask exec, final TaskSource taskSource, final ProcessContext execContext)
     {
-        final ExecutorTask task = proc.loadTask(taskSource, ExecutorTask.class);
-        final InputPlugin in = newInputPlugin(proc, task);
-        final OutputPlugin out = newOutputPlugin(proc, task);
+        final ExecutorTask task = exec.loadTask(taskSource, ExecutorTask.class);
+        final InputPlugin in = newInputPlugin(exec, task);
+        final OutputPlugin out = newOutputPlugin(exec, task);
 
         // TODO multi-threading
 
-        for (int i=0; i < proc.getProcessorCount(); i++) {
+        for (int i=0; i < exec.getProcessorCount(); i++) {
             final int processorIndex = i;
 
             PluginThread thread = null;
             Throwable error = null;
-            try (final PageChannel channel = proc.newPageChannel()) {
-                thread = proc.startPluginThread(new Runnable() {
+            try (final PageChannel channel = exec.newPageChannel()) {
+                thread = exec.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
                             // TODO return Report
-                            Report report = out.runOutput(proc, task.getOutputTask(),
+                            Report report = out.runOutput(exec, task.getOutputTask(),
                                 processorIndex, channel.getInput());
-                            procContext.setOutputReport(processorIndex, report);
+                            execContext.setOutputReport(processorIndex, report);
                         } catch (Throwable ex) {
-                            procContext.setOutputReport(processorIndex, new FailedReport(ex));
+                            execContext.setOutputReport(processorIndex, new FailedReport(ex));
                             throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
                         } finally {
                             channel.completeConsumer();
@@ -233,14 +233,14 @@ public class LocalExecutor
                 });
 
                 try {
-                    Report report = in.runInput(proc, task.getInputTask(),
+                    Report report = in.runInput(exec, task.getInputTask(),
                             processorIndex, channel.getOutput());
                     channel.completeProducer();
                     thread.join();
                     channel.join();  // throws if channel is fully consumed
-                    procContext.setInputReport(processorIndex, report);
+                    execContext.setInputReport(processorIndex, report);
                 } catch (Throwable ex) {
-                    procContext.setInputReport(processorIndex, new FailedReport(ex));
+                    execContext.setInputReport(processorIndex, new FailedReport(ex));
                     throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
                 }
 

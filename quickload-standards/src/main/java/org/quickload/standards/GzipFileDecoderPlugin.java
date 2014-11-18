@@ -6,7 +6,7 @@ import java.util.zip.GZIPInputStream;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 
 public class GzipFileDecoderPlugin
         extends InputStreamFileDecoderPlugin
@@ -16,14 +16,14 @@ public class GzipFileDecoderPlugin
     {
     }
 
-    public TaskSource getFileDecoderTask(ProcTask proc, ConfigSource config)
+    public TaskSource getFileDecoderTask(ExecTask exec, ConfigSource config)
     {
-        PluginTask task = proc.loadConfig(config, PluginTask.class);
-        return proc.dumpTask(task);
+        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        return exec.dumpTask(task);
     }
 
     @Override
-    public InputStream openInputStream(ProcTask proc, TaskSource taskSource,
+    public InputStream openInputStream(ExecTask exec, TaskSource taskSource,
             InputStream in) throws IOException
     {
         return new GZIPInputStream(in);

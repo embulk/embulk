@@ -9,25 +9,25 @@ import org.quickload.config.ConfigSource;
 import org.quickload.buffer.Buffer;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.FileBufferOutput;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 import org.quickload.spi.FileDecoderPlugin;
 import org.quickload.spi.FilePlugins;
 
 public abstract class InputStreamFileDecoderPlugin
         implements FileDecoderPlugin
 {
-    public abstract TaskSource getFileDecoderTask(ProcTask proc, ConfigSource config);
+    public abstract TaskSource getFileDecoderTask(ExecTask exec, ConfigSource config);
 
-    public abstract InputStream openInputStream(ProcTask proc, TaskSource taskSource, InputStream in) throws IOException;
+    public abstract InputStream openInputStream(ExecTask exec, TaskSource taskSource, InputStream in) throws IOException;
 
     @Override
-    public void runFileDecoder(ProcTask proc,
+    public void runFileDecoder(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, FileBufferOutput fileBufferOutput)
     {
         while (fileBufferInput.nextFile()) {
-            try (InputStream in = openInputStream(proc, taskSource, new BufferInputInputStream(fileBufferInput.iterator()))) {
-                FilePlugins.transferInputStream(proc.getBufferAllocator(),
+            try (InputStream in = openInputStream(exec, taskSource, new BufferInputInputStream(fileBufferInput.iterator()))) {
+                FilePlugins.transferInputStream(exec.getBufferAllocator(),
                         in, fileBufferOutput);
             } catch (IOException ex) {
                 // TODO exception class

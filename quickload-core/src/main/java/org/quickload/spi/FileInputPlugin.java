@@ -16,10 +16,10 @@ import org.quickload.channel.PageOutput;
 public abstract class FileInputPlugin
         implements InputPlugin
 {
-    public abstract NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control);
+    public abstract NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control);
 
-    public abstract Report runFileInput(ProcTask proc, TaskSource taskSource,
+    public abstract Report runFileInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput);
 
     public interface InputTask
@@ -36,44 +36,44 @@ public abstract class FileInputPlugin
         public void setFileInputTask(TaskSource task);
     }
 
-    protected ParserPlugin newParserPlugin(ProcTask proc, InputTask task)
+    protected ParserPlugin newParserPlugin(ExecTask exec, InputTask task)
     {
-        return proc.newPlugin(ParserPlugin.class, task.getParserConfig().get("type"));
+        return exec.newPlugin(ParserPlugin.class, task.getParserConfig().get("type"));
     }
 
     @Override
-    public NextConfig runInputTransaction(final ProcTask proc, ConfigSource config,
-            final ProcControl control)
+    public NextConfig runInputTransaction(final ExecTask exec, ConfigSource config,
+            final ExecControl control)
     {
-        final InputTask task = proc.loadConfig(config, InputTask.class);
+        final InputTask task = exec.loadConfig(config, InputTask.class);
 
-        return runFileInputTransaction(proc, config, new ProcControl() {
+        return runFileInputTransaction(exec, config, new ExecControl() {
             public List<Report> run(TaskSource taskSource)
             {
-                ParserPlugin parser = newParserPlugin(proc, task);
-                task.setParserTask(parser.getParserTask(proc, task.getParserConfig()));
+                ParserPlugin parser = newParserPlugin(exec, task);
+                task.setParserTask(parser.getParserTask(exec, task.getParserConfig()));
                 task.setFileInputTask(taskSource);
-                return control.run(proc.dumpTask(task));
+                return control.run(exec.dumpTask(task));
             }
         });
     }
 
     @Override
-    public Report runInput(final ProcTask proc,
+    public Report runInput(final ExecTask exec,
             TaskSource taskSource, final int processorIndex,
             final PageOutput pageOutput)
     {
-        final InputTask task = proc.loadTask(taskSource, InputTask.class);
-        final ParserPlugin parser = newParserPlugin(proc, task);
+        final InputTask task = exec.loadTask(taskSource, InputTask.class);
+        final ParserPlugin parser = newParserPlugin(exec, task);
 
         PluginThread thread = null;
         Throwable error = null;
-        try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
-            thread = proc.startPluginThread(new Runnable() {
+        try (final FileBufferChannel channel = exec.newFileBufferChannel()) {
+            thread = exec.startPluginThread(new Runnable() {
                 public void run()
                 {
                     try {
-                        parser.runParser(proc,
+                        parser.runParser(exec,
                                 task.getParserTask(), processorIndex,
                                 channel.getInput(), pageOutput);
                     } finally {
@@ -82,7 +82,7 @@ public abstract class FileInputPlugin
                 }
             });
 
-            Report report = runFileInput(proc,
+            Report report = runFileInput(exec,
                     task.getFileInputTask(), processorIndex,
                     channel.getOutput());
             channel.completeProducer();

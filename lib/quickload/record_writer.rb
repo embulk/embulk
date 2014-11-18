@@ -3,9 +3,9 @@ module QuickLoad
 
   class RecordWriter
     def initialize(task_config, pageOutput)
-      proc = task_config.java_proc
-      @schema = Bridge::Schema.wrap(proc.getSchema)
-      @pageBuilder = pageBuilder = Java::PageBuilder.new(proc.getBufferAllocator, proc.getSchema, pageOutput)
+      exec = task_config.java_exec
+      @schema = Bridge::Schema.wrap(exec.getSchema)
+      @pageBuilder = pageBuilder = Java::PageBuilder.new(exec.getBufferAllocator, exec.getSchema, pageOutput)
       @setters = @schema.columns.map do |column|
         type = column.type
         index = column.index

@@ -17,26 +17,26 @@ import org.quickload.record.TimestampWriter;
 import org.quickload.record.StringWriter;
 import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.LineDecoder;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 
 import java.util.List;
 
 public class CsvParserPlugin extends BasicParserPlugin {
     @Override
-    public TaskSource getBasicParserTask(ProcTask proc, ConfigSource config) {
-        CsvParserTask task = proc.loadConfig(config, CsvParserTask.class);
-        proc.setSchema(task.getSchemaConfig().toSchema());
-        return proc.dumpTask(task);
+    public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config) {
+        CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
+        exec.setSchema(task.getSchemaConfig().toSchema());
+        return exec.dumpTask(task);
     }
 
     @Override
-    public void runBasicParser(ProcTask proc,
+    public void runBasicParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput) {
-        Schema schema = proc.getSchema();
-        CsvParserTask task = proc.loadTask(taskSource, CsvParserTask.class);
+        Schema schema = exec.getSchema();
+        CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
         CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
-        try (PageBuilder builder = new PageBuilder(proc.getPageAllocator(), proc.getSchema(), pageOutput)) {
+        try (PageBuilder builder = new PageBuilder(exec.getPageAllocator(), exec.getSchema(), pageOutput)) {
             while (fileBufferInput.nextFile()) {
                 boolean skipHeaderLine = task.getHeaderLine();
                 for (final List<String> record : tokenizer) {

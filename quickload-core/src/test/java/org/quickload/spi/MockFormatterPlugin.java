@@ -50,17 +50,17 @@ public class MockFormatterPlugin
         return records;
     }
 
-    public TaskSource getFormatterTask(ProcTask proc, ConfigSource config)
+    public TaskSource getFormatterTask(ExecTask exec, ConfigSource config)
     {
-        return proc.dumpTask(proc.loadConfig(config, taskIface));
+        return exec.dumpTask(exec.loadConfig(config, taskIface));
     }
 
-    public void runFormatter(ProcTask proc,
+    public void runFormatter(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
         records = new ArrayList<Record>();
-        schema = proc.getSchema();
+        schema = exec.getSchema();
 
         try (PageReader reader = new PageReader(schema, pageInput)) {
             while (reader.nextRecord()) {

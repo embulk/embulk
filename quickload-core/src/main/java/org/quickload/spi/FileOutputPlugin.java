@@ -16,10 +16,10 @@ import org.quickload.channel.PageInput;
 public abstract class FileOutputPlugin
         implements OutputPlugin
 {
-    public abstract NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control);
+    public abstract NextConfig runFileOutputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control);
 
-    public abstract Report runFileOutput(ProcTask proc,
+    public abstract Report runFileOutput(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput);
 
@@ -37,44 +37,44 @@ public abstract class FileOutputPlugin
         public void setFileOutputTask(TaskSource task);
     }
 
-    protected FormatterPlugin newFormatterPlugin(ProcTask proc, OutputTask task)
+    protected FormatterPlugin newFormatterPlugin(ExecTask exec, OutputTask task)
     {
-        return proc.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get("type"));
+        return exec.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get("type"));
     }
 
     @Override
-    public NextConfig runOutputTransaction(final ProcTask proc, ConfigSource config,
-            final ProcControl control)
+    public NextConfig runOutputTransaction(final ExecTask exec, ConfigSource config,
+            final ExecControl control)
     {
-        final OutputTask task = proc.loadConfig(config, OutputTask.class);
+        final OutputTask task = exec.loadConfig(config, OutputTask.class);
 
-        return runFileOutputTransaction(proc, config, new ProcControl() {
+        return runFileOutputTransaction(exec, config, new ExecControl() {
             public List<Report> run(TaskSource taskSource)
             {
-                FormatterPlugin formatter = newFormatterPlugin(proc, task);
-                task.setFormatterTask(formatter.getFormatterTask(proc, task.getFormatterConfig()));
+                FormatterPlugin formatter = newFormatterPlugin(exec, task);
+                task.setFormatterTask(formatter.getFormatterTask(exec, task.getFormatterConfig()));
                 task.setFileOutputTask(taskSource);
-                return control.run(proc.dumpTask(task));
+                return control.run(exec.dumpTask(task));
             }
         });
     }
 
     @Override
-    public Report runOutput(final ProcTask proc,
+    public Report runOutput(final ExecTask exec,
             TaskSource taskSource, final int processorIndex,
             final PageInput pageInput)
     {
-        final OutputTask task = proc.loadTask(taskSource, OutputTask.class);
-        final FormatterPlugin formatter = newFormatterPlugin(proc, task);
+        final OutputTask task = exec.loadTask(taskSource, OutputTask.class);
+        final FormatterPlugin formatter = newFormatterPlugin(exec, task);
 
         PluginThread thread = null;
         Throwable error = null;
-        try (final FileBufferChannel channel = proc.newFileBufferChannel()) {
-            thread = proc.startPluginThread(new Runnable() {
+        try (final FileBufferChannel channel = exec.newFileBufferChannel()) {
+            thread = exec.startPluginThread(new Runnable() {
                 public void run()
                 {
                     try {
-                        formatter.runFormatter(proc,
+                        formatter.runFormatter(exec,
                                 task.getFormatterTask(), processorIndex,
                                 pageInput, channel.getOutput());
                     } finally {
@@ -83,7 +83,7 @@ public abstract class FileOutputPlugin
                 }
             });
 
-            Report report = runFileOutput(proc,
+            Report report = runFileOutput(exec,
                     task.getFileOutputTask(), processorIndex,
                     channel.getInput());
             channel.completeConsumer();

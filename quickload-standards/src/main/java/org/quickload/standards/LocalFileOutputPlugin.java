@@ -18,8 +18,8 @@ import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.spi.BufferPlugins;
 import org.quickload.spi.FileOutputPlugin;
-import org.quickload.spi.ProcTask;
-import org.quickload.spi.ProcControl;
+import org.quickload.spi.ExecTask;
+import org.quickload.spi.ExecControl;
 
 public class LocalFileOutputPlugin
         extends FileOutputPlugin
@@ -45,22 +45,22 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public NextConfig runFileOutputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+    public NextConfig runFileOutputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
     {
-        PluginTask task = proc.loadConfig(config, PluginTask.class);
+        PluginTask task = exec.loadConfig(config, PluginTask.class);
 
-        control.run(proc.dumpTask(task));
+        control.run(exec.dumpTask(task));
 
         return new NextConfig();
     }
 
     @Override
-    public Report runFileOutput(ProcTask proc,
+    public Report runFileOutput(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput)
     {
-        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
 
         // TODO format path using timestamp
         String fileName = task.getFileNameFormat();
@@ -77,7 +77,7 @@ public class LocalFileOutputPlugin
             File file = new File(path);
             file.getParentFile().mkdirs();
             try (OutputStream out = new FileOutputStream(file)) {
-                BufferPlugins.transferBufferInput(proc.getBufferAllocator(),
+                BufferPlugins.transferBufferInput(exec.getBufferAllocator(),
                         fileBufferInput, out);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);

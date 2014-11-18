@@ -22,8 +22,8 @@ import org.quickload.config.Report;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.FilePlugins;
-import org.quickload.spi.ProcTask;
-import org.quickload.spi.ProcControl;
+import org.quickload.spi.ExecTask;
+import org.quickload.spi.ExecControl;
 
 public class LocalFileInputPlugin
         extends FileInputPlugin
@@ -40,10 +40,10 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public NextConfig runFileInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+    public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
     {
-        PluginTask task = proc.loadConfig(config, PluginTask.class);
+        PluginTask task = exec.loadConfig(config, PluginTask.class);
 
         // list files recursively
         try {
@@ -53,10 +53,10 @@ public class LocalFileInputPlugin
         }
 
         // number of processors is same with number of files
-        proc.setProcessorCount(task.getFiles().size());
+        exec.setProcessorCount(task.getFiles().size());
 
         // run
-        control.run(proc.dumpTask(task));
+        control.run(exec.dumpTask(task));
 
         return new NextConfig();
     }
@@ -79,16 +79,16 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public Report runFileInput(ProcTask proc, TaskSource taskSource,
+    public Report runFileInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
-        PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
 
         String path = task.getFiles().get(processorIndex);
         File file = new File(path);
 
         try (InputStream in = new FileInputStream(file)) {
-            FilePlugins.transferInputStream(proc.getBufferAllocator(),
+            FilePlugins.transferInputStream(exec.getBufferAllocator(),
                     in, fileBufferOutput);
         } catch (IOException ex) {
             throw new RuntimeException(ex);

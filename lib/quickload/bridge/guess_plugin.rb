@@ -7,7 +7,7 @@ module QuickLoad
     class GuessPluginBridge
       include Java::GuessPlugin
 
-      def guess(proc, config, sample)
+      def guess(exec, config, sample)
         sample = Bridge::BufferBridge.to_str(sample)
         config = Bridge::DataSourceBridge.wrap(config)
         next_config = guess_buffer(config, sample)
@@ -16,7 +16,7 @@ module QuickLoad
     end
 
     class LineGuessPluginBridge < Java::LineGuessPlugin
-      def guessLines(proc, config, lines)
+      def guessLines(exec, config, lines)
         config = Bridge::DataSourceBridge.wrap(config)
         lines = lines.to_a
         next_config = guess_lines(config, lines)
@@ -25,7 +25,7 @@ module QuickLoad
     end
 
     class TextGuessPluginBridge < Java::TextGuessPlugin
-      def guessText(proc, config, text)
+      def guessText(exec, config, text)
         config = Bridge::DataSourceBridge.wrap(config)
         text = text.to_s
         next_config = guess_text(config, text)

@@ -5,19 +5,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.quickload.record.Schema;
 import org.quickload.config.ConfigException;
 
-// "exec:" config loaded by PluginExecutors.newProcTask
-public class ProcConfig
+// "exec:" config loaded by PluginExecutors.newExecTask
+public class ExecConfig
 {
     protected Schema schema;
     protected int processorCount;
     protected String uniqueTransactionName;
 
-    public ProcConfig()
+    public ExecConfig()
     {
     }
 
     @JsonCreator
-    public void ProcConfig(
+    public void ExecConfig(
             @JsonProperty("schema") Schema schema,
             @JsonProperty("processorCount") int processorCount,
             @JsonProperty("uniqueTransactionName") String uniqueTransactionName)
@@ -27,8 +27,8 @@ public class ProcConfig
         this.uniqueTransactionName = uniqueTransactionName;
     }
 
-    // for ProcTask
-    void set(ProcConfig copy)
+    // for ExecTask
+    void set(ExecConfig copy)
     {
         this.schema = copy.schema;
         this.processorCount = copy.processorCount;

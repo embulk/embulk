@@ -14,15 +14,15 @@ import org.quickload.channel.BufferChannel;
 import org.quickload.channel.FileBufferChannel;
 import org.quickload.channel.PageChannel;
 
-public class ProcTask
-        extends ProcConfig
+public class ExecTask
+        extends ExecConfig
 {
     private final Injector injector;
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferManager bufferManager;
 
-    public ProcTask(Injector injector)
+    public ExecTask(Injector injector)
     {
         super();
         this.injector = injector;
@@ -31,10 +31,10 @@ public class ProcTask
         this.bufferManager = injector.getInstance(BufferManager.class);
     }
 
-    public ProcTask(Injector injector, ProcConfig procConfig)
+    public ExecTask(Injector injector, ExecConfig execConfig)
     {
         this(injector);
-        set(procConfig);
+        set(execConfig);
     }
 
     public <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)

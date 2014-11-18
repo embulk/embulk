@@ -25,9 +25,9 @@ import org.quickload.record.Column;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.ParserPlugin;
 import org.quickload.spi.BasicParserPlugin;
-import org.quickload.spi.ProcTask;
+import org.quickload.spi.ExecTask;
 import org.quickload.spi.GuessPlugin;
-import org.quickload.spi.ProcControl;
+import org.quickload.spi.ExecControl;
 
 public class GuessExecutor
 {
@@ -44,25 +44,25 @@ public class GuessExecutor
 
     public NextConfig run(ConfigSource config)
     {
-        ProcTask proc = PluginExecutors.newProcTask(injector, config);
-        return guess(proc, config);
+        ExecTask exec = PluginExecutors.newExecTask(injector, config);
+        return guess(exec, config);
     }
 
-    protected InputPlugin newInputPlugin(ProcTask proc, ConfigSource guessInputConfig)
+    protected InputPlugin newInputPlugin(ExecTask exec, ConfigSource guessInputConfig)
     {
-        return proc.newPlugin(InputPlugin.class, guessInputConfig.get("type"));
+        return exec.newPlugin(InputPlugin.class, guessInputConfig.get("type"));
     }
 
-    public NextConfig guess(ProcTask proc, ConfigSource config)
+    public NextConfig guess(ExecTask exec, ConfigSource config)
     {
         try {
-            return doGuess(proc, config);
+            return doGuess(exec, config);
         } catch (Throwable ex) {
             throw PluginExecutors.propagePluginExceptions(ex);
         }
     }
 
-    private NextConfig doGuess(final ProcTask proc, ConfigSource config)
+    private NextConfig doGuess(final ExecTask exec, ConfigSource config)
     {
         // repeat guessing upto 10 times
         NextConfig lastGuessed = new NextConfig();
@@ -75,13 +75,13 @@ public class GuessExecutor
             guessInputConfig.getObjectOrSetEmpty("parser").setString("type", "system_guess");
 
             // run FileInputPlugin
-            final InputPlugin input = newInputPlugin(proc, guessInputConfig);
+            final InputPlugin input = newInputPlugin(exec, guessInputConfig);
             NextConfig guessed;
             try {
-                input.runInputTransaction(proc, guessInputConfig, new ProcControl() {
+                input.runInputTransaction(exec, guessInputConfig, new ExecControl() {
                     public List<Report> run(TaskSource inputTaskSource)
                     {
-                        input.runInput(proc, inputTaskSource, 0, null);   // TODO add dummy PageOutput which throws "guess plugin works only with FileInputPlugin"
+                        input.runInput(exec, inputTaskSource, 0, null);   // TODO add dummy PageOutput which throws "guess plugin works only with FileInputPlugin"
                         return null;
                     }
                 });
@@ -123,31 +123,31 @@ public class GuessExecutor
         }
 
         @Override
-        public TaskSource getBasicParserTask(ProcTask proc, ConfigSource config)
+        public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config)
         {
-            PluginTask task = proc.loadConfig(config, PluginTask.class);
+            PluginTask task = exec.loadConfig(config, PluginTask.class);
 
             task.setConfigSource(config);
 
-            // set dummy schema to bypass ProcTask validation
-            proc.setSchema(new Schema(ImmutableList.<Column>of()));
+            // set dummy schema to bypass ExecTask validation
+            exec.setSchema(new Schema(ImmutableList.<Column>of()));
 
-            return proc.dumpTask(task);
+            return exec.dumpTask(task);
         }
 
         @Override
-        public void runBasicParser(ProcTask proc,
+        public void runBasicParser(ExecTask exec,
                 TaskSource taskSource, int processorIndex,
                 FileBufferInput fileBufferInput, PageOutput pageOutput)
         {
-            PluginTask task = proc.loadTask(taskSource, PluginTask.class);
+            PluginTask task = exec.loadTask(taskSource, PluginTask.class);
             final int maxSampleSize = task.getSampleSize();
             final ConfigSource config = task.getConfigSource();
 
             // load guess plugins
             ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
             for (JsonNode guessType : task.getGuessPluginTypes()) {
-                GuessPlugin guess = proc.newPlugin(GuessPlugin.class, guessType);
+                GuessPlugin guess = exec.newPlugin(GuessPlugin.class, guessType);
                 builder.add(guess);
             }
             List<GuessPlugin> guesses = builder.build();
@@ -159,7 +159,7 @@ public class GuessExecutor
             NextConfig guessedParserConfig = new NextConfig();
             for (int i=0; i < guesses.size(); i++) {
                 GuessPlugin guess = guesses.get(i);
-                guessedParserConfig.mergeRecursively(guess.guess(proc, config, sample));
+                guessedParserConfig.mergeRecursively(guess.guess(exec, config, sample));
             }
 
             throw new GuessedNoticeError(guessedParserConfig);

@@ -67,8 +67,8 @@ module QuickLoad::Java
   java_import 'org.quickload.spi.ParserPlugin'
   java_import 'org.quickload.spi.PartialTransferException'
   java_import 'org.quickload.spi.PluginThread'
-  java_import 'org.quickload.spi.ProcControl'
+  java_import 'org.quickload.spi.ExecControl'
   java_import 'org.quickload.spi.ProcTask'
-  java_import 'org.quickload.spi.ProcConfig'
+  java_import 'org.quickload.spi.ExecConfig'
   java_import 'org.quickload.spi.TextGuessPlugin'
 end

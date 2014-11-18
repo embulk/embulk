@@ -4,7 +4,7 @@ import java.util.List;
 import org.quickload.config.TaskSource;
 import org.quickload.config.Report;
 
-public interface ProcControl
+public interface ExecControl
 {
     public List<Report> run(TaskSource taskSource);
 }

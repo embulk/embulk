@@ -55,13 +55,13 @@ public class MockParserPlugin
         return files;
     }
 
-    public TaskSource getParserTask(ProcTask proc, ConfigSource config)
+    public TaskSource getParserTask(ExecTask exec, ConfigSource config)
     {
-        proc.setSchema(schema);
-        return proc.dumpTask(proc.loadConfig(config, taskIface));
+        exec.setSchema(schema);
+        return exec.dumpTask(exec.loadConfig(config, taskIface));
     }
 
-    public void runParser(ProcTask proc,
+    public void runParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput)
     {
@@ -73,7 +73,7 @@ public class MockParserPlugin
             }
             files.add(buffers);
         }
-        try (PageBuilder builder = new PageBuilder(proc.getPageAllocator(), schema, pageOutput)) {
+        try (PageBuilder builder = new PageBuilder(exec.getPageAllocator(), schema, pageOutput)) {
             for (final Record record : records) {
                 builder.addRecord(new RecordWriter() {
                     public void writeBoolean(Column column, BooleanWriter writer)

@@ -32,18 +32,18 @@ public class MockOutputPlugin
         return records;
     }
 
-    public NextConfig runOutputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control)
+    public NextConfig runOutputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control)
     {
         control.run(new TaskSource());
         return new NextConfig();
     }
 
-    public Report runOutput(ProcTask proc, TaskSource taskSource,
+    public Report runOutput(ExecTask exec, TaskSource taskSource,
             int processorIndex, PageInput pageInput)
     {
         records = new ArrayList<Record>();
-        schema = proc.getSchema();
+        schema = exec.getSchema();
 
         try (PageReader reader = new PageReader(schema, pageInput)) {
             while (reader.nextRecord()) {

@@ -26,8 +26,8 @@ public class TestLineDecoderTask
     @Test
     public void testDefaultValues()
     {
-        ProcTask proc = new ProcTask(binder.getInjector());
-        LineDecoderTask task = proc.loadConfig(new ConfigSource(), LineDecoderTask.class);
+        ExecTask exec = new ExecTask(binder.getInjector());
+        LineDecoderTask task = exec.loadConfig(new ConfigSource(), LineDecoderTask.class);
         assertEquals("utf-8", task.getCharset());
         assertEquals("CRLF", task.getNewline());
     }
@@ -35,11 +35,11 @@ public class TestLineDecoderTask
     @Test
     public void testLoadConfig()
     {
-        ProcTask proc = new ProcTask(binder.getInjector());
+        ExecTask exec = new ExecTask(binder.getInjector());
         ConfigSource config = new ConfigSource()
             .setString("charset", "utf-16")
             .setString("newline", "LF");
-        LineDecoderTask task = proc.loadConfig(config, LineDecoderTask.class);
+        LineDecoderTask task = exec.loadConfig(config, LineDecoderTask.class);
         assertEquals("utf-16", task.getCharset());
         assertEquals("LF", task.getNewline());
     }

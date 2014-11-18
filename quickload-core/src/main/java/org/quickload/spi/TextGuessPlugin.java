@@ -16,12 +16,12 @@ public abstract class TextGuessPlugin
     }
 
     @Override
-    public NextConfig guess(ProcTask proc, ConfigSource config,
+    public NextConfig guess(ExecTask exec, ConfigSource config,
             Buffer sample)
     {
         TextGuessTask task;
         try {
-            task = proc.loadConfig(config, TextGuessTask.class);
+            task = exec.loadConfig(config, TextGuessTask.class);
         } catch (Exception ex) {
             return new NextConfig();
         }
@@ -40,9 +40,9 @@ public abstract class TextGuessPlugin
         }
         String text = sb.toString();
 
-        return guessText(proc, config, text);
+        return guessText(exec, config, text);
     }
 
-    public abstract NextConfig guessText(ProcTask proc, ConfigSource config,
+    public abstract NextConfig guessText(ExecTask exec, ConfigSource config,
             String text);
 }

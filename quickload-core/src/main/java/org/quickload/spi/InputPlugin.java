@@ -8,9 +8,9 @@ import org.quickload.channel.PageOutput;
 
 public interface InputPlugin
 {
-    public NextConfig runInputTransaction(ProcTask proc, ConfigSource config,
-            ProcControl control);
+    public NextConfig runInputTransaction(ExecTask exec, ConfigSource config,
+            ExecControl control);
 
-    public Report runInput(ProcTask proc, TaskSource taskSource,
+    public Report runInput(ExecTask exec, TaskSource taskSource,
             int processorIndex, PageOutput pageOutput);
 }

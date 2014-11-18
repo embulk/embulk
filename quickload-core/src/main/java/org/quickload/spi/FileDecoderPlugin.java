@@ -7,9 +7,9 @@ import org.quickload.channel.FileBufferOutput;
 
 public interface FileDecoderPlugin
 {
-    public TaskSource getFileDecoderTask(ProcTask proc, ConfigSource config);
+    public TaskSource getFileDecoderTask(ExecTask exec, ConfigSource config);
 
-    public void runFileDecoder(ProcTask proc,
+    public void runFileDecoder(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, FileBufferOutput fileBufferOutput);
 }

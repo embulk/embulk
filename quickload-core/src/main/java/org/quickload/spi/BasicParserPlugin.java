@@ -16,9 +16,9 @@ import org.quickload.channel.FileBufferChannel;
 public abstract class BasicParserPlugin
         implements ParserPlugin
 {
-    public abstract TaskSource getBasicParserTask(ProcTask proc, ConfigSource config);
+    public abstract TaskSource getBasicParserTask(ExecTask exec, ConfigSource config);
 
-    public abstract void runBasicParser(ProcTask proc,
+    public abstract void runBasicParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput);
 
@@ -37,36 +37,36 @@ public abstract class BasicParserPlugin
         public void setBasicParserTask(TaskSource source);
     }
 
-    protected List<FileDecoderPlugin> newFileDecoderPlugins(ProcTask proc, ParserTask task)
+    protected List<FileDecoderPlugin> newFileDecoderPlugins(ExecTask exec, ParserTask task)
     {
         ImmutableList.Builder<FileDecoderPlugin> builder = ImmutableList.builder();
         for (ConfigSource fileDecoderConfig : task.getFileDecoderConfigs()) {
-            builder.add(proc.newPlugin(FileDecoderPlugin.class, fileDecoderConfig.get("type")));
+            builder.add(exec.newPlugin(FileDecoderPlugin.class, fileDecoderConfig.get("type")));
         }
         return builder.build();
     }
 
     @Override
-    public TaskSource getParserTask(ProcTask proc, ConfigSource config)
+    public TaskSource getParserTask(ExecTask exec, ConfigSource config)
     {
-        ParserTask task = proc.loadConfig(config, ParserTask.class);
+        ParserTask task = exec.loadConfig(config, ParserTask.class);
         ImmutableList.Builder<TaskSource> builder = ImmutableList.builder();
-        List<FileDecoderPlugin> fdecs = newFileDecoderPlugins(proc, task);
+        List<FileDecoderPlugin> fdecs = newFileDecoderPlugins(exec, task);
         for (int i=0; i < fdecs.size(); i++) {
-            builder.add(fdecs.get(i).getFileDecoderTask(proc, task.getFileDecoderConfigs().get(i)));
+            builder.add(fdecs.get(i).getFileDecoderTask(exec, task.getFileDecoderConfigs().get(i)));
         }
         task.setFileDecoderTasks(builder.build());
-        task.setBasicParserTask(getBasicParserTask(proc, config));
-        return proc.dumpTask(task);
+        task.setBasicParserTask(getBasicParserTask(exec, config));
+        return exec.dumpTask(task);
     }
 
     @Override
-    public void runParser(final ProcTask proc,
+    public void runParser(final ExecTask exec,
             TaskSource taskSource, final int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput)
     {
-        final ParserTask task = proc.loadTask(taskSource, ParserTask.class);
-        final List<FileDecoderPlugin> fdecs = newFileDecoderPlugins(proc, task);
+        final ParserTask task = exec.loadTask(taskSource, ParserTask.class);
+        final List<FileDecoderPlugin> fdecs = newFileDecoderPlugins(exec, task);
         final List<TaskSource> ftasks = task.getFileDecoderTasks();
 
         List<FileBufferChannel> channels = new ArrayList<FileBufferChannel>();
@@ -79,16 +79,16 @@ public abstract class BasicParserPlugin
                 final FileDecoderPlugin fdec = fdecs.get(i);
                 final TaskSource ftask = ftasks.get(i);
 
-                final FileBufferChannel fdecOutputChannel = proc.newFileBufferChannel();
+                final FileBufferChannel fdecOutputChannel = exec.newFileBufferChannel();
                 channels.add(fdecOutputChannel);
 
                 final FileBufferInput fdecInput = nextInput;
                 final FileBufferChannel fdecInputChannel = prevChannel;
-                PluginThread thread = proc.startPluginThread(new Runnable() {
+                PluginThread thread = exec.startPluginThread(new Runnable() {
                     public void run()
                     {
                         try {
-                            fdec.runFileDecoder(proc,
+                            fdec.runFileDecoder(exec,
                                     ftask, processorIndex,
                                     fdecInput, fdecOutputChannel.getOutput());
                         } finally {
@@ -109,7 +109,7 @@ public abstract class BasicParserPlugin
                 nextInput = fdecOutputChannel.getInput();
             }
 
-            runBasicParser(proc,
+            runBasicParser(exec,
                     task.getBasicParserTask(), processorIndex,
                     nextInput, pageOutput);
 

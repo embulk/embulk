@@ -5,18 +5,18 @@ import com.google.common.collect.ImmutableList;
 import org.quickload.config.TaskSource;
 import org.quickload.config.Report;
 
-public class MockProcControl
-        implements ProcControl
+public class MockExecControl
+        implements ExecControl
 {
     private final List<Report> reports;
     private TaskSource taskSource;
 
-    public MockProcControl()
+    public MockExecControl()
     {
         this(ImmutableList.of(new Report()));
     }
 
-    public MockProcControl(List<Report> reports)
+    public MockExecControl(List<Report> reports)
     {
         this.reports = reports;
     }
