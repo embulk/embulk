@@ -81,7 +81,6 @@ public class CsvParserPlugin extends BasicParserPlugin {
                             writer.write(value);
                         }
                     });
-                    builder.addRecord();
                 }
             }
         }
