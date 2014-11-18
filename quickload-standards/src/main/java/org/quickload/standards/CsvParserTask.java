@@ -11,8 +11,7 @@ import javax.validation.constraints.NotNull;
 public interface CsvParserTask
         extends Task, LineDecoderTask
 {
-    @Config("columns")
-    @NotNull
+    @Config("columns")@NotNull
     public SchemaConfig getSchemaConfig();
 
     @Config("header_line") // how to set default value?? TODO @Default("true")
