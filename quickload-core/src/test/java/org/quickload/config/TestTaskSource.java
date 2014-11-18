@@ -56,15 +56,15 @@ public class TestTaskSource
     @Test
     public void testEqualsOfLoadedTasks()
     {
-        TypeFields task = taskSource.loadModel(modelManager, TypeFields.class);
+        TypeFields task = modelManager.readObject(taskSource, TypeFields.class);
         task.setBoolean(true);
         task.setDouble(0.2);
         task.setInt(3);
         task.setLong(Long.MAX_VALUE);
         task.setString("sf");
 
-        ObjectNode json = modelManager.writeJsonObjectNode(task);
-        TypeFields task2 = new TaskSource(json).loadModel(modelManager, TypeFields.class);
+        TaskSource taskSource2 = modelManager.writeAsTaskSource(task);
+        TypeFields task2 = modelManager.readObject(taskSource2, TypeFields.class);
 
         assertTrue(task.equals(task2));
         assertTrue(task.hashCode() == task2.hashCode());

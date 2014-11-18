@@ -10,10 +10,10 @@ import static org.junit.Assert.assertNull;
 import org.junit.runner.RunWith;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.quickload.config.ModelManager;
+import org.quickload.config.TaskSource;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestRuntimeModule;
 
@@ -46,8 +46,8 @@ public class TestTypeManager
     public void testGetType()
     {
         HasType type = new HasType(StringType.STRING);
-        ObjectNode json = modelManager.writeJsonObjectNode(type);
-        HasType decoded = modelManager.readJsonObject(json, HasType.class);
+        TaskSource taskSource = modelManager.writeAsTaskSource(type);
+        HasType decoded = modelManager.readObject(taskSource, HasType.class);
         assertTrue(StringType.STRING == decoded.getType());
     }
 }

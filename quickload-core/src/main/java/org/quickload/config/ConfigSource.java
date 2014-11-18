@@ -8,53 +8,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ConfigSource
         extends DataSource<ConfigSource>
 {
-    private static final FieldMapper fieldMapper = new FieldMapper() {
-        @Override
-        public Optional<String> getJsonKey(Method getterMethod)
-        {
-            return configJsonKey(getterMethod);
-        }
-
-        @Override
-        public Optional<String> getDefaultJsonString(Method getterMethod)
-        {
-            return configDefaultJsonValue(getterMethod);
-        }
-    };
-
     public ConfigSource()
     {
-        super(fieldMapper);
+        super();
     }
 
     ConfigSource(ObjectNode data)
     {
-        super(data, fieldMapper);
+        super(data);
     }
 
     @Override
     protected ConfigSource newInstance(ObjectNode data)
     {
         return new ConfigSource(data);
-    }
-
-    private static Optional<String> configJsonKey(Method getterMethod)
-    {
-        Config a = getterMethod.getAnnotation(Config.class);
-        if (a != null) {
-            return Optional.of(a.value());
-        } else {
-            return Optional.absent();
-        }
-    }
-
-    private static Optional<String> configDefaultJsonValue(Method getterMethod)
-    {
-        ConfigDefault a = getterMethod.getAnnotation(ConfigDefault.class);
-        if (a != null && !a.value().isEmpty()) {
-            return Optional.of(a.value());
-        } else {
-            return Optional.absent();
-        }
     }
 }
