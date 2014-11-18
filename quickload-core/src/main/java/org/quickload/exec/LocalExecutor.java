@@ -18,7 +18,7 @@ import org.quickload.config.FailedReport;
 import org.quickload.record.Schema;
 import org.quickload.spi.ProcControl;
 import org.quickload.spi.ProcTask;
-import org.quickload.spi.ProcTaskSource;
+import org.quickload.spi.ProcConfig;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
