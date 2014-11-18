@@ -19,9 +19,14 @@ public class StringWriter
 
     public void write(String value)
     {
-        Page page = builder.getPage();
-        int index = page.addStringReference(value);
-        page.setInt(builder.getOffset(column.getIndex()), index);
+        if (value == null) {
+            // this is unnecessary check but exists for buggy plugins
+            writeNull();
+        } else {
+            Page page = builder.getPage();
+            int index = page.addStringReference(value);
+            page.setInt(builder.getOffset(column.getIndex()), index);
+        }
     }
 
     @Override
