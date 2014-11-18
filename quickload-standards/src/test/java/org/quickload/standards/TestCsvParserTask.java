@@ -2,6 +2,7 @@ package org.quickload.standards;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.quickload.TestRuntimeBinder;
@@ -20,10 +21,17 @@ public class TestCsvParserTask
     @Rule
     public TestRuntimeBinder binder = new TestRuntimeBinder();
 
+    protected ExecTask exec;
+
+    @Before
+    public void setup()
+    {
+        exec = binder.newExecTask();
+    }
+
     @Test
     public void checkDefaultValues()
     {
-        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource()
                 .set("columns", arrayNode()
                         .add(objectNode()
@@ -42,7 +50,6 @@ public class TestCsvParserTask
     @Test(expected = ConfigException.class)
     public void checkColumnsRequired()
     {
-        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource();
 
         exec.loadConfig(config, CsvParserTask.class);
@@ -51,7 +58,6 @@ public class TestCsvParserTask
     @Test
     public void checkLoadConfig()
     {
-        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource()
                 .setString("charset", "utf-16")
                 .setString("newline", "LF")
@@ -72,4 +78,3 @@ public class TestCsvParserTask
         assertEquals('\\', task.getQuoteChar());
     }
 }
-
