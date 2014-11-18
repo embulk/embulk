@@ -1,5 +1,7 @@
 package org.quickload.record;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -63,5 +65,13 @@ public class ColumnConfig
     {
         return String.format("ColumnConfig[%s, %s]",
                 getName(), getType());
+    }
+
+    public static ObjectNode column(JsonNodeFactory js, String name, String type)
+    {
+        ObjectNode column = js.objectNode();
+        column.put("name", name);
+        column.put("type", type);
+        return column;
     }
 }
