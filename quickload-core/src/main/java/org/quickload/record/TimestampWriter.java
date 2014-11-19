@@ -1,6 +1,6 @@
 package org.quickload.record;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 
 public class TimestampWriter
         extends TypeWriter
@@ -19,8 +19,8 @@ public class TimestampWriter
     {
         Page page = builder.getPage();
         int offset = builder.getOffset(column.getIndex());
-        page.setLong(offset, value.getTime() / 1000);
-        page.setInt(offset + 8, value.getNanos());
+        page.setLong(offset, value.getEpochSecond() / 1000);
+        page.setInt(offset + 8, value.getNano());
     }
 
     @Override

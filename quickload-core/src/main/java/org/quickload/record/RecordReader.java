@@ -1,6 +1,6 @@
 package org.quickload.record;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 
 public interface RecordReader
 {

@@ -1,6 +1,6 @@
 package org.quickload.standards;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
 import org.quickload.config.ConfigSource;
@@ -75,9 +75,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                         {
                             // TODO timestamp parsing needs strptime format and default time zone
                             long msec = Long.parseLong(record.get(column.getIndex()));
-                            int nsec = 0;
-                            Timestamp value = new Timestamp(msec);
-                            value.setNanos(nsec);
+                            Timestamp value = Timestamp.ofEpochMilli(msec);
                             writer.write(value);
                         }
                     });

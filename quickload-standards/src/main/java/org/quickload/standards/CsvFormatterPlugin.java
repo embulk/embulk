@@ -1,6 +1,6 @@
 package org.quickload.standards;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;

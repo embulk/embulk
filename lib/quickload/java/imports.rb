@@ -1,6 +1,11 @@
 require 'java'
 
 module QuickLoad::Java
+  java_import 'org.quickload.time.Timestamp'
+  java_import 'org.quickload.time.TimestampFormat'
+  java_import 'org.quickload.time.TimestampFormatter'
+  java_import 'org.quickload.time.TimestampParser'
+
   java_import 'org.quickload.buffer.Buffer'
   java_import 'org.quickload.buffer.BufferAllocator'
 
