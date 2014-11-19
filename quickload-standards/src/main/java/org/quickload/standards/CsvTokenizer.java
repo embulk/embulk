@@ -70,6 +70,8 @@ public class CsvTokenizer implements Iterable<List<String>> {
         currentValue.setLength(0);
         currentLine.setLength(0);
 
+        // TODO should handle null charactor and empty string
+
         // process each character in the line, catering for surrounding quotes (QUOTE_MODE)
         state = State.NORMAL_MODE;
         // the line number where a potential multi-line cell starts
