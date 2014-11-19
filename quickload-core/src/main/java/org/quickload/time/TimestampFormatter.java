@@ -7,7 +7,6 @@ import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.RubyDateFormat;
 import org.quickload.spi.LineEncoder;
 import org.quickload.config.ConfigException;
-import static org.quickload.time.TimestampFormatConfig.parseDateTimeZone;
 
 public class TimestampFormatter
 {
@@ -16,10 +15,7 @@ public class TimestampFormatter
 
     public TimestampFormatter(ScriptingContainer jruby, String format, TimestampFormatterTask task)
     {
-        this.timeZone = parseDateTimeZone(task.getTimeZone());
-        if (timeZone == null) {
-            throw new ConfigException("Unsupported timezone '"+task.getTimeZone()+"'");
-        }
+        this.timeZone = task.getTimeZone();
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
     }
 

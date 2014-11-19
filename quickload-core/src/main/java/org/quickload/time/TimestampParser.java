@@ -15,10 +15,7 @@ public class TimestampParser
         JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("QuickLoad::Java::TimeParserHelper::Factory.new");
         // TODO get default current time from ExecTask.getExecTimestamp
         this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, 1970, 1, 1, 0, 0, 0, 0);  // TODO default time zone
-        this.defaultTimeZone = parseDateTimeZone(task.getDefaultTimeZone());
-        if (defaultTimeZone == null) {
-            throw new ConfigException("Unsupported timezone '"+task.getDefaultTimeZone()+"'");
-        }
+        this.defaultTimeZone = task.getDefaultTimeZone();
     }
 
     public Timestamp parse(String text) throws TimestampParseException
