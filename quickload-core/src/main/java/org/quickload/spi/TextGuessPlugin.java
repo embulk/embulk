@@ -12,7 +12,7 @@ public abstract class TextGuessPlugin
     private static interface TextGuessTask
             extends LineDecoderTask
     {
-        public void setNewline(String charset);
+        public void setNewline(Newline newline);
     }
 
     @Override
@@ -25,7 +25,7 @@ public abstract class TextGuessPlugin
         } catch (Exception ex) {
             return new NextConfig();
         }
-        task.setNewline("CR");
+        task.setNewline(Newline.CR);
 
         LineDecoder decoder = new LineDecoder(ImmutableList.of(sample), task);
         StringBuilder sb = new StringBuilder();

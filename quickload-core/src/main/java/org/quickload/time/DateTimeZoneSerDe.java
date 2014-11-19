@@ -1,8 +1,6 @@
 package org.quickload.time;
 
-import java.util.Map;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import org.joda.time.DateTimeZone;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.core.JsonGenerator;
