@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import com.google.common.collect.ImmutableList;
 import org.quickload.spi.LineDecoder;
 
 import java.util.ArrayList;
@@ -206,8 +207,8 @@ public class CsvTokenizer implements Iterable<List<String>> {
                 throw new NoSuchElementException();
             }
 
-            List<String> r = record;
-            record = null; // TODO
+            List<String> r = ImmutableList.copyOf(record); // copy
+            record = null;
             return r;
         }
 
