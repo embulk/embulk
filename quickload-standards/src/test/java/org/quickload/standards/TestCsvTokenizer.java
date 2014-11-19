@@ -75,10 +75,50 @@ public class TestCsvTokenizer
     public void parseSimple() throws Exception
     {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "a,b\nc,d\n"));
+                "aaa,bbb\nccc,ddd\n"));
         assertEquals(Arrays.asList(
-                        Arrays.asList("a", "b"),
-                        Arrays.asList("c", "d")),
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
                 parsed);
     }
+
+    @Test
+    public void parseSeparatedBuffers() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "aaa", ",bbb", "\nccc,ddd", "\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
+                parsed);
+    }
+
+    @Test
+    public void parseQuotedValues() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "\"aaa\"", ",\"b,bb\"", "\n\"cc\"\"c\",\"\"\"ddd\"", "\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "b,bb"),
+                        Arrays.asList("ccc", "ddd")), // TODO Arrays.asList("cc\"c", "\"ddd")),
+                parsed);
+    }
+
+    /*
+    @Test
+    public void parseEscapedQuotedValues() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "\"aa,a\",\",aaa\",\"aaa,\"", "\n",
+                "\"bb\"\"b\",\"\"\"bbb\",\"bbb\"\"\"", "\n",
+                "\"cc\\\"c\",\"\\\"ccc\",\"ccc\\\"\"", "\n",
+                "\"dd\nd\",\"\nddd\",\"ddd\n\"", "\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aa,a", ",aaa", "aaa,"),
+                        Arrays.asList("bb\"b", "\"bbb", "bbb\""),
+                        Arrays.asList("cc\"c", "\"ccc", "ccc\""),
+                        Arrays.asList("dd\nd", "\nddd", "ddd\n")),
+                parsed);
+    }
+    */
 }
