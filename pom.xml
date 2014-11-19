@@ -31,6 +31,7 @@
         <project.build.jvmsize>1024m</project.build.jvmsize>
         <project.test.fork-mode>once</project.test.fork-mode>
 
+        <dep.joda-time.version>2.3</dep.joda-time.version>
         <dep.jruby.version>1.7.16.1</dep.jruby.version>
 
         <project.check.skip-all>false</project.check.skip-all>
@@ -134,6 +135,12 @@
                 <groupId>org.jruby</groupId>
                 <artifactId>jruby-complete</artifactId>
                 <version>${dep.jruby.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${dep.joda-time.version}</version>
             </dependency>
 
             <!-- ==================== -->

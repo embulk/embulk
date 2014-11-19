@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-public class TaskSerDe
+class TaskSerDe
 {
     public static class TaskSerializer
             extends JsonSerializer<Task>
