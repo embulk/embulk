@@ -12,13 +12,13 @@ import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -177,6 +177,16 @@ class TaskSerDe
         }
     }
 
+    public static class TaskSerializerModule
+            extends SimpleModule
+    {
+        public TaskSerializerModule(ObjectMapper nestedObjectMapper)
+        {
+            super();
+            addSerializer(Task.class, new TaskSerializer(nestedObjectMapper));
+        }
+    }
+
     public static class ConfigTaskDeserializer <T>
             extends TaskDeserializer<T>
     {
@@ -207,13 +217,13 @@ class TaskSerDe
         }
     }
 
-    public static class TaskDeserializeModule
+    public static class TaskDeserializerModule
             extends Module // can't use just SimpleModule, due to generic types
     {
         protected final ObjectMapper nestedObjectMapper;
         protected final TaskValidator taskValidator;
 
-        public TaskDeserializeModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
+        public TaskDeserializerModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
         {
             this.nestedObjectMapper = nestedObjectMapper;
             this.taskValidator = taskValidator;
@@ -248,10 +258,10 @@ class TaskSerDe
         }
     }
 
-    public static class ConfigTaskDeserializeModule
-            extends TaskDeserializeModule
+    public static class ConfigTaskDeserializerModule
+            extends TaskDeserializerModule
     {
-        public ConfigTaskDeserializeModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
+        public ConfigTaskDeserializerModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
         {
             super(nestedObjectMapper, taskValidator);
         }
@@ -263,16 +273,6 @@ class TaskSerDe
         protected JsonDeserializer<?> newTaskDeserializer(Class<?> raw)
         {
             return new ConfigTaskDeserializer(nestedObjectMapper, taskValidator, raw);
-        }
-    }
-
-    public static class TaskSerializeModule
-            extends SimpleModule
-    {
-        public TaskSerializeModule(ObjectMapper nestedObjectMapper)
-        {
-            super();
-            addSerializer(Task.class, new TaskSerializer(nestedObjectMapper));
         }
     }
 }

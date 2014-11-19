@@ -24,10 +24,10 @@ public class ModelManager
         this.taskValidator = new TaskValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
-        objectMapper.registerModule(new TaskSerDe.TaskSerializeModule(objectMapper));
-        objectMapper.registerModule(new TaskSerDe.TaskDeserializeModule(objectMapper, taskValidator));
-        configObjectMapper.registerModule(new TaskSerDe.TaskSerializeModule(configObjectMapper));
-        configObjectMapper.registerModule(new TaskSerDe.ConfigTaskDeserializeModule(configObjectMapper, taskValidator));
+        objectMapper.registerModule(new TaskSerDe.TaskSerializerModule(objectMapper));
+        objectMapper.registerModule(new TaskSerDe.TaskDeserializerModule(objectMapper, taskValidator));
+        configObjectMapper.registerModule(new TaskSerDe.TaskSerializerModule(configObjectMapper));
+        configObjectMapper.registerModule(new TaskSerDe.ConfigTaskDeserializerModule(configObjectMapper, taskValidator));
     }
 
     // TODO inject by Set<Module> because this is not thread-safe?

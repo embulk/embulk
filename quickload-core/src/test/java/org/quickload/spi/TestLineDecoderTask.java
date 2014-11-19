@@ -29,7 +29,7 @@ public class TestLineDecoderTask
         ExecTask exec = new ExecTask(binder.getInjector());
         LineDecoderTask task = exec.loadConfig(new ConfigSource(), LineDecoderTask.class);
         assertEquals("utf-8", task.getCharset());
-        assertEquals("CRLF", task.getNewline());
+        assertEquals(Newline.CRLF, task.getNewline());
     }
 
     @Test
@@ -41,6 +41,6 @@ public class TestLineDecoderTask
             .setString("newline", "LF");
         LineDecoderTask task = exec.loadConfig(config, LineDecoderTask.class);
         assertEquals("utf-16", task.getCharset());
-        assertEquals("LF", task.getNewline());
+        assertEquals(Newline.LF, task.getNewline());
     }
 }

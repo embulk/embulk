@@ -22,13 +22,14 @@ import org.quickload.record.RandomRecordGenerator;
 
 public class TestLineDecoder
 {
+    // TODO use loadConfig to instantiate LineDecoderTask
     public static class TestTask
             implements LineDecoderTask
     {
         private final String charset;
-        private final String newline;
+        private final Newline newline;
 
-        public TestTask(String charset, String newline)
+        public TestTask(String charset, Newline newline)
         {
             this.charset = charset;
             this.newline = newline;
@@ -41,7 +42,7 @@ public class TestLineDecoder
         }
 
         @Override
-        public String getNewline()
+        public Newline getNewline()
         {
             return newline;
         }
@@ -52,12 +53,12 @@ public class TestLineDecoder
         }
     }
 
-    private static LineDecoder newDecoder(String charsetName, String newline, List<Buffer> buffers)
+    private static LineDecoder newDecoder(String charsetName, Newline newline, List<Buffer> buffers)
     {
         return new LineDecoder(buffers, new TestTask(charsetName, newline));
     }
 
-    private static List<String> doDecode(String charsetName, String newline, List<Buffer> buffers)
+    private static List<String> doDecode(String charsetName, Newline newline, List<Buffer> buffers)
     {
         return ImmutableList.copyOf(newDecoder(charsetName, newline, buffers));
     }
@@ -78,7 +79,7 @@ public class TestLineDecoder
     @Test
     public void testDecodeBasicAscii() throws Exception
     {
-        List<String> decoded = doDecode("utf-8", "LF",
+        List<String> decoded = doDecode("utf-8", Newline.LF,
                 bufferList("utf-8", "test1\ntest2\ntest3\n"));
         assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
     }
@@ -86,7 +87,7 @@ public class TestLineDecoder
     @Test
     public void testDecodeBasicAsciiCRLF() throws Exception
     {
-        List<String> decoded = doDecode("utf-8", "CRLF",
+        List<String> decoded = doDecode("utf-8", Newline.CRLF,
                 bufferList("utf-8", "test1\r\ntest2\r\ntest3\r\n"));
         assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
     }
@@ -94,7 +95,7 @@ public class TestLineDecoder
     @Test
     public void testDecodeBasicAsciiTail() throws Exception
     {
-        List<String> decoded = doDecode("utf-8", "LF",
+        List<String> decoded = doDecode("utf-8", Newline.LF,
                 bufferList("utf-8", "test1"));
         assertEquals(Arrays.asList("test1"), decoded);
     }
@@ -102,7 +103,7 @@ public class TestLineDecoder
     @Test
     public void testDecodeChunksLF() throws Exception
     {
-        List<String> decoded = doDecode("utf-8", "LF",
+        List<String> decoded = doDecode("utf-8", Newline.LF,
                 bufferList("utf-8", "t", "1", "\n", "t", "2"));
         assertEquals(Arrays.asList("t1", "t2"), decoded);
     }
@@ -110,7 +111,7 @@ public class TestLineDecoder
     @Test
     public void testDecodeChunksCRLF() throws Exception
     {
-        List<String> decoded = doDecode("utf-8", "CRLF",
+        List<String> decoded = doDecode("utf-8", Newline.CRLF,
                 bufferList("utf-8", "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
         assertEquals(Arrays.asList("t1", "t2", "t3"), decoded);
     }

@@ -13,5 +13,5 @@ public interface LineEncoderTask
 
     @Config("newline")
     @ConfigDefault("\"CRLF\"")
-    public String getNewline();
+    public Newline getNewline();
 }

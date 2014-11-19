@@ -2,10 +2,13 @@ package org.quickload.record;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.IOException;
 import com.google.inject.Inject;
+import com.google.common.base.Joiner;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.quickload.config.ModelManager;
 
 public class TypeManager
@@ -49,8 +52,16 @@ public class TypeManager
 
         @Override
         protected Type _deserialize(String value, DeserializationContext context)
+                throws IOException
         {
-            return getType(value);
+            Type t = getType(value);
+            if (t == null) {
+                throw new JsonMappingException(
+                        String.format("Unknown type name '%s'. Supported types are: %s",
+                            value,
+                            Joiner.on(", ").join(fromStringToTypeMap.keySet())));
+            }
+            return t;
         }
     }
 }
