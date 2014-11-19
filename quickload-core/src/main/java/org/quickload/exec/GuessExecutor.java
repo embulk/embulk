@@ -115,7 +115,7 @@ public class GuessExecutor
             public int getSampleSize();
 
             @Config("guess_plugins")
-            @ConfigDefault("[\"gzip\",\"newline\",\"csv\"]")  // TODO require some plugins
+            @ConfigDefault("[\"gzip\",\"charset\",\"newline\",\"csv\"]")  // TODO require some plugins
             public List<JsonNode> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();

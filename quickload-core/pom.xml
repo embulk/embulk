@@ -67,6 +67,12 @@
             <artifactId>jruby-complete</artifactId>
         </dependency>
 
+        <!-- for guess_charset plugin -->
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
