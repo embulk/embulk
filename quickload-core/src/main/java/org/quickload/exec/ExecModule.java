@@ -12,6 +12,7 @@ import org.quickload.record.TypeManager;
 import org.quickload.config.DataSourceSerDe;
 import org.quickload.config.EnumTaskSerDe;
 import org.quickload.spi.ParserPlugin;
+import org.quickload.spi.CharsetSerDe;
 
 public class ExecModule
         implements Module
@@ -28,5 +29,6 @@ public class ExecModule
         binder.bind(DateTimeZoneSerDe.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess")).to(GuessExecutor.GuessParserPlugin.class);
+        binder.bind(CharsetSerDe.class).asEagerSingleton();
     }
 }

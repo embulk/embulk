@@ -21,13 +21,7 @@ public class LineEncoder
     {
         this.bufferAllocator = bufferAllocator;
         this.output = output;
-
-        try {
-            this.charset = Charset.forName(task.getCharset());
-        } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
-        }
-
+        this.charset = task.getCharset();
         this.newline = task.getNewline().getString().getBytes(charset);
     }
 

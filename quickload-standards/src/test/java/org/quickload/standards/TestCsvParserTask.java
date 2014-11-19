@@ -4,6 +4,7 @@ import org.junit.Rule;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import java.nio.charset.Charset;
 import org.quickload.TestRuntimeBinder;
 import org.quickload.config.ConfigException;
 import org.quickload.config.ConfigSource;
@@ -39,7 +40,7 @@ public class TestCsvParserTask
                         );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
-        assertEquals("utf-8", task.getCharset());
+        assertEquals(Charset.forName("utf-8"), task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
         assertEquals(false, task.getHeaderLine());
         assertEquals(',', task.getDelimiterChar());
@@ -70,7 +71,7 @@ public class TestCsvParserTask
                         );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
-        assertEquals("utf-16", task.getCharset());
+        assertEquals(Charset.forName("utf-16"), task.getCharset());
         assertEquals(Newline.LF, task.getNewline());
         assertEquals(true, task.getHeaderLine());
         assertEquals('\t', task.getDelimiterChar());

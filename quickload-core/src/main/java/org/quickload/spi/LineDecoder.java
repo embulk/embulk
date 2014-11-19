@@ -36,16 +36,10 @@ public class LineDecoder
     {
         this.input = input.iterator();
         this.newline = task.getNewline();
-
-        try {
-            this.decoder = Charset.forName(task.getCharset())
-                .newDecoder()
-                .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
-                .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
-        } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
-        }
-
+        this.decoder = task.getCharset()
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
+            .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.lineBuffer = CharBuffer.allocate(INITIAL_DECODE_BUFFER_SIZE);
         lineBuffer.limit(0);
         this.byteBuffer = EMPTY_BYTE_BUFFER;
