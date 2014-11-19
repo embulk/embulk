@@ -61,4 +61,11 @@ public class Timestamp
         h += 17 * nano;
         return h;
     }
+
+    @Override
+    public String toString()
+    {
+        // TODO use UTC format
+        return "Timestamp["+seconds+"."+nano+"]";
+    }
 }

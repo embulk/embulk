@@ -5,9 +5,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.RubyDateFormat;
-import static org.quickload.time.TimestampFormatConfig.parseDateTimeZone;
 import org.quickload.spi.LineEncoder;
 import org.quickload.config.ConfigException;
+import static org.quickload.time.TimestampFormatConfig.parseDateTimeZone;
 
 public class TimestampFormatter
 {
