@@ -1,6 +1,6 @@
 package org.quickload.record;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 
 public class TimestampReader
         extends TypeReader
@@ -20,8 +20,7 @@ public class TimestampReader
             int offset = reader.getOffset(reader.getOffset(column.getIndex()));
             long msec = page.getLong(offset);
             int nsec = page.getInt(offset + 8);
-            Timestamp value = new Timestamp(msec);
-            value.setNanos(nsec);
+            Timestamp value = Timestamp.ofEpochSecond(msec, nsec);
             visitor.readTimestamp(column, value);
         }
     }

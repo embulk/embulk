@@ -1,6 +1,6 @@
 package org.quickload.spi;
 
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.NextConfig;

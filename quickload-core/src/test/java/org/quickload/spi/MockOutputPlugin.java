@@ -2,8 +2,8 @@ package org.quickload.spi;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.sql.Timestamp;
 import com.google.inject.Inject;
+import org.quickload.time.Timestamp;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.NextConfig;

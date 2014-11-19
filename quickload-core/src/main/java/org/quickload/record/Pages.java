@@ -1,8 +1,8 @@
 package org.quickload.record;
 
 import java.util.List;
-import java.sql.Timestamp;
 import com.google.common.collect.ImmutableList;
+import org.quickload.time.Timestamp;
 
 public class Pages
 {

@@ -1,6 +1,11 @@
 require 'java'
 
 module QuickLoad::Java
+  java_import 'org.quickload.time.Timestamp'
+  java_import 'org.quickload.time.TimestampFormatter'
+  java_import 'org.quickload.time.TimestampParser'
+  java_import 'org.quickload.time.TimestampParseException'
+
   java_import 'org.quickload.buffer.Buffer'
   java_import 'org.quickload.buffer.BufferAllocator'
 
@@ -68,7 +73,7 @@ module QuickLoad::Java
   java_import 'org.quickload.spi.PartialTransferException'
   java_import 'org.quickload.spi.PluginThread'
   java_import 'org.quickload.spi.ExecControl'
-  java_import 'org.quickload.spi.ProcTask'
+  java_import 'org.quickload.spi.ExecTask'
   java_import 'org.quickload.spi.ExecConfig'
   java_import 'org.quickload.spi.TextGuessPlugin'
 end

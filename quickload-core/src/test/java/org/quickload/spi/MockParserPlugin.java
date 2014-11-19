@@ -2,7 +2,7 @@ package org.quickload.spi;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.sql.Timestamp;
+import org.quickload.time.Timestamp;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
