@@ -4,7 +4,6 @@ module QuickLoad::Plugin
     Plugin.register_guess('newline', self)
 
     def guess_text(config, sample_text)
-      return {} if config["newline"]
       cr_count = sample_text.count("\r")
       lf_count = sample_text.count("\n")
       crlf_count = sample_text.count("\r\n")

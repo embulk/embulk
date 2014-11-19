@@ -4,7 +4,6 @@ module QuickLoad::Plugin
     Plugin.register_guess('charset', self)
 
     def guess_buffer(config, sample_buffer)
-      return {} if config["charset"]
       # ICU4J
       detector = com.ibm.icu.text.CharsetDetector.new
       detector.setText(sample_buffer.to_java_bytes)
