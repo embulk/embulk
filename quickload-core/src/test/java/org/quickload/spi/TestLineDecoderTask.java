@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import org.junit.Rule;
+import java.nio.charset.Charset;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
@@ -28,8 +29,8 @@ public class TestLineDecoderTask
     {
         ExecTask exec = new ExecTask(binder.getInjector());
         LineDecoderTask task = exec.loadConfig(new ConfigSource(), LineDecoderTask.class);
-        assertEquals("utf-8", task.getCharset());
-        assertEquals("CRLF", task.getNewline());
+        assertEquals(Charset.forName("utf-8"), task.getCharset());
+        assertEquals(Newline.CRLF, task.getNewline());
     }
 
     @Test
@@ -40,7 +41,7 @@ public class TestLineDecoderTask
             .setString("charset", "utf-16")
             .setString("newline", "LF");
         LineDecoderTask task = exec.loadConfig(config, LineDecoderTask.class);
-        assertEquals("utf-16", task.getCharset());
-        assertEquals("LF", task.getNewline());
+        assertEquals(Charset.forName("utf-16"), task.getCharset());
+        assertEquals(Newline.LF, task.getNewline());
     }
 }

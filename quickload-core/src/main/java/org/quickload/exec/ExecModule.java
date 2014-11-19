@@ -6,10 +6,13 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import org.quickload.time.TimestampFormatConfigSerDe;
+import org.quickload.time.DateTimeZoneSerDe;
 import org.quickload.config.ModelManager;
 import org.quickload.record.TypeManager;
 import org.quickload.config.DataSourceSerDe;
+import org.quickload.config.EnumTaskSerDe;
 import org.quickload.spi.ParserPlugin;
+import org.quickload.spi.CharsetSerDe;
 
 public class ExecModule
         implements Module
@@ -21,8 +24,11 @@ public class ExecModule
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(TypeManager.class).asEagerSingleton();
         binder.bind(DataSourceSerDe.class).asEagerSingleton();
+        binder.bind(EnumTaskSerDe.class).asEagerSingleton();
         binder.bind(TimestampFormatConfigSerDe.class).asEagerSingleton();
+        binder.bind(DateTimeZoneSerDe.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess")).to(GuessExecutor.GuessParserPlugin.class);
+        binder.bind(CharsetSerDe.class).asEagerSingleton();
     }
 }

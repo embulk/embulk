@@ -30,19 +30,7 @@ public class CsvTokenizer implements Iterable<List<String>> {
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
-        switch (task.getNewline()) { // TODO reuse setting of newline
-            case "CRLF":
-                newline = "\r\n";
-                break;
-            case "LF":
-                newline = "\n";
-                break;
-            case "CR":
-                newline = "\r";
-                break;
-            default:
-                throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR");
-        }
+        newline = task.getNewline().getString();
         surroundingSpacesNeedQuotes = false; // TODO
 
         this.decoder = decoder;

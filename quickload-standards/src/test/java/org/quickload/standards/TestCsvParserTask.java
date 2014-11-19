@@ -1,18 +1,18 @@
 package org.quickload.standards;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.Rule;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import java.nio.charset.Charset;
 import org.quickload.TestRuntimeBinder;
-import org.quickload.TestRuntimeModule;
 import org.quickload.config.ConfigException;
 import org.quickload.config.ConfigSource;
 import org.quickload.record.ColumnConfig;
 import org.quickload.record.SchemaConfig;
 import org.quickload.record.Types;
 import org.quickload.spi.ExecTask;
+import org.quickload.spi.Newline;
 import static org.quickload.config.DataSource.arrayNode;
 import static org.quickload.config.DataSource.objectNode;
 
@@ -40,8 +40,8 @@ public class TestCsvParserTask
                         );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
-        assertEquals("utf-8", task.getCharset());
-        assertEquals("CRLF", task.getNewline());
+        assertEquals(Charset.forName("utf-8"), task.getCharset());
+        assertEquals(Newline.CRLF, task.getNewline());
         assertEquals(false, task.getHeaderLine());
         assertEquals(',', task.getDelimiterChar());
         assertEquals('\"', task.getQuoteChar());
@@ -71,8 +71,8 @@ public class TestCsvParserTask
                         );
 
         CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
-        assertEquals("utf-16", task.getCharset());
-        assertEquals("LF", task.getNewline());
+        assertEquals(Charset.forName("utf-16"), task.getCharset());
+        assertEquals(Newline.LF, task.getNewline());
         assertEquals(true, task.getHeaderLine());
         assertEquals('\t', task.getDelimiterChar());
         assertEquals('\\', task.getQuoteChar());

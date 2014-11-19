@@ -24,7 +24,7 @@ public class LineDecoder
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0);
 
     private final Iterator<Buffer> input;
-    private final String newline;
+    private final Newline newline;
 
     private int newlineSearchPosition;
     private Buffer buffer;
@@ -35,30 +35,11 @@ public class LineDecoder
     public LineDecoder(Iterable<Buffer> input, LineDecoderTask task)
     {
         this.input = input.iterator();
-
-        switch (task.getNewline()) {
-        case "CRLF":
-            this.newline = "\r\n";
-            break;
-        case "LF":
-            this.newline = "\n";
-            break;
-        case "CR":
-            this.newline = "\r";
-            break;
-        default:
-            throw new IllegalArgumentException("in.parser.newline must be either of CRLF, LF, or CR but got '"+task.getNewline()+"'");
-        }
-
-        try {
-            this.decoder = Charset.forName(task.getCharset())
-                .newDecoder()
-                .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
-                .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
-        } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
-        }
-
+        this.newline = task.getNewline();
+        this.decoder = task.getCharset()
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
+            .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.lineBuffer = CharBuffer.allocate(INITIAL_DECODE_BUFFER_SIZE);
         lineBuffer.limit(0);
         this.byteBuffer = EMPTY_BYTE_BUFFER;
@@ -146,10 +127,10 @@ public class LineDecoder
     {
         int pos = newlineSearchPosition;
         int limit = lineBuffer.limit();
-        char firstChar = newline.charAt(0);
+        char firstChar = newline.getFirstCharCode();
         for (; pos < limit; pos++) {
             if (lineBuffer.get(pos) == firstChar) {
-                if (newline.length() == 1) {
+                if (newline != Newline.CRLF) {
                     // LF or CR
                     newlineSearchPosition = pos + 1;
                     return pos;
@@ -160,7 +141,7 @@ public class LineDecoder
                         newlineSearchPosition = pos;
                         return -1;
                     }
-                    if (lineBuffer.get(pos + 1) == newline.charAt(1)) {
+                    if (lineBuffer.get(pos + 1) == newline.getSecondCharCode()) {
                         // CRLF matched
                         newlineSearchPosition = pos + 2;
                         return pos;

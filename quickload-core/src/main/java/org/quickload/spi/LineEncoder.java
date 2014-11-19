@@ -21,26 +21,8 @@ public class LineEncoder
     {
         this.bufferAllocator = bufferAllocator;
         this.output = output;
-
-        try {
-            this.charset = Charset.forName(task.getCharset());
-        } catch (UnsupportedCharsetException ex) {
-            throw new IllegalArgumentException("Unsupported encoding is set to in.parser.charset", ex);
-        }
-
-        switch (task.getNewline()) {
-        case "CRLF":
-            this.newline = "\r\n".getBytes(charset);
-            break;
-        case "LF":
-            this.newline = "\n".getBytes(charset);
-            break;
-        case "CR":
-            this.newline = "\r".getBytes(charset);
-            break;
-        default:
-            throw new IllegalArgumentException("out.formatter.newline must be either of CRLF, LF, or CR");
-        }
+        this.charset = task.getCharset();
+        this.newline = task.getNewline().getString().getBytes(charset);
     }
 
     // TODO initialize and call LineFilterPlugin

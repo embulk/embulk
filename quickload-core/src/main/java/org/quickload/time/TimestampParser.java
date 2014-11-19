@@ -2,6 +2,7 @@ package org.quickload.time;
 
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
+import org.quickload.config.ConfigException;
 import static org.quickload.time.TimestampFormatConfig.parseDateTimeZone;
 
 public class TimestampParser
@@ -14,7 +15,7 @@ public class TimestampParser
         JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("QuickLoad::Java::TimeParserHelper::Factory.new");
         // TODO get default current time from ExecTask.getExecTimestamp
         this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, 1970, 1, 1, 0, 0, 0, 0);  // TODO default time zone
-        this.defaultTimeZone = parseDateTimeZone(task.getDefaultTimeZone());
+        this.defaultTimeZone = task.getDefaultTimeZone();
     }
 
     public Timestamp parse(String text) throws TimestampParseException

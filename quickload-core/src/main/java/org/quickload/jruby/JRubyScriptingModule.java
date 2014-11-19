@@ -55,7 +55,7 @@ public class JRubyScriptingModule
             loadPaths.add(libPath);
             jruby.setLoadPaths(loadPaths);
 
-            // load quickload.rb from $QUICKLOAD_HOME
+            // load quickload.rb from $QUICKLOAD_HOME/lib
             jruby.runScriptlet(PathType.ABSOLUTE, libPath + File.separator + "quickload.rb");
 
             return jruby;

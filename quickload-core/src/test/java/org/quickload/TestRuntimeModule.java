@@ -6,6 +6,7 @@ import org.quickload.config.ConfigSource;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.SystemConfigModule;
 import org.quickload.plugin.BuiltinPluginSourceModule;
+import org.quickload.jruby.JRubyScriptingModule;
 
 public class TestRuntimeModule
         implements Module
@@ -31,8 +32,9 @@ public class TestRuntimeModule
     @Override
     public void configure(Binder binder)
     {
-        new ExecModule().configure(binder);
         new SystemConfigModule(systemConfig).configure(binder);
+        new ExecModule().configure(binder);
         new BuiltinPluginSourceModule().configure(binder);
+        new JRubyScriptingModule().configure(binder);
     }
 }
