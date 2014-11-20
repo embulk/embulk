@@ -6,9 +6,6 @@ import com.google.common.collect.ImmutableList;
 import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigDefault;
 import org.quickload.config.NextConfig;
@@ -26,7 +23,6 @@ import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.ExecControl;
-import org.quickload.spi.NoticeLogger;
 
 public class PreviewExecutor
 {
@@ -56,9 +52,9 @@ public class PreviewExecutor
         public void setInputTask(TaskSource taskSource);
     }
 
-    public PreviewResult run(ConfigSource config, NoticeLogger notice)
+    public PreviewResult run(ConfigSource config)
     {
-        ExecTask exec = PluginExecutors.newExecTask(injector, config, notice);
+        ExecTask exec = PluginExecutors.newExecTask(injector, config);
         return preview(exec, config);
     }
 
@@ -106,10 +102,12 @@ public class PreviewExecutor
                         // don't call joinAndThrow to ignore exceptions in InputPlugins
                         thread.join();
                     }
-                    throw new PreviewedNoticeError(new PreviewResult(exec.getSchema(), pages));
+                    throw new PreviewedNoticeError(new PreviewResult(exec.getSchema(), pages,
+                                exec.notice().getMessages(), exec.notice().getSkippedRecords()));
                 }
             });
-            return new PreviewResult(exec.getSchema(), ImmutableList.<Page>of());
+            return new PreviewResult(exec.getSchema(), ImmutableList.<Page>of(),
+                    exec.notice().getMessages(), exec.notice().getSkippedRecords());
         } catch (PreviewedNoticeError previewed) {
             return previewed.getPreviewResult();
         }

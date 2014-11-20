@@ -28,7 +28,6 @@ import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.GuessPlugin;
 import org.quickload.spi.ExecControl;
-import org.quickload.spi.NullNoticeLogger;
 
 public class GuessExecutor
 {
@@ -45,7 +44,7 @@ public class GuessExecutor
 
     public NextConfig run(ConfigSource config)
     {
-        ExecTask exec = PluginExecutors.newExecTask(injector, config, new NullNoticeLogger());
+        ExecTask exec = PluginExecutors.newExecTask(injector, config);
         return guess(exec, config);
     }
 

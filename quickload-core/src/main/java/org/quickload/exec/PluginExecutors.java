@@ -48,10 +48,14 @@ public abstract class PluginExecutors
         return !(ex instanceof ChannelAsynchronousCloseException);
     }
 
-    public static ExecTask newExecTask(Injector injector, ConfigSource config, NoticeLogger notice)
+    public static ExecTask newExecTask(Injector injector, ConfigSource config)
     {
-        ExecTask exec = new ExecTask(injector, notice);
         ConfigSource execConfig = config.getObjectOrSetEmpty("exec");
+        // TODO get maxSkippedRecordSize, maxMessageSize and Priority from exec
+        int maxSkippedRecordSize = 32*1024*1024;
+        int maxMessageSize = 32*1024*1024;
+        NoticeLogger.Priority priority = NoticeLogger.Priority.DEBUG;
+        ExecTask exec = new ExecTask(injector, new NoticeLogger(maxSkippedRecordSize, maxMessageSize, priority));
         exec.setUniqueTransactionName(execConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
         // TODO get default time zone from config
         // TODO get start time from config

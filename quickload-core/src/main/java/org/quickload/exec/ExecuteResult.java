@@ -1,35 +1,29 @@
 package org.quickload.exec;
 
 import java.util.List;
+import org.quickload.config.NextConfig;
 import org.quickload.record.Schema;
 import org.quickload.record.Page;
 import org.quickload.spi.NoticeLogger;
 
-public class PreviewResult
+public class ExecuteResult
 {
-    private final Schema schema;
-    private final List<Page> pages;
+    private final NextConfig nextConfig;
     private final List<NoticeLogger.Message> noticeMessages;
     private final List<NoticeLogger.SkippedRecord> skippedRecords;
 
-    public PreviewResult(Schema schema, List<Page> pages,
+    public ExecuteResult(NextConfig nextConfig,
             List<NoticeLogger.Message> noticeMessages,
             List<NoticeLogger.SkippedRecord> skippedRecords)
     {
-        this.schema = schema;
-        this.pages = pages;
+        this.nextConfig = nextConfig;
         this.noticeMessages = noticeMessages;
         this.skippedRecords = skippedRecords;
     }
 
-    public Schema getSchema()
+    public NextConfig getNextConfig()
     {
-        return schema;
-    }
-
-    public List<Page> getPages()
-    {
-        return pages;
+        return nextConfig;
     }
 
     public List<NoticeLogger.Message> getNoticeMessages()

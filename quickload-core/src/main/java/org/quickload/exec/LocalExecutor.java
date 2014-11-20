@@ -57,12 +57,14 @@ public class LocalExecutor
         this.systemConfig = systemConfig;
     }
 
-    private static class ControlContext
+    private static class TransactionContext
     {
         private List<Report> inputReports;
         private List<Report> outputReports;
         private NextConfig inputNextConfig;
         private NextConfig outputNextConfig;
+        private List<NoticeLogger.Message> noticeMessages;
+        private List<NoticeLogger.SkippedRecord> skippedRecords;
 
         public List<Report> getInputReports()
         {
@@ -103,12 +105,34 @@ public class LocalExecutor
         {
             return outputNextConfig;
         }
+
+        public void setNoticeMessages(List<NoticeLogger.Message> noticeMessages)
+        {
+            this.noticeMessages = noticeMessages;
+        }
+
+        public void setSkippedRecords(List<NoticeLogger.SkippedRecord> skippedRecords)
+        {
+            this.skippedRecords = skippedRecords;
+        }
+
+        public List<NoticeLogger.Message> getNoticeMessages()
+        {
+            return noticeMessages;
+        }
+
+        public List<NoticeLogger.SkippedRecord> getSkippedRecords()
+        {
+            return skippedRecords;
+        }
     }
 
     private static class ProcessContext
     {
         private final Report[] inputReports;
         private final Report[] outputReports;
+        private final List<NoticeLogger.Message> noticeMessages;
+        private final List<NoticeLogger.SkippedRecord> skippedRecords;
 
         public ProcessContext(int processorCount)
         {
@@ -117,6 +141,8 @@ public class LocalExecutor
             for (int i=0; i < processorCount; i++) {
                 inputReports[i] = outputReports[i] = new Report();
             }
+            this.noticeMessages = new ArrayList<NoticeLogger.Message>();
+            this.skippedRecords = new ArrayList<NoticeLogger.SkippedRecord>();
         }
 
         public void setInputReport(int processorIndex, Report report)
@@ -129,6 +155,16 @@ public class LocalExecutor
             outputReports[processorIndex] = report;
         }
 
+        public void addNotices(NoticeLogger notice)
+        {
+            synchronized (noticeMessages) {
+                notice.addAllMessagesTo(noticeMessages);
+            }
+            synchronized (skippedRecords) {
+                notice.addAllSkippedRecordsTo(skippedRecords);
+            }
+        }
+
         public List<Report> getInputReports()
         {
             return ImmutableList.copyOf(inputReports);
@@ -137,6 +173,16 @@ public class LocalExecutor
         public List<Report> getOutputReports()
         {
             return ImmutableList.copyOf(outputReports);
+        }
+
+        public List<NoticeLogger.Message> getNoticeMessages()
+        {
+            return noticeMessages;
+        }
+
+        public List<NoticeLogger.SkippedRecord> getSkippedRecords()
+        {
+            return skippedRecords;
         }
     }
 
@@ -150,24 +196,24 @@ public class LocalExecutor
         return exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
     }
 
-    public NextConfig run(ConfigSource config, NoticeLogger notice)
+    public ExecuteResult run(ConfigSource config)
     {
         try {
-            return doRun(config, notice);
+            return doRun(config);
         } catch (Throwable ex) {
             throw PluginExecutors.propagePluginExceptions(ex);
         }
     }
 
-    private NextConfig doRun(ConfigSource config, NoticeLogger notice)
+    private ExecuteResult doRun(ConfigSource config)
     {
-        final ExecTask exec = PluginExecutors.newExecTask(injector, config, notice);
+        final ExecTask exec = PluginExecutors.newExecTask(injector, config);
         final ExecutorTask task = exec.loadConfig(config, ExecutorTask.class);
 
         final InputPlugin in = newInputPlugin(exec, task);
         final OutputPlugin out = newOutputPlugin(exec, task);
 
-        final ControlContext ctrlContext = new ControlContext();
+        final TransactionContext tranContext = new TransactionContext();
 
         // TODO create and use ExecTaskBuilder to set default values
 
@@ -184,25 +230,30 @@ public class LocalExecutor
                         System.out.println("input: "+task.getInputTask());
                         System.out.println("output: "+task.getOutputTask());
 
-                        ProcessContext execContext = new ProcessContext(exec.getProcessorCount());
+                        ProcessContext procContext = new ProcessContext(exec.getProcessorCount());
 
-                        process(exec, exec.dumpTask(task), execContext);
-                        ctrlContext.setOutputReports(execContext.getOutputReports());
-                        ctrlContext.setInputReports(execContext.getInputReports());
+                        process(exec, exec.dumpTask(task), procContext);
+                        tranContext.setOutputReports(procContext.getOutputReports());
+                        tranContext.setInputReports(procContext.getInputReports());
+                        tranContext.setNoticeMessages(procContext.getNoticeMessages());
+                        tranContext.setSkippedRecords(procContext.getSkippedRecords());
 
-                        return ctrlContext.getOutputReports();
+                        return tranContext.getOutputReports();
                     }
                 });
-                ctrlContext.setOutputNextConfig(outputNextConfig);
-                return ctrlContext.getInputReports();
+                tranContext.setOutputNextConfig(outputNextConfig);
+                return tranContext.getInputReports();
             }
         });
-        ctrlContext.setInputNextConfig(inputNextConfig);
+        tranContext.setInputNextConfig(inputNextConfig);
 
-        return ctrlContext.getInputNextConfig().setAll(ctrlContext.getOutputNextConfig());
+        return new ExecuteResult(
+                tranContext.getInputNextConfig().setAll(tranContext.getOutputNextConfig()),
+                tranContext.getNoticeMessages(),
+                tranContext.getSkippedRecords());
     }
 
-    private final void process(final ExecTask exec, final TaskSource taskSource, final ProcessContext execContext)
+    private final void process(final ExecTask exec, final TaskSource taskSource, final ProcessContext procContext)
     {
         final ExecutorTask task = exec.loadTask(taskSource, ExecutorTask.class);
         final InputPlugin in = newInputPlugin(exec, task);
@@ -223,9 +274,9 @@ public class LocalExecutor
                             // TODO return Report
                             Report report = out.runOutput(exec, task.getOutputTask(),
                                 processorIndex, channel.getInput());
-                            execContext.setOutputReport(processorIndex, report);
+                            procContext.setOutputReport(processorIndex, report);
                         } catch (Throwable ex) {
-                            execContext.setOutputReport(processorIndex, new FailedReport(ex));
+                            procContext.setOutputReport(processorIndex, new FailedReport(ex));
                             throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
                         } finally {
                             channel.completeConsumer();
@@ -239,9 +290,9 @@ public class LocalExecutor
                     channel.completeProducer();
                     thread.join();
                     channel.join();  // throws if channel is fully consumed
-                    execContext.setInputReport(processorIndex, report);
+                    procContext.setInputReport(processorIndex, report);
                 } catch (Throwable ex) {
-                    execContext.setInputReport(processorIndex, new FailedReport(ex));
+                    procContext.setInputReport(processorIndex, new FailedReport(ex));
                     throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
                 }
 
@@ -251,5 +302,8 @@ public class LocalExecutor
                 PluginThread.joinAndThrowNested(thread, error);
             }
         }
+
+        // TODO create ExecTask for each thread and do this for each thread
+        procContext.addNotices(exec.notice());
     }
 }
