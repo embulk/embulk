@@ -83,38 +83,33 @@ module QuickLoad::Plugin
         fields.each_with_index {|field,i| (column_lines[i] ||= []) << guess_type(field) }
       end
       columns = column_lines.map do |types|
-        types.inject(nil) {|r,t| merge_type(r,t) }
+        types.inject(nil) {|r,t| merge_type(r,t) } || "string"
       end
       return columns
     end
 
+    TYPE_COALESCE = Hash[{
+      long: :double,
+      boolean: :long,
+    }.map {|k,v|
+      [[k.to_s, v.to_s].sort, v.to_s]
+    }]
+
     def merge_type(type1, type2)
-      case type1
-      when nil
-        return type2
-
-      when "string"
-        return "string"
-
-      when "long"
-        if type2 == "double"
-          return "double"
-        elsif type2 == "long"
-          return "long"
-        else
-          return "string"
-        end
-
-      when "double"
-        if ["long", "double"].include?(type2)
-          return "double"
-        else
-          return "string"
-        end
+      if type1 == type2
+        type1
+      elsif type1.nil? || type2.nil?
+        type1 || type2
+      else
+        TYPE_COALESCE[[type1, type2].sort] || "string"
       end
     end
 
     def guess_type(str)
+      if ["true", "false"].include?(str)
+        return "boolean"
+      end
+
       if str.to_i.to_s == str
         return "long"
       end
