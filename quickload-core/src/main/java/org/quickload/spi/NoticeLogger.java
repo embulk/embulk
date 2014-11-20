@@ -79,6 +79,13 @@ public class NoticeLogger
         {
             return message.length();
         }
+
+        @Override
+        public String toString()
+        {
+            return String.format("%s [%s]: %s",
+                    timestamp.toString(), priority.getName(), message);
+        }
     }
 
     static class MessagePriorityComparator
@@ -119,6 +126,12 @@ public class NoticeLogger
         int size()
         {
             return json.length();
+        }
+
+        @Override
+        public String toString()
+        {
+            return json;
         }
     }
 

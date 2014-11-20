@@ -9,6 +9,7 @@ import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigSources;
 import org.quickload.config.NextConfig;
 import org.quickload.record.Pages;
+import org.quickload.spi.NoticeLogger;
 //import org.quickload.exec.QuickLoadService;
 import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.ExecuteResult;
@@ -55,6 +56,15 @@ public class QuickLoad
         ExecuteResult result = exec.run(config);
 
         System.out.println("next config: "+result.getNextConfig());
+
+        System.out.println("notice messages: ");
+        for (NoticeLogger.Message message : result.getNoticeMessages()) {
+            System.out.println("  "+message);
+        }
+
+        System.out.println("skipped records: ");
+        for (NoticeLogger.SkippedRecord record : result.getSkippedRecords()) {
+            System.out.println("  "+record);
+        }
     }
 }
-
