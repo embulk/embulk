@@ -1,29 +1,27 @@
 package org.quickload.standards;
 
-import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
-import com.google.common.collect.ImmutableList;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import org.quickload.buffer.Buffer;
-import org.quickload.buffer.BufferAllocator;
+
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
-import org.quickload.config.Task;
-import org.quickload.config.TaskSource;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
+import org.quickload.config.TaskSource;
+import org.quickload.spi.ExecControl;
+import org.quickload.spi.ExecTask;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.FilePlugins;
-import org.quickload.spi.ExecTask;
-import org.quickload.spi.ExecControl;
+
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.google.common.collect.ImmutableList;
 
 public class S3FileInputPlugin
         extends FileInputPlugin

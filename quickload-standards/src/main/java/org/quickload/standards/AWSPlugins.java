@@ -49,6 +49,11 @@ public class AWSPlugins
         return client;
     }
 
+    /**
+     * Lists S3 filenames filtered by prefix.
+     * 
+     * The resulting list does not include the file that's size == 0.
+     */
     public static List<String> listS3FilesByPrefix(AmazonS3Client client, String bucketName, String prefix)
     {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -58,7 +63,9 @@ public class AWSPlugins
             ListObjectsRequest req = new ListObjectsRequest(bucketName, prefix, lastKey, null, 1024);
             ObjectListing ol = client.listObjects(req);
             for(S3ObjectSummary s : ol.getObjectSummaries()) {
-                builder.add(s.getKey());
+                if (s.getSize() > 0) {
+                    builder.add(s.getKey());
+                }
             }
             lastKey = ol.getNextMarker();
         } while(lastKey != null);
