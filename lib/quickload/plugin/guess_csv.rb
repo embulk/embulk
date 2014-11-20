@@ -1,4 +1,5 @@
 module QuickLoad::Plugin
+  require 'quickload/plugin/tf_guess'
 
   class CsvGuess < LineGuess
     Plugin.register_guess('csv', self)
@@ -22,7 +23,7 @@ module QuickLoad::Plugin
 
       # TODO guess quote chars
 
-      sample_records = sample_lines.map {|line| line.split(delim) }
+      sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
       first_types = guess_field_types(sample_records[0, 1])
       other_types = guess_field_types(sample_records[1..-1])
 
@@ -42,9 +43,13 @@ module QuickLoad::Plugin
           column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
         end
         schema = []
-        column_names.zip(other_types).each do |name,type|
+        column_names.zip(other_types).each do |name,(type,format)|
           if name && type
-            schema << {"name" => name, "type" => type}
+            if format
+              schema << {"name" => name, "type" => type, "format" => format}
+            else
+              schema << {"name" => name, "type" => type}
+            end
           end
         end
         guessed["columns"] = schema
@@ -83,7 +88,13 @@ module QuickLoad::Plugin
         fields.each_with_index {|field,i| (column_lines[i] ||= []) << guess_type(field) }
       end
       columns = column_lines.map do |types|
-        types.inject(nil) {|r,t| merge_type(r,t) } || "string"
+        t = types.inject(nil) {|r,t| merge_type(r,t) } || "string"
+        if t.is_a?(TimestampMatch)
+          format = TFGuess.guess(types.map {|type| type.text })
+          ["timestamp", format]
+        else
+          [t]
+        end
       end
       return columns
     end
@@ -105,9 +116,21 @@ module QuickLoad::Plugin
       end
     end
 
+    class TimestampMatch < String
+      def initialize(text)
+        super("timestamp")
+        @text = text
+      end
+      attr_reader :text
+    end
+
     def guess_type(str)
       if ["true", "false"].include?(str)
         return "boolean"
+      end
+
+      if TFGuess.guess(str)
+        return TimestampMatch.new(str)
       end
 
       if str.to_i.to_s == str
