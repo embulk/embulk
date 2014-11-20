@@ -1,8 +1,11 @@
 package org.quickload;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.quickload.config.ConfigSource;
 import org.quickload.exec.PluginExecutors;
 import org.quickload.spi.ExecTask;
+import org.quickload.spi.LoggerNoticeLogger;
 
 public class TestRuntimeBinder
         extends GuiceBinder
@@ -28,6 +31,7 @@ public class TestRuntimeBinder
     public ExecTask newExecTask()
     {
         return PluginExecutors.newExecTask(getInjector(),
-                new ConfigSource().set("exec", execConfig));
+                new ConfigSource().set("exec", execConfig),
+                new LoggerNoticeLogger(LogFactory.getLog(TestRuntimeBinder.class)));
     }
 }

@@ -21,19 +21,21 @@ public class ExecTask
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferManager bufferManager;
+    private final NoticeLogger noticeLogger;
 
-    public ExecTask(Injector injector)
+    public ExecTask(Injector injector, NoticeLogger noticeLogger)
     {
         super();
         this.injector = injector;
+        this.noticeLogger = noticeLogger;
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferManager = injector.getInstance(BufferManager.class);
     }
 
-    public ExecTask(Injector injector, ExecConfig execConfig)
+    public ExecTask(Injector injector, NoticeLogger noticeLogger, ExecConfig execConfig)
     {
-        this(injector);
+        this(injector, noticeLogger);
         set(execConfig);
     }
 
@@ -70,6 +72,11 @@ public class ExecTask
     public <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
     {
         return pluginManager.newPlugin(iface, typeConfig);
+    }
+
+    public NoticeLogger notice()
+    {
+        return noticeLogger;
     }
 
     public PluginThread startPluginThread(Runnable runnable)

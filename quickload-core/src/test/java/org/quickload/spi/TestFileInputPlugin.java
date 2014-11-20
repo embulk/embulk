@@ -24,9 +24,8 @@ import org.quickload.config.TaskValidationException;
 import org.quickload.record.Schema;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.GuiceJUnitRunner;
-import org.quickload.GuiceBinder;
+import org.quickload.TestRuntimeBinder;
 import org.quickload.TestUtilityModule;
-import org.quickload.TestRuntimeModule;
 import org.quickload.record.RandomSchemaGenerator;
 import org.quickload.record.RandomRecordGenerator;
 import org.quickload.plugin.MockPluginSource;
@@ -41,7 +40,7 @@ public class TestFileInputPlugin
     protected RandomRecordGenerator recordGen;
 
     @Rule
-    public GuiceBinder binder = new GuiceBinder(new TestRuntimeModule());
+    public TestRuntimeBinder binder = new TestRuntimeBinder();
 
     private static interface TestParserTask
             extends Task
@@ -76,7 +75,7 @@ public class TestFileInputPlugin
                 TestParserTask.class);
         binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class, parser));
 
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
 
         ConfigSource config = new ConfigSource()
             .set("parser",

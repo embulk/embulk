@@ -13,21 +13,17 @@ import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.TaskSource;
-import org.quickload.GuiceBinder;
-import org.quickload.TestRuntimeModule;
-import org.quickload.TestUtilityModule;
-import org.quickload.record.RandomSchemaGenerator;
-import org.quickload.record.RandomRecordGenerator;
+import org.quickload.TestRuntimeBinder;
 
 public class TestLineDecoderTask
 {
     @Rule
-    public GuiceBinder binder = new GuiceBinder(new TestRuntimeModule());
+    public TestRuntimeBinder binder = new TestRuntimeBinder();
 
     @Test
     public void testDefaultValues()
     {
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
         LineDecoderTask task = exec.loadConfig(new ConfigSource(), LineDecoderTask.class);
         assertEquals(Charset.forName("utf-8"), task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
@@ -36,7 +32,7 @@ public class TestLineDecoderTask
     @Test
     public void testLoadConfig()
     {
-        ExecTask exec = new ExecTask(binder.getInjector());
+        ExecTask exec = binder.newExecTask();
         ConfigSource config = new ConfigSource()
             .setString("charset", "utf-16")
             .setString("newline", "LF");

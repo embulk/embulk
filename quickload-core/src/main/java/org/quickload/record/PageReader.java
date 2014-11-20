@@ -5,6 +5,7 @@ import java.util.Iterator;
 public class PageReader
         implements AutoCloseable
 {
+    private final Schema schema;
     private final Iterator<Page> input;
     private final int[] columnOffsets;
 
@@ -17,6 +18,7 @@ public class PageReader
 
     public PageReader(Schema schema, Iterable<Page> input)
     {
+        this.schema = schema;
         this.input = input.iterator();
         this.columnOffsets = Page.columnOffsets(schema);
         this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
@@ -24,6 +26,11 @@ public class PageReader
         for (Column column : schema.getColumns()) {
             typeReaders[column.getIndex()] = column.getType().newReader(this, column);
         }
+    }
+
+    public Schema getSchema()
+    {
+        return schema;
     }
 
     public boolean isNull(int columnIndex)

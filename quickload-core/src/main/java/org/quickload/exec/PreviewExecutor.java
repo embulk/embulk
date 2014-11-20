@@ -26,6 +26,7 @@ import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.ExecControl;
+import org.quickload.spi.NoticeLogger;
 
 public class PreviewExecutor
 {
@@ -55,9 +56,9 @@ public class PreviewExecutor
         public void setInputTask(TaskSource taskSource);
     }
 
-    public PreviewResult run(ConfigSource config)
+    public PreviewResult run(ConfigSource config, NoticeLogger notice)
     {
-        ExecTask exec = PluginExecutors.newExecTask(injector, config);
+        ExecTask exec = PluginExecutors.newExecTask(injector, config, notice);
         return preview(exec, config);
     }
 

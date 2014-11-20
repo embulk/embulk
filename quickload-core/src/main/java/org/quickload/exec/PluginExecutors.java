@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 import org.quickload.config.ConfigSource;
 import org.quickload.channel.ChannelAsynchronousCloseException;
 import org.quickload.spi.ExecTask;
+import org.quickload.spi.NoticeLogger;
 
 public abstract class PluginExecutors
 {
@@ -47,9 +48,9 @@ public abstract class PluginExecutors
         return !(ex instanceof ChannelAsynchronousCloseException);
     }
 
-    public static ExecTask newExecTask(Injector injector, ConfigSource config)
+    public static ExecTask newExecTask(Injector injector, ConfigSource config, NoticeLogger notice)
     {
-        ExecTask exec = new ExecTask(injector);
+        ExecTask exec = new ExecTask(injector, notice);
         ConfigSource execConfig = config.getObjectOrSetEmpty("exec");
         exec.setUniqueTransactionName(execConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
         // TODO get default time zone from config

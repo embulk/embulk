@@ -2,6 +2,8 @@ package org.quickload.cli;
 
 import java.util.List;
 import java.io.File;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigSources;
@@ -12,6 +14,7 @@ import org.quickload.exec.LocalExecutor;
 import org.quickload.exec.GuessExecutor;
 import org.quickload.exec.PreviewExecutor;
 import org.quickload.exec.PreviewResult;
+import org.quickload.spi.LoggerNoticeLogger;
 
 public class QuickLoad
         extends QuickLoadService
@@ -36,20 +39,21 @@ public class QuickLoad
     public void run(String configPath) throws Exception
     {
         ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
+        LoggerNoticeLogger notice = new LoggerNoticeLogger(LogFactory.getLog(QuickLoad.class));  // TODO initialize log4j
 
         // automatic guess
         NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
         System.out.println("guessed: "+guessed);
         config.mergeRecursively(guessed);
 
-        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
+        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config, notice);
         List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
         String previewJson = new ObjectMapper().writeValueAsString(records);
         System.out.println("preview schema: "+preview.getSchema());
         System.out.println("preview records: "+previewJson);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
-        NextConfig nextConfig = exec.run(config);
+        NextConfig nextConfig = exec.run(config, notice);
 
         System.out.println("next config: "+nextConfig);
     }

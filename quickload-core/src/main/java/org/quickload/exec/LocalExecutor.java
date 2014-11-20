@@ -22,6 +22,7 @@ import org.quickload.spi.ExecConfig;
 import org.quickload.spi.InputPlugin;
 import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
+import org.quickload.spi.NoticeLogger;
 import org.quickload.channel.PageChannel;
 
 public class LocalExecutor
@@ -149,18 +150,18 @@ public class LocalExecutor
         return exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
     }
 
-    public NextConfig run(final ConfigSource config)
+    public NextConfig run(ConfigSource config, NoticeLogger notice)
     {
         try {
-            return doRun(config);
+            return doRun(config, notice);
         } catch (Throwable ex) {
             throw PluginExecutors.propagePluginExceptions(ex);
         }
     }
 
-    private NextConfig doRun(ConfigSource config)
+    private NextConfig doRun(ConfigSource config, NoticeLogger notice)
     {
-        final ExecTask exec = PluginExecutors.newExecTask(injector, config);
+        final ExecTask exec = PluginExecutors.newExecTask(injector, config, notice);
         final ExecutorTask task = exec.loadConfig(config, ExecutorTask.class);
 
         final InputPlugin in = newInputPlugin(exec, task);
