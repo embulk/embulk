@@ -45,21 +45,21 @@ public class JRubyPluginSource
         String name = typeConfig.asText();
 
         String category;
-        if (InputPlugin.class.equals(iface)) {
+        if (InputPlugin.class.isAssignableFrom(iface)) {
             category = "input";
-        } else if (OutputPlugin.class.equals(iface)) {
+        } else if (OutputPlugin.class.isAssignableFrom(iface)) {
             category = "output";
-        } else if (ParserPlugin.class.equals(iface)) {
+        } else if (ParserPlugin.class.isAssignableFrom(iface)) {
             category = "parser";
-        } else if (FormatterPlugin.class.equals(iface)) {
+        } else if (FormatterPlugin.class.isAssignableFrom(iface)) {
             category = "formatter";
-        } else if (FileDecoderPlugin.class.equals(iface)) {
+        } else if (FileDecoderPlugin.class.isAssignableFrom(iface)) {
             category = "decoder";
-        } else if (FileEncoderPlugin.class.equals(iface)) {
+        } else if (FileEncoderPlugin.class.isAssignableFrom(iface)) {
             category = "encoder";
-        } else if (LineFilterPlugin.class.equals(iface)) {
+        } else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
             category = "line_filter";
-        } else if (GuessPlugin.class.equals(iface)) {
+        } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
         } else {
             // unsupported plugin category
