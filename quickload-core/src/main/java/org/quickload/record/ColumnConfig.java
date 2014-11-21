@@ -44,7 +44,11 @@ public class ColumnConfig
 
     public Column toColumn(int index)
     {
-        return new Column(index, name, type);
+        if (type instanceof TimestampType && format != null) {
+            return new Column(index, name, ((TimestampType) type).withFormat(format));
+        } else {
+            return new Column(index, name, type);
+        }
     }
 
     @Override
