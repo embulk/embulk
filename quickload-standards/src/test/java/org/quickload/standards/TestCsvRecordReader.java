@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestCsvTokenizer
+public class TestCsvRecordReader
 {
     private static CsvTokenizer newTokenizer(CsvParserTask task, List<Buffer> buffers)
     {
