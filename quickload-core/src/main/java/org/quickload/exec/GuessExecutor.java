@@ -68,7 +68,7 @@ public class GuessExecutor
         NextConfig lastGuessed = new NextConfig();
         for (int i=0; i < 10; i++) {
             // include last-guessed config to run guess
-            ConfigSource guessConfig = config.deepCopy().mergeRecursively(lastGuessed);
+            ConfigSource guessConfig = config.deepCopy().mergeRecursively(lastGuessed.deepCopy());
 
             // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
             ConfigSource guessInputConfig = guessConfig.getObject("in");
