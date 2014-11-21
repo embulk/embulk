@@ -1,7 +1,9 @@
 package org.quickload.spi;
 
+import org.joda.time.DateTimeZone;
 import com.google.inject.Injector;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.jruby.embed.ScriptingContainer;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Task;
@@ -13,6 +15,7 @@ import org.quickload.record.PageAllocator;
 import org.quickload.channel.BufferChannel;
 import org.quickload.channel.FileBufferChannel;
 import org.quickload.channel.PageChannel;
+import org.quickload.time.TimestampFormatter;
 
 public class ExecTask
         extends ExecConfig
@@ -100,5 +103,10 @@ public class ExecTask
     public PageChannel newPageChannel()
     {
         return new PageChannel(32*1024*1024);  // TODO configurable buffer size
+    }
+
+    public TimestampFormatter newTimestampFormatter(String format, DateTimeZone timeZone)
+    {
+        return new TimestampFormatter(injector.getInstance(ScriptingContainer.class), format, timeZone);
     }
 }

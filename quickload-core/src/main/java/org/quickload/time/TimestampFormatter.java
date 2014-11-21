@@ -15,7 +15,12 @@ public class TimestampFormatter
 
     public TimestampFormatter(ScriptingContainer jruby, String format, TimestampFormatterTask task)
     {
-        this.timeZone = task.getTimeZone();
+        this(jruby, format, task.getTimeZone());
+    }
+
+    public TimestampFormatter(ScriptingContainer jruby, String format, DateTimeZone timeZone)
+    {
+        this.timeZone = timeZone;
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
     }
 
