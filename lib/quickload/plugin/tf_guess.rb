@@ -7,27 +7,33 @@ module QuickLoad::Plugin::TFGuess
     DAY = /[0 ]?[1-9]|[1-2][0-9]|30|31/
     HOUR = /[0 ]?[0-9]|20|21|22|23|24/
     MINUTE = SECOND = /[0 ][0-9]|[1-5]?[0-9]|60/
+
+    MONTH_NAME_SHORT = /Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/
+    MONTH_NAME_FULL = /January|February|March|April|May|June|July|August|September|October|November|December/
+
+    WEEKDAY_NAME_SHORT = /Sun|Mon|Tue|Wed|Thu|Fri|Sat/
+    WEEKDAY_NAME_FULL = /Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday/
   end
 
   class GuessMatch
-    def initialize(delimiters, parts, headings)
+    def initialize(delimiters, parts, part_options)
       @delimiters = delimiters
       @parts = parts
-      @headings = headings
+      @part_options = part_options
     end
 
     def format
       format = ''
       @parts.size.times do |i|
         format << @delimiters[i-1] if i != 0
-        heading = @headings[i]
+        option = @part_options[i]
 
         case @parts[i]
         when :year
           format << '%Y'
 
         when :month
-          case heading
+          case option
           when :zero
             format << '%m'
           when :blank
@@ -41,7 +47,7 @@ module QuickLoad::Plugin::TFGuess
           end
 
         when :day
-          case heading
+          case option
           when :zero
             format << '%d'
           when :blank
@@ -53,7 +59,7 @@ module QuickLoad::Plugin::TFGuess
           end
 
         when :hour
-          case heading
+          case option
           when :zero
             format << '%H'
           when :blank
@@ -73,23 +79,23 @@ module QuickLoad::Plugin::TFGuess
           format << '%S'
 
         when :frac
-          if heading <= 3
+          if option <= 3
             format << '%L'
-          #elsif heading <= 6
+          #elsif option <= 6
           #  format << '%6N'
-          #elsif heading <= 6
+          #elsif option <= 6
           #  format << '%6N'
-          #elsif heading <= 9
+          #elsif option <= 9
           #  format << '%9N'
-          #elsif heading <= 12
+          #elsif option <= 12
           #  format << '%12N'
-          #elsif heading <= 15
+          #elsif option <= 15
           #  format << '%15N'
-          #elsif heading <= 18
+          #elsif option <= 18
           #  format << '%18N'
-          #elsif heading <= 21
+          #elsif option <= 21
           #  format << '%21N'
-          #elsif heading <= 24
+          #elsif option <= 24
           #  format << '%24N'
           else
             format << '%N'
@@ -113,15 +119,13 @@ module QuickLoad::Plugin::TFGuess
       [@delimiters, @parts]
     end
 
-    attr_reader :headings
+    attr_reader :part_options
 
     def merge!(another_in_group)
-      headings = another_in_group.headings
-      @headings.size.times do |i|
-        @headings[i] ||= headings[i]
-        if @headings[i] != headings[i]
-          @headings[i] = :zero
-        end
+      part_options = another_in_group.part_options
+      @part_options.size.times do |i|
+        @part_options[i] ||= part_options[i]
+        [@part_options[i], part_options[i]].sort.last
       end
     end
   end
@@ -143,31 +147,31 @@ module QuickLoad::Plugin::TFGuess
     def match(text)
       delimiters = []
       parts = []
-      headings = []
+      part_options = []
 
       if dm = /^#{YMD}(?<rest>.*)$/.match(text)
         parts << :year
-        headings << nil
+        part_options << nil
         delimiters << dm["date_delim"]
 
         parts << :month
-        headings << part_heading(dm["month"])
+        part_options << part_heading_option(dm["month"])
         delimiters << dm["date_delim"]
 
         parts << :day
-        headings << part_heading(dm["day"])
+        part_options << part_heading_option(dm["day"])
 
       elsif dm = /^#{DMY}(?<rest>.*)$/.match(text)
         parts << :day
-        headings << part_heading(dm["day"])
+        part_options << part_heading_option(dm["day"])
         delimiters << dm["date_delim"]
 
         parts << :month
-        headings << part_heading(dm["month"])
+        part_options << part_heading_option(dm["month"])
         delimiters << dm["date_delim"]
 
         parts << :year
-        headings << nil
+        part_options << nil
         delimiters << dm["date_delim"]
 
       else
@@ -184,22 +188,22 @@ module QuickLoad::Plugin::TFGuess
       if tm = /^#{date_time_delims}#{TIME}(?<rest>.*)?$/.match(rest)
         delimiters << tm["date_time_delim"]
         parts << :hour
-        headings << part_heading(tm["hour"])
+        part_options << part_heading_option(tm["hour"])
 
         delimiters << tm["time_delim"]
         parts << :minute
-        headings << part_heading(tm["minute"])
+        part_options << part_heading_option(tm["minute"])
 
         if tm["second"]
           delimiters << tm["time_delim"]
           parts << :second
-          headings << part_heading(tm["second"])
+          part_options << part_heading_option(tm["second"])
         end
 
         if tm["frac"]
           delimiters << tm["frac_delim"]
           parts << :frac
-          headings << tm["frac"].size
+          part_options << tm["frac"].size
         end
 
         rest = tm["rest"]
@@ -215,19 +219,19 @@ module QuickLoad::Plugin::TFGuess
         else
           parts << :zone_abb
         end
-        headings << nil
+        part_options << nil
 
-        return GuessMatch.new(delimiters, parts, headings)
+        return GuessMatch.new(delimiters, parts, part_options)
 
       elsif rest =~ /^\s*$/
-        return GuessMatch.new(delimiters, parts, headings)
+        return GuessMatch.new(delimiters, parts, part_options)
 
       else
         return nil
       end
     end
 
-    def part_heading(text)
+    def part_heading_option(text)
       if text[0] == '0'
         :zero
       elsif text[0] == ' '
@@ -250,6 +254,9 @@ module QuickLoad::Plugin::TFGuess
     def mergeable_group
       @format
     end
+
+    def merge!(another_in_group)
+    end
   end
 
   class RegexpPattern
@@ -267,13 +274,21 @@ module QuickLoad::Plugin::TFGuess
     end
   end
 
+  module StandardPatterns
+    include Parts
+
+    RFC_822_1123 = /^#{WEEKDAY_NAME_SHORT}, \d\d #{MONTH_NAME_SHORT} \d\d\d\d \d\d:\d\d:\d\d [a-zA-Z]{3}$/
+    RFC_850_1035 = /^#{WEEKDAY_NAME_FULL}, \d\d-#{MONTH_NAME_SHORT}-\d\d \d\d:\d\d:\d\d [a-zA-Z]{3}$/
+    APACHE_CLF = /^\d\d\/#{MONTH_NAME_SHORT}\/\d\d\d\d \d\d:\d\d:\d\d [\-\+]\d\d(?::?\d\d)?$/
+    ANSI_C_ASCTIME = /^#{WEEKDAY_NAME_SHORT} #{MONTH_NAME_SHORT} \d\d? \d\d:\d\d:\d\d \d\d\d\d$/
+  end
+
   PATTERNS = [
     GuessPattern.new,
-    # TODO RFC 8222_1123
-    # TODO RFC 850_1036
-    # TODO APACHE_CLF
-    # TODO ANSI_C
-    #RegexpPattern.new(),
+    RegexpPattern.new(StandardPatterns::RFC_822_1123, "%a, %d %b %Y %H:%M:%S %z"),
+    RegexpPattern.new(StandardPatterns::RFC_850_1035, "%A, %d-%b-%y %H:%M:%S %z"),
+    RegexpPattern.new(StandardPatterns::APACHE_CLF, "%d/%b/%Y %H:%M:%S %Z"),
+    RegexpPattern.new(StandardPatterns::ANSI_C_ASCTIME, "$a %b %e %H:%M:%S %Y"),
   ]
 
   def self.guess(texts)
@@ -287,7 +302,7 @@ module QuickLoad::Plugin::TFGuess
       return matches[0].format
     else
       match_groups = matches.group_by {|match| match.mergeable_group }
-      best_match_group = match_groups.sort_by {|group| group.size }.first[1]
+      best_match_group = match_groups.sort_by {|group| group.size }.last[1]
       best_match = best_match_group.shift
       best_match_group.each {|m| best_match.merge!(m) }
       return best_match.format
