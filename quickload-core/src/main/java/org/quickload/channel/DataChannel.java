@@ -192,7 +192,7 @@ public class DataChannel <E extends Buffer>
 
     public Iterator<E> iterator()
     {
-        return new Ite(this);
+        return new Ite<E>(this);
     }
 
     public void add(E e)
