@@ -33,13 +33,15 @@ public class CsvParserPlugin extends BasicParserPlugin {
     public void runBasicParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput) {
+        PageAllocator pageAllocator = exec.getPageAllocator();
         Schema schema = exec.getSchema();
         CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
         CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
-        try (PageBuilder builder = new PageBuilder(exec.getPageAllocator(), exec.getSchema(), pageOutput)) {
+        CsvRecordReader reader = new CsvRecordReader(tokenizer);
+        try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
             while (fileBufferInput.nextFile()) {
                 boolean skipHeaderLine = task.getHeaderLine();
-                for (final List<String> record : tokenizer) {
+                for (final List<String> record : reader) {
                     if (record.size() != schema.getColumns().size()) {
                         throw new RuntimeException("not match"); // TODO fix the error handling
                     }
