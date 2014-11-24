@@ -36,6 +36,8 @@ public class ConfigSources
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
         Yaml yaml = new Yaml();
         for (String key : props.stringPropertyNames()) {
+            // TODO handle "." and "[...]" as map and array acccessor for example:
+            //      in.parser.type=csv => {"in": {"parser": {"type": "csv"}}}
             if (!key.startsWith(keyPrefix)) {
                 continue;
             }

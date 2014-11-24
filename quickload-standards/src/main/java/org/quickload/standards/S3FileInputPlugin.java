@@ -1,11 +1,19 @@
 package org.quickload.standards;
 
+import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;
@@ -17,25 +25,22 @@ import org.quickload.spi.ExecTask;
 import org.quickload.spi.FileInputPlugin;
 import org.quickload.spi.FilePlugins;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.google.common.collect.ImmutableList;
-
 public class S3FileInputPlugin
         extends FileInputPlugin
 {
     public interface PluginTask
-            extends AWSCredentialsTask, AmazonS3Task
+            extends AwsPlugins.CredentialsTask
     {
         @Config("bucket")
-        @NotNull
         public String getBucket();
 
         @Config("paths")
-        @NotNull
         public List<String> getPathPrefixes();
+
+        @Config("endpoint")
+        public Optional<String> getEndpoint();
+
+        // TODO timeout, ssl, etc
 
         public List<String> getFiles();
         public void setFiles(List<String> files);
@@ -59,23 +64,66 @@ public class S3FileInputPlugin
         return new NextConfig();
     }
 
-    private static AmazonS3Client createS3Client(PluginTask task)
+    private static AmazonS3Client newS3Client(PluginTask task)
     {
-        AWSCredentialsProvider credentials = AWSPlugins.getCredentialsProvider(task);
-        AmazonS3Client client = AWSPlugins.getS3Client(task, credentials);
+        AWSCredentialsProvider credentials = AwsPlugins.getCredentialsProvider(task);
+        AmazonS3Client client = newS3Client(credentials, task.getEndpoint());
+        return client;
+    }
+
+    private static AmazonS3Client newS3Client(AWSCredentialsProvider credentials,
+            Optional<String> endpoint)
+    {
+        // TODO get config from AmazonS3Task
+        ClientConfiguration clientConfig = new ClientConfiguration();
+        //clientConfig.setProtocol(Protocol.HTTP);
+        clientConfig.setMaxConnections(50); // SDK default: 50
+        clientConfig.setMaxErrorRetry(3); // SDK default: 3
+        clientConfig.setSocketTimeout(8*60*1000); // SDK default: 50*1000
+
+        AmazonS3Client client = new AmazonS3Client(credentials, clientConfig);
+
+        if (endpoint.isPresent()) {
+            client.setEndpoint(endpoint.get());
+        }
+
         return client;
     }
 
     public List<String> listFiles(PluginTask task)
     {
-        AmazonS3Client client = createS3Client(task);
+        AmazonS3Client client = newS3Client(task);
         String bucketName = task.getBucket();
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
             // TODO format path using timestamp
-            builder.addAll(AWSPlugins.listS3FilesByPrefix(client, bucketName, prefix));
+            builder.addAll(listS3FilesByPrefix(client, bucketName, prefix));
         }
+
+        return builder.build();
+    }
+
+    /**
+     * Lists S3 filenames filtered by prefix.
+     *
+     * The resulting list does not include the file that's size == 0.
+     */
+    public static List<String> listS3FilesByPrefix(AmazonS3Client client, String bucketName, String prefix)
+    {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+        String lastKey = null;
+        do {
+            ListObjectsRequest req = new ListObjectsRequest(bucketName, prefix, lastKey, null, 1024);
+            ObjectListing ol = client.listObjects(req);
+            for(S3ObjectSummary s : ol.getObjectSummaries()) {
+                if (s.getSize() > 0) {
+                    builder.add(s.getKey());
+                }
+            }
+            lastKey = ol.getNextMarker();
+        } while(lastKey != null);
 
         return builder.build();
     }
@@ -85,7 +133,7 @@ public class S3FileInputPlugin
             int processorIndex, FileBufferOutput fileBufferOutput)
     {
         PluginTask task = exec.loadTask(taskSource, PluginTask.class);
-        AmazonS3Client client = createS3Client(task);
+        AmazonS3Client client = newS3Client(task);
 
         String bucket = task.getBucket();
         String key = task.getFiles().get(processorIndex);
