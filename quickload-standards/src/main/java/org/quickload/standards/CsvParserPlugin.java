@@ -19,8 +19,6 @@ import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.LineDecoder;
 import org.quickload.spi.ExecTask;
 
-import java.util.List;
-
 public class CsvParserPlugin extends BasicParserPlugin {
     @Override
     public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config) {
@@ -33,56 +31,72 @@ public class CsvParserPlugin extends BasicParserPlugin {
     public void runBasicParser(ExecTask exec,
             TaskSource taskSource, int processorIndex,
             FileBufferInput fileBufferInput, PageOutput pageOutput) {
-        PageAllocator pageAllocator = exec.getPageAllocator();
-        Schema schema = exec.getSchema();
-        CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
-        CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
-        CsvRecordReader reader = new CsvRecordReader(tokenizer);
+        final PageAllocator pageAllocator = exec.getPageAllocator();
+        final Schema schema = exec.getSchema();
+        final CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
+        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
         try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
             while (fileBufferInput.nextFile()) {
                 boolean skipHeaderLine = task.getHeaderLine();
-                for (final List<String> record : reader) {
-                    if (record.size() != schema.getColumns().size()) {
-                        throw new RuntimeException("not match"); // TODO fix the error handling
-                    }
-
+                while (tokenizer.hasNext()) {
                     if (skipHeaderLine) {
+                        tokenizer.skipLine();
                         skipHeaderLine = false;
                         continue;
                     }
 
-                    builder.addRecord(new RecordWriter() {
-                        // TODO null column string
-                        public void writeBoolean(Column column, BooleanWriter writer)
-                        {
-                            writer.write(Boolean.parseBoolean(record.get(column.getIndex())));
-                        }
+                    try {
+                        builder.addRecord(new RecordWriter() {
+                            public void writeBoolean(Column column, BooleanWriter writer) {
+                                validateNextColumn(column, tokenizer);
+                                writer.write(Boolean.parseBoolean(nextColumn(tokenizer)));
+                            }
 
-                        public void writeLong(Column column, LongWriter writer)
-                        {
-                            writer.write(Long.parseLong(record.get(column.getIndex())));
-                        }
+                            public void writeLong(Column column, LongWriter writer) {
+                                validateNextColumn(column, tokenizer);
+                                writer.write(Long.parseLong(nextColumn(tokenizer)));
+                            }
 
-                        public void writeDouble(Column column, DoubleWriter writer)
-                        {
-                            writer.write(Double.parseDouble(record.get(column.getIndex())));
-                        }
+                            public void writeDouble(Column column, DoubleWriter writer) {
+                                validateNextColumn(column, tokenizer);
+                                writer.write(Double.parseDouble(nextColumn(tokenizer)));
+                            }
 
-                        public void writeString(Column column, StringWriter writer)
-                        {
-                            writer.write(record.get(column.getIndex()));
-                        }
+                            public void writeString(Column column, StringWriter writer) {
+                                validateNextColumn(column, tokenizer);
+                                writer.write(nextColumn(tokenizer));
+                            }
 
-                        public void writeTimestamp(Column column, TimestampWriter writer)
-                        {
-                            // TODO timestamp parsing needs strptime format and default time zone
-                            long msec = Long.parseLong(record.get(column.getIndex()));
-                            Timestamp value = Timestamp.ofEpochMilli(msec);
-                            writer.write(value);
-                        }
-                    });
+                            public void writeTimestamp(Column column, TimestampWriter writer) {
+                                validateNextColumn(column, tokenizer);
+                                // TODO timestamp parsing needs strptime format and default time zone
+                                long msec = Long.parseLong(nextColumn(tokenizer));
+                                Timestamp value = Timestamp.ofEpochMilli(msec);
+                                writer.write(value);
+                            }
+                        });
+                    } catch (Exception e) { // TODO better error handling
+                        tokenizer.skipLine();
+                    }
                 }
             }
+        }
+    }
+
+    private static void validateNextColumn(final Column column, final CsvTokenizer tokenizer)
+    {
+        if (!tokenizer.hasNextColumn()) {
+            throw new RuntimeException("not much"); // TODO
+        }
+    }
+
+    private static String nextColumn(final CsvTokenizer tokenizer)
+    {
+        String column = tokenizer.nextColumn();
+        if (!column.isEmpty()) {
+            return column;
+        } else {
+            return tokenizer.isQuotedColumn() ? "" : null;
         }
     }
 }

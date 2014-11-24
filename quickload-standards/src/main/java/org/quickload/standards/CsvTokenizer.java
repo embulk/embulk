@@ -1,66 +1,14 @@
 package org.quickload.standards;
 
-import com.google.common.base.Objects;
 import org.quickload.spi.LineDecoder;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
-public class CsvTokenizer
+public class CsvTokenizer implements Iterator<String>
 {
-    static enum Mode
+    static enum State
     {
-        NORMAL, QUOTE, END_OF_COLUMNS_MODE;
-    }
-
-    static enum Identifier
-    {
-        STRING, EMPTY_STRING;
-    }
-
-    static class Token implements Cloneable
-    {
-        private final Identifier id;
-        private final String column;
-        private final boolean isQuoted;
-
-        Token(Identifier id, String column, boolean isQuoted)
-        {
-            this.id = id;
-            this.column = column;
-            this.isQuoted = isQuoted;
-        }
-
-        public boolean isQuoted()
-        {
-            return isQuoted;
-        }
-
-        public boolean isEmptyColumnString()
-        {
-            return id.equals(Identifier.EMPTY_STRING);
-        }
-
-        public String getColumn()
-        {
-            return column;
-        }
-
-        @Override
-        public String toString()
-        {
-            return Objects.toStringHelper("Token")
-                    .add("id", id)
-                    .add("column", column)
-                    .add("isQuoted", isQuoted)
-                    .toString();
-        }
-
-        @Override
-        public Object clone()
-        {
-            return new Token(id, column, isQuoted);
-        }
+        NORMAL, QUOTE, END_OF_COLUMNS;
     }
 
     private static final char END_OF_LINE = 0;
@@ -70,10 +18,9 @@ public class CsvTokenizer
     private final String newline;
     private final boolean surroundingSpacesNeedQuotes;
 
-    private Iterator<String> decoder;
-    private Mode mode;
-    private Identifier currentId;
-    private Token currentToken;
+    private Iterator<String> lineDecoder;
+
+    private State currentState;
     private int currentLineNum;
     private String currentLine;
     private int currentLinePos;
@@ -82,17 +29,15 @@ public class CsvTokenizer
     private final StringBuilder currentUntokenizedLine;
 
     // @see http://tools.ietf.org/html/rfc4180
-    public CsvTokenizer(LineDecoder decoder, CsvParserTask task)
+    public CsvTokenizer(LineDecoder lineDecoder, CsvParserTask task)
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
         surroundingSpacesNeedQuotes = false; // TODO
 
-        this.decoder = decoder.iterator();
-        mode = Mode.NORMAL;
-        currentToken = null;
-        currentId = Identifier.STRING;
+        this.lineDecoder = lineDecoder.iterator();
+        currentState = State.NORMAL;
         isQuotedColumn = false;
         currentColumn = new StringBuilder();
         currentLineNum = 0;
@@ -110,48 +55,77 @@ public class CsvTokenizer
         return currentUntokenizedLine.toString();
     }
 
-    public boolean hasNextRecord()
+    @Override
+    public boolean hasNext()
     {
-        return decoder.hasNext();
+        // returns true if LineDecoder has more lines.
+        boolean flag = lineDecoder.hasNext();
+        System.out.println("# hasNext: "+ flag);
+        return flag;
+        //return lineDecoder.hasNext();
     }
 
-    public boolean hasNextToken()
+    @Override
+    public String next()
     {
-        if (currentToken != null) {
-            return true;
-        } else {
-            poll();
-            return currentToken != null;
+        // the method name is ambiguous. users might be confusing that
+        // it is for lines or columns.
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void remove()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void skipLine()
+    {
+        while (hasNextColumn()) { // ad-hoc implementation
+            nextColumn();
         }
     }
 
-    public Token nextToken()
+    public boolean hasNextColumn()
     {
-        if (!hasNextToken()) {
-            throw new NoSuchElementException();
+        System.out.println("# hasNextColumn: currentColumn:"+currentColumn.toString() + ", state: "+ currentState);
+        if (currentState.equals(State.END_OF_COLUMNS)) {
+            currentState = State.NORMAL;
+            return false;
         }
 
-        Token token = (Token)currentToken.clone(); // deep copy
-        currentToken = null;
-        return token;
+        poll();
+        return true;
+    }
+
+    public boolean isQuotedColumn()
+    {
+        return isQuotedColumn;
+    }
+
+    public String nextColumn()
+    {
+        String c = currentColumn.toString();
+        currentColumn.setLength(0);
+        return c;
     }
 
     private void poll()
     {
-        if (mode.equals(Mode.END_OF_COLUMNS_MODE)) {
-            mode = Mode.NORMAL;
-            return;
-        }
+        System.out.println("# poll: currentColumn:"+currentColumn.toString() + ", state: "+ currentState);
 
         // TODO check QUOTE_MODE
+
+        isQuotedColumn = false;
 
         // keep track of spaces (so leading/trailing space can be removed if required)
         int potentialSpaces = 0;
 
         while (true) {
             final char c = getChar();
+            System.out.println("# char: "+c);
 
-            if (mode.equals(Mode.NORMAL)) {
+            if (currentState.equals(State.NORMAL)) {
                 if (isDelimiter(c)) {
                     // Save the column (trim trailing space if required) then
                     // continue to next character.
@@ -159,9 +133,6 @@ public class CsvTokenizer
                         appendSpaces(currentColumn, potentialSpaces);
                     }
                     potentialSpaces = 0;
-                    if (currentColumn.length() == 0) {
-                        currentId = Identifier.EMPTY_STRING;
-                    }
                     break;
 
                 } else if (isEndOfLine(c)) {
@@ -171,14 +142,14 @@ public class CsvTokenizer
                         appendSpaces(currentColumn, potentialSpaces);
                     }
                     potentialSpaces = 0;
-                    mode = Mode.END_OF_COLUMNS_MODE;
+                    currentState = State.END_OF_COLUMNS;
                     break;
 
                 } else if (isSpace(c)) {
                     potentialSpaces += 1;
 
                 } else if (isQuote(c)) {
-                    mode = Mode.QUOTE;
+                    currentState = State.QUOTE;
                     isQuotedColumn = true;
 
                     // cater for spaces before a quoted section
@@ -202,7 +173,7 @@ public class CsvTokenizer
                 // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
 
                 if (isQuote(c)) {
-                    mode = Mode.NORMAL;
+                    currentState = State.NORMAL;
                     // reset ready for next multi-line cell
 
                 } else if (isEndOfLine(c)) {
@@ -213,32 +184,30 @@ public class CsvTokenizer
                 }
             }
         }
-
-        currentToken = new Token(currentId, currentColumn.toString(), isQuotedColumn);
-        currentId = Identifier.STRING;
-        currentColumn.setLength(0);
-        isQuotedColumn = false;
     }
 
     private char getChar()
     {
+        try {
+            Thread.sleep(100);
+        } catch (Exception e) {}
         if (currentLine == null) {
             String line;
 
-            while (decoder.hasNext()) {
-                line = decoder.next();
-                //System.out.println("line: "+line);
+            while (lineDecoder.hasNext()) {
+                line = lineDecoder.next();
+                System.out.println("line: "+line);
                 currentLineNum++; // increment # of line
 
-                // if it finds empty lines with STRING mode, they should be skipped.
-                if (line.isEmpty() && mode.equals(Mode.NORMAL)) {
+                // if it finds empty lines with STRING currentState, they should be skipped.
+                if (line.isEmpty() && currentState.equals(State.NORMAL)) {
                     continue;
                 }
 
                 // update the untokenized line:
-                // if STRING mode, untokenized line first should be cleaned up. otherwise,
-                // (it means QUOTE mode), new line is appended to current untokenized line.
-                if (mode.equals(Mode.NORMAL)) {
+                // if STRING currentState, untokenized line first should be cleaned up. otherwise,
+                // (it means QUOTE currentState), new line is appended to current untokenized line.
+                if (currentState.equals(State.NORMAL)) {
                     currentUntokenizedLine.setLength(0);
                 } else {
                     currentUntokenizedLine.append(newline); // multi lines
