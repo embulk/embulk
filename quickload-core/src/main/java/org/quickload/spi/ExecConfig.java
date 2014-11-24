@@ -2,6 +2,7 @@ package org.quickload.spi;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.quickload.time.Timestamp;
 import org.quickload.record.Schema;
 import org.quickload.config.ConfigException;
 
@@ -10,6 +11,7 @@ public class ExecConfig
 {
     protected Schema schema;
     protected int processorCount;
+    protected Timestamp transactionTime;
     protected String uniqueTransactionName;
 
     public ExecConfig()
@@ -20,10 +22,12 @@ public class ExecConfig
     public void ExecConfig(
             @JsonProperty("schema") Schema schema,
             @JsonProperty("processorCount") int processorCount,
+            @JsonProperty("transactionTime") Timestamp transactionTime,
             @JsonProperty("uniqueTransactionName") String uniqueTransactionName)
     {
         this.schema = schema;
         this.processorCount = processorCount;
+        this.transactionTime = transactionTime;
         this.uniqueTransactionName = uniqueTransactionName;
     }
 
@@ -54,6 +58,17 @@ public class ExecConfig
     public void setProcessorCount(int processorCount)
     {
         this.processorCount = processorCount;
+    }
+
+    @JsonProperty("transactionTime")
+    public Timestamp getTransactionTime()
+    {
+        return transactionTime;
+    }
+
+    public void setTransactionTime(Timestamp transactionTime)
+    {
+        this.transactionTime = transactionTime;
     }
 
     @JsonProperty("uniqueTransactionName")
