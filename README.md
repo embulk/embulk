@@ -1,8 +1,8 @@
 ## Build
 
 ```
-QUICKLOAD_HOME=$(pwd) mvn clean package dependency:copy-dependencies -Dproject.check.skip-findbugs=true
-QUICKLOAD_HOME=. java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.quickload.cli.QuickLoad examples/config.yml
+mvn clean package dependency:copy-dependencies -Dproject.check.skip-findbugs=true
+java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.quickload.cli.QuickLoad examples/config.yml
 ```
 
 You can see JaCoCo's coverage report at ${project}/target/site/jacoco/index.html

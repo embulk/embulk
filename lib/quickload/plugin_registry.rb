@@ -32,14 +32,17 @@ module QuickLoad
       path = "#{@search_prefix}#{type}"
 
       # prefer LOAD_PATH than gems
-      files = $LOAD_PATH.map { |lp|
+      paths = $LOAD_PATH.map { |lp|
         lpath = File.expand_path(File.join(lp, "#{path}.rb"))
         File.exist?(lpath) ? lpath : nil
-      }.compact
-      unless files.empty?
+      }.compact.sort + [path]  # add [path] to search from Java classpath
+      paths.each do |path|
         # prefer newer version
-        require files.sort.last
-        return
+        begin
+          require path
+          return
+        rescue LoadError
+        end
       end
 
       # search gems
