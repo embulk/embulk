@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestCsvRecordReader
+public class TestCsvTokenizer
 {
     private static CsvTokenizer newTokenizer(CsvParserTask task, List<Buffer> buffers)
     {
@@ -31,14 +31,29 @@ public class TestCsvRecordReader
 
     private static List<List<String>> doParse(CsvParserTask task, List<Buffer> buffers)
     {
-        return ImmutableList.copyOf(newTokenizer(task, buffers));
+        CsvTokenizer tokenizer = newTokenizer(task, buffers);
+        List<List<String>> records = new ArrayList<>();
+        while (tokenizer.hasNext()) {
+            List<String> record = new ArrayList<>();
+            while (tokenizer.hasNextColumn()) {
+                String column = tokenizer.nextColumn();
+                System.out.println("column: " + column);
+                if (!column.isEmpty()) {
+                    record.add(column);
+                } else {
+                    record.add(tokenizer.isQuotedColumn() ? "" : null);
+                }
+            }
+            records.add(record);
+        }
+        return records;
     }
 
     private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException
     {
         Charset charset = Charset.forName(charsetName);
 
-        List<Buffer> buffers = new ArrayList<Buffer>();
+        List<Buffer> buffers = new ArrayList<>();
         for (String source : sources) {
             ByteBuffer buffer = charset.encode(source);
             buffers.add(Buffer.wrap(buffer.array(), buffer.limit()));
@@ -97,10 +112,11 @@ public class TestCsvRecordReader
     public void parseQuotedValues() throws Exception
     {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "\"aaa\"", ",\"b,bb\"", "\n\"cc\"\"c\",\"\"\"ddd\"", "\n"));
+                "\"a\r\na\na\"", ",\"b,bb\"", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
         assertEquals(Arrays.asList(
-                        Arrays.asList("aaa", "b,bb"),
-                        Arrays.asList("ccc", "ddd")), // TODO Arrays.asList("cc\"c", "\"ddd")),
+                        Arrays.asList("a\r\na\na", "b,bb"),
+                        Arrays.asList("ccc", "ddd"), // TODO Arrays.asList("cc\"c", "\"ddd")),
+                        Arrays.asList(null, "")),
                 parsed);
     }
 
