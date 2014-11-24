@@ -48,31 +48,50 @@ public class CsvParserPlugin extends BasicParserPlugin {
                     try {
                         builder.addRecord(new RecordWriter() {
                             public void writeBoolean(Column column, BooleanWriter writer) {
-                                validateNextColumn(column, tokenizer);
-                                writer.write(Boolean.parseBoolean(nextColumn(tokenizer)));
+                                if (tokenizer.hasNextColumn()) {
+                                    // if CsvTokenizer doesn't have any more columns, writer
+                                    // is not called. just skipped.
+                                    // TODO need any messages for skipping?
+                                    writer.write(Boolean.parseBoolean(nextColumn(tokenizer)));
+                                }
                             }
 
                             public void writeLong(Column column, LongWriter writer) {
-                                validateNextColumn(column, tokenizer);
-                                writer.write(Long.parseLong(nextColumn(tokenizer)));
+                                if (tokenizer.hasNextColumn()) {
+                                    // if CsvTokenizer doesn't have any more columns, writer
+                                    // is not called. just skipped.
+                                    // TODO need any messages for skipping?
+                                    writer.write(Long.parseLong(nextColumn(tokenizer)));
+                                }
                             }
 
                             public void writeDouble(Column column, DoubleWriter writer) {
-                                validateNextColumn(column, tokenizer);
-                                writer.write(Double.parseDouble(nextColumn(tokenizer)));
+                                if (tokenizer.hasNextColumn()) {
+                                    // if CsvTokenizer doesn't have any more columns, writer
+                                    // is not called. just skipped.
+                                    // TODO need any messages for skipping?
+                                    writer.write(Double.parseDouble(nextColumn(tokenizer)));
+                                }
                             }
 
                             public void writeString(Column column, StringWriter writer) {
-                                validateNextColumn(column, tokenizer);
-                                writer.write(nextColumn(tokenizer));
+                                if (tokenizer.hasNextColumn()) {
+                                    // if CsvTokenizer doesn't have any more columns, writer
+                                    // is not called. just skipped.
+                                    // TODO need any messages for skipping?
+                                    writer.write(nextColumn(tokenizer));
+                                }
                             }
 
                             public void writeTimestamp(Column column, TimestampWriter writer) {
-                                validateNextColumn(column, tokenizer);
-                                // TODO timestamp parsing needs strptime format and default time zone
-                                long msec = Long.parseLong(nextColumn(tokenizer));
-                                Timestamp value = Timestamp.ofEpochMilli(msec);
-                                writer.write(value);
+                                if (tokenizer.hasNextColumn()) {
+                                    // if CsvTokenizer doesn't have any more columns, writer
+                                    // is not called. just skipped.
+                                    // TODO timestamp parsing needs strptime format and default time zone
+                                    long msec = Long.parseLong(nextColumn(tokenizer));
+                                    Timestamp value = Timestamp.ofEpochMilli(msec);
+                                    writer.write(value);
+                                }
                             }
                         });
                     } catch (Exception e) {
@@ -81,13 +100,6 @@ public class CsvParserPlugin extends BasicParserPlugin {
                     }
                 }
             }
-        }
-    }
-
-    private static void validateNextColumn(final Column column, final CsvTokenizer tokenizer)
-    {
-        if (!tokenizer.hasNextColumn()) {
-            throw new RuntimeException("not much"); // TODO
         }
     }
 
