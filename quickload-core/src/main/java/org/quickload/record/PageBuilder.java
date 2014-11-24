@@ -80,7 +80,7 @@ public class PageBuilder
             int index = stringReferences.size();
             stringReferences.put(value, index);
             page.setInt(getOffset(columnIndex), index);
-            stringReferenceSize += value.length() * 2;  // assuming size of char = size of byte * 2
+            stringReferenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
         }
     }
 
@@ -103,7 +103,7 @@ public class PageBuilder
         @Override
         public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2)
         {
-            return e1.getKey().compareTo(e2.getKey());
+            return e1.getValue().compareTo(e2.getValue());
         }
 
         @Override
