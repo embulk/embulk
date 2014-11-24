@@ -15,7 +15,7 @@ public class LongWriter
 
     public void write(long value)
     {
-        builder.getPage().setLong(builder.getOffset(column.getIndex()), value);
+        builder.setLong(column.getIndex(), value);
     }
 
     @Override

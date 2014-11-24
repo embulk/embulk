@@ -14,10 +14,7 @@ public class StringReader
         if (reader.isNull(column.getIndex())) {
             visitor.readNull(column);
         } else {
-            Page page = reader.getPage();
-            int index = reader.getPage().getInt(reader.getOffset(column.getIndex()));
-            String value = page.getStringReference(index);
-            visitor.readString(column, value);
+            visitor.readString(column, reader.getString(column.getIndex()));
         }
     }
 }

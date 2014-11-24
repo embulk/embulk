@@ -19,9 +19,7 @@ public class StringWriter
             // this is unnecessary check but exists for buggy plugins
             writeNull();
         } else {
-            Page page = builder.getPage();
-            int index = page.addStringReference(value);
-            page.setInt(builder.getOffset(column.getIndex()), index);
+            builder.setString(column.getIndex(), value);
         }
     }
 

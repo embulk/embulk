@@ -17,10 +17,12 @@ public class TimestampWriter
 
     public void write(Timestamp value)
     {
-        Page page = builder.getPage();
-        int offset = builder.getOffset(column.getIndex());
-        page.setLong(offset, value.getEpochSecond() / 1000);
-        page.setInt(offset + 8, value.getNano());
+        if (value == null) {
+            // this is unnecessary check but exists for buggy plugins
+            writeNull();
+        } else {
+            builder.setTimestamp(column.getIndex(), value);
+        }
     }
 
     @Override
