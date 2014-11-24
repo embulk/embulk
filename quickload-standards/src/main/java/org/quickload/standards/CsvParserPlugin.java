@@ -75,7 +75,8 @@ public class CsvParserPlugin extends BasicParserPlugin {
                                 writer.write(value);
                             }
                         });
-                    } catch (Exception e) { // TODO better error handling
+                    } catch (Exception e) {
+                        exec.notice().skippedLine(tokenizer.getCurrentUntokenizedLine());
                         tokenizer.skipLine();
                     }
                 }
