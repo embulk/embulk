@@ -60,7 +60,6 @@ public class CsvTokenizer implements Iterator<String>
     {
         // returns true if LineDecoder has more lines.
         boolean flag = lineDecoder.hasNext();
-        System.out.println("# hasNext: "+ flag);
         return flag;
         //return lineDecoder.hasNext();
     }
@@ -88,7 +87,6 @@ public class CsvTokenizer implements Iterator<String>
 
     public boolean hasNextColumn()
     {
-        System.out.println("# hasNextColumn: currentColumn:"+currentColumn.toString() + ", state: "+ currentState);
         if (currentState.equals(State.END_OF_COLUMNS)) {
             currentState = State.NORMAL;
             return false;
@@ -112,8 +110,6 @@ public class CsvTokenizer implements Iterator<String>
 
     private void poll()
     {
-        System.out.println("# poll: currentColumn:"+currentColumn.toString() + ", state: "+ currentState);
-
         // TODO check QUOTE_MODE
 
         isQuotedColumn = false;
@@ -123,7 +119,6 @@ public class CsvTokenizer implements Iterator<String>
 
         while (true) {
             final char c = getChar();
-            System.out.println("# char: "+c);
 
             if (currentState.equals(State.NORMAL)) {
                 if (isDelimiter(c)) {
@@ -196,7 +191,6 @@ public class CsvTokenizer implements Iterator<String>
 
             while (lineDecoder.hasNext()) {
                 line = lineDecoder.next();
-                System.out.println("line: "+line);
                 currentLineNum++; // increment # of line
 
                 // if it finds empty lines with STRING currentState, they should be skipped.
