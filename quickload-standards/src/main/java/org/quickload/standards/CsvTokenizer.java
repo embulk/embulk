@@ -183,9 +183,6 @@ public class CsvTokenizer implements Iterator<String>
 
     private char getChar()
     {
-        try {
-            Thread.sleep(100);
-        } catch (Exception e) {}
         if (currentLine == null) {
             String line;
 
