@@ -21,7 +21,7 @@ public class CsvTokenizer implements Iterator<String>
     private Iterator<String> lineDecoder;
 
     private State currentState;
-    private int currentLineNum;
+    private long currentLineNum;
     private String currentLine;
     private int currentLinePos;
     private boolean isQuotedColumn;
@@ -45,7 +45,7 @@ public class CsvTokenizer implements Iterator<String>
         currentUntokenizedLine = new StringBuilder();
     }
 
-    public int getCurrentLineNum()
+    public long getCurrentLineNum()
     {
         return currentLineNum;
     }
