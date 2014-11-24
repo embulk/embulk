@@ -30,7 +30,7 @@ public class TestAWSPlugins
         Mockito.doReturn("in/file/").doReturn(null).when(ol).getNextMarker();
 
         // It counts only size != 0 files.
-        assertEquals(1, AWSPlugins.listS3FilesByPrefix(client, "bucketName", "prefix").size());
+        assertEquals(1, S3FileInputPlugin.listS3FilesByPrefix(client, "bucketName", "prefix").size());
     }
 
     private S3ObjectSummary bucket(String key, long size)
