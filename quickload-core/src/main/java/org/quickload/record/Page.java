@@ -1,7 +1,8 @@
 package org.quickload.record;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.nio.ByteBuffer;
+import com.google.common.collect.ImmutableList;
 import org.quickload.buffer.Buffer;
 
 public class Page
@@ -40,13 +41,15 @@ public class Page
     //   binary payload:   3 30-dataOff (32-dataLen)
     //
 
-    private final List<String> stringReferences; // TODO ??
-    // TODO private final List<byte[]> binaryReferences;
+    private static final List<String> EMPTY_STRING_REFERENCES = ImmutableList.<String>of();
+
+    private List<String> stringReferences;
+    // TODO private List<byte[]> binaryReferences;
 
     protected Page(int size)
     {
         super(size);
-        this.stringReferences = new ArrayList<String>();
+        this.stringReferences = EMPTY_STRING_REFERENCES;
     }
 
     public static Page allocate(int length)
@@ -64,11 +67,6 @@ public class Page
     public int getRecordCount()
     {
         return getInt(0);
-    }
-
-    public void clear()
-    {
-        stringReferences.clear();
     }
 
     static int nullBitSetSize(Schema schema)
@@ -100,15 +98,13 @@ public class Page
         return offsets;
     }
 
+    public void setStringReferences(List<String> values)
+    {
+        this.stringReferences = values;
+    }
+
     public String getStringReference(int index)
     {
         return stringReferences.get(index);
-    }
-
-    public int addStringReference(String value)
-    {
-        int index = stringReferences.size();
-        stringReferences.add(value);
-        return index;
     }
 }

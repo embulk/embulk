@@ -16,7 +16,7 @@ public class TimestampFormatConfigSerDe
 
         module.addDeserializer(TimestampFormatConfig.class, new TimestampFormatConfigDeserializer(jruby));
 
-        modelManager.addObjectMapperModule(module);
+        modelManager.registerObjectMapperModule(module);
     }
 
     public static class TimestampFormatConfigDeserializer

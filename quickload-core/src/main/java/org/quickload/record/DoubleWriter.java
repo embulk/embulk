@@ -15,7 +15,7 @@ public class DoubleWriter
 
     public void write(double value)
     {
-        builder.getPage().setDouble(builder.getOffset(column.getIndex()), value);
+        builder.setDouble(column.getIndex(), value);
     }
 
     @Override

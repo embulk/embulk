@@ -15,7 +15,7 @@ public class BooleanWriter
 
     public void write(boolean value)
     {
-        builder.getPage().setByte(builder.getOffset(column.getIndex()), value ? (byte) 1 : (byte) 0);
+        builder.setBoolean(column.getIndex(), value);
     }
 
     @Override

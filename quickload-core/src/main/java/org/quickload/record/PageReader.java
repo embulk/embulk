@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 import java.util.Iterator;
+import org.quickload.time.Timestamp;
 
 public class PageReader
         implements AutoCloseable
@@ -8,13 +9,13 @@ public class PageReader
     private final Schema schema;
     private final Iterator<Page> input;
     private final int[] columnOffsets;
+    private final TypeReader[] typeReaders;
 
     private Page page;
     private int pageRecordCount;
     private int readCount;
     private int position;
     private final byte[] nullBitSet;
-    private final TypeReader[] typeReaders;
 
     public PageReader(Schema schema, Iterable<Page> input)
     {
@@ -39,15 +40,42 @@ public class PageReader
     }
 
     // for TypeReader
-    int getOffset(int columnIndex)
+    boolean getBoolean(int columnIndex)
     {
-        return position + columnOffsets[columnIndex];
+        return page.getByte(getOffset(columnIndex)) != (byte) 0;
     }
 
-    // for TypeWriter
-    Page getPage()
+    // for TypeReader
+    long getLong(int columnIndex)
     {
-        return page;
+        return page.getLong(getOffset(columnIndex));
+    }
+
+    // for TypeReader
+    double getDouble(int columnIndex)
+    {
+        return page.getDouble(getOffset(columnIndex));
+    }
+
+    // for TypeReader
+    String getString(int columnIndex)
+    {
+        int index = page.getInt(getOffset(columnIndex));
+        return page.getStringReference(index);
+    }
+
+    // for TypeReader
+    Timestamp getTimestamp(int columnIndex)
+    {
+        int offset = getOffset(getOffset(columnIndex));
+        long msec = page.getLong(offset);
+        int nsec = page.getInt(offset + 8);
+        return Timestamp.ofEpochSecond(msec, nsec);
+    }
+
+    private int getOffset(int columnIndex)
+    {
+        return position + columnOffsets[columnIndex];
     }
 
     //// TODO implement if useful

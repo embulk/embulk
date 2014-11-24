@@ -31,4 +31,25 @@ public abstract class AbstractType
     {
         return fixedStorageSize;
     }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == null) {
+            return false;
+        }
+        return o.getClass().isAssignableFrom(getClass());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return getClass().hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+        return name;
+    }
 }

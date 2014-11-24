@@ -1,10 +1,13 @@
 package org.quickload.exec;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
-import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
+import com.fasterxml.jackson.module.guice.ObjectMapperModule;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.quickload.time.TimestampFormatConfigSerDe;
 import org.quickload.time.DateTimeZoneSerDe;
 import org.quickload.config.ModelManager;
@@ -23,12 +26,17 @@ public class ExecModule
         Preconditions.checkNotNull(binder, "binder is null.");
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(TypeManager.class).asEagerSingleton();
-        binder.bind(DataSourceSerDe.class).asEagerSingleton();
-        binder.bind(EnumTaskSerDe.class).asEagerSingleton();
-        binder.bind(TimestampFormatConfigSerDe.class).asEagerSingleton();
-        binder.bind(DateTimeZoneSerDe.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess")).to(GuessExecutor.GuessParserPlugin.class);
-        binder.bind(CharsetSerDe.class).asEagerSingleton();
+        binder.bind(TimestampFormatConfigSerDe.class).asEagerSingleton();
+
+        ObjectMapperModule mapper = new ObjectMapperModule();
+        DataSourceSerDe.configure(mapper);
+        DateTimeZoneSerDe.configure(mapper);
+        EnumTaskSerDe.configure(mapper);
+        CharsetSerDe.configure(mapper);
+        mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
+        mapper.registerModule(new JodaModule());  // jackson-datatype-joda
+        mapper.configure(binder);
     }
 }

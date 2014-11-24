@@ -11,16 +11,17 @@ public class ColumnConfig
 {
     private final String name;
     private final Type type;
+    private final String format;
 
-    // TODO support 3-element tuple [name, type, ConfigSource]
     @JsonCreator
     public ColumnConfig(
             @JsonProperty("name") String name,
-            @JsonProperty("type") Type type
-            /*, ConfigSource attributes*/)
+            @JsonProperty("type") Type type,
+            @JsonProperty("format") String format)
     {
         this.name = name;
         this.type = type;
+        this.format = format;
     }
 
     @JsonProperty("name")
@@ -35,9 +36,19 @@ public class ColumnConfig
         return type;
     }
 
+    @JsonProperty("format")
+    public String getFormat()
+    {
+        return format;
+    }
+
     public Column toColumn(int index)
     {
-        return new Column(index, name, type);
+        if (type instanceof TimestampType && format != null) {
+            return new Column(index, name, ((TimestampType) type).withFormat(format));
+        } else {
+            return new Column(index, name, type);
+        }
     }
 
     @Override

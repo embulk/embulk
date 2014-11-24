@@ -9,12 +9,13 @@ import org.quickload.config.ConfigSource;
 import org.quickload.config.ConfigSources;
 import org.quickload.config.NextConfig;
 import org.quickload.record.Pages;
+import org.quickload.spi.NoticeLogger;
 //import org.quickload.exec.QuickLoadService;
 import org.quickload.exec.LocalExecutor;
+import org.quickload.exec.ExecuteResult;
 import org.quickload.exec.GuessExecutor;
 import org.quickload.exec.PreviewExecutor;
 import org.quickload.exec.PreviewResult;
-import org.quickload.spi.LoggerNoticeLogger;
 
 public class QuickLoad
         extends QuickLoadService
@@ -39,23 +40,31 @@ public class QuickLoad
     public void run(String configPath) throws Exception
     {
         ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
-        LoggerNoticeLogger notice = new LoggerNoticeLogger(LogFactory.getLog(QuickLoad.class));  // TODO initialize log4j
 
         // automatic guess
         NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
         System.out.println("guessed: "+guessed);
         config.mergeRecursively(guessed);
 
-        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config, notice);
+        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
         List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
         String previewJson = new ObjectMapper().writeValueAsString(records);
         System.out.println("preview schema: "+preview.getSchema());
         System.out.println("preview records: "+previewJson);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
-        NextConfig nextConfig = exec.run(config, notice);
+        ExecuteResult result = exec.run(config);
 
-        System.out.println("next config: "+nextConfig);
+        System.out.println("next config: "+result.getNextConfig());
+
+        System.out.println("notice messages: ");
+        for (NoticeLogger.Message message : result.getNoticeMessages()) {
+            System.out.println("  "+message);
+        }
+
+        System.out.println("skipped records: ");
+        for (NoticeLogger.SkippedRecord record : result.getSkippedRecords()) {
+            System.out.println("  "+record);
+        }
     }
 }
-

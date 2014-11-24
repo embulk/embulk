@@ -2,7 +2,6 @@ package org.quickload.spi;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import com.google.inject.Inject;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -11,17 +10,17 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
+import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import org.quickload.config.ModelManager;
 
 public class CharsetSerDe
 {
-    @Inject
-    public CharsetSerDe(ModelManager modelManager)
+    public static void configure(ObjectMapperModule mapper)
     {
         SimpleModule module = new SimpleModule();
         module.addSerializer(Charset.class, new CharsetSerializer());
         module.addDeserializer(Charset.class, new CharsetDeserializer());
-        modelManager.addObjectMapperModule(module);
+        mapper.registerModule(module);
     }
 
     public static class CharsetSerializer

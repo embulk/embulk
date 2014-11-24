@@ -12,10 +12,16 @@ public class TimestampParser
 
     public TimestampParser(ScriptingContainer jruby, String format, TimestampParserTask task)
     {
+        this(jruby, format, task.getDefaultTimeZone());
+    }
+
+    // TODO this is still private because this might need current time
+    private TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
+    {
         JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("QuickLoad::Java::TimeParserHelper::Factory.new");
         // TODO get default current time from ExecTask.getExecTimestamp
         this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, 1970, 1, 1, 0, 0, 0, 0);  // TODO default time zone
-        this.defaultTimeZone = task.getDefaultTimeZone();
+        this.defaultTimeZone = defaultTimeZone;
     }
 
     public Timestamp parse(String text) throws TimestampParseException

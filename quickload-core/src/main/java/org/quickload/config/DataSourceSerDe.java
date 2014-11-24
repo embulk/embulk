@@ -11,13 +11,13 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 
 public class DataSourceSerDe
 {
-    @Inject
-    public DataSourceSerDe(ModelManager modelManager)
+    public static void configure(ObjectMapperModule mapper)
     {
         SimpleModule module = new SimpleModule();
 
@@ -51,7 +51,7 @@ public class DataSourceSerDe
                     }
                 }));
 
-        modelManager.addObjectMapperModule(module);
+        mapper.registerModule(module);
     }
 
     private interface DataSourceFactory <T extends DataSource<T>>

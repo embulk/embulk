@@ -1,6 +1,7 @@
 package org.quickload.time;
 
 public class Timestamp
+        implements Comparable<Timestamp>
 {
     private final long seconds;
     private final int nano;
@@ -60,6 +61,18 @@ public class Timestamp
         int h = (int) (seconds ^ (seconds >>> 32));
         h += 17 * nano;
         return h;
+    }
+
+    @Override
+    public int compareTo(Timestamp t)
+    {
+        if (seconds < t.seconds) {
+            return -1;
+        } else if (seconds == t.seconds) {
+            return nano == t.nano ? 0 : (nano < t.nano ? -1 : 1);
+        } else {
+            return 1;
+        }
     }
 
     @Override

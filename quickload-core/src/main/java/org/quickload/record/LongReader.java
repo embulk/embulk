@@ -14,7 +14,7 @@ public class LongReader
         if (reader.isNull(column.getIndex())) {
             visitor.readNull(column);
         } else {
-            visitor.readLong(column, reader.getPage().getLong(reader.getOffset(column.getIndex())));
+            visitor.readLong(column, reader.getLong(column.getIndex()));
         }
     }
 }

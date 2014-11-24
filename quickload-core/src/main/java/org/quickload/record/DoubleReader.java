@@ -14,7 +14,7 @@ public class DoubleReader
         if (reader.isNull(column.getIndex())) {
             visitor.readNull(column);
         } else {
-            visitor.readDouble(column, reader.getPage().getDouble(reader.getOffset(column.getIndex())));
+            visitor.readDouble(column, reader.getDouble(column.getIndex()));
         }
     }
 }

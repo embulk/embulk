@@ -20,7 +20,7 @@ public class TypeManager
     {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Type.class, new TypeDeserializer());
-        modelManager.addObjectMapperModule(module);
+        modelManager.registerObjectMapperModule(module);
 
         this.fromStringToTypeMap = new HashMap<String, Type>();
         regsterTypes();

@@ -17,10 +17,10 @@ public class ModelManager
     private final TaskValidator taskValidator;
 
     @Inject
-    public ModelManager()
+    public ModelManager(ObjectMapper objectMapper)
     {
-        this.objectMapper = new ObjectMapper().findAndRegisterModules();
-        this.configObjectMapper = new ObjectMapper().findAndRegisterModules();
+        this.objectMapper = objectMapper;
+        this.configObjectMapper = objectMapper.copy();
         this.taskValidator = new TaskValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
@@ -31,7 +31,7 @@ public class ModelManager
     }
 
     // TODO inject by Set<Module> because this is not thread-safe?
-    public void addObjectMapperModule(Module module)
+    public void registerObjectMapperModule(Module module)
     {
         objectMapper.registerModule(module);
         configObjectMapper.registerModule(module);

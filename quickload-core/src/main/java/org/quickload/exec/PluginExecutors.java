@@ -48,13 +48,8 @@ public abstract class PluginExecutors
         return !(ex instanceof ChannelAsynchronousCloseException);
     }
 
-    public static ExecTask newExecTask(Injector injector, ConfigSource config, NoticeLogger notice)
+    public static ExecTask newExecTask(Injector injector, ConfigSource config)
     {
-        ExecTask exec = new ExecTask(injector, notice);
-        ConfigSource execConfig = config.getObjectOrSetEmpty("exec");
-        exec.setUniqueTransactionName(execConfig.getString("transactionName", "TODO"));  // TODO set default value using current time
-        // TODO get default time zone from config
-        // TODO get start time from config
-        return exec;
+        return ExecTask.loadFromConfig(injector, config);
     }
 }

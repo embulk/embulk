@@ -44,19 +44,22 @@ public class JRubyScriptingModule
             ScriptingContainer jruby = new ScriptingContainer();
             jruby.setCompatVersion(CompatVersion.RUBY1_9);
 
-            // search quickload/lib path
-            String home = System.getenv("QUICKLOAD_HOME");
-            if (home == null || home.isEmpty()) {
-                home = JRubyScriptingModule.class.getProtectionDomain().getCodeSource().getLocation().getPath() + File.separator + "..";
-            }
-            String libPath = home + File.separator + "lib";
-
+            // search quickload.rb path
             List<String> loadPaths = new ArrayList<String>();
-            loadPaths.add(libPath);
+
+            String coreJarPath = JRubyScriptingModule.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            loadPaths.add(coreJarPath);
+
+            String home = System.getenv("QUICKLOAD_HOME");
+            if (home != null && !home.isEmpty()) {
+                String homeLibPath = home + File.separator + "lib";
+                loadPaths.add(homeLibPath);
+            }
+
             jruby.setLoadPaths(loadPaths);
 
             // load quickload.rb from $QUICKLOAD_HOME/lib
-            jruby.runScriptlet(PathType.ABSOLUTE, libPath + File.separator + "quickload.rb");
+            jruby.runScriptlet("require 'quickload'");
 
             return jruby;
         }

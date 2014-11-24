@@ -14,7 +14,7 @@ public class BooleanReader
         if (reader.isNull(column.getIndex())) {
             visitor.readNull(column);
         } else {
-            visitor.readBoolean(column, reader.getPage().getByte(reader.getOffset(column.getIndex())) == (byte) 1 ? true : false);
+            visitor.readBoolean(column, reader.getBoolean(column.getIndex()));
         }
     }
 }

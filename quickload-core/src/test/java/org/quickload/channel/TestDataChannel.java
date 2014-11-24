@@ -1,19 +1,21 @@
 package org.quickload.channel;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.nio.ByteBuffer;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.Timeout;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import org.quickload.buffer.Buffer;
 import org.quickload.DurationWatch;
 
@@ -161,6 +163,53 @@ public class TestDataChannel
         assertTrue(duration.runtimeMillis() > 50);
     }
 
+    @Test
+    public void testCloseReleasesUnconsumedBuffers()
+    {
+        channel.add(newBuffer());
+        channel.close();
+    }
+
+    @Test
+    public void testBlockedAddThrowsAfterConsumerCompleted() throws Exception
+    {
+        channel = new DataChannel<Buffer>(1);
+        channel.add(newBuffer(1));
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.completeConsumer();
+            }
+        });
+        try {
+            // blocks, and throws after released by close()
+            channel.add(newBuffer(1));
+            fail();
+        } catch (ChannelAsynchronousCloseException cace) {
+            // Make sure code comes here.
+        }
+    }
+
+    @Test
+    public void testBlockedAddThrowsAfterProducerCompleted() throws Exception
+    {
+        channel = new DataChannel<Buffer>(1);
+        channel.add(newBuffer(1));
+        doLater(new Runnable() {
+            public void run()
+            {
+                channel.completeProducer();
+            }
+        });
+        try {
+            // blocks, and throws after released by close()
+            channel.add(newBuffer(1));
+            fail();
+        } catch (IllegalStateException ise) {
+            // Make sure code comes here.
+        }
+    }
+
     @Test(expected = NullPointerException.class)
     public void testAddNullFails() throws Exception
     {
@@ -212,7 +261,7 @@ public class TestDataChannel
     @Test
     public void testMaxQueuedSizeBlocksConsumer() throws Exception
     {
-        channel = new DataChannel(10);
+        channel = new DataChannel<Buffer>(10);
         channel.add(newBuffer(5));
         channel.add(newBuffer(5));
         doLater(new Runnable() {

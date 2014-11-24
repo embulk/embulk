@@ -3,14 +3,12 @@ package org.quickload.config;
 import java.util.Map;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import com.google.inject.Inject;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -18,17 +16,18 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.deser.Deserializers;
+import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
+import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import org.quickload.config.ModelManager;
 
 public class EnumTaskSerDe
 {
-    @Inject
-    public EnumTaskSerDe(ModelManager modelManager)
+    public static void configure(ObjectMapperModule mapper)
     {
-        modelManager.addObjectMapperModule(new EnumTaskSerializerModule());
-        modelManager.addObjectMapperModule(new EnumTaskDeserializerModule());
+        mapper.registerModule(new EnumTaskSerializerModule());
+        mapper.registerModule(new EnumTaskDeserializerModule());
     }
 
     public static class EnumTaskSerializer
