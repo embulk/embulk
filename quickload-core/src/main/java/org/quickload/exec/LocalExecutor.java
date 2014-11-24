@@ -127,14 +127,14 @@ public class LocalExecutor
         }
     }
 
-    private static class ProcessContext
+    private static class ProcessResult
     {
         private final Report[] inputReports;
         private final Report[] outputReports;
         private final List<NoticeLogger.Message> noticeMessages;
         private final List<NoticeLogger.SkippedRecord> skippedRecords;
 
-        public ProcessContext(int processorCount)
+        public ProcessResult(int processorCount)
         {
             this.inputReports = new Report[processorCount];
             this.outputReports = new Report[processorCount];
@@ -230,13 +230,11 @@ public class LocalExecutor
                         System.out.println("input: "+task.getInputTask());
                         System.out.println("output: "+task.getOutputTask());
 
-                        ProcessContext procContext = new ProcessContext(exec.getProcessorCount());
-
-                        process(exec, exec.dumpTask(task), procContext);
-                        tranContext.setOutputReports(procContext.getOutputReports());
-                        tranContext.setInputReports(procContext.getInputReports());
-                        tranContext.setNoticeMessages(procContext.getNoticeMessages());
-                        tranContext.setSkippedRecords(procContext.getSkippedRecords());
+                        ProcessResult procResult = process(exec, exec.dumpTask(task), exec.getProcessorCount());
+                        tranContext.setOutputReports(procResult.getOutputReports());
+                        tranContext.setInputReports(procResult.getInputReports());
+                        tranContext.setNoticeMessages(procResult.getNoticeMessages());
+                        tranContext.setSkippedRecords(procResult.getSkippedRecords());
 
                         return tranContext.getOutputReports();
                     }
@@ -253,57 +251,73 @@ public class LocalExecutor
                 tranContext.getSkippedRecords());
     }
 
-    private final void process(final ExecTask exec, final TaskSource taskSource, final ProcessContext procContext)
+    private ProcessResult process(final ExecTask exec, final TaskSource taskSource, final int processorCount)
     {
-        final ExecutorTask task = exec.loadTask(taskSource, ExecutorTask.class);
-        final InputPlugin in = newInputPlugin(exec, task);
-        final OutputPlugin out = newOutputPlugin(exec, task);
+        ProcessResult procResult = new ProcessResult(processorCount);
 
-        // TODO multi-threading
+        List<PluginThread> processors = new ArrayList<>();
 
-        for (int i=0; i < exec.getProcessorCount(); i++) {
-            final int processorIndex = i;
-
-            PluginThread thread = null;
-            Throwable error = null;
-            try (final PageChannel channel = exec.newPageChannel()) {
-                thread = exec.startPluginThread(new Runnable() {
-                    public void run()
-                    {
-                        try {
-                            // TODO return Report
-                            Report report = out.runOutput(exec, task.getOutputTask(),
-                                processorIndex, channel.getInput());
-                            procContext.setOutputReport(processorIndex, report);
-                        } catch (Throwable ex) {
-                            procContext.setOutputReport(processorIndex, new FailedReport(ex));
-                            throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
-                        } finally {
-                            channel.completeConsumer();
-                        }
-                    }
-                });
-
-                try {
-                    Report report = in.runInput(exec, task.getInputTask(),
-                            processorIndex, channel.getOutput());
-                    channel.completeProducer();
-                    thread.join();
-                    channel.join();  // throws if channel is fully consumed
-                    procContext.setInputReport(processorIndex, report);
-                } catch (Throwable ex) {
-                    procContext.setInputReport(processorIndex, new FailedReport(ex));
-                    throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
-                }
-
-            } catch (Throwable ex) {
-                error = ex;
-            } finally {
-                PluginThread.joinAndThrowNested(thread, error);
+        try {
+            for (int i=0; i < exec.getProcessorCount(); i++) {
+                processors.add(startProcessor(exec, taskSource, procResult, i));
             }
+        } finally {
+            PluginThread.joinAndThrowNested(processors);
         }
 
-        // TODO create ExecTask for each thread and do this for each thread
-        procContext.addNotices(exec.notice());
+        return procResult;
+    }
+
+    private PluginThread startProcessor(final ExecTask exec, final TaskSource taskSource,
+            final ProcessResult procResult, final int processorIndex)
+    {
+        return exec.startPluginThread(new Runnable() {
+            public void run()
+            {
+                final ExecutorTask task = exec.loadTask(taskSource, ExecutorTask.class);
+                final InputPlugin in = newInputPlugin(exec, task);
+                final OutputPlugin out = newOutputPlugin(exec, task);
+
+                PluginThread thread = null;
+                Throwable error = null;
+                try (final PageChannel channel = exec.newPageChannel()) {
+                    thread = exec.startPluginThread(new Runnable() {
+                        public void run()
+                        {
+                            try {
+                                // TODO return Report
+                                Report report = out.runOutput(exec, task.getOutputTask(),
+                                    processorIndex, channel.getInput());
+                                procResult.setOutputReport(processorIndex, report);
+                            } catch (Throwable ex) {
+                                procResult.setOutputReport(processorIndex, new FailedReport(ex));
+                                throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
+                            } finally {
+                                channel.completeConsumer();
+                            }
+                        }
+                    });
+
+                    try {
+                        Report report = in.runInput(exec, task.getInputTask(),
+                                processorIndex, channel.getOutput());
+                        channel.completeProducer();
+                        thread.join();
+                        channel.join();  // throws if channel is fully consumed
+                        procResult.setInputReport(processorIndex, report);
+                    } catch (Throwable ex) {
+                        procResult.setInputReport(processorIndex, new FailedReport(ex));
+                        throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
+                    }
+
+                    procResult.addNotices(exec.notice());
+                } catch (Throwable ex) {
+                    error = ex;
+                    procResult.addNotices(exec.notice());
+                } finally {
+                    PluginThread.joinAndThrowNested(thread, error);
+                }
+            }
+        });
     }
 }
