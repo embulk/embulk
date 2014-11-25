@@ -67,7 +67,7 @@ public class PageReader
     // for TypeReader
     Timestamp getTimestamp(int columnIndex)
     {
-        int offset = getOffset(getOffset(columnIndex));
+        int offset = page.getInt(getOffset(columnIndex));
         long msec = page.getLong(offset);
         int nsec = page.getInt(offset + 8);
         return Timestamp.ofEpochSecond(msec, nsec);
