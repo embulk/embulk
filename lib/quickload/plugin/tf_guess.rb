@@ -3,10 +3,10 @@ module QuickLoad::Plugin::TFGuess
 
   module Parts
     YEAR = /[1-4][0-9]{3}/
-    MONTH = /[0 ]?[0-9]|10|11|12/
-    DAY = /[0 ]?[1-9]|[1-2][0-9]|30|31/
-    HOUR = /[0 ]?[0-9]|20|21|22|23|24/
-    MINUTE = SECOND = /[0 ][0-9]|[1-5]?[0-9]|60/
+    MONTH = /10|11|12|[0 ]?[0-9]/
+    DAY = /[1-2][0-9]|[0 ]?[1-9]|30|31/
+    HOUR = /20|21|22|23|24|1[0-9]|[0 ]?[0-9]/
+    MINUTE = SECOND = /60|[0 ][0-9]|[1-5]?[0-9]/
 
     MONTH_NAME_SHORT = /Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/
     MONTH_NAME_FULL = /January|February|March|April|May|June|July|August|September|October|November|December/
@@ -125,7 +125,13 @@ module QuickLoad::Plugin::TFGuess
       part_options = another_in_group.part_options
       @part_options.size.times do |i|
         @part_options[i] ||= part_options[i]
-        [@part_options[i], part_options[i]].sort.last
+        if @part_options[i] == nil
+          part_options[i]
+        elsif part_options[i] == nil
+          @part_options[i]
+        else
+          [@part_options[i], part_options[i]].sort.last
+        end
       end
     end
   end
@@ -149,7 +155,7 @@ module QuickLoad::Plugin::TFGuess
       parts = []
       part_options = []
 
-      if dm = /^#{YMD}(?<rest>.*)$/.match(text)
+      if dm = /^#{YMD}(?<rest>.*?)$/.match(text)
         parts << :year
         part_options << nil
         delimiters << dm["date_delim"]
@@ -161,7 +167,7 @@ module QuickLoad::Plugin::TFGuess
         parts << :day
         part_options << part_heading_option(dm["day"])
 
-      elsif dm = /^#{DMY}(?<rest>.*)$/.match(text)
+      elsif dm = /^#{DMY}(?<rest>.*?)$/.match(text)
         parts << :day
         part_options << part_heading_option(dm["day"])
         delimiters << dm["date_delim"]
@@ -185,7 +191,7 @@ module QuickLoad::Plugin::TFGuess
         date_time_delims = /(?<date_time_delim>[ T])/
       end
 
-      if tm = /^#{date_time_delims}#{TIME}(?<rest>.*)?$/.match(rest)
+      if tm = /^#{date_time_delims}#{TIME}(?<rest>.*?)?$/.match(rest)
         delimiters << tm["date_time_delim"]
         parts << :hour
         part_options << part_heading_option(tm["hour"])
