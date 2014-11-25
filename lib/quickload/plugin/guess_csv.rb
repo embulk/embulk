@@ -33,7 +33,7 @@ module QuickLoad::Plugin
       end
 
       unless config.has_key?("header_line")
-        guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != "string" })
+        guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != ["string"] })
       end
 
       unless config.has_key?("columns")
