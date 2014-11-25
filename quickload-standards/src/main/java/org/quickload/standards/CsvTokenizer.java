@@ -4,11 +4,12 @@ import org.quickload.spi.LineDecoder;
 
 import java.util.Iterator;
 
-public class CsvTokenizer implements Iterator<String>
+public class CsvTokenizer
 {
     static enum State
     {
-        NORMAL, QUOTE, END_OF_COLUMNS;
+        BEGIN_OF_COLUMN, FIRST_TRIM, LAST_TRIM,
+        NORMAL, QUOTED, END_OF_COLUMN, END_OF_COLUMNS;
     }
 
     private static final char END_OF_LINE = 0;
@@ -16,35 +17,29 @@ public class CsvTokenizer implements Iterator<String>
     private final char delimiter;
     private final char quote;
     private final String newline;
-    private final boolean surroundingSpacesNeedQuotes;
+    private final boolean trimIfNotQuoted;
     private final long maxColumnSize;
 
     private Iterator<String> lineDecoder;
 
-    private State currentState;
-    private long currentLineNum;
-    private String currentLine;
-    private int currentLinePos;
-    private boolean isQuotedColumn;
-    private final StringBuilder currentColumn;
-    private final StringBuilder currentUntokenizedLine;
+    private State currentState = State.BEGIN_OF_COLUMN;
+    private long currentLineNum = 0;
+    private String currentLine = null;
+    private int currentLinePos = 0;
+    private boolean isQuotedColumn = false;
+    private final StringBuilder currentColumn = new StringBuilder();
+    private final StringBuilder currentUntokenizedLine = new StringBuilder();
 
     // @see http://tools.ietf.org/html/rfc4180
-    public CsvTokenizer(LineDecoder lineDecoder, CsvParserTask task)
+    public CsvTokenizer(LineDecoder decoder, CsvParserTask task)
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
-        surroundingSpacesNeedQuotes = false; // TODO
+        trimIfNotQuoted = false; // TODO
         maxColumnSize = 128*1024*1024; // 128MB TODO
 
-        this.lineDecoder = lineDecoder.iterator();
-        currentState = State.NORMAL;
-        isQuotedColumn = false;
-        currentColumn = new StringBuilder();
-        currentLineNum = 0;
-        currentLinePos = 0;
-        currentUntokenizedLine = new StringBuilder();
+        lineDecoder = decoder.iterator();
     }
 
     public long getCurrentLineNum()
@@ -57,45 +52,47 @@ public class CsvTokenizer implements Iterator<String>
         return currentUntokenizedLine.toString();
     }
 
-    @Override
-    public boolean hasNext()
+    public boolean hasNextRecord()
     {
         // returns true if LineDecoder has more lines.
-        boolean flag = lineDecoder.hasNext();
-        return flag;
-        //return lineDecoder.hasNext();
+        return lineDecoder.hasNext();
     }
 
-    @Override
-    public String next()
+    public void nextRecord()
     {
-        // the method name is ambiguous. users might be confusing that
-        // it is for lines or columns.
-        throw new UnsupportedOperationException();
-    }
+        if (!currentState.equals(State.END_OF_COLUMNS)) {
+            throw new CsvValueValidateException("too many columns");
+        }
 
-    @Override
-    public void remove()
-    {
-        throw new UnsupportedOperationException();
+        // change the current state to 'start'
+        currentState = State.BEGIN_OF_COLUMN;
+
+        // change the current position to 0
+        currentLinePos = 0;
+        currentLine = null;
+        currentUntokenizedLine.setLength(0);
     }
 
     public void skipLine()
     {
-        while (hasNextColumn()) { // ad-hoc implementation
+        while (!currentState.equals(State.END_OF_COLUMNS)) {
             nextColumn();
         }
+        nextRecord();
     }
 
-    public boolean hasNextColumn()
+    public String nextColumn()
     {
-        if (currentState.equals(State.END_OF_COLUMNS)) {
-            currentState = State.NORMAL;
-            return false;
+        fetchNextColumn();
+
+        if (!currentState.equals(State.END_OF_COLUMNS) &&
+                !currentState.equals(State.END_OF_COLUMN)) {
+            throw new CsvValueValidateException("doesn't have enough columns");
         }
 
-        poll();
-        return true;
+        String c = currentColumn.toString();
+        currentColumn.setLength(0);
+        return c;
     }
 
     public boolean isQuotedColumn()
@@ -103,18 +100,10 @@ public class CsvTokenizer implements Iterator<String>
         return isQuotedColumn;
     }
 
-    public String nextColumn()
+    private void fetchNextColumn()
     {
-        String c = currentColumn.toString();
-        currentColumn.setLength(0);
-        return c;
-    }
-
-    private void poll()
-    {
-        // TODO check QUOTE_MODE
-
         isQuotedColumn = false;
+        currentState = State.BEGIN_OF_COLUMN;
 
         // keep track of spaces (so leading/trailing space can be removed if required)
         int potentialSpaces = 0;
@@ -122,20 +111,99 @@ public class CsvTokenizer implements Iterator<String>
         while (true) {
             final char c = getChar();
 
-            if (currentState.equals(State.NORMAL)) {
+            if (currentState.equals(State.BEGIN_OF_COLUMN)) {
                 if (isDelimiter(c)) {
-                    // Save the column (trim trailing space if required) then
-                    // continue to next character.
-                    if (!surroundingSpacesNeedQuotes) {
-                        appendSpaces(currentColumn, potentialSpaces);
-                    }
-                    potentialSpaces = 0;
+                    currentState = State.END_OF_COLUMN;
                     break;
 
                 } else if (isEndOfLine(c)) {
-                    // Save the column (trim trailing space if required) then
-                    // continue to next character.
-                    if (!surroundingSpacesNeedQuotes) {
+                    currentState = State.END_OF_COLUMNS;
+                    break;
+
+                } else if (isSpace(c)) {
+                    potentialSpaces += 1;
+                    currentState = State.FIRST_TRIM;
+
+                } else if (isQuote(c)) {
+                    isQuotedColumn = true;
+                    currentState = State.QUOTED;
+
+                } else {
+                    currentColumn.append(c);
+                    currentState = State.NORMAL;
+
+                }
+            } else if (currentState.equals(State.FIRST_TRIM)) {
+                if (isSpace(c)) {
+                    // state is not change
+                    potentialSpaces += 1;
+
+                } else if (isQuote(c)) {
+                    if (!trimIfNotQuoted) {
+                        insertSpaces(currentColumn, potentialSpaces);
+                    }
+                    potentialSpaces = 0;
+                    isQuotedColumn = true;
+                    currentState = State.QUOTED;
+
+                } else {
+                    if (!trimIfNotQuoted) {
+                        insertSpaces(currentColumn, potentialSpaces);
+                    }
+                    potentialSpaces = 0;
+                    currentColumn.append(c);
+                    currentState = State.NORMAL;
+
+                }
+            } else if (currentState.equals(State.NORMAL)) {
+                if (isDelimiter(c)) {
+                    currentState = State.END_OF_COLUMN;
+                    break;
+
+                } else if (isEndOfLine(c)) {
+                    currentState = State.END_OF_COLUMNS;
+                    break;
+
+                } else if (isSpace(c)) {
+                    potentialSpaces += 1;
+                    currentState = State.LAST_TRIM;
+
+                } else if (isQuote(c)) {
+                    isQuotedColumn = true;
+                    currentState = State.QUOTED;
+
+                } else {
+                    // state is not change
+                    currentColumn.append(c);
+
+                }
+            } else if (currentState.equals(State.QUOTED)) {
+                // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
+
+                if (isEndOfLine(c)) {
+                    currentColumn.append(newline);
+                    currentLine = null;
+                    currentLinePos = 0;
+
+                } else if (isQuote(c)) {
+                    currentState = State.NORMAL; // back to 'normal' mode
+
+                } else {
+                    // state is not change
+                    currentColumn.append(c);
+
+                }
+            } else if (currentState.equals(State.LAST_TRIM)) {
+                if (isDelimiter(c)) {
+                    if (!trimIfNotQuoted) {
+                        appendSpaces(currentColumn, potentialSpaces);
+                    }
+                    potentialSpaces = 0;
+                    currentState = State.END_OF_COLUMN;
+                    break;
+
+                } else if (isEndOfLine(c)) {
+                    if (!trimIfNotQuoted) {
                         appendSpaces(currentColumn, potentialSpaces);
                     }
                     potentialSpaces = 0;
@@ -143,42 +211,20 @@ public class CsvTokenizer implements Iterator<String>
                     break;
 
                 } else if (isSpace(c)) {
+                    // state is not change
                     potentialSpaces += 1;
 
                 } else if (isQuote(c)) {
-                    currentState = State.QUOTE;
-                    isQuotedColumn = true;
-
-                    // cater for spaces before a quoted section
-                    if(!surroundingSpacesNeedQuotes || currentColumn.length() > 0 ) {
-                        appendSpaces(currentColumn, potentialSpaces);
-                    }
                     potentialSpaces = 0;
+                    currentState = State.QUOTED;
 
                 } else {
-                    // add any required spaces (but trim any leading spaces if
-                    // surrounding spaces need quotes), add the character, then
-                    // continue to next character.
-                    if(!surroundingSpacesNeedQuotes || currentColumn.length() > 0 ) {
-                        appendSpaces(currentColumn, potentialSpaces);
-                    }
                     potentialSpaces = 0;
-                    currentColumn.append(c);
-
-                }
-            } else { // QUOTE_MODE
-                // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
-
-                if (isQuote(c)) {
                     currentState = State.NORMAL;
-                    // reset ready for next multi-line cell
 
-                } else if (isEndOfLine(c)) {
-                    currentColumn.append(newline);
-
-                } else {
-                    currentColumn.append(c);
                 }
+            } else {
+                throw new RuntimeException("should not rearch this control");
             }
         }
     }
@@ -193,14 +239,14 @@ public class CsvTokenizer implements Iterator<String>
                 currentLineNum++; // increment # of line
 
                 // if it finds empty lines with STRING currentState, they should be skipped.
-                if (line.isEmpty() && currentState.equals(State.NORMAL)) {
+                if (line.isEmpty() && (currentState.equals(State.BEGIN_OF_COLUMN))) {
                     continue;
                 }
 
-                // update the untokenized line:
-                // if STRING currentState, untokenized line first should be cleaned up. otherwise,
-                // (it means QUOTE currentState), new line is appended to current untokenized line.
-                if (currentState.equals(State.NORMAL)) {
+                // update the untokenized line: if current state is 'normal', the untokenized
+                // line first should be cleaned up. otherwise (i mean 'quoted' mode), new line
+                // is appended to current untokenized line.
+                if (currentState.equals(State.BEGIN_OF_COLUMN)) {
                     currentUntokenizedLine.setLength(0);
                 } else {
                     currentUntokenizedLine.append(newline); // multi lines
@@ -209,17 +255,22 @@ public class CsvTokenizer implements Iterator<String>
 
                 if (line != null) {
                     currentLine = line;
-                    currentLinePos = 0;
                     break;
                 }
             }
         }
 
         if (currentLine == null || currentLinePos >= currentLine.length()) {
-            currentLine = null;
             return END_OF_LINE;
         } else {
             return currentLine.charAt(currentLinePos++);
+        }
+    }
+
+    private void insertSpaces(final StringBuilder sbuf, final int spaces)
+    {
+        for (int i = 0; i < spaces; i++) {
+            sbuf.insert(0, ' ');
         }
     }
 
@@ -248,5 +299,14 @@ public class CsvTokenizer implements Iterator<String>
     private boolean isQuote(char c)
     {
         return c == quote;
+    }
+
+    static class CsvValueValidateException
+            extends RuntimeException
+    {
+        CsvValueValidateException(String reason)
+        {
+            super(reason);
+        }
     }
 }

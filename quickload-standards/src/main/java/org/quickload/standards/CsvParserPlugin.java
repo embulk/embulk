@@ -70,16 +70,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                     try {
                         builder.addRecord(new RecordWriter() {
                             public void writeBoolean(final Column column, final BooleanWriter writer) {
-                                System.out.println("# writeBoolean: col:"+column.getName());
-                                if (!tokenizer.hasNextColumn()) {
-                                    // TODO need any messages for skipping?
-                                    // if CsvTokenizer doesn't have any more columns, writer
-                                    // is not called. just skipped.
-                                    return;
-                                }
-
                                 String v = nextColumn(tokenizer);
-                                System.out.println("# writeBoolean: col:"+column.getName() + ", v:"+v);
                                 if (v == null) {
                                     writer.writeNull();
                                 } else {
@@ -92,16 +83,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                             }
 
                             public void writeLong(Column column, LongWriter writer) {
-                                System.out.println("# writeLong: col:"+column.getName());
-                                if (!tokenizer.hasNextColumn()) {
-                                    // TODO need any messages for skipping?
-                                    // if CsvTokenizer doesn't have any more columns, writer
-                                    // is not called. just skipped.
-                                    return;
-                                }
-
                                 String v = nextColumn(tokenizer);
-                                System.out.println("# writeLong: col:"+column.getName() + ", v:"+v);
                                 if (v == null) {
                                     writer.writeNull();
                                 } else {
@@ -114,16 +96,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                             }
 
                             public void writeDouble(Column column, DoubleWriter writer) {
-                                System.out.println("# writeDouble: col:"+column.getName());
-                                if (!tokenizer.hasNextColumn()) {
-                                    // TODO need any messages for skipping?
-                                    // if CsvTokenizer doesn't have any more columns, writer
-                                    // is not called. just skipped.
-                                    return;
-                                }
-
                                 String v = nextColumn(tokenizer);
-                                System.out.println("# writeDouble: col:"+column.getName()+", v:"+v);
                                 if (v == null) {
                                     writer.writeNull();
                                 } else {
@@ -136,16 +109,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                             }
 
                             public void writeString(Column column, StringWriter writer) {
-                                System.out.println("# writeString: col:"+column.getName());
-                                if (!tokenizer.hasNextColumn()) {
-                                    // TODO need any messages for skipping?
-                                    // if CsvTokenizer doesn't have any more columns, writer
-                                    // is not called. just skipped.
-                                    return;
-                                }
-
                                 String v = nextColumn(tokenizer);
-                                System.out.println("# writeString: col:"+column.getName()+", v:"+v);
                                 if (v == null) {
                                     writer.writeNull();
                                 } else {
@@ -154,16 +118,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
                             }
 
                             public void writeTimestamp(Column column, TimestampWriter writer) {
-                                System.out.println("# writeTimestamp: col:"+column.getName());
-                                if (!tokenizer.hasNextColumn()) {
-                                    // TODO need any messages for skipping?
-                                    // if CsvTokenizer doesn't have any more columns, writer
-                                    // is not called. just skipped.
-                                    return;
-                                }
-
                                 String v = nextColumn(tokenizer);
-                                System.out.println("# writeTimestamp: col:"+column.getName()+", v:"+v);
                                 if (v == null) {
                                     writer.writeNull();
                                 } else {
