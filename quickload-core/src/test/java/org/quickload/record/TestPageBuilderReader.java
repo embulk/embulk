@@ -14,6 +14,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import org.quickload.TestRuntimeBinder;
 import org.quickload.TestUtilityModule;
 import org.quickload.time.Timestamp;
@@ -96,6 +97,16 @@ public class TestPageBuilderReader
     }
 
     @Test
+    public void testDuplicateStringsMultiColumns()
+    {
+        check(newSchema(newColumn("col1", STRING), newColumn("col1", STRING)),
+                "test2", "test1",
+                "test1", "test2",
+                "test2", "test0",
+                "test1", "test1");
+    }
+
+    @Test
     public void testTimestamp()
     {
         check(newSchema(newColumn("col1", TIMESTAMP)),
@@ -104,24 +115,30 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testMixedTypes()
+    public void testNull()
     {
         check(newSchema(
+                    newColumn("col3", DOUBLE),
                     newColumn("col1", STRING),
                     newColumn("col3", LONG),
+                    newColumn("col3", BOOLEAN),
                     newColumn("col2", TIMESTAMP)),
-                "val1", 3L, Timestamp.ofEpochMilli(0),
-                "val2", Long.MAX_VALUE, Timestamp.ofEpochMilli(10));
+                null, null, null, null, null,
+                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0),
+                null, null, null, null, null);
     }
 
     @Test
-    public void testDuplicateStringsMultiColumns()
+    public void testMixedTypes()
     {
-        check(newSchema(newColumn("col1", STRING), newColumn("col1", STRING)),
-                "test2", "test1",
-                "test1", "test2",
-                "test2", "test0",
-                "test1", "test1");
+        check(newSchema(
+                    newColumn("col3", DOUBLE),
+                    newColumn("col1", STRING),
+                    newColumn("col3", LONG),
+                    newColumn("col3", BOOLEAN),
+                    newColumn("col2", TIMESTAMP)),
+                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0),
+                140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10));
     }
 
     private void check(Schema schema, Object... objects)
@@ -135,7 +152,7 @@ public class TestPageBuilderReader
         this.builder = new PageBuilder(pageAllocator, schema, channel.getOutput());
         final AtomicInteger i = new AtomicInteger(0);
         while (i.get() < objects.length) {
-            builder.visitColumns(new RecordWriter() {
+            builder.addRecord(new RecordWriter() {
                 public void writeBoolean(Column column, BooleanWriter writer)
                 {
                     if (objects[i.get()] == null) {
@@ -186,9 +203,8 @@ public class TestPageBuilderReader
                     i.getAndIncrement();
                 }
             });
-            builder.addRecord();
         }
-        builder.flush();
+        builder.close();
         channel.completeProducer();
     }
 
@@ -231,5 +247,73 @@ public class TestPageBuilderReader
             });
         }
         assertEquals(objects.length, i.get());
+    }
+
+    @Test
+    public void testEmptySchema()
+    {
+        this.builder = new PageBuilder(pageAllocator, newSchema(), channel.getOutput());
+        builder.addRecord();
+        builder.addRecord();
+        builder.close();
+        channel.completeProducer();
+        this.reader = new PageReader(newSchema(), channel.getInput());
+        assertTrue(reader.nextRecord());
+        assertTrue(reader.nextRecord());
+        assertFalse(reader.nextRecord());
+    }
+
+    @Test
+    public void testRenewPage()
+    {
+        this.pageAllocator = new PageAllocator() {
+            public Page allocatePage(int minimumCapacity)
+            {
+                return Page.allocate(minimumCapacity);
+            }
+        };
+        check(newSchema(newColumn("col1", LONG)),
+                0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L);
+    }
+
+    @Test
+    public void testRenewPageWithStrings()
+    {
+        this.pageAllocator = new PageAllocator() {
+            public Page allocatePage(int minimumCapacity)
+            {
+                return Page.allocate(minimumCapacity + 3);
+            }
+        };
+        check(newSchema(
+                    newColumn("col1", LONG),
+                    newColumn("col1", STRING)),
+                0L, "record0",
+                1L, "record1",
+                3L, "record3");
+    }
+
+    @Test
+    public void testRepeatableClose()
+    {
+        this.builder = new PageBuilder(pageAllocator, newSchema(newColumn("col1", STRING)), channel.getOutput());
+        builder.close();
+        builder.close();
+        channel.completeProducer();
+        for (Page page : channel.getInput()) {
+            fail();
+        }
+    }
+
+    @Test
+    public void testRepeatableFlush()
+    {
+        this.builder = new PageBuilder(pageAllocator, newSchema(newColumn("col1", STRING)), channel.getOutput());
+        builder.flush();
+        builder.flush();
+        channel.completeProducer();
+        for (Page page : channel.getInput()) {
+            fail();
+        }
     }
 }

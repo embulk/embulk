@@ -4,6 +4,11 @@ import com.google.common.collect.ImmutableList;
 
 public class PageTestUtils
 {
+    public static Schema newSchema()
+    {
+        return new Schema(ImmutableList.<Column>of());
+    }
+
     public static Schema newSchema(Column... columns)
     {
         return new Schema(ImmutableList.copyOf(columns));
