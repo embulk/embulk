@@ -87,17 +87,21 @@ module QuickLoad::Plugin
       delim_regexp = Regexp.escape(delim)
       quote_weights = QUOTE_CANDIDATES.map do |q|
         weights = sample_lines.map do |line|
-          count = line.count(q)
           q_regexp = Regexp.escape(q)
-          weight = 0
-          weight += count * 5 if count % 2 == 0  # even number of quoting char likely means quoted column
-          weight += line.scan(/(?:\A|#{delim_regexp})\s*#{q_regexp}(?:(?!#{q_regexp}).)*(?:$|#{delim_regexp})/).size * 50
-          weight
-        end
-        array_avg(weights)
+          count = line.count(q)
+          if count > 0
+            weight = count
+            weight += line.scan(/(?:\A|#{delim_regexp})\s*#{q_regexp}(?:(?!#{q_regexp}).)*\s*#{q_regexp}(?:$|#{delim_regexp})/).size * 20
+            weight += line.scan(/(?:\A|#{delim_regexp})\s*#{q_regexp}(?:(?!#{delim_regexp}).)*\s*#{q_regexp}(?:$|#{delim_regexp})/).size * 40
+            weight
+          else
+            nil
+          end
+        end.compact
+        weights.empty? ? 0 : array_avg(weights)
       end
       quote, weight = QUOTE_CANDIDATES.zip(quote_weights).sort_by {|q,w| w }.last
-      if weight >= 7.0
+      if weight >= 10.0
         return quote
       else
         return nil
