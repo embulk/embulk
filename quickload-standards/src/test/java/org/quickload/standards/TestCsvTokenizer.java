@@ -37,7 +37,6 @@ public class TestCsvTokenizer
             List<String> record = new ArrayList<>();
             while (tokenizer.hasNextColumn()) {
                 String column = tokenizer.nextColumn();
-                System.out.println("column: " + column);
                 if (!column.isEmpty()) {
                     record.add(column);
                 } else {
