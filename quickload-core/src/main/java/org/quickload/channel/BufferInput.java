@@ -8,7 +8,7 @@ public class BufferInput
 {
     protected final DataChannel<Buffer> channel;
 
-    BufferInput(DataChannel<Buffer> channel)
+    protected BufferInput(DataChannel<Buffer> channel)
     {
         this.channel = channel;
     }

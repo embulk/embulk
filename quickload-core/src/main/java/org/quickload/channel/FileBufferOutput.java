@@ -5,7 +5,7 @@ import org.quickload.buffer.Buffer;
 public class FileBufferOutput
         extends BufferOutput
 {
-    FileBufferOutput(DataChannel<Buffer> channel)
+    protected FileBufferOutput(DataChannel<Buffer> channel)
     {
         super(channel);
     }

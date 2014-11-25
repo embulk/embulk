@@ -125,7 +125,7 @@ public class PreviewExecutor
             }
         }
         if (sampleRows == 0) {
-            throw new RuntimeException("No input records to preview");  // TODO exception class
+            throw new NoSampleException("No input records to preview");
         }
 
         return builder.build();
