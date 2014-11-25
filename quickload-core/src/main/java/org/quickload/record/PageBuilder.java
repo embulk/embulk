@@ -88,7 +88,7 @@ public class PageBuilder
     void setTimestamp(int columnIndex, Timestamp value)
     {
         int offset = getOffset(columnIndex);
-        page.setLong(offset, value.getEpochSecond() / 1000);
+        page.setLong(offset, value.getEpochSecond());
         page.setInt(offset + 8, value.getNano());
     }
 

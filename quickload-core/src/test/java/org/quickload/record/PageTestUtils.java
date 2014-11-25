@@ -1,9 +1,21 @@
 package org.quickload.record;
 
-public class PageTestUtils {
+import com.google.common.collect.ImmutableList;
 
-    public static void prettyPrint()
+public class PageTestUtils
+{
+    public static Schema newSchema(Column... columns)
     {
-        // TODO
+        return new Schema(ImmutableList.copyOf(columns));
+    }
+
+    public static Schema newSchema(ColumnConfig... columns)
+    {
+        return new SchemaConfig(ImmutableList.copyOf(columns)).toSchema();
+    }
+
+    public static ColumnConfig newColumn(String name, Type type)
+    {
+        return new ColumnConfig(name, type, null);
     }
 }
