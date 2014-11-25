@@ -298,7 +298,7 @@ module QuickLoad::Plugin::TFGuess
   ]
 
   def self.guess(texts)
-    texts = Array(texts)
+    texts = Array(texts).select {|text| text != "" }
     matches = texts.map do |text|
       PATTERNS.map {|pattern| pattern.match(text) }.compact
     end.flatten
