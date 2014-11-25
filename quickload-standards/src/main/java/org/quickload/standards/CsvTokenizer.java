@@ -17,6 +17,7 @@ public class CsvTokenizer implements Iterator<String>
     private final char quote;
     private final String newline;
     private final boolean surroundingSpacesNeedQuotes;
+    private final long maxColumnSize;
 
     private Iterator<String> lineDecoder;
 
@@ -35,6 +36,7 @@ public class CsvTokenizer implements Iterator<String>
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
         surroundingSpacesNeedQuotes = false; // TODO
+        maxColumnSize = 128*1024*1024; // 128MB TODO
 
         this.lineDecoder = lineDecoder.iterator();
         currentState = State.NORMAL;

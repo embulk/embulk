@@ -5,13 +5,15 @@ import org.quickload.config.ConfigDefault;
 import org.quickload.config.Task;
 import org.quickload.record.SchemaConfig;
 import org.quickload.spi.LineDecoderTask;
+import org.quickload.time.TimestampParser;
+import org.quickload.time.TimestampParserTask;
 
 import javax.validation.constraints.NotNull;
 
 public interface CsvParserTask
-        extends Task, LineDecoderTask
+        extends Task, LineDecoderTask, TimestampParserTask
 {
-    @Config("columns")@NotNull
+    @Config("columns")
     public SchemaConfig getSchemaConfig();
 
     @Config("header_line") // how to set default value?? TODO @Default("true")
