@@ -9,6 +9,8 @@ import org.quickload.TestRuntimeBinder;
 import org.quickload.TestRuntimeModule;
 import org.quickload.buffer.Buffer;
 import org.quickload.config.ConfigSource;
+import org.quickload.record.Column;
+import org.quickload.record.Schema;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.LineDecoder;
 import static org.quickload.config.DataSource.arrayNode;
@@ -21,35 +23,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestCsvTokenizer
-{
-    private static CsvTokenizer newTokenizer(CsvParserTask task, List<Buffer> buffers)
-    {
+public class TestCsvTokenizer {
+    private static CsvTokenizer newTokenizer(CsvParserTask task, List<Buffer> buffers) {
         LineDecoder decoder = new LineDecoder(buffers, task);
         return new CsvTokenizer(decoder, task);
     }
 
-    private static List<List<String>> doParse(CsvParserTask task, List<Buffer> buffers)
-    {
-        CsvTokenizer tokenizer = newTokenizer(task, buffers);
+    private static List<List<String>> doParse(CsvParserTask task, List<Buffer> buffers) {
+        final Schema schema = task.getSchemaConfig().toSchema();
+        final CsvTokenizer tokenizer = newTokenizer(task, buffers);
+
         List<List<String>> records = new ArrayList<>();
-        while (tokenizer.hasNext()) {
+        while (tokenizer.hasNextRecord()) {
             List<String> record = new ArrayList<>();
-            while (tokenizer.hasNextColumn()) {
-                String column = tokenizer.nextColumn();
-                if (!column.isEmpty()) {
-                    record.add(column);
+            for (Column c : schema.getColumns()) {
+                String v = tokenizer.nextColumn();
+                if (!v.isEmpty()) {
+                    record.add(v);
                 } else {
                     record.add(tokenizer.isQuotedColumn() ? "" : null);
                 }
             }
             records.add(record);
+            tokenizer.nextRecord();
         }
         return records;
     }
 
-    private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException
-    {
+    private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException {
         Charset charset = Charset.forName(charsetName);
 
         List<Buffer> buffers = new ArrayList<>();
@@ -69,8 +70,7 @@ public class TestCsvTokenizer
     protected CsvParserTask task;
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         exec = binder.newExecTask();
         config = new ConfigSource()
                 .setString("newline", "LF")
@@ -86,10 +86,9 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseSimple() throws Exception
-    {
+    public void parseSimple() throws Exception {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "aaa,bbb\nccc,ddd\n"));
+                "\naaa,bbb\n\nccc,ddd\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "bbb"),
                         Arrays.asList("ccc", "ddd")),
@@ -97,10 +96,9 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseSeparatedBuffers() throws Exception
-    {
+    public void parseSeparatedBuffers() throws Exception {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "aaa", ",bbb", "\nccc,ddd", "\n"));
+                "\naaa", ",bbb\n", "\nccc,ddd", "\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "bbb"),
                         Arrays.asList("ccc", "ddd")),
@@ -108,14 +106,25 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseQuotedValues() throws Exception
-    {
+    public void parseQuotedValues() throws Exception {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "\"a\r\na\na\"", ",\"b,bb\"", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
+                "\n\"a\r\na\na\"", ",\"b,bb\"\n", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("a\r\na\na", "b,bb"),
                         Arrays.asList("ccc", "ddd"), // TODO Arrays.asList("cc\"c", "\"ddd")),
                         Arrays.asList(null, "")),
+                parsed);
+    }
+
+    @Test
+    public void parseTrimedValues() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "  aaa  ", ",  b bb \n", "\n\"  ccc\",\"dd d \n \"", "\n"));
+
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "b bb "),
+                        Arrays.asList("  ccc","dd d \n ")),
                 parsed);
     }
 
