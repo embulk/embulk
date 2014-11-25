@@ -20,6 +20,8 @@ import org.quickload.channel.FileBufferChannel;
 import org.quickload.channel.PageChannel;
 import org.quickload.time.Timestamp;
 import org.quickload.time.TimestampFormatter;
+import org.quickload.time.TimestampParser;
+import org.quickload.time.TimestampParserTask;
 
 public class ExecTask
         extends ExecConfig
@@ -158,5 +160,10 @@ public class ExecTask
     public TimestampFormatter newTimestampFormatter(String format, DateTimeZone timeZone)
     {
         return new TimestampFormatter(injector.getInstance(ScriptingContainer.class), format, timeZone);
+    }
+
+    public TimestampParser newTimestampParser(String format, TimestampParserTask parserTask)
+    {
+        return new TimestampParser(injector.getInstance(ScriptingContainer.class), format, parserTask);
     }
 }
