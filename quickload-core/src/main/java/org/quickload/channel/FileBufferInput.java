@@ -9,7 +9,7 @@ public class FileBufferInput
 {
     Buffer element;
 
-    FileBufferInput(DataChannel<Buffer> channel)
+    protected FileBufferInput(DataChannel<Buffer> channel)
     {
         super(channel);
         this.element = FileBufferChannel.END_OF_FILE;

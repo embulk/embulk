@@ -7,7 +7,7 @@ public class BufferOutput
     protected final DataChannel<Buffer> channel;
     protected long addedSize;
 
-    BufferOutput(DataChannel<Buffer> channel)
+    protected BufferOutput(DataChannel<Buffer> channel)
     {
         this.channel = channel;
     }

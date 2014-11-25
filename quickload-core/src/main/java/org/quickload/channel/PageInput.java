@@ -8,7 +8,7 @@ public class PageInput
 {
     protected final DataChannel<Page> channel;
 
-    PageInput(DataChannel<Page> channel)
+    protected PageInput(DataChannel<Page> channel)
     {
         this.channel = channel;
     }

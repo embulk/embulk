@@ -24,10 +24,18 @@ public class ExecModule
     public void configure(Binder binder)
     {
         Preconditions.checkNotNull(binder, "binder is null.");
+
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(TypeManager.class).asEagerSingleton();
         binder.bind(BufferManager.class).in(Scopes.SINGLETON);
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess")).to(GuessExecutor.GuessParserPlugin.class);
+
+        // GuessExecutor
+        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess"))
+            .to(GuessExecutor.GuessParserPlugin.class);
+        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_sampling"))
+            .toInstance(new SamplingParserPlugin(32*1024));  // TODO get sample size from system config
+
+        // serde
         binder.bind(TimestampFormatConfigSerDe.class).asEagerSingleton();
 
         ObjectMapperModule mapper = new ObjectMapperModule();

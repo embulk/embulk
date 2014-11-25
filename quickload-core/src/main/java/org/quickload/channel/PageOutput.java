@@ -6,7 +6,7 @@ public class PageOutput
 {
     protected final DataChannel<Page> channel;
 
-    PageOutput(DataChannel<Page> channel)
+    protected PageOutput(DataChannel<Page> channel)
     {
         this.channel = channel;
     }
