@@ -21,7 +21,8 @@ module QuickLoad::Plugin
 
       guessed = {"type"=>"csv", "delimiter"=>delim}
 
-      # TODO guess quote chars
+      quote = guess_quote(sample_lines, delim)
+      guessed["quote"] = quote ? quote : ''
 
       sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
       first_types = guess_field_types(sample_records[0, 1])
@@ -77,6 +78,27 @@ module QuickLoad::Plugin
       delim, weight = *delim_weights.sort_by {|d,weight| weight }.last
       if delim != nil && weight > 1
         return delim
+      else
+        return nil
+      end
+    end
+
+    def guess_quote(sample_lines, delim)
+      delim_regexp = Regexp.escape(delim)
+      quote_weights = QUOTE_CANDIDATES.map do |q|
+        weights = sample_lines.map do |line|
+          count = line.count(q)
+          q_regexp = Regexp.escape(q)
+          weight = 0
+          weight += count * 5 if count % 2 == 0  # even number of quoting char likely means quoted column
+          weight += line.scan(/(?:\A|#{delim_regexp})\s*#{q_regexp}(?:(?!#{q_regexp}).)*(?:$|#{delim_regexp})/).size * 50
+          weight
+        end
+        array_avg(weights)
+      end
+      quote, weight = QUOTE_CANDIDATES.zip(quote_weights).sort_by {|q,w| w }.last
+      if weight >= 7.0
+        return quote
       else
         return nil
       end
