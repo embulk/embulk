@@ -13,7 +13,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.collect.ImmutableList;
 
-public class TestAWSPlugins
+public class TestAwsPlugins
 {
     @Test
     public void listS3FilesByPrefix()
