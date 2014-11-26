@@ -18,7 +18,7 @@ public class CsvTokenizer
     private final char quote;
     private final String newline;
     private final boolean trimIfNotQuoted;
-    private final long maxColumnSize;
+    private final long maxQuotedColumnSize;
 
     private Iterator<String> lineDecoder;
 
@@ -37,7 +37,7 @@ public class CsvTokenizer
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
-        maxColumnSize = 128*1024*1024; // 128MB TODO
+        maxQuotedColumnSize = task.getMaxQuotedColumnSize();
 
         lineDecoder = decoder.iterator();
     }
@@ -191,6 +191,10 @@ public class CsvTokenizer
                 } else {
                     // state is not change
                     currentColumn.append(c);
+
+                    if (currentColumn.length() >= maxQuotedColumnSize) {
+                        throw new CsvValueValidateException("too large sized column value");
+                    }
 
                 }
             } else if (currentState.equals(State.LAST_TRIM)) {

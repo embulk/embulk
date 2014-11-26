@@ -131,6 +131,21 @@ public class TestCsvTokenizer {
     }
 
     /*
+    @Test(expected = CsvTokenizer.CsvValueValidateException.class)
+    public void parseTooLargeSizedValues() throws Exception
+    {
+        config.setLong("max_quoted_column_size", 8L);
+        task = exec.loadConfig(config, CsvParserTask.class);
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "aaa,bbb", "\n", "\"cccccccc\",ddd", "\n"));
+
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
+                parsed);
+    }
+    */
+    /*
     @Test
     public void parseEscapedQuotedValues() throws Exception
     {
