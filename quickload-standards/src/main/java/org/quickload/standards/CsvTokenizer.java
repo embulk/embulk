@@ -36,7 +36,7 @@ public class CsvTokenizer
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
-        trimIfNotQuoted = false; // TODO
+        trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxColumnSize = 128*1024*1024; // 128MB TODO
 
         lineDecoder = decoder.iterator();
@@ -219,6 +219,8 @@ public class CsvTokenizer
                     currentState = State.QUOTED;
 
                 } else {
+                    appendSpaces(currentColumn, potentialSpaces);
+                    currentColumn.append(c);
                     potentialSpaces = 0;
                     currentState = State.NORMAL;
 

@@ -117,13 +117,15 @@ public class TestCsvTokenizer {
     }
 
     @Test
-    public void parseTrimedValues() throws Exception
+    public void parseTrimedValuesWithNonTriming() throws Exception
     {
+        config.setBoolean("trim_if_not_quoted", true);
+        task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "  aaa  ", ",  b bb \n", "\n\"  ccc\",\"dd d \n \"", "\n"));
+                "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
 
         assertEquals(Arrays.asList(
-                        Arrays.asList("aaa", "b bb "),
+                        Arrays.asList("aaa", "b cd"),
                         Arrays.asList("  ccc","dd d \n ")),
                 parsed);
     }

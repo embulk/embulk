@@ -28,4 +28,7 @@ public interface CsvParserTask
     @ConfigDefault("\"\\\"\"")
     public char getQuoteChar();
 
+    @Config("trim_if_not_quoted")
+    @ConfigDefault("false")
+    public boolean getTrimIfNotQuoted();
 }
