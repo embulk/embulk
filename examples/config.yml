@@ -19,6 +19,7 @@ out:
   file_ext: csv.gz
   formatter:
     type: csv
+    timezone: Etc/UTC
     file_encoders:
       - type: gzip
         level: 9
