@@ -1,35 +1,54 @@
 package org.quickload.standards;
 
-import org.quickload.time.Timestamp;
-import org.quickload.buffer.Buffer;
-import org.quickload.config.Task;
-import org.quickload.config.TaskSource;
-import org.quickload.config.ConfigSource;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import org.quickload.record.Column;
-import org.quickload.record.Page;
 import org.quickload.record.PageReader;
 import org.quickload.record.RecordReader;
 import org.quickload.record.Schema;
+import org.quickload.record.TimestampType;
+import org.quickload.time.Timestamp;
+import org.quickload.config.TaskSource;
+import org.quickload.config.ConfigSource;
 import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
 import org.quickload.spi.BasicFormatterPlugin;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.LineEncoder;
 import org.quickload.spi.LineEncoderTask;
+import org.quickload.time.TimestampFormatter;
+import org.quickload.time.TimestampFormatterTask;
+
+import java.util.Map;
 
 public class CsvFormatterPlugin
         extends BasicFormatterPlugin
 {
-    public interface PluginTask
-            extends LineEncoderTask
+    public interface CsvFormatterTask
+            extends LineEncoderTask, TimestampFormatterTask
     {
     }
 
     @Override
     public TaskSource getBasicFormatterTask(ExecTask exec, ConfigSource config)
     {
-        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        CsvFormatterTask task = exec.loadConfig(config, CsvFormatterTask.class);
         return exec.dumpTask(task);
+    }
+
+    private Map<Integer, TimestampFormatter> newTimestampFormatters(
+            final ExecTask exec, final TimestampFormatterTask task, final Schema schema)
+    {
+        ImmutableMap.Builder<Integer, TimestampFormatter> builder =
+                new ImmutableBiMap.Builder<>();
+        for (Column column : schema.getColumns()) {
+            if (column.getType() instanceof TimestampType) {
+                TimestampType tt = (TimestampType) column.getType();
+                builder.put(column.getIndex(), exec.newTimestampFormatter(
+                        tt.getFormat(), task.getTimeZone()));
+            }
+        }
+        return builder.build();
     }
 
     @Override
@@ -37,8 +56,12 @@ public class CsvFormatterPlugin
             TaskSource taskSource, int processorIndex,
             PageInput pageInput, FileBufferOutput fileBufferOutput)
     {
-        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
-        final LineEncoder encoder = new LineEncoder(exec.getBufferAllocator(), task, fileBufferOutput);
+        final CsvFormatterTask task = exec.loadTask(taskSource, CsvFormatterTask.class);
+        final Schema schema = exec.getSchema();
+        final LineEncoder encoder = new LineEncoder(
+                exec.getBufferAllocator(), task, fileBufferOutput);
+        final Map<Integer, TimestampFormatter> timestampFormatters =
+                newTimestampFormatters(exec, task, schema);
 
         try (PageReader reader = new PageReader(exec.getSchema(), pageInput)) {
             while (reader.nextRecord()) {
@@ -75,7 +98,7 @@ public class CsvFormatterPlugin
                     public void readTimestamp(Column column, Timestamp value)
                     {
                         addDelimiter(column);
-                        encoder.addText(value.toString());  // TODO fromatting timestamp needs timezone
+                        encoder.addText(timestampFormatters.get(column.getIndex()).format(value));
                     }
 
                     private void addDelimiter(Column column)
