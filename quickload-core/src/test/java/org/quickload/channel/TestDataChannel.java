@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -111,6 +112,18 @@ public class TestDataChannel
         assertTrue(ite.next() == b1);
         assertTrue(ite.next() == b2);
         assertFalse(ite.hasNext());
+    }
+    
+    @Test(expected = NoSuchElementException.class)
+    public void testNextThrowsWhenItDoesNotHave() throws Exception
+    {
+        channel.add(newBuffer());
+        channel.completeProducer();
+        Iterator<Buffer> ite = channel.iterator();
+        assertTrue(ite.hasNext());
+        ite.next();
+        assertFalse(ite.hasNext());
+        ite.next();
     }
 
     @Test
