@@ -112,31 +112,16 @@ public class TestFileInputPlugin
         assertEquals("frsyuki", parserTask.getField());
     }
 
-    // TODO: extract common code
     @Test
     public void testRunInput()
     {
-        // prepare 100 records auto-generate parser plugin
-        Schema schema = schemaGen.generate(4);
-        MockParserPlugin parser = new MockParserPlugin(schema,
-                ImmutableList.copyOf(recordGen.generate(schema, 100)),
-                TestParserTask.class);
-        // always use MockParserPlugin as "parser" plugin
-        binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class,
-                parser));
-
+        prepareMockParser();
         ExecTask exec = binder.newExecTask();
+        InputTask task = prepareInputTask(exec);
 
         TestTargetFileInputPlugin plugin = binder
                 .getInstance(TestTargetFileInputPlugin.class);
-        ConfigSource config = new ConfigSource().set("parser",
-                new ConfigSource().setString("type", "dummy"));
-
-        InputTask task = exec.loadConfig(config, InputTask.class);
-        task.setParserTask(new TaskSource());
-        task.setFileInputTask(new TaskSource());
         MockPageOutput pageOutput = new MockPageOutput();
-
         plugin.runInput(exec, exec.dumpTask(task), 0, pageOutput);
         // actually the size depends on Page's buffer size (BufferManager
         // decides)
@@ -147,27 +132,35 @@ public class TestFileInputPlugin
     @Test(expected = RuntimeException.class)
     public void testRunInputPropagatesException()
     {
+        prepareMockParser();
+        ExecTask exec = binder.newExecTask();
+        InputTask task = prepareInputTask(exec);
+
+        TestTargetFileInputPlugin plugin = binder
+                .getInstance(TestTargetFileInputPlugin.class);
+        plugin.emulateException = true;
+        plugin.runInput(exec, exec.dumpTask(task), 0, null);
+    }
+
+    private void prepareMockParser()
+    {
         // prepare 100 records auto-generate parser plugin
         Schema schema = schemaGen.generate(4);
         MockParserPlugin parser = new MockParserPlugin(schema,
-                ImmutableList.copyOf(recordGen.generate(schema, 0)),
+                ImmutableList.copyOf(recordGen.generate(schema, 100)),
                 TestParserTask.class);
         // always use MockParserPlugin as "parser" plugin
         binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class,
                 parser));
+    }
 
-        ExecTask exec = binder.newExecTask();
-
-        TestTargetFileInputPlugin plugin = binder
-                .getInstance(TestTargetFileInputPlugin.class);
+    private InputTask prepareInputTask(ExecTask exec)
+    {
         ConfigSource config = new ConfigSource().set("parser",
                 new ConfigSource().setString("type", "dummy"));
-
         InputTask task = exec.loadConfig(config, InputTask.class);
         task.setParserTask(new TaskSource());
         task.setFileInputTask(new TaskSource());
-
-        plugin.emulateException = true;
-        plugin.runInput(exec, exec.dumpTask(task), 0, null);
+        return task;
     }
 }
