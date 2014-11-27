@@ -1,22 +1,25 @@
 package org.quickload.spi;
 
-import java.util.List;
-import java.util.PriorityQueue;
 import java.util.ArrayDeque;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
-import java.io.IOException;
-import com.google.common.collect.ImmutableList;
+import java.util.PriorityQueue;
+
+import org.quickload.config.EnumTask;
+import org.quickload.record.Page;
+import org.quickload.record.PageReader;
+import org.quickload.record.Pages;
+import org.quickload.record.Schema;
+import org.quickload.time.Timestamp;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.quickload.time.Timestamp;
-import org.quickload.config.EnumTask;
-import org.quickload.record.Schema;
-import org.quickload.record.Page;
-import org.quickload.record.Pages;
-import org.quickload.record.PageReader;
+import com.google.common.collect.ImmutableList;
 
 public class NoticeLogger
 {
@@ -95,7 +98,7 @@ public class NoticeLogger
         public int compare(Message o1, Message o2)
         {
             int prio1 = o1.getPriority().getPrio();
-            int prio2 = o1.getPriority().getPrio();
+            int prio2 = o2.getPriority().getPrio();
             if (prio1 == prio2) {
                 return o1.getTimestamp().compareTo(o2.getTimestamp());
             }
@@ -159,12 +162,22 @@ public class NoticeLogger
 
     public synchronized void addAllMessagesTo(Collection<Message> collection)
     {
-        collection.addAll(messages);
+        for (Message msg : collection) {
+            if (msg.getPriority().getPrio() >= messagePriorityThreshold) {
+                addMessage(msg);;
+            }
+        }
     }
 
     public synchronized List<Message> getMessages()
     {
-        return ImmutableList.copyOf(messages);
+        // TODO: iterator of PriorityQueue does not guarantee the order so we
+        // cannot use ImmutableList.copyOf(messages);
+        List<Message> result = new ArrayList<Message>(messages);
+        Collections.sort(result, new MessagePriorityComparator());
+        // Make important thing comes first
+        Collections.reverse(result);
+        return ImmutableList.copyOf(result);
     }
 
     public synchronized void addAllSkippedRecordsTo(Collection<SkippedRecord> collection)
@@ -217,7 +230,7 @@ public class NoticeLogger
 
     public void debug(String messageFormat, Object... args)
     {
-        if (messagePriorityThreshold <= Priority.DEBUG.getPrio()) {
+        if (messagePriorityThreshold > Priority.DEBUG.getPrio()) {
             return;
         }
         addMessage(new Message(Priority.DEBUG,
@@ -227,7 +240,7 @@ public class NoticeLogger
 
     public void info(String messageFormat, Object... args)
     {
-        if (messagePriorityThreshold <= Priority.INFO.getPrio()) {
+        if (messagePriorityThreshold > Priority.INFO.getPrio()) {
             return;
         }
         addMessage(new Message(Priority.INFO,
@@ -237,7 +250,7 @@ public class NoticeLogger
 
     public void warn(String messageFormat, Object... args)
     {
-        if (messagePriorityThreshold <= Priority.WARN.getPrio()) {
+        if (messagePriorityThreshold > Priority.WARN.getPrio()) {
             return;
         }
         addMessage(new Message(Priority.WARN,
@@ -247,7 +260,7 @@ public class NoticeLogger
 
     public void error(String messageFormat, Object... args)
     {
-        if (messagePriorityThreshold <= Priority.ERROR.getPrio()) {
+        if (messagePriorityThreshold > Priority.ERROR.getPrio()) {
             return;
         }
         addMessage(new Message(Priority.ERROR,
