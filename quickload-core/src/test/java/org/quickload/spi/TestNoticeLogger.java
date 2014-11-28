@@ -1,6 +1,13 @@
 package org.quickload.spi;
 
 import static org.junit.Assert.assertEquals;
+import static org.quickload.record.PageTestUtils.newColumn;
+import static org.quickload.record.PageTestUtils.newSchema;
+import static org.quickload.record.Types.BOOLEAN;
+import static org.quickload.record.Types.DOUBLE;
+import static org.quickload.record.Types.LONG;
+import static org.quickload.record.Types.STRING;
+import static org.quickload.record.Types.TIMESTAMP;
 
 import java.util.List;
 
@@ -10,30 +17,23 @@ import org.junit.runner.RunWith;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestRuntimeBinder;
 import org.quickload.TestUtilityModule;
-import org.quickload.channel.FileBufferOutput;
-import org.quickload.config.Config;
-import org.quickload.config.ConfigSource;
-import org.quickload.config.NextConfig;
-import org.quickload.config.Report;
-import org.quickload.config.Task;
-import org.quickload.config.TaskSource;
-import org.quickload.plugin.MockPluginSource;
-import org.quickload.record.RandomRecordGenerator;
-import org.quickload.record.RandomSchemaGenerator;
+import org.quickload.channel.PageChannel;
+import org.quickload.exec.BufferManager;
+import org.quickload.record.PageBuilder;
+import org.quickload.record.RecordWriter;
 import org.quickload.record.Schema;
-import org.quickload.spi.FileInputPlugin.InputTask;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ TestUtilityModule.class })
 public class TestNoticeLogger
 {
+    @Rule
+    public TestRuntimeBinder binder = new TestRuntimeBinder();
+
     @Test
     public void testMessageThreshold()
     {
-        NoticeLogger subject = new NoticeLogger(10, 1024,
+        NoticeLogger subject = new NoticeLogger(1024, 1024,
                 NoticeLogger.Priority.DEBUG);
         assertEquals(0, subject.getMessages().size());
         addTestMessages(subject);
@@ -51,7 +51,7 @@ public class TestNoticeLogger
         assertEquals(2, subject.getMessages().size());
         assertEquals("warn: 4", subject.getMessages().get(1).getMessage());
 
-        subject = new NoticeLogger(10, 1024, NoticeLogger.Priority.ERROR);
+        subject = new NoticeLogger(1024, 1024, NoticeLogger.Priority.ERROR);
         addTestMessages(subject);
         assertEquals(1, subject.getMessages().size());
         assertEquals("error: 5 あ", subject.getMessages().get(0).getMessage());
@@ -60,13 +60,13 @@ public class TestNoticeLogger
     @Test
     public void testAddAllMessages()
     {
-        NoticeLogger base = new NoticeLogger(10, 1024,
+        NoticeLogger base = new NoticeLogger(1024, 1024,
                 NoticeLogger.Priority.DEBUG);
         addTestMessages(base, "addAllMessage0");
         addTestMessages(base, "addAllMessage1");
         addTestMessages(base, "addAllMessage2");
 
-        NoticeLogger subject = new NoticeLogger(10, 1024,
+        NoticeLogger subject = new NoticeLogger(1024, 1024,
                 NoticeLogger.Priority.ERROR);
         subject.addAllMessagesTo(base.getMessages());
         assertEquals(3, subject.getMessages().size());
@@ -76,7 +76,7 @@ public class TestNoticeLogger
     public void testMaxMessageSize()
     {
         // max == 9 bytes
-        NoticeLogger subject = new NoticeLogger(10, 9,
+        NoticeLogger subject = new NoticeLogger(1024, 9,
                 NoticeLogger.Priority.DEBUG);
         // add 3 x 3: 9 bytes
         subject.debug("123");
@@ -102,7 +102,7 @@ public class TestNoticeLogger
     public void testMessagesAreSortedByPriorityAndTime()
             throws InterruptedException
     {
-        NoticeLogger subject = new NoticeLogger(10, 1024,
+        NoticeLogger subject = new NoticeLogger(1024, 1024,
                 NoticeLogger.Priority.DEBUG);
         addTestMessages(subject, "prioTest0");
         Thread.sleep(50);
@@ -115,6 +115,74 @@ public class TestNoticeLogger
         assertEquals("error: prioTest0", messages.get(2).getMessage());
     }
 
+    @Test
+    public void testSkippedLine()
+    {
+        NoticeLogger subject = new NoticeLogger(1024, 1024,
+                NoticeLogger.Priority.DEBUG);
+        subject.skippedLine("abc");
+        subject.skippedLine("def");
+        subject.skippedLine("ghi");
+        assertEquals(3, subject.getSkippedRecords().size());
+        assertEquals("{\"line\":\"def\"}", subject.getSkippedRecords().get(1)
+                .getJson().toString());
+    }
+    
+    @Test
+    public void testSkippedPage()
+    {
+        NoticeLogger subject = new NoticeLogger(1024, 1024,
+                NoticeLogger.Priority.DEBUG);
+
+        PageChannel channel = new PageChannel(Integer.MAX_VALUE);
+        try {
+            Schema schema = newSchema(newColumn("c1", BOOLEAN),
+                    newColumn("c2", LONG), newColumn("c3", DOUBLE),
+                    newColumn("c4", STRING), newColumn("c5", TIMESTAMP));
+            PageBuilder builder = new PageBuilder(
+                    binder.getInstance(BufferManager.class), schema,
+                    channel.getOutput());
+            RecordWriter dummyRecordWriter = new MockRecordWriter();
+            builder.addRecord(dummyRecordWriter);
+            builder.addRecord(dummyRecordWriter);
+            builder.addRecord(dummyRecordWriter);
+            builder.close();
+            channel.completeProducer();
+            subject.skippedPage(schema, channel.getInput().iterator().next());
+            assertEquals(3, subject.getSkippedRecords().size());
+        } finally {
+            channel.close();
+        }
+    }
+
+    @Test
+    public void testMaxSkippedRecordSize()
+    {
+        // 100 bytes in JSON
+        NoticeLogger subject = new NoticeLogger(100, 1024,
+                NoticeLogger.Priority.DEBUG);
+
+        PageChannel channel = new PageChannel(Integer.MAX_VALUE);
+        try {
+            Schema schema = newSchema(newColumn("c1", BOOLEAN),
+                    newColumn("c2", LONG), newColumn("c3", DOUBLE),
+                    newColumn("c4", STRING), newColumn("c5", TIMESTAMP));
+            PageBuilder builder = new PageBuilder(
+                    binder.getInstance(BufferManager.class), schema,
+                    channel.getOutput());
+            RecordWriter dummyRecordWriter = new MockRecordWriter();
+            builder.addRecord(dummyRecordWriter);
+            builder.addRecord(dummyRecordWriter);
+            builder.addRecord(dummyRecordWriter);
+            builder.close();
+            channel.completeProducer();
+            subject.skippedPage(schema, channel.getInput().iterator().next());
+            assertEquals(2, subject.getSkippedRecords().size());
+        } finally {
+            channel.close();
+        }
+    }
+    
     private void addTestMessages(NoticeLogger subject)
     {
         subject.debug("debug: %d", 1);

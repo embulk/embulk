@@ -205,6 +205,7 @@ public class NoticeLogger
             String json = mapper.writeValueAsString(Pages.toObjects(record));
             skippedRecord(new SkippedRecord(json));
         } catch (Exception ex) {
+            // TODO: logging
         }
     }
 
@@ -216,6 +217,7 @@ public class NoticeLogger
             String json = mapper.writeValueAsString(record);
             skippedRecord(new SkippedRecord(json));
         } catch (Exception ex) {
+            // TODO: logging
         }
     }
 
@@ -260,9 +262,6 @@ public class NoticeLogger
 
     public void error(String messageFormat, Object... args)
     {
-        if (messagePriorityThreshold > Priority.ERROR.getPrio()) {
-            return;
-        }
         addMessage(new Message(Priority.ERROR,
                 currentTimestamp(),
                 String.format(messageFormat, args)));
