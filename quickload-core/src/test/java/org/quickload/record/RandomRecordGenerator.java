@@ -1,6 +1,7 @@
 package org.quickload.record;
 
 import java.util.Iterator;
+
 import com.google.inject.Inject;
 
 public class RandomRecordGenerator

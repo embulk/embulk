@@ -1,11 +1,12 @@
 package org.quickload;
 
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
 //import org.junit.AssumptionViolatedException;
 import java.util.concurrent.TimeUnit;
+
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 public class DurationWatch
         implements TestRule

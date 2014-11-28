@@ -1,21 +1,23 @@
 package org.quickload.record;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import org.junit.runner.RunWith;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestUtilityModule;
-import org.quickload.time.Timestamp;
-import org.quickload.buffer.Buffer;
 import org.quickload.channel.PageChannel;
 import org.quickload.exec.BufferManager;
 import org.quickload.exec.ExecModule;
+import org.quickload.time.Timestamp;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ ExecModule.class, TestUtilityModule.class })

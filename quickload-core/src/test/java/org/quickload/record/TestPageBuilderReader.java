@@ -1,34 +1,29 @@
 package org.quickload.record;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Rule;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import org.quickload.TestRuntimeBinder;
-import org.quickload.TestUtilityModule;
-import org.quickload.time.Timestamp;
-import org.quickload.buffer.Buffer;
-import org.quickload.channel.PageChannel;
-import org.quickload.exec.BufferManager;
-import org.quickload.exec.ExecModule;
-import static org.quickload.record.PageTestUtils.newSchema;
 import static org.quickload.record.PageTestUtils.newColumn;
+import static org.quickload.record.PageTestUtils.newSchema;
 import static org.quickload.record.Types.BOOLEAN;
-import static org.quickload.record.Types.LONG;
 import static org.quickload.record.Types.DOUBLE;
+import static org.quickload.record.Types.LONG;
 import static org.quickload.record.Types.STRING;
 import static org.quickload.record.Types.TIMESTAMP;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.quickload.TestRuntimeBinder;
+import org.quickload.channel.PageChannel;
+import org.quickload.exec.BufferManager;
+import org.quickload.time.Timestamp;
 
 public class TestPageBuilderReader
 {

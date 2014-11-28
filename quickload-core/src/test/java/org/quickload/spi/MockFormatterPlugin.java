@@ -1,20 +1,20 @@
 package org.quickload.spi;
 
-import java.util.List;
 import java.util.ArrayList;
-import org.quickload.time.Timestamp;
+import java.util.List;
+
 import org.quickload.buffer.Buffer;
-import org.quickload.config.ConfigSource;
-import org.quickload.config.TaskSource;
-import org.quickload.config.Task;
-import org.quickload.channel.PageInput;
 import org.quickload.channel.FileBufferOutput;
-import org.quickload.record.Schema;
-import org.quickload.record.Page;
-import org.quickload.record.PageReader;
-import org.quickload.record.RecordReader;
+import org.quickload.channel.PageInput;
+import org.quickload.config.ConfigSource;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.record.Column;
+import org.quickload.record.PageReader;
 import org.quickload.record.Record;
+import org.quickload.record.RecordReader;
+import org.quickload.record.Schema;
+import org.quickload.time.Timestamp;
 
 public class MockFormatterPlugin
         implements FormatterPlugin

@@ -1,20 +1,16 @@
 package org.quickload.config;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.validation.constraints.NotNull;
-import org.junit.After;
+
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import org.junit.runner.RunWith;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestRuntimeModule;
+
+import com.google.inject.Inject;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ TestRuntimeModule.class })

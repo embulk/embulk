@@ -1,12 +1,13 @@
 package org.quickload;
 
-import com.google.inject.Module;
-import com.google.inject.Binder;
 import org.quickload.config.ConfigSource;
 import org.quickload.exec.ExecModule;
 import org.quickload.exec.SystemConfigModule;
-import org.quickload.plugin.BuiltinPluginSourceModule;
 import org.quickload.jruby.JRubyScriptingModule;
+import org.quickload.plugin.BuiltinPluginSourceModule;
+
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
 public class TestRuntimeModule
         implements Module

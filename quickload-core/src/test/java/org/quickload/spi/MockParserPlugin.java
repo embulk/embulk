@@ -1,24 +1,25 @@
 package org.quickload.spi;
 
-import java.util.List;
 import java.util.ArrayList;
-import org.quickload.time.Timestamp;
+import java.util.List;
+
 import org.quickload.buffer.Buffer;
-import org.quickload.config.ConfigSource;
-import org.quickload.config.TaskSource;
-import org.quickload.config.Task;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
-import org.quickload.record.Schema;
-import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordWriter;
-import org.quickload.record.Column;
+import org.quickload.config.ConfigSource;
+import org.quickload.config.Task;
+import org.quickload.config.TaskSource;
 import org.quickload.record.BooleanWriter;
-import org.quickload.record.LongWriter;
+import org.quickload.record.Column;
 import org.quickload.record.DoubleWriter;
+import org.quickload.record.LongWriter;
+import org.quickload.record.PageBuilder;
+import org.quickload.record.Record;
+import org.quickload.record.RecordWriter;
+import org.quickload.record.Schema;
 import org.quickload.record.StringWriter;
 import org.quickload.record.TimestampWriter;
-import org.quickload.record.Record;
+import org.quickload.time.Timestamp;
 
 public class MockParserPlugin
         implements ParserPlugin

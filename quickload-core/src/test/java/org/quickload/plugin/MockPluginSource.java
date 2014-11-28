@@ -1,9 +1,9 @@
 package org.quickload.plugin;
 
-import com.google.inject.Module;
-import com.google.inject.Binder;
-import com.google.inject.multibindings.Multibinder;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
 
 public class MockPluginSource
         implements PluginSource

@@ -1,20 +1,20 @@
 package org.quickload.channel;
 
-import java.util.Iterator;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Rule;
-import org.junit.rules.Timeout;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import org.quickload.buffer.Buffer;
-import org.quickload.DurationWatch;
+import static org.junit.Assert.assertTrue;
 import static org.quickload.channel.TestDataChannel.doLater;
 import static org.quickload.channel.TestDataChannel.newBuffer;
 import static org.quickload.channel.TestDataChannel.newFilledBuffer;
+
+import java.util.Iterator;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.Timeout;
+import org.quickload.DurationWatch;
+import org.quickload.buffer.Buffer;
 
 public class TestFileBufferChannel
 {
@@ -74,10 +74,6 @@ public class TestFileBufferChannel
     @Test
     public void testGetAddedFileSize()
     {
-        Buffer b1 = newFilledBuffer(10);
-        Buffer b2 = newFilledBuffer(20);
-        Buffer b3 = newFilledBuffer(30);
-
         assertEquals(0, output.getAddedSize());
         output.add(newFilledBuffer(10));
         assertEquals(10, output.getAddedSize());

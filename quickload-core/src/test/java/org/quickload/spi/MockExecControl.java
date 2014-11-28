@@ -1,9 +1,11 @@
 package org.quickload.spi;
 
 import java.util.List;
-import com.google.common.collect.ImmutableList;
-import org.quickload.config.TaskSource;
+
 import org.quickload.config.Report;
+import org.quickload.config.TaskSource;
+
+import com.google.common.collect.ImmutableList;
 
 public class MockExecControl
         implements ExecControl

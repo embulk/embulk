@@ -1,20 +1,19 @@
 package org.quickload.spi;
 
-import java.util.List;
 import java.util.ArrayList;
-import com.google.inject.Inject;
-import org.quickload.time.Timestamp;
-import org.quickload.config.TaskSource;
+import java.util.List;
+
+import org.quickload.channel.PageInput;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.channel.PageInput;
-import org.quickload.record.Schema;
-import org.quickload.record.Page;
-import org.quickload.record.PageReader;
-import org.quickload.record.RecordReader;
+import org.quickload.config.TaskSource;
 import org.quickload.record.Column;
+import org.quickload.record.PageReader;
 import org.quickload.record.Record;
+import org.quickload.record.RecordReader;
+import org.quickload.record.Schema;
+import org.quickload.time.Timestamp;
 
 public class MockOutputPlugin
         implements OutputPlugin

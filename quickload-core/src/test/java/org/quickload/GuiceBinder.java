@@ -1,15 +1,17 @@
 package org.quickload;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
 
 public class GuiceBinder
         implements TestRule

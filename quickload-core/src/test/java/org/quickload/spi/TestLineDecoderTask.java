@@ -1,19 +1,13 @@
 package org.quickload.spi;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import org.junit.Rule;
+
 import java.nio.charset.Charset;
-import org.quickload.config.Task;
-import org.quickload.config.Config;
-import org.quickload.config.ConfigSource;
-import org.quickload.config.TaskSource;
+
+import org.junit.Rule;
+import org.junit.Test;
 import org.quickload.TestRuntimeBinder;
+import org.quickload.config.ConfigSource;
 
 public class TestLineDecoderTask
 {

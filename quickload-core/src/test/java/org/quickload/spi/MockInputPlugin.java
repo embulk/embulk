@@ -1,22 +1,21 @@
 package org.quickload.spi;
 
-import org.quickload.time.Timestamp;
-import org.quickload.config.TaskSource;
+import org.quickload.channel.PageOutput;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.NextConfig;
 import org.quickload.config.Report;
-import org.quickload.record.Schema;
-import org.quickload.record.PageAllocator;
-import org.quickload.record.PageBuilder;
-import org.quickload.record.RecordWriter;
-import org.quickload.record.Column;
+import org.quickload.config.TaskSource;
 import org.quickload.record.BooleanWriter;
-import org.quickload.record.LongWriter;
+import org.quickload.record.Column;
 import org.quickload.record.DoubleWriter;
+import org.quickload.record.LongWriter;
+import org.quickload.record.PageBuilder;
+import org.quickload.record.Record;
+import org.quickload.record.RecordWriter;
+import org.quickload.record.Schema;
 import org.quickload.record.StringWriter;
 import org.quickload.record.TimestampWriter;
-import org.quickload.record.Record;
-import org.quickload.channel.PageOutput;
+import org.quickload.time.Timestamp;
 
 public class MockInputPlugin
         implements InputPlugin

@@ -1,21 +1,17 @@
 package org.quickload.record;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+
+import org.junit.Test;
 import org.junit.runner.RunWith;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.quickload.config.ModelManager;
-import org.quickload.config.TaskSource;
 import org.quickload.GuiceJUnitRunner;
 import org.quickload.TestRuntimeModule;
+import org.quickload.config.ModelManager;
+import org.quickload.config.TaskSource;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.inject.Inject;
 
 @RunWith(GuiceJUnitRunner.class)
 @GuiceJUnitRunner.GuiceModules({ TestRuntimeModule.class })

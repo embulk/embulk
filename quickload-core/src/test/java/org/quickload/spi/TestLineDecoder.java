@@ -1,24 +1,18 @@
 package org.quickload.spi;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import com.google.common.collect.ImmutableList;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
 import org.quickload.buffer.Buffer;
-import org.quickload.TestRuntimeModule;
-import org.quickload.TestUtilityModule;
-import org.quickload.record.RandomSchemaGenerator;
-import org.quickload.record.RandomRecordGenerator;
+
+import com.google.common.collect.ImmutableList;
 
 public class TestLineDecoder
 {

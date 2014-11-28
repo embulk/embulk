@@ -1,12 +1,11 @@
 package org.quickload;
 
-import com.google.inject.Binder;
-import com.google.inject.Module;
-import com.google.inject.Scopes;
-import org.quickload.exec.BufferManager;
 import org.quickload.record.RandomManager;
 import org.quickload.record.RandomRecordGenerator;
 import org.quickload.record.RandomSchemaGenerator;
+
+import com.google.inject.Binder;
+import com.google.inject.Module;
 
 public class TestUtilityModule
         implements Module
