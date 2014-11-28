@@ -2,7 +2,6 @@ package org.quickload.spi;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.quickload.config.Task;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigSource;

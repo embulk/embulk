@@ -2,7 +2,6 @@ package org.quickload.buffer;
 
 import io.airlift.slice.Slices;
 import io.airlift.slice.Slice;
-import static sun.misc.Unsafe.ARRAY_BYTE_BASE_OFFSET;
 
 public class Buffer
 {

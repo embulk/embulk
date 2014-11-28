@@ -1,6 +1,5 @@
 package org.quickload.config;
 
-import java.util.Set;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import com.google.inject.Inject;

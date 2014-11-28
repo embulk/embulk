@@ -1,10 +1,6 @@
 package org.quickload.record;
 
 import java.util.List;
-import java.util.Arrays;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;

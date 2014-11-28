@@ -11,7 +11,7 @@ public class FileBufferChannel
 
     public FileBufferChannel(int maxQueuedSize)
     {
-        this.channel = new DataChannel(maxQueuedSize);
+        this.channel = new DataChannel<>(maxQueuedSize);
         this.input = new FileBufferInput(channel);
         this.output = new FileBufferOutput(channel);
     }

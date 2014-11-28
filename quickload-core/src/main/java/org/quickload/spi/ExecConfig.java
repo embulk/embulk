@@ -19,7 +19,7 @@ public class ExecConfig
     }
 
     @JsonCreator
-    public void ExecConfig(
+    public ExecConfig(
             @JsonProperty("schema") Schema schema,
             @JsonProperty("processorCount") int processorCount,
             @JsonProperty("transactionTime") Timestamp transactionTime,

@@ -1,7 +1,6 @@
 package org.quickload.record;
 
 import java.util.List;
-import java.nio.ByteBuffer;
 import com.google.common.collect.ImmutableList;
 import org.quickload.buffer.Buffer;
 

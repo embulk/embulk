@@ -11,7 +11,7 @@ public class PageChannel
 
     public PageChannel(int maxQueuedSize)
     {
-        this.channel = new DataChannel(maxQueuedSize);
+        this.channel = new DataChannel<>(maxQueuedSize);
         this.input = new PageInput(channel);
         this.output = new PageOutput(channel);
     }

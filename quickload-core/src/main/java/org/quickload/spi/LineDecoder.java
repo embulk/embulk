@@ -1,16 +1,12 @@
 package org.quickload.spi;
 
-import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
-import java.nio.charset.Charset;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.CoderMalfunctionError;
-import java.nio.charset.UnsupportedCharsetException;
 import java.nio.charset.CharacterCodingException;
 import org.quickload.buffer.Buffer;
 

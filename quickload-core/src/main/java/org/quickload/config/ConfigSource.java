@@ -1,8 +1,5 @@
 package org.quickload.config;
 
-import java.lang.reflect.Method;
-import com.google.common.base.Optional;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ConfigSource

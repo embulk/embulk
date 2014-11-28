@@ -1,6 +1,5 @@
 package org.quickload.spi;
 
-import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.quickload.config.NextConfig;
 import org.quickload.config.ConfigSource;

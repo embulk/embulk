@@ -2,8 +2,6 @@ package org.quickload.exec;
 
 import java.util.List;
 import org.quickload.config.NextConfig;
-import org.quickload.record.Schema;
-import org.quickload.record.Page;
 import org.quickload.spi.NoticeLogger;
 
 public class ExecuteResult

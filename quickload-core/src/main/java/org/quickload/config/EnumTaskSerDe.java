@@ -2,7 +2,6 @@ package org.quickload.config;
 
 import java.util.Map;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -20,7 +19,6 @@ import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
-import org.quickload.config.ModelManager;
 
 public class EnumTaskSerDe
 {

@@ -1,25 +1,20 @@
 package org.quickload.exec;
 
 import java.util.List;
-import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
 import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigDefault;
-import org.quickload.config.NextConfig;
 import org.quickload.config.Task;
 import org.quickload.config.TaskSource;
 import org.quickload.config.ConfigSource;
 import org.quickload.config.Report;
 import org.quickload.channel.PageChannel;
 import org.quickload.channel.PageInput;
-import org.quickload.record.Schema;
-import org.quickload.record.Column;
 import org.quickload.record.Page;
 import org.quickload.spi.InputPlugin;
-import org.quickload.spi.OutputPlugin;
 import org.quickload.spi.PluginThread;
 import org.quickload.spi.ExecTask;
 import org.quickload.spi.ExecControl;

@@ -1,6 +1,5 @@
 package org.quickload.exec;
 
-import java.util.List;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.ArrayDeque;
@@ -9,7 +8,6 @@ import com.google.inject.Injector;
 import org.quickload.config.ConfigSource;
 import org.quickload.channel.ChannelAsynchronousCloseException;
 import org.quickload.spi.ExecTask;
-import org.quickload.spi.NoticeLogger;
 
 public abstract class PluginExecutors
 {

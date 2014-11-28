@@ -107,7 +107,7 @@ public class PluginThread
             throw Throwables.propagate(ex);
         }
 
-        Deque<Throwable> nestedExceptions = new ArrayDeque();
+        Deque<Throwable> nestedExceptions = new ArrayDeque<>();
         for (PluginThread thread : nestedThreads) {
             try {
                 thread.joinAndThrow();

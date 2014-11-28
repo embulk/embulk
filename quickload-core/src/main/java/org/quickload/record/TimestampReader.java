@@ -1,7 +1,5 @@
 package org.quickload.record;
 
-import org.quickload.time.Timestamp;
-
 public class TimestampReader
         extends TypeReader
 {

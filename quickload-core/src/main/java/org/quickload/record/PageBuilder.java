@@ -115,7 +115,7 @@ public class PageBuilder
 
     private List<String> getSortedStringReferences()
     {
-        ArrayList<Map.Entry<String, Integer>> s = new ArrayList(stringReferences.entrySet());
+        ArrayList<Map.Entry<String, Integer>> s = new ArrayList<>(stringReferences.entrySet());
         Collections.sort(s, new StringReferenceSortComparator());
         String[] array = new String[s.size()];
         for (int i=0; i < array.length; i++) {

@@ -8,12 +8,8 @@ import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import org.jruby.CompatVersion;
 import org.jruby.embed.ScriptingContainer;
-import org.jruby.embed.PathType;
-import org.quickload.config.Task;
-import org.quickload.config.ConfigSource;
 import org.quickload.plugin.PluginSource;
 
 public class JRubyScriptingModule

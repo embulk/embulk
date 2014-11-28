@@ -2,12 +2,8 @@ package org.quickload.jruby;
 
 import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.jruby.RubySymbol;
-import org.jruby.RubyModule;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.embed.InvokeFailedException;
-import org.jruby.exceptions.RaiseException;
-import org.jruby.runtime.builtin.IRubyObject;
 import org.quickload.plugin.PluginSource;
 import org.quickload.plugin.PluginSourceNotMatchException;
 import org.quickload.spi.InputPlugin;
