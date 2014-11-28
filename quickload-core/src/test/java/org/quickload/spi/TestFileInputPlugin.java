@@ -36,39 +36,21 @@ public class TestFileInputPlugin
     @Rule
     public TestRuntimeBinder binder = new TestRuntimeBinder();
 
-    private static interface TestParserTask
-            extends Task
+    private static interface TestParserTask extends Task
     {
         @Config("field")
         public String getField();
-    }
-    
-    private static class ParserTestFileInputPlugin
-            extends FileInputPlugin
-    {
-        public NextConfig runFileInputTransaction(ExecTask exec,
-                ConfigSource config, ExecControl control)
-        {
-            control.run(new TaskSource());
-            return new NextConfig();
-        }
-
-        public Report runFileInput(ExecTask exec, TaskSource taskSource,
-                int processorIndex, FileBufferOutput fileBufferOutput)
-        {
-            return new Report();
-        }
     }
 
     private static class TestTargetFileInputPlugin extends FileInputPlugin
     {
         boolean emulateException = false;
-        
+
         @Override
         public NextConfig runFileInputTransaction(ExecTask exec,
                 ConfigSource config, ExecControl control)
         {
-            // Not called
+            control.run(new TaskSource());
             return new NextConfig();
         }
 
@@ -86,28 +68,29 @@ public class TestFileInputPlugin
     public void testTransactionSetsParserTask()
     {
         Schema schema = schemaGen.generate(0);
-        MockParserPlugin parser = new MockParserPlugin(
-                schema, ImmutableList.copyOf(recordGen.generate(schema, 0)),
+        MockParserPlugin parser = new MockParserPlugin(schema,
+                ImmutableList.copyOf(recordGen.generate(schema, 0)),
                 TestParserTask.class);
-        binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class, parser));
+        binder.addModule(MockPluginSource.newInjectModule(ParserPlugin.class,
+                parser));
 
         ExecTask exec = binder.newExecTask();
 
-        ConfigSource config = new ConfigSource()
-            .set("parser",
-                    new ConfigSource()
-                        .setString("field", "frsyuki")
-                        .setString("type", "dummy"));
+        ConfigSource config = new ConfigSource().set(
+                "parser",
+                new ConfigSource().setString("field", "frsyuki").setString(
+                        "type", "dummy"));
 
-        ParserTestFileInputPlugin plugin = binder.getInstance(ParserTestFileInputPlugin.class);
+        TestTargetFileInputPlugin plugin = binder
+                .getInstance(TestTargetFileInputPlugin.class);
 
         MockExecControl control = new MockExecControl();
         plugin.runInputTransaction(exec, config, control);
 
-        FileInputPlugin.InputTask inputTask =
-            exec.loadTask(control.getTaskSource(), FileInputPlugin.InputTask.class);
-        TestParserTask parserTask =
-            exec.loadTask(inputTask.getParserTask(), TestParserTask.class);
+        FileInputPlugin.InputTask inputTask = exec.loadTask(
+                control.getTaskSource(), FileInputPlugin.InputTask.class);
+        TestParserTask parserTask = exec.loadTask(inputTask.getParserTask(),
+                TestParserTask.class);
 
         assertEquals("frsyuki", parserTask.getField());
     }
