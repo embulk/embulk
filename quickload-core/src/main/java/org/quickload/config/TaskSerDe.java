@@ -126,7 +126,7 @@ class TaskSerDe
                 } else {
                     Object value = nestedObjectMapper.readValue(jp, new GenericTypeReference(field.getType()));
                     if (value == null) {
-                        throw new JsonMappingException("Setting null to a @Config field is not allowed. Configuration object must ble Optional<T> (com.google.common.base.Optional)");
+                        throw new JsonMappingException("Setting null to a @Config field is not allowed. Configuration object must be Optional<T> (com.google.common.base.Optional)");
                     }
                     objects.put(field.getName(), value);
                     unusedMappings.remove(key);
@@ -139,7 +139,7 @@ class TaskSerDe
                 if (field.getDefaultJsonString().isPresent()) {
                     Object value = nestedObjectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
                     if (value == null) {
-                        throw new JsonMappingException("Setting null to a @Config field is not allowed. Configuration object must ble Optional<T> (com.google.common.base.Optional)");
+                        throw new JsonMappingException("Setting null to a @Config field is not allowed. Configuration object must be Optional<T> (com.google.common.base.Optional)");
                     }
                     objects.put(field.getName(), value);
                 } else {
