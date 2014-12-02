@@ -111,7 +111,7 @@ public class TestCsvTokenizer {
                 "\n\"a\r\na\na\"", ",\"b,bb\"\n", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("a\r\na\na", "b,bb"),
-                        Arrays.asList("ccc", "ddd"), // TODO Arrays.asList("cc\"c", "\"ddd")),
+                        Arrays.asList("cc\"c", "\"ddd"),
                         Arrays.asList(null, "")),
                 parsed);
     }
