@@ -1,18 +1,26 @@
 package org.quickload.standards;
 
+import com.google.common.base.Preconditions;
 import org.quickload.spi.LineDecoder;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class CsvTokenizer
 {
-    static enum State
+    static enum ParserState
     {
-        BEGIN_OF_COLUMN, FIRST_TRIM, LAST_TRIM,
-        NORMAL, QUOTED, END_OF_COLUMN, END_OF_COLUMNS;
+        BEGIN, END,
+    }
+
+    static enum CursorState
+    {
+        BEGIN, PARSED, FIRST_TRIM, LAST_TRIM, QUOTED,
     }
 
     private static final char END_OF_LINE = 0;
+    private static final boolean TRACE = false;
 
     private final char delimiter;
     private final char quote;
@@ -22,15 +30,15 @@ public class CsvTokenizer
 
     private Iterator<String> lineDecoder;
 
-    private State currentState = State.BEGIN_OF_COLUMN;
-    private long currentLineNum = 0;
-    private String currentLine = null;
-    private int currentLinePos = 0;
+    private ParserState pState = ParserState.BEGIN;
+    private CursorState cState = CursorState.BEGIN;
+    private long lineNum = 0;
+    private String line = null;
+    private int linePos = 0, columnStartPos = 0, columnEndPos = 0;
     private boolean isQuotedColumn = false;
-    private final StringBuilder currentColumn = new StringBuilder();
-    private final StringBuilder currentUntokenizedLine = new StringBuilder();
+    private StringBuilder column = new StringBuilder();
+    private List<String> untokenizedLines = new ArrayList<>();
 
-    // @see http://tools.ietf.org/html/rfc4180
     public CsvTokenizer(LineDecoder decoder, CsvParserTask task)
     {
         delimiter = task.getDelimiterChar();
@@ -44,38 +52,43 @@ public class CsvTokenizer
 
     public long getCurrentLineNum()
     {
-        return currentLineNum;
+        return lineNum;
     }
 
-    public String getCurrentUntokenizedLine()
-    {
-        return currentUntokenizedLine.toString();
+    public String getCurrentUntokenizedLine() {
+        StringBuilder sbuf = new StringBuilder();
+        for (int i = 0; i < untokenizedLines.size(); i++) {
+            sbuf.append(untokenizedLines.get(i));
+            if (i + 1 < untokenizedLines.size()) {
+                sbuf.append(newline);
+            }
+        }
+        return sbuf.toString();
     }
 
     public boolean hasNextRecord()
     {
         // returns true if LineDecoder has more lines.
-        return lineDecoder.hasNext();
+        return !untokenizedLines.isEmpty() || lineDecoder.hasNext();
     }
 
     public void nextRecord()
     {
-        if (!currentState.equals(State.END_OF_COLUMNS)) {
-            throw new CsvValueValidateException("too many columns");
-        }
+        Preconditions.checkState(pState.equals(ParserState.END), "too many columns");
 
-        // change the current state to 'start'
-        currentState = State.BEGIN_OF_COLUMN;
+        // change the parser state to 'begin'
+        pState = ParserState.BEGIN;
 
-        // change the current position to 0
-        currentLinePos = 0;
-        currentLine = null;
-        currentUntokenizedLine.setLength(0);
+        // change the start/end positions to 0s
+        linePos = columnStartPos = columnEndPos = 0;
+
+        line = null;
+        untokenizedLines.clear();
     }
 
     public void skipLine()
     {
-        while (!currentState.equals(State.END_OF_COLUMNS)) {
+        while (!pState.equals(ParserState.END)) {
             nextColumn();
         }
         nextRecord();
@@ -83,15 +96,17 @@ public class CsvTokenizer
 
     public String nextColumn()
     {
+        Preconditions.checkState(!pState.equals(ParserState.END), "doesn't have enough columns");
+
+        // fetch and parse next column
         fetchNextColumn();
 
-        if (!currentState.equals(State.END_OF_COLUMNS) &&
-                !currentState.equals(State.END_OF_COLUMN)) {
-            throw new CsvValueValidateException("doesn't have enough columns");
+        column.append(line.substring(columnStartPos, columnEndPos));
+        String c = column.toString();
+        column.setLength(0);
+        if (TRACE) {
+            System.out.println("#MN column: " + c);
         }
-
-        String c = currentColumn.toString();
-        currentColumn.setLength(0);
         return c;
     }
 
@@ -100,176 +115,183 @@ public class CsvTokenizer
         return isQuotedColumn;
     }
 
+    // @see http://tools.ietf.org/html/rfc4180
     private void fetchNextColumn()
     {
         isQuotedColumn = false;
-        currentState = State.BEGIN_OF_COLUMN;
+        columnStartPos = columnEndPos = linePos;
+        cState = CursorState.BEGIN;
 
-        // keep track of spaces (so leading/trailing space can be removed if required)
-        int potentialSpaces = 0;
+        boolean loopFinished = false;
+        while (!loopFinished) {
+            final char c = getChar(linePos);
+            if (TRACE) {
+                System.out.println("#MN c: " + c + " (" + cState + "," + pState + ")");
+            }
+            try { Thread.sleep(100); } catch (Exception e) {}
 
-        while (true) {
-            final char c = getChar();
+            switch (cState) {
+                case BEGIN:
+                    if (isDelimiter(c)) {
+                        linePos++;
+                        loopFinished = true;
 
-            if (currentState.equals(State.BEGIN_OF_COLUMN)) {
-                if (isDelimiter(c)) {
-                    currentState = State.END_OF_COLUMN;
-                    break;
+                    } else if (isEndOfLine(c)) {
+                        throw new RuntimeException(); // TODO not come here
 
-                } else if (isEndOfLine(c)) {
-                    currentState = State.END_OF_COLUMNS;
-                    break;
+                    } else if (isSpace(c)) {
+                        if (trimIfNotQuoted) {
+                            columnStartPos = columnEndPos = ++linePos;
+                            cState = CursorState.FIRST_TRIM;
+                        } else {
+                            throw new RuntimeException(); // TODO not come here
+                        }
 
-                } else if (isSpace(c)) {
-                    potentialSpaces += 1;
-                    currentState = State.FIRST_TRIM;
+                    } else if (isQuote(c)) {
+                        isQuotedColumn = true;
+                        columnStartPos = columnEndPos = ++linePos;
+                        cState = CursorState.QUOTED;
 
-                } else if (isQuote(c)) {
-                    isQuotedColumn = true;
-                    currentState = State.QUOTED;
+                    } else {
+                        columnEndPos = ++linePos;
+                        cState = CursorState.PARSED;
 
-                } else {
-                    currentColumn.append(c);
-                    currentState = State.NORMAL;
-
-                }
-            } else if (currentState.equals(State.FIRST_TRIM)) {
-                if (isSpace(c)) {
-                    // state is not change
-                    potentialSpaces += 1;
-
-                } else if (isQuote(c)) {
-                    if (!trimIfNotQuoted) {
-                        insertSpaces(currentColumn, potentialSpaces);
                     }
-                    potentialSpaces = 0;
-                    isQuotedColumn = true;
-                    currentState = State.QUOTED;
-
-                } else {
-                    if (!trimIfNotQuoted) {
-                        insertSpaces(currentColumn, potentialSpaces);
-                    }
-                    potentialSpaces = 0;
-                    currentColumn.append(c);
-                    currentState = State.NORMAL;
-
-                }
-            } else if (currentState.equals(State.NORMAL)) {
-                if (isDelimiter(c)) {
-                    currentState = State.END_OF_COLUMN;
                     break;
 
-                } else if (isEndOfLine(c)) {
-                    currentState = State.END_OF_COLUMNS;
+                case FIRST_TRIM:
+                    if (isSpace(c)) {
+                        columnStartPos = columnEndPos = ++linePos;
+
+                    } else if (isQuote(c)) {
+                        throw new RuntimeException(); // TODO not come here
+
+                    } else {
+                        columnStartPos = columnEndPos = linePos;
+                        linePos++;
+                        cState = CursorState.PARSED;
+
+                    }
                     break;
 
-                } else if (isSpace(c)) {
-                    potentialSpaces += 1;
-                    currentState = State.LAST_TRIM;
+                case PARSED:
+                    if (isDelimiter(c)) {
+                        linePos++;
+                        loopFinished = true;
 
-                } else if (isQuote(c)) {
-                    isQuotedColumn = true;
-                    currentState = State.QUOTED;
+                    } else if (isEndOfLine(c)) {
+                        pState = ParserState.END;
+                        loopFinished = true;
 
-                } else {
-                    // state is not change
-                    currentColumn.append(c);
+                    } else if (isSpace(c)) {
+                        if (trimIfNotQuoted) {
+                            cState = CursorState.LAST_TRIM;
+                            linePos++;
+                        } else {
+                            columnEndPos = ++linePos;
+                        }
 
-                }
-            } else if (currentState.equals(State.QUOTED)) {
-                // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
+                    } else if (isQuote(c)) {
+                        // TODO not implemented yet foo""bar""baz -> [foo, bar, baz].append
+                        throw new RuntimeException(); // TODO not come here
 
-                if (isEndOfLine(c)) {
-                    currentColumn.append(newline);
-                    currentLine = null;
-                    currentLinePos = 0;
+                    } else {
+                        columnEndPos = ++linePos;
 
-                } else if (isQuote(c)) {
-                    currentState = State.NORMAL; // back to 'normal' mode
-
-                } else {
-                    // state is not change
-                    currentColumn.append(c);
-
-                    if (currentColumn.length() >= maxQuotedColumnSize) {
-                        throw new CsvValueValidateException("too large sized column value");
                     }
-
-                }
-            } else if (currentState.equals(State.LAST_TRIM)) {
-                if (isDelimiter(c)) {
-                    if (!trimIfNotQuoted) {
-                        appendSpaces(currentColumn, potentialSpaces);
-                    }
-                    potentialSpaces = 0;
-                    currentState = State.END_OF_COLUMN;
                     break;
 
-                } else if (isEndOfLine(c)) {
-                    if (!trimIfNotQuoted) {
-                        appendSpaces(currentColumn, potentialSpaces);
+                case QUOTED:
+                    // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
+
+                    if (isEndOfLine(c)) {
+                        column.append(line.substring(columnStartPos, columnEndPos)).append(newline);
+                        line = null;
+                        columnStartPos = columnEndPos = linePos = 0;
+
+                    } else if (isQuote(c)) {
+                        linePos++;
+                        char next = getChar(linePos);
+                        if (TRACE) {
+                            System.out.println("#MN quoted c: " + next + " (" + cState + "," + pState + ")");
+                        }
+                        if (isQuote(next)) { // escaped quote
+                            column.append(line.substring(columnStartPos, columnEndPos)).append(quote);
+                            columnStartPos = columnEndPos = ++linePos;
+                        } else {
+                            cState = CursorState.PARSED; // back to 'normal' mode
+                        }
+
+                    } else {
+                        columnEndPos = ++linePos;
+
                     }
-                    potentialSpaces = 0;
-                    currentState = State.END_OF_COLUMNS;
                     break;
 
-                } else if (isSpace(c)) {
-                    // state is not change
-                    potentialSpaces += 1;
+                case LAST_TRIM:
+                    if (isDelimiter(c)) {
+                        linePos++;
+                        loopFinished = true;
 
-                } else if (isQuote(c)) {
-                    potentialSpaces = 0;
-                    currentState = State.QUOTED;
+                    } else if (isEndOfLine(c)) {
+                        pState = ParserState.END;
+                        loopFinished = true;
 
-                } else {
-                    appendSpaces(currentColumn, potentialSpaces);
-                    currentColumn.append(c);
-                    potentialSpaces = 0;
-                    currentState = State.NORMAL;
+                    } else if (isSpace(c)) {
+                        linePos++;
 
-                }
-            } else {
-                throw new RuntimeException("should not rearch this control");
+                    } else if (isQuote(c)) {
+                        throw new RuntimeException(); // TODO not come here
+
+                    } else {
+                        columnEndPos = ++linePos;
+                        cState = CursorState.PARSED;
+
+                    }
+                    break;
+
+                default:
+                    throw new RuntimeException("should not rearch this control");
             }
         }
     }
 
-    private char getChar()
+    private char getChar(final int pos)
     {
-        if (currentLine == null) {
-            String line;
+        if (line == null) {
+            String l;
 
             while (lineDecoder.hasNext()) {
-                line = lineDecoder.next();
-                currentLineNum++; // increment # of line
+                l = lineDecoder.next();
+                lineNum++;
+                if (TRACE) {
+                    System.out.println("#MN line: " + l + " (" + lineNum + ")");
+                }
 
-                // if it finds empty lines with STRING currentState, they should be skipped.
-                if (line.isEmpty() && (currentState.equals(State.BEGIN_OF_COLUMN))) {
+                // if it finds empty lines with BEGIN state, they should be skipped.
+                if (l.isEmpty() && (cState.equals(CursorState.BEGIN))) {
                     continue;
                 }
 
                 // update the untokenized line: if current state is 'normal', the untokenized
                 // line first should be cleaned up. otherwise (i mean 'quoted' mode), new line
                 // is appended to current untokenized line.
-                if (currentState.equals(State.BEGIN_OF_COLUMN)) {
-                    currentUntokenizedLine.setLength(0);
-                } else {
-                    currentUntokenizedLine.append(newline); // multi lines
+                if (cState.equals(CursorState.BEGIN)) {
+                    untokenizedLines.clear();
                 }
-                currentUntokenizedLine.append(line);
+                untokenizedLines.add(line);
 
-                if (line != null) {
-                    currentLine = line;
+                if (l != null) {
+                    line = l;
                     break;
                 }
             }
         }
 
-        if (currentLine == null || currentLinePos >= currentLine.length()) {
+        if (line == null || pos >= line.length()) {
             return END_OF_LINE;
         } else {
-            return currentLine.charAt(currentLinePos++);
+            return line.charAt(pos);
         }
     }
 
