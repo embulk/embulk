@@ -2,6 +2,8 @@ package org.quickload.standards;
 
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
+import org.quickload.config.Config;
+import org.quickload.config.ConfigDefault;
 import org.quickload.record.Column;
 import org.quickload.record.PageReader;
 import org.quickload.record.RecordReader;
@@ -27,6 +29,9 @@ public class CsvFormatterPlugin
     public interface CsvFormatterTask
             extends LineEncoderTask, TimestampFormatterTask
     {
+        @Config("header_line")
+        @ConfigDefault("true")
+        public boolean getHeaderLine();
     }
 
     @Override
@@ -62,6 +67,11 @@ public class CsvFormatterPlugin
                 exec.getBufferAllocator(), task, fileBufferOutput);
         final Map<Integer, TimestampFormatter> timestampFormatters =
                 newTimestampFormatters(exec, task, schema);
+
+        if (task.getHeaderLine()) {
+            // write header
+            writeHeader(schema, encoder);
+        }
 
         try (PageReader reader = new PageReader(exec.getSchema(), pageInput)) {
             while (reader.nextRecord()) {
@@ -113,5 +123,16 @@ public class CsvFormatterPlugin
         }
         encoder.flush();
         fileBufferOutput.addFile();
+    }
+
+    private void writeHeader(final Schema schema, final LineEncoder encoder)
+    {
+        for (Column column : schema.getColumns()) {
+            if (column.getIndex() != 0) {
+                encoder.addText(",");
+            }
+            encoder.addText(column.getName());
+        }
+        encoder.addNewLine();
     }
 }
