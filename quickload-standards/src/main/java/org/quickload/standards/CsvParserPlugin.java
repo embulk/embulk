@@ -24,7 +24,8 @@ import org.quickload.time.TimestampParserTask;
 
 import java.util.Map;
 
-public class CsvParserPlugin extends BasicParserPlugin {
+public class CsvParserPlugin
+        extends BasicParserPlugin {
     @Override
     public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config)
     {
@@ -55,7 +56,7 @@ public class CsvParserPlugin extends BasicParserPlugin {
         final PageAllocator pageAllocator = exec.getPageAllocator();
         final Schema schema = exec.getSchema();
         final CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
-        final Map<Integer, TimestampParser> timestampParsers = newTimestampParsers(exec, task, schema);
+        final Map<Integer, TimestampParser> tsParsers = newTimestampParsers(exec, task, schema);
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
         try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
             while (fileBufferInput.nextFile()) {
@@ -69,16 +70,12 @@ public class CsvParserPlugin extends BasicParserPlugin {
 
                     try {
                         builder.addRecord(new RecordWriter() {
-                            public void writeBoolean(final Column column, final BooleanWriter writer) {
+                            public void writeBoolean(Column column, BooleanWriter writer) {
                                 String v = nextColumn(tokenizer);
-                                if (v == null) {
-                                    writer.writeNull();
+                                if (v != null) {
+                                    writer.write(Boolean.parseBoolean(v));
                                 } else {
-                                    try {
-                                        writer.write(Boolean.parseBoolean(v));
-                                    } catch (NumberFormatException e) {
-                                        throw e; // TODO
-                                    }
+                                    writer.writeNull();
                                 }
                             }
 
@@ -86,12 +83,13 @@ public class CsvParserPlugin extends BasicParserPlugin {
                                 String v = nextColumn(tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
-                                } else {
-                                    try {
-                                        writer.write(Long.parseLong(v));
-                                    } catch (NumberFormatException e) {
-                                        throw e; // TODO
-                                    }
+                                    return;
+                                }
+
+                                try {
+                                    writer.write(Long.parseLong(v));
+                                } catch (NumberFormatException e) {
+                                    throw new CsvRecordValidateException(e);
                                 }
                             }
 
@@ -99,21 +97,22 @@ public class CsvParserPlugin extends BasicParserPlugin {
                                 String v = nextColumn(tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
-                                } else {
-                                    try {
-                                        writer.write(Double.parseDouble(v));
-                                    } catch (NumberFormatException e) {
-                                        throw e; // TODO
-                                    }
+                                    return;
+                                }
+
+                                try {
+                                    writer.write(Double.parseDouble(v));
+                                } catch (NumberFormatException e) {
+                                    throw new CsvRecordValidateException(e);
                                 }
                             }
 
                             public void writeString(Column column, StringWriter writer) {
                                 String v = nextColumn(tokenizer);
-                                if (v == null) {
-                                    writer.writeNull();
-                                } else {
+                                if (v != null) {
                                     writer.write(v);
+                                } else {
+                                    writer.writeNull();
                                 }
                             }
 
@@ -121,19 +120,19 @@ public class CsvParserPlugin extends BasicParserPlugin {
                                 String v = nextColumn(tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
-                                } else {
-                                    try {
-                                        writer.write((timestampParsers.get(column.getIndex()).parse(v)));
-                                    } catch (Exception e) {
-                                        // TODO
-                                    }
+                                    return;
+                                }
+
+                                try {
+                                    writer.write((tsParsers.get(column.getIndex()).parse(v)));
+                                } catch (Exception e) {
+                                    throw new CsvRecordValidateException(e);
                                 }
                             }
                         });
-                        tokenizer.nextRecord();
 
+                        tokenizer.nextRecord();
                     } catch (Exception e) {
-                        e.printStackTrace();
                         exec.notice().skippedLine(tokenizer.getCurrentUntokenizedLine());
                         tokenizer.skipLine();
                     }
@@ -149,6 +148,15 @@ public class CsvParserPlugin extends BasicParserPlugin {
             return tokenizer.isQuotedColumn() ? "" : null;
         } else {
             return v;
+        }
+    }
+
+    static class CsvRecordValidateException
+            extends RuntimeException
+    {
+        CsvRecordValidateException(Throwable cause)
+        {
+            super(cause);
         }
     }
 }
