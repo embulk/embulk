@@ -19,6 +19,7 @@ import org.quickload.record.TimestampWriter;
 import org.quickload.spi.BasicParserPlugin;
 import org.quickload.spi.LineDecoder;
 import org.quickload.spi.ExecTask;
+import org.quickload.time.TimestampParseException;
 import org.quickload.time.TimestampParser;
 import org.quickload.time.TimestampParserTask;
 
@@ -125,7 +126,7 @@ public class CsvParserPlugin
 
                                 try {
                                     writer.write((tsParsers.get(column.getIndex()).parse(v)));
-                                } catch (Exception e) {
+                                } catch (TimestampParseException e) {
                                     throw new CsvRecordValidateException(e);
                                 }
                             }
