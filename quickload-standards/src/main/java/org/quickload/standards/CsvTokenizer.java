@@ -127,8 +127,8 @@ public class CsvTokenizer
             final char c = getChar(linePos);
             if (TRACE) {
                 System.out.println("#MN c: " + c + " (" + cState + "," + pState + ")");
+                try { Thread.sleep(100); } catch (Exception e) {}
             }
-            try { Thread.sleep(100); } catch (Exception e) {}
 
             switch (cState) {
                 case BEGIN:
