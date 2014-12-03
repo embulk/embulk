@@ -26,7 +26,7 @@ public class CsvTokenizer
     private final char quote;
     private final String newline;
     private final boolean trimIfNotQuoted;
-    private final long maxQuotedColumnSize;
+    private final long maxQuotedSizeLimit;
 
     private Iterator<String> lineDecoder;
 
@@ -45,7 +45,7 @@ public class CsvTokenizer
         quote = task.getQuoteChar();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
-        maxQuotedColumnSize = task.getMaxQuotedColumnSize();
+        maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
 
         lineDecoder = decoder.iterator();
     }
@@ -137,14 +137,14 @@ public class CsvTokenizer
                         loopFinished = true;
 
                     } else if (isEndOfLine(c)) {
-                        throw new RuntimeException(); // TODO not come here
+                        throw new RuntimeException("should not rearch this control"); // TODO
 
                     } else if (isSpace(c)) {
                         if (trimIfNotQuoted) {
                             columnStartPos = columnEndPos = ++linePos;
                             cState = CursorState.FIRST_TRIM;
                         } else {
-                            throw new RuntimeException(); // TODO not come here
+                            throw new RuntimeException("should not rearch this control"); // TODO
                         }
 
                     } else if (isQuote(c)) {
@@ -164,7 +164,7 @@ public class CsvTokenizer
                         columnStartPos = columnEndPos = ++linePos;
 
                     } else if (isQuote(c)) {
-                        throw new RuntimeException(); // TODO not come here
+                        throw new RuntimeException("should not rearch this control"); // TODO
 
                     } else {
                         columnStartPos = columnEndPos = linePos;
@@ -193,7 +193,7 @@ public class CsvTokenizer
 
                     } else if (isQuote(c)) {
                         // TODO not implemented yet foo""bar""baz -> [foo, bar, baz].append
-                        throw new RuntimeException(); // TODO not come here
+                        throw new RuntimeException("should not rearch this control"); // TODO
 
                     } else {
                         columnEndPos = ++linePos;
@@ -241,7 +241,7 @@ public class CsvTokenizer
                         linePos++;
 
                     } else if (isQuote(c)) {
-                        throw new RuntimeException(); // TODO not come here
+                        throw new RuntimeException("should not rearch this control"); // TODO
 
                     } else {
                         columnEndPos = ++linePos;
@@ -292,20 +292,6 @@ public class CsvTokenizer
             return END_OF_LINE;
         } else {
             return line.charAt(pos);
-        }
-    }
-
-    private void insertSpaces(final StringBuilder sbuf, final int spaces)
-    {
-        for (int i = 0; i < spaces; i++) {
-            sbuf.insert(0, ' ');
-        }
-    }
-
-    private void appendSpaces(final StringBuilder sbuf, final int spaces)
-    {
-        for (int i = 0; i < spaces; i++) {
-            sbuf.append(' ');
         }
     }
 

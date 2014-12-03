@@ -39,7 +39,7 @@ public interface CsvParserTask
     @ConfigDefault("false")
     public boolean getTrimIfNotQuoted();
 
-    @Config("max_quoted_column_size")
-    @ConfigDefault("134217728") //128MB
-    public long getMaxQuotedColumnSize();
+    @Config("max_quoted_size_limit")
+    @ConfigDefault("131072") //128kB
+    public long getMaxQuotedSizeLimit();
 }
