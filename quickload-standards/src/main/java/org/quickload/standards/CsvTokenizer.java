@@ -20,7 +20,7 @@ public class CsvTokenizer
         BEGIN, VALUE, QUOTED_VALUE, AFTER_QUOTED_VALUE, FIRST_TRIM, LAST_TRIM_OR_VALUE,
     }
 
-    private static final char END_OF_LINE = 0;
+    private static final char END_OF_LINE = '\0';
     private static final boolean TRACE = false;
 
     private final char delimiter;
@@ -44,7 +44,7 @@ public class CsvTokenizer
     public CsvTokenizer(Iterable<String> input, CsvParserTask task)
     {
         delimiter = task.getDelimiterChar();
-        quote = task.getQuoteChar();
+        quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
         escape = task.getEscapeChar();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
