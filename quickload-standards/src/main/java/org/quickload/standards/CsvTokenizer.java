@@ -27,7 +27,7 @@ public class CsvTokenizer
     private final char quote;
     private final char escape;
     private final String newline;
-    private final boolean trimmedIfNotQuoted;
+    private final boolean trimIfNotQuoted;
     private final long maxQuotedSizeLimit;  // TODO not used yet
 
     private final Iterator<String> input;
@@ -47,7 +47,7 @@ public class CsvTokenizer
         quote = task.getQuoteChar();
         escape = task.getEscapeChar();
         newline = task.getNewline().getString();
-        trimmedIfNotQuoted = task.getTrimmedIfNotQuoted();
+        trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
         this.input = input.iterator();
     }
@@ -146,7 +146,7 @@ public class CsvTokenizer
                         recordState = RecordState.END;
                         return "";
 
-                    } else if (isSpace(c) && trimmedIfNotQuoted) {
+                    } else if (isSpace(c) && trimIfNotQuoted) {
                         columnState = ColumnState.FIRST_TRIM;
 
                     } else if (isQuote(c)) {
@@ -194,7 +194,7 @@ public class CsvTokenizer
                         recordState = RecordState.END;
                         return line.substring(valueStartPos, linePos);
 
-                    } else if (isSpace(c) && trimmedIfNotQuoted) {
+                    } else if (isSpace(c) && trimIfNotQuoted) {
                         valueEndPos = linePos - 1;  // this is possibly end of value
                         columnState = ColumnState.LAST_TRIM_OR_VALUE;
 

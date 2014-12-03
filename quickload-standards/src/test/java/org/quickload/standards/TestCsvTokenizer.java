@@ -99,7 +99,7 @@ public class TestCsvTokenizer
     @Test
     public void parseEmptyColumn() throws Exception
     {
-        config.setBoolean("trimmed_if_not_quoted", true);
+        config.setBoolean("trim_if_not_quoted", true);
         task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 ",\n", "\"\",\"\"\n", "  ,  \n"));
@@ -171,8 +171,8 @@ public class TestCsvTokenizer
     @Test
     public void trimNonQuotedValues() throws Exception
     {
-        // trimmed_if_not_quoted is true
-        config.setBoolean("trimmed_if_not_quoted", true);
+        // trim_if_not_quoted is true
+        config.setBoolean("trim_if_not_quoted", true);
         task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
@@ -195,9 +195,9 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseQuotedValueWithSpacesAndTrimingOption() throws Exception
+    public void parseQuotedValueWithSpacesAndTrimmingOption() throws Exception
     {
-        config.setBoolean("trimmed_if_not_quoted", true);
+        config.setBoolean("trim_if_not_quoted", true);
         task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "  \"heading1\",  \"heading2\"\n",
