@@ -1,22 +1,23 @@
 package org.quickload.standards;
 
 import com.google.common.base.Preconditions;
-import org.quickload.spi.LineDecoder;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.ArrayDeque;
+import java.util.Iterator;
 
 public class CsvTokenizer
 {
-    static enum ParserState
+    static enum RecordState
     {
-        BEGIN, END,
+        NOT_END, END,
     }
 
-    static enum CursorMode
+    static enum ColumnState
     {
-        DEFAULT_PARSED, FIRST_TRIMMED, LAST_TRIMMED, QUOTED,
+        BEGIN, VALUE, QUOTED_VALUE, AFTER_QUOTED_VALUE, FIRST_TRIM, LAST_TRIM_OR_VALUE,
     }
 
     private static final char END_OF_LINE = 0;
@@ -27,21 +28,20 @@ public class CsvTokenizer
     private final char escape;
     private final String newline;
     private final boolean trimmedIfNotQuoted;
-    private final long maxQuotedSizeLimit;
+    private final long maxQuotedSizeLimit;  // TODO not used yet
 
-    private Iterator<String> lineDecoder;
+    private final Iterator<String> input;
 
-    private ParserState parserState = ParserState.BEGIN;
-    private CursorMode cursorMode = CursorMode.DEFAULT_PARSED;
-    private List<String> lineBuffer = new ArrayList<>();
-    private int lineBufferIndex = 0;
-    private long lineNum = 0;
+    private RecordState recordState = RecordState.END;  // initial state is end of a record. nextRecord() must be called first
+    private long lineNumber = 0;
+
     private String line = null;
-    private int linePos = 0, columnStartPos = 0, columnEndPos = 0;
-    private boolean isQuotedColumn = false;
-    private StringBuilder column = new StringBuilder();
+    private int linePos = 0;
+    private boolean wasQuotedColumn = false;
+    private List<String> quotedValueLines = new ArrayList<>();
+    private Deque<String> unreadLines = new ArrayDeque<>();
 
-    public CsvTokenizer(LineDecoder decoder, CsvParserTask task)
+    public CsvTokenizer(Iterable<String> input, CsvParserTask task)
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
@@ -49,243 +49,275 @@ public class CsvTokenizer
         newline = task.getNewline().getString();
         trimmedIfNotQuoted = task.getTrimmedIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
-
-        lineDecoder = decoder.iterator();
+        this.input = input.iterator();
     }
 
-    public long getCurrentLineNum()
+    public long getCurrentLineNumber()
     {
-        return lineNum;
+        return lineNumber;
     }
 
-    public String getCurrentUntokenizedLine() {
-        StringBuilder sbuf = new StringBuilder();
-        for (int i = 0; i < lineBuffer.size(); i++) {
-            sbuf.append(lineBuffer.get(i));
-            if (i + 1 < lineBuffer.size()) {
-                sbuf.append(newline);
+    // returns skipped line
+    public String skipCurrentLine()
+    {
+        String skippedLine;
+        if (quotedValueLines.isEmpty()) {
+            skippedLine = line;
+        } else {
+            // recover lines of quoted value
+            skippedLine = quotedValueLines.remove(0);  // TODO optimize performance
+            unreadLines.addAll(quotedValueLines);
+            unreadLines.add(line);
+            lineNumber -= quotedValueLines.size();
+            quotedValueLines.clear();
+        }
+        recordState = RecordState.END;
+        return line;
+    }
+
+    public boolean nextRecord()
+    {
+        // If at the end of record, read the next line and initialize the state
+        Preconditions.checkState(recordState == RecordState.END, "too many columns");  // TODO exception class
+        boolean hasNext = nextLine(true);
+        if (hasNext) {
+            recordState = RecordState.NOT_END;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean nextLine(boolean ignoreEmptyLine)
+    {
+        while (true) {
+            if (!unreadLines.isEmpty()) {
+                line = unreadLines.removeFirst();
+            } else {
+                if (!input.hasNext()) {
+                    return false;
+                }
+                line = input.next();
+            }
+            linePos = 0;
+            lineNumber++;
+
+            if (TRACE) {
+                System.out.println("#MN line: " + line + " (" + lineNumber + ")");
+            }
+
+            if (!line.isEmpty() || !ignoreEmptyLine) {
+                return true;
             }
         }
-        return sbuf.toString();
-    }
-
-    public boolean hasNextRecord()
-    {
-        // returns true if LineDecoder has more lines.
-        return !lineBuffer.isEmpty() || lineDecoder.hasNext();
-    }
-
-    public void nextRecord()
-    {
-        Preconditions.checkState(parserState.equals(ParserState.END), "too many columns");
-
-        // change the parser state to 'begin'
-        parserState = ParserState.BEGIN;
-
-        // change the start/end positions to 0s
-        linePos = columnStartPos = columnEndPos = 0;
-
-        line = null;
-        lineBuffer.clear();
-    }
-
-    public void skipLine()
-    {
-        while (!parserState.equals(ParserState.END)) {
-            nextColumn();
-        }
-        nextRecord();
     }
 
     public String nextColumn()
     {
-        Preconditions.checkState(!parserState.equals(ParserState.END), "doesn't have enough columns");
+        Preconditions.checkState(recordState == RecordState.NOT_END, "doesn't have enough columns");  // TODO exception class
 
-        // fetch and parse next column
-        fetchNextColumn();
+        // reset last state
+        wasQuotedColumn = false;
+        quotedValueLines.clear();
 
-        column.append(line.substring(columnStartPos, columnEndPos));
-        String c = column.toString();
-        column.setLength(0);
-        if (TRACE) {
-            System.out.println("#MN column: " + c);
-        }
-        return c;
-    }
+        // local state
+        int valueStartPos = linePos;
+        int valueEndPos = 0;  // initialized by VALUE state and used by LAST_TRIM_OR_VALUE and
+        StringBuilder quotedValue = null;  // initial by VALUE or FIRST_TRIM state and used by QUOTED_VALUE state
+        ColumnState columnState = ColumnState.BEGIN;
 
-    public boolean isQuotedColumn()
-    {
-        return isQuotedColumn;
-    }
-
-    // @see http://tools.ietf.org/html/rfc4180
-    private void fetchNextColumn()
-    {
-        isQuotedColumn = false;
-        columnStartPos = columnEndPos = linePos;
-        cursorMode = CursorMode.DEFAULT_PARSED;
-
-        boolean parseStarted = false;
-        boolean loopFinished = false;
-        while (!loopFinished) {
-            final char c = getChar(linePos);
+        while (true) {
+            final char c = nextChar();
             if (TRACE) {
-                System.out.println("#MN c: " + c + " (" + cursorMode + "," + parserState + ")");
+                System.out.println("#MN c: " + c + " (" + columnState + "," + recordState + ")");
                 try { Thread.sleep(100); } catch (Exception e) {}
             }
 
-            switch (cursorMode) {
-                case FIRST_TRIMMED:
-                    if (isSpace(c)) {
-                        columnStartPos = columnEndPos = ++linePos;
-
-                    } else if (isQuote(c)) {
-                        throw new RuntimeException("should not rearch this control");
-
-                    } else {
-                        columnStartPos = columnEndPos = linePos;
-                        linePos++;
-                        cursorMode = CursorMode.DEFAULT_PARSED;
-
-                    }
-                    break;
-
-                case DEFAULT_PARSED:
+            switch (columnState) {
+                case BEGIN:
+                    // TODO optimization: state is BEGIN only at the first character of a column.
+                    //      this block can be out of the looop.
                     if (isDelimiter(c)) {
-                        linePos++;
-                        loopFinished = true;
+                        // empty value
+                        return "";
 
                     } else if (isEndOfLine(c)) {
-                        if (!parseStarted) { // BEGIN state
-                            throw new RuntimeException("should not rearch this control");
-                        } else {
-                            parserState = ParserState.END;
-                            loopFinished = true;
-                        }
+                        // empty value
+                        recordState = RecordState.END;
+                        return "";
 
-                    } else if (isSpace(c)) {
-                        if (trimmedIfNotQuoted) {
-                            if (!parseStarted) { // BEGIN state
-                                columnStartPos = columnEndPos = ++linePos;
-                                cursorMode = CursorMode.FIRST_TRIMMED;
-                            } else {
-                                linePos++;
-                                cursorMode = CursorMode.LAST_TRIMMED;
-                            }
-                        } else {
-                            columnEndPos = ++linePos;
-                        }
+                    } else if (isSpace(c) && trimmedIfNotQuoted) {
+                        columnState = ColumnState.FIRST_TRIM;
 
                     } else if (isQuote(c)) {
-                        if (!parseStarted) { // BEGIN state
-                            isQuotedColumn = true;
-                            columnStartPos = columnEndPos = ++linePos;
-                            cursorMode = CursorMode.QUOTED;
-                        } else {
-                            throw new RuntimeException("should not rearch this control");
-                            // TODO not implemented yet foo""bar""baz -> [foo, bar, baz].append
-                            // In RFC4180, If fields are not enclosed with double quotes, then
-                            // double quotes may not appear inside the fields. But they are often
-                            // included in the fields. We should care about them later.
-                        }
+                        valueStartPos = linePos;  // == 1
+                        wasQuotedColumn = true;
+                        quotedValue = new StringBuilder();
+                        columnState = ColumnState.QUOTED_VALUE;
 
                     } else {
-                        columnEndPos = ++linePos;
-
+                        columnState = ColumnState.VALUE;
                     }
-                    parseStarted = true;
                     break;
 
-                case QUOTED:
+                case FIRST_TRIM:
+                    if (isDelimiter(c)) {
+                        // empty value
+                        return "";
+
+                    } else if (isEndOfLine(c)) {
+                        // empty value
+                        recordState = RecordState.END;
+                        return "";
+
+                    } else if (isQuote(c)) {
+                        // column has heading spaces and quoted. TODO should this be rejected?
+                        valueStartPos = linePos;
+                        wasQuotedColumn = true;
+                        quotedValue = new StringBuilder();
+                        columnState = ColumnState.QUOTED_VALUE;
+
+                    } else if (isSpace(c)) {
+                        // skip this character
+
+                    } else {
+                        valueStartPos = linePos - 1;
+                        columnState = ColumnState.VALUE;
+                    }
+                    break;
+
+                case VALUE:
+                    if (isDelimiter(c)) {
+                        return line.substring(valueStartPos, linePos - 1);
+
+                    } else if (isEndOfLine(c)) {
+                        recordState = RecordState.END;
+                        return line.substring(valueStartPos, linePos);
+
+                    } else if (isSpace(c) && trimmedIfNotQuoted) {
+                        valueEndPos = linePos - 1;  // this is possibly end of value
+                        columnState = ColumnState.LAST_TRIM_OR_VALUE;
+
+                    // TODO not implemented yet foo""bar""baz -> [foo, bar, baz].append
+                    //} else if (isQuote(c)) {
+                    //    // In RFC4180, If fields are not enclosed with double quotes, then
+                    //    // double quotes may not appear inside the fields. But they are often
+                    //    // included in the fields. We should care about them later.
+
+                    } else {
+                        // keep VALUE state
+                    }
+                    break;
+
+                case LAST_TRIM_OR_VALUE:
+                    if (isDelimiter(c)) {
+                        return line.substring(valueStartPos, valueEndPos);
+
+                    } else if (isEndOfLine(c)) {
+                        recordState = RecordState.END;
+                        return line.substring(valueStartPos, valueEndPos);
+
+                    } else if (isSpace(c)) {
+                        // keep LAST_TRIM_OR_VALUE state
+
+                    } else {
+                        // this spaces are not trailing spaces. go back to VALUE state
+                        columnState = ColumnState.BEGIN;
+                    }
+                    break;
+
+                case QUOTED_VALUE:
                     if (isEndOfLine(c)) {
-                        column.append(line.substring(columnStartPos, columnEndPos)).append(newline);
-                        line = null;
-                        columnStartPos = columnEndPos = linePos = 0;
-
-                    } else if (isQuote(c) || isEscape(c)) {
-                        // In RFC 4180, CSV's escape char is '\"'. But '\\' is often used.
-                        linePos++;
-                        char next = getChar(linePos);
-                        if (TRACE) {
-                            System.out.println("#MN quoted c: " + next + " (" + cursorMode + "," + parserState + ")");
+                        // multi-line quoted value
+                        quotedValue.append(line.substring(valueStartPos, linePos));
+                        quotedValue.append(newline);
+                        quotedValueLines.add(line);
+                        if (!nextLine(false)) {
+                            throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
                         }
-                        if (isQuote(next)) { // check that it's escaped quote or not.
-                            column.append(line.substring(columnStartPos, columnEndPos)).append(quote);
-                            columnStartPos = columnEndPos = ++linePos;
+                        valueStartPos = 0;
+
+                    } else if (isQuote(c)) {
+                        char next = peekNextChar();
+                        if (TRACE) {
+                            System.out.println("#MN quoted c: " + next + " (" + columnState + "," + recordState + ")");
+                        }
+                        if (isQuote(next)) { // escaped quote
+                            quotedValue.append(line.substring(valueStartPos, linePos));
+                            valueStartPos = ++linePos;
                         } else {
-                            cursorMode = CursorMode.DEFAULT_PARSED; // back to 'normal' mode
+                            quotedValue.append(line.substring(valueStartPos, linePos - 1));
+                            columnState = ColumnState.AFTER_QUOTED_VALUE;
+                        }
+
+                    } else if (isEscape(c)) {  // isQuote must be checked first in case of quote == escape
+                        // In RFC 4180, CSV's escape char is '\"'. But '\\' is often used.
+                        char next = peekNextChar();
+                        if (isEndOfLine(c)) {
+                            // escape end of line. TODO assuming multi-line quoted value without newline?
+                            quotedValue.append(line.substring(valueStartPos, linePos));
+                            quotedValueLines.add(line);
+                            if (!nextLine(false)) {
+                                throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
+                            }
+                            valueStartPos = 0;
+                        } else if (isQuote(next) || isEscape(next)) { // escaped quote
+                            quotedValue.append(line.substring(valueStartPos, linePos - 1));
+                            quotedValue.append(next);
+                            valueStartPos = ++linePos;
                         }
 
                     } else {
-                        columnEndPos = ++linePos;
-
+                        // keep QUOTED_VALUE state
                     }
                     break;
 
-                case LAST_TRIMMED:
+                case AFTER_QUOTED_VALUE:
                     if (isDelimiter(c)) {
-                        linePos++;
-                        loopFinished = true;
+                        return quotedValue.toString();
 
                     } else if (isEndOfLine(c)) {
-                        parserState = ParserState.END;
-                        loopFinished = true;
+                        recordState = RecordState.END;
+                        return quotedValue.toString();
 
                     } else if (isSpace(c)) {
-                        linePos++;
-
-                    } else if (isQuote(c)) {
-                        throw new RuntimeException("should not rearch this control"); // TODO
+                        // column has trailing spaces and quoted. TODO should this be rejected?
 
                     } else {
-                        columnEndPos = ++linePos;
-                        cursorMode = CursorMode.DEFAULT_PARSED;
-
+                        throw new RuntimeException("Unexpected extra character after quoted value");  // TODO exception class
                     }
                     break;
 
                 default:
-                    throw new RuntimeException("should not rearch this control");
+                    assert false;
             }
         }
     }
 
-    private char getChar(final int pos)
+    public boolean wasQuotedColumn()
     {
-        if (line == null) {
-            String l;
+        return wasQuotedColumn;
+    }
 
-            while (lineDecoder.hasNext()) {
-                l = lineDecoder.next();
-                lineNum++;
-                if (TRACE) {
-                    System.out.println("#MN line: " + l + " (" + lineNum + ")");
-                }
+    private char nextChar()
+    {
+        Preconditions.checkState(line != null, "nextColumn is called after end of file");
 
-                // if it finds empty lines with BEGIN state, they should be skipped.
-                if (l.isEmpty() && (cursorMode.equals(CursorMode.DEFAULT_PARSED))) {
-                    continue;
-                }
-
-                // update the untokenized line: if current state is 'normal', the untokenized
-                // line first should be cleaned up. otherwise (i mean 'quoted' mode), new line
-                // is appended to current untokenized line.
-                if (cursorMode.equals(CursorMode.DEFAULT_PARSED)) {
-                    lineBuffer.clear();
-                }
-                lineBuffer.add(line);
-
-                if (l != null) {
-                    line = l;
-                    break;
-                }
-            }
-        }
-
-        if (line == null || pos >= line.length()) {
+        if (linePos >= line.length()) {
             return END_OF_LINE;
         } else {
-            return line.charAt(pos);
+            return line.charAt(linePos++);
+        }
+    }
+
+    private char peekNextChar()
+    {
+        Preconditions.checkState(line != null, "peekNextChar is called after end of file");
+
+        if (linePos >= line.length()) {
+            return END_OF_LINE;
+        } else {
+            return line.charAt(linePos);
         }
     }
 
@@ -312,14 +344,5 @@ public class CsvTokenizer
     private boolean isEscape(char c)
     {
         return c == escape;
-    }
-
-    static class CsvValueValidateException
-            extends RuntimeException
-    {
-        CsvValueValidateException(String reason)
-        {
-            super(reason);
-        }
     }
 }

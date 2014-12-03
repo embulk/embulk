@@ -27,7 +27,8 @@ import org.quickload.time.TimestampParserTask;
 import java.util.Map;
 
 public class CsvParserPlugin
-        extends BasicParserPlugin {
+        extends BasicParserPlugin
+{
     @Override
     public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config)
     {
@@ -64,9 +65,9 @@ public class CsvParserPlugin
         try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
             while (fileBufferInput.nextFile()) {
                 boolean skipHeaderLine = task.getHeaderLine();
-                while (tokenizer.hasNextRecord()) {
+                while (tokenizer.nextRecord()) {
                     if (skipHeaderLine) {
-                        tokenizer.skipLine();
+                        tokenizer.skipCurrentLine();
                         skipHeaderLine = false;
                         continue;
                     }
@@ -133,11 +134,8 @@ public class CsvParserPlugin
                                 }
                             }
                         });
-
-                        tokenizer.nextRecord();
                     } catch (Exception e) {
-                        exec.notice().skippedLine(tokenizer.getCurrentUntokenizedLine());
-                        tokenizer.skipLine();
+                        exec.notice().skippedLine(tokenizer.skipCurrentLine());
                     }
                 }
             }
@@ -151,7 +149,7 @@ public class CsvParserPlugin
             return v;
         }
 
-        if (tokenizer.isQuotedColumn()) {
+        if (tokenizer.wasQuotedColumn()) {
             return "";
         }
 
