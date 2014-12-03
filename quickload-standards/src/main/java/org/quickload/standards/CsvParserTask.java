@@ -29,6 +29,10 @@ public interface CsvParserTask
     @ConfigDefault("\"\\\"\"")
     public char getQuoteChar();
 
+    @Config("escape")
+    @ConfigDefault("\"\\\\\"")
+    public char getEscapeChar();
+
     // Null value handling: if the CsvParser found 'non-quoted empty string's,
     // it replaces them to string that users specified like "\N", "NULL".
     @Config("null_string")

@@ -24,6 +24,7 @@ public class CsvTokenizer
 
     private final char delimiter;
     private final char quote;
+    private final char escape;
     private final String newline;
     private final boolean trimmedIfNotQuoted;
     private final long maxQuotedSizeLimit;
@@ -44,6 +45,7 @@ public class CsvTokenizer
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar();
+        escape = task.getEscapeChar();
         newline = task.getNewline().getString();
         trimmedIfNotQuoted = task.getTrimmedIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
@@ -195,14 +197,13 @@ public class CsvTokenizer
                     break;
 
                 case QUOTED:
-                    // TODO it is not rfc4180 but we should parse an escapsed quote char like \" and \\"
-
                     if (isEndOfLine(c)) {
                         column.append(line.substring(columnStartPos, columnEndPos)).append(newline);
                         line = null;
                         columnStartPos = columnEndPos = linePos = 0;
 
-                    } else if (isQuote(c)) {
+                    } else if (isQuote(c) || isEscape(c)) {
+                        // In RFC 4180, CSV's escape char is '\"'. But '\\' is often used.
                         linePos++;
                         char next = getChar(linePos);
                         if (TRACE) {
@@ -306,6 +307,11 @@ public class CsvTokenizer
     private boolean isQuote(char c)
     {
         return c == quote;
+    }
+
+    private boolean isEscape(char c)
+    {
+        return c == escape;
     }
 
     static class CsvValueValidateException

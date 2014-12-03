@@ -106,7 +106,7 @@ public class TestCsvTokenizer {
     }
 
     @Test
-    public void notHaveEofInCsv() throws Exception
+    public void parseCSVWithNonEof() throws Exception
     {
         // In RFC 4180, the last record in the file may or may not have
         // an ending line break.
@@ -119,11 +119,24 @@ public class TestCsvTokenizer {
     }
 
     @Test
-    public void parseQuotedValues() throws Exception {
+    public void parseQuotedValues() throws Exception
+    {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "\n\"a\r\na\na\"", ",\"b,bb\"\n", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("a\r\na\na", "b,bb"),
+                        Arrays.asList("cc\"c", "\"ddd"),
+                        Arrays.asList(null, "")),
+                parsed);
+    }
+
+    @Test
+    public void parseEscapedValues() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "\n\"a\\\"aa\"", ",\"b,bb\\\"\"\n", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("a\"aa", "b,bb\""),
                         Arrays.asList("cc\"c", "\"ddd"),
                         Arrays.asList(null, "")),
                 parsed);
