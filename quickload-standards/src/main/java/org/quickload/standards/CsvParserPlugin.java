@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.quickload.channel.FileBufferInput;
 import org.quickload.channel.PageOutput;
@@ -59,6 +60,7 @@ public class CsvParserPlugin
         final CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
         final Map<Integer, TimestampParser> tsParsers = newTimestampParsers(exec, task, schema);
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
+
         try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
             while (fileBufferInput.nextFile()) {
                 boolean skipHeaderLine = task.getHeaderLine();
@@ -72,7 +74,7 @@ public class CsvParserPlugin
                     try {
                         builder.addRecord(new RecordWriter() {
                             public void writeBoolean(Column column, BooleanWriter writer) {
-                                String v = nextColumn(tokenizer);
+                                String v = nextColumn(task, tokenizer);
                                 if (v != null) {
                                     writer.write(Boolean.parseBoolean(v));
                                 } else {
@@ -81,7 +83,7 @@ public class CsvParserPlugin
                             }
 
                             public void writeLong(Column column, LongWriter writer) {
-                                String v = nextColumn(tokenizer);
+                                String v = nextColumn(task, tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
                                     return;
@@ -95,7 +97,7 @@ public class CsvParserPlugin
                             }
 
                             public void writeDouble(Column column, DoubleWriter writer) {
-                                String v = nextColumn(tokenizer);
+                                String v = nextColumn(task, tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
                                     return;
@@ -109,7 +111,7 @@ public class CsvParserPlugin
                             }
 
                             public void writeString(Column column, StringWriter writer) {
-                                String v = nextColumn(tokenizer);
+                                String v = nextColumn(task, tokenizer);
                                 if (v != null) {
                                     writer.write(v);
                                 } else {
@@ -118,7 +120,7 @@ public class CsvParserPlugin
                             }
 
                             public void writeTimestamp(Column column, TimestampWriter writer) {
-                                String v = nextColumn(tokenizer);
+                                String v = nextColumn(task, tokenizer);
                                 if (v == null) {
                                     writer.writeNull();
                                     return;
@@ -142,13 +144,21 @@ public class CsvParserPlugin
         }
     }
 
-    private static String nextColumn(final CsvTokenizer tokenizer)
+    private static String nextColumn(final CsvParserTask task, final CsvTokenizer tokenizer)
     {
-        String v = tokenizer.nextColumn();
-        if (v.isEmpty()) {
-            return tokenizer.isQuotedColumn() ? "" : null;
-        } else {
+        String v = Preconditions.checkNotNull(tokenizer.nextColumn(), "should not be null");
+        if (!v.isEmpty()) {
             return v;
+        }
+
+        if (tokenizer.isQuotedColumn()) {
+            return "";
+        }
+
+        if (task.getNullString().isPresent()) {
+            return task.getNullString().get();
+        } else {
+            return null;
         }
     }
 

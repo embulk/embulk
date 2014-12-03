@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import com.google.common.base.Optional;
 import org.quickload.config.Config;
 import org.quickload.config.ConfigDefault;
 import org.quickload.config.Task;
@@ -27,6 +28,12 @@ public interface CsvParserTask
     @Config("quote")
     @ConfigDefault("\"\\\"\"")
     public char getQuoteChar();
+
+    // Null value handling: if the CsvParser found 'non-quoted empty string's,
+    // it replaces them to string that users specified like "\N", "NULL".
+    @Config("null_string")
+    @ConfigDefault("null")
+    public Optional<String> getNullString();
 
     @Config("trim_if_not_quoted")
     @ConfigDefault("false")
