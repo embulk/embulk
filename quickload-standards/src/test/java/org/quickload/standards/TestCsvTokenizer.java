@@ -106,6 +106,19 @@ public class TestCsvTokenizer {
     }
 
     @Test
+    public void notHaveEofInCsv() throws Exception
+    {
+        // In RFC 4180, the last record in the file may or may not have
+        // an ending line break.
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "\naaa,bbb\n\nccc,ddd"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
+                parsed);
+    }
+
+    @Test
     public void parseQuotedValues() throws Exception {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "\n\"a\r\na\na\"", ",\"b,bb\"\n", "\n", "\"cc\"\"c\",\"\"\"ddd\"", "\n", ",", "\"\"", "\n"));
@@ -117,16 +130,28 @@ public class TestCsvTokenizer {
     }
 
     @Test
-    public void parseTrimedValuesWithNonTriming() throws Exception
+    public void trimNonQuotedValues() throws Exception
     {
-        config.setBoolean("trim_if_not_quoted", true);
+        // trimmed_if_not_quoted is true
+        config.setBoolean("trimmed_if_not_quoted", true);
         task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
-
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "b cd"),
-                        Arrays.asList("  ccc","dd d \n ")),
+                        Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
+                parsed);
+    }
+
+    @Test
+    public void notTrimNonQuotedValues() throws Exception
+    {
+        task = exec.loadConfig(config, CsvParserTask.class);
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("  aaa  ", "  b cd"),
+                        Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
                 parsed);
     }
 
