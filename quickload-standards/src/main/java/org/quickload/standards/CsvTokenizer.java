@@ -240,7 +240,7 @@ public class CsvTokenizer
                     } else if (isQuote(c)) {
                         char next = peekNextChar();
                         if (TRACE) {
-                            System.out.println("#MN quoted c: " + next + " (" + columnState + "," + recordState + ")");
+                            System.out.println("#MN peeked c: " + next + " (" + columnState + "," + recordState + ")");
                         }
                         if (isQuote(next)) { // escaped quote
                             quotedValue.append(line.substring(valueStartPos, linePos));
@@ -253,6 +253,9 @@ public class CsvTokenizer
                     } else if (isEscape(c)) {  // isQuote must be checked first in case of quote == escape
                         // In RFC 4180, CSV's escape char is '\"'. But '\\' is often used.
                         char next = peekNextChar();
+                        if (TRACE) {
+                            System.out.println("#MN peeked c: " + next + " (" + columnState + "," + recordState + ")");
+                        }
                         if (isEndOfLine(c)) {
                             // escape end of line. TODO assuming multi-line quoted value without newline?
                             quotedValue.append(line.substring(valueStartPos, linePos));
