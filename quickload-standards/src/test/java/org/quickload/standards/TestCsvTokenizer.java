@@ -23,7 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TestCsvTokenizer {
+public class TestCsvTokenizer
+{
     private static CsvTokenizer newTokenizer(CsvParserTask task, List<Buffer> buffers) {
         LineDecoder decoder = new LineDecoder(buffers, task);
         return new CsvTokenizer(decoder, task);
@@ -34,18 +35,17 @@ public class TestCsvTokenizer {
         final CsvTokenizer tokenizer = newTokenizer(task, buffers);
 
         List<List<String>> records = new ArrayList<>();
-        while (tokenizer.hasNextRecord()) {
+        while (tokenizer.nextRecord()) {
             List<String> record = new ArrayList<>();
             for (Column c : schema.getColumns()) {
                 String v = tokenizer.nextColumn();
                 if (!v.isEmpty()) {
                     record.add(v);
                 } else {
-                    record.add(tokenizer.isQuotedColumn() ? "" : null);
+                    record.add(tokenizer.wasQuotedColumn() ? "" : null);
                 }
             }
             records.add(record);
-            tokenizer.nextRecord();
         }
         return records;
     }
@@ -86,12 +86,38 @@ public class TestCsvTokenizer {
     }
 
     @Test
-    public void parseSimple() throws Exception {
+    public void parseSimple() throws Exception
+    {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "\naaa,bbb\n\nccc,ddd\n"));
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "bbb"),
                         Arrays.asList("ccc", "ddd")),
+                parsed);
+    }
+
+    @Test
+    public void parseEmptyColumn() throws Exception
+    {
+        config.setBoolean("trimmed_if_not_quoted", true);
+        task = exec.loadConfig(config, CsvParserTask.class);
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                ",\n", "\"\",\"\"\n", "  ,  \n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList(null, null),
+                        Arrays.asList("", ""),
+                        Arrays.asList(null, null)),
+                parsed);
+    }
+
+    @Test
+    public void ignoreEmptyLines() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "\na,b\n\n\nc,d"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("a", "b"),
+                        Arrays.asList("c", "d")),
                 parsed);
     }
 
@@ -161,10 +187,27 @@ public class TestCsvTokenizer {
     {
         task = exec.loadConfig(config, CsvParserTask.class);
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
+                "  aaa  ,  b cd ", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
         assertEquals(Arrays.asList(
-                        Arrays.asList("  aaa  ", "  b cd"),
+                        Arrays.asList("  aaa  ", "  b cd "),
                         Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
+                parsed);
+    }
+
+    @Test
+    public void parseQuotedValueWithSpacesAndTrimingOption() throws Exception
+    {
+        config.setBoolean("trimmed_if_not_quoted", true);
+        task = exec.loadConfig(config, CsvParserTask.class);
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "  \"heading1\",  \"heading2\"\n",
+                "\"trailing1\"  ,\"trailing2\"  \n",
+                "\"trailing\n3\"  ,\"trailing\n4\"  \n"));
+
+        assertEquals(Arrays.asList(
+                        Arrays.asList("heading1", "heading2"),
+                        Arrays.asList("trailing1","trailing2"),
+                        Arrays.asList("trailing\n3","trailing\n4")),
                 parsed);
     }
 
