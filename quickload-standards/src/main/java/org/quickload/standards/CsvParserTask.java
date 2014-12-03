@@ -35,9 +35,9 @@ public interface CsvParserTask
     @ConfigDefault("null")
     public Optional<String> getNullString();
 
-    @Config("trim_if_not_quoted")
+    @Config("trimmed_if_not_quoted")
     @ConfigDefault("false")
-    public boolean getTrimIfNotQuoted();
+    public boolean getTrimmedIfNotQuoted();
 
     @Config("max_quoted_size_limit")
     @ConfigDefault("131072") //128kB
