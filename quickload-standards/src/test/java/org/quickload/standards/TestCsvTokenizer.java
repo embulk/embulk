@@ -1,5 +1,6 @@
 package org.quickload.standards;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Rule;
@@ -97,31 +98,6 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseEmptyColumn() throws Exception
-    {
-        config.setBoolean("trim_if_not_quoted", true);
-        task = exec.loadConfig(config, CsvParserTask.class);
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                ",\n", "\"\",\"\"\n", "  ,  \n"));
-        assertEquals(Arrays.asList(
-                        Arrays.asList(null, null),
-                        Arrays.asList("", ""),
-                        Arrays.asList(null, null)),
-                parsed);
-    }
-
-    @Test
-    public void ignoreEmptyLines() throws Exception
-    {
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "\na,b\n\n\nc,d"));
-        assertEquals(Arrays.asList(
-                        Arrays.asList("a", "b"),
-                        Arrays.asList("c", "d")),
-                parsed);
-    }
-
-    @Test
     public void parseSeparatedBuffers() throws Exception {
         List<List<String>> parsed = doParse(task, bufferList("utf-8",
                 "\naaa", ",bbb\n", "\nccc,ddd", "\n"));
@@ -132,12 +108,66 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void parseCSVWithNonEof() throws Exception
+    public void parseEmptyColumns() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8", ",\n\"\",\"\"\n  ,  \n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList(null, null),
+                        Arrays.asList("", ""),
+                        Arrays.asList("  ", "  ")), // not trimmed
+                parsed);
+
+        config.setBoolean("trim_if_not_quoted", true);
+        task = exec.loadConfig(config, CsvParserTask.class);
+        parsed = doParse(task, bufferList("utf-8", ",\n\"\",\"\"\n  ,  \n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList(null, null),
+                        Arrays.asList("", ""),
+                        Arrays.asList(null, null)), // trimmed
+                parsed);
+    }
+
+    @Test
+    public void ignoreEmptyLines() throws Exception
+    {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8", "\na,b\n\n\nc,d"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("a", "b"),
+                        Arrays.asList("c", "d")),
+                parsed);
+
+        // if quoted column, empty lines are not ignored.
+        parsed = doParse(task, bufferList("utf-8", "\na,\"\nb\n\"\nc,d"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("a", "\nb\n"),
+                        Arrays.asList("c", "d")),
+                parsed);
+    }
+
+    @Test
+    public void parseEndOfFile() throws Exception
     {
         // In RFC 4180, the last record in the file may or may not have
         // an ending line break.
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "\naaa,bbb\n\nccc,ddd"));
+        List<List<String>> parsed = doParse(task, bufferList("utf-8", "aaa,bbb\nccc,ddd"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
+                parsed);
+
+        parsed = doParse(task, bufferList("utf-8", "aaa,bbb\nccc,ddd\n\n"));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("aaa", "bbb"),
+                        Arrays.asList("ccc", "ddd")),
+                parsed);
+    }
+
+    @Test
+    public void changeDelimiter() throws Exception
+    {
+        config.set("delimiter", JsonNodeFactory.instance.textNode("\t")); // TSV format
+        task = exec.loadConfig(config, CsvParserTask.class);
+        List<List<String>> parsed = doParse(task, bufferList("utf-8", "aaa\tbbb\nccc\tddd"));
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "bbb"),
                         Arrays.asList("ccc", "ddd")),
@@ -171,25 +201,20 @@ public class TestCsvTokenizer
     @Test
     public void trimNonQuotedValues() throws Exception
     {
+        List<List<String>> parsed = doParse(task, bufferList("utf-8",
+                "  aaa  ,  b cd \n\"  ccc\",\"dd d \n \""));
+        assertEquals(Arrays.asList(
+                        Arrays.asList("  aaa  ", "  b cd "),
+                        Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
+                parsed);
+
         // trim_if_not_quoted is true
         config.setBoolean("trim_if_not_quoted", true);
         task = exec.loadConfig(config, CsvParserTask.class);
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "  aaa  ,  b cd", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
+        parsed = doParse(task, bufferList("utf-8",
+                "  aaa  ,  b cd \n\"  ccc\",\"dd d \n \""));
         assertEquals(Arrays.asList(
                         Arrays.asList("aaa", "b cd"),
-                        Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
-                parsed);
-    }
-
-    @Test
-    public void notTrimNonQuotedValues() throws Exception
-    {
-        task = exec.loadConfig(config, CsvParserTask.class);
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "  aaa  ,  b cd ", "\n", "\"  ccc\",\"dd d \n \"", "\n"));
-        assertEquals(Arrays.asList(
-                        Arrays.asList("  aaa  ", "  b cd "),
                         Arrays.asList("  ccc","dd d \n ")), // quoted values are not changed
                 parsed);
     }
