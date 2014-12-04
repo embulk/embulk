@@ -222,9 +222,8 @@ public class LocalExecutor
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
 
-                        // TODO debug log; use logger
-                        System.out.println("input: "+task.getInputTask());
-                        System.out.println("output: "+task.getOutputTask());
+                        exec.notice().debug("input: %s", task.getInputTask());
+                        exec.notice().debug("output: %s", task.getOutputTask());
 
                         ProcessResult procResult = process(exec, exec.dumpTask(task), exec.getProcessorCount());
                         tranContext.setOutputReports(procResult.getOutputReports());
