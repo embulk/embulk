@@ -43,7 +43,6 @@ public class MockDecoderPlugin implements FileDecoderPlugin
                     fileBufferOutput.add(Buffer.copyOf(sb.toString().getBytes(
                             "UTF-8")));
                 }
-//                for (Buffer buffer : fileBufferInput) { }
             }
         } catch (UnsupportedEncodingException uee) {
             throw new IllegalStateException(uee.getMessage(), uee);

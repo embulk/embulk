@@ -3,9 +3,7 @@ package org.quickload.spi;
 import java.util.List;
 
 import org.quickload.buffer.Buffer;
-import org.quickload.channel.DataChannel;
 import org.quickload.channel.FileBufferChannel;
-import org.quickload.channel.FileBufferInput;
 
 public class MockFileBufferInput extends FileBufferChannel
 {
