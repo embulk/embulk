@@ -18,7 +18,7 @@ public class FileBufferInput
     public boolean nextFile()
     {
         if (element != FileBufferChannel.END_OF_FILE) {
-            throw new IllegalStateException("nextFile is called but file is not end yet");
+            throw new IllegalStateException("nextFile is called but file is not end yet: " + element);
         }
         element = channel.poll();
         return element != null;

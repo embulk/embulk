@@ -22,9 +22,13 @@ public abstract class TextGuessPlugin
         try {
             task = exec.loadConfig(config, TextGuessTask.class);
         } catch (Exception ex) {
+            exec.notice().error("TestGuessPlugin configuration failure: %s",
+                    ex.getMessage());
             return new NextConfig();
         }
-        task.setNewline(Newline.CR);
+        if (task.getNewline() == null) {
+            task.setNewline(Newline.CR);
+        }
 
         LineDecoder decoder = new LineDecoder(ImmutableList.of(sample), task);
         StringBuilder sb = new StringBuilder();
@@ -33,9 +37,9 @@ public abstract class TextGuessPlugin
             if (first) {
                 first = false;
             } else {
-                sb.append("\r");
+                sb.append(task.getNewline().getString());
             }
-            sb.append(sb);
+            sb.append(line);
         }
         String text = sb.toString();
 
