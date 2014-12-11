@@ -19,7 +19,6 @@ public class JRubyScriptingModule
     {
         // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
         // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
-        // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
     }
 
     @Override
