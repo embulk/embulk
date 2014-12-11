@@ -11,6 +11,7 @@ import org.quickload.channel.ChannelInterruptedException;
 
 public abstract class BufferPlugins
 {
+    // NB: BufferOutput.channel.maxQueuedSize must be equal or larger than 1024
     public static long transferInputStream(BufferAllocator bufferAllocator,
             InputStream input, BufferOutput output) throws PartialTransferException
     {
@@ -43,8 +44,10 @@ public abstract class BufferPlugins
         long transferredSize = 0;
         try {
             for (Buffer buffer : input) {
-                output.write(buffer.get(), 0, buffer.limit());
-                transferredSize += buffer.limit();
+                if (buffer.get() != null) {
+                    output.write(buffer.get(), 0, buffer.limit());
+                    transferredSize += buffer.limit();
+                }
                 buffer.release();
             }
         } catch (ChannelInterruptedException ex) {
