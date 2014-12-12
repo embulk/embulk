@@ -2,7 +2,7 @@
 
 ```
 mvn clean package dependency:copy-dependencies
-java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.quickload.cli.QuickLoad examples/config.yml
+java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Embulk examples/config.yml
 ```
 
 You can see JaCoCo's coverage report at ${project}/target/site/jacoco/index.html
