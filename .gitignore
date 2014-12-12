@@ -4,3 +4,6 @@ target
 ._*
 .idea
 tmp/
+vendor/
+.bundle
+.yardoc
