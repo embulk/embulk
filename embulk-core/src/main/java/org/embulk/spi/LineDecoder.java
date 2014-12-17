@@ -106,6 +106,10 @@ public class LineDecoder
             lineBuffer.position(readingPosition);
             if (cr.isUnderflow()) {
                 // ok, decode a line at the next loop
+                if (byteBuffer.remaining() < 8) {
+                    // FIXME this is a bug
+                    byteBuffer = EMPTY_BYTE_BUFFER;
+                }
             } else if (cr.isOverflow()) {
                 // rewind or resize buffer at the next loop
             } else {
