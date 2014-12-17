@@ -205,15 +205,25 @@ public class GuessExecutor
 
             // get sample buffer
             Buffer sample = null;
-            while (fileBufferInput.nextFile()) {
-                for (Buffer buffer : fileBufferInput) {
-                    if (sample == null) {
-                        // get header data of the file
-                        sample = buffer;
+            RuntimeException decodeException = null;
+            try {
+                while (fileBufferInput.nextFile()) {
+                    for (Buffer buffer : fileBufferInput) {
+                        if (sample == null) {
+                            // get header data of the file
+                            sample = buffer;
+                        }
                     }
                 }
+            } catch (RuntimeException ex) {
+                // ignores exceptions because FileDecoderPlugin can throw exceptions
+                // such as "Unexpected end of ZLIB input stream"
+                decodeException = ex;
             }
             if (sample == null) {
+                if (decodeException != null) {
+                    throw decodeException;
+                }
                 throw new NoSampleException("No input buffer to guess");
             }
 
