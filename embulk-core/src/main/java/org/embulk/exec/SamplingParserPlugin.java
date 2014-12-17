@@ -76,8 +76,9 @@ class SamplingParserPlugin
                     // skip remaining all buffers so that FileInputPlugin.runInput doesn't
                     // throw exceptions at channel.join()
                 } else {
-                    sample.setBytes(sampleSize, buffer, 0, buffer.limit());
-                    sampleSize += buffer.limit();
+                    int size = Math.min(buffer.limit(), sample.capacity() - sampleSize);
+                    sample.setBytes(sampleSize, buffer, 0, size);
+                    sampleSize += size;
                 }
                 buffer.release();
             }
