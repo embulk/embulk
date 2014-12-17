@@ -8,12 +8,16 @@ module Embulk::Plugin
       detector = com.ibm.icu.text.CharsetDetector.new
       detector.setText(sample_buffer.to_java_bytes)
       best_match = detector.detect
-      name = best_match.getName
-      if name == "ISO-8859-1"
-        # ISO-8859-1 means ASCII which is a subset
-        # of UTF-8 in most of cases due to lack of
-        # sample data set
+      if best_match.getConfidence < 50
         name = "UTF-8"
+      else
+        name = best_match.getName
+        if name == "ISO-8859-1"
+          # ISO-8859-1 means ASCII which is a subset
+          # of UTF-8 in most of cases due to lack of
+          # sample data set
+          name = "UTF-8"
+        end
       end
       return {"charset"=>name}
     end
