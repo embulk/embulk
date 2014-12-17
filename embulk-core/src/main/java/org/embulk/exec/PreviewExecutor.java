@@ -13,6 +13,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Report;
 import org.embulk.channel.PageChannel;
 import org.embulk.channel.PageInput;
+import org.embulk.channel.ChannelAsynchronousCloseException;
 import org.embulk.record.Page;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.PluginThread;
@@ -40,7 +41,7 @@ public class PreviewExecutor
         public ConfigSource getInputConfig();
 
         @Config("preview_sample_rows")
-        @ConfigDefault("30")
+        @ConfigDefault("15")
         public int getSampleRows();
 
         public TaskSource getInputTask();
@@ -92,7 +93,13 @@ public class PreviewExecutor
 
                         pages = getSample(channel.getInput(), task.getSampleRows());
                         channel.completeConsumer();
-                        channel.join();
+                        try {
+                            channel.join();
+                        } catch (ChannelAsynchronousCloseException ex) {
+                            // because getSample doesn't consume all pages, channel.join
+                            // causes ChannelAsynchronousCloseException but it should be
+                            // ignored
+                        }
                     } finally {
                         // don't call joinAndThrow to ignore exceptions in InputPlugins
                         thread.join();
