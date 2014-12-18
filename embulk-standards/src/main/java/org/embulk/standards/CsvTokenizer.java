@@ -8,6 +8,8 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 
+import org.embulk.standards.CsvParserPlugin.CsvParserTask;
+
 public class CsvTokenizer
 {
     static enum RecordState

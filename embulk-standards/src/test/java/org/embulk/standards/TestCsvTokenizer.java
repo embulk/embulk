@@ -14,6 +14,7 @@ import org.embulk.record.Column;
 import org.embulk.record.Schema;
 import org.embulk.spi.ExecTask;
 import org.embulk.spi.LineDecoder;
+import org.embulk.standards.CsvParserPlugin.CsvParserTask;
 import static org.embulk.config.DataSource.arrayNode;
 import static org.embulk.config.DataSource.objectNode;
 

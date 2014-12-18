@@ -13,6 +13,7 @@ import org.embulk.record.SchemaConfig;
 import org.embulk.record.Types;
 import org.embulk.spi.ExecTask;
 import org.embulk.spi.Newline;
+import org.embulk.standards.CsvParserPlugin.CsvParserTask;
 import static org.embulk.config.DataSource.arrayNode;
 import static org.embulk.config.DataSource.objectNode;
 
