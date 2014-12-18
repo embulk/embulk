@@ -30,6 +30,7 @@ public class StandardPluginModule implements Module
 
         // output plugins
         binder.bind(OutputPlugin.class).annotatedWith(Names.named("file")).to(LocalFileOutputPlugin.class);
+        binder.bind(OutputPlugin.class).annotatedWith(Names.named("null")).to(NullOutputPlugin.class);
 
         // formatter plugins
         binder.bind(FormatterPlugin.class).annotatedWith(Names.named("csv")).to(CsvFormatterPlugin.class);
