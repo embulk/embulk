@@ -299,6 +299,13 @@ public abstract class DataSource <T extends DataSource>
         return (T) this;
     }
 
+    public T merge(DataSource<?> other)
+    {
+        T copy = deepCopy();
+        copy.mergeRecursively(other.deepCopy());
+        return copy;
+    }
+
     private static void mergeJsonObject(ObjectNode src, ObjectNode other)
     {
         Iterator<Map.Entry<String, JsonNode>> ite = other.fields();
