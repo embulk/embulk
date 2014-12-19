@@ -2,7 +2,7 @@ module Embulk
   require 'embulk/bridge/buffer'
 
   class FileWriter
-    def initialize(task_config, fileBufferOutput)
+    def initialize(fileBufferOutput)
       @fileBufferOutput = fileBufferOutput
     end
 
