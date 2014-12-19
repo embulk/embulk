@@ -216,6 +216,9 @@ public class DataChannel <E extends Buffer>
             } else {
                 int nextQueuedSize = queuedSize + e.capacity();
                 while (nextQueuedSize > maxQueuedSize) {
+                    if (queuedSize == 0) {
+                        throw new IllegalStateException("Not enough capacity but the queue is already empty. Not enough BufferChannel capacity?");
+                    }
                     try {
                         queueCondition.await();
                     } catch (InterruptedException ex) {

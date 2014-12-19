@@ -30,7 +30,8 @@ public class TestBufferPlugins
         InputStream input = new ByteArrayInputStream(
                 "1234567890".getBytes("UTF-8"));
 
-        try (BufferChannel bufferChannel = new BufferChannel(1024)) {
+        int minimumSize = calculateMinimumBufferChannelSize();
+        try (BufferChannel bufferChannel = new BufferChannel(minimumSize)) {
             assertEquals(10, BufferPlugins.transferInputStream(
                     binder.getInstance(BufferManager.class), input,
                     bufferChannel.getOutput()));
@@ -43,6 +44,13 @@ public class TestBufferPlugins
                     new String(buffer.get(), 0, buffer.limit(), "UTF-8"));
             assertFalse(ite.hasNext());
         }
+    }
+
+    private int calculateMinimumBufferChannelSize()
+    {
+        BufferManager bufferAllocator = binder.getInstance(BufferManager.class);
+        int minimumSize = bufferAllocator.allocateBuffer(1).capacity();
+        return minimumSize;
     }
 
     @Test
