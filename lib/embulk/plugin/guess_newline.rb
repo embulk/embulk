@@ -1,8 +1,6 @@
 module Embulk::Plugin
 
-  class NewlineGuess < TextGuess
-    Plugin.register_guess('newline', self)
-
+  class Newline < TextGuess
     def guess_text(config, sample_text)
       cr_count = sample_text.count("\r")
       lf_count = sample_text.count("\n")

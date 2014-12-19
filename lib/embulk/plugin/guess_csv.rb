@@ -1,9 +1,7 @@
 module Embulk::Plugin
   require 'embulk/plugin/tf_guess'
 
-  class CsvGuess < LineGuess
-    Plugin.register_guess('csv', self)
-
+  class Csv < LineGuess
     DELIMITER_CANDIDATES = [
       ",", "\t", "|"
     ]

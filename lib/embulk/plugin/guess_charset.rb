@@ -1,8 +1,6 @@
 module Embulk::Plugin
 
-  class CharsetGuess < Guess
-    Plugin.register_guess('charset', self)
-
+  class Charset < Guess
     def guess_buffer(config, sample_buffer)
       # ICU4J
       detector = com.ibm.icu.text.CharsetDetector.new

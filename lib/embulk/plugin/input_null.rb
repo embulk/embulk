@@ -1,6 +1,6 @@
 module Embulk::Plugin
 
-  class NullInput < Input
+  class Null < Input
     Plugin.register_input('null', self)
 
     def transaction(config, task)
