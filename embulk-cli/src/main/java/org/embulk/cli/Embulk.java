@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigSources;
 import org.embulk.config.NextConfig;
-import org.embulk.record.Pages;
+import org.embulk.page.Pages;
 import org.embulk.spi.NoticeLogger;
 //import org.embulk.exec.EmbulkService;
 import org.embulk.exec.LocalExecutor;
@@ -42,15 +42,15 @@ public class Embulk
         ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
 
         // automatic guess
-        NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
-        System.out.println("guessed: "+guessed);
-        config.mergeRecursively(guessed);
+        //NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
+        //config.mergeRecursively(guessed);
+        //System.out.println("guessed: "+config);
 
-        PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
-        List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
-        String previewJson = new ObjectMapper().writeValueAsString(records);
-        System.out.println("preview schema: "+preview.getSchema());
-        System.out.println("preview records: "+previewJson);
+        //PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
+        //List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
+        //String previewJson = new ObjectMapper().writeValueAsString(records);
+        //System.out.println("preview schema: "+preview.getSchema());
+        //System.out.println("preview records: "+previewJson);
 
         LocalExecutor exec = injector.getInstance(LocalExecutor.class);
         ExecuteResult result = exec.run(config);

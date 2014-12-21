@@ -5,7 +5,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.Report;
 import org.embulk.channel.PageInput;
-import org.embulk.record.Page;
+import org.embulk.page.Page;
 import org.embulk.spi.ExecTask;
 import org.embulk.spi.ExecControl;
 import org.embulk.spi.OutputPlugin;

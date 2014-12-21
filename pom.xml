@@ -21,8 +21,8 @@
 
     <modules>
         <module>embulk-core</module>
-        <module>embulk-standards</module>
-        <module>embulk-cli</module>
+        <!--<module>embulk-standards</module>-->
+        <!--<module>embulk-cli</module>-->
     </modules>
 
     <properties>
@@ -53,11 +53,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!--
             <dependency>
                 <groupId>org.embulk</groupId>
                 <artifactId>embulk-standards</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            -->
 
             <dependency>
                 <groupId>commons-logging</groupId>
