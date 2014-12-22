@@ -25,6 +25,6 @@ public abstract class FilterFileInput
     @Override
     public void close()
     {
-        return in.close();
+        in.close();
     }
 }

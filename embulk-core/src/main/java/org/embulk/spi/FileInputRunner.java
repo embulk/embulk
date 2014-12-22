@@ -2,10 +2,14 @@ package org.embulk.spi;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
+import org.embulk.config.CommitReport;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.type.Schema;
 
 public class FileInputRunner
@@ -51,7 +55,7 @@ public class FileInputRunner
     @Override
     public NextConfig transaction(ConfigSource config, final InputPlugin.Control control)
     {
-        final RunnerTask task = config.loadConfig(RunnerTask.class);
+        final RunnerTask task = Exec.loadConfig(config, RunnerTask.class);
         FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         final List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         final ParserPlugin parserPlugin = newParserPlugin(task);
@@ -82,20 +86,22 @@ public class FileInputRunner
 
     @Override
     public CommitReport run(TaskSource taskSource, Schema schema, int processorIndex,
-            PageOutput output);
+            PageOutput output)
     {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = Exec.loadTask(taskSource, RunnerTask.class);
         FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        Transactional tran = null;
+        TransactionalFileInput tran = null;
         try {
-            try (FileInput fileInput = fileInputPlugin.open(taskSource, processorIndex)) {
-                tran = (Transactional) fileInput;
+            FileInput fileInput = tran = fileInputPlugin.open(taskSource, processorIndex);
+            try {
                 fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
 
                 parserPlugin.run(taskSource, schema, fileInput, output);
+            } finally {
+                fileInput.close();
             }
 
             CommitReport report = tran.commit();  // TODO check output.finish() is called. wrap

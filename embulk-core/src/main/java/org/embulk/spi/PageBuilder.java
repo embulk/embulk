@@ -9,6 +9,7 @@ import java.util.Collections;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 import org.embulk.time.Timestamp;
 import org.embulk.type.Schema;
 import org.embulk.type.Column;
@@ -18,6 +19,7 @@ public class PageBuilder
 {
     private final BufferAllocator allocator;
     private final PageOutput output;
+    private final Schema schema;
     private final int[] columnOffsets;
     private final int fixedRecordSize;
 
@@ -35,19 +37,20 @@ public class PageBuilder
     {
         this.allocator = allocator;
         this.output = output;
-        this.columnOffsets = Page.columnOffsets(schema);
-        this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
-        this.fixedRecordSize = Page.recordHeaderSize(schema) + Page.totalColumnSize(schema);
+        this.schema = schema;
+        this.columnOffsets = PageFormat.columnOffsets(schema);
+        this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
+        this.fixedRecordSize = PageFormat.recordHeaderSize(schema) + PageFormat.totalColumnSize(schema);
         this.nextVariableLengthDataOffset = fixedRecordSize;
         newBuffer();
     }
 
     private void newBuffer()
     {
-        this.buffer = allocator.allocate(Page.PAGE_HEADER_SIZE + fixedRecordSize);
+        this.buffer = allocator.allocate(PageFormat.PAGE_HEADER_SIZE + fixedRecordSize);
         this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.limit());
         this.count = 0;
-        this.position = Page.PAGE_HEADER_SIZE;
+        this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences.clear();
         this.stringReferenceSize = 0;
     }
@@ -122,7 +125,7 @@ public class PageBuilder
     public void setTimestamp(Column column, Timestamp value)
     {
         // TODO check type?
-        return setTimestamp(column.getIndex(), value);
+        setTimestamp(column.getIndex(), value);
     }
 
     public void setTimestamp(int columnIndex, Timestamp value)

@@ -39,6 +39,21 @@ public class Column
         return type;
     }
 
+    public void visit(SchemaVisitor visitor)
+    {
+        if (type instanceof BooleanType) {
+            visitor.booleanColumn(this);
+        } else if (type instanceof LongType) {
+            visitor.longColumn(this);
+        } else if (type instanceof StringType) {
+            visitor.stringColumn(this);
+        } else if (type instanceof TimestampType) {
+            visitor.timestampColumn(this);
+        } else {
+            assert(false);
+        }
+    }
+
     @Override
     public boolean equals(Object obj)
     {

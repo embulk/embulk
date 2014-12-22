@@ -1,21 +1,23 @@
 package org.embulk.spi;
 
+import java.util.Arrays;
+
 public class Buffer
 {
     private byte[] array;
     private int offset;
     private int filled;
 
-    protected Buffer(byte[] wrap, int offset, int size)
+    protected Buffer(byte[] wrap, int offset, int limit)
     {
         this.array = wrap;
         this.offset = offset;
-        this.filled = offset + size;
+        this.filled = offset + limit;
     }
 
     public static Buffer allocate(int length)
     {
-        return new Buffer(length);
+        return new Buffer(new byte[length], 0, length);
     }
 
     public static Buffer copyOf(byte[] src)
@@ -25,9 +27,7 @@ public class Buffer
 
     public static Buffer copyOf(byte[] src, int index, int length)
     {
-        Buffer buffer = allocate(length);
-        buffer.setBytes(0, src, index, length);
-        return buffer.limit(length);
+        return wrap(Arrays.copyOfRange(src, index, length));
     }
 
     public static Buffer wrap(byte[] src)
@@ -56,14 +56,14 @@ public class Buffer
         return this;
     }
 
-    public int size()
+    public int limit()
     {
         return filled - offset;
     }
 
-    public Buffer size(int size)
+    public Buffer limit(int limit)
     {
-        this.filled = offset + size;
+        this.filled = offset + limit;
         return this;
     }
 

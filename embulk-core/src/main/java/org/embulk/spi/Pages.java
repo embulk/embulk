@@ -1,9 +1,11 @@
 package org.embulk.spi;
 
 import java.util.List;
+import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
 import org.embulk.time.Timestamp;
 import org.embulk.type.Schema;
+import org.embulk.type.SchemaVisitor;
 import org.embulk.type.Column;
 
 public class Pages
@@ -17,52 +19,70 @@ public class Pages
     public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages)
     {
         ImmutableList.Builder<Object[]> builder = ImmutableList.builder();
-        try (PageReader reader = new PageReader(schema, pages)) {
-            while (reader.nextRecord()) {
-                builder.add(toObjects(reader));
+        Iterator<Page> ite = pages.iterator();
+        try (PageReader reader = new PageReader(schema)) {
+            while (ite.hasNext()) {
+                reader.setPage(ite.next());
+                while (reader.nextRecord()) {
+                    builder.add(toObjects(reader));
+                }
             }
         }
         return builder.build();
     }
 
-    public static Object[] toObjects(PageReader record)
+    public static Object[] toObjects(final PageReader record)
     {
         final Object[] values = new Object[record.getSchema().getColumns().size()];
-        record.visitColumns(new RecordReader() {
+        record.getSchema().visitColumns(new SchemaVisitor() {
             @Override
-            public void readNull(Column column)
+            public void booleanColumn(Column column)
             {
-                // TODO
+                if (record.isNull(column.getIndex())) {
+                    values[column.getIndex()] = null;
+                } else {
+                    values[column.getIndex()] = record.getBoolean(column.getIndex());
+                }
             }
 
             @Override
-            public void readBoolean(Column column, boolean value)
+            public void longColumn(Column column)
             {
-                values[column.getIndex()] = value;
+                if (record.isNull(column.getIndex())) {
+                    values[column.getIndex()] = null;
+                } else {
+                    values[column.getIndex()] = record.getLong(column.getIndex());
+                }
             }
 
             @Override
-            public void readLong(Column column, long value)
+            public void doubleColumn(Column column)
             {
-                values[column.getIndex()] = value;
+                if (record.isNull(column.getIndex())) {
+                    values[column.getIndex()] = null;
+                } else {
+                    values[column.getIndex()] = record.getDouble(column.getIndex());
+                }
             }
 
             @Override
-            public void readDouble(Column column, double value)
+            public void stringColumn(Column column)
             {
-                values[column.getIndex()] = value;
+                if (record.isNull(column.getIndex())) {
+                    values[column.getIndex()] = null;
+                } else {
+                    values[column.getIndex()] = record.getString(column.getIndex());
+                }
             }
 
             @Override
-            public void readString(Column column, String value)
+            public void timestampColumn(Column column)
             {
-                values[column.getIndex()] = value;
-            }
-
-            @Override
-            public void readTimestamp(Column column, Timestamp value)
-            {
-                values[column.getIndex()] = value;
+                if (record.isNull(column.getIndex())) {
+                    values[column.getIndex()] = null;
+                } else {
+                    values[column.getIndex()] = record.getTimestamp(column.getIndex());
+                }
             }
         });
         return values;

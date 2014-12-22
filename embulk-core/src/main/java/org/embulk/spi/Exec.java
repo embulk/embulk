@@ -2,6 +2,9 @@ package org.embulk.spi;
 
 //import org.slf4j.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.embulk.config.Task;
+import org.embulk.config.TaskSource;
+import org.embulk.config.ConfigSource;
 
 public class Exec
 {
@@ -9,19 +12,19 @@ public class Exec
 
     private Exec() { }
 
-    public <T> T doWith(ExecSession session, ExecAction<T> action) throws Exception
+    public static <T> T doWith(ExecSession session, ExecAction<T> action) throws Exception
     {
-        this.session.set(session);
+        Exec.session.set(session);
         try {
             return action.run();
         } finally {
-            this.session.set(null);
+            Exec.session.set(null);
         }
     }
 
-    public ExecSession session()
+    public static ExecSession session()
     {
-        ExecSession session = session.get();
+        ExecSession session = Exec.session.get();
         if (session == null) {
             throw new NullPointerException("Exec is used outside of Exec.doWith");
         }
@@ -39,13 +42,29 @@ public class Exec
     //    return session().notice();
     //}
 
-    public BufferAllocator getBufferAllocator()
+    public static BufferAllocator getBufferAllocator()
     {
         return session().getBufferAllocator();
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
+    public static <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
     {
         return session().newPlugin(iface, typeConfig);
     }
+
+    public static <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)
+    {
+        return session().loadConfig(config, taskType);
+    }
+
+    public static <T extends Task> T loadTask(TaskSource taskSource, Class<T> taskType)
+    {
+        return session().loadTask(taskSource, taskType);
+    }
+
+    public static TaskSource dumpTask(Task task)
+    {
+        return session().dumpTask(task);
+    }
+
 }

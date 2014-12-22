@@ -41,6 +41,13 @@ public class Schema
         return getColumn(index).getType();
     }
 
+    public void visitColumns(SchemaVisitor visitor)
+    {
+        for (Column column : columns) {
+            column.visit(visitor);
+        }
+    }
+
     public boolean isEmpty()
     {
         return columns.isEmpty();

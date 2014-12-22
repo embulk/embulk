@@ -10,9 +10,9 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FormatterPlugin;
-import org.embulk.spi.FileDecoderPlugin;
-import org.embulk.spi.FileEncoderPlugin;
-import org.embulk.spi.LineFilterPlugin;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
+//import org.embulk.spi.LineFilterPlugin;
 import org.embulk.spi.GuessPlugin;
 
 public class JRubyPluginSource
@@ -49,12 +49,12 @@ public class JRubyPluginSource
             category = "parser";
         } else if (FormatterPlugin.class.isAssignableFrom(iface)) {
             category = "formatter";
-        } else if (FileDecoderPlugin.class.isAssignableFrom(iface)) {
+        } else if (DecoderPlugin.class.isAssignableFrom(iface)) {
             category = "decoder";
-        } else if (FileEncoderPlugin.class.isAssignableFrom(iface)) {
+        } else if (EncoderPlugin.class.isAssignableFrom(iface)) {
             category = "encoder";
-        } else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
-            category = "line_filter";
+        //} else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
+        //    category = "line_filter";
         } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
         } else {

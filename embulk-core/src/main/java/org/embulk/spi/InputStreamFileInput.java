@@ -32,7 +32,7 @@ public class InputStreamFileInput
         public InputStream openNext() throws IOException
         {
             if (iterator.hasNext()) {
-                return false;
+                return null;
             }
             return iterator.next();
         }
@@ -40,8 +40,8 @@ public class InputStreamFileInput
         @Override
         public void close() throws IOException
         {
-            for (InputStream in : iterator) {
-                in.close();
+            while (iterator.hasNext()) {
+                iterator.next().close();
             }
         }
     }
@@ -66,26 +66,29 @@ public class InputStreamFileInput
     {
         Buffer buffer = allocator.allocate();
         try {
-            int n = current.read(buffer.get(), 0, buffer.capacity());
+            int n = current.read(buffer.array(), buffer.offset(), buffer.capacity());
             if (n < 0) {
                 return null;
             }
             buffer.limit(n);
             return buffer;
         } catch (IOException ex) {
-            // TODO partial read exception
             throw new RuntimeException(ex);
         }
     }
 
     public boolean nextFile()
     {
-        if (current != null) {
-            current.close();
-            current = null;
+        try {
+            if (current != null) {
+                current.close();
+                current = null;
+            }
+            current = provider.openNext();
+            return current != null;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
-        current = provider.openNext();
-        return current != null;
     }
 
     public void close()
@@ -93,7 +96,6 @@ public class InputStreamFileInput
         try {
             provider.close();
         } catch (IOException ex) {
-            // TODO exception
             throw new RuntimeException(ex);
         }
     }

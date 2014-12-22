@@ -10,7 +10,7 @@ public interface EncoderPlugin
         public void run(TaskSource taskSource);
     }
 
-    public void configure(ConfigSource config, EncoderPlugin.Control control);
+    public void transaction(ConfigSource config, EncoderPlugin.Control control);
 
     public FileOutput open(TaskSource taskSource, FileOutput fileOutput);
 }

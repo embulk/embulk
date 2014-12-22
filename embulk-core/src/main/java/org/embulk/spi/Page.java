@@ -22,11 +22,6 @@ public class Page
         return new Page(buffer);
     }
 
-    public Buffer buffer()
-    {
-        return buffer;
-    }
-
     public Page setStringReferences(List<String> values)
     {
         this.stringReferences = values;
@@ -36,5 +31,15 @@ public class Page
     public String getStringReference(int index)
     {
         return stringReferences.get(index);
+    }
+
+    public void release()
+    {
+        buffer.release();
+    }
+
+    public Buffer buffer()
+    {
+        return buffer;
     }
 }

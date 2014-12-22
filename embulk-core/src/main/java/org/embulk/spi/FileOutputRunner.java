@@ -2,10 +2,15 @@ package org.embulk.spi;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
+import org.embulk.config.CommitReport;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.type.Schema;
 
 public class FileOutputRunner
@@ -53,7 +58,7 @@ public class FileOutputRunner
             final Schema schema, final int processorCount,
             final OutputPlugin.Control control)
     {
-        final RunnerTask task = config.loadConfig(RunnerTask.class);
+        final RunnerTask task = Exec.loadConfig(config, RunnerTask.class);
         FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         final List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         final FormatterPlugin formatterPlugin = newFormatterPlugin(task);
@@ -85,19 +90,18 @@ public class FileOutputRunner
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
     {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = Exec.loadTask(taskSource, RunnerTask.class);
         FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         FormatterPlugin formatterPlugin = newFormatterPlugin(task);
 
-        Transactional tran = null;
+        TransactionalFileOutput tran = null;
         FileOutput fileOutput = null;
         PageOutput output = null;
         try {
-            fileOutput = fileOutputPlugin.open(taskSource, processorIndex);
-            tran = (Transactional) fileOutput;
+            fileOutput = tran = fileOutputPlugin.open(taskSource, processorIndex);
 
-            fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), tran);
+            fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), fileOutput);
             output = formatterPlugin.open(taskSource, schema, fileOutput);
 
             TransactionalPageOutput ret = new DelegateTransactionalPageOutput(tran, output);
@@ -120,9 +124,11 @@ public class FileOutputRunner
     }
 
     private static class DelegateTransactionalPageOutput
+            implements TransactionalPageOutput
     {
         private final Transactional tran;
         private final PageOutput output;
+        private boolean finished;
 
         public DelegateTransactionalPageOutput(Transactional tran, PageOutput output)
         {
@@ -134,6 +140,13 @@ public class FileOutputRunner
         public void add(Page page)
         {
             output.add(page);
+        }
+
+        @Override
+        public void finish()
+        {
+            output.finish();
+            finished = true;
         }
 
         @Override
@@ -151,6 +164,7 @@ public class FileOutputRunner
         @Override
         public CommitReport commit()
         {
+            // TODO check finished
             return tran.commit();
         }
     }

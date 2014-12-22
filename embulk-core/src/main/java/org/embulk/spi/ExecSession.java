@@ -16,7 +16,7 @@ public class ExecSession
     private final Injector injector;
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
-    private final BufferManager bufferManager;
+    private final BufferAllocator bufferAllocator;
     //private final NoticeLogger noticeLogger;
 
     ExecSession(Injector injector /*, Logger logger, NoticeLogger noticeLogger*/)
@@ -27,7 +27,7 @@ public class ExecSession
         //this.noticeLogger = noticeLogger;
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
-        this.bufferManager = injector.getInstance(BufferManager.class);
+        this.bufferAllocator = injector.getInstance(BufferAllocator.class);
     }
 
     //public Logger getLogger()
@@ -47,7 +47,7 @@ public class ExecSession
 
     public BufferAllocator getBufferAllocator()
     {
-        return bufferManager;
+        return bufferAllocator;
     }
 
     public <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)

@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import java.util.Iterator;
 import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 import org.embulk.time.Timestamp;
 import org.embulk.type.Schema;
 import org.embulk.type.Column;
@@ -20,19 +21,13 @@ public class PageReader
     private int position;
     private final byte[] nullBitSet;
 
-    private static final Page SENTINEL;
-
-    static {
-        Page page = Page.allocate(4);  // buffer().release() does nothing
-        page.setInt(0, 0);
-        SENTINEL = page;
-    }
+    private static final Page SENTINEL = Page.wrap(Buffer.wrap(new byte[4]));  // buffer().release() does nothing
 
     public PageReader(Schema schema)
     {
         this.schema = schema;
-        this.columnOffsets = Page.columnOffsets(schema);
-        this.nullBitSet = new byte[Page.nullBitSetSize(schema)];
+        this.columnOffsets = PageFormat.columnOffsets(schema);
+        this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
     }
 
     public void setPage(Page page)
@@ -41,11 +36,11 @@ public class PageReader
         this.page = SENTINEL;
 
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.limit());
+        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
 
         pageRecordCount = pageSlice.getInt(0);  // see page format
         readCount = 0;
-        position = Page.PAGE_HEADER_SIZE;
+        position = PageFormat.PAGE_HEADER_SIZE;
 
         this.page = page;
         this.pageSlice = pageSlice;
@@ -102,13 +97,13 @@ public class PageReader
     public String getString(Column column)
     {
         // TODO check type?
-        return getString(column.getString());
+        return getString(column.getIndex());
     }
 
     public String getString(int columnIndex)
     {
         int index = pageSlice.getInt(getOffset(columnIndex));
-        return pageSlice.getStringReference(index);
+        return page.getStringReference(index);
     }
 
     public Timestamp getTimestamp(Column column)

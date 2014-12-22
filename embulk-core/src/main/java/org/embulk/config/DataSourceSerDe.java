@@ -41,13 +41,13 @@ public class DataSourceSerDe
                     }
                 }));
 
-        // Report
-        module.addSerializer(Report.class, new DataSourceSerializer<Report>());
-        module.addDeserializer(Report.class,
-                new DataSourceDeserializer(new DataSourceFactory<Report>() {
-                    public Report newInstance(ObjectNode node)
+        // CommitReport
+        module.addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
+        module.addDeserializer(CommitReport.class,
+                new DataSourceDeserializer(new DataSourceFactory<CommitReport>() {
+                    public CommitReport newInstance(ObjectNode node)
                     {
-                        return new Report(node);
+                        return new CommitReport(node);
                     }
                 }));
 
