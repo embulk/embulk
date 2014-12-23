@@ -33,6 +33,7 @@
 
         <dep.joda-time.version>2.3</dep.joda-time.version>
         <dep.jruby.version>1.7.16.1</dep.jruby.version>
+        <dep.netty.version>4.0.24.Final</dep.netty.version>
 
         <project.check.skip-all>false</project.check.skip-all>
         <project.check.skip-dependency>${project.check.skip-all}</project.check.skip-dependency>
@@ -149,6 +150,12 @@
                 <groupId>io.airlift</groupId>
                 <artifactId>slice</artifactId>
                 <version>0.7</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${dep.netty.version}</version>
             </dependency>
 
             <dependency>

@@ -72,6 +72,16 @@ public class Buffer
         return array.length - offset;
     }
 
+    public void setBytes(int index, byte[] source, int sourceIndex, int length)
+    {
+        System.arraycopy(source, sourceIndex, array, offset + index, length);
+    }
+
+    public void getBytes(int index, byte[] dest, int destIndex, int length)
+    {
+        System.arraycopy(array, offset + index, dest, destIndex, length);
+    }
+
     public void release()
     {
     }

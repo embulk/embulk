@@ -4,12 +4,15 @@ import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
+import org.embulk.type.Schema;
+import org.embulk.spi.Exec;
 import org.embulk.spi.Page;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.ExecTask;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
+import org.embulk.spi.PageOutput;
+import static org.embulk.spi.Inputs.each;
 
 /*
  * Used by GuessExecutor
@@ -27,7 +30,7 @@ class SamplingParserPlugin
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
-        control.run(new TaskSource(), null);
+        control.run(Exec.newTaskSource(), null);
     }
 
     @Override
@@ -41,12 +44,12 @@ class SamplingParserPlugin
     static Buffer runFileInputSampling(ConfigSource config)
     {
         // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-        ConfigSource samplingInputConfig = config.getObject("in").deepCopy();
-        samplingInputConfig.getObjectOrSetEmpty("parser").setString("type", "system_sampling");
+        ConfigSource samplingInputConfig = config.getNested("in").deepCopy();
+        samplingInputConfig.getNestedOrSetEmpty("parser").setString("type", "system_sampling");
 
         final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get("type"));
         try {
-            input.runInputTransaction(samplingInputConfig, new FileInput.Control() {
+            input.runInputTransaction(samplingInputConfig, new FileInputPlugin.Control() {
                 public List<CommitReport> run(TaskSource inputTaskSource)
                 {
                     input.runInput(inputTaskSource, 0, new PageOutput(null) {
@@ -71,8 +74,7 @@ class SamplingParserPlugin
         int sampleSize = 0;
 
         while (fileInput.nextFile()) {
-            //for (Buffer buffer = fileInput.poll(); buffer != null; buffer = fileInput.po()) {
-            for (Buffer buffer : fileInput) {
+            for (Buffer buffer : each(fileInput)) {
                 if (sampleSize >= maxSampleSize) {
                     // skip remaining all buffers so that FileInputPlugin.runInput doesn't
                     // throw exceptions at channel.join()

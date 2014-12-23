@@ -21,10 +21,13 @@ import org.embulk.channel.PageOutput;
 import org.embulk.type.Schema;
 import org.embulk.type.Column;
 import org.embulk.page.Page;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.BasicParserPlugin;
-import org.embulk.spi.ExecTask;
+import org.embulk.spi.Exec;
+import org.embulk.spi.ExecAction;
+import org.embulk.spi.ExecSession;
 import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.ExecControl;
 
@@ -32,37 +35,7 @@ public class GuessExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
-    private final List<JsonNode> defaultGuessPlugins;
-
-    @Inject
-    public GuessExecutor(Injector injector,
-            @ForSystemConfig ConfigSource systemConfig)
-    {
-        this.injector = injector;
-        this.systemConfig = systemConfig;
-
-        // TODO get default guess plugins from injector using Multibinder
-        this.defaultGuessPlugins = ImmutableList.copyOf(DataSource.arrayNode()
-                .add("gzip")
-                .add("charset")
-                .add("newline")
-                .add("csv"));
-    }
-
-    public NextConfig run(ConfigSource config)
-    {
-        ExecTask exec = PluginExecutors.newExecTask(injector, config);
-        return guess(exec, config);
-    }
-
-    public NextConfig guess(ExecTask exec, ConfigSource config)
-    {
-        try {
-            return doGuess(exec, config);
-        } catch (Throwable ex) {
-            throw PluginExecutors.propagePluginExceptions(ex);
-        }
-    }
+    private final List<PluginType> defaultGuessPlugins;
 
     private interface GuessExecutorTask
             extends Task
@@ -76,24 +49,49 @@ public class GuessExecutor
         public List<JsonNode> getExcludeGuessPlugins();
     }
 
-    private NextConfig doGuess(final ExecTask exec, ConfigSource config)
+    @Inject
+    public GuessExecutor(Injector injector,
+            @ForSystemConfig ConfigSource systemConfig)
     {
-        Buffer sample = SamplingParserPlugin.runFileInputSampling(exec, config);
+        this.injector = injector;
+        this.systemConfig = systemConfig;
+
+        // TODO get default guess plugins from injector using Multibinder
+        this.defaultGuessPlugins = ImmutableList.of(
+                new PluginType("gzip"),
+                new PluginType("charset"),
+                new PluginType("newline"),
+                new PluginType("csv"));
+    }
+
+    public NextConfig guess(ExecSession exec, ConfigSource config)
+    {
+        return Exec.doWith(exec, new ExecAction<NextConfig>() {
+            public NextConfig run()
+            {
+                return doGuess(config);
+            }
+        });
+    }
+
+    private NextConfig doGuess(ConfigSource config)
+    {
+        Buffer sample = SamplingParserPlugin.runFileInputSampling(config);
         if (sample.limit() == 0) {
             throw new NoSampleException("Can't get sample data because the first input file is empty");
         }
 
         List<JsonNode> guessPlugins = new ArrayList<JsonNode>(defaultGuessPlugins);
         if (config.get("exec", null) != null) {
-            GuessExecutorTask task = exec.loadConfig(config.getObject("exec"), GuessExecutorTask.class);
+            GuessExecutorTask task = config.getNestedOrSetEmpty("exec").loadConfig(GuessExecutorTask.class);
             guessPlugins.addAll(task.getGuessPlugins());
             guessPlugins.removeAll(task.getExcludeGuessPlugins());
         }
 
-        return runGuessInput(exec, sample, config, guessPlugins);
+        return runGuessInput(sample, config, guessPlugins);
     }
 
-    private NextConfig runGuessInput(final ExecTask exec, Buffer sample,
+    private NextConfig runGuessInput(Buffer sample,
             ConfigSource config, List<JsonNode> guessPlugins)
     {
         // repeat guessing upto 10 times

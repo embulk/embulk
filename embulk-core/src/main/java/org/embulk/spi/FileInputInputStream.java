@@ -67,7 +67,7 @@ public class FileInputInputStream
         }
         if (b != null) {
             // b == null if skip
-            System.arraycopy(buffer.array(), buffer.offset() + pos, b, off, len);
+            buffer.getBytes(pos, b, off, len);
         }
         if (consumed) {
             releaseBuffer();

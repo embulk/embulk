@@ -92,23 +92,22 @@ public class FileInputRunner
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = null;
+        TransactionalFileInput tran = fileInputPlugin.open(taskSource, processorIndex);
+        FileInput fileInput = tran;
         try {
-            FileInput fileInput = tran = fileInputPlugin.open(taskSource, processorIndex);
-            try {
-                fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
-
-                parserPlugin.run(taskSource, schema, fileInput, output);
-            } finally {
-                fileInput.close();
-            }
+            fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
+            parserPlugin.run(taskSource, schema, fileInput, output);
 
             CommitReport report = tran.commit();  // TODO check output.finish() is called. wrap
             tran = null;
             return report;
         } finally {
-            if (tran != null) {
-                tran.abort();
+            try {
+                if (tran != null) {
+                    tran.abort();
+                }
+            } finally {
+                fileInput.close();
             }
         }
     }

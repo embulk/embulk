@@ -30,6 +30,13 @@ public class PageReader
         this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
     }
 
+    public static int getRecordCount(Page page)
+    {
+        Buffer pageBuffer = page.buffer();
+        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
+        return pageSlice.getInt(0);  // see page format
+    }
+
     public void setPage(Page page)
     {
         this.page.buffer().release();

@@ -40,12 +40,12 @@ public class FileOutputOutputStream
             int available = buffer.capacity() - pos;
             int wlen;
             if (available < len) {
-                System.arraycopy(b, off, buffer.array(), buffer.offset() + pos, available);
+                buffer.setBytes(pos, b, off, available);
                 len -= available;
                 off += available;
                 flush();
             } else {
-                System.arraycopy(b, off, buffer.array(), buffer.offset() + pos, len);
+                buffer.setBytes(pos, b, off, len);
                 if (available <= len) {
                     flush();
                 }
