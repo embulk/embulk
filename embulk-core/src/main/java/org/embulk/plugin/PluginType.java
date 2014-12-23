@@ -19,4 +19,26 @@ public class PluginType
     {
         return name;
     }
+
+    @Override
+    public int hashCode()
+    {
+        return name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof PluginType)) {
+            return false;
+        }
+        PluginType o = (PluginType) other;
+        return name.equals(o);
+    }
+
+    @Override
+    public String toString()
+    {
+        return name;
+    }
 }

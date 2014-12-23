@@ -1,6 +1,8 @@
 package org.embulk.spi;
 
 //import org.slf4j.Logger;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
@@ -9,7 +11,6 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
-import com.google.inject.Injector;
 
 public class ExecSession
 {
@@ -21,6 +22,7 @@ public class ExecSession
     private final BufferAllocator bufferAllocator;
     //private final NoticeLogger noticeLogger;
 
+    @Inject
     ExecSession(Injector injector /*, Logger logger, NoticeLogger noticeLogger*/)
     {
         super();

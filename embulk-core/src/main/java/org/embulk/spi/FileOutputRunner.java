@@ -16,6 +16,13 @@ import org.embulk.type.Schema;
 public class FileOutputRunner
         implements OutputPlugin
 {
+    private final FileOutputPlugin fileOutputPlugin;
+
+    public FileOutputRunner(FileOutputPlugin fileOutputPlugin)
+    {
+        this.fileOutputPlugin = fileOutputPlugin;
+    }
+
     private interface RunnerTask extends Task
     {
         @Config("type")
@@ -38,11 +45,6 @@ public class FileOutputRunner
         public TaskSource getFormatterTaskSource();
     }
 
-    protected FileOutputPlugin newFileOutputPlugin(RunnerTask task)
-    {
-        return Exec.newPlugin(FileOutputPlugin.class, task.getType());
-    }
-
     protected List<EncoderPlugin> newEncoderPlugins(RunnerTask task)
     {
         return Encoders.newEncoderPlugins(Exec.session(), task.getEncoderConfigs());
@@ -59,7 +61,6 @@ public class FileOutputRunner
             final OutputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
-        FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         final List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         final FormatterPlugin formatterPlugin = newFormatterPlugin(task);
 
@@ -91,7 +92,6 @@ public class FileOutputRunner
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
-        FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         FormatterPlugin formatterPlugin = newFormatterPlugin(task);
 

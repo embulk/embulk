@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 
 public class Inputs
 {
-    private class AbstractPollIterator <E>
+    private static abstract class AbstractPollIterator <E>
             implements Iterator<E>
     {
         private E next;
@@ -41,7 +41,7 @@ public class Inputs
         }
     }
 
-    public Iterable<Buffer> each(final FileInput input)
+    public static Iterable<Buffer> each(final FileInput input)
     {
         return new Iterable<Buffer>() {
             public Iterator<Buffer> iterator()

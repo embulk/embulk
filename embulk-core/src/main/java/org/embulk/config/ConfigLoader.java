@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,15 +12,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.yaml.snakeyaml.Yaml;
 
-public class ConfigSources
+public class ConfigLoader
 {
-    /*
-    public static ConfigSource fromJson(JsonParser parser) throws IOException
+    private final ModelManager model;
+
+    @Inject
+    public ConfigLoader(ModelManager model)
     {
-        return new ConfigSource(DataSource.parseJson(parser));
+        this.model = model;
     }
 
-    public static ConfigSource fromYamlFile(File path) throws IOException
+    public ConfigSource fromJson(JsonParser parser) throws IOException
+    {
+        // TODO check parsed.isObject()
+        ObjectNode source = (ObjectNode) new ObjectMapper().readTree(parser);
+        return new ConfigSource(model, source);
+    }
+
+    public ConfigSource fromYamlFile(File path) throws IOException
     {
         Yaml yaml = new Yaml();
         Object parsedYaml;
@@ -27,10 +37,10 @@ public class ConfigSources
             parsedYaml = yaml.load(is);
         }
         ObjectNode source = objectToJsonObject(parsedYaml);
-        return new ConfigSource(source);
+        return new ConfigSource(model, source);
     }
 
-    public static ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix)
+    public ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix)
     {
         // TODO exception handling
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
@@ -47,10 +57,10 @@ public class ConfigSources
             JsonNode typedValue = objectToJson(parsedValue);
             source.set(keyName, typedValue);
         }
-        return new ConfigSource(source);
+        return new ConfigSource(model, source);
     }
 
-    private static JsonNode objectToJson(Object object)
+    private JsonNode objectToJson(Object object)
     {
         // TODO exception
         ObjectMapper objectMapper = new ObjectMapper();
@@ -61,7 +71,7 @@ public class ConfigSources
         }
     }
 
-    private static ObjectNode objectToJsonObject(Object object)
+    private ObjectNode objectToJsonObject(Object object)
     {
         // TODO exception
         JsonNode json = objectToJson(object);
@@ -70,5 +80,4 @@ public class ConfigSources
         }
         return (ObjectNode) json;
     }
-    */
 }

@@ -6,11 +6,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ConfigSources;
+import org.embulk.config.ConfigLoader;
 import org.embulk.config.NextConfig;
-import org.embulk.page.Pages;
-import org.embulk.spi.NoticeLogger;
+import org.embulk.spi.Pages;
+//import org.embulk.spi.NoticeLogger;
 //import org.embulk.exec.EmbulkService;
+import org.embulk.config.ModelManager;
+import org.embulk.spi.ExecSession;
 import org.embulk.exec.LocalExecutor;
 import org.embulk.exec.ExecuteResult;
 import org.embulk.exec.GuessExecutor;
@@ -27,7 +29,9 @@ public class Embulk
             return;
         }
 
-        ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
+        // TODO bootstrap model manager
+        //ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
+        ConfigSource systemConfig = new ConfigLoader(new ModelManager(new ObjectMapper())).fromPropertiesYamlLiteral(System.getProperties(), "load.");
 
         new Embulk(systemConfig).run(args[0]);
     }
@@ -39,32 +43,35 @@ public class Embulk
 
     public void run(String configPath) throws Exception
     {
-        ConfigSource config = ConfigSources.fromYamlFile(new File(configPath));
+        ConfigLoader configLoader = injector.getInstance(ConfigLoader.class);
+        ConfigSource config = configLoader.fromYamlFile(new File(configPath));
+
+        ExecSession exec = injector.getInstance(ExecSession.class);
 
         // automatic guess
-        //NextConfig guessed = injector.getInstance(GuessExecutor.class).run(config);
-        //config.mergeRecursively(guessed);
-        //System.out.println("guessed: "+config);
+        NextConfig guessed = injector.getInstance(GuessExecutor.class).guess(exec, config);
+        config.merge(guessed);
+        System.out.println("guessed: "+config);
 
-        //PreviewResult preview = injector.getInstance(PreviewExecutor.class).run(config);
-        //List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
-        //String previewJson = new ObjectMapper().writeValueAsString(records);
-        //System.out.println("preview schema: "+preview.getSchema());
-        //System.out.println("preview records: "+previewJson);
+        PreviewResult preview = injector.getInstance(PreviewExecutor.class).preview(exec, config);
+        List<Object[]> records = Pages.toObjects(preview.getSchema(), preview.getPages());
+        String previewJson = injector.getInstance(ModelManager.class).writeObject(records);
+        System.out.println("preview schema: "+preview.getSchema());
+        System.out.println("preview records: "+previewJson);
 
-        LocalExecutor exec = injector.getInstance(LocalExecutor.class);
-        ExecuteResult result = exec.run(config);
+        LocalExecutor local = injector.getInstance(LocalExecutor.class);
+        ExecuteResult result = local.run(exec, config);
 
         System.out.println("next config: "+result.getNextConfig());
 
-        System.out.println("notice messages: ");
-        for (NoticeLogger.Message message : result.getNoticeMessages()) {
-            System.out.println("  "+message);
-        }
+        //System.out.println("notice messages: ");
+        //for (NoticeLogger.Message message : result.getNoticeMessages()) {
+        //    System.out.println("  "+message);
+        //}
 
-        System.out.println("skipped records: ");
-        for (NoticeLogger.SkippedRecord record : result.getSkippedRecords()) {
-            System.out.println("  "+record);
-        }
+        //System.out.println("skipped records: ");
+        //for (NoticeLogger.SkippedRecord record : result.getSkippedRecords()) {
+        //    System.out.println("  "+record);
+        //}
     }
 }

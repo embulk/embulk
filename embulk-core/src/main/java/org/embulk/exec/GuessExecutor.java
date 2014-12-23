@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.embulk.buffer.Buffer;
+import com.google.common.base.Throwables;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.NextConfig;
@@ -14,22 +13,23 @@ import org.embulk.config.DataSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Report;
-import org.embulk.channel.FileBufferInput;
-import org.embulk.channel.FileBufferOutput;
-import org.embulk.channel.PageOutput;
+import org.embulk.config.CommitReport;
 import org.embulk.type.Schema;
 import org.embulk.type.Column;
-import org.embulk.page.Page;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.Page;
+import org.embulk.spi.Buffer;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.BasicParserPlugin;
+import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
-import org.embulk.spi.GuessPlugin;
-import org.embulk.spi.ExecControl;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.FileInputRunner;
 
 public class GuessExecutor
 {
@@ -42,11 +42,11 @@ public class GuessExecutor
     {
         @Config("guess_plugins")
         @ConfigDefault("[]")
-        public List<JsonNode> getGuessPlugins();
+        public List<PluginType> getGuessPlugins();
 
         @Config("exclude_guess_plugins")
         @ConfigDefault("[]")
-        public List<JsonNode> getExcludeGuessPlugins();
+        public List<PluginType> getExcludeGuessPlugins();
     }
 
     @Inject
@@ -64,14 +64,18 @@ public class GuessExecutor
                 new PluginType("csv"));
     }
 
-    public NextConfig guess(ExecSession exec, ConfigSource config)
+    public NextConfig guess(ExecSession exec, final ConfigSource config)
     {
-        return Exec.doWith(exec, new ExecAction<NextConfig>() {
-            public NextConfig run()
-            {
-                return doGuess(config);
-            }
-        });
+        try {
+            return Exec.doWith(exec, new ExecAction<NextConfig>() {
+                public NextConfig run()
+                {
+                    return doGuess(config);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
     }
 
     private NextConfig doGuess(ConfigSource config)
@@ -81,44 +85,49 @@ public class GuessExecutor
             throw new NoSampleException("Can't get sample data because the first input file is empty");
         }
 
-        List<JsonNode> guessPlugins = new ArrayList<JsonNode>(defaultGuessPlugins);
-        if (config.get("exec", null) != null) {
-            GuessExecutorTask task = config.getNestedOrSetEmpty("exec").loadConfig(GuessExecutorTask.class);
-            guessPlugins.addAll(task.getGuessPlugins());
-            guessPlugins.removeAll(task.getExcludeGuessPlugins());
-        }
+        List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
+        GuessExecutorTask task = config.getNestedOrSetEmpty("exec").loadConfig(GuessExecutorTask.class);
+        guessPlugins.addAll(task.getGuessPlugins());
+        guessPlugins.removeAll(task.getExcludeGuessPlugins());
 
         return runGuessInput(sample, config, guessPlugins);
     }
 
     private NextConfig runGuessInput(Buffer sample,
-            ConfigSource config, List<JsonNode> guessPlugins)
+            ConfigSource config, List<PluginType> guessPlugins)
     {
         // repeat guessing upto 10 times
-        NextConfig lastGuessed = new NextConfig();
+        NextConfig lastGuessed = Exec.newNextConfig();
         for (int i=0; i < 10; i++) {
             // include last-guessed config to run guess
-            ConfigSource guessConfig = config.deepCopy().mergeRecursively(lastGuessed.deepCopy());
+            ConfigSource guessConfig = config.deepCopy().merge(lastGuessed);
 
             // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-            ConfigSource guessInputConfig = guessConfig.getObject("in");
-            guessInputConfig.getObjectOrSetEmpty("parser")
-                .setString("type", "system_guess")
-                .set("guess_plugins", DataSource.arrayNode().addAll(guessPlugins));
+            ConfigSource guessInputConfig = guessConfig.getNested("in");
+            guessInputConfig.getNestedOrSetEmpty("parser")
+                .set("type", "system_guess")
+                .set("guess_plugins", guessPlugins);
 
             // run FileInputPlugin
-            final InputPlugin input = new SampledBufferFileInputPlugin(sample);
+            final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
             NextConfig guessed;
             try {
-                input.runInputTransaction(exec, guessInputConfig, new ExecControl() {
-                    public List<Report> run(TaskSource inputTaskSource)
+                input.transaction(guessInputConfig, new InputPlugin.Control() {
+                    public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int processorCount)
                     {
-                        input.runInput(exec, inputTaskSource, 0, new PageOutput(null) {  // TODO repeat runInput with processorIndex++ if NoSampleException happens
+                        // TODO repeat runwith processorIndex++ if NoSampleException happens
+                        input.run(inputTaskSource, null, 0, new PageOutput() {
                             @Override
                             public void add(Page page)
                             {
                                 throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
                             }
+
+                            @Override
+                            public void finish() { }
+
+                            @Override
+                            public void close() { }
                         });
                         throw new AssertionError("Guess executor must throw GuessedNoticeError");
                     }
@@ -126,13 +135,12 @@ public class GuessExecutor
                 throw new AssertionError("Guess executor must throw GuessedNoticeError");
 
             } catch (GuessedNoticeError error) {
-                guessed = new NextConfig();
-                guessed.getObjectOrSetEmpty("in").set("parser", error.getGuessedParserConfig());
+                guessed = Exec.newNextConfig();
+                guessed.getNestedOrSetEmpty("in").setNested("parser", error.getGuessedParserConfig());
             }
 
             // merge to the last-guessed config
-            NextConfig nextGuessed = lastGuessed.deepCopy();
-            lastGuessed.mergeRecursively(guessed);
+            NextConfig nextGuessed = lastGuessed.deepCopy().merge(guessed);
             if (lastGuessed.equals(nextGuessed)) {
                 // not changed
                 return lastGuessed;
@@ -141,76 +149,126 @@ public class GuessExecutor
         return lastGuessed;
     }
 
-    private static class SampledBufferFileInputPlugin
-            extends FileInputPlugin
+    private static class BufferFileInputPlugin
+            implements FileInputPlugin
     {
         private final Buffer buffer;
 
-        public SampledBufferFileInputPlugin(Buffer buffer)
+        public BufferFileInputPlugin(Buffer buffer)
         {
             this.buffer = buffer;
         }
 
-        public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
-                ExecControl control)
+        public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
         {
-            exec.setProcessorCount(1);
-            control.run(new TaskSource());
-            return new NextConfig();
+            control.run(Exec.newTaskSource(), 1);
+            return Exec.newNextConfig();
         }
 
-        public Report runFileInput(ExecTask exec, TaskSource taskSource,
-                int processorIndex, FileBufferOutput fileBufferOutput)
+        public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
         {
-            fileBufferOutput.add(buffer);
-            fileBufferOutput.addFile();
-            return new Report();
+            return new BufferTransactionalFileInput(buffer);
+        }
+    }
+
+    private static class BufferTransactionalFileInput
+            implements TransactionalFileInput
+    {
+        private Buffer buffer;
+
+        public BufferTransactionalFileInput(Buffer buffer)
+        {
+            this.buffer = buffer;
+        }
+
+        @Override
+        public Buffer poll()
+        {
+            Buffer b = buffer;
+            buffer = null;
+            return b;
+        }
+
+        @Override
+        public boolean nextFile()
+        {
+            return buffer != null;
+        }
+
+        @Override
+        public void close() { }
+
+        @Override
+        public void abort() { }
+
+        @Override
+        public CommitReport commit()
+        {
+            return null;
         }
     }
 
     public static class GuessParserPlugin
-            extends BasicParserPlugin
+            implements ParserPlugin
     {
         private interface PluginTask
                 extends Task
         {
             @Config("guess_plugins")
-            public List<JsonNode> getGuessPluginTypes();
+            public List<PluginType> getGuessPluginTypes();
 
             public ConfigSource getConfigSource();
             public void setConfigSource(ConfigSource config);
         }
 
         @Override
-        public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config)
+        public void transaction(ConfigSource config, ParserPlugin.Control control)
         {
-            PluginTask task = exec.loadConfig(config, PluginTask.class);
-            task.setConfigSource(config);
-
-            // set dummy schema to bypass ExecTask validation
-            exec.setSchema(new Schema(ImmutableList.<Column>of()));
-
-            return exec.dumpTask(task);
+            control.run(Exec.newTaskSource(), null);
         }
 
         @Override
-        public void runBasicParser(ExecTask exec,
-                TaskSource taskSource, int processorIndex,
-                FileBufferInput fileBufferInput, PageOutput pageOutput)
+        public void run(TaskSource taskSource, Schema schema,
+                FileInput input, PageOutput pageOutput)
         {
-            PluginTask task = exec.loadTask(taskSource, PluginTask.class);
+            PluginTask task = taskSource.loadTask(PluginTask.class);
             final ConfigSource config = task.getConfigSource();
 
             // get sample buffer
-            Buffer sample = null;
+            Buffer sample = getFirstBuffer(input);
+
+            // load guess plugins
+            ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
+            for (PluginType guessType : task.getGuessPluginTypes()) {
+                GuessPlugin guess = Exec.newPlugin(GuessPlugin.class, guessType);
+                builder.add(guess);
+            }
+            List<GuessPlugin> guesses = builder.build();
+
+            // run guess plugins
+            ConfigSource totalConfig = config.deepCopy();
+            NextConfig mergedGuessed = Exec.newNextConfig();
+            for (int i=0; i < guesses.size(); i++) {
+                GuessPlugin guess = guesses.get(i);
+                NextConfig guessed = guess.guess(config, sample);
+                totalConfig.merge(guessed);
+                if (!totalConfig.equals(config)) {
+                    // config updated
+                    throw new GuessedNoticeError(guessed);
+                }
+                mergedGuessed.merge(guessed);
+            }
+            throw new GuessedNoticeError(mergedGuessed);
+        }
+
+        private static Buffer getFirstBuffer(FileInput input)
+        {
             RuntimeException decodeException = null;
             try {
-                while (fileBufferInput.nextFile()) {
-                    for (Buffer buffer : fileBufferInput) {
-                        if (sample == null) {
-                            // get header data of the file
-                            sample = buffer;
-                        }
+                while (input.nextFile()) {
+                    Buffer sample = input.poll();
+                    if (sample != null) {
+                        return sample;
                     }
                 }
             } catch (RuntimeException ex) {
@@ -218,30 +276,10 @@ public class GuessExecutor
                 // such as "Unexpected end of ZLIB input stream"
                 decodeException = ex;
             }
-            if (sample == null) {
-                if (decodeException != null) {
-                    throw decodeException;
-                }
-                throw new NoSampleException("No input buffer to guess");
+            if (decodeException != null) {
+                throw decodeException;
             }
-
-            // load guess plugins
-            ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
-            for (JsonNode guessType : task.getGuessPluginTypes()) {
-                GuessPlugin guess = exec.newPlugin(GuessPlugin.class, guessType);
-                builder.add(guess);
-            }
-            List<GuessPlugin> guesses = builder.build();
-
-            // run guess plugins
-            NextConfig guessedParserConfig = new NextConfig();
-            for (int i=0; i < guesses.size(); i++) {
-                GuessPlugin guess = guesses.get(i);
-                NextConfig guessed = guess.guess(exec, config, sample);
-                guessedParserConfig.mergeRecursively(guessed);
-            }
-
-            throw new GuessedNoticeError(guessedParserConfig);
+            throw new NoSampleException("No input buffer to guess");
         }
     }
 

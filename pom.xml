@@ -22,7 +22,7 @@
     <modules>
         <module>embulk-core</module>
         <!--<module>embulk-standards</module>-->
-        <!--<module>embulk-cli</module>-->
+        <module>embulk-cli</module>
     </modules>
 
     <properties>

@@ -8,13 +8,11 @@ import com.google.inject.Scopes;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import org.embulk.time.TimestampFormatConfigSerDe;
 import org.embulk.time.DateTimeZoneSerDe;
 import org.embulk.config.ModelManager;
-import org.embulk.type.TypeManager;
-import org.embulk.config.EnumTaskSerDe;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.CharsetSerDe;
+import org.embulk.spi.BufferAllocator;
 
 public class ExecModule
         implements Module
@@ -25,8 +23,7 @@ public class ExecModule
         Preconditions.checkNotNull(binder, "binder is null.");
 
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
-        binder.bind(TypeManager.class).asEagerSingleton();
-        binder.bind(BufferManager.class).in(Scopes.SINGLETON);
+        binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
 
         // GuessExecutor
         binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess"))

@@ -5,6 +5,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
 import org.embulk.type.Schema;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.Exec;
 import org.embulk.spi.Page;
 import org.embulk.spi.Buffer;
@@ -37,27 +38,31 @@ class SamplingParserPlugin
     public void run(TaskSource taskSource, Schema schema,
             FileInput input, PageOutput output)
     {
-        Buffer buffer = getSample(fileBufferInput, maxSampleSize);
+        Buffer buffer = getSample(input, maxSampleSize);
         throw new SampledNoticeError(buffer);
     }
 
     static Buffer runFileInputSampling(ConfigSource config)
     {
-        // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
+        // override in.parser.type so that FileInputRunner creates GuessParserPlugin
         ConfigSource samplingInputConfig = config.getNested("in").deepCopy();
-        samplingInputConfig.getNestedOrSetEmpty("parser").setString("type", "system_sampling");
+        samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
 
-        final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get("type"));
+        final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get(PluginType.class, "type"));
         try {
-            input.runInputTransaction(samplingInputConfig, new FileInputPlugin.Control() {
-                public List<CommitReport> run(TaskSource inputTaskSource)
+            input.transaction(samplingInputConfig, new InputPlugin.Control() {
+                public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
                 {
-                    input.runInput(inputTaskSource, 0, new PageOutput(null) {
+                    input.run(taskSource, schema, 0, new PageOutput() {
                         @Override
                         public void add(Page page)
                         {
                             throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
                         }
+
+                        public void finish() { }
+
+                        public void close() { }
                     });
                     throw new NoSampleException("No input files to guess parser configuration");
                 }

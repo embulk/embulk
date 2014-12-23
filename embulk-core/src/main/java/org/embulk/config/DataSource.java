@@ -68,6 +68,11 @@ public abstract class DataSource <T extends DataSource>
         };
     }
 
+    public boolean isEmpty()
+    {
+        return !data.fieldNames().hasNext();
+    }
+
     public <E> E get(Class<E> type, String attrName)
     {
         JsonNode json = data.get(attrName);

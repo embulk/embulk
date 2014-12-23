@@ -1,10 +1,12 @@
 package org.embulk.config;
 
+import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class CommitReport
         extends DataSource<CommitReport>
 {
+    @Inject
     public CommitReport(ModelManager model)
     {
         super(model);

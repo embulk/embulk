@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.common.base.Throwables;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
@@ -51,12 +52,16 @@ public class PreviewExecutor
 
     public PreviewResult preview(ExecSession exec, final ConfigSource config)
     {
-        return Exec.doWith(exec, new ExecAction<PreviewResult>() {
-            public PreviewResult run()
-            {
-                return doPreview(config);
-            }
-        });
+        try {
+            return Exec.doWith(exec, new ExecAction<PreviewResult>() {
+                public PreviewResult run()
+                {
+                    return doPreview(config);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
     }
 
     protected InputPlugin newInputPlugin(PreviewTask task)
@@ -80,6 +85,7 @@ public class PreviewExecutor
                     throw new NoSampleException("No input records to preview");
                 }
             });
+            throw new AssertionError("PreviewExecutor executor must throw PreviewedNoticeError");
         } catch (PreviewedNoticeError previewed) {
             return previewed.getPreviewResult();
         }

@@ -1,10 +1,12 @@
 package org.embulk.config;
 
+import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TaskSource
         extends DataSource<TaskSource>
 {
+    @Inject
     public TaskSource(ModelManager model)
     {
         super(model);

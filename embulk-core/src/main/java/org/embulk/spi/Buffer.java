@@ -77,9 +77,19 @@ public class Buffer
         System.arraycopy(source, sourceIndex, array, offset + index, length);
     }
 
+    public void setBytes(int index, Buffer source, int sourceIndex, int length)
+    {
+        setBytes(index, source.array(), source.offset() + sourceIndex, length);
+    }
+
     public void getBytes(int index, byte[] dest, int destIndex, int length)
     {
         System.arraycopy(array, offset + index, dest, destIndex, length);
+    }
+
+    public void getBytes(int index, Buffer dest, int destIndex, int length)
+    {
+        getBytes(index, dest.array(), dest.offset() + destIndex, length);
     }
 
     public void release()

@@ -15,11 +15,15 @@ import org.embulk.type.Schema;
 public class FileInputRunner
         implements InputPlugin
 {
+    private final FileInputPlugin fileInputPlugin;
+
+    public FileInputRunner(FileInputPlugin fileInputPlugin)
+    {
+        this.fileInputPlugin = fileInputPlugin;
+    }
+
     private interface RunnerTask extends Task
     {
-        @Config("type")
-        public PluginType getType();
-
         @Config("decoders")
         @ConfigDefault("[]")
         public List<ConfigSource> getDecoderConfigs();
@@ -37,11 +41,6 @@ public class FileInputRunner
         public TaskSource getParserTaskSource();
     }
 
-    protected FileInputPlugin newFileInputPlugin(RunnerTask task)
-    {
-        return Exec.newPlugin(FileInputPlugin.class, task.getType());
-    }
-
     protected List<DecoderPlugin> newDecoderPlugins(RunnerTask task)
     {
         return Decoders.newDecoderPlugins(Exec.session(), task.getDecoderConfigs());
@@ -56,7 +55,6 @@ public class FileInputRunner
     public NextConfig transaction(ConfigSource config, final InputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
-        FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         final List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         final ParserPlugin parserPlugin = newParserPlugin(task);
 
@@ -88,7 +86,6 @@ public class FileInputRunner
             PageOutput output)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
-        FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 

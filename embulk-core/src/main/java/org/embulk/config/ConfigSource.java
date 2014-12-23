@@ -1,16 +1,18 @@
 package org.embulk.config;
 
+import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ConfigSource
         extends DataSource<ConfigSource>
 {
+    @Inject
     public ConfigSource(ModelManager model)
     {
         super(model);
     }
 
-    // visible for DataSourceSerDe
+    // visible for DataSourceSerDe and ConfigSourceLoader
     ConfigSource(ModelManager model, ObjectNode data)
     {
         super(model, data);

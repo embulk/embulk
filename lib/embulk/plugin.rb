@@ -3,12 +3,12 @@ module Embulk
   require 'forwardable'
   require 'embulk/error'
   require 'embulk/plugin_registry'
-  require 'embulk/java/imports'
-  require 'embulk/bridge/guess_plugin'
+  #require 'embulk/java/imports'
+  #require 'embulk/bridge/guess_plugin'
 
-  require 'embulk/plugin/input'
-  require 'embulk/plugin/parser'
-  require 'embulk/plugin/guess'
+  #require 'embulk/plugin/input'
+  #require 'embulk/plugin/parser'
+  #require 'embulk/plugin/guess'
 
   class PluginManager
     def initialize

@@ -10,7 +10,7 @@ import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.jruby.JRubyScriptingModule;
-import org.embulk.standards.StandardPluginModule;
+//import org.embulk.standards.StandardPluginModule;
 
 public class EmbulkService
 {
@@ -23,7 +23,7 @@ public class EmbulkService
         modules.add(new ExecModule());
         modules.add(new ExtensionServiceLoaderModule());
         modules.add(new BuiltinPluginSourceModule());
-        modules.add(new StandardPluginModule());
+        //modules.add(new StandardPluginModule());
         modules.add(new JRubyScriptingModule());
         modules.addAll(getAdditionalModules());
         injector = Guice.createInjector(modules.build());

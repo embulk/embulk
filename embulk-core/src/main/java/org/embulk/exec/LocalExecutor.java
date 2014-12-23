@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.common.base.Throwables;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
@@ -16,13 +19,14 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
 import org.embulk.type.Schema;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.plugin.PluginType;
 //import org.embulk.spi.NoticeLogger;
+import org.embulk.spi.TransactionalPageOutput;
 
 public class LocalExecutor
 {
@@ -52,6 +56,7 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
+        this.executor = Executors.newCachedThreadPool();  // TODO use pooled thread pool
     }
 
     private static class ExecuteResultBuilder
@@ -147,12 +152,16 @@ public class LocalExecutor
 
     public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
-        Exec.doWith(exec, new ExecAction<ExecuteResult>() {
-            public ExecuteResult run()
-            {
-                return doRun(config);
-            }
-        });
+        try {
+            return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
+                public ExecuteResult run()
+                {
+                    return doRun(config);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
     }
 
     private ExecuteResult doRun(ConfigSource config)
@@ -209,7 +218,13 @@ public class LocalExecutor
                 futures.add(startProcessor(taskSource, schema, i));
             }
             for (Future<ProcessResult> future : futures) {
-                joined.add(future.get());
+                try {
+                    joined.add(future.get());
+                } catch (ExecutionException ex) {
+                    throw Throwables.propagate(ex.getCause());
+                } catch (InterruptedException ex) {
+                    throw new ExecuteInterruptedException(ex);
+                }
             }
             return joined;
         } finally {
@@ -223,7 +238,7 @@ public class LocalExecutor
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
     {
         return executor.submit(new Callable<ProcessResult>() {
-            public ProcessResult run()
+            public ProcessResult call()
             {
                 final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
                 final InputPlugin in = newInputPlugin(task);
@@ -231,7 +246,7 @@ public class LocalExecutor
 
                 TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
                 boolean committed = false;
-                try (TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index)) {
+                try {
                     CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
                     CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
                     committed = true;

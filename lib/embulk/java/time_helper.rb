@@ -1,6 +1,6 @@
 module Embulk
   module Java
-    require 'embulk/java/imports'
+    #require 'embulk/java/imports'
     require 'time'  # Date._strptime
 
     class TimeParserHelper
