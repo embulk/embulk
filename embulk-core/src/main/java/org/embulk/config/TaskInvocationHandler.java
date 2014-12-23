@@ -9,14 +9,14 @@ import com.google.common.collect.ImmutableMap;
 class TaskInvocationHandler
         implements InvocationHandler
 {
+    private final ModelManager model;
     private final Class<?> iface;
-    private final TaskValidator taskValidator;
     private final Map<String, Object> objects;
 
-    public TaskInvocationHandler(Class<?> iface, TaskValidator taskValidator, Map<String, Object> objects)
+    public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects)
     {
+        this.model = model;
         this.iface = iface;
-        this.taskValidator = taskValidator;
         this.objects = objects;
     }
 
@@ -44,17 +44,6 @@ class TaskInvocationHandler
         return objects;
     }
 
-    protected int invokeHashCode()
-    {
-        return objects.hashCode();
-    }
-
-    protected boolean invokeEquals(Object other)
-    {
-        return (other instanceof TaskInvocationHandler) &&
-            objects.equals(((TaskInvocationHandler) other).objects);
-    }
-
     protected Object invokeGetter(Method method, String fieldName)
     {
         return objects.get(fieldName);
@@ -69,7 +58,12 @@ class TaskInvocationHandler
         }
     }
 
-    public String invokeToString()
+    protected TaskSource invokeDump()
+    {
+        return new TaskSource(model, model.writeObjectAsObjectNode(objects));
+    }
+
+    protected String invokeToString()
     {
         StringBuilder sb = new StringBuilder();
         sb.append(iface.getName());
@@ -77,11 +71,35 @@ class TaskInvocationHandler
         return sb.toString();
     }
 
+    protected int invokeHashCode()
+    {
+        return objects.hashCode();
+    }
+
+    protected boolean invokeEquals(Object other)
+    {
+        return (other instanceof TaskInvocationHandler) &&
+            objects.equals(((TaskInvocationHandler) other).objects);
+    }
+
     public Object invoke(Object proxy, Method method, Object[] args)
     {
         String methodName = method.getName();
 
         switch(methodName) {
+        case "validate":
+            checkArgumentLength(method, 0, methodName);
+            model.validate(proxy);
+            return proxy;
+
+        case "dump":
+            checkArgumentLength(method, 0, methodName);
+            return invokeDump();
+
+        case "toString":
+            checkArgumentLength(method, 0, methodName);
+            return invokeToString();
+
         case "hashCode":
             checkArgumentLength(method, 0, methodName);
             return invokeHashCode();
@@ -93,14 +111,6 @@ class TaskInvocationHandler
                 return invokeEquals(otherHandler);
             }
             return false;
-
-        case "validate":
-            taskValidator.validateModel(proxy);
-            return proxy;
-
-        case "toString":
-            checkArgumentLength(method, 0, methodName);
-            return invokeToString();
 
         default:
             {

@@ -5,7 +5,6 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.embulk.config.ConfigException;
 
 public class PluginManager
@@ -22,15 +21,14 @@ public class PluginManager
         this.injector = injector;
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
+    public <T> T newPlugin(Class<T> iface, PluginType type)
     {
         for (PluginSource source : sources) {
             try {
-                return source.newPlugin(iface, typeConfig);
+                return source.newPlugin(iface, type);
             } catch (PluginSourceNotMatchException e) {
             }
         }
-
-        throw new ConfigException("Plugin not found");  // TODO exception message should include typeConfig in original format
+        throw new ConfigException("Plugin not found");  // TODO exception message should include type in original format
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
+import org.embulk.plugin.PluginType;
 
 public abstract class Decoders
 {
@@ -13,7 +14,7 @@ public abstract class Decoders
     {
         ImmutableList.Builder<DecoderPlugin> builder = ImmutableList.builder();
         for (ConfigSource config : configs) {
-            builder.add(exec.newPlugin(DecoderPlugin.class, config.get("type")));
+            builder.add(exec.newPlugin(DecoderPlugin.class, config.get(PluginType.class, "type")));
         }
         return builder.build();
     }

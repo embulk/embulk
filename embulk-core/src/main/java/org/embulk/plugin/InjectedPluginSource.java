@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * InjectedPluginSource loads plugins bound by Guice.
@@ -26,18 +25,14 @@ public class InjectedPluginSource
     private final Injector injector;
 
     @Inject
-    public InjectedPluginSource(
-            Injector injector)
+    public InjectedPluginSource(Injector injector)
     {
         this.injector = injector;
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
+    public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException
     {
-        if (!typeConfig.isTextual()) {
-            throw new PluginSourceNotMatchException();
-        }
-        String name = typeConfig.asText();
+        String name = type.getName();
         try {
             return injector.getInstance(Key.get(iface, Names.named(name)));
         } catch (com.google.inject.ConfigurationException ex) {

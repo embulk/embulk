@@ -2,17 +2,32 @@ package org.embulk.time;
 
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import org.embulk.config.Task;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
-import static org.embulk.time.TimestampFormatConfig.parseDateTimeZone;
+import static org.embulk.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
 {
+    public interface ParserTask
+            extends Task
+    {
+        @Config("default_timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getDefaultTimeZone();
+
+        @JacksonInject
+        public ScriptingContainer getJRuby();
+    }
+
     private final JRubyTimeParserHelper helper;
     private final DateTimeZone defaultTimeZone;
 
-    public TimestampParser(ScriptingContainer jruby, String format, TimestampParserTask task)
+    public TimestampParser(String format, ParserTask task)
     {
-        this(jruby, format, task.getDefaultTimeZone());
+        this(task.getJRuby(), format, task.getDefaultTimeZone());
     }
 
     // TODO this is still private because this might need current time

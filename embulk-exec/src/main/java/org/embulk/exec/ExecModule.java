@@ -12,7 +12,6 @@ import org.embulk.time.TimestampFormatConfigSerDe;
 import org.embulk.time.DateTimeZoneSerDe;
 import org.embulk.config.ModelManager;
 import org.embulk.type.TypeManager;
-import org.embulk.config.DataSourceSerDe;
 import org.embulk.config.EnumTaskSerDe;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.CharsetSerDe;
@@ -36,12 +35,8 @@ public class ExecModule
             .toInstance(new SamplingParserPlugin(32*1024));  // TODO get sample size from system config
 
         // serde
-        binder.bind(TimestampFormatConfigSerDe.class).asEagerSingleton();
-
         ObjectMapperModule mapper = new ObjectMapperModule();
-        DataSourceSerDe.configure(mapper);
         DateTimeZoneSerDe.configure(mapper);
-        EnumTaskSerDe.configure(mapper);
         CharsetSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda

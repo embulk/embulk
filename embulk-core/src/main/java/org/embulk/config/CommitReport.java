@@ -5,22 +5,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class CommitReport
         extends DataSource<CommitReport>
 {
-    public CommitReport()
+    public CommitReport(ModelManager model)
     {
-        super();
+        super(model);
     }
 
-    /**
-     * visible for DataSourceSerDe
-     */
-    CommitReport(ObjectNode data)
+    // visible for DataSourceSerDe
+    CommitReport(ModelManager model, ObjectNode data)
     {
-        super(data);
+        super(model, data);
     }
 
     @Override
-    protected CommitReport newInstance(ObjectNode data)
+    protected CommitReport newInstance(ModelManager model, ObjectNode data)
     {
-        return new CommitReport(data);
+        return new CommitReport(model, data);
     }
 }

@@ -34,57 +34,104 @@ public class Pages
     public static Object[] toObjects(final PageReader record)
     {
         final Object[] values = new Object[record.getSchema().getColumns().size()];
-        record.getSchema().visitColumns(new SchemaVisitor() {
+        record.getSchema().visitColumns(new ObjectSchemaVisitor(record) {
             @Override
-            public void booleanColumn(Column column)
+            public void visit(Column column, Object object)
             {
-                if (record.isNull(column.getIndex())) {
-                    values[column.getIndex()] = null;
-                } else {
-                    values[column.getIndex()] = record.getBoolean(column.getIndex());
-                }
-            }
-
-            @Override
-            public void longColumn(Column column)
-            {
-                if (record.isNull(column.getIndex())) {
-                    values[column.getIndex()] = null;
-                } else {
-                    values[column.getIndex()] = record.getLong(column.getIndex());
-                }
-            }
-
-            @Override
-            public void doubleColumn(Column column)
-            {
-                if (record.isNull(column.getIndex())) {
-                    values[column.getIndex()] = null;
-                } else {
-                    values[column.getIndex()] = record.getDouble(column.getIndex());
-                }
-            }
-
-            @Override
-            public void stringColumn(Column column)
-            {
-                if (record.isNull(column.getIndex())) {
-                    values[column.getIndex()] = null;
-                } else {
-                    values[column.getIndex()] = record.getString(column.getIndex());
-                }
-            }
-
-            @Override
-            public void timestampColumn(Column column)
-            {
-                if (record.isNull(column.getIndex())) {
-                    values[column.getIndex()] = null;
-                } else {
-                    values[column.getIndex()] = record.getTimestamp(column.getIndex());
-                }
+                values[column.getIndex()] = object;
             }
         });
         return values;
+    }
+
+    public static abstract class ObjectSchemaVisitor
+            implements SchemaVisitor
+    {
+        private final PageReader record;
+
+        public ObjectSchemaVisitor(PageReader record)
+        {
+            this.record = record;
+        }
+
+        public abstract void visit(Column column, Object obj);
+
+        @Override
+        public void booleanColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getBoolean(column));
+            }
+        }
+
+        @Override
+        public void longColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getLong(column));
+            }
+        }
+
+        @Override
+        public void doubleColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getDouble(column));
+            }
+        }
+
+        @Override
+        public void stringColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getString(column));
+            }
+        }
+
+        @Override
+        public void timestampColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getTimestamp(column));
+            }
+        }
+    }
+
+    public static Object getObject(PageReader record, Column column)
+    {
+        GetObjectColumnVisitor visitor = new GetObjectColumnVisitor(record);
+        column.visit(visitor);
+        return visitor.get();
+    }
+
+    private static class GetObjectColumnVisitor
+            extends ObjectSchemaVisitor
+    {
+        private Object object;
+
+        public GetObjectColumnVisitor(PageReader record)
+        {
+            super(record);
+        }
+
+        public Object get()
+        {
+            return object;
+        }
+
+        public void visit(Column column, Object object)
+        {
+            this.object = object;
+        }
     }
 }

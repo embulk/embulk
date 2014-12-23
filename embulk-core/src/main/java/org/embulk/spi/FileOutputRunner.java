@@ -3,7 +3,6 @@ package org.embulk.spi;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
@@ -11,6 +10,7 @@ import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.plugin.PluginType;
 import org.embulk.type.Schema;
 
 public class FileOutputRunner
@@ -19,7 +19,7 @@ public class FileOutputRunner
     private interface RunnerTask extends Task
     {
         @Config("type")
-        public JsonNode getType();
+        public PluginType getType();
 
         @Config("encoders")
         @ConfigDefault("[]")
@@ -50,7 +50,7 @@ public class FileOutputRunner
 
     protected FormatterPlugin newFormatterPlugin(RunnerTask task)
     {
-        return Exec.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get("type"));
+        return Exec.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get(PluginType.class, "type"));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class FileOutputRunner
             final Schema schema, final int processorCount,
             final OutputPlugin.Control control)
     {
-        final RunnerTask task = Exec.loadConfig(config, RunnerTask.class);
+        final RunnerTask task = config.loadConfig(RunnerTask.class);
         FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         final List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         final FormatterPlugin formatterPlugin = newFormatterPlugin(task);
@@ -73,11 +73,11 @@ public class FileOutputRunner
                         formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
                             public void run(final TaskSource formatterTaskSource)
                             {
-                                TaskSource taskSource = new TaskSource();
+                                TaskSource taskSource = Exec.newTaskSource();
                                 task.setFileOutputTaskSource(fileOutputTaskSource);
                                 task.setEncoderTaskSources(encoderTaskSources);
                                 task.setFormatterTaskSource(formatterTaskSource);
-                                commitReports.addAll(control.run(Exec.dumpTask(task)));
+                                commitReports.addAll(control.run(task.dump()));
                             }
                         });
                     }
@@ -90,7 +90,7 @@ public class FileOutputRunner
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
     {
-        final RunnerTask task = Exec.loadTask(taskSource, RunnerTask.class);
+        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
         FileOutputPlugin fileOutputPlugin = newFileOutputPlugin(task);
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         FormatterPlugin formatterPlugin = newFormatterPlugin(task);

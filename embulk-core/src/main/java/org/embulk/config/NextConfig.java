@@ -5,22 +5,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class NextConfig
         extends DataSource<NextConfig>
 {
-    public NextConfig()
+    public NextConfig(ModelManager model)
     {
-        super();
+        super(model);
     }
 
-    /**
-     * visible for DataSourceSerDe
-     */
-    NextConfig(ObjectNode data)
+    // visible for DataSourceSerDe
+    NextConfig(ModelManager model, ObjectNode data)
     {
-        super(data);
+        super(model, data);
     }
 
     @Override
-    protected NextConfig newInstance(ObjectNode data)
+    protected NextConfig newInstance(ModelManager model, ObjectNode data)
     {
-        return new NextConfig(data);
+        return new NextConfig(model, data);
     }
 }

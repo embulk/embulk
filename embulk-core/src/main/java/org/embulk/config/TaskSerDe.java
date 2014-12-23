@@ -65,14 +65,14 @@ class TaskSerDe
             extends JsonDeserializer<T>
     {
         private final ObjectMapper nestedObjectMapper;
-        private final TaskValidator taskValidator;
+        private final ModelManager model;
         private final Class<?> iface;
         private final Map<String, FieldEntry> mappings;
 
-        public TaskDeserializer(ObjectMapper nestedObjectMapper, TaskValidator taskValidator, Class<T> iface)
+        public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface)
         {
             this.nestedObjectMapper = nestedObjectMapper;
-            this.taskValidator = taskValidator;
+            this.model = model;
             this.iface = iface;
             this.mappings = getterMappings(iface);
         }
@@ -150,7 +150,7 @@ class TaskSerDe
 
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] { iface },
-                    new TaskInvocationHandler(iface, taskValidator, objects));
+                    new TaskInvocationHandler(model, iface, objects));
         }
 
         private static class FieldEntry
@@ -196,9 +196,9 @@ class TaskSerDe
     public static class ConfigTaskDeserializer <T>
             extends TaskDeserializer<T>
     {
-        public ConfigTaskDeserializer(ObjectMapper nestedObjectMapper, TaskValidator taskValidator, Class<T> iface)
+        public ConfigTaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface)
         {
-            super(nestedObjectMapper, taskValidator, iface);
+            super(nestedObjectMapper, model, iface);
         }
 
         @Override
@@ -227,12 +227,12 @@ class TaskSerDe
             extends Module // can't use just SimpleModule, due to generic types
     {
         protected final ObjectMapper nestedObjectMapper;
-        protected final TaskValidator taskValidator;
+        protected final ModelManager model;
 
-        public TaskDeserializerModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
+        public TaskDeserializerModule(ObjectMapper nestedObjectMapper, ModelManager model)
         {
             this.nestedObjectMapper = nestedObjectMapper;
-            this.taskValidator = taskValidator;
+            this.model = model;
         }
 
         @Override
@@ -260,16 +260,16 @@ class TaskSerDe
 
         protected JsonDeserializer<?> newTaskDeserializer(Class<?> raw)
         {
-            return new TaskDeserializer(nestedObjectMapper, taskValidator, raw);
+            return new TaskDeserializer(nestedObjectMapper, model, raw);
         }
     }
 
     public static class ConfigTaskDeserializerModule
             extends TaskDeserializerModule
     {
-        public ConfigTaskDeserializerModule(ObjectMapper nestedObjectMapper, TaskValidator taskValidator)
+        public ConfigTaskDeserializerModule(ObjectMapper nestedObjectMapper, ModelManager model)
         {
-            super(nestedObjectMapper, taskValidator);
+            super(nestedObjectMapper, model);
         }
 
         @Override
@@ -278,7 +278,7 @@ class TaskSerDe
         @Override
         protected JsonDeserializer<?> newTaskDeserializer(Class<?> raw)
         {
-            return new ConfigTaskDeserializer(nestedObjectMapper, taskValidator, raw);
+            return new ConfigTaskDeserializer(nestedObjectMapper, model, raw);
         }
     }
 }

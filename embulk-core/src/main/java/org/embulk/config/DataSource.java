@@ -16,29 +16,28 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 public abstract class DataSource <T extends DataSource>
 {
     protected final ObjectNode data;
+    protected final ModelManager model;
 
-    public DataSource()
+    public DataSource(ModelManager model)
     {
-        this(new ObjectNode(JsonNodeFactory.instance));
+        this(model, new ObjectNode(JsonNodeFactory.instance));
     }
 
-    protected DataSource(ObjectNode data)
+    protected DataSource(ModelManager model, ObjectNode data)
     {
         this.data = data;
+        this.model = model;
     }
 
-    protected abstract T newInstance(ObjectNode data);
+    protected abstract T newInstance(ModelManager model, ObjectNode data);
 
-    public static ObjectNode parseJson(JsonParser jsonParser) throws IOException
+    /*
+    public static ObjectNode parseJson(ModelManager model, JsonParser jsonParser) throws IOException
     {
-        JsonNode json = new ObjectMapper().readTree(jsonParser);
-        if (!json.isObject()) {
-            throw new JsonMappingException("Expected object to deserialize DataSource but got "+json);
-        }
-        return (ObjectNode) json;
+        ObjectNode json = model.readObject(jsonParser, ObjectNode.class);
     }
 
-    public static ObjectNode parseJson(String jsonString) throws IOException
+    public static ObjectNode parseJson(ModelManager model, String jsonString) throws IOException
     {
         JsonNode json = new ObjectMapper().readTree(jsonString);
         if (!json.isObject()) {
@@ -46,21 +45,20 @@ public abstract class DataSource <T extends DataSource>
         }
         return (ObjectNode) json;
     }
+    */
 
-    /**
-     * visible for DataSourceSerDe, ModelManager
-     */
-    ObjectNode getSource()
+    // visible for DataSourceSerDe.DataSourceSerializer
+    ObjectNode getObjectNode()
     {
         return data;
     }
 
-    public List<String> getFieldNames()
+    public List<String> getAttributeNames()
     {
         return ImmutableList.copyOf(data.fieldNames());
     }
 
-    public Iterable<Map.Entry<String, JsonNode>> getFields()
+    public Iterable<Map.Entry<String, JsonNode>> getAttributes()
     {
         return new Iterable() {
             public Iterator<Map.Entry<String, JsonNode>> iterator()
@@ -70,212 +68,67 @@ public abstract class DataSource <T extends DataSource>
         };
     }
 
-    public JsonNode get(String fieldName)
+    public <E> E get(Class<E> type, String attrName)
     {
-        JsonNode json = data.get(fieldName);
+        JsonNode json = data.get(attrName);
         if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
+            throw new ConfigException("Attribute "+attrName+" is required but not set");
         }
-        return json;
+        return model.readObject(type, json.traverse());
     }
 
-    public JsonNode get(String fieldName, JsonNode defaultValue)
+    public <E> E get(Class<E> type, String attrName, E defaultValue)
     {
-        JsonNode json = data.get(fieldName);
+        JsonNode json = data.get(attrName);
         if (json == null) {
             return defaultValue;
         }
-        return json;
+        return model.readObject(type, json.traverse());
     }
 
-    public T getObject(String fieldName)
+    public T getNested(String attrName)
     {
-        JsonNode json = data.get(fieldName);
+        JsonNode json = data.get(attrName);
         if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
+            throw new ConfigException("Attribute "+attrName+" is required but not set");
         }
         if (!json.isObject()) {
-            throw new ConfigException("Field "+fieldName+" must be an object");
+            throw new ConfigException("Attribute "+attrName+" must be an object");
         }
-        return newInstance((ObjectNode) json);
+        return newInstance(model, (ObjectNode) json);
     }
 
-    public T getObjectOrSetEmpty(String fieldName)
+    public T getNestedOrSetEmpty(String attrName)
     {
-        JsonNode json = data.get(fieldName);
+        JsonNode json = data.get(attrName);
         if (json == null) {
             json = data.objectNode();
-            data.set(fieldName, json);
+            data.set(attrName, json);
         } else if (!json.isObject()) {
-            throw new ConfigException("Field "+fieldName+" must be an object");
+            throw new ConfigException("Attribute "+attrName+" must be an object");
         }
-        return newInstance((ObjectNode) json);
+        return newInstance(model, (ObjectNode) json);
     }
 
-    public boolean getBoolean(String fieldName)
+    public T set(String attrName, Object v)
     {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
+        if (v == null) {
+            data.remove(attrName);
+        } else {
+            data.put(attrName, model.writeObjectAsJsonNode(v));
         }
-        if (!json.isBoolean()) {
-            throw new ConfigException("Field "+fieldName+" must be a boolean");
-        }
-        return json.asBoolean();
-    }
-
-    public boolean getBoolean(String fieldName, boolean defaultValue)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            return defaultValue;
-        }
-        if (!json.canConvertToInt()) {
-            throw new ConfigException("Field "+fieldName+" must be a boolean");
-        }
-        return json.asBoolean();
-    }
-
-    public int getInt(String fieldName)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
-        }
-        if (!json.canConvertToInt()) {
-            throw new ConfigException("Field "+fieldName+" must be an integer and within 32-bit signed int");
-        }
-        return json.asInt();
-    }
-
-    public int getInt(String fieldName, int defaultValue)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            return defaultValue;
-        }
-        if (!json.canConvertToInt()) {
-            throw new ConfigException("Field "+fieldName+" must be an integer and within 32-bit signed int");
-        }
-        return json.asInt();
-    }
-
-    public long getLong(String fieldName)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
-        }
-        if (!json.canConvertToLong()) {
-            throw new ConfigException("Field "+fieldName+" must be an integer and within 64-bit signed int");
-        }
-        return json.asLong();
-    }
-
-    public long getLong(String fieldName, long defaultValue)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            return defaultValue;
-        }
-        if (!json.canConvertToLong()) {
-            throw new ConfigException("Field "+fieldName+" must be an integer and within 64-bit signed int");
-        }
-        return json.asLong();
-    }
-
-    public double getDouble(String fieldName)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
-        }
-        if (!json.isDouble()) {
-            throw new ConfigException("Field "+fieldName+" must be double");
-        }
-        return json.asDouble();
-    }
-
-    public double getDouble(String fieldName, double defaultValue)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            return defaultValue;
-        }
-        if (!json.isDouble()) {
-            throw new ConfigException("Field "+fieldName+" must be double");
-        }
-        return json.asDouble();
-    }
-
-    public String getString(String fieldName)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            throw new ConfigException("Field "+fieldName+" is required but not set");
-        }
-        if (!json.isTextual()) {
-            throw new ConfigException("Field "+fieldName+" must be a string");
-        }
-        return json.asText();
-    }
-
-    public String getString(String fieldName, String defaultValue)
-    {
-        JsonNode json = data.get(fieldName);
-        if (json == null) {
-            return defaultValue;
-        }
-        if (!json.isTextual()) {
-            throw new ConfigException("Field "+fieldName+" must be a string");
-        }
-        return json.asText();
-    }
-
-    public T setBoolean(String fieldName, boolean v)
-    {
-        data.put(fieldName, v);
         return (T) this;
     }
 
-    public T setInt(String fieldName, int v)
+    public T setNested(String attrName, DataSource<?> v)
     {
-        data.put(fieldName, v);
+        data.put(attrName, v.data);
         return (T) this;
     }
 
-    public T setLong(String fieldName, long v)
+    public T setAll(DataSource<?> other)
     {
-        data.put(fieldName, v);
-        return (T) this;
-    }
-
-    public T setDouble(String fieldName, double v)
-    {
-        data.put(fieldName, v);
-        return (T) this;
-    }
-
-    public T setString(String fieldName, String v)
-    {
-        data.put(fieldName, v);
-        return (T) this;
-    }
-
-    public T set(String fieldName, JsonNode v)
-    {
-        data.replace(fieldName, v);
-        return (T) this;
-    }
-
-    public T set(String fieldName, DataSource<?> v)
-    {
-        return set(fieldName, v.data);
-    }
-
-    public T setAll(ObjectNode object)
-    {
-        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = other.data.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
             data.put(field.getKey(), field.getValue());
@@ -283,27 +136,15 @@ public abstract class DataSource <T extends DataSource>
         return (T) this;
     }
 
-    public T setAll(DataSource<?> other)
-    {
-        return setAll(other.data);
-    }
-
     public T deepCopy()
     {
-        return newInstance(data.deepCopy());
-    }
-
-    public T mergeRecursively(DataSource<?> other)
-    {
-        mergeJsonObject(data, other.data);
-        return (T) this;
+        return newInstance(model, data.deepCopy());
     }
 
     public T merge(DataSource<?> other)
     {
-        T copy = deepCopy();
-        copy.mergeRecursively(other.deepCopy());
-        return copy;
+        mergeJsonObject(data, other.data.deepCopy());
+        return (T) this;
     }
 
     private static void mergeJsonObject(ObjectNode src, ObjectNode other)
@@ -321,16 +162,6 @@ public abstract class DataSource <T extends DataSource>
                 src.replace(pair.getKey(), v);
             }
         }
-    }
-
-    public static ArrayNode arrayNode()
-    {
-        return JsonNodeFactory.instance.arrayNode();
-    }
-
-    public static ObjectNode objectNode()
-    {
-        return JsonNodeFactory.instance.objectNode();
     }
 
     private static void mergeJsonArray(ArrayNode src, ArrayNode other)

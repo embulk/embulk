@@ -2,11 +2,13 @@ package org.embulk.spi;
 
 //import org.slf4j.Logger;
 import org.embulk.config.Task;
-import org.embulk.config.TaskSource;
-import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
+import org.embulk.config.CommitReport;
+import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskSource;
+import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Injector;
 
 public class ExecSession
@@ -50,23 +52,28 @@ public class ExecSession
         return bufferAllocator;
     }
 
-    public <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)
+    public <T> T newPlugin(Class<T> iface, PluginType type)
     {
-        return modelManager.readTaskConfig(config, taskType);
+        return pluginManager.newPlugin(iface, type);
     }
 
-    public <T extends Task> T loadTask(TaskSource taskSource, Class<T> taskType)
+    public CommitReport newCommitReport()
     {
-        return modelManager.readObject(taskSource, taskType);
+        return new CommitReport(modelManager);
     }
 
-    public TaskSource dumpTask(Task task)
+    public NextConfig newNextConfig()
     {
-        return modelManager.writeAsTaskSource(task);
+        return new NextConfig(modelManager);
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
+    public ConfigSource newConfigSource()
     {
-        return pluginManager.newPlugin(iface, typeConfig);
+        return new ConfigSource(modelManager);
+    }
+
+    public TaskSource newTaskSource()
+    {
+        return new TaskSource(modelManager);
     }
 }

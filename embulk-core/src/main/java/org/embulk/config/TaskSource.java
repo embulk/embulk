@@ -5,22 +5,25 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class TaskSource
         extends DataSource<TaskSource>
 {
-    public TaskSource()
+    public TaskSource(ModelManager model)
     {
-        super();
+        super(model);
     }
 
-    /**
-     * visible for DataSourceSerDe
-     */
-    TaskSource(ObjectNode data)
+    // visible for DataSourceSerDe and TaskInvocationHandler.dump
+    TaskSource(ModelManager model, ObjectNode data)
     {
-        super(data);
+        super(model, data);
     }
 
     @Override
-    protected TaskSource newInstance(ObjectNode data)
+    protected TaskSource newInstance(ModelManager model, ObjectNode data)
     {
-        return new TaskSource(data);
+        return new TaskSource(model, data);
+    }
+
+    public <T extends Task> T loadTask(Class<T> taskType)
+    {
+        return model.readObject(taskType, data.traverse());
     }
 }

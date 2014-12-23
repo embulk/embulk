@@ -6,18 +6,17 @@ import java.text.SimpleDateFormat;
 import java.text.ParsePosition;
 import com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
-import org.jruby.embed.ScriptingContainer;
 
-public class TimestampFormatConfig
+public class TimestampFormat
 {
-    private final ScriptingContainer jruby;
     private final String format;
 
-    public TimestampFormatConfig(ScriptingContainer jruby, String format)
+    @JsonCreator
+    public TimestampFormat(String format)
     {
-        this.jruby = jruby;
         this.format = format;
     }
 
@@ -27,14 +26,14 @@ public class TimestampFormatConfig
         return format;
     }
 
-    public TimestampFormatter newFormatter(TimestampFormatterTask task)
+    public TimestampFormatter newFormatter(TimestampFormatter.FormatterTask task)
     {
-        return new TimestampFormatter(jruby, format, task);
+        return new TimestampFormatter(format, task);
     }
 
-    public TimestampParser newParser(TimestampParserTask task)
+    public TimestampParser newParser(TimestampParser.ParserTask task)
     {
-        return new TimestampParser(jruby, format, task);
+        return new TimestampParser(format, task);
     }
 
     private static Set<String> availableTimeZoneNames = ImmutableSet.copyOf(DateTimeZone.getAvailableIDs());

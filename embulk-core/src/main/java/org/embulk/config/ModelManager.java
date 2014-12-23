@@ -6,8 +6,10 @@ import com.google.inject.Inject;
 import com.google.common.base.Throwables;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class ModelManager
 {
@@ -24,24 +26,14 @@ public class ModelManager
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
         objectMapper.registerModule(new TaskSerDe.TaskSerializerModule(objectMapper));
-        objectMapper.registerModule(new TaskSerDe.TaskDeserializerModule(objectMapper, taskValidator));
+        objectMapper.registerModule(new TaskSerDe.TaskDeserializerModule(objectMapper, this));
+        objectMapper.registerModule(new DataSourceSerDe.SerDeModule(this));
         configObjectMapper.registerModule(new TaskSerDe.TaskSerializerModule(configObjectMapper));
-        configObjectMapper.registerModule(new TaskSerDe.ConfigTaskDeserializerModule(configObjectMapper, taskValidator));
+        configObjectMapper.registerModule(new TaskSerDe.ConfigTaskDeserializerModule(configObjectMapper, this));
+        configObjectMapper.registerModule(new DataSourceSerDe.SerDeModule(this));
     }
 
-    // TODO inject by Set<Module> because this is not thread-safe?
-    public void registerObjectMapperModule(Module module)
-    {
-        objectMapper.registerModule(module);
-        configObjectMapper.registerModule(module);
-    }
-
-    public <T> T readObject(DataSource<?> json, Class<T> valueType)
-    {
-        return readObject(json.getSource().traverse(), valueType);
-    }
-
-    public <T> T readObject(JsonParser json, Class<T> valueType)
+    public <T> T readObject(Class<T> valueType, String json)
     {
         try {
             return objectMapper.readValue(json, valueType);
@@ -50,24 +42,29 @@ public class ModelManager
         }
     }
 
-    public <T extends Task> T readTaskConfig(DataSource<?> json, Class<T> taskType)
+    public <T> T readObject(Class<T> valueType, JsonParser parser)
     {
-        return readTaskConfig(json.getSource().traverse(), taskType);
+        try {
+            return objectMapper.readValue(parser, valueType);
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
     }
 
-    public <T extends Task> T readTaskConfig(JsonParser json, Class<T> taskType)
+    public <T> T readObjectWithConfigSerDe(Class<T> valueType, JsonParser parser)
     {
         T t;
         try {
-            t = configObjectMapper.readValue(json, taskType);
+            t = configObjectMapper.readValue(parser, valueType);
         } catch (Exception ex) {
+            Throwables.propagateIfInstanceOf(ex, ConfigException.class);
             throw new ConfigException(ex);
         }
-        t.validate();
+        validate(t);
         return t;
     }
 
-    public String writeAsJsonString(Object object)
+    public String writeObject(Object object)
     {
         try {
             return objectMapper.writeValueAsString(object);
@@ -76,21 +73,28 @@ public class ModelManager
         }
     }
 
-    public TaskSource writeAsTaskSource(Object object)
+    public void validate(Object object)
     {
-        String json = writeAsJsonString(object);
+        taskValidator.validateModel(object);
+    }
+
+    // visible for DataSource.set
+    JsonNode writeObjectAsJsonNode(Object v)
+    {
+        String json = writeObject(v);
         try {
-            return new TaskSource((ObjectNode) objectMapper.readTree(json));
+            return objectMapper.readValue(json, JsonNode.class);
         } catch (Exception ex) {
             throw Throwables.propagate(ex);
         }
     }
 
-    public ConfigSource writeAsConfigSource(Object object)
+    // visible for TaskInvocationHandler.invokeDump
+    ObjectNode writeObjectAsObjectNode(Object v)
     {
-        String json = writeAsJsonString(object);
+        String json = writeObject(v);
         try {
-            return new ConfigSource((ObjectNode) objectMapper.readTree(json));
+            return objectMapper.readValue(json, ObjectNode.class);
         } catch (Exception ex) {
             throw Throwables.propagate(ex);
         }

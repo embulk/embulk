@@ -13,6 +13,7 @@ import org.yaml.snakeyaml.Yaml;
 
 public class ConfigSources
 {
+    /*
     public static ConfigSource fromJson(JsonParser parser) throws IOException
     {
         return new ConfigSource(DataSource.parseJson(parser));
@@ -69,4 +70,5 @@ public class ConfigSources
         }
         return (ObjectNode) json;
     }
+    */
 }

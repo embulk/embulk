@@ -17,41 +17,51 @@ import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 
 public class DataSourceSerDe
 {
-    public static void configure(ObjectMapperModule mapper)
+    public static class SerDeModule
+            extends SimpleModule
     {
-        SimpleModule module = new SimpleModule();
+        public SerDeModule(final ModelManager model)
+        {
+            // ConfigSource
+            addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
+            addDeserializer(ConfigSource.class,
+                    new DataSourceDeserializer(new DataSourceFactory<ConfigSource>() {
+                        public ConfigSource newInstance(ObjectNode node)
+                        {
+                            return new ConfigSource(model, node);
+                        }
+                    }));
 
-        // ConfigSource
-        module.addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
-        module.addDeserializer(ConfigSource.class,
-                new DataSourceDeserializer(new DataSourceFactory<ConfigSource>() {
-                    public ConfigSource newInstance(ObjectNode node)
-                    {
-                        return new ConfigSource(node);
-                    }
-                }));
+            // TaskSource
+            addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
+            addDeserializer(TaskSource.class,
+                    new DataSourceDeserializer(new DataSourceFactory<TaskSource>() {
+                        public TaskSource newInstance(ObjectNode node)
+                        {
+                            return new TaskSource(model, node);
+                        }
+                    }));
 
-        // TaskSource
-        module.addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
-        module.addDeserializer(TaskSource.class,
-                new DataSourceDeserializer(new DataSourceFactory<TaskSource>() {
-                    public TaskSource newInstance(ObjectNode node)
-                    {
-                        return new TaskSource(node);
-                    }
-                }));
+            // CommitReport
+            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
+            addDeserializer(CommitReport.class,
+                    new DataSourceDeserializer(new DataSourceFactory<CommitReport>() {
+                        public CommitReport newInstance(ObjectNode node)
+                        {
+                            return new CommitReport(model, node);
+                        }
+                    }));
 
-        // CommitReport
-        module.addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
-        module.addDeserializer(CommitReport.class,
-                new DataSourceDeserializer(new DataSourceFactory<CommitReport>() {
-                    public CommitReport newInstance(ObjectNode node)
-                    {
-                        return new CommitReport(node);
-                    }
-                }));
-
-        mapper.registerModule(module);
+            // NextConfig
+            addSerializer(NextConfig.class, new DataSourceSerializer<NextConfig>());
+            addDeserializer(NextConfig.class,
+                    new DataSourceDeserializer(new DataSourceFactory<NextConfig>() {
+                        public NextConfig newInstance(ObjectNode node)
+                        {
+                            return new NextConfig(model, node);
+                        }
+                    }));
+        }
     }
 
     private interface DataSourceFactory <T extends DataSource<T>>
@@ -89,7 +99,7 @@ public class DataSourceSerDe
         public void serialize(T value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException
         {
-            value.getSource().serialize(jgen, provider);
+            value.getObjectNode().serialize(jgen, provider);
         }
     }
 }

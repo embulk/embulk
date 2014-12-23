@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 
@@ -17,8 +18,8 @@ public class LineDecoder
 {
     // TODO optimize
 
-    public static interface Task
-            extends org.embulk.config.Task
+    public static interface DecoderTask
+            extends Task
     {
         @Config("charset")
         @ConfigDefault("\"utf-8\"")
@@ -32,7 +33,7 @@ public class LineDecoder
     private final FileInputInputStream inputStream;
     private final BufferedReader reader;
 
-    public LineDecoder(FileInput in, Task task)
+    public LineDecoder(FileInput in, DecoderTask task)
     {
         CharsetDecoder decoder = task.getCharset()
             .newDecoder()

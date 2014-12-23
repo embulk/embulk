@@ -1,10 +1,12 @@
 package org.embulk.spi;
 
 //import org.slf4j.Logger;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.embulk.config.Task;
-import org.embulk.config.TaskSource;
+import org.embulk.config.CommitReport;
+import org.embulk.config.NextConfig;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskSource;
+import org.embulk.plugin.PluginType;
 
 public class Exec
 {
@@ -47,24 +49,28 @@ public class Exec
         return session().getBufferAllocator();
     }
 
-    public static <T> T newPlugin(Class<T> iface, JsonNode typeConfig)
+    public static <T> T newPlugin(Class<T> iface, PluginType type)
     {
-        return session().newPlugin(iface, typeConfig);
+        return session().newPlugin(iface, type);
     }
 
-    public static <T extends Task> T loadConfig(ConfigSource config, Class<T> taskType)
+    public static CommitReport newCommitReport()
     {
-        return session().loadConfig(config, taskType);
+        return session().newCommitReport();
     }
 
-    public static <T extends Task> T loadTask(TaskSource taskSource, Class<T> taskType)
+    public static NextConfig newNextConfig()
     {
-        return session().loadTask(taskSource, taskType);
+        return session().newNextConfig();
     }
 
-    public static TaskSource dumpTask(Task task)
+    public static ConfigSource newConfigSource()
     {
-        return session().dumpTask(task);
+        return session().newConfigSource();
     }
 
+    public static TaskSource newTaskSource()
+    {
+        return session().newTaskSource();
+    }
 }

@@ -1,9 +1,9 @@
 package org.embulk.jruby;
 
 import com.google.inject.Inject;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.embed.InvokeFailedException;
+import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.spi.InputPlugin;
@@ -33,12 +33,9 @@ public class JRubyPluginSource
         this.rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
+    public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException
     {
-        if (!typeConfig.isTextual()) {
-            throw new PluginSourceNotMatchException();
-        }
-        String name = typeConfig.asText();
+        String name = type.getName();
 
         String category;
         if (InputPlugin.class.isAssignableFrom(iface)) {

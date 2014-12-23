@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
@@ -10,6 +9,7 @@ import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.plugin.PluginType;
 import org.embulk.type.Schema;
 
 public class FileInputRunner
@@ -18,7 +18,7 @@ public class FileInputRunner
     private interface RunnerTask extends Task
     {
         @Config("type")
-        public JsonNode getType();
+        public PluginType getType();
 
         @Config("decoders")
         @ConfigDefault("[]")
@@ -49,13 +49,13 @@ public class FileInputRunner
 
     protected ParserPlugin newParserPlugin(RunnerTask task)
     {
-        return Exec.newPlugin(ParserPlugin.class, task.getParserConfig().get("type"));
+        return Exec.newPlugin(ParserPlugin.class, task.getParserConfig().get(PluginType.class, "type"));
     }
 
     @Override
     public NextConfig transaction(ConfigSource config, final InputPlugin.Control control)
     {
-        final RunnerTask task = Exec.loadConfig(config, RunnerTask.class);
+        final RunnerTask task = config.loadConfig(RunnerTask.class);
         FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         final List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         final ParserPlugin parserPlugin = newParserPlugin(task);
@@ -70,11 +70,10 @@ public class FileInputRunner
                         parserPlugin.transaction(task.getParserConfig(), new ParserPlugin.Control() {
                             public void run(final TaskSource parserTaskSource, final Schema schema)
                             {
-                                TaskSource taskSource = new TaskSource();
                                 task.setFileInputTaskSource(fileInputTaskSource);
                                 task.setDecoderTaskSources(decoderTaskSources);
                                 task.setParserTaskSource(parserTaskSource);
-                                commitReports.addAll(control.run(Exec.dumpTask(task), schema, processorCount));
+                                commitReports.addAll(control.run(task.dump(), schema, processorCount));
                             }
                         });
                     }
@@ -88,7 +87,7 @@ public class FileInputRunner
     public CommitReport run(TaskSource taskSource, Schema schema, int processorIndex,
             PageOutput output)
     {
-        final RunnerTask task = Exec.loadTask(taskSource, RunnerTask.class);
+        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
         FileInputPlugin fileInputPlugin = newFileInputPlugin(task);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);

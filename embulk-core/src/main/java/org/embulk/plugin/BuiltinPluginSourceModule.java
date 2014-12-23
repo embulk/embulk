@@ -11,7 +11,7 @@ public class BuiltinPluginSourceModule
     public void configure(Binder binder)
     {
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
-        multibinder.addBinding().to(LocalPathPluginSource.class);
+        //multibinder.addBinding().to(LocalDirectoryPluginSource.class);  // TODO
         multibinder.addBinding().to(InjectedPluginSource.class);
     }
 }

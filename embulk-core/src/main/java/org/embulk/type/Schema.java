@@ -90,10 +90,11 @@ public class Schema
     public String toString()
     {
         StringBuilder sbuf = new StringBuilder();
-        sbuf.append(String.format(" Schema: %d columns", columns.size())).append('\n');
+        sbuf.append("Schema{\n");
         for (Column c : columns) {
-            sbuf.append("   " + c.toString()).append('\n');
+            sbuf.append(String.format(" %4d: %s %s\n", c.getIndex(), c.getName(), c.getType()));
         }
+        sbuf.append("}");
         return sbuf.toString();
     }
 }

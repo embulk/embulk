@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import com.fasterxml.jackson.annotation.JacksonInject;
+import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 
@@ -15,8 +16,8 @@ public class LineEncoder
 {
     // TODO optimize
 
-    public interface Task
-            extends org.embulk.config.Task
+    public interface EncoderTask
+            extends Task
     {
         @Config("charset")
         @ConfigDefault("\"utf-8\"")
@@ -34,7 +35,7 @@ public class LineEncoder
     private final FileOutputOutputStream outputStream;
     private final Writer writer;
 
-    public LineEncoder(FileOutput out, Task task)
+    public LineEncoder(FileOutput out, EncoderTask task)
     {
         CharsetEncoder encoder = task.getCharset()
             .newEncoder()
