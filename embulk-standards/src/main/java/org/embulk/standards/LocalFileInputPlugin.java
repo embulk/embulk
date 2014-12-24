@@ -18,12 +18,12 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
-import org.embulk.channel.FileBufferOutput;
+import org.embulk.config.CommitReport;
+import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.FilePlugins;
-import org.embulk.spi.ExecTask;
-import org.embulk.spi.ExecControl;
+import org.embulk.spi.InputStreamFileInput;
+import org.embulk.spi.TransactionalFileInput;
 
 public class LocalFileInputPlugin
         extends FileInputPlugin
@@ -40,10 +40,9 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
-            ExecControl control)
+    public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
     {
-        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
         try {
@@ -52,11 +51,8 @@ public class LocalFileInputPlugin
             throw new RuntimeException(ex);  // TODO exception class
         }
 
-        // number of processors is same with number of files
-        exec.setProcessorCount(task.getFiles().size());
-
-        // run
-        control.run(exec.dumpTask(task));
+        // run with threads. number of processors is same with number of files
+        control.run(task.dump(), task.getFiles().size());
 
         return new NextConfig();
     }
@@ -79,21 +75,42 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public Report runFileInput(ExecTask exec, TaskSource taskSource,
-            int processorIndex, FileBufferOutput fileBufferOutput)
+    public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
     {
-        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        return new LocalFileInput(task, processorIndex);
+    }
 
-        String path = task.getFiles().get(processorIndex);
-        File file = new File(path);
+    public static class LocalFileInput
+            extends InputStreamFileInput
+            implements TransactionalFileInput, InputStreamFileInput.Provider
+    {
+        private final File file;
+        private boolean opened;
 
-        try (InputStream in = new FileInputStream(file)) {
-            FilePlugins.transferInputStream(exec.getBufferAllocator(),
-                    in, fileBufferOutput);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        public LocalFileInput(PluginTask task, int processorIndex)
+        {
+            super(task.getBufferAllocator(), this);
+            this.file = new File(task.getFiles().get(processorIndex));
         }
 
-        return new Report();
+        @Override
+        private InputStream openNext() throws IOException
+        {
+            if (opened) {
+                return false;
+            }
+            return new FileInputStream(file);
+        }
+
+        public void abort() { }
+
+        public CommitReport commit()
+        {
+            return Exec.newCommitReport();
+        }
+
+        @Override
+        public void close() { }
     }
 }
