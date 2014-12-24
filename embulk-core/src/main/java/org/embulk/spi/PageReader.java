@@ -139,6 +139,7 @@ public class PageReader
         }
 
         if (readCount > 0) {
+            // advance position excepting the first record
             int lastRecordSize = pageSlice.getInt(position);
             position += lastRecordSize;
         }

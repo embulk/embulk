@@ -1,12 +1,12 @@
 package org.embulk.standards;
 
 import com.google.common.base.Preconditions;
-
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.Iterator;
+import org.embulk.spi.LineDecoder;
 
 public class CsvTokenizer
 {
@@ -29,8 +29,7 @@ public class CsvTokenizer
     private final String newline;
     private final boolean trimIfNotQuoted;
     private final long maxQuotedSizeLimit;  // TODO not used yet
-
-    private final Iterator<String> input;
+    private final LineDecoder input;
 
     private RecordState recordState = RecordState.END;  // initial state is end of a record. nextRecord() must be called first
     private long lineNumber = 0;
@@ -41,7 +40,7 @@ public class CsvTokenizer
     private List<String> quotedValueLines = new ArrayList<>();
     private Deque<String> unreadLines = new ArrayDeque<>();
 
-    public CsvTokenizer(Iterable<String> input, CsvParserTask task)
+    public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task)
     {
         delimiter = task.getDelimiterChar();
         quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
@@ -49,7 +48,7 @@ public class CsvTokenizer
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
-        this.input = input.iterator();
+        this.input = input;
     }
 
     public long getCurrentLineNumber()
@@ -75,6 +74,11 @@ public class CsvTokenizer
         return line;
     }
 
+    public boolean nextFile()
+    {
+        return input.nextFile();
+    }
+
     public boolean nextRecord()
     {
         // If at the end of record, read the next line and initialize the state
@@ -94,10 +98,10 @@ public class CsvTokenizer
             if (!unreadLines.isEmpty()) {
                 line = unreadLines.removeFirst();
             } else {
-                if (!input.hasNext()) {
+                line = input.poll();
+                if (line == null) {
                     return false;
                 }
-                line = input.next();
             }
             linePos = 0;
             lineNumber++;

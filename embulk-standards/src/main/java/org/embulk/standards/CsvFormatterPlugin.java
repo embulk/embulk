@@ -5,29 +5,28 @@ import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.type.Column;
-import org.embulk.page.PageReader;
-import org.embulk.type.RecordReader;
 import org.embulk.type.Schema;
+import org.embulk.type.SchemaVisitor;
 import org.embulk.type.TimestampType;
 import org.embulk.time.Timestamp;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.channel.PageInput;
-import org.embulk.channel.FileBufferOutput;
-import org.embulk.spi.BasicFormatterPlugin;
-import org.embulk.spi.ExecTask;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.Page;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.PageReader;
+import org.embulk.spi.Exec;
 import org.embulk.spi.LineEncoder;
-import org.embulk.spi.LineEncoderTask;
+import org.embulk.spi.FileOutput;
 import org.embulk.time.TimestampFormatter;
-import org.embulk.time.TimestampFormatterTask;
 
 import java.util.Map;
 
 public class CsvFormatterPlugin
-        extends BasicFormatterPlugin
+        implements FormatterPlugin
 {
-    public interface CsvFormatterTask
-            extends LineEncoderTask, TimestampFormatterTask
+    public interface PluginTask
+            extends LineEncoder.EncoderTask, TimestampFormatter.FormatterTask
     {
         @Config("header_line")
         @ConfigDefault("true")
@@ -35,97 +34,118 @@ public class CsvFormatterPlugin
     }
 
     @Override
-    public TaskSource getBasicFormatterTask(ExecTask exec, ConfigSource config)
+    public void transaction(ConfigSource config, Schema schema,
+            FormatterPlugin.Control control)
     {
-        CsvFormatterTask task = exec.loadConfig(config, CsvFormatterTask.class);
-        return exec.dumpTask(task);
+        PluginTask task = config.loadConfig(PluginTask.class);
+        control.run(task.dump());
     }
 
     private Map<Integer, TimestampFormatter> newTimestampFormatters(
-            final ExecTask exec, final TimestampFormatterTask task, final Schema schema)
+            TimestampFormatter.FormatterTask task, Schema schema)
     {
-        ImmutableMap.Builder<Integer, TimestampFormatter> builder =
-                new ImmutableBiMap.Builder<>();
+        ImmutableMap.Builder<Integer, TimestampFormatter> builder = new ImmutableBiMap.Builder<>();
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
                 TimestampType tt = (TimestampType) column.getType();
-                builder.put(column.getIndex(), exec.newTimestampFormatter(
-                        tt.getFormat(), task.getTimeZone()));
+                builder.put(column.getIndex(), new TimestampFormatter(tt.getFormat(), task));
             }
         }
         return builder.build();
     }
 
     @Override
-    public void runBasicFormatter(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            PageInput pageInput, FileBufferOutput fileBufferOutput)
+    public PageOutput open(TaskSource taskSource, final Schema schema,
+            FileOutput output)
     {
-        final CsvFormatterTask task = exec.loadTask(taskSource, CsvFormatterTask.class);
-        final Schema schema = exec.getSchema();
-        final LineEncoder encoder = new LineEncoder(
-                exec.getBufferAllocator(), task, fileBufferOutput);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final LineEncoder encoder = new LineEncoder(output, task);
         final Map<Integer, TimestampFormatter> timestampFormatters =
-                newTimestampFormatters(exec, task, schema);
+                newTimestampFormatters(task, schema);
 
+        // create a file
+        encoder.nextFile();
+
+        // write header
         if (task.getHeaderLine()) {
-            // write header
             writeHeader(schema, encoder);
         }
 
-        try (PageReader reader = new PageReader(exec.getSchema(), pageInput)) {
-            while (reader.nextRecord()) {
-                reader.visitColumns(new RecordReader() {
-                    public void readNull(Column column)
-                    {
-                        addDelimiter(column);
-                    }
+        return new PageOutput() {
+            private final PageReader pageReader = new PageReader(schema);
 
-                    public void readBoolean(Column column, boolean value)
-                    {
-                        addDelimiter(column);
-                        encoder.addText(Boolean.toString(value));
-                    }
-
-                    public void readLong(Column column, long value)
-                    {
-                        addDelimiter(column);
-                        encoder.addText(Long.toString(value));
-                    }
-
-                    public void readDouble(Column column, double value)
-                    {
-                        addDelimiter(column);
-                        encoder.addText(Double.toString(value));
-                    }
-
-                    public void readString(Column column, String value)
-                    {
-                        addDelimiter(column);
-                        encoder.addText(value);
-                    }
-
-                    public void readTimestamp(Column column, Timestamp value)
-                    {
-                        addDelimiter(column);
-                        encoder.addText(timestampFormatters.get(column.getIndex()).format(value));
-                    }
-
-                    private void addDelimiter(Column column)
-                    {
-                        if (column.getIndex() != 0) {
-                            encoder.addText(",");
+            public void add(Page page)
+            {
+                pageReader.setPage(page);
+                while (pageReader.nextRecord()) {
+                    schema.visitColumns(new SchemaVisitor() {
+                        public void booleanColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                encoder.addText(Boolean.toString(pageReader.getBoolean(column)));
+                            }
                         }
-                    }
-                });
-                encoder.addNewLine();
+
+                        public void longColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                encoder.addText(Long.toString(pageReader.getLong(column)));
+                            }
+                        }
+
+                        public void doubleColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                encoder.addText(Double.toString(pageReader.getDouble(column)));
+                            }
+                        }
+
+                        public void stringColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                // TODO escape and quoting
+                                encoder.addText(pageReader.getString(column));
+                            }
+                        }
+
+                        public void timestampColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                Timestamp value = pageReader.getTimestamp(column);
+                                encoder.addText(timestampFormatters.get(column.getIndex()).format(value));
+                            }
+                        }
+
+                        private void addDelimiter(Column column)
+                        {
+                            if (column.getIndex() != 0) {
+                                encoder.addText(",");
+                            }
+                        }
+                    });
+
+                    encoder.addNewLine();
+                }
             }
-        }
-        encoder.flush();
-        fileBufferOutput.addFile();
+
+            public void finish()
+            {
+                encoder.finish();
+            }
+
+            public void close()
+            {
+                encoder.close();
+            }
+        };
     }
 
-    private void writeHeader(final Schema schema, final LineEncoder encoder)
+    private void writeHeader(Schema schema, LineEncoder encoder)
     {
         for (Column column : schema.getColumns()) {
             if (column.getIndex() != 0) {
