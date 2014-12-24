@@ -1,6 +1,7 @@
 package org.embulk.exec;
 
 import java.util.List;
+import com.google.inject.Inject;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
@@ -23,9 +24,10 @@ class SamplingParserPlugin
 {
     private final int maxSampleSize;
 
-    public SamplingParserPlugin(int maxSampleSize)
+    @Inject
+    public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
-        this.maxSampleSize = maxSampleSize;
+        this.maxSampleSize = 32*1024;  // TODO get sample syze from system config
     }
 
     @Override

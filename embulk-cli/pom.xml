@@ -12,12 +12,10 @@
     <name>embulk-cli</name>
 
     <dependencies>
-        <!--
         <dependency>
             <groupId>org.embulk</groupId>
             <artifactId>embulk-standards</artifactId>
         </dependency>
-        -->
 
         <dependency>
             <groupId>com.google.guava</groupId>

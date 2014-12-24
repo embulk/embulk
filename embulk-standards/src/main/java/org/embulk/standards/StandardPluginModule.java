@@ -8,8 +8,9 @@ import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.FileDecoderPlugin;
-import org.embulk.spi.FileEncoderPlugin;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
+import static org.embulk.plugin.InjectedPluginSource.registerPlugin;
 
 public class StandardPluginModule implements Module
 {
@@ -19,23 +20,23 @@ public class StandardPluginModule implements Module
         Preconditions.checkNotNull(binder, "binder is null.");
 
         // input plugins
-        binder.bind(InputPlugin.class).annotatedWith(Names.named("file")).to(LocalFileInputPlugin.class);
-        binder.bind(InputPlugin.class).annotatedWith(Names.named("s3_file")).to(S3FileInputPlugin.class);
+        registerPlugin(binder, InputPlugin.class, "file", LocalFileInputPlugin.class);
+        registerPlugin(binder, InputPlugin.class, "s3_file", S3FileInputPlugin.class);
 
         // parser plugins
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("csv")).to(CsvParserPlugin.class);
+        registerPlugin(binder, ParserPlugin.class, "csv", CsvParserPlugin.class);
 
         // file decoder plugins
-        binder.bind(FileDecoderPlugin.class).annotatedWith(Names.named("gzip")).to(GzipFileDecoderPlugin.class);
+        registerPlugin(binder, DecoderPlugin.class, "gzip", GzipFileDecoderPlugin.class);
 
         // output plugins
-        binder.bind(OutputPlugin.class).annotatedWith(Names.named("file")).to(LocalFileOutputPlugin.class);
-        binder.bind(OutputPlugin.class).annotatedWith(Names.named("null")).to(NullOutputPlugin.class);
+        registerPlugin(binder, OutputPlugin.class, "file", LocalFileOutputPlugin.class);
+        registerPlugin(binder, OutputPlugin.class, "null", NullOutputPlugin.class);
 
         // formatter plugins
-        binder.bind(FormatterPlugin.class).annotatedWith(Names.named("csv")).to(CsvFormatterPlugin.class);
+        registerPlugin(binder, FormatterPlugin.class, "csv", CsvFormatterPlugin.class);
 
         // file encoder plugins
-        binder.bind(FileEncoderPlugin.class).annotatedWith(Names.named("gzip")).to(GzipFileEncoderPlugin.class);
+        registerPlugin(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
     }
 }

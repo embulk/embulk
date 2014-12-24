@@ -54,13 +54,11 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!--
             <dependency>
                 <groupId>org.embulk</groupId>
                 <artifactId>embulk-standards</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            -->
 
             <dependency>
                 <groupId>commons-logging</groupId>

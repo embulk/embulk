@@ -72,7 +72,11 @@ public class LocalFileOutputPlugin
                 String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
                 System.out.println("path: "+path);  // TODO use Exec.getLogger()
                 fileNames.add(path);
-                output = new FileOutputStream(new File(path));
+                try {
+                    output = new FileOutputStream(new File(path));
+                } catch (FileNotFoundException ex) {
+                    throw new RuntimeException(ex);  // TODO exception class
+                }
                 fileIndex++;
             }
 

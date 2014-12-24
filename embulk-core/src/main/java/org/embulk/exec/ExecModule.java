@@ -13,6 +13,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.CharsetSerDe;
 import org.embulk.spi.BufferAllocator;
+import static org.embulk.plugin.InjectedPluginSource.registerPlugin;
 
 public class ExecModule
         implements Module
@@ -26,10 +27,8 @@ public class ExecModule
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
 
         // GuessExecutor
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_guess"))
-            .to(GuessExecutor.GuessParserPlugin.class);
-        binder.bind(ParserPlugin.class).annotatedWith(Names.named("system_sampling"))
-            .toInstance(new SamplingParserPlugin(32*1024));  // TODO get sample size from system config
+        registerPlugin(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
+        registerPlugin(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

@@ -89,8 +89,6 @@ public class LocalFileInputPlugin
             extends InputStreamFileInput
             implements TransactionalFileInput
     {
-        private final File file;
-
         // TODO create single-file InputStreamFileInput utility
         private static class SingleFileProvider
                 implements InputStreamFileInput.Provider

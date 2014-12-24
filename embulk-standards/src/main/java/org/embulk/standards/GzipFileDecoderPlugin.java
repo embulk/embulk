@@ -34,8 +34,13 @@ public class GzipFileDecoderPlugin
     public FileInput open(TaskSource taskSource, FileInput input)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new InputStreamFileInput(
-                task.getBufferAllocator(),
-                new GZIPInputStream(new FileInputInputStream(input)));
+        try {
+            return new InputStreamFileInput(
+                    task.getBufferAllocator(),
+                    new GZIPInputStream(new FileInputInputStream(input)));
+        } catch (IOException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
     }
 }

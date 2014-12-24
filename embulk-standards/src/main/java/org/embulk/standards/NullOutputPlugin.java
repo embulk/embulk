@@ -19,6 +19,7 @@ public class NullOutputPlugin
             OutputPlugin.Control control)
     {
         control.run(Exec.newTaskSource());
+        return Exec.newNextConfig();
     }
 
     @Override
