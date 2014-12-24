@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -14,22 +16,22 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
-import org.embulk.channel.FileBufferOutput;
 import org.embulk.config.Config;
+import org.embulk.config.Task;
+import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.ExecControl;
-import org.embulk.spi.ExecTask;
+import org.embulk.config.CommitReport;
+import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.FilePlugins;
+import org.embulk.spi.InputStreamFileInput;
+import org.embulk.spi.TransactionalFileInput;
 
 public class S3FileInputPlugin
-        extends FileInputPlugin
+        implements FileInputPlugin
 {
     public interface PluginTask
-            extends AwsPlugins.CredentialsTask
     {
         @Config("bucket")
         public String getBucket();
@@ -42,26 +44,51 @@ public class S3FileInputPlugin
 
         // TODO timeout, ssl, etc
 
+        @Config("access_key_id")
+        public String getAccessKeyId();
+
+        @Config("secret_access_key")
+        public String getSecretAccessKey();
+
+        // TODO support more options such as STS
+
         public List<String> getFiles();
         public void setFiles(List<String> files);
+
+        @JacksonInject
+        public BufferAllocator getBufferAllocator();
     }
 
     @Override
-    public NextConfig runFileInputTransaction(ExecTask exec, ConfigSource config,
-            ExecControl control)
+    public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
     {
-        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
         task.setFiles(listFiles(task));
 
         // number of processors is same with number of files
-        exec.setProcessorCount(task.getFiles().size());
 
         // run
-        control.run(exec.dumpTask(task));
+        control.run(task.dump(), task.getFiles().size());
 
-        return new NextConfig();
+        return Exec.newNextConfig();
+    }
+
+    public static AWSCredentialsProvider getCredentialsProvider(PluginTask task)
+    {
+        final AWSCredentials cred = new BasicAWSCredentials(
+                task.getAccessKeyId(), task.getSecretAccessKey());
+        return new AWSCredentialsProvider() {
+            public AWSCredentials getCredentials()
+            {
+                return cred;
+            }
+
+            public void refresh()
+            {
+            }
+        };
     }
 
     private static AmazonS3Client newS3Client(PluginTask task)
@@ -129,42 +156,35 @@ public class S3FileInputPlugin
     }
 
     @Override
-    public Report runFileInput(ExecTask exec, TaskSource taskSource,
-            int processorIndex, FileBufferOutput fileBufferOutput)
+    public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
     {
         PluginTask task = exec.loadTask(taskSource, PluginTask.class);
-        AmazonS3Client client = newS3Client(task);
-
-        String bucket = task.getBucket();
-        String key = task.getFiles().get(processorIndex);
-
-        ResumeOpener opener = new ResumeOpener(client, bucket, key);
-        try (InputStream in = opener.open(0)) {
-            FilePlugins.transferInputStream(exec.getBufferAllocator(), in, fileBufferOutput);
-            // TODO catch PartialTransferException and implement retry
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        return new Report();
+        return new S3FileInput(task, processorIndex);
     }
 
-    public static class ResumeOpener
+    public static class S3FileInput
+            extends InputStreamFileInput
+            implements TransactionalFileInput, InputStreamFileInput.Provider
     {
         private AmazonS3Client client;
-        private String bucket;
-        private String key;
-        private long contentLength;
+        private final String bucket;
+        private final String key;
+        private boolean opened;
 
-        public ResumeOpener(AmazonS3Client client, String bucket, String key)
+        public S3FileInput(PluginTask task, int processorIndex)
         {
-            this.client = client;
-            this.bucket = bucket;
-            this.key = key;
+            super(task.getBufferAllocator(), this);
+            this.client = newS3Client(task);
+            this.bucket = task.getBucket();
+            this.key = task.getFiles().get(processorIndex);
         }
 
-        public InputStream open(long pos)
+        @Override
+        private InputStream openNext() throws IOException
         {
+            if (opened) {
+                return false;
+            }
             GetObjectRequest request = new GetObjectRequest(bucket, key);
             if (pos > 0) {
                 request.setRange(pos, contentLength);
@@ -176,5 +196,15 @@ public class S3FileInputPlugin
             }
             return obj.getObjectContent();
         }
+
+        public void abort() { }
+
+        public CommitReport commit()
+        {
+            return Exec.newCommitReport();
+        }
+
+        @Override
+        public void close() { }
     }
 }
