@@ -8,12 +8,12 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.FileOutput;
 import org.embulk.spi.FileOutputOutputStream;
 
 public class GzipFileEncoderPlugin
-        implements DecoderPlugin
+        implements EncoderPlugin
 {
     public interface PluginTask
             extends Task
@@ -30,10 +30,10 @@ public class GzipFileEncoderPlugin
     }
 
     @Override
-    public FileOutput open(TaskSource taskSource, FileOutput fileOutput);
+    public FileOutput open(TaskSource taskSource, FileOutput fileOutput)
     {
-        throw new AssertException("OutputStreamFileOutput is not implemented yet");
+        throw new AssertionError("OutputStreamFileOutput is not implemented yet");
         // TODO GZIPOutputStream doesn't support level option?
-        return new OutputStreamFileOutput(new GZIPOutputStream(new FileOutputOutputStream(input)));
+        //return new OutputStreamFileOutput(new GZIPOutputStream(new FileOutputOutputStream(fileOutput)));
     }
 }

@@ -13,6 +13,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -26,7 +27,7 @@ import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
 
 public class LocalFileInputPlugin
-        extends FileInputPlugin
+        implements FileInputPlugin
 {
     public interface PluginTask
             extends Task
@@ -37,6 +38,9 @@ public class LocalFileInputPlugin
 
         public List<String> getFiles();
         public void setFiles(List<String> files);
+
+        @JacksonInject
+        public BufferAllocator getBufferAllocator();
     }
 
     @Override
@@ -54,7 +58,7 @@ public class LocalFileInputPlugin
         // run with threads. number of processors is same with number of files
         control.run(task.dump(), task.getFiles().size());
 
-        return new NextConfig();
+        return Exec.newNextConfig();
     }
 
     public List<String> listFiles(PluginTask task) throws IOException
@@ -83,34 +87,47 @@ public class LocalFileInputPlugin
 
     public static class LocalFileInput
             extends InputStreamFileInput
-            implements TransactionalFileInput, InputStreamFileInput.Provider
+            implements TransactionalFileInput
     {
         private final File file;
-        private boolean opened;
+
+        // TODO create single-file InputStreamFileInput utility
+        private static class SingleFileProvider
+                implements InputStreamFileInput.Provider
+        {
+            private final File file;
+            private boolean opened = false;
+
+            public SingleFileProvider(File file)
+            {
+                this.file = file;
+            }
+
+            @Override
+            public InputStream openNext() throws IOException
+            {
+                if (opened) {
+                    return null;
+                }
+                return new FileInputStream(file);
+            }
+
+            @Override
+            public void close() { }
+        }
 
         public LocalFileInput(PluginTask task, int processorIndex)
         {
-            super(task.getBufferAllocator(), this);
-            this.file = new File(task.getFiles().get(processorIndex));
+            super(task.getBufferAllocator(), new SingleFileProvider(new File(task.getFiles().get(processorIndex))));
         }
 
         @Override
-        private InputStream openNext() throws IOException
-        {
-            if (opened) {
-                return false;
-            }
-            return new FileInputStream(file);
-        }
-
         public void abort() { }
 
+        @Override
         public CommitReport commit()
         {
             return Exec.newCommitReport();
         }
-
-        @Override
-        public void close() { }
     }
 }

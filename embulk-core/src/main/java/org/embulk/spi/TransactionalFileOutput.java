@@ -5,9 +5,9 @@ import org.embulk.config.CommitReport;
 public interface TransactionalFileOutput
         extends Transactional, FileOutput
 {
-    public void add(Buffer buffer);
-
     public void nextFile();
+
+    public void add(Buffer buffer);
 
     public void finish();
 

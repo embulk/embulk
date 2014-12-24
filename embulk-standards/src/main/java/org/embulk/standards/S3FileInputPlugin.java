@@ -33,6 +33,7 @@ public class S3FileInputPlugin
         implements FileInputPlugin
 {
     public interface PluginTask
+            extends Task
     {
         @Config("bucket")
         public String getBucket();
@@ -94,7 +95,7 @@ public class S3FileInputPlugin
 
     private static AmazonS3Client newS3Client(PluginTask task)
     {
-        AWSCredentialsProvider credentials = AwsPlugins.getCredentialsProvider(task);
+        AWSCredentialsProvider credentials = getCredentialsProvider(task);
         AmazonS3Client client = newS3Client(credentials, task.getEndpoint());
         return client;
     }
@@ -159,43 +160,55 @@ public class S3FileInputPlugin
     @Override
     public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
     {
-        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
         return new S3FileInput(task, processorIndex);
     }
 
     public static class S3FileInput
             extends InputStreamFileInput
-            implements TransactionalFileInput, InputStreamFileInput.Provider
+            implements TransactionalFileInput
     {
-        private AmazonS3Client client;
-        private final String bucket;
-        private final String key;
-        private boolean opened;
+        // TODO create single-file InputStreamFileInput utility
+        private static class SingleFileProvider
+                implements InputStreamFileInput.Provider
+        {
+            private AmazonS3Client client;
+            private final String bucket;
+            private final String key;
+            private boolean opened = false;
+
+            public SingleFileProvider(PluginTask task, int processorIndex)
+            {
+                this.client = newS3Client(task);
+                this.bucket = task.getBucket();
+                this.key = task.getFiles().get(processorIndex);
+            }
+
+            @Override
+            public InputStream openNext() throws IOException
+            {
+                if (opened) {
+                    return null;
+                }
+                GetObjectRequest request = new GetObjectRequest(bucket, key);
+                //if (pos > 0) {
+                //    request.setRange(pos, contentLength);
+                //}
+                S3Object obj = client.getObject(request);
+                //if (pos <= 0) {
+                //    // first call
+                //    contentLength = obj.getObjectMetadata().getContentLength();
+                //}
+                return obj.getObjectContent();
+            }
+
+            @Override
+            public void close() { }
+        }
 
         public S3FileInput(PluginTask task, int processorIndex)
         {
-            super(task.getBufferAllocator(), this);
-            this.client = newS3Client(task);
-            this.bucket = task.getBucket();
-            this.key = task.getFiles().get(processorIndex);
-        }
-
-        @Override
-        private InputStream openNext() throws IOException
-        {
-            if (opened) {
-                return false;
-            }
-            GetObjectRequest request = new GetObjectRequest(bucket, key);
-            if (pos > 0) {
-                request.setRange(pos, contentLength);
-            }
-            S3Object obj = client.getObject(request);
-            if (pos <= 0) {
-                // first call
-                contentLength = obj.getObjectMetadata().getContentLength();
-            }
-            return obj.getObjectContent();
+            super(task.getBufferAllocator(), new SingleFileProvider(task, processorIndex));
         }
 
         public void abort() { }

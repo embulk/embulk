@@ -23,7 +23,7 @@ public class GzipFileDecoderPlugin
     public void transaction(ConfigSource config, DecoderPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
-        contro.run(task.dump());
+        control.run(task.dump());
     }
 
     @Override
