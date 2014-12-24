@@ -6,12 +6,13 @@ import java.util.zip.GZIPInputStream;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
+import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputInputStream;
 import org.embulk.spi.InputStreamFileInput;
 
 public class GzipFileDecoderPlugin
-        extends InputStreamFileDecoderPlugin
+        implements DecoderPlugin
 {
     public interface PluginTask
             extends Task

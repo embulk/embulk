@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
