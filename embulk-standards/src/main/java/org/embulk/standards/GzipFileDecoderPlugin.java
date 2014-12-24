@@ -6,7 +6,9 @@ import java.util.zip.GZIPInputStream;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.ExecTask;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.FileInputInputStream;
+import org.embulk.spi.InputStreamFileInput;
 
 public class GzipFileDecoderPlugin
         extends InputStreamFileDecoderPlugin
@@ -16,16 +18,16 @@ public class GzipFileDecoderPlugin
     {
     }
 
-    public TaskSource getFileDecoderTask(ExecTask exec, ConfigSource config)
+    @Override
+    public void transaction(ConfigSource config, DecoderPlugin.Control control)
     {
-        PluginTask task = exec.loadConfig(config, PluginTask.class);
-        return exec.dumpTask(task);
+        PluginTask task = config.loadConfig(PluginTask.class);
+        contro.run(task.dump());
     }
 
     @Override
-    public InputStream openInputStream(ExecTask exec, TaskSource taskSource,
-            InputStream in) throws IOException
+    public FileInput open(TaskSource taskSource, FileInput input)
     {
-        return new GZIPInputStream(in);
+        return new InputStreamFileInput(new GZIPInputStream(new FileInputInputStream(input)));
     }
 }
