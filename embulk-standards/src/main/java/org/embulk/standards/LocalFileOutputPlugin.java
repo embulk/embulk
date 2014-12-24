@@ -91,7 +91,7 @@ public class LocalFileOutputPlugin
             public void add(Buffer buffer)
             {
                 try {
-                    output.write(buffer.array(), buffer.offset(), buffer.size());
+                    output.write(buffer.array(), buffer.offset(), buffer.limit());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
