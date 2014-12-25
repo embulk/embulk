@@ -27,7 +27,7 @@ public abstract class Encoders
     public static void transaction(List<EncoderPlugin> plugins, List<ConfigSource> configs,
             Encoders.Control control)
     {
-        new RecursiveControl(plugins, configs, control);
+        new RecursiveControl(plugins, configs, control).transaction();
     }
 
     public static FileOutput open(List<EncoderPlugin> plugins, List<TaskSource> taskSources,

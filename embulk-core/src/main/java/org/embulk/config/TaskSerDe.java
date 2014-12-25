@@ -4,10 +4,13 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableMap;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -25,6 +28,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.annotation.JacksonInject;
 
 class TaskSerDe
 {
@@ -49,6 +53,9 @@ class TaskSerDe
                     Map<String, Object> objects = h.getObjects();
                     jgen.writeStartObject();
                     for (Map.Entry<String, Object> pair : objects.entrySet()) {
+                        if (h.getInjectedFields().contains(pair.getKey())) {
+                            continue;
+                        }
                         jgen.writeFieldName(pair.getKey());
                         nestedObjectMapper.writeValue(jgen, pair.getValue());
                     }
@@ -68,6 +75,7 @@ class TaskSerDe
         private final ModelManager model;
         private final Class<?> iface;
         private final Map<String, FieldEntry> mappings;
+        private final List<InjectEntry> injects;
 
         public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface)
         {
@@ -75,6 +83,7 @@ class TaskSerDe
             this.model = model;
             this.iface = iface;
             this.mappings = getterMappings(iface);
+            this.injects = injectEntries(iface);
         }
 
         protected Map<String, FieldEntry> getterMappings(Class<?> iface)
@@ -83,6 +92,12 @@ class TaskSerDe
             for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
+
+                if (getterMethod.getAnnotation(JacksonInject.class) != null) {
+                    // InjectEntry
+                    continue;
+                }
+
                 Type fieldType = getterMethod.getGenericReturnType();
 
                 Optional<String> jsonKey = getJsonKey(getterMethod, fieldName);
@@ -92,6 +107,21 @@ class TaskSerDe
                 }
                 Optional<String> defaultJsonString = getDefaultJsonString(getterMethod);
                 builder.put(jsonKey.get(), new FieldEntry(fieldName, fieldType, defaultJsonString));
+            }
+            return builder.build();
+        }
+
+        protected List<InjectEntry> injectEntries(Class<?> iface)
+        {
+            ImmutableList.Builder<InjectEntry> builder = ImmutableList.builder();
+            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
+                Method getterMethod = getter.getValue();
+                String fieldName = getter.getKey();
+                JacksonInject inject = getterMethod.getAnnotation(JacksonInject.class);
+                if (inject != null) {
+                    // InjectEntry
+                    builder.add(new InjectEntry(fieldName, getterMethod.getReturnType()));
+                }
             }
             return builder.build();
         }
@@ -148,9 +178,16 @@ class TaskSerDe
                 }
             }
 
+            // inject
+            ImmutableSet.Builder<String> injectedFields = ImmutableSet.builder();
+            for (InjectEntry inject : injects) {
+                objects.put(inject.getName(), model.getInjectedInstance(inject.getType()));
+                injectedFields.add(inject.getName());
+            }
+
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] { iface },
-                    new TaskInvocationHandler(model, iface, objects));
+                    new TaskInvocationHandler(model, iface, objects, injectedFields.build()));
         }
 
         private static class FieldEntry
@@ -179,6 +216,28 @@ class TaskSerDe
             public Optional<String> getDefaultJsonString()
             {
                 return defaultJsonString;
+            }
+        }
+
+        private static class InjectEntry
+        {
+            private final String name;
+            private Class<?> type;
+
+            public InjectEntry(String name, Class<?> type)
+            {
+                this.name = name;
+                this.type = type;
+            }
+
+            public String getName()
+            {
+                return name;
+            }
+
+            public Class<?> getType()
+            {
+                return type;
             }
         }
     }

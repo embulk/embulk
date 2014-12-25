@@ -31,7 +31,7 @@ public class Embulk
 
         // TODO bootstrap model manager
         //ConfigSource systemConfig = ConfigSources.fromPropertiesYamlLiteral(System.getProperties(), "load.");
-        ConfigSource systemConfig = new ConfigLoader(new ModelManager(new ObjectMapper())).fromPropertiesYamlLiteral(System.getProperties(), "load.");
+        ConfigSource systemConfig = new ConfigLoader(new ModelManager(null, new ObjectMapper())).fromPropertiesYamlLiteral(System.getProperties(), "load.");
 
         new Embulk(systemConfig).run(args[0]);
     }

@@ -107,6 +107,7 @@ public class LocalFileInputPlugin
                 if (opened) {
                     return null;
                 }
+                opened = true;
                 return new FileInputStream(file);
             }
 

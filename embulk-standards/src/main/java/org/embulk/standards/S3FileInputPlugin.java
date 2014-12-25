@@ -190,6 +190,7 @@ public class S3FileInputPlugin
                 if (opened) {
                     return null;
                 }
+                opened = true;
                 GetObjectRequest request = new GetObjectRequest(bucket, key);
                 //if (pos > 0) {
                 //    request.setRange(pos, contentLength);

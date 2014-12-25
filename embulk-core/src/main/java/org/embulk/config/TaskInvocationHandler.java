@@ -3,7 +3,9 @@ package org.embulk.config;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationHandler;
+import java.util.Set;
 import java.util.Map;
+import java.util.HashMap;
 import com.google.common.collect.ImmutableMap;
 
 class TaskInvocationHandler
@@ -12,12 +14,14 @@ class TaskInvocationHandler
     private final ModelManager model;
     private final Class<?> iface;
     private final Map<String, Object> objects;
+    private final Set<String> injectedFields;
 
-    public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects)
+    public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects, Set<String> injectedFields)
     {
         this.model = model;
         this.iface = iface;
         this.objects = objects;
+        this.injectedFields = injectedFields;
     }
 
     /**
@@ -36,12 +40,16 @@ class TaskInvocationHandler
         return builder.build();
     }
 
-    /**
-     * visible for ModelManager.AccessorSerializer
-     */
+    // visible for ModelManager.AccessorSerializer
     Map<String, Object> getObjects()
     {
         return objects;
+    }
+
+    // visible for ModelManager.AccessorSerializer
+    Set<String> getInjectedFields()
+    {
+        return injectedFields;
     }
 
     protected Object invokeGetter(Method method, String fieldName)
@@ -58,16 +66,25 @@ class TaskInvocationHandler
         }
     }
 
+    private Map<String, Object> getSerializableFields()
+    {
+        Map<String, Object> data = new HashMap<String, Object>(objects);
+        for (String injected : injectedFields) {
+            data.remove(injected);
+        }
+        return data;
+    }
+
     protected TaskSource invokeDump()
     {
-        return new TaskSource(model, model.writeObjectAsObjectNode(objects));
+        return new TaskSource(model, model.writeObjectAsObjectNode(getSerializableFields()));
     }
 
     protected String invokeToString()
     {
         StringBuilder sb = new StringBuilder();
         sb.append(iface.getName());
-        sb.append(objects);
+        sb.append(getSerializableFields());
         return sb.toString();
     }
 

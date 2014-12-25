@@ -224,7 +224,9 @@ public class GuessExecutor
         @Override
         public void transaction(ConfigSource config, ParserPlugin.Control control)
         {
-            control.run(Exec.newTaskSource(), null);
+            PluginTask task = config.loadConfig(PluginTask.class);
+            task.setConfigSource(config);
+            control.run(task.dump(), null);
         }
 
         @Override

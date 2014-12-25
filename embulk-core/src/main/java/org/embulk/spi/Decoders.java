@@ -27,7 +27,7 @@ public abstract class Decoders
     public static void transaction(List<DecoderPlugin> plugins, List<ConfigSource> configs,
             Decoders.Control control)
     {
-        new RecursiveControl(plugins, configs, control);
+        new RecursiveControl(plugins, configs, control).transaction();
     }
 
     public static FileInput open(List<DecoderPlugin> plugins, List<TaskSource> taskSources,

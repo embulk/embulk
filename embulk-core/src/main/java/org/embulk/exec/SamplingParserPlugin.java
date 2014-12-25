@@ -69,7 +69,7 @@ class SamplingParserPlugin
                     throw new NoSampleException("No input files to guess parser configuration");
                 }
             });
-            throw new AssertionError("Executor must throw exceptions");
+            throw new AssertionError("SamplingParserPlugin must throw SampledNoticeError");
         } catch (SampledNoticeError error) {
             return error.getSample();
         }

@@ -89,11 +89,11 @@ public class FileInputRunner
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = fileInputPlugin.open(taskSource, processorIndex);
+        TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), processorIndex);
         FileInput fileInput = tran;
         try {
             fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
-            parserPlugin.run(taskSource, schema, fileInput, output);
+            parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
 
             CommitReport report = tran.commit();  // TODO check output.finish() is called. wrap
             tran = null;

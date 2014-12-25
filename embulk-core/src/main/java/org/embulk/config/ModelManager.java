@@ -3,6 +3,7 @@ package org.embulk.config;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.common.base.Throwables;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.Module;
@@ -13,13 +14,15 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 public class ModelManager
 {
+    private final Injector injector;
     private final ObjectMapper objectMapper;
     private final ObjectMapper configObjectMapper;  // configObjectMapper uses different TaskDeserializer
     private final TaskValidator taskValidator;
 
     @Inject
-    public ModelManager(ObjectMapper objectMapper)
+    public ModelManager(Injector injector, ObjectMapper objectMapper)
     {
+        this.injector = injector;
         this.objectMapper = objectMapper;
         this.configObjectMapper = objectMapper.copy();
         this.taskValidator = new TaskValidator(
@@ -98,5 +101,12 @@ public class ModelManager
         } catch (Exception ex) {
             throw Throwables.propagate(ex);
         }
+    }
+
+    // visible for TaskSerDe.set
+    // TODO create annotation calss and get its instance at the 2nd argument
+    <T> T getInjectedInstance(Class<T> type)
+    {
+        return injector.getInstance(type);
     }
 }
