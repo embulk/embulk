@@ -22,6 +22,10 @@ public class DataSourceSerDe
     {
         public SerDeModule(final ModelManager model)
         {
+            // DataSourceImpl
+            addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>());
+            addDeserializer(DataSourceImpl.class, new DataSourceDeserializer<DataSourceImpl>(model));
+
             // ConfigSource
             addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
             addDeserializer(ConfigSource.class, new DataSourceDeserializer<ConfigSource>(model));

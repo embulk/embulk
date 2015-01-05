@@ -1,5 +1,6 @@
 module Embulk
   require 'embulk/error'
   require 'embulk/plugin'
-  require 'embulk/java/time_helper'
+  require 'embulk/buffer'
+  require 'embulk/data_source'
 end

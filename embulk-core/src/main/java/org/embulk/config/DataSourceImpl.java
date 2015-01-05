@@ -11,9 +11,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.jruby.java.proxies.RubyObjectHolderProxy;
+import org.jruby.runtime.builtin.IRubyObject;
+import org.embulk.jruby.DataSourceBridge;
 
 public class DataSourceImpl
-        implements ConfigSource, TaskSource, CommitReport, NextConfig
+        implements ConfigSource, TaskSource, CommitReport, NextConfig,
+                   RubyObjectHolderProxy
 {
     protected final ObjectNode data;
     protected final ModelManager model;
@@ -204,5 +208,11 @@ public class DataSourceImpl
     public int hashCode()
     {
         return data.hashCode();
+    }
+
+    @Override
+    public IRubyObject __ruby_object()
+    {
+        return DataSourceBridge.rubyObject(this);
     }
 }

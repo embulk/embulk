@@ -8,6 +8,8 @@ import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.jruby.CompatVersion;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.plugin.PluginSource;
@@ -24,7 +26,7 @@ public class JRubyScriptingModule
     @Override
     public void configure(Binder binder)
     {
-        binder.bind(ScriptingContainer.class).toProvider(new ScriptingContainerProvider()).in(Scopes.SINGLETON);
+        binder.bind(ScriptingContainer.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
         //binder.bind(JRubyModule.class).in(Scopes.SINGLETON);
 
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
@@ -34,6 +36,14 @@ public class JRubyScriptingModule
     private static class ScriptingContainerProvider
             implements Provider<ScriptingContainer>
     {
+        private final Injector injector;
+
+        @Inject
+        public ScriptingContainerProvider(Injector injector)
+        {
+            this.injector = injector;
+        }
+
         public ScriptingContainer get()
         {
             ScriptingContainer jruby = new ScriptingContainer();
@@ -53,8 +63,18 @@ public class JRubyScriptingModule
 
             jruby.setLoadPaths(loadPaths);
 
+            // load embulk/java/bootstrap.rb from $EMBULK_HOME/lib
+            jruby.runScriptlet("require 'embulk/java/bootstrap'");
+
+            // define Embulk::Java::Injector
+            jruby.put("Injector", injector);  // TODO use Embulk::Java::Injector
+            jruby.runScriptlet("require 'embulk/java/injected'");
+
             // load embulk.rb from $EMBULK_HOME/lib
             jruby.runScriptlet("require 'embulk'");
+
+            // load embulk/java/bridge.rb from $EMBULK_HOME/lib
+            jruby.runScriptlet("require 'embulk/java/bridge'");
 
             return jruby;
         }

@@ -7,6 +7,7 @@ import org.embulk.config.NextConfig;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.jruby.JRubyBridge;
 
 public class Exec
 {
@@ -72,5 +73,10 @@ public class Exec
     public static TaskSource newTaskSource()
     {
         return session().newTaskSource();
+    }
+
+    public static JRubyBridge getJRubyBridge()
+    {
+        return session().getJRubyBridge();
     }
 }

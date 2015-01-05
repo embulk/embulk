@@ -1,13 +1,13 @@
 module Embulk
   module Bridge
-    require 'embulk/java/imports'
+    #require 'embulk/java/imports'
     require 'embulk/bridge/buffer'
     require 'embulk/bridge/data_source'
 
     class GuessPluginBridge
       include Java::GuessPlugin
 
-      def guess(exec, config, sample)
+      def guess(config, sample)
         sample = Bridge::BufferBridge.to_str(sample)
         config = Bridge::DataSourceBridge.wrap(config)
         next_config = guess_buffer(config, sample)
@@ -15,6 +15,7 @@ module Embulk
       end
     end
 
+=begin
     class LineGuessPluginBridge < Java::LineGuessPlugin
       def guessLines(exec, config, lines)
         config = Bridge::DataSourceBridge.wrap(config)
@@ -41,5 +42,6 @@ module Embulk
         return Bridge::DataSourceBridge.wrap(next_config)
       end
     end
+=end
   end
 end
