@@ -1,26 +1,26 @@
 package org.embulk.config;
 
-import com.google.inject.Inject;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class CommitReport
-        extends DataSource<CommitReport>
+public interface CommitReport
+        extends DataSource
 {
-    @Inject
-    public CommitReport(ModelManager model)
-    {
-        super(model);
-    }
-
-    // visible for DataSourceSerDe
-    CommitReport(ModelManager model, ObjectNode data)
-    {
-        super(model, data);
-    }
+    @Override
+    public CommitReport getNested(String attrName);
 
     @Override
-    protected CommitReport newInstance(ModelManager model, ObjectNode data)
-    {
-        return new CommitReport(model, data);
-    }
+    public CommitReport getNestedOrSetEmpty(String attrName);
+
+    @Override
+    public CommitReport set(String attrName, Object v);
+
+    @Override
+    public CommitReport setNested(String attrName, DataSource v);
+
+    @Override
+    public CommitReport setAll(DataSource other);
+
+    @Override
+    public CommitReport deepCopy();
+
+    @Override
+    public CommitReport merge(DataSource other);
 }

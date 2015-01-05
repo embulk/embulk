@@ -77,7 +77,7 @@ class TaskInvocationHandler
 
     protected TaskSource invokeDump()
     {
-        return new TaskSource(model, model.writeObjectAsObjectNode(getSerializableFields()));
+        return new DataSourceImpl(model, model.writeObjectAsObjectNode(getSerializableFields()));
     }
 
     protected String invokeToString()

@@ -1,31 +1,28 @@
 package org.embulk.config;
 
-import com.google.inject.Inject;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ConfigSource
-        extends DataSource<ConfigSource>
+public interface ConfigSource
+        extends DataSource
 {
-    @Inject
-    public ConfigSource(ModelManager model)
-    {
-        super(model);
-    }
-
-    // visible for DataSourceSerDe and ConfigSourceLoader
-    ConfigSource(ModelManager model, ObjectNode data)
-    {
-        super(model, data);
-    }
+    public <T extends Task> T loadConfig(Class<T> taskType);
 
     @Override
-    protected ConfigSource newInstance(ModelManager model, ObjectNode data)
-    {
-        return new ConfigSource(model, data);
-    }
+    public ConfigSource getNested(String attrName);
 
-    public <T extends Task> T loadConfig(Class<T> taskType)
-    {
-        return model.readObjectWithConfigSerDe(taskType, data.traverse());
-    }
+    @Override
+    public ConfigSource getNestedOrSetEmpty(String attrName);
+
+    @Override
+    public ConfigSource set(String attrName, Object v);
+
+    @Override
+    public ConfigSource setNested(String attrName, DataSource v);
+
+    @Override
+    public ConfigSource setAll(DataSource other);
+
+    @Override
+    public ConfigSource deepCopy();
+
+    @Override
+    public ConfigSource merge(DataSource other);
 }

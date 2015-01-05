@@ -24,60 +24,31 @@ public class DataSourceSerDe
         {
             // ConfigSource
             addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
-            addDeserializer(ConfigSource.class,
-                    new DataSourceDeserializer(new DataSourceFactory<ConfigSource>() {
-                        public ConfigSource newInstance(ObjectNode node)
-                        {
-                            return new ConfigSource(model, node);
-                        }
-                    }));
+            addDeserializer(ConfigSource.class, new DataSourceDeserializer<ConfigSource>(model));
 
             // TaskSource
             addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
-            addDeserializer(TaskSource.class,
-                    new DataSourceDeserializer(new DataSourceFactory<TaskSource>() {
-                        public TaskSource newInstance(ObjectNode node)
-                        {
-                            return new TaskSource(model, node);
-                        }
-                    }));
+            addDeserializer(TaskSource.class, new DataSourceDeserializer<TaskSource>(model));
 
             // CommitReport
             addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
-            addDeserializer(CommitReport.class,
-                    new DataSourceDeserializer(new DataSourceFactory<CommitReport>() {
-                        public CommitReport newInstance(ObjectNode node)
-                        {
-                            return new CommitReport(model, node);
-                        }
-                    }));
+            addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
 
             // NextConfig
             addSerializer(NextConfig.class, new DataSourceSerializer<NextConfig>());
-            addDeserializer(NextConfig.class,
-                    new DataSourceDeserializer(new DataSourceFactory<NextConfig>() {
-                        public NextConfig newInstance(ObjectNode node)
-                        {
-                            return new NextConfig(model, node);
-                        }
-                    }));
+            addDeserializer(NextConfig.class, new DataSourceDeserializer<NextConfig>(model));
         }
     }
 
-    private interface DataSourceFactory <T extends DataSource<T>>
-    {
-        public T newInstance(ObjectNode node);
-    }
-
-    private static class DataSourceDeserializer <T extends DataSource<T>>
+    private static class DataSourceDeserializer <T extends DataSource>  // TODO T extends DataSource super DataSourceImpl
             extends JsonDeserializer<T>
     {
-        private final DataSourceFactory<T> factory;
+        private final ModelManager model;
         private final ObjectMapper treeObjectMapper;
 
-        DataSourceDeserializer(DataSourceFactory<T> factory)
+        DataSourceDeserializer(ModelManager model)
         {
-            this.factory = factory;
+            this.model = model;
             this.treeObjectMapper = new ObjectMapper();
         }
 
@@ -88,11 +59,11 @@ public class DataSourceSerDe
             if (!json.isObject()) {
                 throw new JsonMappingException("Expected object to deserialize DataSource", jp.getCurrentLocation());
             }
-            return factory.newInstance((ObjectNode) json);
+            return (T) new DataSourceImpl(model, (ObjectNode) json);
         }
     }
 
-    private static class DataSourceSerializer <T extends DataSource<T>>
+    private static class DataSourceSerializer <T extends DataSource>
             extends JsonSerializer<T>
     {
         @Override

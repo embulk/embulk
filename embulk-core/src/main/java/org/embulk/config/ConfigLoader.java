@@ -26,7 +26,7 @@ public class ConfigLoader
     {
         // TODO check parsed.isObject()
         ObjectNode source = (ObjectNode) new ObjectMapper().readTree(parser);
-        return new ConfigSource(model, source);
+        return new DataSourceImpl(model, source);
     }
 
     public ConfigSource fromYamlFile(File path) throws IOException
@@ -37,7 +37,7 @@ public class ConfigLoader
             parsedYaml = yaml.load(is);
         }
         ObjectNode source = objectToJsonObject(parsedYaml);
-        return new ConfigSource(model, source);
+        return new DataSourceImpl(model, source);
     }
 
     public ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix)
@@ -57,7 +57,7 @@ public class ConfigLoader
             JsonNode typedValue = objectToJson(parsedValue);
             source.set(keyName, typedValue);
         }
-        return new ConfigSource(model, source);
+        return new DataSourceImpl(model, source);
     }
 
     private JsonNode objectToJson(Object object)

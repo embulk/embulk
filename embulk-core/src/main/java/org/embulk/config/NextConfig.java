@@ -1,26 +1,26 @@
 package org.embulk.config;
 
-import com.google.inject.Inject;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class NextConfig
-        extends DataSource<NextConfig>
+public interface NextConfig
+        extends DataSource
 {
-    @Inject
-    public NextConfig(ModelManager model)
-    {
-        super(model);
-    }
-
-    // visible for DataSourceSerDe
-    NextConfig(ModelManager model, ObjectNode data)
-    {
-        super(model, data);
-    }
+    @Override
+    public NextConfig getNested(String attrName);
 
     @Override
-    protected NextConfig newInstance(ModelManager model, ObjectNode data)
-    {
-        return new NextConfig(model, data);
-    }
+    public NextConfig getNestedOrSetEmpty(String attrName);
+
+    @Override
+    public NextConfig set(String attrName, Object v);
+
+    @Override
+    public NextConfig setNested(String attrName, DataSource v);
+
+    @Override
+    public NextConfig setAll(DataSource other);
+
+    @Override
+    public NextConfig deepCopy();
+
+    @Override
+    public NextConfig merge(DataSource other);
 }

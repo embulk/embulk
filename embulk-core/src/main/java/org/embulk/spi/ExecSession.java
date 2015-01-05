@@ -9,6 +9,7 @@ import org.embulk.config.CommitReport;
 import org.embulk.config.NextConfig;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
+import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 
@@ -61,21 +62,21 @@ public class ExecSession
 
     public CommitReport newCommitReport()
     {
-        return new CommitReport(modelManager);
+        return new DataSourceImpl(modelManager);
     }
 
     public NextConfig newNextConfig()
     {
-        return new NextConfig(modelManager);
+        return new DataSourceImpl(modelManager);
     }
 
     public ConfigSource newConfigSource()
     {
-        return new ConfigSource(modelManager);
+        return new DataSourceImpl(modelManager);
     }
 
     public TaskSource newTaskSource()
     {
-        return new TaskSource(modelManager);
+        return new DataSourceImpl(modelManager);
     }
 }
