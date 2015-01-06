@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
@@ -56,7 +57,11 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
-        this.executor = Executors.newCachedThreadPool();  // TODO use pooled thread pool
+        this.executor = Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder()
+                .setNameFormat("embulk-executor-%d")
+                .setDaemon(true)
+                .build());
     }
 
     private static class ExecuteResultBuilder

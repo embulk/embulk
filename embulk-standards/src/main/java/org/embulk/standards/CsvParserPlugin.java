@@ -175,10 +175,11 @@ public class CsvParserPlugin
                                 }
                             }
                         });
+                        pageBuilder.addRecord();
 
                     } catch (Exception e) {
                         String skippedLine = tokenizer.skipCurrentLine();
-                        // TODO
+                        // TODO logging
                         //exec.notice().skippedLine(skippedLine);
                     }
                 }

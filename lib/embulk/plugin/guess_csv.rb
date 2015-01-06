@@ -13,9 +13,6 @@ module Embulk::Plugin
     ]
 
     def guess_lines(config, sample_lines)
-      puts "csv?"
-      p sample_lines
-
       delim = guess_delimiter(sample_lines)
       unless delim
         # not CSV file

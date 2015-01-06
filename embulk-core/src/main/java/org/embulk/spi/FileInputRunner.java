@@ -57,8 +57,6 @@ public class FileInputRunner
         final RunnerTask task = config.loadConfig(RunnerTask.class);
         final List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         final ParserPlugin parserPlugin = newParserPlugin(task);
-        System.out.println("decoderConfigs: "+task.getDecoderConfigs());
-        System.out.println("decoderPlugins: "+decoderPlugins);
 
         return fileInputPlugin.transaction(config, new FileInputPlugin.Control() {
             public List<CommitReport> run(final TaskSource fileInputTaskSource, final int processorCount)

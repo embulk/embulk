@@ -184,17 +184,8 @@ public class PageBuilder
         }
     }
 
-    public void flush()
+    private void doFlush()
     {
-        finish();
-        if (buffer == null) {
-            newBuffer();
-        }
-    }
-
-    public void finish()
-    {
-        // similar to flush but doesn't allocate next buffer
         if (buffer != null && count > 0) {
             // write page header
             bufferSlice.setInt(0, count);
@@ -205,6 +196,20 @@ public class PageBuilder
             buffer = null;
             bufferSlice = null;
         }
+    }
+
+    public void flush()
+    {
+        doFlush();
+        if (buffer == null) {
+            newBuffer();
+        }
+    }
+
+    public void finish()
+    {
+        doFlush();
+        output.finish();
     }
 
     @Override

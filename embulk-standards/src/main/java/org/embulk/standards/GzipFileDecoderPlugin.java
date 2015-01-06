@@ -34,14 +34,22 @@ public class GzipFileDecoderPlugin
     public FileInput open(TaskSource taskSource, FileInput input)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        try {
-            input.nextFile();
-            return new InputStreamFileInput(
-                    task.getBufferAllocator(),
-                    new GZIPInputStream(new FileInputInputStream(input)));
-        } catch (IOException ex) {
-            // TODO
-            throw new RuntimeException(ex);
-        }
+        final FileInputInputStream files = new FileInputInputStream(input);
+        return new InputStreamFileInput(
+                task.getBufferAllocator(),
+                new InputStreamFileInput.Provider() {
+                    public InputStream openNext() throws IOException
+                    {
+                        if (!files.nextFile()) {
+                            return null;
+                        }
+                        return new GZIPInputStream(files);
+                    }
+
+                    public void close() throws IOException
+                    {
+                        files.close();
+                    }
+                });
     }
 }

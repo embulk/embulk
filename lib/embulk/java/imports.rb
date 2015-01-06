@@ -1,5 +1,9 @@
 require 'java'
 
+#
+# this file is loaded by embulk/java/bootstrap.rb
+#
+
 module Embulk::Java
   java_import 'org.embulk.spi.Buffer'
   java_import 'org.embulk.jruby.BufferBridge'

@@ -4,9 +4,6 @@ module Embulk::Plugin
     Plugin.register_guess('newline', self)
 
     def guess_text(config, sample_text)
-      p "newline"
-      p sample_text
-
       cr_count = sample_text.count("\r")
       lf_count = sample_text.count("\n")
       crlf_count = sample_text.scan(/\r\n/).length
