@@ -92,7 +92,7 @@ public class CsvParserPlugin
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final Map<Integer, TimestampParser> timestampFormatters = newTimestampParsers(task, schema);
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
-        final String nullStringOrNull = task.getNullString().or((String) null);
+        final String nullStringOrNull = task.getNullString().orNull();
         boolean skipHeaderLine = task.getHeaderLine();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {

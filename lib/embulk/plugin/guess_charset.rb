@@ -1,6 +1,6 @@
 module Embulk::Plugin
 
-  class CharsetGuess < Guess
+  class CharsetGuess < GuessPlugin
     Plugin.register_guess('charset', self)
 
     def guess_buffer(config, sample_buffer)
@@ -19,7 +19,7 @@ module Embulk::Plugin
           name = "UTF-8"
         end
       end
-      return {"charset"=>name}
+      return {"parser" => {"charset" => name}}
     end
   end
 

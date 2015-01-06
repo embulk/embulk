@@ -31,7 +31,7 @@ public class InputStreamFileInput
 
         public InputStream openNext() throws IOException
         {
-            if (iterator.hasNext()) {
+            if (!iterator.hasNext()) {
                 return null;
             }
             return iterator.next();
@@ -54,7 +54,7 @@ public class InputStreamFileInput
     {
         this.allocator = allocator;
         this.provider = provider;
-        this.current = current;
+        this.current = null;
     }
 
     public InputStreamFileInput(BufferAllocator allocator, final InputStream in)
@@ -64,6 +64,7 @@ public class InputStreamFileInput
 
     public Buffer poll()
     {
+        // TODO check current != null and throw Illegal State - file is not opened
         Buffer buffer = allocator.allocate();
         try {
             int n = current.read(buffer.array(), buffer.offset(), buffer.capacity());

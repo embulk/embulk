@@ -1,7 +1,7 @@
 module Embulk::Plugin
   require 'embulk/plugin/tf_guess'
 
-  class CsvGuess < LineGuess
+  class CsvGuess < LineGuessPlugin
     Plugin.register_guess('csv', self)
 
     DELIMITER_CANDIDATES = [
@@ -13,16 +13,20 @@ module Embulk::Plugin
     ]
 
     def guess_lines(config, sample_lines)
+      puts "csv?"
+      p sample_lines
+
       delim = guess_delimiter(sample_lines)
       unless delim
         # not CSV file
         return {}
       end
 
-      guessed = {"type"=>"csv", "delimiter"=>delim}
+      parser_config = config["parser"] || {}
+      parser_guessed = {"type" => "csv", "delimiter" => delim}
 
       quote = guess_quote(sample_lines, delim)
-      guessed["quote"] = quote ? quote : ''
+      parser_guessed["quote"] = quote ? quote : ''
 
       sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
       first_types = guess_field_types(sample_records[0, 1])
@@ -33,12 +37,12 @@ module Embulk::Plugin
         return {}
       end
 
-      unless config.has_key?("header_line")
-        guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != ["string"] })
+      unless parser_config.has_key?("header_line")
+        parser_guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != ["string"] })
       end
 
-      unless config.has_key?("columns")
-        if guessed["header_line"] || config["header_line"]
+      unless parser_config.has_key?("columns")
+        if parser_guessed["header_line"] || parser_config["header_line"]
           column_names = sample_records.first
         else
           column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
@@ -53,10 +57,10 @@ module Embulk::Plugin
             end
           end
         end
-        guessed["columns"] = schema
+        parser_guessed["columns"] = schema
       end
 
-      return guessed
+      return {"parser" => parser_guessed}
     end
 
     private

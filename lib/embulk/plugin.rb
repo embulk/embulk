@@ -3,8 +3,7 @@ module Embulk
   require 'forwardable'
   require 'embulk/error'
   require 'embulk/plugin_registry'
-  #require 'embulk/java/imports'
-  #require 'embulk/bridge/guess_plugin'
+  require 'embulk/plugin/guess_plugin'
 
   #require 'embulk/plugin/input'
   #require 'embulk/plugin/parser'
@@ -73,9 +72,9 @@ module Embulk
 
     def new_guess(type)
       plugin = new_plugin(:guess, type)
-      unless plugin.respond_to?(:guess_buffer)
-        plugin.extend(Bridge::GuessPluginReverseBridge)
-      end
+      #unless plugin.respond_to?(:guess_buffer)
+      #  plugin.extend(Bridge::GuessPluginReverseBridge)
+      #end
       plugin
     end
 

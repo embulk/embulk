@@ -99,14 +99,13 @@ public class GuessExecutor
         // repeat guessing upto 10 times
         NextConfig lastGuessed = Exec.newNextConfig();
         for (int i=0; i < 10; i++) {
-            // include last-guessed config to run guess
-            ConfigSource guessConfig = config.deepCopy().merge(lastGuessed);
-
-            // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-            ConfigSource guessInputConfig = guessConfig.getNested("in");
+            // include last-guessed config to run guess input
+            ConfigSource originalConfig = config.getNested("in").deepCopy().merge(lastGuessed);
+            ConfigSource guessInputConfig = originalConfig.deepCopy();
             guessInputConfig.getNestedOrSetEmpty("parser")
-                .set("type", "system_guess")
-                .set("guess_plugins", guessPlugins);
+                .set("type", "system_guess")  // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
+                .set("guess_plugins", guessPlugins)
+                .set("orig_config", originalConfig);
 
             // run FileInputPlugin
             final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
@@ -135,18 +134,25 @@ public class GuessExecutor
                 throw new AssertionError("Guess executor must throw GuessedNoticeError");
 
             } catch (GuessedNoticeError error) {
-                guessed = Exec.newNextConfig();
-                guessed.getNestedOrSetEmpty("in").setNested("parser", error.getGuessedParserConfig());
+                guessed = lastGuessed.deepCopy().merge(error.getGuessedConfig());
             }
 
             // merge to the last-guessed config
-            NextConfig nextGuessed = lastGuessed.deepCopy().merge(guessed);
-            if (lastGuessed.equals(nextGuessed)) {
+            if (lastGuessed.equals(guessed)) {
                 // not changed
-                return lastGuessed;
+                return wrapInIn(lastGuessed);
             }
+            lastGuessed = guessed;
         }
-        return lastGuessed;
+
+        return wrapInIn(lastGuessed);
+    }
+
+    private static NextConfig wrapInIn(NextConfig lastGuessed)
+    {
+        NextConfig wrapped = Exec.newNextConfig();
+        wrapped.getNestedOrSetEmpty("in").merge(lastGuessed);
+        return wrapped;
     }
 
     private static class BufferFileInputPlugin
@@ -217,15 +223,14 @@ public class GuessExecutor
             @Config("guess_plugins")
             public List<PluginType> getGuessPluginTypes();
 
-            public ConfigSource getConfigSource();
-            public void setConfigSource(ConfigSource config);
+            @Config("orig_config")
+            public ConfigSource getOriginalConfig();
         }
 
         @Override
         public void transaction(ConfigSource config, ParserPlugin.Control control)
         {
             PluginTask task = config.loadConfig(PluginTask.class);
-            task.setConfigSource(config);
             control.run(task.dump(), null);
         }
 
@@ -234,7 +239,7 @@ public class GuessExecutor
                 FileInput input, PageOutput pageOutput)
         {
             PluginTask task = taskSource.loadTask(PluginTask.class);
-            final ConfigSource config = task.getConfigSource();
+            final ConfigSource originalConfig = task.getOriginalConfig();
 
             // get sample buffer
             Buffer sample = getFirstBuffer(input);
@@ -248,17 +253,16 @@ public class GuessExecutor
             List<GuessPlugin> guesses = builder.build();
 
             // run guess plugins
-            ConfigSource totalConfig = config.deepCopy();
+            ConfigSource mergedConfig = originalConfig.deepCopy();
             NextConfig mergedGuessed = Exec.newNextConfig();
             for (int i=0; i < guesses.size(); i++) {
-                GuessPlugin guess = guesses.get(i);
-                NextConfig guessed = guess.guess(config, sample);
-                totalConfig.merge(guessed);
-                if (!totalConfig.equals(config)) {
-                    // config updated
-                    throw new GuessedNoticeError(guessed);
-                }
+                NextConfig guessed = guesses.get(i).guess(originalConfig, sample);
                 mergedGuessed.merge(guessed);
+                mergedConfig.merge(mergedGuessed);
+                if (!mergedConfig.equals(originalConfig)) {
+                    // config updated
+                    throw new GuessedNoticeError(mergedGuessed);
+                }
             }
             throw new GuessedNoticeError(mergedGuessed);
         }
@@ -288,16 +292,16 @@ public class GuessExecutor
     public static class GuessedNoticeError
             extends Error
     {
-        private final NextConfig guessedParserConfig;
+        private final NextConfig guessedConfig;
 
-        public GuessedNoticeError(NextConfig guessedParserConfig)
+        public GuessedNoticeError(NextConfig guessedConfig)
         {
-            this.guessedParserConfig = guessedParserConfig;
+            this.guessedConfig = guessedConfig;
         }
 
-        public NextConfig getGuessedParserConfig()
+        public NextConfig getGuessedConfig()
         {
-            return guessedParserConfig;
+            return guessedConfig;
         }
     }
 }

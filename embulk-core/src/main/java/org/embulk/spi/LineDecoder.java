@@ -70,22 +70,30 @@ public class LineDecoder
 
     public Iterator<String> iterator()
     {
-        return new Ite();
+        return new Ite(this);
     }
 
     private String nextLine;
 
-    private class Ite
+    private static class Ite
             implements Iterator<String>
     {
+        private LineDecoder self;
+
+        public Ite(LineDecoder self)
+        {
+            // TODO non-static inner class causes a problem with JRuby
+            this.self = self;
+        }
+
         @Override
         public boolean hasNext()
         {
-            if (nextLine != null) {
+            if (self.nextLine != null) {
                 return true;
             } else {
-                nextLine = poll();
-                return nextLine != null;
+                self.nextLine = self.poll();
+                return self.nextLine != null;
             }
         }
 
@@ -95,8 +103,8 @@ public class LineDecoder
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            String l = nextLine;
-            nextLine = null;
+            String l = self.nextLine;
+            self.nextLine = null;
             return l;
         }
 

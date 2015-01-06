@@ -35,6 +35,7 @@ public class GzipFileDecoderPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         try {
+            input.nextFile();
             return new InputStreamFileInput(
                     task.getBufferAllocator(),
                     new GZIPInputStream(new FileInputInputStream(input)));

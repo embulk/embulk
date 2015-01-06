@@ -66,15 +66,13 @@ public class JRubyScriptingModule
             // load embulk/java/bootstrap.rb from $EMBULK_HOME/lib
             jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
-            // define Embulk::Java::Injector
-            jruby.put("Injector", injector);  // TODO use Embulk::Java::Injector
-            jruby.runScriptlet("require 'embulk/java/injected'");
+            // call Embulk::Java.bootstrap!(injector)
+            jruby.callMethod(
+                jruby.runScriptlet("Embulk::Java"),
+                "bootstrap!", injector);
 
             // load embulk.rb from $EMBULK_HOME/lib
             jruby.runScriptlet("require 'embulk'");
-
-            // load embulk/java/bridge.rb from $EMBULK_HOME/lib
-            jruby.runScriptlet("require 'embulk/java/bridge'");
 
             return jruby;
         }

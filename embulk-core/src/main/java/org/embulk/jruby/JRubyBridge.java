@@ -2,9 +2,9 @@ package org.embulk.jruby;
 
 import com.google.inject.Inject;
 import org.jruby.Ruby;
-import org.jruby.RubyClass;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.embed.ScriptingContainer;
+import org.jruby.javasupport.JavaObject;
 
 public class JRubyBridge
 {
@@ -27,8 +27,13 @@ public class JRubyBridge
         return (IRubyObject) jruby.runScriptlet(constName);
     }
 
-    public RubyClass getConstMetaClass(String constName)
+    public IRubyObject callOnConst(String constName, String methodName, Object... args)
     {
-        return getConst(constName).getMetaClass();
+        return (IRubyObject) jruby.callMethod(getConst(constName), methodName, args);
+    }
+
+    public IRubyObject wrapJavaObject(Object object)
+    {
+        return JavaObject.wrap(getRuntime(), object);
     }
 }

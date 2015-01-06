@@ -9,7 +9,7 @@ public class FileInputInputStream
 
     private final FileInput in;
     private int pos;
-    private Buffer buffer;
+    private Buffer buffer = EMPTY;
 
     public FileInputInputStream(FileInput in)
     {
@@ -46,7 +46,7 @@ public class FileInputInputStream
         } else {
             pos++;
         }
-        return (int) b;
+        return b & 0xff;
     }
 
     @Override

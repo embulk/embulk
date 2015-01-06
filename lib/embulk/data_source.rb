@@ -1,4 +1,5 @@
 module Embulk
+  require 'json'
 
   class DataSource < Hash
     def prop(key, type, options={})
@@ -35,6 +36,25 @@ module Embulk
       end
 
       return value
+    end
+
+    if Embulk.java?
+      def self.ruby_object(json_string)
+        new.merge!(JSON.parse(json_string))
+      end
+
+      def java_object
+        json = to_json.to_java
+        Java::DataSourceBridge.newFromJson(Java::Injected::ModelManager, json)
+      end
+
+      def load_config(task_type)
+        Java::Injected::ModelManager.readObjectWithConfigSerDe(task_type.java_class, to_json.to_java)
+      end
+
+      def load_task(task_type)
+        Java::Injected::ModelManager.readObject(task_type.java_class, to_json.to_java)
+      end
     end
   end
 

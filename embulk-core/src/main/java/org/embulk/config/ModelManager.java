@@ -54,6 +54,19 @@ public class ModelManager
         }
     }
 
+    public <T> T readObjectWithConfigSerDe(Class<T> valueType, String json)
+    {
+        T t;
+        try {
+            t = configObjectMapper.readValue(json, valueType);
+        } catch (Exception ex) {
+            Throwables.propagateIfInstanceOf(ex, ConfigException.class);
+            throw new ConfigException(ex);
+        }
+        validate(t);
+        return t;
+    }
+
     public <T> T readObjectWithConfigSerDe(Class<T> valueType, JsonParser parser)
     {
         T t;
