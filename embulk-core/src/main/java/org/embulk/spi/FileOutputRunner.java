@@ -99,10 +99,11 @@ public class FileOutputRunner
         FileOutput fileOutput = null;
         PageOutput output = null;
         try {
-            fileOutput = tran = fileOutputPlugin.open(taskSource, processorIndex);
+            fileOutput = tran = fileOutputPlugin.open(task.getFileOutputTaskSource(), processorIndex);
 
             fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), fileOutput);
-            output = formatterPlugin.open(taskSource, schema, fileOutput);
+            output = formatterPlugin.open(task.getFormatterTaskSource(), schema, fileOutput);
+            fileOutput = null;
 
             TransactionalPageOutput ret = new DelegateTransactionalPageOutput(tran, output);
             tran = null;
@@ -115,7 +116,6 @@ public class FileOutputRunner
             }
             if (fileOutput != null) {
                 fileOutput.close();
-                fileOutput = null;
             }
             if (tran != null) {
                 tran.abort();

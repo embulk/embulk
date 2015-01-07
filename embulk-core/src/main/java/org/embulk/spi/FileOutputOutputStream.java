@@ -88,5 +88,6 @@ public class FileOutputOutputStream
         out.close();
         buffer.release();
         buffer = Buffer.EMPTY;
+        pos = 0;
     }
 }

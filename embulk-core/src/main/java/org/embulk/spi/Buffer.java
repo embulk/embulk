@@ -17,6 +17,10 @@ public class Buffer
         this.offset = offset;
         this.capacity = capacity;
         this.filled = offset;
+        if (array.length < offset + capacity) {
+            // TODO
+            throw new IllegalStateException("capacity out of bound");
+        }
     }
 
     public static Buffer allocate(int length)
@@ -67,6 +71,10 @@ public class Buffer
 
     public Buffer limit(int limit)
     {
+        if (capacity < limit) {
+            // TODO
+            throw new IllegalStateException("limit index out of bound: capacity="+capacity+" limit="+limit);
+        }
         this.filled = offset + limit;
         return this;
     }

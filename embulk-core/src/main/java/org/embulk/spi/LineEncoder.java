@@ -84,6 +84,7 @@ public class LineEncoder
 
     public void finish()
     {
+        close();   // flush all remaining buffer
         outputStream.finish();
     }
 

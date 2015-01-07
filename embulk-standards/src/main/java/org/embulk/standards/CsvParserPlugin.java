@@ -178,9 +178,9 @@ public class CsvParserPlugin
 
                     } catch (Exception e) {
                         String skippedLine = tokenizer.skipCurrentLine();
+                        // TODO logging
                         e.printStackTrace();
                         System.out.println("skip: "+e);
-                        // TODO logging
                         //exec.notice().skippedLine(skippedLine);
                     }
                 }
