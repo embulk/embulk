@@ -19,7 +19,7 @@ public class TestFileInputInputStream
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
-    private MockFileInput fileInput;
+    private ListFileInput fileInput;
     private MockFileOutput fileOutput;
 
     private FileInputInputStream in;
@@ -33,7 +33,7 @@ public class TestFileInputInputStream
 
     private void newInputStream()
     {
-        fileInput = new MockFileInput(fileOutput.getFiles());
+        fileInput = new ListFileInput(fileOutput.getFiles());
         in = new FileInputInputStream(fileInput);
     }
 

@@ -55,7 +55,7 @@ module Embulk
           return DataSource.new
         end
 
-        decoder = Java::LineDecoder.new(Java::ListFileInput.new([sample.java_object]), task)
+        decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.java_object]]), task)
         sample_text = ''
         while decoder.nextFile
           first = true
@@ -89,7 +89,7 @@ module Embulk
           return DataSource.new
         end
 
-        decoder = Java::LineDecoder.new(Java::ListFileInput.new([sample.java_object]), task)
+        decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.java_object]]), task)
         sample_lines = []
         while decoder.nextFile
           while line = decoder.poll
