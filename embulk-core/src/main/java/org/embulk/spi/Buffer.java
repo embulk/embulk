@@ -1,12 +1,8 @@
 package org.embulk.spi;
 
 import java.util.Arrays;
-import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.java.proxies.RubyObjectHolderProxy;
-import org.embulk.jruby.BufferBridge;
 
 public class Buffer
-        implements RubyObjectHolderProxy
 {
     public static final Buffer EMPTY = Buffer.allocate(0);
 
@@ -104,9 +100,6 @@ public class Buffer
     {
     }
 
-    @Override
-    public IRubyObject __ruby_object()
-    {
-        return BufferBridge.rubyObject(this);
-    }
+    // TODO equals
+    // TODO hashCode
 }

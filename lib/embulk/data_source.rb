@@ -39,13 +39,14 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.ruby_object(json_string)
-        new.merge!(JSON.parse(json_string))
+      def self.from_java_object(java_data_source_impl)
+        json = java_data_source_impl.toString
+        new.merge!(JSON.parse(json))
       end
 
       def java_object
-        json = to_json.to_java
-        Java::DataSourceBridge.newFromJson(Java::Injected::ModelManager, json)
+        json = to_json
+        Java::Injected::ModelManager.readObject(Java::DataSourceImpl.java_class, json.to_java)
       end
 
       def load_config(task_type)

@@ -47,63 +47,66 @@ module Embulk
     end
 
     def new_input(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java input plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::InputPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_output(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java output plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::OutputPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_parser(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java parser plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::ParserPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_formatter(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java formatter plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::FormatterPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_decoder(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java decoder plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::DecoderPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_encoder(type)
-      raise NotImplementedError, "Reverse bridge for Ruby of Java encoder plugins is not implemented yet"
+      # TODO not implemented yet
+      Plugin::EncoderPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_guess(type)
-      plugin = new_plugin(:guess, type)
-      #unless plugin.respond_to?(:guess_buffer)
-      #  plugin.extend(Bridge::GuessPluginReverseBridge)
-      #end
-      plugin
+      # TODO not implemented yet
+      Plugin::GuessPlugin.from_java_object(new_plugin(:guess, type))
     end
 
     def new_java_input(type)
-      new_plugin(:input, type)
+      new_plugin(:input, type).java_object
     end
 
     def new_java_output(type)
-      new_plugin(:output, type)
+      new_plugin(:output, type).java_object
     end
 
     def new_java_parser(type)
-      new_plugin(:parser, type)
+      new_plugin(:parser, type).java_object
     end
 
     def new_java_formatter(type)
-      new_plugin(:formatter, type)
+      new_plugin(:formatter, type).java_object
     end
 
     def new_java_decoder(type)
-      new_plugin(:decoder, type)
+      new_plugin(:decoder, type).java_object
     end
 
     def new_java_encoder(type)
-      new_plugin(:encoder, type)
+      new_plugin(:encoder, type).java_object
     end
 
     def new_java_guess(type)
-      new_plugin(:guess, type)
+      new_plugin(:guess, type).java_object
     end
 
     private

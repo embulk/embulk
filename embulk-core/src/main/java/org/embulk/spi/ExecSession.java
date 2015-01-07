@@ -12,7 +12,6 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
-import org.embulk.jruby.JRubyBridge;
 
 public class ExecSession
 {
@@ -23,7 +22,6 @@ public class ExecSession
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
     //private final NoticeLogger noticeLogger;
-    private final JRubyBridge jrubyBridge;
 
     @Inject
     ExecSession(Injector injector /*, Logger logger, NoticeLogger noticeLogger*/)
@@ -35,7 +33,6 @@ public class ExecSession
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
-        this.jrubyBridge = injector.getInstance(JRubyBridge.class);
     }
 
     //public Logger getLogger()
@@ -81,10 +78,5 @@ public class ExecSession
     public TaskSource newTaskSource()
     {
         return new DataSourceImpl(modelManager);
-    }
-
-    public JRubyBridge getJRubyBridge()
-    {
-        return jrubyBridge;
     }
 }

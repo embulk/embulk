@@ -34,6 +34,7 @@ public class PooledBufferAllocator
             extends Buffer
     {
         private ByteBuf buf;
+        private Exception released;
 
         public NettyByteBufBuffer(ByteBuf buf)
         {
@@ -43,8 +44,12 @@ public class PooledBufferAllocator
 
         public void release()
         {
+            if (released != null) {
+                released.printStackTrace();
+            }
             buf.release();
             buf = null;
+            released = new NullPointerException();
         }
     }
 }

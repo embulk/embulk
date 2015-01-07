@@ -104,7 +104,6 @@ public class CsvParserPlugin
                             tokenizer.nextColumn();  // TODO check return value?
                         }
                     }
-                    continue;
                 }
 
                 while (tokenizer.nextRecord()) {
@@ -179,6 +178,8 @@ public class CsvParserPlugin
 
                     } catch (Exception e) {
                         String skippedLine = tokenizer.skipCurrentLine();
+                        e.printStackTrace();
+                        System.out.println("skip: "+e);
                         // TODO logging
                         //exec.notice().skippedLine(skippedLine);
                     }

@@ -48,7 +48,7 @@ public class PageBuilder
     private void newBuffer()
     {
         this.buffer = allocator.allocate(PageFormat.PAGE_HEADER_SIZE + fixedRecordSize);
-        this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.limit());
+        this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences.clear();
@@ -192,9 +192,10 @@ public class PageBuilder
             buffer.limit(position);
 
             // flush page
-            output.add(Page.wrap(buffer).setStringReferences(getSortedStringReferences()));
+            Page page = Page.wrap(buffer).setStringReferences(getSortedStringReferences());
             buffer = null;
             bufferSlice = null;
+            output.add(page);
         }
     }
 
