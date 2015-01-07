@@ -40,10 +40,9 @@ public class FileInputInputStream
             }
         }
         byte b = buffer.array()[buffer.offset() + pos];
-        if (pos + 1 >= buffer.limit()) {
+        pos++;
+        if (pos >= buffer.limit()) {
             releaseBuffer();
-        } else {
-            pos++;
         }
         return b & 0xff;
     }

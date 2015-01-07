@@ -26,10 +26,9 @@ public class FileOutputOutputStream
     public void write(int b)
     {
         buffer.array()[buffer.offset() + pos] = (byte) b;
-        if (pos + 1 >= buffer.capacity()) {
+        pos++;
+        if (pos >= buffer.capacity()) {
             flush();
-        } else {
-            pos++;
         }
     }
 
@@ -38,7 +37,6 @@ public class FileOutputOutputStream
     {
         while (true) {
             int available = buffer.capacity() - pos;
-            int wlen;
             if (available < len) {
                 buffer.setBytes(pos, b, off, available);
                 pos += available;

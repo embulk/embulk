@@ -79,12 +79,18 @@ public class LineEncoder
 
     public void nextFile()
     {
+        try {
+            writer.flush();
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
         outputStream.nextFile();
     }
 
     public void finish()
     {
-        close();   // flush all remaining buffer
+        close();   // flush all remaining buffer in writer
         outputStream.finish();
     }
 

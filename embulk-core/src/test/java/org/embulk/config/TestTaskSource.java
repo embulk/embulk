@@ -1,36 +1,17 @@
 package org.embulk.config;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import org.junit.Rule;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.embulk.GuiceJUnitRunner;
-import org.embulk.TestRuntimeModule;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import com.google.inject.Inject;
+import org.embulk.spi.Exec;
+import org.embulk.EmbulkTestRuntime;
 
-@RunWith(GuiceJUnitRunner.class)
-@GuiceJUnitRunner.GuiceModules({ TestRuntimeModule.class })
 public class TestTaskSource
 {
-    @Inject
-    protected ModelManager modelManager;
-
-    private TaskSource taskSource;
-
-    @Before
-    public void setup() throws Exception
-    {
-        taskSource = new TaskSource();
-        taskSource.setBoolean("Boolean", false);
-        taskSource.setDouble("Double", 0.5);
-        taskSource.setInt("Int", 0);
-        taskSource.setLong("Long", 0);
-        taskSource.setString("String", "");
-    }
-
     private static interface TypeFields
             extends Task
     {
@@ -50,18 +31,34 @@ public class TestTaskSource
         public void setString(String v);
     }
 
+    @Rule
+    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
+
+    private TaskSource taskSource;
+
+    @Before
+    public void setup() throws Exception
+    {
+        taskSource = Exec.newTaskSource();
+        taskSource.set("Boolean", false);
+        taskSource.set("Double", 0.5);
+        taskSource.set("Int", 0);
+        taskSource.set("Long", 0);
+        taskSource.set("String", "");
+    }
+
     @Test
     public void testEqualsOfLoadedTasks()
     {
-        TypeFields task = modelManager.readObject(taskSource, TypeFields.class);
+        TypeFields task = taskSource.loadTask(TypeFields.class);
         task.setBoolean(true);
         task.setDouble(0.2);
         task.setInt(3);
         task.setLong(Long.MAX_VALUE);
         task.setString("sf");
 
-        TaskSource taskSource2 = modelManager.writeAsTaskSource(task);
-        TypeFields task2 = modelManager.readObject(taskSource2, TypeFields.class);
+        TaskSource taskSource2 = task.dump();
+        TypeFields task2 = taskSource2.loadTask(TypeFields.class);
 
         assertTrue(task.equals(task2));
         assertTrue(task.hashCode() == task2.hashCode());
