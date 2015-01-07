@@ -8,15 +8,19 @@ import org.embulk.jruby.BufferBridge;
 public class Buffer
         implements RubyObjectHolderProxy
 {
+    public static final Buffer EMPTY = Buffer.allocate(0);
+
     private byte[] array;
     private int offset;
     private int filled;
+    private final int capacity;
 
-    protected Buffer(byte[] wrap, int offset, int limit)
+    protected Buffer(byte[] wrap, int offset, int capacity)
     {
         this.array = wrap;
         this.offset = offset;
-        this.filled = offset + limit;
+        this.capacity = capacity;
+        this.filled = offset;
     }
 
     public static Buffer allocate(int length)
@@ -41,7 +45,7 @@ public class Buffer
 
     public static Buffer wrap(byte[] src, int offset, int size)
     {
-        return new Buffer(src, offset, size);
+        return new Buffer(src, offset, size).limit(size);
     }
 
     public byte[] array()
@@ -73,7 +77,7 @@ public class Buffer
 
     public int capacity()
     {
-        return array.length - offset;
+        return capacity;
     }
 
     public void setBytes(int index, byte[] source, int sourceIndex, int length)

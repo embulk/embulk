@@ -5,11 +5,9 @@ import java.io.InputStream;
 public class FileInputInputStream
         extends InputStream
 {
-    private final static Buffer EMPTY = Buffer.allocate(0);
-
     private final FileInput in;
     private int pos;
-    private Buffer buffer = EMPTY;
+    private Buffer buffer = Buffer.EMPTY;
 
     public FileInputInputStream(FileInput in)
     {
@@ -23,6 +21,7 @@ public class FileInputInputStream
 
     public boolean nextFile()
     {
+        releaseBuffer();
         return in.nextFile();
     }
 
@@ -58,18 +57,18 @@ public class FileInputInputStream
             }
         }
         int remaining = buffer.limit() - pos;
-        boolean consumed;
+        boolean allConsumed;
         if (remaining <= len) {
-            consumed = true;
+            allConsumed = true;
             len = remaining;
         } else {
-            consumed = false;
+            allConsumed = false;
         }
         if (b != null) {
             // b == null if skip
             buffer.getBytes(pos, b, off, len);
         }
-        if (consumed) {
+        if (allConsumed) {
             releaseBuffer();
         } else {
             pos += len;
@@ -97,7 +96,7 @@ public class FileInputInputStream
     private void releaseBuffer()
     {
         buffer.release();
-        buffer = EMPTY;
+        buffer = Buffer.EMPTY;
         pos = 0;
     }
 

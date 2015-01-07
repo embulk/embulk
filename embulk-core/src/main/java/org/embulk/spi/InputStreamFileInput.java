@@ -70,9 +70,16 @@ public class InputStreamFileInput
                 return null;
             }
             buffer.limit(n);
-            return buffer;
+            Buffer b = buffer;
+            buffer = null;
+            return b;
         } catch (IOException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            if (buffer != null) {
+                buffer.release();
+                buffer = null;
+            }
         }
     }
 

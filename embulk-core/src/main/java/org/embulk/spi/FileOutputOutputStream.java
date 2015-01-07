@@ -41,11 +41,13 @@ public class FileOutputOutputStream
             int wlen;
             if (available < len) {
                 buffer.setBytes(pos, b, off, available);
+                pos += available;
                 len -= available;
                 off += available;
                 flush();
             } else {
                 buffer.setBytes(pos, b, off, len);
+                pos += len;
                 if (available <= len) {
                     flush();
                 }
@@ -54,20 +56,29 @@ public class FileOutputOutputStream
         }
     }
 
-    @Override
-    public void flush()
+    private boolean doFlush()
     {
         if (pos > 0) {
             buffer.limit(pos);
             out.add(buffer);
-            buffer = allocator.allocate();
+            buffer = Buffer.EMPTY;
             pos = 0;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void flush()
+    {
+        if (doFlush()) {
+            buffer = allocator.allocate();
         }
     }
 
     public void finish()
     {
-        flush();
+        doFlush();
         out.finish();
     }
 
@@ -75,5 +86,7 @@ public class FileOutputOutputStream
     public void close()
     {
         out.close();
+        buffer.release();
+        buffer = Buffer.EMPTY;
     }
 }

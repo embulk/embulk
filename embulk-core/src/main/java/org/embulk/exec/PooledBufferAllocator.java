@@ -44,6 +44,7 @@ public class PooledBufferAllocator
         public void release()
         {
             buf.release();
+            buf = null;
         }
     }
 }
