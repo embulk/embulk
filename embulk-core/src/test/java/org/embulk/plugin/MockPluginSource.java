@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
@@ -10,7 +9,7 @@ public class MockPluginSource
 {
     private final Class<?> expectedIface;
     private final Object plugin;
-    private JsonNode typeConfig;
+    private PluginType typeConfig;
 
     public <T> MockPluginSource(Class<T> expectedIface, T plugin)
     {
@@ -18,12 +17,12 @@ public class MockPluginSource
         this.plugin = plugin;
     }
 
-    public JsonNode getTypeConfig()
+    public PluginType getTypeConfig()
     {
         return typeConfig;
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
+    public <T> T newPlugin(Class<T> iface, PluginType typeConfig) throws PluginSourceNotMatchException
     {
         if (expectedIface.equals(iface)) {
             this.typeConfig = typeConfig;

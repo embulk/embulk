@@ -9,7 +9,7 @@ import org.junit.Before;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import com.google.common.collect.ImmutableList;
-import org.embulk.TestRuntimeBinder;
+import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
@@ -17,7 +17,7 @@ import org.embulk.config.NextConfig;
 public class TestFileInputInputStream
 {
     @Rule
-    public TestRuntimeBinder binder = new TestRuntimeBinder();
+    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     private MockFileInput fileInput;
     private MockFileOutput fileOutput;
@@ -28,7 +28,7 @@ public class TestFileInputInputStream
     private void newOutputStream()
     {
         fileOutput = new MockFileOutput();
-        out = new FileOutputOutputStream(fileOutput, binder.getBufferAllocator());
+        out = new FileOutputOutputStream(fileOutput, runtime.getBufferAllocator());
     }
 
     private void newInputStream()
@@ -43,7 +43,7 @@ public class TestFileInputInputStream
         newOutputStream();
         out.nextFile();
         ByteArrayOutputStream expectedOut = new ByteArrayOutputStream();
-        Random rand = binder.getRandom();
+        Random rand = runtime.getRandom();
         byte[] buffer = new byte[rand.nextInt() % 1024 + 1024];
         for (int i = 0; i < 256; i++) {
             rand.nextBytes(buffer);

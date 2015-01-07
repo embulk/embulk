@@ -2,12 +2,10 @@ package org.embulk;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -57,7 +55,7 @@ public class GuiceBinder
     }
 
     @Override
-    public final Statement apply(Statement base, Description description)
+    public Statement apply(Statement base, Description description)
     {
         return new GuceBinderWatcher().apply(base, description);
     }
