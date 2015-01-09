@@ -1,57 +1,25 @@
-#in:
-#  type: file
-#  paths:
-#    - benchmark/
-#  #parser:
-#  #  type: csv
-#  #  newline: LF
-#  #  columns:
-#  #    - {name: date_code, type: string}
-#  #    - {name: customer_code, type: long}
-#  #    - {name: product_code, type: string}
-#  #    - {name: employee_code, type: string}
-#  #  file_decoders:
-#  #    - type: gzip
-#out:
-#  type: "null"
-#    #  type: file
-#    #  directory: tmp/
-#    #  file_name: output
-#    #  file_ext: csv.gz
-#    #  formatter:
-#    #    type: csv
-#    #    timezone: Etc/UTC
-#    #    file_encoders:
-#    #      - type: gzip
-#    #        level: 9
-#---
 in:
   type: file
   paths:
-  - benchmark/
-  parser:
-    file_decoders:
-    - type: gzip
-    charset: UTF-8
-    newline: LF
-    type: csv
-    delimiter: ! ','
-    quote: ''
-    header_line: true
-    columns:
-    - name: hansya_code
-      type: string
-    - name: serial_no
-      type: string
-    - name: mach_id
-      type: string
-    - name: cntr_id
-      type: string
-    - name: date
-      type: string
-    - name: count
-      type: long
+    - examples/csv/
+  #parser:
+  #  type: csv
+  #  newline: LF
+  #  columns:
+  #    - {name: date_code, type: string}
+  #    - {name: customer_code, type: long}
+  #    - {name: product_code, type: string}
+  #    - {name: employee_code, type: string}
+  #  file_decoders:
+  #    - type: gzip
 out:
-  type: 'null'
-exec: {}
-
+  type: file
+  directory: tmp/
+  file_name: output
+  file_ext: csv
+  #encoders:
+  #  - type: gzip
+  #    level: 9
+  formatter:
+    type: csv
+    timezone: Etc/UTC
