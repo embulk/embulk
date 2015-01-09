@@ -1,5 +1,6 @@
 package org.embulk.exec;
 
+import org.slf4j.ILoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
@@ -23,6 +24,7 @@ public class ExecModule
     {
         Preconditions.checkNotNull(binder, "binder is null.");
 
+        binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class);
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
 

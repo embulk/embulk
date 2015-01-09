@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
-//import org.slf4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.ILoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.embulk.config.Task;
@@ -15,39 +16,36 @@ import org.embulk.plugin.PluginManager;
 
 public class ExecSession
 {
-    //private final Logger logger;
-
     private final Injector injector;
+    private final ILoggerFactory loggerFactory;
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
-    //private final NoticeLogger noticeLogger;
 
     @Inject
-    ExecSession(Injector injector /*, Logger logger, NoticeLogger noticeLogger*/)
+    ExecSession(Injector injector)
     {
         super();
         this.injector = injector;
-        //this.logger = logger;
-        //this.noticeLogger = noticeLogger;
+        this.loggerFactory = injector.getInstance(ILoggerFactory.class);
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
     }
 
-    //public Logger getLogger()
-    //{
-    //    return logger;
-    //}
-
-    //public NoticeLogger notice()
-    //{
-    //    return noticeLogger;
-    //}
-
     public Injector getInjector()
     {
         return injector;
+    }
+
+    public Logger getLogger(String name)
+    {
+        return loggerFactory.getLogger(name);
+    }
+
+    public Logger getLogger(Class<?> name)
+    {
+        return loggerFactory.getLogger(name.getName());
     }
 
     public BufferAllocator getBufferAllocator()

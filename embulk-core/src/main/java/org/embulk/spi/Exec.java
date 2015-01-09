@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-//import org.slf4j.Logger;
+import org.slf4j.Logger;
 import org.embulk.config.Task;
 import org.embulk.config.CommitReport;
 import org.embulk.config.NextConfig;
@@ -34,16 +34,15 @@ public class Exec
         return session;
     }
 
-    // TODO
-    //public Logger getLogger()
-    //{
-    //    return session().getLogger();
-    //}
+    public Logger getLogger(String name)
+    {
+        return session().getLogger(name);
+    }
 
-    //public NoticeLogger notice()
-    //{
-    //    return session().notice();
-    //}
+    public Logger getLogger(Class<?> name)
+    {
+        return session().getLogger(name);
+    }
 
     public static BufferAllocator getBufferAllocator()
     {
