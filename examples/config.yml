@@ -23,3 +23,9 @@ out:
   formatter:
     type: csv
     timezone: Etc/UTC
+#in:
+#  type: file
+#  paths:
+#    - benchmark/
+#out:
+#  type: "null"

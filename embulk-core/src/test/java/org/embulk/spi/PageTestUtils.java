@@ -1,9 +1,16 @@
-package org.embulk.record;
+package org.embulk.spi;
 
 import com.google.common.collect.ImmutableList;
+import org.embulk.type.Type;
+import org.embulk.type.Schema;
+import org.embulk.type.SchemaConfig;
+import org.embulk.type.Column;
+import org.embulk.type.ColumnConfig;
 
 public class PageTestUtils
 {
+    private PageTestUtils() { }
+
     public static Schema newSchema()
     {
         return new Schema(ImmutableList.<Column>of());
