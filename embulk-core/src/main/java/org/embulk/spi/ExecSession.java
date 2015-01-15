@@ -23,7 +23,7 @@ public class ExecSession
     private final BufferAllocator bufferAllocator;
 
     @Inject
-    ExecSession(Injector injector)
+    public ExecSession(Injector injector)
     {
         super();
         this.injector = injector;
