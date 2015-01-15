@@ -77,7 +77,6 @@ module Embulk
     end
 
     def new_guess(type)
-      # TODO not implemented yet
       Plugin::GuessPlugin.from_java_object(new_plugin(:guess, type))
     end
 
