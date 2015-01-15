@@ -1,8 +1,9 @@
-$:.push File.expand_path("../lib", __FILE__)
+$LOAD_PATH.push File.expand_path("../lib", __FILE__)
+require 'embulk/version'
 
 Gem::Specification.new do |s|
   s.name = "embulk"
-  s.version = "0.1.0" # TODO
+  s.version = Embulk::VERSION
   s.summary = %q{Embulk data sync framework}
   s.description = %q{Embulk is an open-source, plugin-based data synchronizer to scale and simplify data management across heterogeneous storages. It can collect and ship many kinds of data in high throughput.}
   s.author = "Sadayuki Furuhashi"
@@ -11,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://embulk.org/"
   s.rubyforge_project = "embulk"
   s.has_rdoc = false
-  s.files = `git ls-files`.split("\n")
+  s.files = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
   s.require_paths = ["lib"]
 

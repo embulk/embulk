@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+
+# TODO cygwin/windows check
+cygwin = false
+windows = false
+
+java_commands = []
+while i = ARGV.find_index {|arg| arg =~ /^\-D/ }
+  if ARGV[i] == "-D"
+    prop_path = ARGV[i + 1]
+    unless prop_path
+      STDERR.puts "-D option requires an option"
+      exit 1
+    end
+    ARGV.slice!(i, 2)
+  else
+    java_commands << ARGV[i]
+    ARGV.slice!(i)
+  end
+end
+
+if prop_path
+  props = File.read(prop_path)
+  java_props = props.split("\n").reject {|prop| prop.strip.empty? }
+  java_commands = java_props + java_commands
+end
+
+java_cmd = ENV['JAVACMD']
+unless java_cmd
+  if java_home = ENV['JAVA_HOME']
+    if cygwin
+      java_cmd = "#{`cygpath -u "#{java_home}"`.strip}/bin/java"
+    else
+      java_cmd = "#{java_home}/bin/java"
+    end
+  else
+    java_cmd = "java"
+  end
+end
+
+embulk_home = ENV['EMBULK_HOME']
+unless embulk_home
+  embulk_home = File.dirname(File.dirname(__FILE__))
+end
+ENV['EMBULK_HOME'] = File.expand_path(embulk_home)
+jars = Dir["#{embulk_home}/classpath/*.jar"]
+
+cp_delim = windows ? ';' : ':'
+classpath = jars.join(cp_delim)
+
+cmdline = [java_cmd]
+cmdline.concat java_commands
+cmdline << "-classpath"
+cmdline << classpath
+cmdline << "org.embulk.cli.Runner"
+cmdline.concat ARGV
+
+exec *cmdline
+
+# Next step: lib/embulk/command/embulk.rb
+# Next step: org.embulk.cli.Runner
+

@@ -2,7 +2,7 @@
 
 ```
 mvn clean package dependency:copy-dependencies
-java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Embulk examples/config.yml
+java -cp $(echo classpath/*.jar | sed "s/ /:/g") org.embulk.cli.Embulk examples/config.yml
 ```
 
 You can see JaCoCo's coverage report at ${project}/target/site/jacoco/index.html
@@ -16,8 +16,9 @@ mvn clean package coveralls:report -Dcoveralls.repo.token=05RZCkCRpJWXa5vqpUSBSr
 ## Execution
 
 ```
-EMBULK_HOME=$(pwd) java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Runner guess examples/config.yml > config.yml
-EMBULK_HOME=$(pwd) java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Runner preview config.yml
-EMBULK_HOME=$(pwd) java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Runner run config.yml
+rake compile
+./bin/embulk guess examples/config.yml > config.yml
+./bin/embulk preview config.yml
+./bin/embulk run config.yml
 ```
 
