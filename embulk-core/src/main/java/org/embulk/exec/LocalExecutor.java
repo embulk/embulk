@@ -7,7 +7,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
-import javax.validation.constraints.NotNull;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -35,7 +36,8 @@ public class LocalExecutor
     private final Injector injector;
     private final ConfigSource systemConfig;
     private final ExecutorService executor;
-    private Logger LOG;
+    private final AtomicInteger runningThreadCount;
+    private Logger log;
 
     public interface ExecutorTask
             extends Task
@@ -64,6 +66,7 @@ public class LocalExecutor
                 .setNameFormat("embulk-executor-%d")
                 .setDaemon(true)
                 .build());
+        this.runningThreadCount = new AtomicInteger(0);
     }
 
     private static class ExecuteResultBuilder
@@ -159,7 +162,7 @@ public class LocalExecutor
 
     public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
-        LOG = exec.getLogger(LocalExecutor.class);
+        log = exec.getLogger(LocalExecutor.class);
         try {
             return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
                 public ExecuteResult run()
@@ -192,8 +195,8 @@ public class LocalExecutor
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
 
-                        //LOG.debug("input: %s", task.getInputTask());
-                        //LOG.debug("output: %s", task.getOutputTask());
+                        //log.debug("input: %s", task.getInputTask());
+                        //log.debug("output: %s", task.getOutputTask());
 
                         List<ProcessResult> results = process(task.dump(), schema, processorCount);
                         for (ProcessResult result : results) {
@@ -221,8 +224,8 @@ public class LocalExecutor
         List<Future<ProcessResult>> futures = new ArrayList<>();
         List<ProcessResult> joined = new ArrayList<>();
         try {
-            LOG.info("Start bulk processing");
-            LOG.info(getProgress(0, processorCount));
+            log.info("Start bulk processing");
+            showProgress(0, processorCount);
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));
             }
@@ -230,7 +233,7 @@ public class LocalExecutor
             for (int i=0; i < processorCount; i++) {
                 try {
                     joined.add(futures.get(i).get());
-                    LOG.info(getProgress(i+1, processorCount));
+                    showProgress(i + 1, processorCount);
 
                 } catch (ExecutionException ex) {
                     throw Throwables.propagate(ex.getCause());
@@ -247,9 +250,13 @@ public class LocalExecutor
         }
     }
 
-    private String getProgress(int num, int total)
+    private void showProgress(int done, int total)
     {
-        return String.format("Progress %1$3d%% completed", num*100/total);
+        int running = runningThreadCount.get();
+        int pending = total - done - running;
+
+        log.info(" pending  running     done /    total");
+        log.info(String.format("%8d %8d %8d / %8d", pending, running, done, total));
     }
 
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
@@ -257,6 +264,7 @@ public class LocalExecutor
         return executor.submit(new Callable<ProcessResult>() {
             public ProcessResult call()
             {
+                runningThreadCount.getAndIncrement();
                 final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
                 final InputPlugin in = newInputPlugin(task);
                 final OutputPlugin out = newOutputPlugin(task);
@@ -273,6 +281,7 @@ public class LocalExecutor
                         tran.abort();
                     }
                     tran.close();
+                    runningThreadCount.getAndDecrement();
                 }
             }
         });
