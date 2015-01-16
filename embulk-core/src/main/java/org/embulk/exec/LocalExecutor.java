@@ -36,8 +36,10 @@ public class LocalExecutor
     private final Injector injector;
     private final ConfigSource systemConfig;
     private final ExecutorService executor;
-    private final AtomicInteger runningThreadCount;
+
     private Logger log;
+    private final AtomicInteger runningTaskCount;
+    private final AtomicInteger completedTaskCount;
 
     public interface ExecutorTask
             extends Task
@@ -66,7 +68,8 @@ public class LocalExecutor
                 .setNameFormat("embulk-executor-%d")
                 .setDaemon(true)
                 .build());
-        this.runningThreadCount = new AtomicInteger(0);
+        this.runningTaskCount = new AtomicInteger(0);
+        this.completedTaskCount = new AtomicInteger(0);
     }
 
     private static class ExecuteResultBuilder
@@ -225,7 +228,7 @@ public class LocalExecutor
         List<ProcessResult> joined = new ArrayList<>();
         try {
             log.info("Start bulk processing");
-            showProgress(0, processorCount);
+            showProgress(processorCount);
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));
             }
@@ -233,7 +236,7 @@ public class LocalExecutor
             for (int i=0; i < processorCount; i++) {
                 try {
                     joined.add(futures.get(i).get());
-                    showProgress(i + 1, processorCount);
+                    showProgress(processorCount);
 
                 } catch (ExecutionException ex) {
                     throw Throwables.propagate(ex.getCause());
@@ -250,9 +253,10 @@ public class LocalExecutor
         }
     }
 
-    private void showProgress(int done, int total)
+    private void showProgress(int total)
     {
-        int running = runningThreadCount.get();
+        int running = runningTaskCount.get();
+        int done = completedTaskCount.get();
         int pending = total - done - running;
 
         log.info(" pending  running     done /    total");
@@ -264,24 +268,28 @@ public class LocalExecutor
         return executor.submit(new Callable<ProcessResult>() {
             public ProcessResult call()
             {
-                runningThreadCount.getAndIncrement();
-                final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
-                final InputPlugin in = newInputPlugin(task);
-                final OutputPlugin out = newOutputPlugin(task);
-
-                TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
-                boolean committed = false;
                 try {
-                    CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
-                    CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
-                    committed = true;
-                    return new ProcessResult(inReport, outReport);
-                } finally {
-                    if (!committed) {
-                        tran.abort();
+                    runningTaskCount.getAndIncrement();
+                    final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+                    final InputPlugin in = newInputPlugin(task);
+                    final OutputPlugin out = newOutputPlugin(task);
+
+                    TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
+                    boolean committed = false;
+                    try {
+                        CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
+                        CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
+                        committed = true;
+                        return new ProcessResult(inReport, outReport);
+                    } finally {
+                        if (!committed) {
+                            tran.abort();
+                        }
+                        tran.close();
                     }
-                    tran.close();
-                    runningThreadCount.getAndDecrement();
+                } finally {
+                    runningTaskCount.getAndDecrement();
+                    completedTaskCount.getAndIncrement();
                 }
             }
         });
