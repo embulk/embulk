@@ -1,0 +1,10 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    embulk (0.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  embulk (~> 0.1.0)
