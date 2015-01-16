@@ -1,6 +1,6 @@
-module Embulk::Plugin
+module Embulk
 
-  class NewlineGuess < TextGuessPlugin
+  class GuessNewline < TextGuessPlugin
     Plugin.register_guess('newline', self)
 
     def guess_text(config, sample_text)

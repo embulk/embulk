@@ -1,7 +1,7 @@
-module Embulk::Plugin
-  require 'embulk/plugin/tf_guess'
+module Embulk
+  require_relative 'tf_guess'
 
-  class CsvGuess < LineGuessPlugin
+  class GuessCsv < LineGuessPlugin
     Plugin.register_guess('csv', self)
 
     DELIMITER_CANDIDATES = [
@@ -191,4 +191,5 @@ module Embulk::Plugin
       Math.sqrt(array_variance(array))
     end
   end
+
 end

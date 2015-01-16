@@ -31,20 +31,20 @@ when :run
   end
   op.on('-P', '--with-preview', TrueClass) do |b|
   end
-  op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
+  op.on('-I', '--load-path PATH') do |load_path|
+    $LOAD_PATH << File.expand_path(load_path)
   end
   args = 1
 
 when :preview
   op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
+    $LOAD_PATH << File.expand_path(load_path)
   end
   args = 1
 
 when :guess
   op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
+    $LOAD_PATH << File.expand_path(load_path)
   end
   args = 1
 
