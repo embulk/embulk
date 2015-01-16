@@ -28,12 +28,14 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 //import org.embulk.spi.NoticeLogger;
 import org.embulk.spi.TransactionalPageOutput;
+import org.slf4j.Logger;
 
 public class LocalExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
     private final ExecutorService executor;
+    private Logger LOG;
 
     public interface ExecutorTask
             extends Task
@@ -157,6 +159,7 @@ public class LocalExecutor
 
     public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
+        LOG = exec.getLogger(LocalExecutor.class);
         try {
             return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
                 public ExecuteResult run()
@@ -189,9 +192,8 @@ public class LocalExecutor
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
 
-                        // TODO
-                        //Exec.getLogger().debug("input: %s", task.getInputTask());
-                        //Exec.getLogger().debug("output: %s", task.getOutputTask());
+                        //LOG.debug("input: %s", task.getInputTask());
+                        //LOG.debug("output: %s", task.getOutputTask());
 
                         List<ProcessResult> results = process(task.dump(), schema, processorCount);
                         for (ProcessResult result : results) {
@@ -219,12 +221,17 @@ public class LocalExecutor
         List<Future<ProcessResult>> futures = new ArrayList<>();
         List<ProcessResult> joined = new ArrayList<>();
         try {
+            LOG.info("Start bulk processing");
+            LOG.info(getProgress(0, processorCount));
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));
             }
-            for (Future<ProcessResult> future : futures) {
+
+            for (int i=0; i < processorCount; i++) {
                 try {
-                    joined.add(future.get());
+                    joined.add(futures.get(i).get());
+                    LOG.info(getProgress(i+1, processorCount));
+
                 } catch (ExecutionException ex) {
                     throw Throwables.propagate(ex.getCause());
                 } catch (InterruptedException ex) {
@@ -238,6 +245,11 @@ public class LocalExecutor
                 // TODO join?
             }
         }
+    }
+
+    private String getProgress(int num, int total)
+    {
+        return String.format("Progress %1$3d%% completed", num*100/total);
     }
 
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
