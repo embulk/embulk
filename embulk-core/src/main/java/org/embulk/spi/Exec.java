@@ -34,12 +34,12 @@ public class Exec
         return session;
     }
 
-    public Logger getLogger(String name)
+    public static Logger getLogger(String name)
     {
         return session().getLogger(name);
     }
 
-    public Logger getLogger(Class<?> name)
+    public static Logger getLogger(Class<?> name)
     {
         return session().getLogger(name);
     }
