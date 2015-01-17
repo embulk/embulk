@@ -2,7 +2,6 @@ module Embulk
 
   require 'embulk/data_source'
   require 'embulk/column'
-  require 'embulk/buffer'
   require 'embulk/page'
 
   class OutputPlugin
@@ -51,7 +50,6 @@ module Embulk
         def transaction(java_config, java_schema, processor_count, java_control)
           config = DataSource.from_java_object(java_config)
           schema = Schema.from_java_object(java_schema)
-          # TODO check return type of #transaction
           next_config_hash = @ruby_class.transaction(config, schema, processor_count) do |task_source_hash|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).java_object
             java_commit_reports = java_control.run(java_task_source)
@@ -59,6 +57,7 @@ module Embulk
               DataSource.from_java_object(java_commit_report)
             }
           end
+          # TODO check return type of #transaction
           return DataSource.from_ruby_hash(next_config_hash).java_object
         end
 

@@ -9,8 +9,8 @@ module Embulk
       }
 
       puts "Started"
-      reports = yield(task)
-      puts "Finished. Commit reports = #{reports.to_json}"
+      commit_reports = yield(task)
+      puts "Finished. Commit reports = #{commit_reports.to_json}"
 
       return {}
     end
@@ -38,9 +38,10 @@ module Embulk
     end
 
     def commit
-      {
+      commit_report = {
         "records" => @records
       }
+      return commit_report
     end
   end
 

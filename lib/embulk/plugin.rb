@@ -3,7 +3,7 @@ module Embulk
   require 'forwardable'
   require 'embulk/error'
   require 'embulk/plugin_registry'
-  #require 'embulk/input_plugin'
+  require 'embulk/input_plugin'
   require 'embulk/output_plugin'
   #require 'embulk/parser_plugin'
   #require 'embulk/formatter_plugin'

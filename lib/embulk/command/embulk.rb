@@ -30,9 +30,9 @@ when :bundle
 
 when :run
   op.banner = "Usage: run [--options] <config.yml>"
-  #op.on('-b', '--bundle GEMFILE_DIR', 'Path to Gemfile directory') do |path|
-  #  # TODO
-  #end
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
+  end
   #op.on('-G', '--with-guess', TrueClass) do |b|
   #  # TODO
   #end
@@ -46,6 +46,9 @@ when :run
 
 when :preview
   op.banner = "Usage: preview [--options] <config.yml>"
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
+  end
   op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
     $LOAD_PATH << File.expand_path(load_path)
   end
@@ -53,6 +56,9 @@ when :preview
 
 when :guess
   op.banner = "Usage: guess [--options] <partial-config.yml>"
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
+  end
   op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
     $LOAD_PATH << File.expand_path(load_path)
   end
@@ -79,11 +85,22 @@ def load_config(config_path)
   Embulk::Java::Injector.getInstance(ConfigLoader.java_class).fromYamlFile(java.io.File.new(config_path))
 end
 
+def setup_bundler(path)
+  return unless path
+  ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
+  ENV['GEM_PATH'] = ''
+  ENV.delete 'BUNDLE_GEMFILE'
+  require 'rubygems'
+  require 'bundler'
+  Bundler.load.setup_environment
+end
+
 case subcmd.to_sym
 when :bundle
   path = ARGV[0]
-  ENV['GEM_HOME'] = "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
+  ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
   ENV['GEM_PATH'] = ''
+  ENV.delete 'BUNDLE_GEMFILE'
   if path
     tmpl = File.expand_path("#{File.dirname(__FILE__)}/../../../templates/bundle")
     require 'fileutils'
@@ -107,6 +124,8 @@ when :bundle
 
 when :run
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.LocalExecutor'
   java_import 'org.embulk.spi.ExecSession'
 
@@ -120,6 +139,8 @@ when :run
 
 when :preview
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.PreviewExecutor'
   java_import 'org.embulk.config.ModelManager'
   java_import 'org.embulk.spi.ExecSession'
@@ -142,6 +163,8 @@ when :preview
 
 when :guess
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.GuessExecutor'
   java_import 'org.embulk.spi.ExecSession'
 

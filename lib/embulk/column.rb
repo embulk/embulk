@@ -22,9 +22,9 @@ module Embulk
   class Schema < Array
     def initialize(src)
       super
-      freeze
-      page_reader_script = "lambda do |reader|\n"
-      page_reader_script << "record = []\n"
+
+      record_reader_script = "lambda do |reader|\n"
+      record_reader_script << "record = []\n"
       each do |column|
         column_script =
           case column.type
@@ -39,19 +39,46 @@ module Embulk
           when :timestamp
             "record << reader.getTimestamp(#{column.index})"  # TODO convert to Time
           end
-        page_reader_script << column_script << "\n"
+        record_reader_script << column_script << "\n"
       end
-      page_reader_script << "end"
-      @page_reader = eval(page_reader_script)
+      record_reader_script << "end"
+      @record_reader = eval(record_reader_script)
+
+      record_writer_script = "lambda do |builder,record|\n"
+      record_writer_script << ""
+      each do |column|
+        column_script =
+          case column.type
+          when :boolean
+            "builder.setBoolean(#{column.index}, record[#{column.index}])"
+          when :long
+            "builder.setLong(#{column.index}, record[#{column.index}])"
+          when :double
+            "builder.setDouble(#{column.index}, record[#{column.index}])"
+          when :string
+            "builder.setString(#{column.index}, record[#{column.index}])"
+          when :timestamp
+            "builder.setTimestamp(#{column.index}, record[#{column.index}])"  # TODO convert to Time
+          end
+        record_writer_script << column_script << "\n"
+      end
+      record_writer_script << "end"
+      @record_writer = eval(record_writer_script)
+
+      freeze
     end
 
     def read_record(page_reader)
-      @page_reader.call(page_reader)
+      @record_reader.call(page_reader)
+    end
+
+    def write_record(page_builder, record)
+      @record_writer.call(page_builder, record)
     end
 
     if Embulk.java?
       def self.from_java_object(java_schema)
-        java_schema.getColumns
+        new java_schema.getColumns
       end
 
       def java_object
