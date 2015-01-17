@@ -46,7 +46,7 @@ public class Embulk
         ConfigLoader configLoader = injector.getInstance(ConfigLoader.class);
         ConfigSource config = configLoader.fromYamlFile(new File(configPath));
 
-        ExecSession exec = injector.getInstance(ExecSession.class);
+        ExecSession exec = new ExecSession(injector, config.getNestedOrSetEmpty("exec"));
 
         // automatic guess
         NextConfig guessed = injector.getInstance(GuessExecutor.class).guess(exec, config);

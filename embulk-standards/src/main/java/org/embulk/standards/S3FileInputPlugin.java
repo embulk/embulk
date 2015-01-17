@@ -1,8 +1,11 @@
 package org.embulk.standards;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.TimeZone;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -17,6 +20,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
+import com.google.inject.Inject;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -28,6 +32,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.slf4j.Logger;
 
 public class S3FileInputPlugin
         implements FileInputPlugin
@@ -59,6 +64,17 @@ public class S3FileInputPlugin
 
         @JacksonInject
         public BufferAllocator getBufferAllocator();
+    }
+
+    private final Logger log;
+    private final StrftimeFormat strftimeFormat;
+    private final Object simpleDateFormattingLock = new Object();
+
+    @Inject
+    public S3FileInputPlugin()
+    {
+        this.log = Exec.getLogger(getClass());
+        this.strftimeFormat = new StrftimeFormat();
     }
 
     @Override
@@ -126,11 +142,43 @@ public class S3FileInputPlugin
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
-            // TODO format path using timestamp
-            builder.addAll(listS3FilesByPrefix(client, bucketName, prefix));
+            try {
+                builder.addAll(listS3FilesByPrefix(client, bucketName, formatPrefix(prefix)));
+            } catch (Exception e) {
+                log.warn("Cannot parse prefix: "+prefix, e);
+            }
         }
 
         return builder.build();
+    }
+
+    /**
+     * paths:
+     *   - in/{%Y-%m-%d}/
+     */
+    private synchronized String formatPrefix(String prefix)
+    {
+        long unixtime = Exec.session().getTransactionTime();
+        TimeZone tz = Exec.session().getTransactionTimeZone();
+        int startAt = prefix.indexOf('{');
+        int endAt = prefix.indexOf('}');
+        //  TODO parse multiple strftime strings
+        if (startAt < 0 || endAt < 0 || startAt >= endAt) {
+            return prefix;
+        }
+
+        String strftimeString = prefix.substring(startAt + 1, endAt);
+        String simpleDateString = strftimeFormat.toSimpleDateFormat(strftimeString);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(simpleDateString);
+        simpleDateFormat.setTimeZone(tz);
+
+        StringBuilder sb = new StringBuilder();
+        synchronized (simpleDateFormattingLock) {
+            sb.append(prefix.substring(0, startAt));
+            sb.append(simpleDateFormat.format(unixtime * 1000));
+            sb.append(prefix.substring(endAt + 1, prefix.length()));
+        }
+        return sb.toString();
     }
 
     /**

@@ -14,19 +14,22 @@ import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 
+import java.util.TimeZone;
+
 public class ExecSession
 {
     private final Injector injector;
+    private final ConfigSource execConfig;
     private final ILoggerFactory loggerFactory;
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
 
-    @Inject
-    public ExecSession(Injector injector)
+    public ExecSession(Injector injector, ConfigSource execConfig)
     {
         super();
         this.injector = injector;
+        this.execConfig = execConfig;
         this.loggerFactory = injector.getInstance(ILoggerFactory.class);
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
@@ -36,6 +39,17 @@ public class ExecSession
     public Injector getInjector()
     {
         return injector;
+    }
+
+    public long getTransactionTime()
+    {
+        return execConfig.get(Long.class, "transaction_time", 0L);
+    }
+
+    public TimeZone getTransactionTimeZone()
+    {
+        String tzName = execConfig.get(String.class, "transaction_timezone", "UTC");
+        return TimeZone.getTimeZone(tzName);
     }
 
     public Logger getLogger(String name)
