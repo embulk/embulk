@@ -1,3 +1,6 @@
+exec:
+  transaction_time: 1421452800
+  transaction_timezone: UTC
 in:
   type: file
   paths:
