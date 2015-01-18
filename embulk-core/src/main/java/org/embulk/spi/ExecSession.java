@@ -1,5 +1,7 @@
 package org.embulk.spi;
 
+import org.embulk.time.Timestamp;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
 import com.google.inject.Inject;
@@ -41,15 +43,14 @@ public class ExecSession
         return injector;
     }
 
-    public long getTransactionTime()
+    public Timestamp getTransactionTime()
     {
-        return execConfig.get(Long.class, "transaction_time", 0L);
+        return Timestamp.ofEpochSecond(execConfig.get(Long.class, "transaction_time", 0L));
     }
 
-    public TimeZone getTransactionTimeZone()
+    public DateTimeZone getTransactionTimeZone()
     {
-        String tzName = execConfig.get(String.class, "transaction_timezone", "UTC");
-        return TimeZone.getTimeZone(tzName);
+        return DateTimeZone.forID(execConfig.get(String.class, "transaction_time_zone", "UTC"));
     }
 
     public Logger getLogger(String name)

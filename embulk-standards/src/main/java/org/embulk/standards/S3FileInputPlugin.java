@@ -32,6 +32,10 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.time.Timestamp;
+import org.embulk.time.TimestampFormatter;
+import org.embulk.time.TimestampFormatter.FormatterTask;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
 public class S3FileInputPlugin
@@ -67,14 +71,11 @@ public class S3FileInputPlugin
     }
 
     private final Logger log;
-    private final StrftimeFormat strftimeFormat;
-    private final Object simpleDateFormattingLock = new Object();
 
     @Inject
     public S3FileInputPlugin()
     {
         this.log = Exec.getLogger(getClass());
-        this.strftimeFormat = new StrftimeFormat();
     }
 
     @Override
@@ -158,8 +159,6 @@ public class S3FileInputPlugin
      */
     private synchronized String formatPrefix(String prefix)
     {
-        long unixtime = Exec.session().getTransactionTime();
-        TimeZone tz = Exec.session().getTransactionTimeZone();
         int startAt = prefix.indexOf('{');
         int endAt = prefix.indexOf('}');
         //  TODO parse multiple strftime strings
@@ -167,18 +166,19 @@ public class S3FileInputPlugin
             return prefix;
         }
 
-        String strftimeString = prefix.substring(startAt + 1, endAt);
-        String simpleDateString = strftimeFormat.toSimpleDateFormat(strftimeString);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(simpleDateString);
-        simpleDateFormat.setTimeZone(tz);
+        Timestamp timestamp = Exec.session().getTransactionTime();
+        DateTimeZone timezone = Exec.session().getTransactionTimeZone();
+        ConfigSource config = Exec.newConfigSource();
+        config.set("timezone", timezone.getID());
+        FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
 
-        StringBuilder sb = new StringBuilder();
-        synchronized (simpleDateFormattingLock) {
-            sb.append(prefix.substring(0, startAt));
-            sb.append(simpleDateFormat.format(unixtime * 1000));
-            sb.append(prefix.substring(endAt + 1, prefix.length()));
-        }
-        return sb.toString();
+        String strftimeString = prefix.substring(startAt + 1, endAt);
+        TimestampFormatter formatter = new TimestampFormatter(strftimeString, formatterTask);
+        return new StringBuilder()
+                .append(prefix.substring(0, startAt))
+                .append(formatter.format(timestamp))
+                .append(prefix.substring(endAt + 1, prefix.length()))
+                .toString();
     }
 
     /**
