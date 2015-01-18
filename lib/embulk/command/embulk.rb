@@ -97,29 +97,34 @@ end
 
 case subcmd.to_sym
 when :bundle
-  path = ARGV[0]
+  path = ARGV[0] || "."
   ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
   ENV['GEM_PATH'] = ''
   ENV.delete 'BUNDLE_GEMFILE'
-  if path
+  unless File.exists?(path)
     tmpl = File.expand_path("#{File.dirname(__FILE__)}/../../../templates/bundle")
     require 'fileutils'
-    if File.exists?(path)
-      raise "Path #{path} already exists"
-    end
     puts "Initializing #{path}..."
     FileUtils.mkdir_p File.dirname(path)
     FileUtils.cp_r tmpl, path
     require 'rubygems/gem_runner'
-    Gem::GemRunner.new.run %w[install bundler]
-    Dir.chdir(path)
+    begin
+      Gem::GemRunner.new.run %w[install bundler]
+    rescue Gem::SystemExitException => e
+      if e.exit_code != 0
+        FileUtils.rm_rf path
+        raise e
+      end
+    end
   end
-  require 'rubygems'
-  require 'bundler'
-  require 'bundler/friendly_errors'
-  require 'bundler/cli'
-  Bundler.with_friendly_errors do
-    Bundler::CLI.start(%[install], debug: true)
+  Dir.chdir(path) do
+    Gem.clear_paths  # force rubygems to reload GEM_HOME
+    require 'bundler'
+    require 'bundler/friendly_errors'
+    require 'bundler/cli'
+    Bundler.with_friendly_errors do
+      Bundler::CLI.start(%w[install], debug: true)
+    end
   end
 
 when :run
