@@ -3,13 +3,15 @@ require 'optparse'
 define_singleton_method(:usage) do |message|
   puts "usage: <command> [--options]"
   puts "commands:"
-  puts "   bundle  [--options] <bundle dir>"
+  puts "   bundle  [--options] [new directory]"
   puts "   run     [--options] <config.yml>"
   puts "   preview [--options] <config.yml>"
   puts "   guess   [--options] <partial-config.yml>  | tee config.yml"
+  puts ""
   if message
-    puts
     puts "error: #{message}"
+  else
+    puts "Use \`<command> --help\` to see description of the commands."
   end
   exit 1
 end
@@ -19,34 +21,48 @@ usage nil unless i
 subcmd = ARGV.slice!(i)
 
 op = OptionParser.new
+conf = {}
 
 case subcmd.to_sym
 when :bundle
-  raise "Not implemented yet"
+  op.banner = "Usage: bundle [new directory]"
+  args = 0..1
 
 when :run
-  op.on('-b', '--bundle GEMFILE_DIR', 'Path to Gemfile directory') do |path|
+  op.banner = "Usage: run [--options] <config.yml>"
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
   end
-  op.on('-G', '--with-guess', TrueClass) do |b|
+  #op.on('-G', '--with-guess', TrueClass) do |b|
+  #  # TODO
+  #end
+  #op.on('-P', '--with-preview', TrueClass) do |b|
+  #  # TODO
+  #end
+  op.on('-I', '--load-path PATH', 'Add $LOAD_PATH for plugin scripts') do |load_path|
+    $LOAD_PATH << File.expand_path(load_path)
   end
-  op.on('-P', '--with-preview', TrueClass) do |b|
-  end
-  op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
-  end
-  args = 1
+  args = 1..1
 
 when :preview
-  op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
+  op.banner = "Usage: preview [--options] <config.yml>"
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
   end
-  args = 1
+  op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
+    $LOAD_PATH << File.expand_path(load_path)
+  end
+  args = 1..1
 
 when :guess
-  op.on('-I', '--load-path') do |load_path|
-    $LOAD_PATH << load_path
+  op.banner = "Usage: guess [--options] <partial-config.yml>"
+  op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+    conf[:bundle_path] = path
   end
-  args = 1
+  op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
+    $LOAD_PATH << File.expand_path(load_path)
+  end
+  args = 1..1
 
 else
   usage "Unknown subcommand #{subcmd.dump}."
@@ -54,7 +70,7 @@ end
 
 begin
   op.parse!(ARGV)
-  if ARGV.length != args
+  unless args.include?(ARGV.length)
     usage nil
   end
 rescue => e
@@ -69,9 +85,52 @@ def load_config(config_path)
   Embulk::Java::Injector.getInstance(ConfigLoader.java_class).fromYamlFile(java.io.File.new(config_path))
 end
 
+def setup_bundler(path)
+  return unless path
+  ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
+  ENV['GEM_PATH'] = ''
+  ENV.delete 'BUNDLE_GEMFILE'
+  require 'rubygems'
+  require 'bundler'
+  Bundler.load.setup_environment
+end
+
 case subcmd.to_sym
+when :bundle
+  path = ARGV[0] || "."
+  ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
+  ENV['GEM_PATH'] = ''
+  ENV.delete 'BUNDLE_GEMFILE'
+  unless File.exists?(path)
+    tmpl = File.expand_path("#{File.dirname(__FILE__)}/../../../templates/bundle")
+    require 'fileutils'
+    puts "Initializing #{path}..."
+    FileUtils.mkdir_p File.dirname(path)
+    FileUtils.cp_r tmpl, path
+    require 'rubygems/gem_runner'
+    begin
+      Gem::GemRunner.new.run %w[install bundler]
+    rescue Gem::SystemExitException => e
+      if e.exit_code != 0
+        FileUtils.rm_rf path
+        raise e
+      end
+    end
+  end
+  Dir.chdir(path) do
+    Gem.clear_paths  # force rubygems to reload GEM_HOME
+    require 'bundler'
+    require 'bundler/friendly_errors'
+    require 'bundler/cli'
+    Bundler.with_friendly_errors do
+      Bundler::CLI.start(%w[install], debug: true)
+    end
+  end
+
 when :run
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.LocalExecutor'
   java_import 'org.embulk.spi.ExecSession'
 
@@ -85,6 +144,8 @@ when :run
 
 when :preview
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.PreviewExecutor'
   java_import 'org.embulk.config.ModelManager'
   java_import 'org.embulk.spi.ExecSession'
@@ -107,6 +168,8 @@ when :preview
 
 when :guess
   config_path = ARGV[0]
+  setup_bundler(conf[:bundle_path])
+
   java_import 'org.embulk.exec.GuessExecutor'
   java_import 'org.embulk.spi.ExecSession'
 

@@ -1,4 +1,4 @@
-module Embulk::Plugin::TFGuess
+module Embulk::Guess::TFGuess
   # time format guess
 
   module Parts
