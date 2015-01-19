@@ -20,7 +20,7 @@ module Embulk
           when :string
             "record << reader.getString(#{column.index})"
           when :timestamp
-            "record << reader.getTimestamp(#{column.index})"  # TODO convert to Time
+            "record << reader.getTimestamp(#{column.index}).getRubyTime(JRuby.runtime)"
           else
             raise "Unknown type #{column.type.inspect}"
           end

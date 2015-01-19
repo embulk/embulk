@@ -4,6 +4,9 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.DateTime;
+import org.jruby.Ruby;
+import org.jruby.RubyTime;
 
 public class Timestamp
         implements Comparable<Timestamp>
@@ -83,6 +86,13 @@ public class Timestamp
         } else {
             return 1;
         }
+    }
+
+    public RubyTime getRubyTime(Ruby runtime)
+    {
+        RubyTime time = new RubyTime(runtime, runtime.getClass("Time"), new DateTime(toEpochMilli())).gmtime();
+        time.setNSec(nano % 1000000);
+        return time;
     }
 
     @Override
