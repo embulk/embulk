@@ -36,9 +36,9 @@ public class EmbulkTestRuntime
             ConfigSource systemConfig = getSystemConfig();
             new SystemConfigModule(systemConfig).configure(binder);
             new ExecModule().configure(binder);
-            new ExtensionServiceLoaderModule().configure(binder);
+            new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
-            new JRubyScriptingModule().configure(binder);
+            new JRubyScriptingModule(systemConfig).configure(binder);
             new TestUtilityModule().configure(binder);
         }
     }

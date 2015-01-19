@@ -21,10 +21,10 @@ public class EmbulkService
         ImmutableList.Builder<Module> modules = ImmutableList.builder();
         modules.add(new SystemConfigModule(systemConfig));
         modules.add(new ExecModule());
-        modules.add(new ExtensionServiceLoaderModule());
+        modules.add(new ExtensionServiceLoaderModule(systemConfig));
         modules.add(new BuiltinPluginSourceModule());
         modules.add(new StandardPluginModule());
-        modules.add(new JRubyScriptingModule());
+        modules.add(new JRubyScriptingModule(systemConfig));
         modules.addAll(getAdditionalModules());
         injector = Guice.createInjector(modules.build());
     }
@@ -32,5 +32,10 @@ public class EmbulkService
     protected Iterable<? extends Module> getAdditionalModules()
     {
         return ImmutableList.of();
+    }
+
+    public Injector getInjector()
+    {
+        return injector;
     }
 }
