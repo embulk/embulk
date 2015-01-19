@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 
-# TODO cygwin/windows check
+# TODO cygwin check
 cygwin = false
-windows = false
 
 java_args = []
 while i = ARGV.find_index {|arg| arg =~ /^\-D/ }

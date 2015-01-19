@@ -3,8 +3,10 @@ package org.embulk.cli;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Locale;
 import java.io.File;
 import java.io.IOException;
+import java.text.NumberFormat;
 import org.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
@@ -91,19 +93,35 @@ public class Runner
 
         String[] header = new String[result.getSchema().getColumnCount()];
         for (int i=0; i < header.length; i++) {
-            header[i] = result.getSchema().getColumnName(i) + " " + result.getSchema().getColumnType(i);
+            header[i] = result.getSchema().getColumnName(i) + ":" + result.getSchema().getColumnType(i);
         }
 
         TablePrinter printer = new TablePrinter(System.out, header) {
+            private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
+
             protected String valueToString(Object obj)
             {
-                return model.writeObject(obj);
+                if (obj instanceof String) {
+                    return (String) obj;
+                } else if (obj instanceof Number) {
+                    if (obj instanceof Integer) {
+                        return numberFormat.format(((Integer) obj).longValue());
+                    }
+                    if (obj instanceof Long) {
+                        return numberFormat.format(((Long) obj).longValue());
+                    }
+                    return obj.toString();
+                } else {
+                    return model.writeObject(obj);
+                }
             }
         };
+
         try {
             for (Object[] record : records) {
                 printer.add(record);
             }
+            printer.flush();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }

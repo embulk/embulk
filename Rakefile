@@ -13,11 +13,13 @@ YARD::Rake::YardocTask.new(:doc) do |t|
   t.options << '--debug' << '--verbose' if $trace
 end
 
+desc "Clean java code and copy files"
 task :clean do
   sh "mvn clean"
   rm_rf "classpath"
 end
 
+desc "Compile java code and copy jar files to classpath/"
 task :compile do
   sh "mvn package dependency:copy-dependencies"
   rm_rf "classpath"
@@ -28,12 +30,7 @@ task :compile do
   cp targets, "classpath"
 end
 
-task :help do
-  puts "  mvn package             : build jar package (TODO not fully implemented yet)"
-  puts "  bundle exec rake doc    : build plugin API document for JRuby to doc"
-  puts ""
-end
-
+desc "Run clean, compile and build"
 task :all do
   Rake::Task["clean"].invoke
   Rake::Task["compile"].invoke

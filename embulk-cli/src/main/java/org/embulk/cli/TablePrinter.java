@@ -6,9 +6,9 @@ import java.util.Locale;
 import java.io.PrintStream;
 import java.io.Flushable;
 import java.io.IOException;
-import java.text.NumberFormat;
 
-public class TablePrinter {
+class TablePrinter
+{
     private static final int SAMPLES = 10;
 
     private PrintStream out;
@@ -19,16 +19,16 @@ public class TablePrinter {
     private String format;
     private String border;
 
-    private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-    public TablePrinter(PrintStream out, String... header) {
+    public TablePrinter(PrintStream out, String... header)
+    {
         this.out = out;
         this.header = header;
         this.samples = new ArrayList<String[]>(SAMPLES);
         samples.add(header);
     }
 
-    public void add(Object... values) throws IOException {
+    public void add(Object... values) throws IOException
+    {
         int min = header.length < values.length ? header.length : values.length;
         String[] cols = new String[header.length];
         for(int i=0; i < min; i++) {
@@ -53,19 +53,13 @@ public class TablePrinter {
         }
     }
 
-    protected String valueToString(Object obj) {
-        if(obj instanceof Number) {
-            if(obj instanceof Integer) {
-                return numberFormat.format(((Integer) obj).longValue());
-            }
-            if(obj instanceof Long) {
-                return numberFormat.format(((Long) obj).longValue());
-            }
-        }
+    protected String valueToString(Object obj)
+    {
         return obj.toString();
     }
 
-    private void flushSamples() {
+    private void flushSamples()
+    {
         StringBuilder borderBuilder = new StringBuilder();
 
         StringBuilder sb = new StringBuilder();
@@ -101,7 +95,8 @@ public class TablePrinter {
         this.samples = null;
     }
 
-    private int maxLengthInColumn(int i) {
+    private int maxLengthInColumn(int i)
+    {
         int max = 0;
         for(String[] cols : samples) {
             String s = cols[i];
@@ -113,7 +108,8 @@ public class TablePrinter {
         return max;
     }
 
-    public void flush() throws IOException {
+    public void flush() throws IOException
+    {
         if(!samples.isEmpty()) {
             flushSamples();
         }
