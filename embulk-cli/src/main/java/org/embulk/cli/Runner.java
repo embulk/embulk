@@ -22,6 +22,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.Pages;
+import org.embulk.time.Timestamp;
 import org.embulk.exec.LocalExecutor;
 import org.embulk.exec.ExecuteResult;
 import org.embulk.exec.GuessExecutor;
@@ -129,6 +130,8 @@ public class Runner
                     if (obj instanceof Long) {
                         return numberFormat.format(((Long) obj).longValue());
                     }
+                    return obj.toString();
+                } else if (obj instanceof Timestamp) {
                     return obj.toString();
                 } else {
                     return model.writeObject(obj);

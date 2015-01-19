@@ -76,4 +76,41 @@ public class TestTimestamp
         assertEquals( 1, Timestamp.ofEpochSecond(4).compareTo(Timestamp.ofEpochSecond(3)));
         assertEquals( 1, Timestamp.ofEpochSecond(3, 4).compareTo(Timestamp.ofEpochSecond(3)));
     }
+
+    @Test
+    public void testToString()
+    {
+        assertEquals("1970-01-01 00:00:00 UTC", Timestamp.ofEpochSecond(0).toString());
+        assertEquals("2015-01-19 07:36:10 UTC", Timestamp.ofEpochSecond(1421652970).toString());
+        assertEquals("2015-01-19 07:36:10.100 UTC",       Timestamp.ofEpochSecond(1421652970, 100*1000*1000).toString());
+        assertEquals("2015-01-19 07:36:10.120 UTC",       Timestamp.ofEpochSecond(1421652970, 120*1000*1000).toString());
+        assertEquals("2015-01-19 07:36:10.123 UTC",       Timestamp.ofEpochSecond(1421652970, 123*1000*1000).toString());
+        assertEquals("2015-01-19 07:36:10.123400 UTC",    Timestamp.ofEpochSecond(1421652970, 123400*1000).toString());
+        assertEquals("2015-01-19 07:36:10.123450 UTC",    Timestamp.ofEpochSecond(1421652970, 123450*1000).toString());
+        assertEquals("2015-01-19 07:36:10.123456 UTC",    Timestamp.ofEpochSecond(1421652970, 123456*1000).toString());
+        assertEquals("2015-01-19 07:36:10.123456700 UTC", Timestamp.ofEpochSecond(1421652970, 123456700).toString());
+        assertEquals("2015-01-19 07:36:10.123456780 UTC", Timestamp.ofEpochSecond(1421652970, 123456780).toString());
+        assertEquals("2015-01-19 07:36:10.123456789 UTC", Timestamp.ofEpochSecond(1421652970, 123456789).toString());
+    }
+
+    @Test
+    public void testFromString()
+    {
+        checkToStringFromString(Timestamp.ofEpochSecond(0));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 100*1000*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 120*1000*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123*1000*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123400*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123450*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123456*1000));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123456700));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123456780));
+        checkToStringFromString(Timestamp.ofEpochSecond(1421652970, 123456789));
+    }
+
+    private void checkToStringFromString(Timestamp timestamp)
+    {
+        assertEquals(timestamp, Timestamp.fromString(timestamp.toString()));
+    }
 }

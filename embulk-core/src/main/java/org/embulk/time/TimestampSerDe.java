@@ -1,7 +1,6 @@
 package org.embulk.time;
 
 import java.io.IOException;
-import org.joda.time.DateTimeZone;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -11,47 +10,41 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
-import org.embulk.config.ModelManager;
 
-public class DateTimeZoneSerDe
+public class TimestampSerDe
 {
     public static void configure(ObjectMapperModule mapper)
     {
         SimpleModule module = new SimpleModule();
-        module.addSerializer(DateTimeZone.class, new DateTimeZoneSerializer());
-        module.addDeserializer(DateTimeZone.class, new DateTimeZoneDeserializer());
+        module.addSerializer(Timestamp.class, new DateTimeZoneSerializer());
+        module.addDeserializer(Timestamp.class, new DateTimeZoneDeserializer());
         mapper.registerModule(module);
     }
 
     public static class DateTimeZoneSerializer
-            extends JsonSerializer<DateTimeZone>
+            extends JsonSerializer<Timestamp>
     {
         @Override
-        public void serialize(DateTimeZone value, JsonGenerator jgen, SerializerProvider provider)
+        public void serialize(Timestamp value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException
         {
-            jgen.writeString(value.getID());
+            jgen.writeString(value.toString());
         }
     }
 
     public static class DateTimeZoneDeserializer
-            extends FromStringDeserializer<DateTimeZone>
+            extends FromStringDeserializer<Timestamp>
     {
         public DateTimeZoneDeserializer()
         {
-            super(DateTimeZone.class);
+            super(Timestamp.class);
         }
 
         @Override
-        protected DateTimeZone _deserialize(String value, DeserializationContext context)
+        protected Timestamp _deserialize(String value, DeserializationContext context)
                 throws JsonMappingException
         {
-            DateTimeZone parsed = TimestampFormat.parseDateTimeZone(value);
-            if (parsed == null) {
-                // TODO include link to a document to the message for the list of supported time zones
-                throw new JsonMappingException(String.format("Unknown time zone name '%s'", value));
-            }
-            return parsed;
+            return Timestamp.fromString(value);
         }
     }
 }
