@@ -1,8 +1,6 @@
 
 module Embulk
 
-  require 'embulk/column'
-
   # TODO pure-ruby page reader
 
   class Page
@@ -19,7 +17,7 @@ module Embulk
       begin
         reader.setPage(@java_page)
         while reader.nextRecord
-          schema.read_record(reader)
+          yield schema.read_record(reader)
         end
       ensure
         reader.close

@@ -15,14 +15,21 @@ module Embulk
         Column.new(2, 'col2', :string),
       ]
 
-      puts "Started"
+      puts "Example input started."
       commit_reports = yield(task, columns, threads)
-      puts "Finished. Commit reports = #{reports.to_json}"
+      puts "Example input finished. Commit reports = #{commit_reports.to_json}"
 
       return {}
     end
 
     def self.run(task, schema, index, page_builder)
+      puts "Example input thread #{index}..."
+
+      10.times do |i|
+        page_builder.add([i, 10.0, "example"])
+      end
+      page_builder.finish  # don't forget to call finish :-)
+
       commit_report = {
       }
       return commit_report

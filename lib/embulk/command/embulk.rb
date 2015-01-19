@@ -123,6 +123,7 @@ else
     setup_gem_paths(bundle_path)
     require 'bundler'  # bundler is installed at bundle_path
     Bundler.load.setup_environment
+    $LOAD_PATH << File.expand_path(path)  # for local plugins
   else
     $LOAD_PATH << File.expand_path('../..', File.dirname(__FILE__))
   end

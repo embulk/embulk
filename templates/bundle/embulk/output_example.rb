@@ -1,22 +1,24 @@
 module Embulk
 
-  class OutputExample
+  class OutputExample < OutputPlugin
     Plugin.register_output('example', self)
 
     def self.transaction(config, schema, processor_count, &control)
       task = {
-        'message' => config.prop('message', :string, default: nil)
+        'message' => config.prop('message', :string, default: "record")
       }
 
-      puts "Started"
+      puts "Example output started."
       commit_reports = yield(task)
-      puts "Finished. Commit reports = #{commit_reports.to_json}"
+      puts "Example output finished. Commit reports = #{commit_reports.to_json}"
 
       return {}
     end
 
     def initialize(task, schema, index)
+      puts "Example output thread #{index}..."
       super
+      @message = task.prop('message', :string)
       @records = 0
     end
 
@@ -25,8 +27,8 @@ module Embulk
 
     def add(page)
       page.each do |record|
-        hash = schema.zip(record)
-        puts "#{message}: #{hash.to_json}"
+        hash = Hash[schema.names.zip(record)]
+        puts "#{@message}: #{hash.to_json}"
         @records += 1
       end
     end

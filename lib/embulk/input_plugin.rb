@@ -1,7 +1,7 @@
 module Embulk
 
   require 'embulk/data_source'
-  require 'embulk/column'
+  require 'embulk/schema'
   require 'embulk/page_builder'
 
   class InputPlugin
