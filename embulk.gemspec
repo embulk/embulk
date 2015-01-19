@@ -5,8 +5,8 @@ Gem::Specification.new do |gem|
   gem.name          = "embulk"
   gem.version       = Embulk::VERSION
 
-  gem.summary       = %q{Embulk, unified data load framework}
-  gem.description   = %q{Embulk is an open-source, plugin-based data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput.}
+  gem.summary       = %q{Embulk, a plugin-based bulk data loader}
+  gem.description   = %q{Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control.}
   gem.authors       = ["Sadayuki Furuhashi"]
   gem.email         = ["frsyuki@gmail.com"]
   gem.license       = "Apache 2.0"

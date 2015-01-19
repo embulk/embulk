@@ -3,119 +3,123 @@ module Embulk
   require 'forwardable'
   require 'embulk/error'
   require 'embulk/plugin_registry'
-  require 'embulk/plugin/guess_plugin'
-
-  #require 'embulk/plugin/input'
-  #require 'embulk/plugin/parser'
-  #require 'embulk/plugin/guess'
+  require 'embulk/input_plugin'
+  require 'embulk/output_plugin'
+  #require 'embulk/parser_plugin'
+  #require 'embulk/formatter_plugin'
+  #require 'embulk/decoder_plugin'
+  #require 'embulk/encoder_plugin'
+  require 'embulk/guess_plugin'
 
   class PluginManager
     def initialize
       @registries = {}
       %w[input output parser formatter decoder encoder line_filter guess].each do |category|
-        @registries[category.to_sym] = PluginRegistry.new(category, "embulk/plugin/#{category}_")
+        @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}_")
       end
     end
 
     def register_input(type, klass)
-      register_plugin(:input, type, klass, Java::InputPlugin)
+      register_plugin(:input, type, klass, InputPlugin)
     end
 
     def register_output(type, klass)
-      register_plugin(:output, type, klass, Java::OutputPlugin)
+      register_plugin(:output, type, klass, OutputPlugin,
+                      "Output plugin #{klass} must extend OutputPlugin")
     end
 
     def register_parser(type, klass)
-      register_plugin(:parser, type, klass, Java::ParserPlugin)
+      register_plugin(:parser, type, klass, ParserPlugin)
     end
 
     def register_formatter(type, klass)
-      register_plugin(:formatter, type, klass, Java::FormatterPlugin)
+      register_plugin(:formatter, type, klass, FormatterPlugin)
     end
 
     def register_decoder(type, klass)
-      register_plugin(:decoder, type, klass, Java::DecoderPlugin)
+      register_plugin(:decoder, type, klass, DecoderPlugin)
     end
 
     def register_encoder(type, klass)
-      register_plugin(:encoder, type, klass, Java::EncoderPlugin)
+      register_plugin(:encoder, type, klass, EncoderPlugin)
     end
 
     def register_guess(type, klass)
-      register_plugin(:guess, type, klass, Java::GuessPlugin,
-                     "Guess plugin #{klass} must inherit Guess, LineGuess, or TextGuess class")
+      register_plugin(:guess, type, klass, GuessPlugin,
+                     "Guess plugin #{klass} must extend GuessPlugin, LineGuessPlugin, or TextGuessPlugin class")
     end
 
-    def new_input(type)
+    def get_input(type)
       # TODO not implemented yet
-      Plugin::InputPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_output(type)
+    def get_output(type)
       # TODO not implemented yet
-      Plugin::OutputPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_parser(type)
+    def get_parser(type)
       # TODO not implemented yet
-      Plugin::ParserPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_formatter(type)
+    def get_formatter(type)
       # TODO not implemented yet
-      Plugin::FormatterPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_decoder(type)
+    def get_decoder(type)
       # TODO not implemented yet
-      Plugin::DecoderPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_encoder(type)
+    def get_encoder(type)
       # TODO not implemented yet
-      Plugin::EncoderPlugin.from_java_object(new_plugin(:guess, type))
+      lookup(:guess, type)
     end
 
-    def new_guess(type)
-      Plugin::GuessPlugin.from_java_object(new_plugin(:guess, type))
+    def get_guess(type)
+      # TODO not implemented yet
+      lookup(:guess, type)
     end
 
     def new_java_input(type)
-      new_plugin(:input, type).java_object
+      lookup(:input, type).java_object
     end
 
     def new_java_output(type)
-      new_plugin(:output, type).java_object
+      lookup(:output, type).java_object
     end
 
     def new_java_parser(type)
-      new_plugin(:parser, type).java_object
+      lookup(:parser, type).java_object
     end
 
     def new_java_formatter(type)
-      new_plugin(:formatter, type).java_object
+      lookup(:formatter, type).java_object
     end
 
     def new_java_decoder(type)
-      new_plugin(:decoder, type).java_object
+      lookup(:decoder, type).java_object
     end
 
     def new_java_encoder(type)
-      new_plugin(:encoder, type).java_object
+      lookup(:encoder, type).java_object
     end
 
     def new_java_guess(type)
-      new_plugin(:guess, type).java_object
+      lookup(:guess, type).java_object
     end
 
     private
 
-    # TODO new_plugin should fallback to Java PluginSource
+    # TODO lookup should fallback to Java PluginSource
     # if not found so that ruby plugins can call java plugins.
     # call injector.newPlugin and wrap the instance in a reverse bridge object.
 
-    def new_plugin(category, type)
-      @registries[category].lookup(type).new
+    def lookup(category, type)
+      @registries[category].lookup(type)
     end
 
     def register_plugin(category, type, klass, iface, message=nil)
@@ -127,23 +131,22 @@ module Embulk
     end
   end
 
-  module Plugin
-    class <<self
-      INSTANCE = PluginManager.new
+  Plugin = PluginManager.new
 
-      extend Forwardable
-
-      def_delegators 'INSTANCE',
-        :register_input, :new_input, :new_java_input,
-        :register_output, :new_output, :new_java_output,
-        :register_parser, :new_parser, :new_java_parser,
-        :register_formatter, :new_formatter, :new_java_formatter,
-        :register_decoder, :new_decoder, :new_java_decoder,
-        :register_encoder, :new_encoder, :new_java_encoder,
-        :register_guess, :new_guess, :new_java_guess
-    end
-
-    # Embulk::Plugin::Plugin
-    Plugin = self
-  end
+  #module Plugin
+  #  class <<self
+  #    INSTANCE = PluginManager.new
+  #
+  #    extend Forwardable
+  #
+  #    def_delegators 'INSTANCE',
+  #      :register_input, :new_input, :new_java_input,
+  #      :register_output, :new_output, :new_java_output,
+  #      :register_parser, :new_parser, :new_java_parser,
+  #      :register_formatter, :new_formatter, :new_java_formatter,
+  #      :register_decoder, :new_decoder, :new_java_decoder,
+  #      :register_encoder, :new_encoder, :new_java_encoder,
+  #      :register_guess, :new_guess, :new_java_guess
+  #  end
+  #end
 end

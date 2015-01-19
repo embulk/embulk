@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.embulk.time.DateTimeZoneSerDe;
+import org.embulk.time.TimestampSerDe;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.CharsetSerDe;
@@ -35,6 +36,7 @@ public class ExecModule
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();
         DateTimeZoneSerDe.configure(mapper);
+        TimestampSerDe.configure(mapper);
         CharsetSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda
