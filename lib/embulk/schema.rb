@@ -31,7 +31,7 @@ module Embulk
       @record_reader = eval(record_reader_script)
 
       record_writer_script = "lambda do |builder,record|\n"
-      record_writer_script << ""
+      record_writer_script << "java_timestamp_class = ::Embulk::Java::Timestamp\n"
       each do |column|
         column_script =
           case column.type
@@ -44,7 +44,7 @@ module Embulk
           when :string
             "builder.setString(#{column.index}, record[#{column.index}])"
           when :timestamp
-            "builder.setTimestamp(#{column.index}, record[#{column.index}])"  # TODO convert to Time
+            "builder.setTimestamp(#{column.index}, java_timestamp_class.fromRubyTime(record[#{column.index}]))"
           else
             raise "Unknown type #{column.type.inspect}"
           end
