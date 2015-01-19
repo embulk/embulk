@@ -1,12 +1,14 @@
-module Embulk::TFGuess
-  # time format guess
-
+module Embulk::TimeFormatGuess
   module Parts
     YEAR = /[1-4][0-9]{3}/
-    MONTH = /10|11|12|[0 ]?[0-9]/
-    DAY = /[1-2][0-9]|[0 ]?[1-9]|30|31/
-    HOUR = /20|21|22|23|24|1[0-9]|[0 ]?[0-9]/
-    MINUTE = SECOND = /60|[0 ][0-9]|[1-5]?[0-9]/
+    MONTH         = /10|11|12|[0 ]?[0-9]/
+    MONTH_NODELIM = /10|11|12|[0][0-9]/
+    DAY         = /[1-2][0-9]|[0 ]?[1-9]|30|31/
+    DAY_NODELIM = /[1-2][0-9]|[0][1-9]|30|31/
+    HOUR         = /20|21|22|23|24|1[0-9]|[0 ]?[0-9]/
+    HOUR_NODELIM = /20|21|22|23|24|1[0-9]|[0][0-9]/
+    MINUTE         = SECOND         = /60|[1-5][0-9]|[0 ]?[0-9]/
+    MINUTE_NODELIM = SECOND_NODELIM = /60|[1-5][0-9]|[0][0-9]/
 
     MONTH_NAME_SHORT = /Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/
     MONTH_NAME_FULL = /January|February|March|April|May|June|July|August|September|October|November|December/
@@ -140,13 +142,18 @@ module Embulk::TFGuess
     include Parts
 
     date_delims = /[\/\-]/
-    YMD = /(?<year>#{YEAR})(?<date_delim>#{date_delims}?)(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/  # yyyy-MM-dd
-    DMY = /(?<year>#{YEAR})(?<date_delim>\/)(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/  # dd/MM/yyyy
+    # yyyy-MM-dd
+    YMD         = /(?<year>#{YEAR})(?<date_delim>#{date_delims})(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/
+    YMD_NODELIM = /(?<year>#{YEAR})(?<month>#{MONTH_NODELIM})(?<day>#{DAY_NODELIM})/
+    # dd/MM/yyyy
+    DMY         = /(?<year>#{YEAR})(?<date_delim>#{date_delims})(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/
+    DMY_NODELIM = /(?<year>#{YEAR})(?<month>#{MONTH_NODELIM})(?<day>#{DAY_NODELIM})/
 
     frac = /[0-9]{1,24}/
     time_delims = /[\:\-]/
     frac_delims = /[\.\,]/
-    TIME = /(?<hour>#{HOUR})(?<time_delim>#{time_delims}?)(?<minute>#{MINUTE})(?:\k<time_delim>(?<second>#{SECOND})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?/
+    TIME         = /(?<hour>#{HOUR})(?<time_delim>#{time_delims})(?<minute>#{MINUTE})(?:\k<time_delim>(?<second>#{SECOND})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?/
+    TIME_NODELIM = /(?<hour>#{HOUR_NODELIM})(?<minute>#{MINUTE_NODELIM})((?<second>#{SECOND_NODELIM})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?/
 
     TZ = /(?<zone_space> )?(?<zone>(?<zone_off>[\-\+]\d\d(?::?\d\d)?)|(?<zone_abb>[A-Z]{3}))|(?<z>Z)/
 
@@ -155,53 +162,60 @@ module Embulk::TFGuess
       parts = []
       part_options = []
 
-      if dm = /^#{YMD}(?<rest>.*?)$/.match(text)
+      if dm = (/^#{YMD}(?<rest>.*?)$/.match(text) or /^#{YMD_NODELIM}(?<rest>.*?)$/.match(text))
+        date_delim = dm["date_delim"] rescue ""
+
         parts << :year
         part_options << nil
-        delimiters << dm["date_delim"]
+        delimiters << date_delim
 
         parts << :month
         part_options << part_heading_option(dm["month"])
-        delimiters << dm["date_delim"]
+        delimiters << date_delim
 
         parts << :day
         part_options << part_heading_option(dm["day"])
 
-      elsif dm = /^#{DMY}(?<rest>.*?)$/.match(text)
+      elsif dm = (/^#{DMY}(?<rest>.*?)$/.match(text) or /^#{DMY_NODELIM}(?<rest>.*?)$/.match(text))
+        date_delim = dm["date_delim"] rescue ""
+
         parts << :day
         part_options << part_heading_option(dm["day"])
-        delimiters << dm["date_delim"]
+        delimiters << date_delim
 
         parts << :month
         part_options << part_heading_option(dm["month"])
-        delimiters << dm["date_delim"]
+        delimiters << date_delim
 
         parts << :year
         part_options << nil
-        delimiters << dm["date_delim"]
+        delimiters << date_delim
 
       else
+        date_delim = ""
         return nil
       end
       rest = dm["rest"]
 
-      if dm["date_delim"] == ""
-        date_time_delims = /(?<date_time_delim>[ T]?)/
-      else
-        date_time_delims = /(?<date_time_delim>[ T])/
-      end
+      date_time_delims = /[ _T]/
+      if tm = (
+            /^(?<date_time_delim>#{date_time_delims})#{TIME}(?<rest>.*?)?$/.match(rest) or
+            /^(?<date_time_delim>#{date_time_delims})#{TIME_NODELIM}(?<rest>.*?)?$/.match(rest) or
+            (date_delim == "" && /^#{TIME_NODELIM}(?<rest>.*?)?$/.match(rest))
+          )
+        date_time_delim = tm["date_time_delim"] rescue ""
+        time_delim = tm["time_delim"] rescue ""
 
-      if tm = /^#{date_time_delims}#{TIME}(?<rest>.*?)?$/.match(rest)
-        delimiters << tm["date_time_delim"]
+        delimiters << date_time_delim
         parts << :hour
         part_options << part_heading_option(tm["hour"])
 
-        delimiters << tm["time_delim"]
+        delimiters << time_delim
         parts << :minute
         part_options << part_heading_option(tm["minute"])
 
         if tm["second"]
-          delimiters << tm["time_delim"]
+          delimiters << time_delim
           parts << :second
           part_options << part_heading_option(tm["second"])
         end

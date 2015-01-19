@@ -1,5 +1,5 @@
 module Embulk
-  require_relative 'tf_guess'
+  require_relative 'time_format_guess'
 
   class GuessCsv < LineGuessPlugin
     Plugin.register_guess('csv', self)
@@ -117,7 +117,7 @@ module Embulk
       columns = column_lines.map do |types|
         t = types.inject(nil) {|r,t| merge_type(r,t) } || "string"
         if t.is_a?(TimestampMatch)
-          format = TFGuess.guess(types.map {|type| type.text })
+          format = TimeFormatGuess.guess(types.map {|type| type.text })
           ["timestamp", format]
         else
           [t]
@@ -156,7 +156,7 @@ module Embulk
         return "boolean"
       end
 
-      if TFGuess.guess(str)
+      if TimeFormatGuess.guess(str)
         return TimestampMatch.new(str)
       end
 
