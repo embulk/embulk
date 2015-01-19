@@ -6,7 +6,7 @@ define_singleton_method(:usage) do |message|
   STDERR.puts "   bundle  [--options] [new directory]"
   STDERR.puts "   run     [--options] <config.yml>"
   STDERR.puts "   preview [--options] <config.yml>"
-  STDERR.puts "   guess   [--options] <partial-config.yml>  | tee config.yml"
+  STDERR.puts "   guess   [--options] <partial-config.yml> -o <output.yml>"
   STDERR.puts ""
   if message
     STDERR.puts "error: #{message}"
@@ -21,7 +21,8 @@ usage nil unless i
 subcmd = ARGV.slice!(i)
 
 op = OptionParser.new
-conf = {}
+bundle_path = nil
+options = {}
 
 case subcmd.to_sym
 when :bundle
@@ -31,13 +32,7 @@ when :bundle
 when :run
   op.banner = "Usage: run [--options] <config.yml>"
   op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-    conf[:bundle_path] = path
-  end
-  op.on('-G', '--with-guess', TrueClass) do |b|
-    conf[:with_guess] = true
-  end
-  op.on('-P', '--with-preview', TrueClass) do |b|
-    conf[:with_preview] = true
+    bundle_path = path
   end
   op.on('-I', '--load-path PATH', 'Add $LOAD_PATH for plugin scripts') do |load_path|
     $LOAD_PATH << File.expand_path(load_path)
@@ -47,7 +42,7 @@ when :run
 when :preview
   op.banner = "Usage: preview [--options] <config.yml>"
   op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-    conf[:bundle_path] = path
+    bundle_path = path
   end
   op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
     $LOAD_PATH << File.expand_path(load_path)
@@ -57,7 +52,10 @@ when :preview
 when :guess
   op.banner = "Usage: guess [--options] <partial-config.yml>"
   op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-    conf[:bundle_path] = path
+    bundle_path = path
+  end
+  op.on('-o', '--output PATH', 'Path to write the guessed config file') do |path|
+    options[:guessOutput] = path
   end
   op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
     $LOAD_PATH << File.expand_path(load_path)
@@ -119,7 +117,7 @@ when :bundle
   end
 
 else
-  if bundle_path = conf[:bundle_path]
+  if bundle_path
     setup_gem_paths(bundle_path)
     require 'bundler'  # bundler is installed at bundle_path
     Bundler.load.setup_environment
@@ -143,5 +141,5 @@ else
     end
   end
 
-  org.embulk.cli.Runner.new(conf.to_json).main(subcmd, ARGV.to_java(:string))
+  org.embulk.cli.Runner.new(options.to_json).main(subcmd, ARGV.to_java(:string))
 end

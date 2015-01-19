@@ -7,7 +7,7 @@ You can install Embulk using [RubyGems](https://rubygems.org/). `embulk bundle`
 ```
 gem install embulk
 embulk bundle  data
-embulk guess   -b data data/examples/csv.yml > config.yml
+embulk guess   -b data data/examples/csv.yml -o config.yml
 embulk preview -b data config.yml
 embulk run     -b data config.yml
 ```

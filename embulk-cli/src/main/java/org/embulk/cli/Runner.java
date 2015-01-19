@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.NumberFormat;
 import org.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +36,13 @@ public class Runner
         //      See lib/embulk/command/embulk.rb
     }
 
+    private static class Options
+    {
+        private String guessOutput;
+        public String getGuessOutput() { return guessOutput; }
+    }
+
+    private final Options options;
     private final ConfigSource systemConfig;
     private final EmbulkService service;
     private final Injector injector;
@@ -40,6 +51,7 @@ public class Runner
     public Runner(String optionJson)
     {
         ModelManager bootstrapModelManager = new ModelManager(null, new ObjectMapper());
+        this.options = bootstrapModelManager.readObject(Options.class, optionJson);
         this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
         this.service = new EmbulkService(systemConfig);
         this.injector = service.getInjector();
@@ -78,9 +90,16 @@ public class Runner
         ConfigSource config = loadYamlConfig(partialConfigPath);
         GuessExecutor guess = injector.getInstance(GuessExecutor.class);
         NextConfig result = guess.guess(exec, config);
-        config.merge(result);
 
-        System.out.println(dumpConfigInYaml(config));
+        String out = dumpConfigInYaml(config.merge(result));
+        if (options.getGuessOutput() != null && !options.getGuessOutput().equals("-")) {
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(options.getGuessOutput())))) {
+                writer.write(out);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        System.out.println(out);
     }
 
     public void preview(String partialConfigPath)
