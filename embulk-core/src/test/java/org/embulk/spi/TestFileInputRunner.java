@@ -10,13 +10,13 @@ import java.util.Queue;
 
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.CommitReport;
-import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.time.Timestamp;
 import org.embulk.type.Schema;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,6 +27,12 @@ public class TestFileInputRunner
 {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
+
+    @Before
+    public void tearDown()
+    {
+        MockParserPlugin.raiseException = false;
+    }
 
     private static class MockFileInputPlugin implements FileInputPlugin
     {
@@ -121,16 +127,15 @@ public class TestFileInputRunner
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
 
-        List<List<Object>> records = PageTestUtils.parsePage(schema,
-                output.pages.get(0));
+        List<Object[]> records = Pages.toObjects(schema, output.pages);
         assertEquals(2, records.size());
-        for (List<Object> record : records) {
-            assertEquals(5, record.size());
-            assertEquals(true, record.get(0));
-            assertEquals(2L, record.get(1));
-            assertEquals(3.0D, (Double) record.get(2), 0.01D);
-            assertEquals("45", record.get(3));
-            assertEquals(678L, ((Timestamp) record.get(4)).toEpochMilli());
+        for (Object[] record : records) {
+            assertEquals(5, record.length);
+            assertEquals(true, record[0]);
+            assertEquals(2L, record[1]);
+            assertEquals(3.0D, (Double) record[2], 0.01D);
+            assertEquals("45", record[3]);
+            assertEquals(678L, ((Timestamp) record[4]).toEpochMilli());
         }
     }
 
