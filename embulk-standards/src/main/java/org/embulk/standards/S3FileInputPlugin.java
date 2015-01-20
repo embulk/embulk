@@ -30,10 +30,9 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
-import org.embulk.time.Timestamp;
-import org.embulk.time.TimestampFormatter;
-import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
+
+import static org.embulk.spi.FileInputRunner.formatPrefix;
 
 public class S3FileInputPlugin
         implements FileInputPlugin
@@ -148,14 +147,6 @@ public class S3FileInputPlugin
         }
 
         return builder.build();
-    }
-
-    private static String formatPrefix(String prefix)
-    {
-        Timestamp timestamp = Exec.session().getTransactionTime();
-        DateTimeZone timezone = Exec.session().getTransactionTimeZone();
-        TimestampFormatter formatter = Exec.session().newTimestampFormatter(prefix, timezone);
-        return formatter.format(timestamp);
     }
 
     /**

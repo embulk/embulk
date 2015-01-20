@@ -26,6 +26,8 @@ import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
 
+import static org.embulk.spi.FileInputRunner.formatPrefix;
+
 public class LocalFileInputPlugin
         implements FileInputPlugin
 {
@@ -66,7 +68,7 @@ public class LocalFileInputPlugin
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
             // TODO format path using timestamp
-            Files.walkFileTree(Paths.get(prefix), new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(Paths.get(formatPrefix(prefix)), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
                 {

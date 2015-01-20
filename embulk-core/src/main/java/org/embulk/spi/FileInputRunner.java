@@ -10,7 +10,10 @@ import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
+import org.embulk.time.Timestamp;
+import org.embulk.time.TimestampFormatter;
 import org.embulk.type.Schema;
+import org.joda.time.DateTimeZone;
 
 public class FileInputRunner
         implements InputPlugin
@@ -107,5 +110,13 @@ public class FileInputRunner
                 fileInput.close();
             }
         }
+    }
+
+    public static String formatPrefix(String prefix)
+    {
+        Timestamp timestamp = Exec.session().getTransactionTime();
+        DateTimeZone timezone = Exec.session().getTransactionTimeZone();
+        TimestampFormatter formatter = Exec.session().newTimestampFormatter(prefix, timezone);
+        return formatter.format(timestamp);
     }
 }
