@@ -153,32 +153,12 @@ public class S3FileInputPlugin
         return builder.build();
     }
 
-    /**
-     * paths:
-     *   - in/{%Y-%m-%d}/
-     */
-    private synchronized String formatPrefix(String prefix)
+    private static String formatPrefix(String prefix)
     {
-        int startAt = prefix.indexOf('{');
-        int endAt = prefix.indexOf('}');
-        //  TODO parse multiple strftime strings
-        if (startAt < 0 || endAt < 0 || startAt >= endAt) {
-            return prefix;
-        }
-
         Timestamp timestamp = Exec.session().getTransactionTime();
         DateTimeZone timezone = Exec.session().getTransactionTimeZone();
-        ConfigSource config = Exec.newConfigSource();
-        config.set("timezone", timezone.getID());
-        FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
-
-        String strftimeString = prefix.substring(startAt + 1, endAt);
-        TimestampFormatter formatter = new TimestampFormatter(strftimeString, formatterTask);
-        return new StringBuilder()
-                .append(prefix.substring(0, startAt))
-                .append(formatter.format(timestamp))
-                .append(prefix.substring(endAt + 1, prefix.length()))
-                .toString();
+        TimestampFormatter formatter = Exec.session().newTimestampFormatter(prefix, timezone);
+        return formatter.format(timestamp);
     }
 
     /**

@@ -1,6 +1,9 @@
 package org.embulk.spi;
 
 import org.embulk.time.Timestamp;
+import org.embulk.time.TimestampFormat;
+import org.embulk.time.TimestampFormatter;
+import org.embulk.time.TimestampFormatter.FormatterTask;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -16,8 +19,6 @@ import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 
-import java.util.TimeZone;
-
 public class ExecSession
 {
     private final Injector injector;
@@ -26,6 +27,8 @@ public class ExecSession
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
+
+    private final Timestamp sessionCreatedTime;
 
     public ExecSession(Injector injector, ConfigSource execConfig)
     {
@@ -36,6 +39,8 @@ public class ExecSession
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
+
+        this.sessionCreatedTime = Timestamp.ofEpochMilli(System.currentTimeMillis());
     }
 
     public Injector getInjector()
@@ -45,12 +50,13 @@ public class ExecSession
 
     public Timestamp getTransactionTime()
     {
-        return Timestamp.ofEpochSecond(execConfig.get(Long.class, "transaction_time", 0L));
+        return execConfig.get(Timestamp.class, "transaction_time", sessionCreatedTime);
     }
 
     public DateTimeZone getTransactionTimeZone()
     {
-        return DateTimeZone.forID(execConfig.get(String.class, "transaction_time_zone", "UTC"));
+        String timezone = execConfig.get(String.class, "transaction_time_zone", "UTC");
+        return TimestampFormat.parseDateTimeZone(timezone);
     }
 
     public Logger getLogger(String name)
@@ -91,5 +97,13 @@ public class ExecSession
     public TaskSource newTaskSource()
     {
         return new DataSourceImpl(modelManager);
+    }
+
+    public TimestampFormatter newTimestampFormatter(String format, DateTimeZone timezone)
+    {
+        ConfigSource config = Exec.newConfigSource();
+        config.set("timezone", timezone.getID());
+        FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
+        return new TimestampFormatter(format, formatterTask);
     }
 }
