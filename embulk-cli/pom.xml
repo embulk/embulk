@@ -13,11 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.embulk</groupId>
-            <artifactId>embulk-standards</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
@@ -35,6 +30,12 @@
         <dependency>
             <groupId>org.embulk</groupId>
             <artifactId>embulk-core</artifactId>
+        </dependency>
+
+        <!-- TODO move embulk-standards to another repository -->
+        <dependency>
+            <groupId>org.embulk</groupId>
+            <artifactId>embulk-standards</artifactId>
         </dependency>
     </dependencies>
 </project>
