@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
@@ -21,9 +20,9 @@ public class ExecSession
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
+    private final ConfigSource execConfig;
 
-    @Inject
-    public ExecSession(Injector injector)
+    public ExecSession(Injector injector, ConfigSource execConfig)
     {
         super();
         this.injector = injector;
@@ -31,6 +30,7 @@ public class ExecSession
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
+        this.execConfig = execConfig;
     }
 
     public Injector getInjector()

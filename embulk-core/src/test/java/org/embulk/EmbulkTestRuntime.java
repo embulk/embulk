@@ -48,7 +48,8 @@ public class EmbulkTestRuntime
     public EmbulkTestRuntime()
     {
         super(new TestRuntimeModule());
-        this.exec = getInstance(ExecSession.class);
+        ConfigSource execConfig = new DataSourceImpl(null);
+        this.exec = new ExecSession(getInjector(), execConfig);
     }
 
     public ExecSession getExec()
