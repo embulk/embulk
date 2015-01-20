@@ -74,7 +74,6 @@ public class FileOutputRunner
                         formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
                             public void run(final TaskSource formatterTaskSource)
                             {
-                                TaskSource taskSource = Exec.newTaskSource();
                                 task.setFileOutputTaskSource(fileOutputTaskSource);
                                 task.setEncoderTaskSources(encoderTaskSources);
                                 task.setFormatterTaskSource(formatterTaskSource);
