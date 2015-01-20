@@ -1,15 +1,19 @@
 package org.embulk.spi;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
+
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+
 import org.embulk.time.Timestamp;
 import org.embulk.type.Schema;
 import org.embulk.type.Column;
@@ -141,7 +145,7 @@ public class PageBuilder
     }
 
     private static class StringReferenceSortComparator
-            implements Comparator<Map.Entry<String, Integer>>
+            implements Comparator<Map.Entry<String, Integer>>, Serializable
     {
         @Override
         public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2)

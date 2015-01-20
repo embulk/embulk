@@ -92,7 +92,7 @@ public class Schema
         StringBuilder sbuf = new StringBuilder();
         sbuf.append("Schema{\n");
         for (Column c : columns) {
-            sbuf.append(String.format(" %4d: %s %s\n", c.getIndex(), c.getName(), c.getType()));
+            sbuf.append(String.format(" %4d: %s %s%n", c.getIndex(), c.getName(), c.getType()));
         }
         sbuf.append("}");
         return sbuf.toString();
