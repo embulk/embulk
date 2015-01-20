@@ -1,10 +1,8 @@
 package org.embulk.standards;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.TimeZone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
@@ -34,7 +32,6 @@ import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.time.Timestamp;
 import org.embulk.time.TimestampFormatter;
-import org.embulk.time.TimestampFormatter.FormatterTask;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 
