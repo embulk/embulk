@@ -20,9 +20,11 @@ i = ARGV.find_index {|arg| arg !~ /^\-/ }
 usage nil unless i
 subcmd = ARGV.slice!(i)
 
-op = OptionParser.new
-bundle_path = nil
+bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
+bundle_path = nil if bundle_path.empty?
 options = {}
+
+op = OptionParser.new
 
 case subcmd.to_sym
 when :bundle
@@ -76,10 +78,10 @@ rescue => e
 end
 
 def setup_gem_paths(path)
-  ENV['GEM_HOME'] = File.expand_path "#{path}/#{Gem.ruby_engine}/#{RbConfig::CONFIG['ruby_version']}"
+  ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
   ENV['GEM_PATH'] = ''
-  ENV.delete 'BUNDLE_GEMFILE'
   Gem.clear_paths  # force rubygems to reload GEM_HOME
+  ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
 end
 
 case subcmd.to_sym
@@ -122,11 +124,14 @@ else
     require 'bundler'  # bundler is installed at bundle_path
     Bundler.load.setup_environment
     $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
-  else
-    $LOAD_PATH << File.expand_path('../..', File.dirname(__FILE__))
+    # since here, require '...' may load files of different (newer) embulk versions
+    # especially following 'embulk/command/embulk_home'
   end
+  require 'embulk/command/embulk_home'  # defines Embulk.home(dir)
 
-  require 'embulk/command/embulk_home'  # set EMBULK_HOME
+  # for org.embulk.jruby.JRubyScriptingModule to require 'embulk/java/bootstrap'
+  $LOAD_PATH << Embulk.home('lib')
+
   require 'java'
   require 'json'
 
@@ -134,7 +139,7 @@ else
     java.lang.Class.forName('org.embulk.cli.Runner')
   rescue java.lang.ClassNotFoundException
     # load classpath
-    classpath_dir = File.join(ENV['EMBULK_HOME'], 'classpath')
+    classpath_dir = Embulk.home('classpath')
     jars = Dir.entries(classpath_dir).select {|f| f =~ /\.jar$/ }.sort
     jars.each do |jar|
       require File.join(classpath_dir, jar)

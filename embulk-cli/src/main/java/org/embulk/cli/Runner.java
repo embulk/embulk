@@ -31,12 +31,6 @@ import org.embulk.exec.PreviewResult;
 
 public class Runner
 {
-    public static void main(String[] args)
-    {
-        // TODO Pure-java CLI is not implemented yet.
-        //      See lib/embulk/command/embulk.rb
-    }
-
     private static class Options
     {
         private String guessOutput;
