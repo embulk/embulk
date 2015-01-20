@@ -23,6 +23,7 @@
         <module>embulk-core</module>
         <module>embulk-standards</module>
         <module>embulk-cli</module>
+        <module>embulk-bundle</module>
     </modules>
 
     <properties>
@@ -52,6 +53,12 @@
             <dependency>
                 <groupId>org.embulk</groupId>
                 <artifactId>embulk-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.embulk</groupId>
+                <artifactId>embulk-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

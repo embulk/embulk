@@ -44,6 +44,10 @@ module Embulk
         new.merge!(JSON.parse(json))
       end
 
+      def self.from_ruby_hash(hash)
+        new.merge!(hash)
+      end
+
       def java_object
         json = to_json
         Java::Injected::ModelManager.readObject(Java::DataSourceImpl.java_class, json.to_java)

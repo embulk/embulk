@@ -7,7 +7,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
-import javax.validation.constraints.NotNull;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -28,12 +29,17 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 //import org.embulk.spi.NoticeLogger;
 import org.embulk.spi.TransactionalPageOutput;
+import org.slf4j.Logger;
 
 public class LocalExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
     private final ExecutorService executor;
+
+    private Logger log;
+    private final AtomicInteger runningTaskCount;
+    private final AtomicInteger completedTaskCount;
 
     public interface ExecutorTask
             extends Task
@@ -62,6 +68,8 @@ public class LocalExecutor
                 .setNameFormat("embulk-executor-%d")
                 .setDaemon(true)
                 .build());
+        this.runningTaskCount = new AtomicInteger(0);
+        this.completedTaskCount = new AtomicInteger(0);
     }
 
     private static class ExecuteResultBuilder
@@ -157,6 +165,7 @@ public class LocalExecutor
 
     public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
+        log = exec.getLogger(LocalExecutor.class);
         try {
             return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
                 public ExecuteResult run()
@@ -189,9 +198,8 @@ public class LocalExecutor
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
 
-                        // TODO
-                        //Exec.getLogger().debug("input: %s", task.getInputTask());
-                        //Exec.getLogger().debug("output: %s", task.getOutputTask());
+                        //log.debug("input: %s", task.getInputTask());
+                        //log.debug("output: %s", task.getOutputTask());
 
                         List<ProcessResult> results = process(task.dump(), schema, processorCount);
                         for (ProcessResult result : results) {
@@ -219,12 +227,17 @@ public class LocalExecutor
         List<Future<ProcessResult>> futures = new ArrayList<>();
         List<ProcessResult> joined = new ArrayList<>();
         try {
+            log.info("Start bulk processing");
+            showProgress(processorCount);
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));
             }
-            for (Future<ProcessResult> future : futures) {
+
+            for (int i=0; i < processorCount; i++) {
                 try {
-                    joined.add(future.get());
+                    joined.add(futures.get(i).get());
+                    showProgress(processorCount);
+
                 } catch (ExecutionException ex) {
                     throw Throwables.propagate(ex.getCause());
                 } catch (InterruptedException ex) {
@@ -240,27 +253,43 @@ public class LocalExecutor
         }
     }
 
+    private void showProgress(int total)
+    {
+        int running = runningTaskCount.get();
+        int done = completedTaskCount.get();
+        int pending = total - done - running;
+
+        log.info(" pending  running     done /    total");
+        log.info(String.format("%8d %8d %8d / %8d", pending, running, done, total));
+    }
+
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
     {
         return executor.submit(new Callable<ProcessResult>() {
             public ProcessResult call()
             {
-                final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
-                final InputPlugin in = newInputPlugin(task);
-                final OutputPlugin out = newOutputPlugin(task);
-
-                TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
-                boolean committed = false;
                 try {
-                    CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
-                    CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
-                    committed = true;
-                    return new ProcessResult(inReport, outReport);
-                } finally {
-                    if (!committed) {
-                        tran.abort();
+                    runningTaskCount.getAndIncrement();
+                    final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+                    final InputPlugin in = newInputPlugin(task);
+                    final OutputPlugin out = newOutputPlugin(task);
+
+                    TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
+                    boolean committed = false;
+                    try {
+                        CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
+                        CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
+                        committed = true;
+                        return new ProcessResult(inReport, outReport);
+                    } finally {
+                        if (!committed) {
+                            tran.abort();
+                        }
+                        tran.close();
                     }
-                    tran.close();
+                } finally {
+                    runningTaskCount.getAndDecrement();
+                    completedTaskCount.getAndIncrement();
                 }
             }
         });

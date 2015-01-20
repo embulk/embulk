@@ -2,6 +2,7 @@ package org.embulk.exec;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ResourceLeakDetector;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 
@@ -34,7 +35,7 @@ public class PooledBufferAllocator
             extends Buffer
     {
         private ByteBuf buf;
-        private Exception released;
+        private Exception doubleFreeCheck;
 
         public NettyByteBufBuffer(ByteBuf buf)
         {
@@ -44,12 +45,14 @@ public class PooledBufferAllocator
 
         public void release()
         {
-            if (released != null) {
-                released.printStackTrace();
+            if (doubleFreeCheck != null) {
+                doubleFreeCheck.printStackTrace();
             }
-            buf.release();
-            buf = null;
-            released = new NullPointerException();
+            if (buf != null) {
+                buf.release();
+                buf = null;
+                doubleFreeCheck = new NullPointerException();
+            }
         }
     }
 }

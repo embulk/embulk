@@ -36,10 +36,11 @@ public class EmbulkTestRuntime
             ConfigSource systemConfig = getSystemConfig();
             new SystemConfigModule(systemConfig).configure(binder);
             new ExecModule().configure(binder);
-            new ExtensionServiceLoaderModule().configure(binder);
+            new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
-            new JRubyScriptingModule().configure(binder);
+            new JRubyScriptingModule(systemConfig).configure(binder);
             new TestUtilityModule().configure(binder);
+            new TestPluginSourceModule().configure(binder);
         }
     }
 
@@ -48,7 +49,8 @@ public class EmbulkTestRuntime
     public EmbulkTestRuntime()
     {
         super(new TestRuntimeModule());
-        this.exec = getInstance(ExecSession.class);
+        ConfigSource execConfig = new DataSourceImpl(null);
+        this.exec = new ExecSession(getInjector(), execConfig);
     }
 
     public ExecSession getExec()

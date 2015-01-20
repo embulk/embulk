@@ -3,6 +3,7 @@ package org.embulk.exec;
 import java.util.ServiceLoader;
 import com.google.inject.Module;
 import com.google.inject.Binder;
+import org.embulk.config.ConfigSource;
 
 /**
  * ExtensionServiceLoaderModule loads Extensions using java.util.ServiceLoader
@@ -16,7 +17,7 @@ public class ExtensionServiceLoaderModule
 {
     private final ClassLoader classLoader;
 
-    public ExtensionServiceLoaderModule()
+    public ExtensionServiceLoaderModule(ConfigSource systemConfig)
     {
         this(ExtensionServiceLoaderModule.class.getClassLoader());
     }
