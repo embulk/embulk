@@ -47,7 +47,6 @@ public class Runner
     private final ConfigSource systemConfig;
     private final EmbulkService service;
     private final Injector injector;
-    private final ExecSession exec;
 
     public Runner(String optionJson)
     {
@@ -56,7 +55,6 @@ public class Runner
         this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
         this.service = new EmbulkService(systemConfig);
         this.injector = service.getInjector();
-        this.exec = new ExecSession(injector);
     }
 
     public void main(String command, String[] args)
@@ -79,6 +77,7 @@ public class Runner
     public void run(String configPath)
     {
         ConfigSource config = loadYamlConfig(configPath);
+        ExecSession exec = newExecSession(config);
         LocalExecutor local = injector.getInstance(LocalExecutor.class);
         ExecuteResult result = local.run(exec, config);
 
@@ -89,6 +88,7 @@ public class Runner
     public void guess(String partialConfigPath)
     {
         ConfigSource config = loadYamlConfig(partialConfigPath);
+        ExecSession exec = newExecSession(config);
         GuessExecutor guess = injector.getInstance(GuessExecutor.class);
         NextConfig result = guess.guess(exec, config);
 
@@ -106,6 +106,7 @@ public class Runner
     public void preview(String partialConfigPath)
     {
         ConfigSource config = loadYamlConfig(partialConfigPath);
+        ExecSession exec = newExecSession(config);
         PreviewExecutor preview = injector.getInstance(PreviewExecutor.class);
         PreviewResult result = preview.preview(exec, config);
         List<Object[]> records = Pages.toObjects(result.getSchema(), result.getPages());
@@ -164,6 +165,11 @@ public class Runner
         ModelManager model = injector.getInstance(ModelManager.class);
         Map<String, Object> map = model.readObject(MapType.class, model.writeObject(config));
         return new Yaml().dump(map);
+    }
+
+    private ExecSession newExecSession(ConfigSource config)
+    {
+        return new ExecSession(injector, config.getNestedOrSetEmpty("exec"));
     }
 
     private static class MapType extends HashMap<String, Object> {

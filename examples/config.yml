@@ -1,6 +1,6 @@
-exec:
-  transaction_time: 2015-01-17 00:00:00 UTC
-  transaction_timezone: UTC
+#exec:
+#  transaction_time: 2015-01-17 00:00:00 UTC
+#  transaction_timezone: UTC
 in:
   type: file
   paths:

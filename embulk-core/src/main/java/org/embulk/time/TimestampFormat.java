@@ -38,7 +38,7 @@ public class TimestampFormat
 
     private static Set<String> availableTimeZoneNames = ImmutableSet.copyOf(DateTimeZone.getAvailableIDs());
 
-    static DateTimeZone parseDateTimeZone(String s)
+    public static DateTimeZone parseDateTimeZone(String s)
     {
         if(s.startsWith("+") || s.startsWith("-")) {
             return DateTimeZone.forID("GMT"+s);
