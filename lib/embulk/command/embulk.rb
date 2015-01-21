@@ -109,27 +109,29 @@ when :bundle
   unless File.exists?(path)
     puts "Initializing #{path}..."
     FileUtils.mkdir_p File.dirname(path)
-    if __FILE__ =~ /^classpath:/
-      # data is in jar
-      resource_class = org.embulk.command.Runner.java_class
-      # TODO get file list form the jar
-      %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|
-        url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
-        dst = File.join(path, file)
-        FileUtils.mkdir_p File.dirname(dst)
-        FileUtils.cp(url, dst)
-      end
-    else
-      tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
-      FileUtils.cp_r tmpl, path
-    end
     begin
-      Gem::GemRunner.new.run %w[install bundler]
-    rescue Gem::SystemExitException => e
-      if e.exit_code != 0
-        FileUtils.rm_rf path
-        raise e
+      success = false
+      if __FILE__ =~ /^classpath:/
+        # data is in jar
+        resource_class = org.embulk.command.Runner.java_class
+        # TODO get file list form the jar
+        %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|
+          url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
+          dst = File.join(path, file)
+          FileUtils.mkdir_p File.dirname(dst)
+          FileUtils.cp(url, dst)
+        end
+      else
+        tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
+        FileUtils.cp_r tmpl, path
       end
+      Gem::GemRunner.new.run %w[install bundler]
+      success = true
+    rescue Gem::SystemExitException => e
+      raise e if e.exit_code != 0
+      success = true
+    ensure
+      FileUtils.rm_rf path unless success
     end
   end
 
@@ -150,7 +152,7 @@ else
     require 'bundler'  # bundler is installed at bundle_path
     Bundler.load.setup_environment
     $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
-    # since here, require '...' may load files of different (newer) embulk versions
+    # since here, `require` may load files of different (newer) embulk versions
     # especially following 'embulk/command/embulk_home'
   end
   require 'embulk/command/embulk_home'  # defines Embulk.home(dir)
