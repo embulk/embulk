@@ -50,6 +50,20 @@ module Embulk
       end
       args = 1..1
 
+    when :gem
+      if ENV['GEM_HOME'].to_s.empty?
+        STDERR.puts "GEM_HOME is not set. gem subcommand is not available with executable-jar."
+        STDERR.puts "You can use bundle subcommand instead."
+        exit 1
+      end
+      require 'rubygems/gem_runner'
+      Gem::GemRunner.new.run ARGV
+      exit 0
+
+    when :exec
+      exec *ARGV
+      exit 127
+
     else
       usage "Unknown subcommand #{subcmd.dump}."
     end
@@ -179,6 +193,7 @@ module Embulk
     STDERR.puts "   run       <config.yml>"
     STDERR.puts "   preview   <config.yml>"
     STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
+    STDERR.puts "   gem       <install | list | help>"
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"

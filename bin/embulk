@@ -55,7 +55,7 @@ unless jruby_complete
 end
 
 gem_home = ENV['GEM_HOME'].to_s
-unless gem_home.empty?
+if gem_home.empty?
   # inherit this ruby's GEM_HOME to the sub jruby process
   ENV['GEM_HOME'] = Gem.default_dir
 end
