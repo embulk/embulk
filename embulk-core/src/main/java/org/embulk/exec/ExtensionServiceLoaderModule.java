@@ -36,7 +36,6 @@ public class ExtensionServiceLoaderModule
         ServiceLoader<Extension> serviceLoader = ServiceLoader.load(Extension.class, classLoader);
         for (Extension extension : serviceLoader) {
             for (Module module : extension.getModules(systemConfig)) {
-                System.out.println("configure: "+module);
                 module.configure(binder);
             }
         }

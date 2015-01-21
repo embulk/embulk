@@ -40,6 +40,8 @@ EOF
 
     ruby_init_script = b <<EOF
 #{bundle_path_script}
+ENV.delete 'GEM_HOME'
+ENV.delete 'GEM_PATH'
 EOF
 
     ruby_script = b(File.read(ruby_script_path))
