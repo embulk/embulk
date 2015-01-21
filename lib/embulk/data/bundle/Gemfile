@@ -1,6 +1,6 @@
 source 'https://rubygems.org/'
 
-gem 'embulk', '~> 0.1.0'
+#gem 'embulk', '~> 0.1.0'
 
 # plugins
 #gem 'embulk-input-xyz'

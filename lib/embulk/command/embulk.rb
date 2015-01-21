@@ -3,10 +3,11 @@ require 'optparse'
 define_singleton_method(:usage) do |message|
   STDERR.puts "usage: <command> [--options]"
   STDERR.puts "commands:"
-  STDERR.puts "   bundle  [--options] [new directory]"
-  STDERR.puts "   run     [--options] <config.yml>"
-  STDERR.puts "   preview [--options] <config.yml>"
-  STDERR.puts "   guess   [--options] <partial-config.yml> -o <output.yml>"
+  STDERR.puts "   bundle    [new directory]"
+  STDERR.puts "   run       <config.yml>"
+  STDERR.puts "   preview   <config.yml>"
+  STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
+  STDERR.puts "   gem       <install | list | help>"
   STDERR.puts ""
   if message
     STDERR.puts "error: #{message}"
@@ -19,6 +20,12 @@ end
 i = ARGV.find_index {|arg| arg !~ /^\-/ }
 usage nil unless i
 subcmd = ARGV.slice!(i)
+
+if subcmd == "gem"
+  require 'rubygems/gem_runner'
+  Gem::GemRunner.new.run ARGV
+  exit 0
+end
 
 bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
@@ -82,7 +89,6 @@ def setup_gem_paths(path)
   ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
   ENV['GEM_PATH'] = ''
   Gem.clear_paths  # force rubygems to reload GEM_HOME
-  ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
 end
 
 def setup_load_paths(load_paths)
@@ -97,13 +103,34 @@ def setup_load_paths(load_paths)
   end
 end
 
+if bundle_path
+  setup_gem_paths(bundle_path)
+  ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
+  require 'bundler'  # bundler is installed at bundle_path
+  Bundler.load.setup_environment
+  $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
+  # since here, `require` may load files of different (newer) embulk versions
+  # especially following 'embulk/command/embulk_home'
+end
+
+begin
+  require 'embulk/command/embulk_home'  # defines Embulk.home(dir)
+rescue LoadError
+  require_relative 'embulk_home'
+end
+
+# for org.embulk.jruby.JRubyScriptingModule to require 'embulk/java/bootstrap'
+$LOAD_PATH << Embulk.home('lib')
+
+# TODO move following script to embulk/command/xyz so that
+#      self-update works
+
 case subcmd.to_sym
 when :bundle
   path = ARGV[0] || "."
 
   require 'fileutils'
   require 'rubygems/gem_runner'
-  setup_gem_paths(path)
   setup_load_paths(load_paths)
 
   unless File.exists?(path)
@@ -111,6 +138,8 @@ when :bundle
     FileUtils.mkdir_p File.dirname(path)
     begin
       success = false
+
+      # copy embulk/data/bundle/ directory
       if __FILE__ =~ /^classpath:/
         # data is in jar
         resource_class = org.embulk.command.Runner.java_class
@@ -122,10 +151,21 @@ when :bundle
           FileUtils.cp(url, dst)
         end
       else
-        tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
+        #tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
+        tmpl = File.join(Embulk.home('lib'), 'embulk', 'data', 'bundle')
         FileUtils.cp_r tmpl, path
       end
+
+      # create bin/embulk
+      bin_embulk_path = File.join(path, 'bin', 'embulk')
+      FileUtils.mkdir_p File.dirname(bin_embulk_path)
+      require 'embulk/command/embulk_generate_bin'  # defines Embulk.generate_bin
+      File.open(bin_embulk_path, 'wb', 0755) {|f| f.write Embulk.generate_bin(bundle_path: :here) }
+
+      # install bundler
+      setup_gem_paths(path)
       Gem::GemRunner.new.run %w[install bundler]
+
       success = true
     rescue Gem::SystemExitException => e
       raise e if e.exit_code != 0
@@ -147,19 +187,6 @@ when :bundle
   end
 
 else
-  if bundle_path
-    setup_gem_paths(bundle_path)
-    require 'bundler'  # bundler is installed at bundle_path
-    Bundler.load.setup_environment
-    $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
-    # since here, `require` may load files of different (newer) embulk versions
-    # especially following 'embulk/command/embulk_home'
-  end
-  require 'embulk/command/embulk_home'  # defines Embulk.home(dir)
-
-  # for org.embulk.jruby.JRubyScriptingModule to require 'embulk/java/bootstrap'
-  $LOAD_PATH << Embulk.home('lib')
-
   require 'java'
   require 'json'
 
