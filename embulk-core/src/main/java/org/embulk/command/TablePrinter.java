@@ -1,4 +1,4 @@
-package org.embulk.cli;
+package org.embulk.command;
 
 import java.util.List;
 import java.util.ArrayList;

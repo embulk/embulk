@@ -23,7 +23,6 @@
         <module>embulk-core</module>
         <module>embulk-standards</module>
         <module>embulk-cli</module>
-        <module>embulk-bundle</module>
     </modules>
 
     <properties>

@@ -1,4 +1,4 @@
-package org.embulk.cli;
+package org.embulk.command;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,7 @@ import org.embulk.exec.ExecuteResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
+import org.embulk.EmbulkService;
 
 public class Runner
 {
