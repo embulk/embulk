@@ -45,6 +45,8 @@ public class Column
             visitor.booleanColumn(this);
         } else if (type instanceof LongType) {
             visitor.longColumn(this);
+        } else if (type instanceof DoubleType) {
+            visitor.doubleColumn(this);
         } else if (type instanceof StringType) {
             visitor.stringColumn(this);
         } else if (type instanceof TimestampType) {

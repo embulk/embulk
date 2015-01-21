@@ -1,18 +1,14 @@
 package org.embulk.spi;
 
-import java.io.InputStream;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
+
+import org.embulk.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Before;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import com.google.common.collect.ImmutableList;
-import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
 
 public class TestFileInputInputStream
 {

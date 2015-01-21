@@ -22,6 +22,7 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.time.TimestampParser;
 import org.embulk.time.TimestampParseException;
+import org.slf4j.Logger;
 
 import java.util.Map;
 
@@ -65,6 +66,13 @@ public class CsvParserPlugin
         public long getMaxQuotedSizeLimit();
     }
 
+    private final Logger log;
+
+    public CsvParserPlugin()
+    {
+        log = Exec.getLogger(CsvParserPlugin.class);
+    }
+
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
@@ -106,8 +114,12 @@ public class CsvParserPlugin
                     }
                 }
 
-                while (tokenizer.nextRecord()) {
+                while (true) {
                     try {
+                        if (!tokenizer.nextRecord()) {
+                            break;
+                        }
+
                         schema.visitColumns(new SchemaVisitor() {
                             public void booleanColumn(Column column)
                             {
@@ -177,10 +189,10 @@ public class CsvParserPlugin
                         pageBuilder.addRecord();
 
                     } catch (Exception e) {
-                        String skippedLine = tokenizer.skipCurrentLine();
                         // TODO logging
-                        e.printStackTrace();
-                        System.out.println("skip: "+e);
+                        long lineNumber = tokenizer.getCurrentLineNumber();
+                        String skippedLine = tokenizer.skipCurrentLine();
+                        log.warn(String.format("Skipped (line %d): %s", lineNumber, skippedLine), e);
                         //exec.notice().skippedLine(skippedLine);
                     }
                 }
