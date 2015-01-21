@@ -109,8 +109,20 @@ when :bundle
   unless File.exists?(path)
     puts "Initializing #{path}..."
     FileUtils.mkdir_p File.dirname(path)
-    tmpl = File.expand_path("#{File.dirname(__FILE__)}/../../../templates/bundle")
-    FileUtils.cp_r tmpl, path
+    if __FILE__ =~ /^classpath:/
+      # data is in jar
+      resource_class = org.embulk.command.Runner.java_class
+      # TODO get file list form the jar
+      %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|
+        url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
+        dst = File.join(path, file)
+        FileUtils.mkdir_p File.dirname(dst)
+        FileUtils.cp(url, dst)
+      end
+    else
+      tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
+      FileUtils.cp_r tmpl, path
+    end
     begin
       Gem::GemRunner.new.run %w[install bundler]
     rescue Gem::SystemExitException => e
@@ -150,7 +162,7 @@ else
   require 'json'
 
   begin
-    java.lang.Class.forName('org.embulk.cli.Runner')
+    java.lang.Class.forName('org.embulk.command.Runner')
   rescue java.lang.ClassNotFoundException
     # load classpath
     classpath_dir = Embulk.home('classpath')
@@ -162,5 +174,5 @@ else
 
   setup_load_paths(load_paths)
 
-  org.embulk.cli.Runner.new(options.to_json).main(subcmd, ARGV.to_java(:string))
+  org.embulk.command.Runner.new(options.to_json).main(subcmd, ARGV.to_java(:string))
 end

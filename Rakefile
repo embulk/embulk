@@ -26,7 +26,7 @@ task :compile do
   mkdir_p "classpath"
   cp Dir["embulk-cli/target/dependency/*.jar"], "classpath"
   targets = Dir["embulk-cli/target/embulk-cli-*.jar"]
-  targets.reject! {|target| target =~ /sources/ }
+  targets.reject! {|target| target =~ /-sources.jar$/ || target =~ /-executable.jar$/ }
   cp targets, "classpath"
 end
 
