@@ -7,18 +7,19 @@ module Embulk
     load_paths = []
     options = {}
 
+    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
+    $LOAD_PATH << Embulk.home('lib')
+
     require 'optparse'
     op = OptionParser.new
+
     op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       # only for help message. implemented at lib/embulk/command/embulk.rb
     end
 
-    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
-    $LOAD_PATH << Embulk.home('lib')
-
     case subcmd.to_sym
     when :bundle
-      op.banner = "Usage: bundle [new directory]"
+      op.banner = "Usage: bundle [directory]"
       args = 0..1
 
     when :run
@@ -113,6 +114,7 @@ module Embulk
         setup_gem_paths(path)
       end
 
+      ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
       Dir.chdir(path) do
         require 'bundler'
         require 'bundler/friendly_errors'
@@ -149,27 +151,13 @@ module Embulk
     File.join(home, dir)
   end
 
-  def self.usage(message)
-    STDERR.puts "usage: <command> [--options]"
-    STDERR.puts "commands:"
-    STDERR.puts "   bundle    [new directory]"
-    STDERR.puts "   run       <config.yml>"
-    STDERR.puts "   preview   <config.yml>"
-    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
-    STDERR.puts ""
-    if message
-      STDERR.puts "error: #{message}"
-    else
-      STDERR.puts "Use \`<command> --help\` to see description of the commands."
-    end
-    exit 1
-  end
+  private
 
   def self.setup_gem_paths(path)
+    # install bundler gem here & use bundler installed here
     ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
     ENV['GEM_PATH'] = ''
     Gem.clear_paths  # force rubygems to reload GEM_HOME
-    ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
   end
 
   def self.setup_load_paths(load_paths)
@@ -182,5 +170,21 @@ module Embulk
         $LOAD_PATH << File.expand_path(load_path)
       end
     end
+  end
+
+  def self.usage(message)
+    STDERR.puts "usage: <command> [--options]"
+    STDERR.puts "commands:"
+    STDERR.puts "   bundle    [directory]"
+    STDERR.puts "   run       <config.yml>"
+    STDERR.puts "   preview   <config.yml>"
+    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
+    STDERR.puts ""
+    if message
+      STDERR.puts "error: #{message}"
+    else
+      STDERR.puts "Use \`<command> --help\` to see description of the commands."
+    end
+    exit 1
   end
 end

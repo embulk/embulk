@@ -18,6 +18,7 @@ if bundle_path
   Bundler.load.setup_environment
   # since here, `require` may load files of different (newer) embulk versions
   # especially following 'embulk/command/embulk_run'.
+
   $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
 end
 
