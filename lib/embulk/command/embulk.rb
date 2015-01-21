@@ -7,7 +7,6 @@ define_singleton_method(:usage) do |message|
   STDERR.puts "   run       <config.yml>"
   STDERR.puts "   preview   <config.yml>"
   STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
-  STDERR.puts "   gem       <install | list | help>"
   STDERR.puts ""
   if message
     STDERR.puts "error: #{message}"
@@ -20,12 +19,6 @@ end
 i = ARGV.find_index {|arg| arg !~ /^\-/ }
 usage nil unless i
 subcmd = ARGV.slice!(i)
-
-if subcmd == "gem"
-  require 'rubygems/gem_runner'
-  Gem::GemRunner.new.run ARGV
-  exit 0
-end
 
 bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
