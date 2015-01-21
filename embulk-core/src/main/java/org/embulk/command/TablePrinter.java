@@ -15,7 +15,7 @@ class TablePrinter
 
     private String[] header;
 
-    private List<String[]> samples;
+    private List<Object[]> samples;
     private String format;
     private String border;
 
@@ -23,14 +23,14 @@ class TablePrinter
     {
         this.out = out;
         this.header = header;
-        this.samples = new ArrayList<String[]>(SAMPLES);
+        this.samples = new ArrayList<Object[]>(SAMPLES);
         samples.add(header);
     }
 
     public void add(Object... values) throws IOException
     {
         int min = header.length < values.length ? header.length : values.length;
-        String[] cols = new String[header.length];
+        Object[] cols = new Object[header.length];
         for(int i=0; i < min; i++) {
             if(values[i] == null) {
                 cols[i] = "";
@@ -98,8 +98,8 @@ class TablePrinter
     private int maxLengthInColumn(int i)
     {
         int max = 0;
-        for(String[] cols : samples) {
-            String s = cols[i];
+        for(Object[] cols : samples) {
+            String s = (String) cols[i];
             int len = (s == null) ? 0 : s.length();
             if(max < len) {
                 max = len;

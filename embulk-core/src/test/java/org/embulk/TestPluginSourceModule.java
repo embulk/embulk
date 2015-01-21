@@ -1,6 +1,6 @@
 package org.embulk;
 
-import static org.embulk.plugin.InjectedPluginSource.registerPlugin;
+import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.MockFormatterPlugin;
@@ -15,9 +15,9 @@ public class TestPluginSourceModule implements Module
     @Override
     public void configure(Binder binder)
     {
-        registerPlugin(binder, ParserPlugin.class, "mock",
+        registerPluginTo(binder, ParserPlugin.class, "mock",
                 MockParserPlugin.class);
-        registerPlugin(binder, FormatterPlugin.class, "mock",
+        registerPluginTo(binder, FormatterPlugin.class, "mock",
                 MockFormatterPlugin.class);
     }
 }
