@@ -22,6 +22,7 @@ subcmd = ARGV.slice!(i)
 
 bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
+load_paths = []
 options = {}
 
 op = OptionParser.new
@@ -36,8 +37,8 @@ when :run
   op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
     bundle_path = path
   end
-  op.on('-I', '--load-path PATH', 'Add $LOAD_PATH for plugin scripts') do |load_path|
-    $LOAD_PATH << File.expand_path(load_path)
+  op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+    load_paths << load_path
   end
   args = 1..1
 
@@ -46,8 +47,8 @@ when :preview
   op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
     bundle_path = path
   end
-  op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
-    $LOAD_PATH << File.expand_path(load_path)
+  op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+    load_paths << load_path
   end
   args = 1..1
 
@@ -59,8 +60,8 @@ when :guess
   op.on('-o', '--output PATH', 'Path to write the guessed config file') do |path|
     options[:guessOutput] = path
   end
-  op.on('-I', '--load-path', 'Add $LOAD_PATH for plugin scripts') do |load_path|
-    $LOAD_PATH << File.expand_path(load_path)
+  op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+    load_paths << load_path
   end
   args = 1..1
 
@@ -84,6 +85,18 @@ def setup_gem_paths(path)
   ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
 end
 
+def setup_load_paths(load_paths)
+  load_paths.each do |load_path|
+    if File.file?(load_path)
+      # jar files
+      require File.expand_path(load_path)
+    else
+      # ruby script directory
+      $LOAD_PATH << File.expand_path(load_path)
+    end
+  end
+end
+
 case subcmd.to_sym
 when :bundle
   path = ARGV[0] || "."
@@ -91,6 +104,7 @@ when :bundle
   require 'fileutils'
   require 'rubygems/gem_runner'
   setup_gem_paths(path)
+  setup_load_paths(load_paths)
 
   unless File.exists?(path)
     puts "Initializing #{path}..."
@@ -145,6 +159,8 @@ else
       require File.join(classpath_dir, jar)
     end
   end
+
+  setup_load_paths(load_paths)
 
   org.embulk.cli.Runner.new(options.to_json).main(subcmd, ARGV.to_java(:string))
 end
