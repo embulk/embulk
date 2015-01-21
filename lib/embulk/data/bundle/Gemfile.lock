@@ -4,7 +4,7 @@ GEM
     embulk (0.1.0)
 
 PLATFORMS
-  ruby
+  java
 
 DEPENDENCIES
   embulk (~> 0.1.0)

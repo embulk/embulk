@@ -89,6 +89,7 @@ def setup_gem_paths(path)
   ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
   ENV['GEM_PATH'] = ''
   Gem.clear_paths  # force rubygems to reload GEM_HOME
+  ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
 end
 
 def setup_load_paths(load_paths)
@@ -105,7 +106,6 @@ end
 
 if bundle_path
   setup_gem_paths(bundle_path)
-  ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
   require 'bundler'  # bundler is installed at bundle_path
   Bundler.load.setup_environment
   $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
@@ -143,8 +143,7 @@ when :bundle
       if __FILE__ =~ /^classpath:/
         # data is in jar
         resource_class = org.embulk.command.Runner.java_class
-        # TODO get file list form the jar
-        %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|
+        %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
           url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
           dst = File.join(path, file)
           FileUtils.mkdir_p File.dirname(dst)
@@ -173,10 +172,11 @@ when :bundle
     ensure
       FileUtils.rm_rf path unless success
     end
+  else
+    setup_gem_paths(path)
   end
 
   Dir.chdir(path) do
-    Gem.clear_paths  # force rubygems to reload GEM_HOME
     require 'bundler'
     require 'bundler/friendly_errors'
     require 'bundler/cli'
