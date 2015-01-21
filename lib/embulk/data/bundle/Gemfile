@@ -2,6 +2,7 @@ source 'https://rubygems.org/'
 
 # TODO
 #gem 'embulk', '~> 0.1.0'
+gem 'embulk', path: '/Users/frsyuki/project/embulk/'
 
 # plugins
 #gem 'embulk-input-xyz'

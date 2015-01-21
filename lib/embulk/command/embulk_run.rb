@@ -1,5 +1,67 @@
 module Embulk
-  def self.run(load_paths, subcmd, argv, options)
+  def self.run(argv)
+    i = ARGV.find_index {|arg| arg !~ /^\-/ }
+    usage nil unless i
+    subcmd = ARGV.slice!(i)
+
+    load_paths = []
+    options = {}
+
+    require 'optparse'
+    op = OptionParser.new
+    op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+      # only for help message. implemented at lib/embulk/command/embulk.rb
+    end
+
+    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
+    $LOAD_PATH << Embulk.home('lib')
+
+    case subcmd.to_sym
+    when :bundle
+      op.banner = "Usage: bundle [new directory]"
+      args = 0..1
+
+    when :run
+      op.banner = "Usage: run [--options] <config.yml>"
+      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+      end
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+        load_paths << load_path
+      end
+      args = 1..1
+
+    when :preview
+      op.banner = "Usage: preview [--options] <config.yml>"
+      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+      end
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+        load_paths << load_path
+      end
+      args = 1..1
+
+    when :guess
+      op.banner = "Usage: guess [--options] <partial-config.yml>"
+      op.on('-o', '--output PATH', 'Path to write the guessed config file') do |path|
+        options[:guessOutput] = path
+      end
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+        load_paths << load_path
+      end
+      args = 1..1
+
+    else
+      usage "Unknown subcommand #{subcmd.dump}."
+    end
+
+    begin
+      op.parse!(ARGV)
+      unless args.include?(ARGV.length)
+        usage nil
+      end
+    rescue => e
+      usage e.to_s
+    end
+
     case subcmd.to_sym
     when :bundle
       path = argv[0] || "."
@@ -82,6 +144,34 @@ module Embulk
     end
   end
 
+  def self.home(dir)
+    home = File.expand_path('../../..', File.dirname(__FILE__))
+    File.join(home, dir)
+  end
+
+  def self.usage(message)
+    STDERR.puts "usage: <command> [--options]"
+    STDERR.puts "commands:"
+    STDERR.puts "   bundle    [new directory]"
+    STDERR.puts "   run       <config.yml>"
+    STDERR.puts "   preview   <config.yml>"
+    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
+    STDERR.puts ""
+    if message
+      STDERR.puts "error: #{message}"
+    else
+      STDERR.puts "Use \`<command> --help\` to see description of the commands."
+    end
+    exit 1
+  end
+
+  def self.setup_gem_paths(path)
+    ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
+    ENV['GEM_PATH'] = ''
+    Gem.clear_paths  # force rubygems to reload GEM_HOME
+    ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
+  end
+
   def self.setup_load_paths(load_paths)
     load_paths.each do |load_path|
       if File.file?(load_path)
@@ -93,5 +183,4 @@ module Embulk
       end
     end
   end
-
 end
