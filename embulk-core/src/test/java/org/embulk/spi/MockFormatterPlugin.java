@@ -3,110 +3,99 @@ package org.embulk.spi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.embulk.buffer.Buffer;
-import org.embulk.channel.FileBufferOutput;
-import org.embulk.channel.PageInput;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.record.Column;
-import org.embulk.record.PageReader;
-import org.embulk.record.Record;
-import org.embulk.record.RecordReader;
-import org.embulk.record.Schema;
-import org.embulk.time.Timestamp;
+import org.embulk.type.Column;
+import org.embulk.type.Schema;
+import org.embulk.type.SchemaVisitor;
 
-public class MockFormatterPlugin
-        implements FormatterPlugin
+public class MockFormatterPlugin implements FormatterPlugin
 {
-    private final Iterable<? extends Iterable<Buffer>> files;
-    private final Class<? extends Task> taskIface;
-    private Schema schema;
-    private List<Record> records;
+    public static List<List<Object>> records;
 
-    public <F extends Iterable<Buffer>> MockFormatterPlugin(Iterable<F> files)
+    public interface PluginTask extends Task
     {
-        this(files, Task.class);
     }
 
-    public <F extends Iterable<Buffer>, T extends Task> MockFormatterPlugin(Iterable<F> files, Class<T> taskIface)
+    @Override
+    public void transaction(ConfigSource config, Schema schema,
+            FormatterPlugin.Control control)
     {
-        this.files = files;
-        this.taskIface = taskIface;
+        PluginTask task = config.loadConfig(PluginTask.class);
+        control.run(task.dump());
     }
 
-    public Iterable<? extends Iterable<Buffer>> getFiles()
+    @Override
+    public PageOutput open(TaskSource taskSource, final Schema schema,
+            FileOutput output)
     {
-        return files;
+        return new PageOutput()
+        {
+            public void add(Page page)
+            {
+                records = readPage(schema, page);
+            }
+
+            @Override
+            public void finish()
+            {
+            }
+
+            @Override
+            public void close()
+            {
+            }
+        };
     }
 
-    public Schema getSchema()
+    public static List<List<Object>> readPage(final Schema schema, Page page)
     {
-        return schema;
-    }
-
-    public List<Record> getRecords()
-    {
-        return records;
-    }
-
-    public TaskSource getFormatterTask(ExecTask exec, ConfigSource config)
-    {
-        return exec.dumpTask(exec.loadConfig(config, taskIface));
-    }
-
-    public void runFormatter(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            PageInput pageInput, FileBufferOutput fileBufferOutput)
-    {
-        records = new ArrayList<Record>();
-        schema = exec.getSchema();
-
-        try (PageReader reader = new PageReader(schema, pageInput)) {
-            while (reader.nextRecord()) {
-                final Object[] values = new Object[schema.getColumns().size()];
-
-                reader.visitColumns(new RecordReader() {
-                    public void readNull(Column column)
+        List<List<Object>> records = new ArrayList<>();
+        try (final PageReader pageReader = new PageReader(schema)) {
+            pageReader.setPage(page);
+            while (pageReader.nextRecord()) {
+                final List<Object> record = new ArrayList<>();
+                schema.visitColumns(new SchemaVisitor()
+                {
+                    public void booleanColumn(Column column)
                     {
-                        values[column.getIndex()] = null;
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getBoolean(column));
+                        }
                     }
 
-                    public void readBoolean(Column column, boolean value)
+                    public void longColumn(Column column)
                     {
-                        values[column.getIndex()] = value;
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getLong(column));
+                        }
                     }
 
-                    public void readLong(Column column, long value)
+                    public void doubleColumn(Column column)
                     {
-                        values[column.getIndex()] = value;
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getDouble(column));
+                        }
                     }
 
-                    public void readDouble(Column column, double value)
+                    public void stringColumn(Column column)
                     {
-                        values[column.getIndex()] = value;
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getString(column));
+                        }
                     }
 
-                    public void readString(Column column, String value)
+                    public void timestampColumn(Column column)
                     {
-                        values[column.getIndex()] = value;
-                    }
-
-                    public void readTimestamp(Column column, Timestamp value)
-                    {
-                        values[column.getIndex()] = value;
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getTimestamp(column));
+                        }
                     }
                 });
-
-                records.add(new Record(values));
+                records.add(record);
             }
         }
-
-        for (Iterable<Buffer> buffers : files) {
-            for (Buffer buffer : buffers) {
-                fileBufferOutput.add(buffer);
-            }
-            fileBufferOutput.addFile();
-        }
+        return records;
     }
 }

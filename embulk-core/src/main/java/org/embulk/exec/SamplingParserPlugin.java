@@ -1,17 +1,20 @@
 package org.embulk.exec;
 
 import java.util.List;
-import org.embulk.buffer.Buffer;
+import com.google.inject.Inject;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Report;
-import org.embulk.channel.FileBufferInput;
-import org.embulk.channel.PageOutput;
-import org.embulk.record.Page;
-import org.embulk.spi.ExecTask;
+import org.embulk.config.CommitReport;
+import org.embulk.type.Schema;
+import org.embulk.plugin.PluginType;
+import org.embulk.spi.Exec;
+import org.embulk.spi.Page;
+import org.embulk.spi.Buffer;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.ExecControl;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.PageOutput;
+import static org.embulk.spi.Inputs.each;
 
 /*
  * Used by GuessExecutor
@@ -21,57 +24,64 @@ class SamplingParserPlugin
 {
     private final int maxSampleSize;
 
-    public SamplingParserPlugin(int maxSampleSize)
+    @Inject
+    public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
-        this.maxSampleSize = maxSampleSize;
+        this.maxSampleSize = 32*1024;  // TODO get sample syze from system config
     }
 
-    public TaskSource getParserTask(ExecTask exec, ConfigSource config)
+    @Override
+    public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
-        return new TaskSource();
+        control.run(Exec.newTaskSource(), null);
     }
 
-    public void runParser(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            FileBufferInput fileBufferInput, PageOutput pageOutput)
+    @Override
+    public void run(TaskSource taskSource, Schema schema,
+            FileInput input, PageOutput output)
     {
-        throw new SampledNoticeError(getSample(fileBufferInput, maxSampleSize));
+        Buffer buffer = getSample(input, maxSampleSize);
+        throw new SampledNoticeError(buffer);
     }
 
-    static Buffer runFileInputSampling(final ExecTask exec, ConfigSource config)
+    static Buffer runFileInputSampling(ConfigSource config)
     {
-        // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
-        ConfigSource samplingInputConfig = config.getObject("in").deepCopy();
-        samplingInputConfig.getObjectOrSetEmpty("parser").setString("type", "system_sampling");
+        // override in.parser.type so that FileInputRunner creates GuessParserPlugin
+        ConfigSource samplingInputConfig = config.getNested("in").deepCopy();
+        samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
 
-        final InputPlugin input = exec.newPlugin(InputPlugin.class, samplingInputConfig.get("type"));
+        final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get(PluginType.class, "type"));
         try {
-            input.runInputTransaction(exec, samplingInputConfig, new ExecControl() {
-                public List<Report> run(TaskSource inputTaskSource)
+            input.transaction(samplingInputConfig, new InputPlugin.Control() {
+                public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
                 {
-                    input.runInput(exec, inputTaskSource, 0, new PageOutput(null) {
+                    input.run(taskSource, schema, 0, new PageOutput() {
                         @Override
                         public void add(Page page)
                         {
                             throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
                         }
+
+                        public void finish() { }
+
+                        public void close() { }
                     });
                     throw new NoSampleException("No input files to guess parser configuration");
                 }
             });
-            throw new AssertionError("Executor must throw exceptions");
+            throw new AssertionError("SamplingParserPlugin must throw SampledNoticeError");
         } catch (SampledNoticeError error) {
             return error.getSample();
         }
     }
 
-    private static Buffer getSample(FileBufferInput fileBufferInput, int maxSampleSize)
+    private static Buffer getSample(FileInput fileInput, int maxSampleSize)
     {
         Buffer sample = Buffer.allocate(maxSampleSize);
         int sampleSize = 0;
 
-        while (fileBufferInput.nextFile()) {
-            for (Buffer buffer : fileBufferInput) {
+        while (fileInput.nextFile()) {
+            for (Buffer buffer : each(fileInput)) {
                 if (sampleSize >= maxSampleSize) {
                     // skip remaining all buffers so that FileInputPlugin.runInput doesn't
                     // throw exceptions at channel.join()

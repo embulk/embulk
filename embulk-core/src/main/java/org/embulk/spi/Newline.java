@@ -1,9 +1,6 @@
 package org.embulk.spi;
 
-import org.embulk.config.EnumTask;
-
 public enum Newline
-        implements EnumTask
 {
     CRLF("\r\n"),
     LF("\n"),
@@ -37,11 +34,5 @@ public enum Newline
     public char getSecondCharCode()
     {
         return secondCharCode;
-    }
-
-    @Override
-    public String getName()
-    {
-        return toString();
     }
 }

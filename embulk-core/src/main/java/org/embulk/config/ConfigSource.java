@@ -1,23 +1,28 @@
 package org.embulk.config;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class ConfigSource
-        extends DataSource<ConfigSource>
+public interface ConfigSource
+        extends DataSource
 {
-    public ConfigSource()
-    {
-        super();
-    }
-
-    ConfigSource(ObjectNode data)
-    {
-        super(data);
-    }
+    public <T extends Task> T loadConfig(Class<T> taskType);
 
     @Override
-    protected ConfigSource newInstance(ObjectNode data)
-    {
-        return new ConfigSource(data);
-    }
+    public ConfigSource getNested(String attrName);
+
+    @Override
+    public ConfigSource getNestedOrSetEmpty(String attrName);
+
+    @Override
+    public ConfigSource set(String attrName, Object v);
+
+    @Override
+    public ConfigSource setNested(String attrName, DataSource v);
+
+    @Override
+    public ConfigSource setAll(DataSource other);
+
+    @Override
+    public ConfigSource deepCopy();
+
+    @Override
+    public ConfigSource merge(DataSource other);
 }

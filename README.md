@@ -1,14 +1,33 @@
-## Build
+# Embulk: plugin-based bulk data loader
+
+## Quick Start
+
+You can install Embulk using [RubyGems](https://rubygems.org/). `embulk bundle`
 
 ```
-mvn clean package dependency:copy-dependencies
-java -cp $(echo $(find */target -name "*.jar") | sed "s/ /:/g") org.embulk.cli.Embulk examples/config.yml
+gem install embulk
+embulk bundle  data
+embulk guess   -b data data/examples/csv.yml -o config.yml
+embulk preview -b data config.yml
+embulk run     -b data config.yml
 ```
 
-You can see JaCoCo's coverage report at ${project}/target/site/jacoco/index.html
+## Development
 
-To send coverage report to Coveralls; (coveralls.repo.token may change)
+### Packaging
 
 ```
-mvn clean package coveralls:report -Dcoveralls.repo.token=05RZCkCRpJWXa5vqpUSBSrke3FUDPGkO2 -Dproject.check.skip-findbugs=true
+rake
 ```
+
+### Build
+
+```
+mvn clean package dependency:copy-dependencies && mv -f embulk-cli/target/dependency/*.jar classpath/
+./bin/embulk guess examples/config.yml > config.yml
+./bin/embulk preview config.yml
+./bin/embulk run config.yml
+```
+
+You can see JaCoCo's test coverage report at ${project}/target/site/jacoco/index.html
+

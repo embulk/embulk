@@ -1,15 +1,19 @@
 package org.embulk.spi;
 
-import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.channel.PageInput;
-import org.embulk.channel.FileBufferOutput;
+import org.embulk.config.ConfigSource;
+import org.embulk.type.Schema;
 
 public interface FormatterPlugin
 {
-    public TaskSource getFormatterTask(ExecTask exec, ConfigSource config);
+    public interface Control
+    {
+        public void run(TaskSource taskSource);
+    }
 
-    public void runFormatter(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            PageInput pageInput, FileBufferOutput fileBufferOutput);
+    public void transaction(ConfigSource config, Schema schema,
+            FormatterPlugin.Control control);
+
+    public PageOutput open(TaskSource taskSource, Schema schema,
+            FileOutput output);
 }

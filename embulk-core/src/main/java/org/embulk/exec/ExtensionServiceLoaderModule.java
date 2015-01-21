@@ -3,6 +3,8 @@ package org.embulk.exec;
 import java.util.ServiceLoader;
 import com.google.inject.Module;
 import com.google.inject.Binder;
+import org.embulk.config.ConfigSource;
+import org.embulk.spi.Extension;
 
 /**
  * ExtensionServiceLoaderModule loads Extensions using java.util.ServiceLoader
@@ -15,15 +17,17 @@ public class ExtensionServiceLoaderModule
         implements Module
 {
     private final ClassLoader classLoader;
+    private final ConfigSource systemConfig;
 
-    public ExtensionServiceLoaderModule()
+    public ExtensionServiceLoaderModule(ConfigSource systemConfig)
     {
-        this(ExtensionServiceLoaderModule.class.getClassLoader());
+        this(ExtensionServiceLoaderModule.class.getClassLoader(), systemConfig);
     }
 
-    public ExtensionServiceLoaderModule(ClassLoader classLoader)
+    public ExtensionServiceLoaderModule(ClassLoader classLoader, ConfigSource systemConfig)
     {
         this.classLoader = classLoader;
+        this.systemConfig = systemConfig;
     }
 
     @Override
@@ -31,7 +35,8 @@ public class ExtensionServiceLoaderModule
     {
         ServiceLoader<Extension> serviceLoader = ServiceLoader.load(Extension.class, classLoader);
         for (Extension extension : serviceLoader) {
-            for (Module module : extension.getModules()) {
+            for (Module module : extension.getModules(systemConfig)) {
+                System.out.println("configure: "+module);
                 module.configure(binder);
             }
         }

@@ -1,37 +1,31 @@
 package org.embulk.exec;
 
 import java.util.List;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.common.base.Throwables;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Report;
-import org.embulk.channel.PageChannel;
-import org.embulk.channel.PageInput;
-import org.embulk.channel.ChannelAsynchronousCloseException;
-import org.embulk.record.Page;
+import org.embulk.config.CommitReport;
+import org.embulk.plugin.PluginType;
+import org.embulk.type.Schema;
+import org.embulk.spi.Page;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.PageReader;
 import org.embulk.spi.InputPlugin;
-import org.embulk.spi.PluginThread;
-import org.embulk.spi.ExecTask;
-import org.embulk.spi.ExecControl;
+import org.embulk.spi.Exec;
+import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecAction;
 
 public class PreviewExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
-
-    @Inject
-    public PreviewExecutor(Injector injector,
-            @ForSystemConfig ConfigSource systemConfig)
-    {
-        this.injector = injector;
-        this.systemConfig = systemConfig;
-    }
 
     public interface PreviewTask
             extends Task
@@ -48,88 +42,97 @@ public class PreviewExecutor
         public void setInputTask(TaskSource taskSource);
     }
 
-    public PreviewResult run(ConfigSource config)
+    @Inject
+    public PreviewExecutor(Injector injector,
+            @ForSystemConfig ConfigSource systemConfig)
     {
-        ExecTask exec = PluginExecutors.newExecTask(injector, config);
-        return preview(exec, config);
+        this.injector = injector;
+        this.systemConfig = systemConfig;
     }
 
-    protected InputPlugin newInputPlugin(ExecTask exec, PreviewTask task)
-    {
-        return exec.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
-    }
-
-    public PreviewResult preview(ExecTask exec, ConfigSource config)
+    public PreviewResult preview(ExecSession exec, final ConfigSource config)
     {
         try {
-            return doPreview(exec, config);
-        } catch (Throwable ex) {
-            throw PluginExecutors.propagePluginExceptions(ex);
+            return Exec.doWith(exec, new ExecAction<PreviewResult>() {
+                public PreviewResult run()
+                {
+                    return doPreview(config);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 
-    private PreviewResult doPreview(final ExecTask exec, ConfigSource config)
+    protected InputPlugin newInputPlugin(PreviewTask task)
     {
-        final PreviewTask task = exec.loadConfig(config, PreviewTask.class);
-        final InputPlugin input = newInputPlugin(exec, task);
+        return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
+    }
+
+    private PreviewResult doPreview(ConfigSource config)
+    {
+        final PreviewTask task = config.loadConfig(PreviewTask.class);
+        InputPlugin input = newInputPlugin(task);
 
         try {
-            input.runInputTransaction(exec, task.getInputConfig(), new ExecControl() {
-                public List<Report> run(final TaskSource inputTaskSource)
+            input.transaction(task.getInputConfig(), new InputPlugin.Control() {
+                public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
                 {
-                    List<Page> pages;
-                    PluginThread thread = null;
-                    try (final PageChannel channel = exec.newPageChannel()) {
-                        thread = exec.startPluginThread(new Runnable() {
-                            public void run()
-                            {
-                                try {
-                                    input.runInput(exec, inputTaskSource, 0, channel.getOutput());
-                                } finally {
-                                    channel.completeProducer();
-                                }
-                            }
-                        });
-
-                        pages = getSample(channel.getInput(), task.getSampleRows());
-                        channel.completeConsumer();
-                        try {
-                            channel.join();
-                        } catch (ChannelAsynchronousCloseException ex) {
-                            // because getSample doesn't consume all pages, channel.join
-                            // causes ChannelAsynchronousCloseException but it should be
-                            // ignored
-                        }
-                    } finally {
-                        // don't call joinAndThrow to ignore exceptions in InputPlugins
-                        thread.join();
+                    InputPlugin input = newInputPlugin(task);
+                    try (SamplingPageOutput out = new SamplingPageOutput(task.getSampleRows(), schema)) {
+                        input.run(taskSource, schema, 0, out);
                     }
-                    throw new PreviewedNoticeError(new PreviewResult(exec.getSchema(), pages,
-                                exec.notice().getMessages(), exec.notice().getSkippedRecords()));
+                    throw new NoSampleException("No input records to preview");
                 }
             });
-            return new PreviewResult(exec.getSchema(), ImmutableList.<Page>of(),
-                    exec.notice().getMessages(), exec.notice().getSkippedRecords());
+            throw new AssertionError("PreviewExecutor executor must throw PreviewedNoticeError");
         } catch (PreviewedNoticeError previewed) {
             return previewed.getPreviewResult();
         }
     }
 
-    public static List<Page> getSample(PageInput pageInput, int maxSampleRows)
+    private static class SamplingPageOutput
+            implements PageOutput
     {
-        int sampleRows = 0;
-        ImmutableList.Builder<Page> builder = ImmutableList.builder();
-        for (Page page : pageInput) {
-            builder.add(page);
-            sampleRows += page.getRecordCount();
-            if (sampleRows >= maxSampleRows) {
-                break;
-            }
-        }
-        if (sampleRows == 0) {
-            throw new NoSampleException("No input records to preview");
+        private final int sampleRows;
+        private final Schema schema;
+        private List<Page> pages;
+        private int recordCount;
+
+        public SamplingPageOutput(int sampleRows, Schema schema)
+        {
+            this.sampleRows = sampleRows;
+            this.schema = schema;
+            this.pages = new ArrayList<Page>();
         }
 
-        return builder.build();
+        @Override
+        public void add(Page page)
+        {
+            pages.add(page);
+            recordCount += PageReader.getRecordCount(page);
+            if (recordCount >= sampleRows) {
+                finish();
+            }
+        }
+
+        @Override
+        public void finish()
+        {
+            if (recordCount == 0) {
+                throw new NoSampleException("No input records to preview");
+            }
+            PreviewResult res = new PreviewResult(schema, pages);
+            pages = null;
+            throw new PreviewedNoticeError(res);
+        }
+
+        @Override
+        public void close()
+        {
+            for (Page page : pages) {
+                page.release();
+            }
+        }
     }
 }

@@ -31,7 +31,9 @@
         <project.build.jvmsize>1024m</project.build.jvmsize>
         <project.test.fork-mode>once</project.test.fork-mode>
 
+        <dep.slf4j.version>1.7.9</dep.slf4j.version>
         <dep.joda-time.version>2.3</dep.joda-time.version>
+        <dep.netty.version>4.0.24.Final</dep.netty.version>
         <dep.jruby.version>1.7.16.1</dep.jruby.version>
 
         <project.check.skip-all>false</project.check.skip-all>
@@ -50,6 +52,12 @@
             <dependency>
                 <groupId>org.embulk</groupId>
                 <artifactId>embulk-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.embulk</groupId>
+                <artifactId>embulk-cli</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -126,6 +134,24 @@
             </dependency>
 
             <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${dep.slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${dep.slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.17</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
                 <version>1.14</version>
@@ -150,15 +176,21 @@
             </dependency>
 
             <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${dep.joda-time.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.jruby</groupId>
                 <artifactId>jruby-complete</artifactId>
                 <version>${dep.jruby.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>${dep.joda-time.version}</version>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${dep.netty.version}</version>
             </dependency>
 
             <dependency>

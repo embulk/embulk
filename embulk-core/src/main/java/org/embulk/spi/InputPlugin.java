@@ -1,16 +1,21 @@
 package org.embulk.spi;
 
+import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
-import org.embulk.channel.PageOutput;
+import org.embulk.config.CommitReport;
+import org.embulk.type.Schema;
 
 public interface InputPlugin
 {
-    public NextConfig runInputTransaction(ExecTask exec, ConfigSource config,
-            ExecControl control);
+    public interface Control
+    {
+        public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount);
+    }
 
-    public Report runInput(ExecTask exec, TaskSource taskSource,
-            int processorIndex, PageOutput pageOutput);
+    public NextConfig transaction(ConfigSource config, InputPlugin.Control control);
+
+    public CommitReport run(TaskSource taskSource, Schema schema, int processorIndex,
+            PageOutput output);
 }

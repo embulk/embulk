@@ -2,179 +2,98 @@ package org.embulk.spi;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
+import java.io.Reader;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.CharacterCodingException;
-import org.embulk.buffer.Buffer;
+import org.embulk.config.Task;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 
 public class LineDecoder
-        implements Iterable<String>
+        implements AutoCloseable, Iterable<String>
 {
-    private static final int INITIAL_DECODE_BUFFER_SIZE = 128;  // TODO configurable?
-    private static final int MINIMUM_DECODE_BUFFER_SIZE = 128;  // TODO configurable?
-    // MINIMUM_DECODE_BUFFER_SIZE must be <= INITIAL_DECODE_BUFFER_SIZE
+    // TODO optimize
 
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0);
-
-    private final Iterator<Buffer> input;
-    private final Newline newline;
-
-    private int newlineSearchPosition;
-    private Buffer buffer;
-    private ByteBuffer byteBuffer;
-    private CharsetDecoder decoder;
-    private CharBuffer lineBuffer;
-
-    public LineDecoder(Iterable<Buffer> input, LineDecoderTask task)
+    public static interface DecoderTask
+            extends Task
     {
-        this.input = input.iterator();
-        this.newline = task.getNewline();
-        this.decoder = task.getCharset()
+        @Config("charset")
+        @ConfigDefault("\"utf-8\"")
+        public Charset getCharset();
+
+        @Config("newline")
+        @ConfigDefault("\"CRLF\"")
+        public Newline getNewline();
+    }
+
+    private final FileInputInputStream inputStream;
+    private final BufferedReader reader;
+
+    public LineDecoder(FileInput in, DecoderTask task)
+    {
+        CharsetDecoder decoder = task.getCharset()
             .newDecoder()
             .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
             .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
-        this.lineBuffer = CharBuffer.allocate(INITIAL_DECODE_BUFFER_SIZE);
-        lineBuffer.limit(0);
-        this.byteBuffer = EMPTY_BYTE_BUFFER;
+        this.inputStream = new FileInputInputStream(in);
+        this.reader = new BufferedReader(new InputStreamReader(inputStream, decoder));
     }
 
-    // TODO initialize and call LineFilterPlugin
+    public boolean nextFile()
+    {
+        return inputStream.nextFile();
+    }
 
     public String poll()
     {
-        while (true) {
-            if (lineBuffer.hasRemaining()) {
-                int pos = searchNewline();
-                if (pos >= 0) {
-                    String line = lineBuffer.subSequence(0, pos - lineBuffer.position()).toString();
-                    lineBuffer.position(newlineSearchPosition);
-                    return line;
-                }
-            }
-
-            if (!byteBuffer.hasRemaining()) {
-                if (buffer != null) {
-                    buffer.release();
-                    buffer = null;
-                }
-                if (!input.hasNext()) {
-                    if (byteBuffer == EMPTY_BYTE_BUFFER) {
-                        // last string
-                        if (lineBuffer.hasRemaining()) {
-                            String line = lineBuffer.subSequence(0, lineBuffer.remaining()).toString();
-                            lineBuffer.limit(lineBuffer.position());
-                            return line;
-                        }
-                        return null;
-                    }
-                    byteBuffer = EMPTY_BYTE_BUFFER;
-                } else {
-                    buffer = input.next();
-                    byteBuffer = ByteBuffer.wrap(buffer.get(), 0, buffer.limit());
-                }
-            }
-
-            if (lineBuffer.capacity() - lineBuffer.limit() < MINIMUM_DECODE_BUFFER_SIZE) {
-                // lineBuffer is almost full. rewind or resize buffer
-                if (lineBuffer.capacity() - lineBuffer.remaining() < MINIMUM_DECODE_BUFFER_SIZE) {
-                    // rewinding is insufficient to secure minium size. resizing.
-                    // TODO limit maxmium possible line size to prevent OutOfMemoryError
-                    CharBuffer nextLineBuffer = CharBuffer.allocate(lineBuffer.capacity() * 2);
-                    newlineSearchPosition -= lineBuffer.position();
-                    nextLineBuffer.put(lineBuffer);
-                    nextLineBuffer.flip();
-                    lineBuffer = nextLineBuffer;
-                } else {
-                    // rewinding
-                    newlineSearchPosition -= lineBuffer.position();
-                    CharBuffer slice = lineBuffer.slice();
-                    lineBuffer.position(0);
-                    lineBuffer.limit(slice.limit());
-                    lineBuffer.put(slice);
-                    lineBuffer.flip();
-                }
-            }
-
-            int readingPosition = lineBuffer.position();
-            lineBuffer.position(lineBuffer.limit());
-            lineBuffer.limit(lineBuffer.capacity());
-            CoderResult cr = decoder.decode(byteBuffer, lineBuffer, byteBuffer == EMPTY_BYTE_BUFFER);  // last byteBuffer is EMPTY_BYTE_BUFFER
-            lineBuffer.limit(lineBuffer.position());
-            lineBuffer.position(readingPosition);
-            if (cr.isUnderflow()) {
-                // ok, decode a line at the next loop
-                if (byteBuffer.remaining() < 8) {
-                    // FIXME this is a bug
-                    byteBuffer = EMPTY_BYTE_BUFFER;
-                }
-            } else if (cr.isOverflow()) {
-                // rewind or resize buffer at the next loop
-            } else {
-                // error
-                try {
-                    cr.throwException();
-                } catch (CharacterCodingException ex) {
-                    throw new LineCharacterCodingException(ex);
-                }
-            }
+        try {
+            return reader.readLine();
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
         }
     }
 
-    private int searchNewline()
+    public void close()
     {
-        int pos = newlineSearchPosition;
-        int limit = lineBuffer.limit();
-        char firstChar = newline.getFirstCharCode();
-        for (; pos < limit; pos++) {
-            if (lineBuffer.get(pos) == firstChar) {
-                if (newline != Newline.CRLF) {
-                    // LF or CR
-                    newlineSearchPosition = pos + 1;
-                    return pos;
-                } else {
-                    // CRLF
-                    if (pos + 1 >= limit) {
-                        // insufficient buffer
-                        newlineSearchPosition = pos;
-                        return -1;
-                    }
-                    if (lineBuffer.get(pos + 1) == newline.getSecondCharCode()) {
-                        // CRLF matched
-                        newlineSearchPosition = pos + 2;
-                        return pos;
-                    } else {
-                        // CR matched but LF didn't match
-                        pos++;
-                    }
-                }
-            }
+        try {
+            reader.close();
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
         }
-        newlineSearchPosition = pos;
-        return -1;
     }
+
+    public Iterator<String> iterator()
+    {
+        return new Ite(this);
+    }
+
+    private String nextLine;
 
     private static class Ite
             implements Iterator<String>
     {
-        private final LineDecoder lineDecoder;
-        private String line;
+        private LineDecoder self;
 
-        public Ite(LineDecoder lineDecoder)
+        public Ite(LineDecoder self)
         {
-            this.lineDecoder = lineDecoder;
+            // TODO non-static inner class causes a problem with JRuby
+            this.self = self;
         }
 
         @Override
         public boolean hasNext()
         {
-            if (line != null) {
+            if (self.nextLine != null) {
                 return true;
             } else {
-                line = lineDecoder.poll();
-                return line != null;
+                self.nextLine = self.poll();
+                return self.nextLine != null;
             }
         }
 
@@ -184,8 +103,8 @@ public class LineDecoder
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            String l = line;
-            line = null;
+            String l = self.nextLine;
+            self.nextLine = null;
             return l;
         }
 
@@ -195,10 +114,4 @@ public class LineDecoder
             throw new UnsupportedOperationException();
         }
     }
-
-    public Iterator<String> iterator()
-    {
-        return new Ite(this);
-    }
 }
-

@@ -7,36 +7,30 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
-
-import org.embulk.channel.FileBufferInput;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
+import org.embulk.config.CommitReport;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.BufferPlugins;
+import org.embulk.spi.Buffer;
 import org.embulk.spi.FileOutputPlugin;
-import org.embulk.spi.ExecTask;
-import org.embulk.spi.ExecControl;
+import org.embulk.spi.TransactionalFileOutput;
+import org.embulk.spi.Exec;
 
 public class LocalFileOutputPlugin
-        extends FileOutputPlugin
+        implements FileOutputPlugin
 {
     public interface PluginTask
             extends Task
     {
         @Config("directory")
-        @NotNull
         public String getDirectory();
 
         @Config("file_name")
-        @NotNull
         public String getFileNameFormat();
 
         @Config("file_ext")
-        @NotNull
         public String getFileNameExtension();
 
         // TODO support in FileInputPlugin and FileOutputPlugin
@@ -45,53 +39,88 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public NextConfig runFileOutputTransaction(ExecTask exec, ConfigSource config,
-            ExecControl control)
+    public NextConfig transaction(ConfigSource config, int processorCount,
+            FileOutputPlugin.Control control)
     {
-        PluginTask task = exec.loadConfig(config, PluginTask.class);
+        PluginTask task = config.loadConfig(PluginTask.class);
 
-        control.run(exec.dumpTask(task));
+        control.run(task.dump());
 
-        return new NextConfig();
+        return Exec.newNextConfig();
     }
 
     @Override
-    public Report runFileOutput(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            FileBufferInput fileBufferInput)
+    public TransactionalFileOutput open(TaskSource taskSource, final int processorIndex)
     {
-        PluginTask task = exec.loadTask(taskSource, PluginTask.class);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
 
         // TODO format path using timestamp
-        String fileName = task.getFileNameFormat();
+        final String fileName = task.getFileNameFormat();
 
-        String pathPrefix = task.getDirectory() + File.separator + fileName;
-        String pathSuffix = task.getFileNameExtension();
+        final String pathPrefix = task.getDirectory() + File.separator + fileName;
+        final String pathSuffix = task.getFileNameExtension();
 
-        int fileIndex = 0;
-        List<String> fileNames = new ArrayList<>();
-        List<Long> fileSizes = new ArrayList<>();
-        while (fileBufferInput.nextFile()) {
-            String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
-            System.out.println("path: "+path);
-            File file = new File(path);
-            file.getParentFile().mkdirs();
-            try (OutputStream out = new FileOutputStream(file)) {
-                BufferPlugins.transferBufferInput(exec.getBufferAllocator(),
-                        fileBufferInput, out);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+        final List<String> fileNames = new ArrayList<>();
+
+        return new TransactionalFileOutput() {
+            private int fileIndex = 0;
+            private FileOutputStream output = null;
+
+            public void nextFile()
+            {
+                closeFile();
+                String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
+                System.out.println("path: "+path);  // TODO use Exec.getLogger()
+                fileNames.add(path);
+                try {
+                    output = new FileOutputStream(new File(path));
+                } catch (FileNotFoundException ex) {
+                    throw new RuntimeException(ex);  // TODO exception class
+                }
+                fileIndex++;
             }
-            System.out.println("file written: "+path);
-            fileNames.add(path);
-            fileSizes.add(file.length());
-            fileIndex++;
-        }
 
-        Report report = new Report();
-        // TODO better setting for Report
-        // report.set("file_names", fileNames);
-        // report.set("file_sizes", fileSizes);
-        return report;
+            private void closeFile()
+            {
+                if (output != null) {
+                    System.out.println("file written");
+                    try {
+                        output.close();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+
+            public void add(Buffer buffer)
+            {
+                try {
+                    output.write(buffer.array(), buffer.offset(), buffer.limit());
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+
+            public void finish()
+            {
+                closeFile();
+            }
+
+            public void close()
+            {
+                closeFile();
+            }
+
+            public void abort() { }
+
+            public CommitReport commit()
+            {
+                CommitReport report = Exec.newCommitReport();
+                // TODO better setting for Report
+                // report.set("file_names", fileNames);
+                // report.set("file_sizes", fileSizes);
+                return report;
+            }
+        };
     }
 }

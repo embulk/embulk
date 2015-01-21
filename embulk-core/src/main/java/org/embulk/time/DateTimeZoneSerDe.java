@@ -46,10 +46,10 @@ public class DateTimeZoneSerDe
         protected DateTimeZone _deserialize(String value, DeserializationContext context)
                 throws JsonMappingException
         {
-            DateTimeZone parsed = TimestampFormatConfig.parseDateTimeZone(value);
+            DateTimeZone parsed = TimestampFormat.parseDateTimeZone(value);
             if (parsed == null) {
                 // TODO include link to a document to the message for the list of supported time zones
-                throw new JsonMappingException(String.format("Unknown timezone '%s'", value));
+                throw new JsonMappingException(String.format("Unknown time zone name '%s'", value));
             }
             return parsed;
         }

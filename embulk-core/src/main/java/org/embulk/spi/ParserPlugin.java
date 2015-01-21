@@ -1,15 +1,18 @@
 package org.embulk.spi;
 
-import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.channel.FileBufferInput;
-import org.embulk.channel.PageOutput;
+import org.embulk.config.ConfigSource;
+import org.embulk.type.Schema;
 
 public interface ParserPlugin
 {
-    public TaskSource getParserTask(ExecTask exec, ConfigSource config);
+    public interface Control
+    {
+        public void run(TaskSource taskSource, Schema schema);
+    }
 
-    public void runParser(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            FileBufferInput fileBufferInput, PageOutput pageOutput);
+    public void transaction(ConfigSource config, ParserPlugin.Control control);
+
+    public void run(TaskSource taskSource, Schema schema,
+            FileInput input, PageOutput output);
 }

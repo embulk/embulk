@@ -1,54 +1,107 @@
 package org.embulk.spi;
 
-import java.nio.ByteBuffer;
+import java.io.Writer;
+import java.io.OutputStreamWriter;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
-import org.embulk.buffer.Buffer;
-import org.embulk.buffer.BufferAllocator;
-import org.embulk.channel.BufferOutput;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import org.embulk.config.Task;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 
 public class LineEncoder
+        implements AutoCloseable
 {
-    private static final int MINIMUM_ENCODE_BUFFER_SIZE = 128;  // TODO configurable?
+    // TODO optimize
 
-    private final BufferAllocator bufferAllocator;
-    private final BufferOutput output;
-    private final Charset charset;
-    private final byte[] newline;
-
-    public LineEncoder(BufferAllocator bufferAllocator, LineEncoderTask task,
-            BufferOutput output)
+    public interface EncoderTask
+            extends Task
     {
-        this.bufferAllocator = bufferAllocator;
-        this.output = output;
-        this.charset = task.getCharset();
-        this.newline = task.getNewline().getString().getBytes(charset);
+        @Config("charset")
+        @ConfigDefault("\"utf-8\"")
+        public Charset getCharset();
+
+        @Config("newline")
+        @ConfigDefault("\"CRLF\"")
+        public Newline getNewline();
+
+        @JacksonInject
+        public BufferAllocator getBufferAllocator();
     }
 
-    // TODO initialize and call LineFilterPlugin
+    private final String newline;
+    private final FileOutputOutputStream outputStream;
+    private final Writer writer;
+
+    public LineEncoder(FileOutput out, EncoderTask task)
+    {
+        CharsetEncoder encoder = task.getCharset()
+            .newEncoder()
+            .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
+            .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
+        this.newline = task.getNewline().getString();
+        this.outputStream = new FileOutputOutputStream(out, task.getBufferAllocator());
+        this.writer = new OutputStreamWriter(outputStream, encoder);
+    }
 
     public void addNewLine()
     {
-        // TODO optimize
-        output.add(Buffer.wrap(newline));
+        try {
+            writer.append(newline);
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
     }
 
     public void addLine(String line)
     {
-        // TODO optimize
-        ByteBuffer bb = charset.encode(line);
-        output.add(Buffer.wrap(bb.array(), bb.limit()));
+        try {
+            writer.append(line);
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
         addNewLine();
     }
 
     public void addText(String text)
     {
-        ByteBuffer bb = charset.encode(text);
-        Buffer buffer = Buffer.wrap(bb.array(), bb.limit());
-        output.add(buffer);
+        try {
+            writer.append(text);
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
     }
 
-    public void flush()
+    public void nextFile()
     {
+        try {
+            writer.flush();
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
+        outputStream.nextFile();
+    }
+
+    public void finish()
+    {
+        close();   // flush all remaining buffer in writer
+        outputStream.finish();
+    }
+
+    @Override
+    public void close()
+    {
+        try {
+            writer.close();
+        } catch (IOException ex) {
+            // unexpected
+            throw new RuntimeException(ex);
+        }
     }
 }

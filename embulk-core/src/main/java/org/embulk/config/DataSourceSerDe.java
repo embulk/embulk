@@ -17,57 +17,42 @@ import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 
 public class DataSourceSerDe
 {
-    public static void configure(ObjectMapperModule mapper)
+    public static class SerDeModule
+            extends SimpleModule
     {
-        SimpleModule module = new SimpleModule();
+        public SerDeModule(final ModelManager model)
+        {
+            // DataSourceImpl
+            addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>());
+            addDeserializer(DataSourceImpl.class, new DataSourceDeserializer<DataSourceImpl>(model));
 
-        // ConfigSource
-        module.addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
-        module.addDeserializer(ConfigSource.class,
-                new DataSourceDeserializer(new DataSourceFactory<ConfigSource>() {
-                    public ConfigSource newInstance(ObjectNode node)
-                    {
-                        return new ConfigSource(node);
-                    }
-                }));
+            // ConfigSource
+            addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
+            addDeserializer(ConfigSource.class, new DataSourceDeserializer<ConfigSource>(model));
 
-        // TaskSource
-        module.addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
-        module.addDeserializer(TaskSource.class,
-                new DataSourceDeserializer(new DataSourceFactory<TaskSource>() {
-                    public TaskSource newInstance(ObjectNode node)
-                    {
-                        return new TaskSource(node);
-                    }
-                }));
+            // TaskSource
+            addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
+            addDeserializer(TaskSource.class, new DataSourceDeserializer<TaskSource>(model));
 
-        // Report
-        module.addSerializer(Report.class, new DataSourceSerializer<Report>());
-        module.addDeserializer(Report.class,
-                new DataSourceDeserializer(new DataSourceFactory<Report>() {
-                    public Report newInstance(ObjectNode node)
-                    {
-                        return new Report(node);
-                    }
-                }));
+            // CommitReport
+            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
+            addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
 
-        mapper.registerModule(module);
+            // NextConfig
+            addSerializer(NextConfig.class, new DataSourceSerializer<NextConfig>());
+            addDeserializer(NextConfig.class, new DataSourceDeserializer<NextConfig>(model));
+        }
     }
 
-    private interface DataSourceFactory <T extends DataSource<T>>
-    {
-        public T newInstance(ObjectNode node);
-    }
-
-    private static class DataSourceDeserializer <T extends DataSource<T>>
+    private static class DataSourceDeserializer <T extends DataSource>  // TODO T extends DataSource super DataSourceImpl
             extends JsonDeserializer<T>
     {
-        private final DataSourceFactory<T> factory;
+        private final ModelManager model;
         private final ObjectMapper treeObjectMapper;
 
-        DataSourceDeserializer(DataSourceFactory<T> factory)
+        DataSourceDeserializer(ModelManager model)
         {
-            this.factory = factory;
+            this.model = model;
             this.treeObjectMapper = new ObjectMapper();
         }
 
@@ -78,18 +63,18 @@ public class DataSourceSerDe
             if (!json.isObject()) {
                 throw new JsonMappingException("Expected object to deserialize DataSource", jp.getCurrentLocation());
             }
-            return factory.newInstance((ObjectNode) json);
+            return (T) new DataSourceImpl(model, (ObjectNode) json);
         }
     }
 
-    private static class DataSourceSerializer <T extends DataSource<T>>
+    private static class DataSourceSerializer <T extends DataSource>
             extends JsonSerializer<T>
     {
         @Override
         public void serialize(T value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException
         {
-            value.getSource().serialize(jgen, provider);
+            value.getObjectNode().serialize(jgen, provider);
         }
     }
 }

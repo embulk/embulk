@@ -2,40 +2,52 @@ package org.embulk.exec;
 
 import java.util.List;
 import java.util.ArrayList;
-import javax.validation.constraints.NotNull;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
-import org.embulk.config.FailedReport;
-import org.embulk.spi.ExecControl;
-import org.embulk.spi.ExecTask;
+import org.embulk.config.CommitReport;
+import org.embulk.type.Schema;
+import org.embulk.plugin.PluginType;
+import org.embulk.spi.Exec;
+import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecAction;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.PluginThread;
-import org.embulk.spi.NoticeLogger;
-import org.embulk.channel.PageChannel;
+//import org.embulk.spi.NoticeLogger;
+import org.embulk.spi.TransactionalPageOutput;
+import org.slf4j.Logger;
 
 public class LocalExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
+    private final ExecutorService executor;
+
+    private Logger log;
+    private final AtomicInteger runningTaskCount;
+    private final AtomicInteger completedTaskCount;
 
     public interface ExecutorTask
             extends Task
     {
         @Config("in")
-        @NotNull
         public ConfigSource getInputConfig();
 
-        // TODO
         @Config("out")
-        @NotNull
         public ConfigSource getOutputConfig();
 
         public TaskSource getInputTask();
@@ -51,36 +63,21 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
+        this.executor = Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder()
+                .setNameFormat("embulk-executor-%d")
+                .setDaemon(true)
+                .build());
+        this.runningTaskCount = new AtomicInteger(0);
+        this.completedTaskCount = new AtomicInteger(0);
     }
 
-    private static class TransactionContext
+    private static class ExecuteResultBuilder
     {
-        private List<Report> inputReports;
-        private List<Report> outputReports;
         private NextConfig inputNextConfig;
         private NextConfig outputNextConfig;
-        private List<NoticeLogger.Message> noticeMessages;
-        private List<NoticeLogger.SkippedRecord> skippedRecords;
-
-        public List<Report> getInputReports()
-        {
-            return inputReports;
-        }
-
-        public List<Report> getOutputReports()
-        {
-            return outputReports;
-        }
-
-        public void setInputReports(List<Report> inputReports)
-        {
-            this.inputReports = inputReports;
-        }
-
-        public void setOutputReports(List<Report> outputReports)
-        {
-            this.outputReports = outputReports;
-        }
+        //private List<NoticeLogger.Message> noticeMessages;
+        //private List<NoticeLogger.SkippedRecord> skippedRecords;
 
         public void setInputNextConfig(NextConfig inputNextConfig)
         {
@@ -102,215 +99,197 @@ public class LocalExecutor
             return outputNextConfig;
         }
 
-        public void setNoticeMessages(List<NoticeLogger.Message> noticeMessages)
-        {
-            this.noticeMessages = noticeMessages;
-        }
+        //public void setNoticeMessages(List<NoticeLogger.Message> noticeMessages)
+        //{
+        //    this.noticeMessages = noticeMessages;
+        //}
 
-        public void setSkippedRecords(List<NoticeLogger.SkippedRecord> skippedRecords)
-        {
-            this.skippedRecords = skippedRecords;
-        }
+        //public void setSkippedRecords(List<NoticeLogger.SkippedRecord> skippedRecords)
+        //{
+        //    this.skippedRecords = skippedRecords;
+        //}
 
-        public List<NoticeLogger.Message> getNoticeMessages()
-        {
-            return noticeMessages;
-        }
+        //public List<NoticeLogger.Message> getNoticeMessages()
+        //{
+        //    return noticeMessages;
+        //}
 
-        public List<NoticeLogger.SkippedRecord> getSkippedRecords()
+        //public List<NoticeLogger.SkippedRecord> getSkippedRecords()
+        //{
+        //    return skippedRecords;
+        //}
+        public ExecuteResult build()
         {
-            return skippedRecords;
+            if (inputNextConfig == null) {
+                inputNextConfig = Exec.newNextConfig();
+            }
+            if (outputNextConfig == null) {
+                outputNextConfig = Exec.newNextConfig();
+            }
+            NextConfig nextConfig = inputNextConfig.deepCopy().merge(outputNextConfig);
+            return new ExecuteResult(nextConfig);
         }
     }
 
     private static class ProcessResult
     {
-        private final Report[] inputReports;
-        private final Report[] outputReports;
-        private final List<NoticeLogger.Message> noticeMessages;
-        private final List<NoticeLogger.SkippedRecord> skippedRecords;
+        private final CommitReport inputCommitReport;
+        private final CommitReport outputCommitReport;
 
-        public ProcessResult(int processorCount)
+        public ProcessResult(CommitReport inputCommitReport, CommitReport outputCommitReport)
         {
-            this.inputReports = new Report[processorCount];
-            this.outputReports = new Report[processorCount];
-            for (int i=0; i < processorCount; i++) {
-                inputReports[i] = outputReports[i] = new Report();
-            }
-            this.noticeMessages = new ArrayList<NoticeLogger.Message>();
-            this.skippedRecords = new ArrayList<NoticeLogger.SkippedRecord>();
+            this.inputCommitReport = inputCommitReport;
+            this.outputCommitReport = outputCommitReport;
         }
 
-        public void setInputReport(int processorIndex, Report report)
+        public CommitReport getInputCommitReport()
         {
-            inputReports[processorIndex] = report;
+            return inputCommitReport;
         }
 
-        public void setOutputReport(int processorIndex, Report report)
+        public CommitReport getOutputCommitReport()
         {
-            outputReports[processorIndex] = report;
-        }
-
-        public void addNotices(NoticeLogger notice)
-        {
-            synchronized (noticeMessages) {
-                notice.addAllMessagesTo(noticeMessages);
-            }
-            synchronized (skippedRecords) {
-                notice.addAllSkippedRecordsTo(skippedRecords);
-            }
-        }
-
-        public List<Report> getInputReports()
-        {
-            return ImmutableList.copyOf(inputReports);
-        }
-
-        public List<Report> getOutputReports()
-        {
-            return ImmutableList.copyOf(outputReports);
-        }
-
-        public List<NoticeLogger.Message> getNoticeMessages()
-        {
-            return noticeMessages;
-        }
-
-        public List<NoticeLogger.SkippedRecord> getSkippedRecords()
-        {
-            return skippedRecords;
+            return outputCommitReport;
         }
     }
 
-    protected InputPlugin newInputPlugin(ExecTask exec, ExecutorTask task)
+    protected InputPlugin newInputPlugin(ExecutorTask task)
     {
-        return exec.newPlugin(InputPlugin.class, task.getInputConfig().get("type"));
+        return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
     }
 
-    protected OutputPlugin newOutputPlugin(ExecTask exec, ExecutorTask task)
+    protected OutputPlugin newOutputPlugin(ExecutorTask task)
     {
-        return exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get("type"));
+        return Exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get(PluginType.class, "type"));
     }
 
-    public ExecuteResult run(ConfigSource config)
+    public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
+        log = exec.getLogger(LocalExecutor.class);
         try {
-            return doRun(config);
-        } catch (Throwable ex) {
-            throw PluginExecutors.propagePluginExceptions(ex);
+            return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
+                public ExecuteResult run()
+                {
+                    return doRun(config);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 
     private ExecuteResult doRun(ConfigSource config)
     {
-        final ExecTask exec = PluginExecutors.newExecTask(injector, config);
-        final ExecutorTask task = exec.loadConfig(config, ExecutorTask.class);
+        final ExecutorTask task = config.loadConfig(ExecutorTask.class);
 
-        final InputPlugin in = newInputPlugin(exec, task);
-        final OutputPlugin out = newOutputPlugin(exec, task);
+        final InputPlugin in = newInputPlugin(task);
+        final OutputPlugin out = newOutputPlugin(task);
 
-        final TransactionContext tranContext = new TransactionContext();
+        final ExecuteResultBuilder execResult = new ExecuteResultBuilder();
 
-        // TODO create and use ExecTaskBuilder to set default values
-
-        NextConfig inputNextConfig = in.runInputTransaction(exec, task.getInputConfig(), new ExecControl() {
-            public List<Report> run(final TaskSource inputTask)
+        NextConfig inputNextConfig = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
+            public List<CommitReport> run(final TaskSource inputTask, final Schema schema, final int processorCount)
             {
-                NextConfig outputNextConfig = out.runOutputTransaction(exec, task.getOutputConfig(), new ExecControl() {
-                    public List<Report> run(final TaskSource outputTask)
+                final ImmutableList.Builder<CommitReport> inputCommitReports = ImmutableList.builder();
+                NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), schema, processorCount, new OutputPlugin.Control() {
+                    public List<CommitReport> run(final TaskSource outputTask)
                     {
+                        final ImmutableList.Builder<CommitReport> outputCommitReports = ImmutableList.builder();
                         task.setInputTask(inputTask);
                         task.setOutputTask(outputTask);
 
-                        exec.notice().debug("input: %s", task.getInputTask());
-                        exec.notice().debug("output: %s", task.getOutputTask());
+                        //log.debug("input: %s", task.getInputTask());
+                        //log.debug("output: %s", task.getOutputTask());
 
-                        ProcessResult procResult = process(exec, exec.dumpTask(task), exec.getProcessorCount());
-                        tranContext.setOutputReports(procResult.getOutputReports());
-                        tranContext.setInputReports(procResult.getInputReports());
-                        tranContext.setNoticeMessages(procResult.getNoticeMessages());
-                        tranContext.setSkippedRecords(procResult.getSkippedRecords());
+                        List<ProcessResult> results = process(task.dump(), schema, processorCount);
+                        for (ProcessResult result : results) {
+                            inputCommitReports.add(result.getInputCommitReport());
+                            outputCommitReports.add(result.getOutputCommitReport());
+                            // TODO
+                            //execResult.addNoticeMessages(procResult.getNoticeMessages());
+                            //execResult.addSkippedRecords(procResult.getSkippedRecords());
+                        }
 
-                        return tranContext.getOutputReports();
+                        return outputCommitReports.build();
                     }
                 });
-                tranContext.setOutputNextConfig(outputNextConfig);
-                return tranContext.getInputReports();
+                execResult.setOutputNextConfig(outputNextConfig);
+                return inputCommitReports.build();
             }
         });
-        tranContext.setInputNextConfig(inputNextConfig);
+        execResult.setInputNextConfig(inputNextConfig);
 
-        return new ExecuteResult(
-                tranContext.getInputNextConfig().setAll(tranContext.getOutputNextConfig()),
-                tranContext.getNoticeMessages(),
-                tranContext.getSkippedRecords());
+        return execResult.build();
     }
 
-    private ProcessResult process(final ExecTask exec, final TaskSource taskSource, final int processorCount)
+    private List<ProcessResult> process(TaskSource taskSource, Schema schema, int processorCount)
     {
-        ProcessResult procResult = new ProcessResult(processorCount);
-
-        List<PluginThread> processors = new ArrayList<>();
-
+        List<Future<ProcessResult>> futures = new ArrayList<>();
+        List<ProcessResult> joined = new ArrayList<>();
         try {
-            for (int i=0; i < exec.getProcessorCount(); i++) {
-                processors.add(startProcessor(exec, taskSource, procResult, i));
+            log.info("Start bulk processing");
+            showProgress(processorCount);
+            for (int i=0; i < processorCount; i++) {
+                futures.add(startProcessor(taskSource, schema, i));
             }
-        } finally {
-            PluginThread.joinAndThrowNested(processors);
-        }
 
-        return procResult;
+            for (int i=0; i < processorCount; i++) {
+                try {
+                    joined.add(futures.get(i).get());
+                    showProgress(processorCount);
+
+                } catch (ExecutionException ex) {
+                    throw Throwables.propagate(ex.getCause());
+                } catch (InterruptedException ex) {
+                    throw new ExecuteInterruptedException(ex);
+                }
+            }
+            return joined;
+        } finally {
+            for (int i=joined.size(); i < futures.size(); i++) {
+                futures.get(i).cancel(true);
+                // TODO join?
+            }
+        }
     }
 
-    private PluginThread startProcessor(final ExecTask exec, final TaskSource taskSource,
-            final ProcessResult procResult, final int processorIndex)
+    private void showProgress(int total)
     {
-        return exec.startPluginThread(new Runnable() {
-            public void run()
+        int running = runningTaskCount.get();
+        int done = completedTaskCount.get();
+        int pending = total - done - running;
+
+        log.info(" pending  running     done /    total");
+        log.info(String.format("%8d %8d %8d / %8d", pending, running, done, total));
+    }
+
+    private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
+    {
+        return executor.submit(new Callable<ProcessResult>() {
+            public ProcessResult call()
             {
-                final ExecutorTask task = exec.loadTask(taskSource, ExecutorTask.class);
-                final InputPlugin in = newInputPlugin(exec, task);
-                final OutputPlugin out = newOutputPlugin(exec, task);
+                try {
+                    runningTaskCount.getAndIncrement();
+                    final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+                    final InputPlugin in = newInputPlugin(task);
+                    final OutputPlugin out = newOutputPlugin(task);
 
-                PluginThread thread = null;
-                Throwable error = null;
-                try (final PageChannel channel = exec.newPageChannel()) {
-                    thread = exec.startPluginThread(new Runnable() {
-                        public void run()
-                        {
-                            try {
-                                // TODO return Report
-                                Report report = out.runOutput(exec, task.getOutputTask(),
-                                    processorIndex, channel.getInput());
-                                procResult.setOutputReport(processorIndex, report);
-                            } catch (Throwable ex) {
-                                procResult.setOutputReport(processorIndex, new FailedReport(ex));
-                                throw ex;  // TODO error handling to propagate exceptions to runInputTransaction should be at the end of process() once multi-threaded
-                            } finally {
-                                channel.completeConsumer();
-                            }
-                        }
-                    });
-
+                    TransactionalPageOutput tran = out.open(task.getOutputTask(), schema, index);
+                    boolean committed = false;
                     try {
-                        Report report = in.runInput(exec, task.getInputTask(),
-                                processorIndex, channel.getOutput());
-                        channel.completeProducer();
-                        thread.join();
-                        channel.join();  // throws if channel is fully consumed
-                        procResult.setInputReport(processorIndex, report);
-                    } catch (Throwable ex) {
-                        procResult.setInputReport(processorIndex, new FailedReport(ex));
-                        throw ex;  // TODO error handling to propagate exceptions to runInputTransactioat the end of process() once multi-threaded
+                        CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
+                        CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
+                        committed = true;
+                        return new ProcessResult(inReport, outReport);
+                    } finally {
+                        if (!committed) {
+                            tran.abort();
+                        }
+                        tran.close();
                     }
-
-                    procResult.addNotices(exec.notice());
-                } catch (Throwable ex) {
-                    error = ex;
-                    procResult.addNotices(exec.notice());
                 } finally {
-                    PluginThread.joinAndThrowNested(thread, error);
+                    runningTaskCount.getAndDecrement();
+                    completedTaskCount.getAndIncrement();
                 }
             }
         });

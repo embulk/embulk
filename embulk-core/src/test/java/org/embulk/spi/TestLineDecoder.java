@@ -1,60 +1,70 @@
 package org.embulk.spi;
 
-import static org.junit.Assert.assertEquals;
-
+import java.util.List;
+import java.util.ArrayList;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.Test;
-import org.embulk.buffer.Buffer;
-
 import com.google.common.collect.ImmutableList;
+import org.junit.Rule;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkTestRuntime;
 
 public class TestLineDecoder
 {
-    // TODO use loadConfig to instantiate LineDecoderTask
-    public static class TestTask
-            implements LineDecoderTask
+    @Rule
+    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
+
+    @Test
+    public void testDefaultValues()
     {
-        private final Charset charset;
-        private final Newline newline;
+        ConfigSource config = Exec.newConfigSource();
+        LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
+        assertEquals(Charset.forName("utf-8"), task.getCharset());
+        assertEquals(Newline.CRLF, task.getNewline());
+    }
 
-        public TestTask(Charset charset, Newline newline)
-        {
-            this.charset = charset;
-            this.newline = newline;
-        }
+    @Test
+    public void testLoadConfig()
+    {
+        ConfigSource config = Exec.newConfigSource()
+            .set("charset", "utf-16")
+            .set("newline", "CRLF");
+        LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
+        assertEquals(Charset.forName("utf-16"), task.getCharset());
+        assertEquals(Newline.CRLF, task.getNewline());
+    }
 
-        @Override
-        public Charset getCharset()
-        {
-            return charset;
-        }
-
-        @Override
-        public Newline getNewline()
-        {
-            return newline;
-        }
-
-        @Override
-        public void validate()
-        {
-        }
+    private static LineDecoder.DecoderTask getExampleConfig()
+    {
+        ConfigSource config = Exec.newConfigSource()
+            .set("charset", "utf-8")
+            .set("newline", "LF");
+        return config.loadConfig(LineDecoder.DecoderTask.class);
     }
 
     private static LineDecoder newDecoder(Charset charset, Newline newline, List<Buffer> buffers)
     {
-        return new LineDecoder(buffers, new TestTask(charset, newline));
+        ListFileInput input = new ListFileInput(ImmutableList.of(buffers));
+        return new LineDecoder(input, getExampleConfig());
     }
 
     private static List<String> doDecode(Charset charset, Newline newline, List<Buffer> buffers)
     {
-        return ImmutableList.copyOf(newDecoder(charset, newline, buffers));
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        LineDecoder decoder = newDecoder(charset, newline, buffers);
+        decoder.nextFile();
+        while (true) {
+            String line = decoder.poll();
+            if (line == null) {
+                break;
+            }
+            builder.add(line);
+        }
+        return builder.build();
     }
 
     private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException
@@ -64,7 +74,7 @@ public class TestLineDecoder
         List<Buffer> buffers = new ArrayList<Buffer>();
         for (String source : sources) {
             ByteBuffer buffer = charset.encode(source);
-            buffers.add(Buffer.wrap(buffer.array(), buffer.limit()));
+            buffers.add(Buffer.wrap(buffer.array(), 0, buffer.limit()));
         }
 
         return buffers;
@@ -76,7 +86,7 @@ public class TestLineDecoder
         List<String> decoded = doDecode(
                 Charset.forName("utf-8"), Newline.LF,
                 bufferList("utf-8", "test1\ntest2\ntest3\n"));
-        assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
+        assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
     }
 
     @Test
@@ -85,7 +95,7 @@ public class TestLineDecoder
         List<String> decoded = doDecode(
                 Charset.forName("utf-8"), Newline.CRLF,
                 bufferList("utf-8", "test1\r\ntest2\r\ntest3\r\n"));
-        assertEquals(Arrays.asList("test1", "test2", "test3"), decoded);
+        assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
     }
 
     @Test
@@ -94,7 +104,7 @@ public class TestLineDecoder
         List<String> decoded = doDecode(
                 Charset.forName("utf-8"), Newline.LF,
                 bufferList("utf-8", "test1"));
-        assertEquals(Arrays.asList("test1"), decoded);
+        assertEquals(ImmutableList.of("test1"), decoded);
     }
 
     @Test
@@ -103,7 +113,7 @@ public class TestLineDecoder
         List<String> decoded = doDecode(
                 Charset.forName("utf-8"), Newline.LF,
                 bufferList("utf-8", "t", "1", "\n", "t", "2"));
-        assertEquals(Arrays.asList("t1", "t2"), decoded);
+        assertEquals(ImmutableList.of("t1", "t2"), decoded);
     }
 
     @Test
@@ -112,7 +122,7 @@ public class TestLineDecoder
         List<String> decoded = doDecode(
                 Charset.forName("utf-8"), Newline.CRLF,
                 bufferList("utf-8", "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
-        assertEquals(Arrays.asList("t1", "t2", "t3"), decoded);
+        assertEquals(ImmutableList.of("t1", "t2", "t3"), decoded);
     }
 
     // TODO test multibytes

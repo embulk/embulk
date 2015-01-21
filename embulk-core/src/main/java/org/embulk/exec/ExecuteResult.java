@@ -2,21 +2,21 @@ package org.embulk.exec;
 
 import java.util.List;
 import org.embulk.config.NextConfig;
-import org.embulk.spi.NoticeLogger;
+//import org.embulk.spi.NoticeLogger;
 
 public class ExecuteResult
 {
     private final NextConfig nextConfig;
-    private final List<NoticeLogger.Message> noticeMessages;
-    private final List<NoticeLogger.SkippedRecord> skippedRecords;
+    //private final List<NoticeLogger.Message> noticeMessages;
+    //private final List<NoticeLogger.SkippedRecord> skippedRecords;
 
-    public ExecuteResult(NextConfig nextConfig,
+    public ExecuteResult(NextConfig nextConfig/*,
             List<NoticeLogger.Message> noticeMessages,
-            List<NoticeLogger.SkippedRecord> skippedRecords)
+            List<NoticeLogger.SkippedRecord> skippedRecords*/)
     {
         this.nextConfig = nextConfig;
-        this.noticeMessages = noticeMessages;
-        this.skippedRecords = skippedRecords;
+        //this.noticeMessages = noticeMessages;
+        //this.skippedRecords = skippedRecords;
     }
 
     public NextConfig getNextConfig()
@@ -24,13 +24,13 @@ public class ExecuteResult
         return nextConfig;
     }
 
-    public List<NoticeLogger.Message> getNoticeMessages()
-    {
-        return noticeMessages;
-    }
+    //public List<NoticeLogger.Message> getNoticeMessages()
+    //{
+    //    return noticeMessages;
+    //}
 
-    public List<NoticeLogger.SkippedRecord> getSkippedRecords()
-    {
-        return skippedRecords;
-    }
+    //public List<NoticeLogger.SkippedRecord> getSkippedRecords()
+    //{
+    //    return skippedRecords;
+    //}
 }

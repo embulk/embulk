@@ -1,26 +1,28 @@
 package org.embulk.config;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public class TaskSource
-        extends DataSource<TaskSource>
+public interface TaskSource
+        extends DataSource
 {
-    public TaskSource()
-    {
-        super();
-    }
-
-    /**
-     * visible for DataSourceSerDe
-     */
-    TaskSource(ObjectNode data)
-    {
-        super(data);
-    }
+    public <T extends Task> T loadTask(Class<T> taskType);
 
     @Override
-    protected TaskSource newInstance(ObjectNode data)
-    {
-        return new TaskSource(data);
-    }
+    public TaskSource getNested(String attrName);
+
+    @Override
+    public TaskSource getNestedOrSetEmpty(String attrName);
+
+    @Override
+    public TaskSource set(String attrName, Object v);
+
+    @Override
+    public TaskSource setNested(String attrName, DataSource v);
+
+    @Override
+    public TaskSource setAll(DataSource other);
+
+    @Override
+    public TaskSource deepCopy();
+
+    @Override
+    public TaskSource merge(DataSource other);
 }

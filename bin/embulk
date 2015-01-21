@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+
+# TODO cygwin check
+cygwin = false
+
+java_args = []
+while i = ARGV.find_index {|arg| arg =~ /^\-D/ }
+  if ARGV[i] == "-D"
+    prop_path = ARGV[i + 1]
+    unless prop_path
+      STDERR.puts "-D option requires an option"
+      exit 1
+    end
+    ARGV.slice!(i, 2)
+  else
+    java_args << ARGV[i]
+    ARGV.slice!(i)
+  end
+end
+
+if prop_path
+  props = File.read(prop_path)
+  java_props = props.split("\n").reject {|prop| prop.strip.empty? }
+  java_args = java_props + java_args
+end
+
+java_cmd = ENV['JAVACMD']
+unless java_cmd
+  if java_home = ENV['JAVA_HOME']
+    if cygwin
+      java_cmd = "#{`cygpath -u "#{java_home}"`.strip}/bin/java"
+    else
+      java_cmd = "#{java_home}/bin/java"
+    end
+  else
+    java_cmd = "java"
+  end
+end
+
+embulk_home = ENV['EMBULK_HOME']
+unless embulk_home
+  embulk_home = File.dirname(File.dirname(__FILE__))
+end
+ENV['EMBULK_HOME'] = File.expand_path(embulk_home)
+
+classpath_dir = File.join(embulk_home, 'classpath')
+lib_dir = File.join(embulk_home, 'lib')
+
+jruby_complete = Dir.entries(classpath_dir).find {|jar| jar =~ /jruby-complete-[\d\.]+\.jar/ }
+unless jruby_complete
+  STDERR.puts "Could not find jruby-complete at $EMBULK_HOME/classpath directory."
+  STDERR.puts "Please confirm EMBULK_HOME is correctly set"
+  STDERR.puts "Current EMBULK_HOME = #{ENV['EMBULK_HOME'].to_s.dump}"
+  raise SystemExit.new(1)
+end
+
+gem_home = ENV['GEM_HOME'].to_s
+unless gem_home.empty?
+  # inherit this ruby's GEM_HOME to the sub jruby process
+  ENV['GEM_HOME'] = Gem.default_dir
+end
+
+# java ... -jar ruby-complete.jar $EMBULK_HOME/lib/embulk/command/embulk.rb "$@"
+cmdline = [java_cmd]
+cmdline.concat java_args
+cmdline << '-jar' << File.join(classpath_dir, jruby_complete)
+cmdline << File.join(lib_dir, 'embulk/command/embulk.rb')
+cmdline.concat ARGV
+exec *cmdline

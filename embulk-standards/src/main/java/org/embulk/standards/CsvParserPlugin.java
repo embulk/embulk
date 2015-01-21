@@ -1,42 +1,36 @@
 package org.embulk.standards;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import org.embulk.channel.FileBufferInput;
-import org.embulk.channel.PageOutput;
+import com.google.common.base.Optional;
+import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.record.BooleanWriter;
-import org.embulk.record.Column;
-import org.embulk.record.DoubleWriter;
-import org.embulk.record.LongWriter;
-import org.embulk.record.PageAllocator;
-import org.embulk.record.PageBuilder;
-import org.embulk.record.RecordWriter;
-import org.embulk.record.Schema;
-import org.embulk.record.SchemaConfig;
-import org.embulk.record.StringWriter;
-import org.embulk.record.TimestampType;
-import org.embulk.record.TimestampWriter;
-import org.embulk.spi.BasicParserPlugin;
+import org.embulk.type.Column;
+import org.embulk.type.Schema;
+import org.embulk.type.TimestampType;
+import org.embulk.type.SchemaConfig;
+import org.embulk.type.SchemaVisitor;
+import org.embulk.spi.PageBuilder;
+import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.LineDecoder;
-import org.embulk.spi.ExecTask;
-import org.embulk.spi.LineDecoderTask;
-import org.embulk.time.TimestampParseException;
+import org.embulk.spi.Exec;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.BufferAllocator;
 import org.embulk.time.TimestampParser;
-import org.embulk.time.TimestampParserTask;
+import org.embulk.time.TimestampParseException;
+import org.slf4j.Logger;
 
 import java.util.Map;
 
 public class CsvParserPlugin
-        extends BasicParserPlugin
+        implements ParserPlugin
 {
-    public interface CsvParserTask
-            extends Task, LineDecoderTask, TimestampParserTask
+    public interface PluginTask
+            extends Task, LineDecoder.DecoderTask, TimestampParser.ParserTask
     {
         @Config("columns")
         public SchemaConfig getSchemaConfig();
@@ -72,132 +66,157 @@ public class CsvParserPlugin
         public long getMaxQuotedSizeLimit();
     }
 
-    @Override
-    public TaskSource getBasicParserTask(ExecTask exec, ConfigSource config)
+    private final Logger log;
+
+    public CsvParserPlugin()
     {
-        CsvParserTask task = exec.loadConfig(config, CsvParserTask.class);
-        exec.setSchema(task.getSchemaConfig().toSchema());
-        return exec.dumpTask(task);
+        log = Exec.getLogger(CsvParserPlugin.class);
+    }
+
+    @Override
+    public void transaction(ConfigSource config, ParserPlugin.Control control)
+    {
+        PluginTask task = config.loadConfig(PluginTask.class);
+        control.run(task.dump(), task.getSchemaConfig().toSchema());
     }
 
     private Map<Integer, TimestampParser> newTimestampParsers(
-            final ExecTask exec, final TimestampParserTask parserTask,
-            final Schema schema)
+            TimestampParser.ParserTask task, Schema schema)
     {
         ImmutableMap.Builder<Integer, TimestampParser> builder = new ImmutableMap.Builder<>();
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
                 TimestampType tt = (TimestampType) column.getType();
-                builder.put(column.getIndex(), exec.newTimestampParser(tt.getFormat(), parserTask));
+                builder.put(column.getIndex(), new TimestampParser(tt.getFormat(), task));
             }
         }
         return builder.build();
     }
 
     @Override
-    public void runBasicParser(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            FileBufferInput fileBufferInput, PageOutput pageOutput)
+    public void run(TaskSource taskSource, final Schema schema,
+            FileInput input, PageOutput output)
     {
-        final PageAllocator pageAllocator = exec.getPageAllocator();
-        final Schema schema = exec.getSchema();
-        final CsvParserTask task = exec.loadTask(taskSource, CsvParserTask.class);
-        final Map<Integer, TimestampParser> tsParsers = newTimestampParsers(exec, task, schema);
-        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(fileBufferInput, task), task);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final Map<Integer, TimestampParser> timestampFormatters = newTimestampParsers(task, schema);
+        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
+        final String nullStringOrNull = task.getNullString().orNull();
+        boolean skipHeaderLine = task.getHeaderLine();
 
-        try (PageBuilder builder = new PageBuilder(pageAllocator, schema, pageOutput)) {
-            while (fileBufferInput.nextFile()) {
-                boolean skipHeaderLine = task.getHeaderLine();
-                while (tokenizer.nextRecord()) {
-                    if (skipHeaderLine) {
-                        tokenizer.skipCurrentLine();
-                        skipHeaderLine = false;
-                        continue;
+        try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
+            while (tokenizer.nextFile()) {
+                if (skipHeaderLine) {
+                    // skip the first line
+                    if (tokenizer.nextRecord()) {
+                        for (int i=0; i < schema.getColumnCount(); i++) {
+                            tokenizer.nextColumn();  // TODO check return value?
+                        }
                     }
+                }
 
+                while (true) {
                     try {
-                        builder.addRecord(new RecordWriter() {
-                            public void writeBoolean(Column column, BooleanWriter writer) {
-                                String v = nextColumn(task, tokenizer);
-                                if (v != null) {
-                                    writer.write(Boolean.parseBoolean(v));
+                        if (!tokenizer.nextRecord()) {
+                            break;
+                        }
+
+                        schema.visitColumns(new SchemaVisitor() {
+                            public void booleanColumn(Column column)
+                            {
+                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                if (v == null) {
+                                    pageBuilder.setNull(column);
                                 } else {
-                                    writer.writeNull();
+                                    pageBuilder.setBoolean(column, Boolean.parseBoolean(v));
                                 }
                             }
 
-                            public void writeLong(Column column, LongWriter writer) {
-                                String v = nextColumn(task, tokenizer);
+                            public void longColumn(Column column)
+                            {
+                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
                                 if (v == null) {
-                                    writer.writeNull();
-                                    return;
-                                }
-
-                                try {
-                                    writer.write(Long.parseLong(v));
-                                } catch (NumberFormatException e) {
-                                    throw new CsvRecordValidateException(e);
-                                }
-                            }
-
-                            public void writeDouble(Column column, DoubleWriter writer) {
-                                String v = nextColumn(task, tokenizer);
-                                if (v == null) {
-                                    writer.writeNull();
-                                    return;
-                                }
-
-                                try {
-                                    writer.write(Double.parseDouble(v));
-                                } catch (NumberFormatException e) {
-                                    throw new CsvRecordValidateException(e);
-                                }
-                            }
-
-                            public void writeString(Column column, StringWriter writer) {
-                                String v = nextColumn(task, tokenizer);
-                                if (v != null) {
-                                    writer.write(v);
+                                    pageBuilder.setNull(column);
                                 } else {
-                                    writer.writeNull();
+                                    try {
+                                        pageBuilder.setLong(column, Long.parseLong(v));
+                                    } catch (NumberFormatException e) {
+                                        // TODO support default value
+                                        throw new CsvRecordValidateException(e);
+                                    }
                                 }
                             }
 
-                            public void writeTimestamp(Column column, TimestampWriter writer) {
-                                String v = nextColumn(task, tokenizer);
+                            public void doubleColumn(Column column)
+                            {
+                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
                                 if (v == null) {
-                                    writer.writeNull();
-                                    return;
+                                    pageBuilder.setNull(column);
+                                } else {
+                                    try {
+                                        pageBuilder.setDouble(column, Double.parseDouble(v));
+                                    } catch (NumberFormatException e) {
+                                        // TODO support default value
+                                        throw new CsvRecordValidateException(e);
+                                    }
                                 }
+                            }
 
-                                try {
-                                    writer.write((tsParsers.get(column.getIndex()).parse(v)));
-                                } catch (TimestampParseException e) {
-                                    throw new CsvRecordValidateException(e);
+                            public void stringColumn(Column column)
+                            {
+                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                if (v == null) {
+                                    pageBuilder.setNull(column);
+                                } else {
+                                    pageBuilder.setString(column, v);
+                                }
+                            }
+
+                            public void timestampColumn(Column column)
+                            {
+                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                if (v == null) {
+                                    pageBuilder.setNull(column);
+                                } else {
+                                    try {
+                                        pageBuilder.setTimestamp(column, (timestampFormatters.get(column.getIndex()).parse(v)));
+                                    } catch (TimestampParseException e) {
+                                        // TODO support default value
+                                        throw new CsvRecordValidateException(e);
+                                    }
                                 }
                             }
                         });
+                        pageBuilder.addRecord();
+
                     } catch (Exception e) {
-                        exec.notice().skippedLine(tokenizer.skipCurrentLine());
+                        // TODO logging
+                        long lineNumber = tokenizer.getCurrentLineNumber();
+                        String skippedLine = tokenizer.skipCurrentLine();
+                        log.warn(String.format("Skipped (line %d): %s", lineNumber, skippedLine), e);
+                        //exec.notice().skippedLine(skippedLine);
                     }
                 }
             }
+
+            pageBuilder.finish();
         }
     }
 
-    private static String nextColumn(final CsvParserTask task, final CsvTokenizer tokenizer)
+    private static String nextColumn(Schema schema, CsvTokenizer tokenizer, String nullStringOrNull)
     {
-        String v = Preconditions.checkNotNull(tokenizer.nextColumn(), "should not be null");
+        String v = tokenizer.nextColumn();
+        if (v == null) {
+            throw new RuntimeException(String.format("Expected %d columns but line %d has fewer number of columns",
+                        schema.getColumnCount(), tokenizer.getCurrentLineNumber()));
+        }
+
         if (!v.isEmpty()) {
+            if (v.equals(nullStringOrNull)) {
+                return null;
+            }
             return v;
-        }
-
-        if (tokenizer.wasQuotedColumn()) {
+        } else if (tokenizer.wasQuotedColumn()) {
             return "";
-        }
-
-        if (task.getNullString().isPresent()) {
-            return task.getNullString().get();
         } else {
             return null;
         }

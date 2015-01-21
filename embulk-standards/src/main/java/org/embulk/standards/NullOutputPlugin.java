@@ -3,29 +3,44 @@ package org.embulk.standards;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
-import org.embulk.config.Report;
-import org.embulk.channel.PageInput;
-import org.embulk.record.Page;
-import org.embulk.spi.ExecTask;
-import org.embulk.spi.ExecControl;
+import org.embulk.config.CommitReport;
+import org.embulk.type.Schema;
+import org.embulk.spi.Page;
+import org.embulk.spi.Exec;
 import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.TransactionalPageOutput;
 
 public class NullOutputPlugin
         implements OutputPlugin
 {
-    public NextConfig runOutputTransaction(ExecTask exec, ConfigSource config,
-            ExecControl control)
+    @Override
+    public NextConfig transaction(ConfigSource config,
+            Schema schema, int processorCount,
+            OutputPlugin.Control control)
     {
-        control.run(new TaskSource());
-        return new NextConfig();
+        control.run(Exec.newTaskSource());
+        return Exec.newNextConfig();
     }
 
-    public Report runOutput(ExecTask exec, TaskSource taskSource,
-            int processorIndex, PageInput pageInput)
+    @Override
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
     {
-        for (Page page : pageInput) {
-            page.release();
-        }
-        return new Report();
+        return new TransactionalPageOutput() {
+            public void add(Page page)
+            {
+                page.release();
+            }
+
+            public void finish() { }
+
+            public void close() { }
+
+            public void abort() { }
+
+            public CommitReport commit()
+            {
+                return Exec.newCommitReport();
+            }
+        };
     }
 }

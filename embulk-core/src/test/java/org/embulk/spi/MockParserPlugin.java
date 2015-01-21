@@ -1,108 +1,71 @@
 package org.embulk.spi;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.embulk.buffer.Buffer;
-import org.embulk.channel.FileBufferInput;
-import org.embulk.channel.PageOutput;
+import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.record.BooleanWriter;
-import org.embulk.record.Column;
-import org.embulk.record.DoubleWriter;
-import org.embulk.record.LongWriter;
-import org.embulk.record.PageBuilder;
-import org.embulk.record.Record;
-import org.embulk.record.RecordWriter;
-import org.embulk.record.Schema;
-import org.embulk.record.StringWriter;
-import org.embulk.record.TimestampWriter;
 import org.embulk.time.Timestamp;
+import org.embulk.type.Column;
+import org.embulk.type.SchemaConfig;
+import org.embulk.type.Type;
 
-public class MockParserPlugin
-        implements ParserPlugin
+public class MockParserPlugin implements ParserPlugin
 {
-    private final Schema schema;
-    private final Iterable<Record> records;
-    private final Class<? extends Task> taskIface;
-    private List<List<Buffer>> files;
+    public static boolean raiseException = false;
 
-    public MockParserPlugin(Schema schema, Iterable<Record> records)
+    public interface PluginTask extends Task
     {
-        this(schema, records, Task.class);
+        @Config("columns")
+        public SchemaConfig getSchemaConfig();
     }
 
-    public MockParserPlugin(Schema schema, Iterable<Record> records, Class<? extends Task> taskIface)
+    @Override
+    public void transaction(ConfigSource config, Control control)
     {
-        this.schema = schema;
-        this.records = records;
-        this.taskIface = taskIface;
+        PluginTask task = config.loadConfig(PluginTask.class);
+        control.run(task.dump(), task.getSchemaConfig().toSchema());
     }
 
-    public Schema getSchema()
+    @Override
+    public void run(TaskSource taskSource, org.embulk.type.Schema schema,
+            FileInput input, org.embulk.spi.PageOutput output)
     {
-        return schema;
-    }
-
-    public Iterable<Record> getRecords()
-    {
-        return records;
-    }
-
-    public List<List<Buffer>> getFiles()
-    {
-        return files;
-    }
-
-    public TaskSource getParserTask(ExecTask exec, ConfigSource config)
-    {
-        exec.setSchema(schema);
-        return exec.dumpTask(exec.loadConfig(config, taskIface));
-    }
-
-    public void runParser(ExecTask exec,
-            TaskSource taskSource, int processorIndex,
-            FileBufferInput fileBufferInput, PageOutput pageOutput)
-    {
-        files = new ArrayList<List<Buffer>>();
-        while (fileBufferInput.nextFile()) {
-            List<Buffer> buffers = new ArrayList<Buffer>();
-            for (Buffer buffer : fileBufferInput) {
-                buffers.add(buffer);
+        try (final PageBuilder pageBuilder = new PageBuilder(
+                Exec.getBufferAllocator(), schema, output)) {
+            while (input.nextFile()) {
+                Buffer buffer = input.poll();
+                if (buffer != null) {
+                    for (Column column : schema.getColumns()) {
+                        Type type = column.getType();
+                        switch (type.getName()) {
+                        case "boolean":
+                            pageBuilder.setBoolean(column, true);
+                            break;
+                        case "long":
+                            pageBuilder.setLong(column, 2L);
+                            break;
+                        case "double":
+                            pageBuilder.setDouble(column, 3.0D);
+                            break;
+                        case "string":
+                            pageBuilder.setString(column, "45");
+                            break;
+                        case "timestamp":
+                            pageBuilder.setTimestamp(column,
+                                    Timestamp.ofEpochMilli(678L));
+                            break;
+                        default:
+                            throw new IllegalStateException("Unknown type: "
+                                    + type.getName());
+                        }
+                    }
+                    pageBuilder.addRecord();
+                    if (raiseException) {
+                        throw new RuntimeException("emulated exception");
+                    }
+                }
             }
-            files.add(buffers);
-        }
-        try (PageBuilder builder = new PageBuilder(exec.getPageAllocator(), schema, pageOutput)) {
-            for (final Record record : records) {
-                builder.addRecord(new RecordWriter() {
-                    public void writeBoolean(Column column, BooleanWriter writer)
-                    {
-                        writer.write((boolean) record.getObject(column.getIndex()));
-                    }
-
-                    public void writeLong(Column column, LongWriter writer)
-                    {
-                        writer.write((long) record.getObject(column.getIndex()));
-                    }
-
-                    public void writeDouble(Column column, DoubleWriter writer)
-                    {
-                        writer.write((double) record.getObject(column.getIndex()));
-                    }
-
-                    public void writeString(Column column, StringWriter writer)
-                    {
-                        writer.write((String) record.getObject(column.getIndex()));
-                    }
-
-                    public void writeTimestamp(Column column, TimestampWriter writer)
-                    {
-                        writer.write((Timestamp) record.getObject(column.getIndex()));
-                    }
-                });
-            }
+            pageBuilder.finish();
         }
     }
 }

@@ -1,18 +1,18 @@
 package org.embulk.jruby;
 
 import com.google.inject.Inject;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.embed.InvokeFailedException;
+import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FormatterPlugin;
-import org.embulk.spi.FileDecoderPlugin;
-import org.embulk.spi.FileEncoderPlugin;
-import org.embulk.spi.LineFilterPlugin;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
+//import org.embulk.spi.LineFilterPlugin;
 import org.embulk.spi.GuessPlugin;
 
 public class JRubyPluginSource
@@ -33,12 +33,9 @@ public class JRubyPluginSource
         this.rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
     }
 
-    public <T> T newPlugin(Class<T> iface, JsonNode typeConfig) throws PluginSourceNotMatchException
+    public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException
     {
-        if (!typeConfig.isTextual()) {
-            throw new PluginSourceNotMatchException();
-        }
-        String name = typeConfig.asText();
+        String name = type.getName();
 
         String category;
         if (InputPlugin.class.isAssignableFrom(iface)) {
@@ -49,12 +46,12 @@ public class JRubyPluginSource
             category = "parser";
         } else if (FormatterPlugin.class.isAssignableFrom(iface)) {
             category = "formatter";
-        } else if (FileDecoderPlugin.class.isAssignableFrom(iface)) {
+        } else if (DecoderPlugin.class.isAssignableFrom(iface)) {
             category = "decoder";
-        } else if (FileEncoderPlugin.class.isAssignableFrom(iface)) {
+        } else if (EncoderPlugin.class.isAssignableFrom(iface)) {
             category = "encoder";
-        } else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
-            category = "line_filter";
+        //} else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
+        //    category = "line_filter";
         } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
         } else {

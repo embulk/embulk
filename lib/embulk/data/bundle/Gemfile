@@ -1,0 +1,11 @@
+source 'https://rubygems.org/'
+
+# TODO
+#gem 'embulk', '~> 0.1.0'
+
+# plugins
+#gem 'embulk-input-xyz'
+#gem 'embulk-output-xyz', '~> 0.1.0'
+#gem 'embulk-parser-xyz', '= 0.2.0'
+#gem 'embulk-formatter-xyz', '>= 0.3.0'
+

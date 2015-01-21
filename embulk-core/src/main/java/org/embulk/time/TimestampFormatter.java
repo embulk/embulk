@@ -5,17 +5,32 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.RubyDateFormat;
-import org.embulk.spi.LineEncoder;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import org.embulk.config.Task;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
+import org.embulk.spi.LineEncoder;
 
 public class TimestampFormatter
 {
+    public interface FormatterTask
+            extends Task
+    {
+        @Config("timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getTimeZone();
+
+        @JacksonInject
+        public ScriptingContainer getJRuby();
+    }
+
     private final RubyDateFormat dateFormat;
     private final DateTimeZone timeZone;
 
-    public TimestampFormatter(ScriptingContainer jruby, String format, TimestampFormatterTask task)
+    public TimestampFormatter(String format, FormatterTask task)
     {
-        this(jruby, format, task.getTimeZone());
+        this(task.getJRuby(), format, task.getTimeZone());
     }
 
     public TimestampFormatter(ScriptingContainer jruby, String format, DateTimeZone timeZone)
