@@ -1,0 +1,5 @@
+rootProject.name = 'embulk'
+
+include 'embulk-core'
+include 'embulk-standards'
+include 'embulk-cli'
