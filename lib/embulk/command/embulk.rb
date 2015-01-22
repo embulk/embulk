@@ -20,11 +20,13 @@ if bundle_path
   # especially following 'embulk/command/embulk_run'.
 
   $LOAD_PATH << File.expand_path(bundle_path)  # for local plugins
-end
 
-begin
-  require 'embulk/command/embulk_run'
-rescue LoadError
+  begin
+    require 'embulk/command/embulk_run'
+  rescue LoadError
+    require_relative 'embulk_run'
+  end
+else
   require_relative 'embulk_run'
 end
 

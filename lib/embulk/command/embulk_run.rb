@@ -1,8 +1,8 @@
 module Embulk
   def self.run(argv)
-    i = ARGV.find_index {|arg| arg !~ /^\-/ }
+    i = argv.find_index {|arg| arg !~ /^\-/ }
     usage nil unless i
-    subcmd = ARGV.slice!(i)
+    subcmd = argv.slice!(i)
 
     load_paths = []
     options = {}
@@ -57,11 +57,11 @@ module Embulk
         exit 1
       end
       require 'rubygems/gem_runner'
-      Gem::GemRunner.new.run ARGV
+      Gem::GemRunner.new.run argv
       exit 0
 
     when :exec
-      exec *ARGV
+      exec *argv
       exit 127
 
     else
@@ -69,8 +69,8 @@ module Embulk
     end
 
     begin
-      op.parse!(ARGV)
-      unless args.include?(ARGV.length)
+      op.parse!(argv)
+      unless args.include?(argv.length)
         usage nil
       end
     rescue => e
@@ -92,8 +92,8 @@ module Embulk
           success = false
 
           # copy embulk/data/bundle/ directory
-          if __FILE__ =~ /^classpath:/
-            # data is in jar
+          if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
+            # data is in embulk-core jar
             resource_class = org.embulk.command.Runner.java_class
             %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
               url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
@@ -140,7 +140,6 @@ module Embulk
       end
 
     else
-      require 'java'
       require 'json'
 
       begin
