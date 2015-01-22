@@ -179,8 +179,8 @@ module Embulk
         # jar files
         require File.expand_path(load_path)
       else
-        # ruby script directory
-        $LOAD_PATH << File.expand_path(load_path)
+        # ruby script directory (add at the beginning of $LOAD_PATH to make it highest priority)
+        $LOAD_PATH.unshift File.expand_path(load_path)
       end
     end
   end
