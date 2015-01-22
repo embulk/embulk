@@ -49,15 +49,4 @@ public class SchemaConfig
     {
         return Objects.hashCode(columns);
     }
-
-    //public static ConfigSource schemaConfigSource(ColumnConfig... columns)
-    //{
-    //    return schemaConfigSource(ImmutableList.of(columns));
-    //}
-
-    //public static ConfigSource schemaConfigSource(List<ColumnConfig> columns)
-    //{
-    //    SchemaConfig config = new SchemaConfig(Arrays.asList(columns));
-    //    return new ModelManager().writeAsConfigSource(config);
-    //}
 }
