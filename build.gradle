@@ -14,34 +14,30 @@ subprojects {
     }
 
     dependencies {
-        //compile'org.embulk:embulk-core:0.1.0-SNAPSHOT'
-	//compile 'org.embulk:embulk-cli:0.1.0-SNAPSHOT'
-        //compile 'org.embulk:embulk-standards:0.1.0-SNAPSHOT'
-        compile 'commons-logging:commons-logging:1.2'
-	compile 'com.google.guava:guava:17.0'
-        compile 'javax.inject:javax.inject:1'
-        compile 'com.google.inject:guice:3.0'
-        compile 'com.google.inject.extensions:guice-multibindings:3.0'
-        compile 'com.fasterxml.jackson.core:jackson-annotations:2.4.3'
-        compile 'com.fasterxml.jackson.core:jackson-core:2.4.3'
-        compile 'com.fasterxml.jackson.core:jackson-databind:2.4.3'
-        compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.4.3'
-        compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.3'
-        compile 'com.fasterxml.jackson.module:jackson-module-guice:2.4.3'
-        compile 'org.slf4j:slf4j-api:1.7.9'
-        compile 'org.slf4j:slf4j-log4j12:1.7.9'
-        compile 'log4j:log4j:1.2.17'
-        compile 'org.yaml:snakeyaml:1.14'
-        compile 'javax.validation:validation-api:1.1.0.Final'
-        compile 'org.apache.bval:bval-jsr303:0.5'
-        compile 'io.airlift:slice:0.7'
-        compile 'joda-time:joda-time:2.3'
-        compile 'org.jruby:jruby-complete:1.7.16.1'
-        compile 'io.netty:netty-buffer:4.0.24.Final'
-        compile 'com.ibm.icu:icu4j:53.1'
+        compile 'commons-logging:commons-logging:1.2',
+                'com.google.guava:guava:17.0',
+                'com.google.inject:guice:3.0',
+                'com.google.inject.extensions:guice-multibindings:3.0',
+                'javax.inject:javax.inject:1',
+                'com.fasterxml.jackson.core:jackson-annotations:2.4.3',
+                'com.fasterxml.jackson.core:jackson-core:2.4.3',
+                'com.fasterxml.jackson.core:jackson-databind:2.4.3',
+                'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.4.3',
+                'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.3',
+                'com.fasterxml.jackson.module:jackson-module-guice:2.4.3',
+                'org.slf4j:slf4j-api:1.7.9',
+                'org.slf4j:slf4j-log4j12:1.7.9',
+                'log4j:log4j:1.2.17',
+                'org.yaml:snakeyaml:1.14',
+                'javax.validation:validation-api:1.1.0.Final',
+                'org.apache.bval:bval-jsr303:0.5',
+                'io.airlift:slice:0.7',
+                'joda-time:joda-time:2.3',
+                'org.jruby:jruby-complete:1.7.16.1',
+                'io.netty:netty-buffer:4.0.24.Final',
+                'com.ibm.icu:icu4j:53.1'
 
-        //testCompile 'org.embulk:embulk-core:0.1.0-SNAPSHOT' // test-jar
-        testCompile 'junit:junit:4.10'
-        testCompile 'org.mockito:mockito-core:1.9.5'
+        testCompile 'junit:junit:4.10',
+                    'org.mockito:mockito-core:1.9.5'
     }
 }
