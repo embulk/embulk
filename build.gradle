@@ -6,10 +6,11 @@ subprojects {
 
     // maven plugin's intall task allows to install archives to the local repository
     apply plugin: 'maven'
+    group = 'org.embulk'
+    version = '0.1.0-SNAPSHOT'
 
     compileJava.options.encoding = 'UTF-8' // source encoding
     sourceCompatibility = 1.7 // target Java version
-    version = '0.1.0-SNAPSHOT'
 
     repositories {
         //jcenter()
