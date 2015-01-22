@@ -31,3 +31,12 @@ mvn clean package dependency:copy-dependencies && mv -f embulk-cli/target/depend
 
 You can see JaCoCo's test coverage report at ${project}/target/site/jacoco/index.html
 
+To build by Gradle, run:
+```
+./gradlew build
+```
+
+If you want to compile the source code of embulk-core project only, run:
+```
+./gradlew :embulk-core:compileJava
+```
