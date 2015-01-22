@@ -35,8 +35,15 @@ To build by Gradle, run:
 ```
 ./gradlew build
 ```
-
+If you want to deploy artifacts on local maven repository like ~/.m2/repository/, run:
+```
+./gradlew install
+```
 If you want to compile the source code of embulk-core project only, run:
 ```
 ./gradlew :embulk-core:compileJava
+```
+The following command allows use to see the dependency tree of embulk-core project
+```
+./gradlew :embulk-core:dependencies
 ```
