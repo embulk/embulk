@@ -54,11 +54,13 @@ unless jruby_complete
   raise SystemExit.new(1)
 end
 
-gem_home = ENV['GEM_HOME'].to_s
-if gem_home.empty?
-  # inherit this ruby's GEM_HOME to the sub jruby process
-  ENV['GEM_HOME'] = Gem.default_dir
-end
+# TODO Should here do this? This may not work because RUBY_PLATFORM can be different.
+#      embulk_run.rb sets GEM_HOME to ~/.embulk.
+#gem_home = ENV['GEM_HOME'].to_s
+#if gem_home.empty?
+#  # inherit this ruby's GEM_HOME to the sub jruby process
+#  ENV['GEM_HOME'] = Gem.default_dir
+#end
 
 # java ... -jar ruby-complete.jar $EMBULK_HOME/lib/embulk/command/embulk.rb "$@"
 cmdline = [java_cmd]

@@ -1,5 +1,19 @@
 module Embulk
   def self.run(argv)
+    # default_bundle_path
+    default_bundle_path = nil
+    gemfile_path = ENV['BUNDLE_GEMFILE'].to_s
+    gemfile_path = nil if gemfile_path.empty?
+    default_bundle_path = File.dirname(gemfile_path) if gemfile_path
+
+    # default GEM_HOME is ~/.embulk/jruby/1.9/. If -b option is set,
+    # GEM_HOME is already set by embulk/command/embulk.rb
+    gem_home = ENV['GEM_HOME'].to_s
+    if gem_home.empty?
+      ENV['GEM_HOME'] = File.expand_path File.join(ENV['HOME'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
+      Gem.clear_paths  # force rubygems to reload GEM_HOME
+    end
+
     i = argv.find_index {|arg| arg !~ /^\-/ }
     usage nil unless i
     subcmd = argv.slice!(i)
@@ -19,8 +33,13 @@ module Embulk
 
     case subcmd.to_sym
     when :bundle
-      op.banner = "Usage: bundle [directory]"
-      args = 0..1
+      if default_bundle_path
+        op.banner = "Usage: bundle [directory=#{default_bundle_path}]"
+        args = 0..1
+      else
+        op.banner = "Usage: bundle <directory>"
+        args = 1..1
+      end
 
     when :run
       op.banner = "Usage: run [--options] <config.yml>"
@@ -51,11 +70,11 @@ module Embulk
       args = 1..1
 
     when :gem
-      if ENV['GEM_HOME'].to_s.empty?
-        STDERR.puts "GEM_HOME is not set. gem subcommand is not available with executable-jar."
-        STDERR.puts "You can use bundle subcommand instead."
-        exit 1
-      end
+      #if ENV['GEM_HOME'].to_s.empty?
+      #  STDERR.puts "GEM_HOME is not set. gem subcommand is not available with executable-jar."
+      #  STDERR.puts "You can use bundle subcommand instead."
+      #  exit 1
+      #end
       require 'rubygems/gem_runner'
       Gem::GemRunner.new.run argv
       exit 0
@@ -79,7 +98,7 @@ module Embulk
 
     case subcmd.to_sym
     when :bundle
-      path = argv[0] || "."
+      path = argv[0] || default_bundle_path
 
       require 'fileutils'
       require 'rubygems/gem_runner'
@@ -188,11 +207,12 @@ module Embulk
   def self.usage(message)
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
-    STDERR.puts "   bundle    [directory]"
-    STDERR.puts "   run       <config.yml>"
-    STDERR.puts "   preview   <config.yml>"
-    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>"
-    STDERR.puts "   gem       <install | list | help>"
+    STDERR.puts "   bundle    [directory]                              # create or update plugin environment."
+    STDERR.puts "   run       <config.yml>                             # run a bulk load transaction."
+    STDERR.puts "   preview   <config.yml>                             # dry-run the bulk load and show preview."
+    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
+    STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
+    STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"
