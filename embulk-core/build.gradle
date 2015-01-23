@@ -1,0 +1,8 @@
+sourceSets {
+    main.resources {
+        srcDirs 'src/main/resources'
+        srcDirs '../lib'
+
+    }
+}
+

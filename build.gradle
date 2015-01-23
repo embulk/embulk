@@ -29,19 +29,31 @@ subprojects {
                 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.4.3',
                 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.3',
                 'com.fasterxml.jackson.module:jackson-module-guice:2.4.3',
+                'log4j:log4j:1.2.17',
                 'org.slf4j:slf4j-api:1.7.9',
                 'org.slf4j:slf4j-log4j12:1.7.9',
-                'log4j:log4j:1.2.17',
+                'org.jruby:jruby-complete:1.7.16.1',
                 'org.yaml:snakeyaml:1.14',
                 'javax.validation:validation-api:1.1.0.Final',
                 'org.apache.bval:bval-jsr303:0.5',
                 'io.airlift:slice:0.7',
                 'joda-time:joda-time:2.3',
-                'org.jruby:jruby-complete:1.7.16.1',
                 'io.netty:netty-buffer:4.0.24.Final',
                 'com.ibm.icu:icu4j:53.1'
 
         testCompile 'junit:junit:4.10',
                     'org.mockito:mockito-core:1.9.5'
+    }
+
+    task copyDependencies << {
+        println ":copy depend to $buildDir/libs/dependencies"
+        new File("$buildDir/libs/dependencies").mkdirs()
+        copy {
+            into "$buildDir/libs/dependencies"
+            from configurations.runtime.filter {
+                //  TODO avoid bytecode compatibility error
+                it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
+            }
+        }
     }
 }
