@@ -2,21 +2,19 @@ package org.embulk.spi;
 
 import static org.embulk.spi.PageTestUtils.newColumn;
 import static org.embulk.spi.PageTestUtils.newSchema;
-import static org.embulk.type.Types.BOOLEAN;
-import static org.embulk.type.Types.DOUBLE;
-import static org.embulk.type.Types.LONG;
-import static org.embulk.type.Types.STRING;
-import static org.embulk.type.Types.TIMESTAMP;
+import static org.embulk.spi.type.Types.BOOLEAN;
+import static org.embulk.spi.type.Types.DOUBLE;
+import static org.embulk.spi.type.Types.LONG;
+import static org.embulk.spi.type.Types.STRING;
+import static org.embulk.spi.type.Types.TIMESTAMP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
-
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.Schema;
 import org.embulk.EmbulkTestRuntime;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Schema;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

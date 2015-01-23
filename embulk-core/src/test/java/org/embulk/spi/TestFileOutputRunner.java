@@ -11,8 +11,8 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Schema;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.Schema;
 import org.junit.Rule;
 import org.junit.Test;
 

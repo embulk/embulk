@@ -20,14 +20,14 @@ import org.embulk.config.ConfigLoader;
 import org.embulk.config.NextConfig;
 import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
-import org.embulk.spi.ExecSession;
-import org.embulk.spi.Pages;
-import org.embulk.time.Timestamp;
 import org.embulk.exec.LocalExecutor;
 import org.embulk.exec.ExecuteResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.ExecSession;
+import org.embulk.spi.util.Pages;
 import org.embulk.EmbulkService;
 
 public class Runner
@@ -139,7 +139,7 @@ public class Runner
             for (Object[] record : records) {
                 printer.add(record);
             }
-            printer.flush();
+            printer.finish();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }

@@ -7,21 +7,20 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Schema;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import org.embulk.spi.Schema;
+import org.embulk.spi.util.Pages;
 
 public class TestFileInputRunner
 {

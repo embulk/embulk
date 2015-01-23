@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Column;
-import org.embulk.type.ColumnConfig;
-import org.embulk.type.Schema;
-import org.embulk.type.SchemaConfig;
-import org.embulk.type.SchemaVisitor;
-import org.embulk.type.Type;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.Column;
+import org.embulk.spi.ColumnConfig;
+import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
+import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.type.Type;
 
 import com.google.common.collect.ImmutableList;
 

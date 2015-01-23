@@ -13,7 +13,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
 import org.embulk.plugin.PluginType;
-import org.embulk.type.Schema;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;

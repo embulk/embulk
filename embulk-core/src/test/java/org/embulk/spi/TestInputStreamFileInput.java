@@ -2,16 +2,14 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.embulk.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
-
 import com.google.common.collect.ImmutableList;
+import org.embulk.EmbulkTestRuntime;
+import org.embulk.spi.util.InputStreamFileInput;
 
 public class TestInputStreamFileInput
 {

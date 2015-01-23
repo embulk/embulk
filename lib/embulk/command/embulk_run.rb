@@ -42,7 +42,7 @@ module Embulk
       end
 
     when :run
-      op.banner = "Usage: run [--options] <config.yml>"
+      op.banner = "Usage: run <config.yml>"
       op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
@@ -51,7 +51,7 @@ module Embulk
       args = 1..1
 
     when :preview
-      op.banner = "Usage: preview [--options] <config.yml>"
+      op.banner = "Usage: preview <config.yml>"
       op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
@@ -60,14 +60,20 @@ module Embulk
       args = 1..1
 
     when :guess
-      op.banner = "Usage: guess [--options] <partial-config.yml>"
-      op.on('-o', '--output PATH', 'Path to write the guessed config file') do |path|
+      op.banner = "Usage: guess <partial-config.yml>"
+      op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
         options[:guessOutput] = path
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
         load_paths << load_path
       end
       args = 1..1
+
+    when :generate
+      op.banner = %[Usage: generate <mode> <path>\n
+modes:
+   example_csv    <path.csv>        # example csv data]
+      args = 1..2**30
 
     when :gem
       #if ENV['GEM_HOME'].to_s.empty?

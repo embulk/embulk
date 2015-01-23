@@ -26,8 +26,8 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
 
 public class S3FileInputPlugin
         implements FileInputPlugin

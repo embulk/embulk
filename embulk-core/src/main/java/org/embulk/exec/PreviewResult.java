@@ -1,7 +1,7 @@
 package org.embulk.exec;
 
 import java.util.List;
-import org.embulk.type.Schema;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
 
 public class PreviewResult

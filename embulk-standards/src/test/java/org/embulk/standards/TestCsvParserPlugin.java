@@ -11,7 +11,7 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Exec;
-import org.embulk.spi.Newline;
+import org.embulk.spi.util.Newline;
 
 public class TestCsvParserPlugin
 {

@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import org.embulk.type.Schema;
-
 abstract class PageFormat
 {
     // PageHeader
