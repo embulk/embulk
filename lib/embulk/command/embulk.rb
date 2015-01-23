@@ -26,7 +26,12 @@ if bundle_path
   rescue LoadError
     require_relative 'embulk_run'
   end
+
 else
+  # GEM_HOME is set by embulk_run.rb
+  ENV.delete('GEM_HOME')
+  ENV.delete('GEM_PATH')
+  ENV.delete('BUNDLE_GEMFILE')
   require_relative 'embulk_run'
 end
 

@@ -69,18 +69,10 @@ module Embulk
       end
       args = 1..1
 
-    when :generate
-      op.banner = %[Usage: generate <mode> <path>\n
-modes:
-   example_csv    <path.csv>        # example csv data]
-      args = 1..2**30
+    #when :generate  # or :new
+      # TODO create plugin templates
 
     when :gem
-      #if ENV['GEM_HOME'].to_s.empty?
-      #  STDERR.puts "GEM_HOME is not set. gem subcommand is not available with executable-jar."
-      #  STDERR.puts "You can use bundle subcommand instead."
-      #  exit 1
-      #end
       require 'rubygems/gem_runner'
       Gem::GemRunner.new.run argv
       exit 0
@@ -120,7 +112,7 @@ modes:
           if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
             # data is in embulk-core jar
             resource_class = org.embulk.command.Runner.java_class
-            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
+            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv-stdout.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
               url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
               dst = File.join(path, file)
               FileUtils.mkdir_p File.dirname(dst)
