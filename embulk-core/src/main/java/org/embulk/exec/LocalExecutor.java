@@ -20,14 +20,13 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
-import org.embulk.type.Schema;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-//import org.embulk.spi.NoticeLogger;
 import org.embulk.spi.TransactionalPageOutput;
 import org.slf4j.Logger;
 
@@ -76,8 +75,6 @@ public class LocalExecutor
     {
         private NextConfig inputNextConfig;
         private NextConfig outputNextConfig;
-        //private List<NoticeLogger.Message> noticeMessages;
-        //private List<NoticeLogger.SkippedRecord> skippedRecords;
 
         public void setInputNextConfig(NextConfig inputNextConfig)
         {
@@ -99,25 +96,6 @@ public class LocalExecutor
             return outputNextConfig;
         }
 
-        //public void setNoticeMessages(List<NoticeLogger.Message> noticeMessages)
-        //{
-        //    this.noticeMessages = noticeMessages;
-        //}
-
-        //public void setSkippedRecords(List<NoticeLogger.SkippedRecord> skippedRecords)
-        //{
-        //    this.skippedRecords = skippedRecords;
-        //}
-
-        //public List<NoticeLogger.Message> getNoticeMessages()
-        //{
-        //    return noticeMessages;
-        //}
-
-        //public List<NoticeLogger.SkippedRecord> getSkippedRecords()
-        //{
-        //    return skippedRecords;
-        //}
         public ExecuteResult build()
         {
             if (inputNextConfig == null) {
@@ -205,9 +183,6 @@ public class LocalExecutor
                         for (ProcessResult result : results) {
                             inputCommitReports.add(result.getInputCommitReport());
                             outputCommitReports.add(result.getOutputCommitReport());
-                            // TODO
-                            //execResult.addNoticeMessages(procResult.getNoticeMessages());
-                            //execResult.addSkippedRecords(procResult.getSkippedRecords());
                         }
 
                         return outputCommitReports.build();

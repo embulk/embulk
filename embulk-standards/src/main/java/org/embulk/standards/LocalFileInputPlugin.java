@@ -14,6 +14,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.google.inject.Inject;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -23,8 +24,11 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
+import org.slf4j.Logger;
+
+import static org.embulk.spi.util.Inputs.formatPrefix;
 
 public class LocalFileInputPlugin
         implements FileInputPlugin
@@ -43,6 +47,14 @@ public class LocalFileInputPlugin
         public BufferAllocator getBufferAllocator();
     }
 
+    private final Logger log;
+
+    @Inject
+    public LocalFileInputPlugin()
+    {
+        this.log = Exec.getLogger(getClass());
+    }
+
     @Override
     public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
     {
@@ -51,8 +63,9 @@ public class LocalFileInputPlugin
         // list files recursively
         try {
             task.setFiles(listFiles(task));
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);  // TODO exception class
+        } catch (IOException e) {
+            log.error("Cannot get a list of the files: "+e.getMessage());
+            throw new RuntimeException(e);  // TODO exception class
         }
 
         // run with threads. number of processors is same with number of files
@@ -65,8 +78,17 @@ public class LocalFileInputPlugin
     {
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
-            // TODO format path using timestamp
-            Files.walkFileTree(Paths.get(prefix), new SimpleFileVisitor<Path>() {
+            String formatted;
+            try {
+                formatted = formatPrefix(prefix);
+            } catch (RuntimeException e) {
+                //  The RuntimeException that is thrown during formatPath() call should
+                //  be a fatal error. It should stop the input transaction and notice
+                //  that the prefix includes an invalid syntax for users.
+                log.error("Cannot parse the invalid prefix. An invalid syntax is included in: "+prefix);
+                throw e;
+            }
+            Files.walkFileTree(Paths.get(formatted), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
                 {

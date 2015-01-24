@@ -6,9 +6,9 @@ import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.type.Column;
-import org.embulk.type.Schema;
-import org.embulk.type.SchemaVisitor;
+import org.embulk.spi.Column;
+import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaVisitor;
 
 public class MockFormatterPlugin implements FormatterPlugin
 {

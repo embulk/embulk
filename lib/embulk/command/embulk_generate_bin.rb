@@ -1,7 +1,8 @@
 module Embulk
   def self.generate_bin(options={})
     jruby_jar_path = org.jruby.Main.java_class.protection_domain.code_source.location.to_s
-    if __FILE__ =~ /^classpath:/
+    if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
+      resource_class = org.embulk.command.Runner.java_class
       ruby_script_path = resource_class.resource("/embulk/command/embulk.rb").to_s
     else
       ruby_script_path = File.join(File.dirname(__FILE__), 'embulk.rb')
@@ -25,7 +26,7 @@ module Embulk
 #!/bin/sh
 =begin 2>/dev/null
 #{java_home_script}
-exec #{java_path} -jar "$0" "$0" "$@"
+exec #{java_path} -classpath "$0" org.jruby.Main "$0" "$@"
 exit 127
 =end
 EOF
@@ -40,6 +41,8 @@ EOF
 
     ruby_init_script = b <<EOF
 #{bundle_path_script}
+ENV.delete 'GEM_HOME'
+ENV.delete 'GEM_PATH'
 EOF
 
     ruby_script = b(File.read(ruby_script_path))

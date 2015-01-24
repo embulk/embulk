@@ -3,6 +3,9 @@ package org.embulk.standards;
 import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -16,7 +19,7 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
+import com.google.inject.Inject;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -26,8 +29,11 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
+import org.slf4j.Logger;
+
+import static org.embulk.spi.util.Inputs.formatPrefix;
 
 public class S3FileInputPlugin
         implements FileInputPlugin
@@ -59,6 +65,14 @@ public class S3FileInputPlugin
 
         @JacksonInject
         public BufferAllocator getBufferAllocator();
+    }
+
+    private final Logger log;
+
+    @Inject
+    public S3FileInputPlugin()
+    {
+        this.log = Exec.getLogger(getClass());
     }
 
     @Override
@@ -126,8 +140,33 @@ public class S3FileInputPlugin
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
-            // TODO format path using timestamp
-            builder.addAll(listS3FilesByPrefix(client, bucketName, prefix));
+            String formatted;
+            try {
+                formatted = formatPrefix(prefix);
+            } catch (RuntimeException e) {
+                //  The RuntimeException that is thrown during formatPath() call should
+                //  be a fatal error. It should stop the input transaction and notice
+                //  that the prefix includes an invalid syntax for users.
+                log.error("Cannot parse the invalid prefix. An invalid syntax is included in: "+prefix);
+                throw e;
+            }
+            try {
+                builder.addAll(listS3FilesByPrefix(client, bucketName, formatted));
+            } catch (RuntimeException e) {
+                //  The RuntimeException that is thrown during listS3FilesByPrefix() call
+                //  should also be a fatal error. It should stop the input transaction.
+                String message;
+                String errMessage = e.getMessage();
+                if (e instanceof AmazonServiceException) {
+                    message = "an error occurred in Amazon S3: "+errMessage;
+                } else if (e instanceof AmazonClientException) {
+                    message = "an error was encountered in the client: "+errMessage;
+                } else {
+                    message = "Cannot get a list of the objects: "+prefix+": "+e.getMessage();
+                }
+                log.error(message);
+                throw e;
+            }
         }
 
         return builder.build();
