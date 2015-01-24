@@ -1,21 +1,70 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+    }
+}
+
+def globalGroup = 'org.embulk'
+def globalVersion = '0.1.0-SNAPSHOT'
+
 allprojects {
+    apply plugin: 'com.jfrog.bintray'
+
+    group = globalGroup
+    version = globalVersion
+
+    bintray {
+        user = project.property 'bintrayEmbulkUser' // declared in .gradle/gradle.properties
+	key = project.property 'bintrayEmbulkApiKey' // declared in .gradle/gradle.properties
+
+        publications = ['mavenJava']
+
+        dryRun = false
+        publish = true
+        pkg {
+            repo = 'maven'
+            name = 'embulk-package'
+            desc = 'Embulk\'s Package'
+            websiteUrl = 'https://github.com/embulk'
+            issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
+            vcsUrl = 'https://github.com/embulk/embulk.git'
+            licenses = ['Apache-2.0']
+            labels = ['embulk', 'ruby', 'java']
+            publicDownloadNumbers = true
+
+            version {
+                name = project.version
+                desc = "TODO description"
+
+                //mavenCentralSync {
+                //    sync = true
+                //    user = 'userToken'
+                //    password = 'paasword'
+                //    close = '1'
+                //}
+            }
+        }
+    }
 }
 
 subprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
     apply plugin: 'java'
 
     // maven plugin's intall task allows to install archives to the local repository
     apply plugin: 'maven'
-    group = 'org.embulk'
-    version = '0.1.0-SNAPSHOT'
 
     compileJava.options.encoding = 'UTF-8' // source encoding
     sourceCompatibility = 1.7 // target Java version
-
-    repositories {
-        //jcenter()
-        mavenCentral()
-    }
 
     dependencies {
         compile 'commons-logging:commons-logging:1.2',
@@ -45,7 +94,23 @@ subprojects {
                     'org.mockito:mockito-core:1.9.5'
     }
 
-    task copyDependencies << {
+    // custom tasks for creating source/javadoc jars
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    // add javadoc/source jar tasks as artifacts
+    artifacts {
+        archives sourcesJar, javadocJar
+    }
+
+    task copyDependencies << { //  TODO task copyDependencies(type: Copy) {
         println ":copy depend to $buildDir/libs/dependencies"
         new File("$buildDir/libs/dependencies").mkdirs()
         copy {
