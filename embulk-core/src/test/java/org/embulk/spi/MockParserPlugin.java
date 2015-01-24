@@ -4,10 +4,12 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Column;
-import org.embulk.type.SchemaConfig;
-import org.embulk.type.Type;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.type.Type;
+import org.embulk.spi.Column;
+import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
+import org.embulk.spi.PageOutput;
 
 public class MockParserPlugin implements ParserPlugin
 {
@@ -27,8 +29,8 @@ public class MockParserPlugin implements ParserPlugin
     }
 
     @Override
-    public void run(TaskSource taskSource, org.embulk.type.Schema schema,
-            FileInput input, org.embulk.spi.PageOutput output)
+    public void run(TaskSource taskSource, Schema schema,
+            FileInput input, PageOutput output)
     {
         try (final PageBuilder pageBuilder = new PageBuilder(
                 Exec.getBufferAllocator(), schema, output)) {

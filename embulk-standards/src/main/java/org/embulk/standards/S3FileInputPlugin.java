@@ -17,7 +17,6 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
 import com.google.inject.Inject;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
@@ -28,8 +27,8 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
 import org.slf4j.Logger;
 
 import static org.embulk.spi.FileInputRunner.formatPrefix;

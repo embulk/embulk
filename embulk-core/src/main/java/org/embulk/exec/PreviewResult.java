@@ -1,25 +1,18 @@
 package org.embulk.exec;
 
 import java.util.List;
-import org.embulk.type.Schema;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
-//import org.embulk.spi.NoticeLogger;
 
 public class PreviewResult
 {
     private final Schema schema;
     private final List<Page> pages;
-    //private final List<NoticeLogger.Message> noticeMessages;
-    //private final List<NoticeLogger.SkippedRecord> skippedRecords;
 
-    public PreviewResult(Schema schema, List<Page> pages/*,
-            List<NoticeLogger.Message> noticeMessages,
-            List<NoticeLogger.SkippedRecord> skippedRecords*/)
+    public PreviewResult(Schema schema, List<Page> pages)
     {
         this.schema = schema;
         this.pages = pages;
-        //this.noticeMessages = noticeMessages;
-        //this.skippedRecords = skippedRecords;
     }
 
     public Schema getSchema()
@@ -31,14 +24,4 @@ public class PreviewResult
     {
         return pages;
     }
-
-    //public List<NoticeLogger.Message> getNoticeMessages()
-    //{
-    //    return noticeMessages;
-    //}
-
-    //public List<NoticeLogger.SkippedRecord> getSkippedRecords()
-    //{
-    //    return skippedRecords;
-    //}
 }

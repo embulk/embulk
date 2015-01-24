@@ -1,14 +1,9 @@
 package org.embulk.spi;
 
-import org.embulk.time.Timestamp;
-import org.embulk.time.TimestampFormat;
-import org.embulk.time.TimestampFormatter;
-import org.embulk.time.TimestampFormatter.FormatterTask;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
 import com.google.inject.Injector;
-import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
 import org.embulk.config.NextConfig;
@@ -17,6 +12,10 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormat;
+import org.embulk.spi.time.TimestampFormatter;
+import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
 public class ExecSession
 {

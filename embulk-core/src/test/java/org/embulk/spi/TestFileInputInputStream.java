@@ -2,13 +2,14 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
-
-import org.embulk.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
+import org.embulk.spi.util.ListFileInput;
+import org.embulk.spi.util.FileInputInputStream;
+import org.embulk.spi.util.FileOutputOutputStream;
+import org.embulk.EmbulkTestRuntime;
 
 public class TestFileInputInputStream
 {

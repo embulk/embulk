@@ -10,7 +10,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.FileOutput;
-import org.embulk.spi.FileOutputOutputStream;
+import org.embulk.spi.util.FileOutputOutputStream;
 
 public class GzipFileEncoderPlugin
         implements EncoderPlugin

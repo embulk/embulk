@@ -3,9 +3,7 @@ package org.embulk.spi;
 import java.util.Iterator;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
-import org.embulk.time.Timestamp;
-import org.embulk.type.Schema;
-import org.embulk.type.Column;
+import org.embulk.spi.time.Timestamp;
 
 public class PageReader
         implements AutoCloseable

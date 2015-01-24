@@ -10,8 +10,8 @@ import org.embulk.config.ConfigSource;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileInput;
-import org.embulk.spi.FileInputInputStream;
-import org.embulk.spi.InputStreamFileInput;
+import org.embulk.spi.util.FileInputInputStream;
+import org.embulk.spi.util.InputStreamFileInput;
 
 public class GzipFileDecoderPlugin
         implements DecoderPlugin

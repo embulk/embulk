@@ -108,7 +108,7 @@ class TablePrinter
         return max;
     }
 
-    public void flush() throws IOException
+    public void finish() throws IOException
     {
         if(!samples.isEmpty()) {
             flushSamples();
