@@ -1,7 +1,8 @@
-package org.embulk.exec;
+package org.embulk.spi;
 
 import java.util.List;
 import com.google.inject.Module;
+import org.embulk.config.ConfigSource;
 
 /**
  * Extension is a module to extend the execution framework using Guice.
@@ -37,5 +38,5 @@ import com.google.inject.Module;
  */
 public interface Extension
 {
-    public List<Module> getModules();
+    public List<Module> getModules(ConfigSource systemConfig);
 }

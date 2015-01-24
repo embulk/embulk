@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
@@ -74,7 +73,6 @@ public class FileOutputRunner
                         formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
                             public void run(final TaskSource formatterTaskSource)
                             {
-                                TaskSource taskSource = Exec.newTaskSource();
                                 task.setFileOutputTaskSource(fileOutputTaskSource);
                                 task.setEncoderTaskSources(encoderTaskSources);
                                 task.setFormatterTaskSource(formatterTaskSource);
@@ -128,7 +126,6 @@ public class FileOutputRunner
     {
         private final Transactional tran;
         private final PageOutput output;
-        private boolean finished;
 
         public DelegateTransactionalPageOutput(Transactional tran, PageOutput output)
         {
@@ -146,7 +143,6 @@ public class FileOutputRunner
         public void finish()
         {
             output.finish();
-            finished = true;
         }
 
         @Override

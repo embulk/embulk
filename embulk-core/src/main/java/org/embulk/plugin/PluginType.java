@@ -11,6 +11,9 @@ public class PluginType
     @JsonCreator
     public PluginType(String name)
     {
+        if (name == null) {
+            throw new NullPointerException("name must not be null");
+        }
         this.name = name;
     }
 
@@ -33,7 +36,7 @@ public class PluginType
             return false;
         }
         PluginType o = (PluginType) other;
-        return name.equals(o);
+        return name.equals(o.name);
     }
 
     @Override

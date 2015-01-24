@@ -27,6 +27,8 @@ public class FileInputRunner
 
     private interface RunnerTask extends Task
     {
+        // TODO "type" needed?
+
         @Config("decoders")
         @ConfigDefault("[]")
         public List<ConfigSource> getDecoderConfigs();

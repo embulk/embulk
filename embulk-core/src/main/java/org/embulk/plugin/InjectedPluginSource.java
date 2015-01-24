@@ -22,7 +22,7 @@ import org.embulk.spi.FileOutputRunner;
  * // Module
  * public void configure(Binder binder)
  * {
- *     InjectedPluginSource.registerPlugin(InputPluginclass, "my", MyInputPlugin.class);
+ *     InjectedPluginSource.registerPluginTo(InputPluginclass, "my", MyInputPlugin.class);
  * }
  *
  */
@@ -54,7 +54,7 @@ public class InjectedPluginSource
         }
     }
 
-    public static <T> void registerPlugin(Binder binder, Class<T> iface, String name, final Class<?> impl)
+    public static <T> void registerPluginTo(Binder binder, Class<T> iface, String name, final Class<?> impl)
     {
         PluginFactory<T> factory;
         if (FileInputPlugin.class.isAssignableFrom(impl)) {

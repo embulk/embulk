@@ -40,6 +40,7 @@ public class EmbulkTestRuntime
             new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule(systemConfig).configure(binder);
             new TestUtilityModule().configure(binder);
+            new TestPluginSourceModule().configure(binder);
         }
     }
 

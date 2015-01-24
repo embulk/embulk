@@ -15,7 +15,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.CharsetSerDe;
 import org.embulk.spi.BufferAllocator;
-import static org.embulk.plugin.InjectedPluginSource.registerPlugin;
+import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class ExecModule
         implements Module
@@ -30,8 +30,8 @@ public class ExecModule
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
 
         // GuessExecutor
-        registerPlugin(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
-        registerPlugin(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
+        registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
+        registerPluginTo(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

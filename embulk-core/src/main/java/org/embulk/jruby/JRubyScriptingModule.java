@@ -57,21 +57,19 @@ public class JRubyScriptingModule
             ScriptingContainer jruby = new ScriptingContainer();
             jruby.setCompatVersion(CompatVersion.RUBY1_9);
 
-            // search embulk.rb path
-            List<String> loadPaths = new ArrayList<String>();
+            // Search embulk/java/bootstrap.rb from a $LOAD_PATH.
+            // $LOAD_PATH is set by lib/embulk/command/embulk.rb if Embulk starts
+            // using embulk-cli but it's not set if Embulk is embedded in an application.
+            // Here adds this jar's internal resources to $LOAD_PATH for those applciations.
 
+            List<String> loadPaths = new ArrayList<String>(jruby.getLoadPaths());
             String coreJarPath = JRubyScriptingModule.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-            loadPaths.add(coreJarPath);
-
-            String home = System.getenv("EMBULK_HOME");
-            if (home != null && !home.isEmpty()) {
-                String homeLibPath = home + File.separator + "lib";
-                loadPaths.add(homeLibPath);
+            if (!loadPaths.contains(coreJarPath)) {
+                loadPaths.add(coreJarPath);
             }
-
             jruby.setLoadPaths(loadPaths);
 
-            // load embulk/java/bootstrap.rb from $EMBULK_HOME/lib
+            // jruby searches embulk/java/bootstrap.rb from the beginning of $LOAD_PATH.
             jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
             // set some constants
@@ -85,7 +83,7 @@ public class JRubyScriptingModule
                     jruby.runScriptlet("Embulk::Java::Injected"),
                     "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
 
-            // load embulk.rb from $EMBULK_HOME/lib
+            // load embulk.rb
             jruby.runScriptlet("require 'embulk'");
 
             return jruby;
