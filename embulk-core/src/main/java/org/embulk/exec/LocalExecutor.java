@@ -62,13 +62,21 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
-        this.executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder()
-                .setNameFormat("embulk-executor-%d")
-                .setDaemon(true)
-                .build());
+        this.executor = newExecutorService(systemConfig);
         this.runningTaskCount = new AtomicInteger(0);
         this.completedTaskCount = new AtomicInteger(0);
+    }
+
+    private ExecutorService newExecutorService(ConfigSource systemConfig)
+    {
+        int defaultMaxThreads = Runtime.getRuntime().availableProcessors() * 2;
+        int maxThreads = systemConfig.get(Integer.class, "max_processing_threads",
+                defaultMaxThreads);
+        return Executors.newFixedThreadPool(maxThreads,
+                new ThreadFactoryBuilder()
+                        .setNameFormat("embulk-executor-%d")
+                        .setDaemon(true)
+                        .build());
     }
 
     private static class ExecuteResultBuilder
