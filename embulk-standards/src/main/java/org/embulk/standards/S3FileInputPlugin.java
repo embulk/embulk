@@ -4,6 +4,8 @@ import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -31,7 +33,7 @@ import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.slf4j.Logger;
 
-import static org.embulk.spi.FileInputRunner.formatPrefix;
+import static org.embulk.spi.util.Inputs.formatPrefix;
 
 public class S3FileInputPlugin
         implements FileInputPlugin
@@ -138,10 +140,32 @@ public class S3FileInputPlugin
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
+            String formatted;
             try {
-                builder.addAll(listS3FilesByPrefix(client, bucketName, formatPrefix(prefix)));
-            } catch (Exception e) {
-                log.warn("Cannot parse prefix: "+prefix, e);
+                formatted = formatPrefix(prefix);
+            } catch (RuntimeException e) {
+                //  The RuntimeException that is thrown during formatPath() call should
+                //  be a fatal error. It should stop the input transaction and notice
+                //  that the prefix includes an invalid syntax for users.
+                log.error("Cannot parse the invalid prefix. An invalid syntax is included in: "+prefix);
+                throw e;
+            }
+            try {
+                builder.addAll(listS3FilesByPrefix(client, bucketName, formatted));
+            } catch (RuntimeException e) {
+                //  The RuntimeException that is thrown during listS3FilesByPrefix() call
+                //  should also be a fatal error. It should stop the input transaction.
+                String message;
+                String errMessage = e.getMessage();
+                if (e instanceof AmazonServiceException) {
+                    message = "an error occurred in Amazon S3: "+errMessage;
+                } else if (e instanceof AmazonClientException) {
+                    message = "an error was encountered in the client: "+errMessage;
+                } else {
+                    message = "Cannot get a list of the objects: "+prefix+": "+e.getMessage();
+                }
+                log.error(message);
+                throw e;
             }
         }
 

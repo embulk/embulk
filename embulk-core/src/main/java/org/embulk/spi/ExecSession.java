@@ -13,7 +13,6 @@ import org.embulk.config.DataSourceImpl;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
@@ -53,8 +52,7 @@ public class ExecSession
 
     public DateTimeZone getTransactionTimeZone()
     {
-        String timezone = execConfig.get(String.class, "transaction_time_zone", "UTC");
-        return TimestampFormat.parseDateTimeZone(timezone);
+        return execConfig.get(DateTimeZone.class, "transaction_time_zone", DateTimeZone.UTC);
     }
 
     public Logger getLogger(String name)
