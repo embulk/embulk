@@ -2,8 +2,13 @@ package org.embulk.spi.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
+import org.joda.time.DateTimeZone;
 
 public class Inputs
 {
@@ -56,5 +61,14 @@ public class Inputs
                 };
             }
         };
+    }
+
+    public static String formatPath(String pathFormat)
+    {
+        Timestamp timestamp = Exec.session().getTransactionTime();
+        DateTimeZone timezone = Exec.session().getTransactionTimeZone();
+        // newTimestampFormatter (eventually calls org.jruby.util.RubyDateFormat.<init> doesn't throw exceptions
+        TimestampFormatter formatter = Exec.session().newTimestampFormatter(pathFormat, timezone);
+        return formatter.format(timestamp);  // TimestampFormatter.format doesn't throw exceptions
     }
 }
