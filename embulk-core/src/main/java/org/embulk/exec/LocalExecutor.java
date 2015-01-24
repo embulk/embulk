@@ -70,7 +70,7 @@ public class LocalExecutor
     private ExecutorService newExecutorService(ConfigSource systemConfig)
     {
         int defaultMaxThreads = Runtime.getRuntime().availableProcessors() * 2;
-        int maxThreads = systemConfig.get(Integer.class, "max_processing_threads",
+        int maxThreads = systemConfig.get(Integer.class, "max_threads",
                 defaultMaxThreads);
         return Executors.newFixedThreadPool(maxThreads,
                 new ThreadFactoryBuilder()
