@@ -18,6 +18,8 @@ allprojects {
     group = globalGroup
     version = globalVersion
 
+    // to upload artifacts to Bintray by gradle-bintray-plugin
+    // $ gradle bintrayUpload
     bintray {
         user = project.property 'bintrayEmbulkUser' // declared in .gradle/gradle.properties
 	key = project.property 'bintrayEmbulkApiKey' // declared in .gradle/gradle.properties
@@ -60,11 +62,13 @@ subprojects {
 
     apply plugin: 'java'
 
-    // maven plugin's intall task allows to install archives to the local repository
+    // to install jar files to the local repo
+    // $ gradle install
     apply plugin: 'maven'
 
     compileJava.options.encoding = 'UTF-8' // source encoding
-    sourceCompatibility = 1.7 // target Java version
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
     dependencies {
         compile 'commons-logging:commons-logging:1.2',
@@ -110,15 +114,15 @@ subprojects {
         archives sourcesJar, javadocJar
     }
 
-    task copyDependencies << { //  TODO task copyDependencies(type: Copy) {
+    // $ gradle copyDependencies
+    task copyDependencies(type: Copy) {
         println ":copy depend to $buildDir/libs/dependencies"
         new File("$buildDir/libs/dependencies").mkdirs()
-        copy {
-            into "$buildDir/libs/dependencies"
-            from configurations.runtime.filter {
-                //  TODO avoid bytecode compatibility error
-                it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
-            }
+
+        into "$buildDir/libs/dependencies"
+        from configurations.runtime.filter {
+            //  TODO avoid bytecode compatibility error
+            it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
         }
     }
 }
