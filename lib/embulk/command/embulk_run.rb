@@ -48,6 +48,9 @@ module Embulk
       op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
         load_paths << load_path
       end
+      op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
+        options[:nextConfigOutputPath] = path
+      end
       args = 1..1
 
     when :preview
@@ -62,7 +65,7 @@ module Embulk
     when :guess
       op.banner = "Usage: guess <partial-config.yml>"
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
-        options[:guessOutput] = path
+        options[:nextConfigOutputPath] = path
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
         load_paths << load_path
@@ -207,7 +210,7 @@ module Embulk
     STDERR.puts "commands:"
     STDERR.puts "   bundle    [directory]                              # create or update plugin environment."
     STDERR.puts "   run       <config.yml>                             # run a bulk load transaction."
-    STDERR.puts "   preview   <config.yml>                             # dry-run the bulk load and show preview."
+    STDERR.puts "   preview   <config.yml>                             # dry-run the bulk load without output and show preview."
     STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
     STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
