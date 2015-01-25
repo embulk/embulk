@@ -79,9 +79,8 @@ public class Runner
         ExecuteResult result = local.run(exec, config);
         NextConfig nextConfig = result.getNextConfig();
 
-        System.out.println("next config:");
-        String yml = writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
-        System.out.println(yml);
+        exec.getLogger(Runner.class).info(String.format("next config: %s", nextConfig.toString()));
+        writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
     }
 
     public void guess(String partialConfigPath)
