@@ -3,4 +3,4 @@ in:
   paths:
     - data/examples/sample.csv.gz
 out:
-  type: example  # see bundle_dir/embulk/output_example.rb
+  type: stdout

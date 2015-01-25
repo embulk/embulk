@@ -6,7 +6,7 @@ source 'https://rubygems.org/'
 # To use those plugins,
 #
 # 1. modify this Gemfile. Examples are at the end of this file.
-# 2. update Gemfile.lock using: embulk bundle -b <this dir>
+# 2. update Gemfile.lock using: embulk bundle <this dir>
 # 3. run embulk with -b option: embulk run -b <this dir> ...
 #
 # Alternatively, you can put a single-file ruby sciprt to <this dir>/embulk
