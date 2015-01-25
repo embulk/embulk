@@ -3,17 +3,16 @@ source 'https://rubygems.org/'
 # Plugin bundle:
 #
 # a) Using plugins released on RubyGems:
-#   You can write plugin names released on RubyGems here to install them.
-#   To use those plugins,
+#   You can write plugin names (and versions) to this file to include
+#   the plugins released on RubyGems. To use those plugins,
 #
 #   1. modify this Gemfile. Examples are at the end of this file.
 #   2. update Gemfile.lock using: embulk bundle <this dir>
 #   3. run embulk with -b option: embulk run -b <this dir> example.yml
 #
 # b) Using simple single-file ruby plugins:
-#
-#   You can put a single-file ruby sciprt to <this dir>/embulk directory.
-#   When you run embulk with -b <this dir> option, embulk uses them:
+#   You can put a simple ruby plugins to <this dir>/embulk directory.
+#   When you run embulk with -b <this dir> option, embulk loads them:
 #
 #   $ embulk run -b <this dir> example.yml
 #

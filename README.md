@@ -34,7 +34,7 @@ java -jar embulk.jar gem list
 
 You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk-).
 
-## Plugin environment
+### Using plugin bundle
 
 `embulk bundle` subcommand generates some example plugins at $data/embulk/\*.rb directory.
 
