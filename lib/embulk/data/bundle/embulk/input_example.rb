@@ -1,6 +1,7 @@
 module Embulk
 
   class InputExample < InputPlugin
+    # input plugin file name must be: embulk/output_<name>.rb
     Plugin.register_input('example', self)
 
     def self.transaction(config, &control)

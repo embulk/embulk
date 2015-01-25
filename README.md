@@ -37,9 +37,10 @@ You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/
 ### Using plugin bundle
 
 `embulk bundle` subcommand creates (or updates if already exists) a bundle directory.
-You can use the bundle with `-b <bundle_dir>` option
+You can use the bundle using `-b <bundle_dir>` option
 
-It also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
+`embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
+
 See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
