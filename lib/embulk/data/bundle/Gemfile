@@ -23,9 +23,9 @@ source 'https://rubygems.org/'
 
 # Plugins
 #
-#gem 'embulk-plugin-xyz'
-#gem 'embulk-plugin-xyz', '~> 0.1.0'
-#gem 'embulk-plugin-xyz', '= 0.2.0'
+#gem 'embulk-plugin-foo'
+#gem 'embulk-plugin-bar', '~> 0.1.0'
+#gem 'embulk-plugin-baz', '= 0.2.0'
 #gem 'embulk-plugin-xyz', '>= 0.3.0'
 #
 

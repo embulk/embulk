@@ -1,6 +1,6 @@
 in:
   type: file
   paths:
-    - data/examples/sample.csv.gz
+    - mydata/examples/sample.csv.gz
 out:
   type: stdout

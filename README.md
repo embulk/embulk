@@ -16,8 +16,8 @@ java -jar embulk.jar --help
 Let's load a CSV file, for example. `embulk bundle` subcommand generates a CSV file for you.
 
 ```
-java -jar embulk.jar bundle ./data
-java -jar embulk.jar guess  ./data/examples/csv-stdout.yml -o example.yml
+java -jar embulk.jar bundle ./mydata   # create a new bundle directory
+java -jar embulk.jar guess  ./mydata/examples/csv-stdout.yml -o example.yml
 java -jar embulk.jar preview example.yml
 java -jar embulk.jar run     example.yml
 ```
@@ -36,15 +36,15 @@ You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/
 
 ### Using plugin bundle
 
-`embulk bundle` subcommand generates some example plugins at $data/embulk/\*.rb directory.
+`embulk bundle` subcommand generates some example plugins at $bundle/embulk/\*.rb directory.
 
 ```
-sed -i .orig s/stdout/example/ ./data/examples/csv-stdout.yml
-java -jar embulk.jar guess -b ./data ./data/examples/csv-stdout.yml -o example.yml
-java -jar embulk.jar run   -b ./data example.yml
+sed -i .orig s/stdout/example/ ./mydata/examples/csv-stdout.yml
+java -jar embulk.jar guess  -b ./mydata ./mydata/examples/csv-stdout.yml -o example.yml
+java -jar embulk.jar run    -b ./mydata example.yml
 ```
 
-See generated ./data/Gemfile how to create and use plugin bundles.
+See generated ./mydata/Gemfile how to create and use plugin bundles.
 
 ### Releasing plugins to RubyGems
 
