@@ -39,10 +39,12 @@ You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/
 `embulk bundle` subcommand generates some example plugins at $data/embulk/\*.rb directory.
 
 ```
-sed -i .orig s/stdout/example/ data/examples/csv-stdout.yml
-java -jar embulk.jar guess -b ./data data/examples/csv-stdout.yml -o example.yml
+sed -i .orig s/stdout/example/ ./data/examples/csv-stdout.yml
+java -jar embulk.jar guess -b ./data ./data/examples/csv-stdout.yml -o example.yml
 java -jar embulk.jar run   -b ./data example.yml
 ```
+
+See generated ./data/Gemfile how to create and use plugin bundles.
 
 ### Releasing plugins to RubyGems
 

@@ -16,14 +16,16 @@ source 'https://rubygems.org/'
 #
 #   $ embulk run -b <this dir> example.yml
 #
-#   See <this dir>/embulk/* files for example.
+#   See <this dir>/embulk/* files for example. When the plugin works,
+#   you can release the plugin to RubyGems with "embulk-plugin-foobar"
+#   name to deploy them to servers.
 #
 
 # Plugins
 #
-#gem 'embulk-input-xyz'
-#gem 'embulk-output-xyz', '~> 0.1.0'
-#gem 'embulk-parser-xyz', '= 0.2.0'
-#gem 'embulk-formatter-xyz', '>= 0.3.0'
+#gem 'embulk-plugin-xyz'
+#gem 'embulk-plugin-xyz', '~> 0.1.0'
+#gem 'embulk-plugin-xyz', '= 0.2.0'
+#gem 'embulk-plugin-xyz', '>= 0.3.0'
 #
 
