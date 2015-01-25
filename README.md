@@ -17,9 +17,9 @@ Let's load a CSV file, for example. `embulk bundle` subcommand generates a CSV f
 
 ```
 java -jar embulk.jar bundle ./data
-java -jar embulk.jar guess ./data/examples/csv-stdout.yml -o example.yml
+java -jar embulk.jar guess  ./data/examples/csv-stdout.yml -o example.yml
 java -jar embulk.jar preview example.yml
-java -jar embulk.jar run example.yml
+java -jar embulk.jar run     example.yml
 ```
 
 ### Using plugins
@@ -36,7 +36,21 @@ You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/
 
 ## Plugin environment
 
-TODO
+`embulk bundle` subcommand generates some example plugins at $data/embulk/\*.rb directory.
+
+```
+sed -i .orig s/stdout/example/ data/examples/csv-stdout.yml
+java -jar embulk.jar guess -b ./data data/examples/csv-stdout.yml -o example.yml
+java -jar embulk.jar run   -b ./data example.yml
+```
+
+### Releasing plugins to RubyGems
+
+TODO: documents
+
+```
+embulk-plugin-xyz
+```
 
 ## Embulk Development
 
