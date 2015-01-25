@@ -1,0 +1,128 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+    }
+}
+
+def globalGroup = 'org.embulk'
+def globalVersion = '0.1.0-SNAPSHOT'
+
+allprojects {
+    apply plugin: 'com.jfrog.bintray'
+
+    group = globalGroup
+    version = globalVersion
+
+    // to upload artifacts to Bintray by gradle-bintray-plugin
+    // $ gradle bintrayUpload
+    bintray {
+        user = project.property 'bintrayEmbulkUser' // declared in .gradle/gradle.properties
+	key = project.property 'bintrayEmbulkApiKey' // declared in .gradle/gradle.properties
+
+        publications = ['mavenJava']
+
+        dryRun = false
+        publish = true
+        pkg {
+            repo = 'maven'
+            name = 'embulk-package'
+            desc = 'Embulk\'s Package'
+            websiteUrl = 'https://github.com/embulk'
+            issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
+            vcsUrl = 'https://github.com/embulk/embulk.git'
+            licenses = ['Apache-2.0']
+            labels = ['embulk', 'ruby', 'java']
+            publicDownloadNumbers = true
+
+            version {
+                name = project.version
+                desc = "TODO description"
+
+                //mavenCentralSync {
+                //    sync = true
+                //    user = 'userToken'
+                //    password = 'paasword'
+                //    close = '1'
+                //}
+            }
+        }
+    }
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    apply plugin: 'java'
+
+    // to install jar files to the local repo
+    // $ gradle install
+    apply plugin: 'maven'
+
+    compileJava.options.encoding = 'UTF-8' // source encoding
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+
+    dependencies {
+        compile 'commons-logging:commons-logging:1.2',
+                'com.google.guava:guava:17.0',
+                'com.google.inject:guice:3.0',
+                'com.google.inject.extensions:guice-multibindings:3.0',
+                'javax.inject:javax.inject:1',
+                'com.fasterxml.jackson.core:jackson-annotations:2.4.3',
+                'com.fasterxml.jackson.core:jackson-core:2.4.3',
+                'com.fasterxml.jackson.core:jackson-databind:2.4.3',
+                'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.4.3',
+                'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.3',
+                'com.fasterxml.jackson.module:jackson-module-guice:2.4.3',
+                'log4j:log4j:1.2.17',
+                'org.slf4j:slf4j-api:1.7.9',
+                'org.slf4j:slf4j-log4j12:1.7.9',
+                'org.jruby:jruby-complete:1.7.16.1',
+                'org.yaml:snakeyaml:1.14',
+                'javax.validation:validation-api:1.1.0.Final',
+                'org.apache.bval:bval-jsr303:0.5',
+                'io.airlift:slice:0.7',
+                'joda-time:joda-time:2.3',
+                'io.netty:netty-buffer:4.0.24.Final',
+                'com.ibm.icu:icu4j:53.1'
+
+        testCompile 'junit:junit:4.10',
+                    'org.mockito:mockito-core:1.9.5'
+    }
+
+    // custom tasks for creating source/javadoc jars
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    // add javadoc/source jar tasks as artifacts
+    artifacts {
+        archives sourcesJar, javadocJar
+    }
+
+    // $ gradle copyDependencies
+    task copyDependencies(type: Copy) {
+        println ":copy depend to $buildDir/libs/dependencies"
+        new File("$buildDir/libs/dependencies").mkdirs()
+
+        into "$buildDir/libs/dependencies"
+        from configurations.runtime.filter {
+            //  TODO avoid bytecode compatibility error
+            it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
+        }
+    }
+}
