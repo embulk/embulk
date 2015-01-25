@@ -68,7 +68,7 @@ public class LocalFileInputPlugin
         for (String prefix : task.getPathPrefixes()) {
             String formatted = formatPath(prefix);
             try {
-                log.info("Listing local files with prefix '%s'", formatted);
+                log.info("Listing local files with prefix '{}'", formatted);
                 Files.walkFileTree(Paths.get(formatted), new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)

@@ -34,6 +34,7 @@ public class LocalExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
+    private final int maxThreads;
     private final ExecutorService executor;
 
     private Logger log;
@@ -62,21 +63,17 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
-        this.executor = newExecutorService(systemConfig);
-        this.runningTaskCount = new AtomicInteger(0);
-        this.completedTaskCount = new AtomicInteger(0);
-    }
 
-    private ExecutorService newExecutorService(ConfigSource systemConfig)
-    {
         int defaultMaxThreads = Runtime.getRuntime().availableProcessors() * 2;
-        int maxThreads = systemConfig.get(Integer.class, "max_threads",
-                defaultMaxThreads);
-        return Executors.newFixedThreadPool(maxThreads,
+        this.maxThreads = systemConfig.get(Integer.class, "max_threads", defaultMaxThreads);
+        this.executor = Executors.newFixedThreadPool(maxThreads,
                 new ThreadFactoryBuilder()
                         .setNameFormat("embulk-executor-%d")
                         .setDaemon(true)
                         .build());
+
+        this.runningTaskCount = new AtomicInteger(0);
+        this.completedTaskCount = new AtomicInteger(0);
     }
 
     private static class ExecuteResultBuilder
@@ -210,7 +207,7 @@ public class LocalExecutor
         List<Future<ProcessResult>> futures = new ArrayList<>();
         List<ProcessResult> joined = new ArrayList<>();
         try {
-            log.info("Start bulk processing");
+            log.info("Running {} tasks using {} local threads", processorCount, maxThreads);
             showProgress(processorCount);
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));

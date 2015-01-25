@@ -79,7 +79,7 @@ public class Runner
         ExecuteResult result = local.run(exec, config);
         NextConfig nextConfig = result.getNextConfig();
 
-        exec.getLogger(Runner.class).info(String.format("next config: %s", nextConfig.toString()));
+        exec.getLogger(Runner.class).info("next config: {}", nextConfig.toString());
         writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
     }
 

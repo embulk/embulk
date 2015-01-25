@@ -135,7 +135,7 @@ public class S3FileInputPlugin
         for (String prefix : task.getPathPrefixes()) {
             String formatted = formatPath(prefix);
             try {
-                log.info("Listing S3 files with prefix '%s'", formatted);
+                log.info("Listing S3 files with prefix '{}'", formatted);
                 builder.addAll(listS3FilesByPrefix(client, bucketName, formatted));
             } catch (RuntimeException e) {
                 throw new RuntimeException(String.format("Failed get a list of S3 files at '%s'", formatted), e);
