@@ -240,10 +240,7 @@ public class LocalExecutor
     {
         int running = runningTaskCount.get();
         int done = completedTaskCount.get();
-        int pending = total - done - running;
-
-        log.info(" pending  running     done /    total");
-        log.info(String.format("%8d %8d %8d / %8d", pending, running, done, total));
+        log.info(String.format("{done:%3d / %d, running: %d}", done, total, running));
     }
 
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)
