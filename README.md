@@ -16,7 +16,7 @@ java -jar embulk.jar --help
 Let's load a CSV file, for example. `embulk bundle` subcommand generates a CSV file for you.
 
 ```
-java -jar embulk.jar bundle ./mydata   # create a new bundle directory
+java -jar embulk.jar bundle ./mydata
 java -jar embulk.jar guess  ./mydata/examples/csv-stdout.yml -o example.yml
 java -jar embulk.jar preview example.yml
 java -jar embulk.jar run     example.yml
@@ -36,15 +36,17 @@ You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/
 
 ### Using plugin bundle
 
-`embulk bundle` subcommand generates some example plugins at $bundle/embulk/\*.rb directory.
+`embulk bundle` subcommand creates (or updates if already exists) a bundle directory.
+You can use the bundle with `-b <bundle_dir>` option
+
+It also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
+See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
 sed -i .orig s/stdout/example/ ./mydata/examples/csv-stdout.yml
 java -jar embulk.jar guess  -b ./mydata ./mydata/examples/csv-stdout.yml -o example.yml
 java -jar embulk.jar run    -b ./mydata example.yml
 ```
-
-See generated ./mydata/Gemfile how to create and use plugin bundles.
 
 ### Releasing plugins to RubyGems
 
