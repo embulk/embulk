@@ -6,6 +6,6 @@ target
 tmp/
 vendor/
 classpath/
-.bundle
+/.bundle
 .yardoc
 /embulk-*.jar
