@@ -1,12 +1,23 @@
 source 'https://rubygems.org/'
 
-# TODO
-#gem 'embulk', '~> 0.1.0'
-gem 'embulk', path: '/Users/frsyuki/project/embulk/'
+# Plugin bundle:
+#
+# You can write plugin versions here to load them when you run embulk.
+# To use those plugins,
+#
+# 1. modify this Gemfile. Examples are at the end of this file.
+# 2. update Gemfile.lock using: embulk bundle -b <this dir>
+# 3. run embulk with -b option: embulk run -b <this dir> ...
+#
+# Alternatively, you can put a single-file ruby sciprt to <this dir>/embulk
+# directory. See <this dir>/embulk/* files for example.
+#
 
-# plugins
+# Plugins
+#
 #gem 'embulk-input-xyz'
 #gem 'embulk-output-xyz', '~> 0.1.0'
 #gem 'embulk-parser-xyz', '= 0.2.0'
 #gem 'embulk-formatter-xyz', '>= 0.3.0'
+#
 

@@ -127,11 +127,12 @@ module Embulk
             FileUtils.cp_r tmpl, path
           end
 
-          # create bin/embulk
-          bin_embulk_path = File.join(path, 'bin', 'embulk')
-          FileUtils.mkdir_p File.dirname(bin_embulk_path)
-          require 'embulk/command/embulk_generate_bin'  # defines Embulk.generate_bin
-          File.open(bin_embulk_path, 'wb', 0755) {|f| f.write Embulk.generate_bin(bundle_path: :here) }
+          ## TODO this is disabled for now. enable this if you want to use
+          ## create bin/embulk
+          #bin_embulk_path = File.join(path, 'bin', 'embulk')
+          #FileUtils.mkdir_p File.dirname(bin_embulk_path)
+          #require 'embulk/command/embulk_generate_bin'  # defines Embulk.generate_bin
+          #File.open(bin_embulk_path, 'wb', 0755) {|f| f.write Embulk.generate_bin(bundle_path: :here) }
 
           # install bundler
           setup_gem_paths(path)
