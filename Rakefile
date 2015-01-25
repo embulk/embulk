@@ -42,7 +42,7 @@ exit 127
 EOF
   data = header.force_encoding('ASCII-8BIT') + executable_data
   path = "embulk-#{Embulk::VERSION}.jar"
-  rm path
+  rm_f path
   File.open(path, 'wb', 0755) {|f| f.write data }
   puts "Created #{path}"
 end
