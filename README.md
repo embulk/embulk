@@ -1,4 +1,4 @@
-# Embulk: plugin-based bulk data loader
+# Embulk: plugin-based parallel bulk data loader
 
 ## What's Embulk?
 

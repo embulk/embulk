@@ -37,10 +37,10 @@ public class PagePrinter
     {
         StringBuilder sb = new StringBuilder();
         for (Column c : schema.getColumns()) {
-            sb.append(printColumn(reader, c));
             if (c.getIndex() != 0) {
                 sb.append(delimiter);
             }
+            sb.append(printColumn(reader, c));
         }
         return sb.toString();
     }

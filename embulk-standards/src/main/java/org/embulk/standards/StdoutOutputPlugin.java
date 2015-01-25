@@ -30,7 +30,6 @@ public class StdoutOutputPlugin
             OutputPlugin.Control control)
     {
         final PluginTask task = config.loadConfig(PluginTask.class);
-
         control.run(task.dump());
         return Exec.newNextConfig();
     }
