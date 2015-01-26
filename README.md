@@ -63,9 +63,6 @@ embulk-plugin-xyz
 
 ```
 rake  # creates embulk-VERSION.jar
-java -jar embulk-0.x.y.jar guess ./lib/embulk/data/bundle/examples/mydata-csv-stdout.yml > config.yml
-java -jar embulk-0.x.y.jar preview config.yml
-java -jar embulk-0.x.y.jar run config.yml
 ```
 
 You can see JaCoCo's test coverage report at ${project}/target/site/jacoco/index.html
