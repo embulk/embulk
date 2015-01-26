@@ -19,25 +19,25 @@ import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 public class ExecSession
 {
     private final Injector injector;
-    private final ConfigSource execConfig;
     private final ILoggerFactory loggerFactory;
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
-
-    private final Timestamp sessionCreatedTime;
+    private final Timestamp transactionTime;
+    private final DateTimeZone transactionTimeZone;
 
     public ExecSession(Injector injector, ConfigSource execConfig)
     {
         super();
         this.injector = injector;
-        this.execConfig = execConfig;
         this.loggerFactory = injector.getInstance(ILoggerFactory.class);
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
-        this.sessionCreatedTime = Timestamp.ofEpochMilli(System.currentTimeMillis());
+        this.transactionTime = execConfig.get(Timestamp.class, "transaction_time",
+                Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
+        this.transactionTimeZone = execConfig.get(DateTimeZone.class, "transaction_time_zone", DateTimeZone.UTC);
     }
 
     public Injector getInjector()
@@ -47,12 +47,12 @@ public class ExecSession
 
     public Timestamp getTransactionTime()
     {
-        return execConfig.get(Timestamp.class, "transaction_time", sessionCreatedTime);
+        return transactionTime;
     }
 
     public DateTimeZone getTransactionTimeZone()
     {
-        return execConfig.get(DateTimeZone.class, "transaction_time_zone", DateTimeZone.UTC);
+        return transactionTimeZone;
     }
 
     public Logger getLogger(String name)
