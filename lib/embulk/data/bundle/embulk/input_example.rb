@@ -1,13 +1,14 @@
 module Embulk
 
   class InputExample < InputPlugin
+    # input plugin file name must be: embulk/output_<name>.rb
     Plugin.register_input('example', self)
 
     def self.transaction(config, &control)
       task = {
-        'message' => config.prop('message', :string, default: nil)
+        'message' => config.param('message', :string, default: nil)
       }
-      threads = config.prop('threads', :int, default: 2)
+      threads = config.param('threads', :integer, default: 2)
 
       columns = [
         Column.new(0, 'col0', :long),

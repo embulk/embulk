@@ -5,11 +5,11 @@ module Embulk
 
     class TimeParserHelper
       #include Java::JRubyTimeParserHelper
-      include org.embulk.time.JRubyTimeParserHelper
+      include org.embulk.spi.time.JRubyTimeParserHelper
 
       class Factory
         #include Java::JRubyTimeParserHelperFactory
-        include org.embulk.time.JRubyTimeParserHelperFactory
+        include org.embulk.spi.time.JRubyTimeParserHelperFactory
 
         def newInstance(format_string, year, mon, day, hour, min, sec, usec)
           default_time = Time.utc(year, mon, day, hour, min, sec, usec)

@@ -9,12 +9,12 @@ import com.google.inject.Scopes;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import org.embulk.time.DateTimeZoneSerDe;
-import org.embulk.time.TimestampSerDe;
 import org.embulk.config.ModelManager;
+import org.embulk.spi.time.DateTimeZoneSerDe;
+import org.embulk.spi.time.TimestampSerDe;
 import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.CharsetSerDe;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.util.CharsetSerDe;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class ExecModule

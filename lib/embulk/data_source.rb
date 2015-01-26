@@ -2,12 +2,12 @@ module Embulk
   require 'json'
 
   class DataSource < Hash
-    def prop(key, type, options={})
+    def param(key, type, options={})
       if self.has_key?(key)
         v = self[key]
         value =
           case type
-          when :int
+          when :integer
             Integer(v)
           when :float
             Float(v)

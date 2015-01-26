@@ -20,14 +20,13 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
-import org.embulk.type.Schema;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
-//import org.embulk.spi.NoticeLogger;
 import org.embulk.spi.TransactionalPageOutput;
 import org.slf4j.Logger;
 
@@ -35,6 +34,7 @@ public class LocalExecutor
 {
     private final Injector injector;
     private final ConfigSource systemConfig;
+    private final int maxThreads;
     private final ExecutorService executor;
 
     private Logger log;
@@ -63,11 +63,15 @@ public class LocalExecutor
     {
         this.injector = injector;
         this.systemConfig = systemConfig;
-        this.executor = Executors.newCachedThreadPool(
+
+        int defaultMaxThreads = Runtime.getRuntime().availableProcessors() * 2;
+        this.maxThreads = systemConfig.get(Integer.class, "max_threads", defaultMaxThreads);
+        this.executor = Executors.newFixedThreadPool(maxThreads,
                 new ThreadFactoryBuilder()
-                .setNameFormat("embulk-executor-%d")
-                .setDaemon(true)
-                .build());
+                        .setNameFormat("embulk-executor-%d")
+                        .setDaemon(true)
+                        .build());
+
         this.runningTaskCount = new AtomicInteger(0);
         this.completedTaskCount = new AtomicInteger(0);
     }
@@ -76,8 +80,6 @@ public class LocalExecutor
     {
         private NextConfig inputNextConfig;
         private NextConfig outputNextConfig;
-        //private List<NoticeLogger.Message> noticeMessages;
-        //private List<NoticeLogger.SkippedRecord> skippedRecords;
 
         public void setInputNextConfig(NextConfig inputNextConfig)
         {
@@ -99,25 +101,6 @@ public class LocalExecutor
             return outputNextConfig;
         }
 
-        //public void setNoticeMessages(List<NoticeLogger.Message> noticeMessages)
-        //{
-        //    this.noticeMessages = noticeMessages;
-        //}
-
-        //public void setSkippedRecords(List<NoticeLogger.SkippedRecord> skippedRecords)
-        //{
-        //    this.skippedRecords = skippedRecords;
-        //}
-
-        //public List<NoticeLogger.Message> getNoticeMessages()
-        //{
-        //    return noticeMessages;
-        //}
-
-        //public List<NoticeLogger.SkippedRecord> getSkippedRecords()
-        //{
-        //    return skippedRecords;
-        //}
         public ExecuteResult build()
         {
             if (inputNextConfig == null) {
@@ -205,9 +188,6 @@ public class LocalExecutor
                         for (ProcessResult result : results) {
                             inputCommitReports.add(result.getInputCommitReport());
                             outputCommitReports.add(result.getOutputCommitReport());
-                            // TODO
-                            //execResult.addNoticeMessages(procResult.getNoticeMessages());
-                            //execResult.addSkippedRecords(procResult.getSkippedRecords());
                         }
 
                         return outputCommitReports.build();
@@ -227,7 +207,7 @@ public class LocalExecutor
         List<Future<ProcessResult>> futures = new ArrayList<>();
         List<ProcessResult> joined = new ArrayList<>();
         try {
-            log.info("Start bulk processing");
+            log.info("Running {} tasks using {} local threads", processorCount, maxThreads);
             showProgress(processorCount);
             for (int i=0; i < processorCount; i++) {
                 futures.add(startProcessor(taskSource, schema, i));
@@ -257,10 +237,7 @@ public class LocalExecutor
     {
         int running = runningTaskCount.get();
         int done = completedTaskCount.get();
-        int pending = total - done - running;
-
-        log.info(" pending  running     done /    total");
-        log.info(String.format("%8d %8d %8d / %8d", pending, running, done, total));
+        log.info(String.format("{done:%3d / %d, running: %d}", done, total, running));
     }
 
     private Future<ProcessResult> startProcessor(final TaskSource taskSource, final Schema schema, final int index)

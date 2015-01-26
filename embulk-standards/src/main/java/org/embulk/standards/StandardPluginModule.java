@@ -33,6 +33,7 @@ public class StandardPluginModule
         // output plugins
         registerPluginTo(binder, OutputPlugin.class, "file", LocalFileOutputPlugin.class);
         registerPluginTo(binder, OutputPlugin.class, "null", NullOutputPlugin.class);
+        registerPluginTo(binder, OutputPlugin.class, "stdout", StdoutOutputPlugin.class);
 
         // formatter plugins
         registerPluginTo(binder, FormatterPlugin.class, "csv", CsvFormatterPlugin.class);

@@ -30,11 +30,29 @@ task :compile do
   cp targets, "classpath"
 end
 
-desc "Run clean, compile and build"
+desc "Create embulk-{version}.jar"
+task :jar do
+  require_relative 'lib/embulk/version'
+  executable = Dir["embulk-cli/target/embulk-cli-*-executable.jar"].sort.last
+  executable_data = File.read(executable).force_encoding('ASCII-8BIT')
+  header = <<EOF
+#!/bin/sh
+exec java -jar "$0" "$@"
+exit 127
+EOF
+  data = header.force_encoding('ASCII-8BIT') + executable_data
+  path = "embulk-#{Embulk::VERSION}.jar"
+  rm_f path
+  File.open(path, 'wb', 0755) {|f| f.write data }
+  puts "Created #{path}"
+end
+
+desc "Run clean, compile, build and jar"
 task :all do
   Rake::Task["clean"].invoke
   Rake::Task["compile"].invoke
   Rake::Task["build"].invoke
+  Rake::Task["jar"].invoke
 end
 
 task :default => :all

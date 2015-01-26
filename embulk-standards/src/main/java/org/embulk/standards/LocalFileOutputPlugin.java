@@ -17,6 +17,7 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
 import org.embulk.spi.Exec;
+import org.slf4j.Logger;
 
 public class LocalFileOutputPlugin
         implements FileOutputPlugin
@@ -37,6 +38,8 @@ public class LocalFileOutputPlugin
         //@Config("compress_type")
         //public String getCompressType();
     }
+
+    private final Logger log = Exec.getLogger(getClass());
 
     @Override
     public NextConfig transaction(ConfigSource config, int processorCount,
@@ -70,7 +73,7 @@ public class LocalFileOutputPlugin
             {
                 closeFile();
                 String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
-                System.out.println("path: "+path);  // TODO use Exec.getLogger()
+                log.info("Writing local file '{}'", path);
                 fileNames.add(path);
                 try {
                     output = new FileOutputStream(new File(path));
@@ -83,7 +86,6 @@ public class LocalFileOutputPlugin
             private void closeFile()
             {
                 if (output != null) {
-                    System.out.println("file written");
                     try {
                         output.close();
                     } catch (IOException ex) {

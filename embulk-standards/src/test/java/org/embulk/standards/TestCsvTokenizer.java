@@ -14,14 +14,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileInput;
-import org.embulk.spi.ListFileInput;
-import org.embulk.config.ConfigSource;
-import org.embulk.type.Column;
-import org.embulk.type.Schema;
+import org.embulk.spi.Column;
+import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
-import org.embulk.spi.LineDecoder;
+import org.embulk.spi.util.LineDecoder;
+import org.embulk.spi.util.ListFileInput;
 
 public class TestCsvTokenizer
 {

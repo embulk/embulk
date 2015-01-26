@@ -1,11 +1,12 @@
 module Embulk
 
   class OutputExample < OutputPlugin
+    # output plugin file name must be: embulk/output_<name>.rb
     Plugin.register_output('example', self)
 
     def self.transaction(config, schema, processor_count, &control)
       task = {
-        'message' => config.prop('message', :string, default: "record")
+        'message' => config.param('message', :string, default: "record")
       }
 
       puts "Example output started."
@@ -18,7 +19,7 @@ module Embulk
     def initialize(task, schema, index)
       puts "Example output thread #{index}..."
       super
-      @message = task.prop('message', :string)
+      @message = task.param('message', :string)
       @records = 0
     end
 

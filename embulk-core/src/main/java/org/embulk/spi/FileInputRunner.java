@@ -10,7 +10,7 @@ import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
-import org.embulk.type.Schema;
+import org.embulk.spi.util.Decoders;
 
 public class FileInputRunner
         implements InputPlugin

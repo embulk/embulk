@@ -3,6 +3,9 @@ package org.embulk.standards;
 import java.util.List;
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -16,7 +19,6 @@ import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
 import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -26,8 +28,11 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
+import org.slf4j.Logger;
+
+import static org.embulk.spi.util.Inputs.formatPath;
 
 public class S3FileInputPlugin
         implements FileInputPlugin
@@ -60,6 +65,8 @@ public class S3FileInputPlugin
         @JacksonInject
         public BufferAllocator getBufferAllocator();
     }
+
+    private final Logger log = Exec.getLogger(getClass());
 
     @Override
     public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
@@ -126,8 +133,13 @@ public class S3FileInputPlugin
 
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
-            // TODO format path using timestamp
-            builder.addAll(listS3FilesByPrefix(client, bucketName, prefix));
+            String formatted = formatPath(prefix);
+            try {
+                log.info("Listing S3 files with prefix '{}'", formatted);
+                builder.addAll(listS3FilesByPrefix(client, bucketName, formatted));
+            } catch (RuntimeException e) {
+                throw new RuntimeException(String.format("Failed get a list of S3 files at '%s'", formatted), e);
+            }
         }
 
         return builder.build();
@@ -140,6 +152,7 @@ public class S3FileInputPlugin
      */
     public static List<String> listS3FilesByPrefix(AmazonS3Client client, String bucketName, String prefix)
     {
+        // TODO implement retrying
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         String lastKey = null;

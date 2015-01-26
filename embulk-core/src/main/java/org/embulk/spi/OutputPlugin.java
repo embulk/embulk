@@ -5,7 +5,6 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.NextConfig;
 import org.embulk.config.CommitReport;
-import org.embulk.type.Schema;
 
 public interface OutputPlugin
 {

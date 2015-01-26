@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
 import java.util.Iterator;
-import org.embulk.spi.LineDecoder;
+import org.embulk.spi.util.LineDecoder;
 
 public class CsvTokenizer
 {

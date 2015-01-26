@@ -23,8 +23,11 @@ import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.InputStreamFileInput;
 import org.embulk.spi.TransactionalFileInput;
+import org.embulk.spi.util.InputStreamFileInput;
+import org.slf4j.Logger;
+
+import static org.embulk.spi.util.Inputs.formatPath;
 
 public class LocalFileInputPlugin
         implements FileInputPlugin
@@ -43,17 +46,15 @@ public class LocalFileInputPlugin
         public BufferAllocator getBufferAllocator();
     }
 
+    private final Logger log = Exec.getLogger(getClass());
+
     @Override
     public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
-        try {
-            task.setFiles(listFiles(task));
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);  // TODO exception class
-        }
+        task.setFiles(listFiles(task));
 
         // run with threads. number of processors is same with number of files
         control.run(task.dump(), task.getFiles().size());
@@ -61,19 +62,24 @@ public class LocalFileInputPlugin
         return Exec.newNextConfig();
     }
 
-    public List<String> listFiles(PluginTask task) throws IOException
+    public List<String> listFiles(PluginTask task)
     {
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         for (String prefix : task.getPathPrefixes()) {
-            // TODO format path using timestamp
-            Files.walkFileTree(Paths.get(prefix), new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
-                {
-                    builder.add(file.toString());
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+            String formatted = formatPath(prefix);
+            try {
+                log.info("Listing local files with prefix '{}'", formatted);
+                Files.walkFileTree(Paths.get(formatted), new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
+                    {
+                        builder.add(file.toString());
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            } catch (IOException ex) {
+                throw new RuntimeException(String.format("Failed get a list of local files at '%s'", formatted), ex);
+            }
         }
         return builder.build();
     }

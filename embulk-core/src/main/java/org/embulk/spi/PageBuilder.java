@@ -7,16 +7,11 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Collections;
-
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
-
-import org.embulk.time.Timestamp;
-import org.embulk.type.Schema;
-import org.embulk.type.Column;
+import org.embulk.spi.time.Timestamp;
 
 public class PageBuilder
         implements AutoCloseable
