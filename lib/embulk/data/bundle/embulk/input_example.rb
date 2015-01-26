@@ -8,7 +8,7 @@ module Embulk
       task = {
         'message' => config.param('message', :string, default: nil)
       }
-      threads = config.param('threads', :int, default: 2)
+      threads = config.param('threads', :integer, default: 2)
 
       columns = [
         Column.new(0, 'col0', :long),

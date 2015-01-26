@@ -7,7 +7,7 @@ module Embulk
         v = self[key]
         value =
           case type
-          when :int
+          when :integer
             Integer(v)
           when :float
             Float(v)
