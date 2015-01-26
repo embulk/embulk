@@ -16,6 +16,7 @@ if bundle_path
   ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(bundle_path, "Gemfile")
   require 'bundler'
   Bundler.load.setup_environment
+  require 'bundler/setup'
   # since here, `require` may load files of different (newer) embulk versions
   # especially following 'embulk/command/embulk_run'.
 
