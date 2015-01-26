@@ -62,10 +62,10 @@ embulk-plugin-xyz
 ### Build
 
 ```
-rake
-java -jar embulk.jar guess ./lib/embulk/data/bundle/examples/csv-stdout.yml > config.yml
-java -jar embulk.jar preview config.yml
-java -jar embulk.jar run config.yml
+rake  # creates embulk-VERSION.jar
+java -jar embulk-0.x.y.jar guess ./lib/embulk/data/bundle/examples/csv-stdout.yml > config.yml
+java -jar embulk-0.x.y.jar preview config.yml
+java -jar embulk-0.x.y.jar run config.yml
 ```
 
 You can see JaCoCo's test coverage report at ${project}/target/site/jacoco/index.html
