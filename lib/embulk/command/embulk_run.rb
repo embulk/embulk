@@ -80,6 +80,9 @@ module Embulk
       Gem::GemRunner.new.run argv
       exit 0
 
+    when :example
+      args = 0..1
+
     when :exec
       exec *argv
       exit 127
@@ -115,7 +118,7 @@ module Embulk
           if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
             # data is in embulk-core jar
             resource_class = org.embulk.command.Runner.java_class
-            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/mydata-csv-stdout.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
+            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
               url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
               dst = File.join(path, file)
               FileUtils.mkdir_p File.dirname(dst)
@@ -159,6 +162,19 @@ module Embulk
           Bundler::CLI.start(%w[install], debug: true)
         end
       end
+
+    when :example
+      require_relative 'embulk_example'
+      path = ARGV[0] || "embulk-example"
+      puts "Creating #{path} directory..."
+      Embulk.create_example(path)
+      puts ""
+      puts "Run following subcommands to try embulk:"
+      puts ""
+      puts "   1. guess #{File.join(path, 'example.yml')} -o config.yml"
+      puts "   2. preview config.yml"
+      puts "   3. run config.yml"
+      puts ""
 
     else
       require 'json'
@@ -215,6 +231,7 @@ module Embulk
     STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
     STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
+    STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"

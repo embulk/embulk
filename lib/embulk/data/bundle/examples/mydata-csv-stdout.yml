@@ -1,6 +1,0 @@
-in:
-  type: file
-  paths:
-    - mydata/examples/sample.csv.gz
-out:
-  type: stdout

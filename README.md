@@ -13,13 +13,13 @@ wget https://github.com/embulk/embulk/releases .... /latest
 java -jar embulk.jar --help
 ```
 
-Let's load a CSV file, for example. `embulk bundle` subcommand generates an example CSV file and config file for you.
+Let's load a CSV file, for example. `embulk example` subcommand generates a csv file and config file for you.
 
 ```
-java -jar embulk.jar bundle ./mydata
-java -jar embulk.jar guess  ./mydata/examples/mydata-csv-stdout.yml -o example.yml
-java -jar embulk.jar preview example.yml
-java -jar embulk.jar run     example.yml
+java -jar embulk.jar example ./try1
+java -jar embulk.jar guess   ./try1/example.yml -o config.yml
+java -jar embulk.jar preview config.yml
+java -jar embulk.jar run     config.yml
 ```
 
 ### Using plugins
@@ -44,9 +44,9 @@ You can use the bundle using `-b <bundle_dir>` option
 See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
-sed -i .orig s/stdout/example/ ./mydata/examples/mydata-csv-stdout.yml
-java -jar embulk.jar guess  -b ./mydata ./mydata/examples/mydata-csv-stdout.yml -o example.yml
-java -jar embulk.jar run    -b ./mydata example.yml
+java -jar embulk.jar bundle ./embulk_bundle
+java -jar embulk.jar guess  -b ./embulk_bundle ...
+java -jar embulk.jar run    -b ./embulk_bundle ...
 ```
 
 ### Releasing plugins to RubyGems
