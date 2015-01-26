@@ -115,7 +115,7 @@ module Embulk
           if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
             # data is in embulk-core jar
             resource_class = org.embulk.command.Runner.java_class
-            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/csv-stdout.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
+            %w[.bundle/config embulk/input_example.rb embulk/output_example.rb examples/mydata-csv-stdout.yml examples/sample.csv.gz Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
               url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
               dst = File.join(path, file)
               FileUtils.mkdir_p File.dirname(dst)
