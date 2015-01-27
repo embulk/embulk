@@ -1,3 +1,5 @@
+// TODO this build.gradle file just works but not well-written yet...
+
 //plugins {
 //    id "com.jfrog.bintray" version "1.0"
 //}
@@ -26,8 +28,11 @@ allprojects {
     // to upload artifacts to Bintray by gradle-bintray-plugin
     // $ gradle bintrayUpload
     bintray {
-        user = "$bintray_user"    // configure at your ~/.gradle/gradle.properties
-        key = "$bintray_api_key"  // configure at your ~/.gradle/gradle.properties
+        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
+        // bintray_user=frsyuki
+        // bintray_api_key=xxxxxxxxxxx
+        user = hasProperty('bintray_user') ? bintray_user : ''
+        key = hasProperty('bintray_api_key') ? bintray_api_key : ''
 
         publications = ['mavenJava']
 
@@ -48,6 +53,7 @@ allprojects {
 
             version {
                 name = project.version
+                // TODO
                 //mavenCentralSync {
                 //    sync = true
                 //    user = 'userToken'
@@ -133,11 +139,7 @@ subprojects {
                 artifactId project.name
                 version project.version
 
-                if (plugins.hasPlugin('war')) {
-                    from components.web
-                } else {
-                    from components.java
-                }
+                from components.java
 
                 artifact sourcesJar
                 artifact javadocJar
