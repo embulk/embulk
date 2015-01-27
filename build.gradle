@@ -1,37 +1,44 @@
+//plugins {
+//    id "com.jfrog.bintray" version "1.0"
+//}
 buildscript {
     repositories {
-        mavenCentral()
         jcenter()
     }
-
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
     }
 }
 
-def globalGroup = 'org.embulk'
-def globalVersion = '0.1.0-SNAPSHOT'
-
 allprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
 
-    group = globalGroup
-    version = globalVersion
+    group = 'org.embulk'
+    version = '0.1.0'
 
     // to upload artifacts to Bintray by gradle-bintray-plugin
     // $ gradle bintrayUpload
     bintray {
-        user = project.property 'bintrayUser' // declared in .gradle/gradle.properties
-        key = project.property 'bintrayApiKey' // declared in .gradle/gradle.properties
+        user = "$bintray_user"    // configure at your ~/.gradle/gradle.properties
+        key = "$bintray_api_key"  // configure at your ~/.gradle/gradle.properties
 
         publications = ['mavenJava']
 
         dryRun = false
-        publish = true
+        publish = false  // TODO publish = project.publish
+
         pkg {
+            userOrg = 'embulk'
             repo = 'maven'
-            name = 'embulk-package'
-            desc = 'Embulk\'s Package'
+            name = 'embulk'
+            desc = 'Embulk, a plugin-based bulk data loader'
             websiteUrl = 'https://github.com/embulk'
             issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
             vcsUrl = 'https://github.com/embulk/embulk.git'
@@ -41,8 +48,6 @@ allprojects {
 
             version {
                 name = project.version
-                desc = "TODO description"
-
                 //mavenCentralSync {
                 //    sync = true
                 //    user = 'userToken'
@@ -55,11 +60,6 @@ allprojects {
 }
 
 subprojects {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-
     apply plugin: 'java'
 
     // to install jar files to the local repo
@@ -123,6 +123,25 @@ subprojects {
         from configurations.runtime.filter {
             //  TODO avoid bytecode compatibility error
             it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version project.version
+
+                if (plugins.hasPlugin('war')) {
+                    from components.web
+                } else {
+                    from components.java
+                }
+
+                artifact sourcesJar
+                artifact javadocJar
+            }
         }
     }
 }
