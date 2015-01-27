@@ -33,21 +33,25 @@ module Embulk
       record_writer_script = "lambda do |builder,record|\n"
       record_writer_script << "java_timestamp_class = ::Embulk::Java::Timestamp\n"
       each do |column|
-        column_script =
+        idx = column.index
+        column_script = "if record[#{idx}].nil?\n" <<
+          "builder.setNull(#{idx})\n" <<
+          "else\n" <<
           case column.type
           when :boolean
-            "builder.setBoolean(#{column.index}, record[#{column.index}])"
+            "builder.setBoolean(#{idx}, record[#{idx}])"
           when :long
-            "builder.setLong(#{column.index}, record[#{column.index}])"
+            "builder.setLong(#{idx}, record[#{idx}])"
           when :double
-            "builder.setDouble(#{column.index}, record[#{column.index}])"
+            "builder.setDouble(#{idx}, record[#{idx}])"
           when :string
-            "builder.setString(#{column.index}, record[#{column.index}])"
+            "builder.setString(#{idx}, record[#{idx}])"
           when :timestamp
-            "builder.setTimestamp(#{column.index}, java_timestamp_class.fromRubyTime(record[#{column.index}]))"
+            "builder.setTimestamp(#{idx}, java_timestamp_class.fromRubyTime(record[#{idx}]))"
           else
             raise "Unknown type #{column.type.inspect}"
-          end
+          end <<
+          "end\n"
         record_writer_script << column_script << "\n"
       end
       record_writer_script << "builder.addRecord\n"
