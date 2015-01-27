@@ -37,20 +37,16 @@ unless java_cmd
   end
 end
 
-embulk_home = ENV['EMBULK_HOME']
-unless embulk_home
-  embulk_home = File.dirname(File.dirname(__FILE__))
-end
-ENV['EMBULK_HOME'] = File.expand_path(embulk_home)
-
+embulk_home = File.dirname(File.dirname(__FILE__))
 classpath_dir = File.join(embulk_home, 'classpath')
 lib_dir = File.join(embulk_home, 'lib')
 
-jruby_complete = Dir.entries(classpath_dir).find {|jar| jar =~ /jruby-complete-[\d\.]+\.jar/ }
+jruby_complete = Dir.entries(classpath_dir).find {|jar| jar =~ /jruby-complete-[\d\.]+\.jar/ } rescue nil
 unless jruby_complete
-  STDERR.puts "Could not find jruby-complete at $EMBULK_HOME/classpath directory."
-  STDERR.puts "Please confirm EMBULK_HOME is correctly set"
-  STDERR.puts "Current EMBULK_HOME = #{ENV['EMBULK_HOME'].to_s.dump}"
+  STDERR.puts "Could not find jruby-complete at #{embulk_home}/classpath directory."
+  if embulk_home == '.'
+    STDERR.puts "Did you run \`rake\`? You need to build java code and create ./classpath directory first."
+  end
   raise SystemExit.new(1)
 end
 
