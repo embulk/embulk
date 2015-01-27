@@ -13,6 +13,7 @@ import org.embulk.config.ConfigSource;
  *
  * An example extention to add a custom PluginSource will be as following:
  *
+ * <code>
  * class MyPluginSourceExtension
  *         implements Extension, Module
  * {
@@ -22,19 +23,20 @@ import org.embulk.config.ConfigSource;
  *         // ...
  *     }
  *
- *     @Override
+ *     {@literal @}Override
  *     public void configure(Binder binder)
  *     {
- *         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
+ *         Multibinder&lt;PluginSource&gt; multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
  *         multibinder.addBinding().to(MyPluginSource.class);
  *     }
  *
- *     @Override
- *     public List<Module> getModules()
+ *     {@literal @}Override
+ *     public List&lt;Module&gt; getModules()
  *     {
- *         return ImmutableList.<Module>of(this);
+ *         return ImmutableList.&lt;Module&gt;of(this);
  *     }
  * }
+ * </code>
  */
 public interface Extension
 {
