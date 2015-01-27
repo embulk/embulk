@@ -9,3 +9,4 @@ classpath/
 /.bundle
 .yardoc
 /embulk-*.jar
+/.gradle

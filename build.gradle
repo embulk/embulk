@@ -21,8 +21,8 @@ allprojects {
     // to upload artifacts to Bintray by gradle-bintray-plugin
     // $ gradle bintrayUpload
     bintray {
-        user = project.property 'bintrayEmbulkUser' // declared in .gradle/gradle.properties
-	key = project.property 'bintrayEmbulkApiKey' // declared in .gradle/gradle.properties
+        user = project.property 'bintrayUser' // declared in .gradle/gradle.properties
+        key = project.property 'bintrayApiKey' // declared in .gradle/gradle.properties
 
         publications = ['mavenJava']
 
