@@ -11,7 +11,7 @@ TODO
 The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java:
 
 ```
-wget https://bintray.com/artifact/download/embulk/maven/embulk-0.1.0.jar -O embulk.jar
+wget https://bintray.com/artifact/download/embulk/maven/embulk-0.2.0.jar -O embulk.jar
 java -jar embulk.jar --help
 ```
 
