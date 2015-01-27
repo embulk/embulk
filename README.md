@@ -37,14 +37,14 @@ java -jar embulk.jar run     config.yml
 ### Using plugins
 
 You can use plugins to load data from/to various systems and file formats.
-An example is [embulk-output-postgres-json]() plugin. It outputs data into PostgreSQL server using "json" column type.
+An example is [embulk-output-postgres-json](https://github.com/frsyuki/embulk-plugin-postgres-json) plugin. It outputs data into PostgreSQL server using "json" column type.
 
 ```
 java -jar embulk.jar gem install embulk-output-postgres-json
 java -jar embulk.jar gem list
 ```
 
-You can search plugins on RubyGems: [search for "embulk-"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk-).
+You can search plugins on RubyGems: [search for "embulk-plugin"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk-plugin).
 
 ### Using plugin bundle
 
