@@ -31,8 +31,8 @@ allprojects {
         // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
         // bintray_user=frsyuki
         // bintray_api_key=xxxxxxxxxxx
-        user = hasProperty('bintray_user') ? bintray_user : ''
-        key = hasProperty('bintray_api_key') ? bintray_api_key : ''
+        user = project.hasProperty('bintray_user') ? bintray_user : ''
+        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
 
         publications = ['mavenJava']
 
@@ -43,8 +43,8 @@ allprojects {
             userOrg = 'embulk'
             repo = 'maven'
             name = 'embulk'
-            desc = 'Embulk, a plugin-based bulk data loader'
-            websiteUrl = 'https://github.com/embulk'
+            desc = 'Embulk, a plugin-based parallel bulk data loader'
+            websiteUrl = 'https://github.com/embulk/embulk'
             issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
             vcsUrl = 'https://github.com/embulk/embulk.git'
             licenses = ['Apache-2.0']

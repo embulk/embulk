@@ -8,8 +8,8 @@
     <packaging>pom</packaging>
 
     <name>Embulk</name>
-    <url>http://github.com/embulk/embulk</url>
-    <description>Embulk bulk data loader</description>
+    <url>https://github.com/embulk/embulk</url>
+    <description>Embulk, a plugin-based parallel bulk data loader</description>
 
     <licenses>
         <license>
