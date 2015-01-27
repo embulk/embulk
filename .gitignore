@@ -1,11 +1,12 @@
-target
+target/
+build/
 *.iml
 *~
 ._*
 .idea
 tmp/
 vendor/
-classpath/
+/classpath/
 /.bundle
 .yardoc
 /embulk-*.jar
