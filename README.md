@@ -59,6 +59,16 @@ embulk-plugin-xyz
 
 ### Build
 
+First, you need to add you bintray account information:
+**$HOME/.gradle/gradle.properties
+```
+bintray_user=(bintray user name)
+bintray_api_key=(bintray api key)
+```
+See also:
+* [Bintray](https://bintray.com)
+* [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_apikeys.html)
+
 ```
 rake  # creates embulk-VERSION.jar
 ```
