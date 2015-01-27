@@ -4,9 +4,12 @@ A plugin-based parallel bulk data loader that makes painful data integration wor
 
 ## What's Embulk?
 
-Embulk is a plugin-based parallel bulk data loader that helps data transfer across various storages, databases, NoSQL and cloud services.
-You can download input and output plugins to integrate more file formats and storages.
-You also can write plugins to share your efforts of data cleaning, error handling, transaction control, and retrying. Packaging effrots into plugins brings OSS-style development to the data scripts which was tend to be one-time adhoc scripts.
+Embulk is a plugin-based parallel bulk data loader that helps **data transfer** between various **storages**, **databases**, **NoSQL** and **cloud services**.
+
+You can install input and output plugins to integrate many other file formats and storages.
+
+You also can release plugins to share your efforts of data cleaning, error handling, transaction control, and retrying. 
+Packaging effrots into plugins **brings OSS-style development to the data scripts** which **was tend to be one-time adhoc scripts**.
 
 [Embuk, an open-source plugin-based parallel bulk data loader](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed) at Slideshare
 
