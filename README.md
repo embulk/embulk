@@ -115,4 +115,3 @@ See also:
 * [Bintray](https://bintray.com)
 * [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_apikeys.html)
 
-
