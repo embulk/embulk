@@ -81,3 +81,38 @@ The following command allows use to see the dependency tree of embulk-core proje
 ```
 ./gradlew :embulk-core:dependencies
 ```
+
+### Release
+
+You need to add your bintray account information to ~/.gradle/gradle.properties
+
+```
+bintray_user=(bintray user name)
+bintray_api_key=(bintray api key)
+```
+
+Increment version number written at following 3 files (TODO improve this):
+
+* build.gradle
+* pom.xml
+* lib/embulk/version.rb
+
+Then, build and upload using gradle:
+
+```
+./gradlew bintrayUpload
+```
+
+Finally, you need to manually upload the single-file jar package to bintray.
+Run `rake` and upload embulk-VERSION.jar from "Upload Files" link at https://bintray.com/embulk/maven/embulk/VERSION/upload.
+
+```
+rake
+# embulk-VERSION.jar is built
+```
+
+See also:
+* [Bintray](https://bintray.com)
+* [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_apikeys.html)
+
+
