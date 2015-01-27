@@ -4,7 +4,8 @@ A plugin-based parallel bulk data loader that makes painful data integration wor
 
 ## What's Embulk?
 
-TODO
+![Embulk](https://gist.githubusercontent.com/frsyuki/f322a77ee2766a508ba9/raw/e8539b6b4fda1b3357e8c79d3966aa8148dbdbd3/embulk-overview.png)
+
 
 ## Quick Start
 
