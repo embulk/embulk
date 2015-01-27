@@ -1,8 +1,8 @@
-# Embulk: plugin-based parallel bulk data loader
+# Embulk
+
+A plugin-based parallel bulk data loader that makes painful data integration works relaxed.
 
 ## What's Embulk?
-
-Embulk is an plugin-based parallel bulk data loader.
 
 TODO
 
