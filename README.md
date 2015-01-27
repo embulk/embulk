@@ -2,14 +2,16 @@
 
 ## What's Embulk?
 
+Embulk is an plugin-based parallel bulk data loader.
+
 TODO
 
 ## Quick Start
 
-The single-file package is the simplest way to try Embulk. You can download the latest embulk.jar from [releases]() and run it with java:
+The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java:
 
 ```
-wget https://github.com/embulk/embulk/releases .... /latest
+wget https://bintray.com/artifact/download/embulk/maven/embulk-0.1.0.jar -O embulk.jar
 java -jar embulk.jar --help
 ```
 
