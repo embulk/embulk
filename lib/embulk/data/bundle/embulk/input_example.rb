@@ -1,7 +1,7 @@
 module Embulk
 
   class InputExample < InputPlugin
-    # input plugin file name must be: embulk/output_<name>.rb
+    # input plugin file name must be: embulk/input_<name>.rb
     Plugin.register_input('example', self)
 
     def self.transaction(config, &control)
@@ -23,13 +23,17 @@ module Embulk
       return {}
     end
 
-    def self.run(task, schema, index, page_builder)
-      puts "Example input thread #{index}..."
+    def initialize(task, schema, index, page_builder)
+      super
+    end
+
+    def run
+      puts "Example input thread #{@index}..."
 
       10.times do |i|
-        page_builder.add([i, 10.0, "example"])
+        @page_builder.add([i, 10.0, "example"])
       end
-      page_builder.finish  # don't forget to call finish :-)
+      @page_builder.finish  # don't forget to call finish :-)
 
       commit_report = {
       }

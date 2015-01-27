@@ -9,8 +9,15 @@ module Embulk
       raise NotImplementedError, "InputPlugin.transaction(config, &control) must be implemented"
     end
 
-    def self.run(task, schema, index, page_builder)
-      raise NotImplementedError, "InputPlugin#run(task, schema, index, page_builder) must be implemented"
+    def initialize(task, schema, index, page_builder)
+      @task = task
+      @schema = schema
+      @index = index
+      @page_builder = page_builder
+    end
+
+    def run
+      raise NotImplementedError, "InputPlugin#run must be implemented"
     end
 
     if Embulk.java?
@@ -43,7 +50,7 @@ module Embulk
           task_source = DataSource.from_java_object(java_task_source)
           schema = Schema.from_java_object(java_schema)
           page_builder = PageBuilder.new(schema, java_output)
-          commit_report_hash = @ruby_class.run(task_source, schema, processor_index, page_builder)
+          commit_report_hash = @ruby_class.new(task_source, schema, processor_index, page_builder).run
           return DataSource.from_ruby_hash(commit_report_hash).java_object
         end
       end
