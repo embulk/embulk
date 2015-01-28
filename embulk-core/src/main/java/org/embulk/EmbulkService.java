@@ -23,11 +23,11 @@ public class EmbulkService
         modules.add(new ExtensionServiceLoaderModule(systemConfig));
         modules.add(new BuiltinPluginSourceModule());
         modules.add(new JRubyScriptingModule(systemConfig));
-        modules.addAll(getAdditionalModules());
+        modules.addAll(getAdditionalModules(systemConfig));
         injector = Guice.createInjector(modules.build());
     }
 
-    protected Iterable<? extends Module> getAdditionalModules()
+    protected Iterable<? extends Module> getAdditionalModules(ConfigSource systemConfig)
     {
         return ImmutableList.of();
     }
