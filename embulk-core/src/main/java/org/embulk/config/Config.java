@@ -16,5 +16,5 @@ public @interface Config
     /**
      * Description of this configuration parameter
      */
-    String description() default "";
+    String desc() default "";
 }
