@@ -1,5 +1,7 @@
 package org.embulk.spi.type;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public abstract class AbstractType
         implements Type
 {
@@ -32,6 +34,7 @@ public abstract class AbstractType
         return fixedStorageSize;
     }
 
+    @SuppressFBWarnings(value = "EQ_UNUSUAL")
     @Override
     public boolean equals(Object o)
     {

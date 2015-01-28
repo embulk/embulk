@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
-import java.util.Iterator;
 import org.embulk.spi.util.LineDecoder;
 
 public class CsvTokenizer
@@ -71,7 +70,7 @@ public class CsvTokenizer
             quotedValueLines.clear();
         }
         recordState = RecordState.END;
-        return line;
+        return skippedLine;
     }
 
     public boolean nextFile()

@@ -205,11 +205,6 @@ public class CsvParserPlugin
     private static String nextColumn(Schema schema, CsvTokenizer tokenizer, String nullStringOrNull)
     {
         String v = tokenizer.nextColumn();
-        if (v == null) {
-            throw new RuntimeException(String.format("Expected %d columns but line %d has fewer number of columns",
-                        schema.getColumnCount(), tokenizer.getCurrentLineNumber()));
-        }
-
         if (!v.isEmpty()) {
             if (v.equals(nullStringOrNull)) {
                 return null;

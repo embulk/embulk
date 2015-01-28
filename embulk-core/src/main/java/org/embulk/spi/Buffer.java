@@ -2,6 +2,8 @@ package org.embulk.spi;
 
 import java.util.Arrays;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class Buffer
 {
     public static final Buffer EMPTY = Buffer.allocate(0);
@@ -48,6 +50,7 @@ public class Buffer
         return new Buffer(src, offset, size).limit(size);
     }
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP")
     public byte[] array()
     {
         return array;
