@@ -21,7 +21,7 @@ Packaging effrots into plugins **brings OSS-style development to the data script
 The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java:
 
 ```
-wget https://bintray.com/artifact/download/embulk/maven/embulk-0.2.0.jar -O embulk.jar
+wget https://bintray.com/artifact/download/embulk/maven/embulk-0.2.1.jar -O embulk.jar
 java -jar embulk.jar --help
 ```
 

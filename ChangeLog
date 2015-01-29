@@ -1,4 +1,13 @@
 
+2015-01-29 version 0.2.1:
+
+* Fixed LineEncoder#finish to flush all remaining buffer (reported by @aibou)
+* Fixed NextConfig to be merged to in: or out: rather than the top-level
+  (reported by enukane) [#41]
+* ./bin/embulk shows warns to run `rake` if ./classpath doesn't exist
+* Embulk::PageBuilder#add accepts nil
+
+
 2015-01-26 version 0.2.0:
 
 * Changed JRuby InputPlugin API to use #run instead of .run

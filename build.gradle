@@ -23,7 +23,7 @@ allprojects {
     apply plugin: 'com.jfrog.bintray'
 
     group = 'org.embulk'
-    version = '0.2.0'
+    version = '0.2.1'
 
     // to upload artifacts to Bintray by gradle-bintray-plugin
     // $ gradle bintrayUpload
