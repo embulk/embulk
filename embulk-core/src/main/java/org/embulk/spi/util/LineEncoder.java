@@ -92,8 +92,13 @@ public class LineEncoder
 
     public void finish()
     {
-        close();   // flush all remaining buffer in writer
-        outputStream.finish();
+        try {
+            writer.flush();   // flush all remaining buffer in writer because FileOutputOutputStream.close() doesn't flush buffer
+            outputStream.finish();
+            writer.close();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
