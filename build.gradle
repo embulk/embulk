@@ -92,6 +92,7 @@ subprojects {
                 'org.slf4j:slf4j-api:1.7.9',
                 'org.slf4j:slf4j-log4j12:1.7.9',
                 'org.jruby:jruby-complete:1.7.16.1',
+                'com.google.code.findbugs:annotations:3.0.0',
                 'org.yaml:snakeyaml:1.14',
                 'javax.validation:validation-api:1.1.0.Final',
                 'org.apache.bval:bval-jsr303:0.5',
