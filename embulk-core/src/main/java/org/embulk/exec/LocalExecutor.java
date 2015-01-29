@@ -109,7 +109,9 @@ public class LocalExecutor
             if (outputNextConfig == null) {
                 outputNextConfig = Exec.newNextConfig();
             }
-            NextConfig nextConfig = inputNextConfig.deepCopy().merge(outputNextConfig);
+            NextConfig nextConfig = Exec.newNextConfig();
+            nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
+            nextConfig.getNestedOrSetEmpty("out").merge(outputNextConfig);
             return new ExecuteResult(nextConfig);
         }
     }
