@@ -99,7 +99,8 @@ subprojects {
                 'io.airlift:slice:0.7',
                 'joda-time:joda-time:2.3',
                 'io.netty:netty-buffer:4.0.24.Final',
-                'com.ibm.icu:icu4j:53.1'
+                'com.ibm.icu:icu4j:53.1',
+                'com.google.code.findbugs:annotations:3.0.0'
 
         testCompile 'junit:junit:4.10',
                     'org.mockito:mockito-core:1.9.5'
