@@ -257,6 +257,7 @@ public class GuessExecutor
             NextConfig mergedGuessed = Exec.newNextConfig();
             for (int i=0; i < guesses.size(); i++) {
                 NextConfig guessed = guesses.get(i).guess(originalConfig, sample);
+                guessed = addAssumedDecoderConfigs(originalConfig, guessed);
                 mergedGuessed.merge(guessed);
                 mergedConfig.merge(mergedGuessed);
                 if (!mergedConfig.equals(originalConfig)) {
@@ -286,6 +287,24 @@ public class GuessExecutor
                 throw decodeException;
             }
             throw new NoSampleException("No input buffer to guess");
+        }
+
+        private static class ConfigSourceList extends ArrayList<ConfigSource> { };
+
+        private static NextConfig addAssumedDecoderConfigs(ConfigSource originalConfig, NextConfig guessed)
+        {
+            List<ConfigSource> guessedDecoders = guessed.get(ConfigSourceList.class, "decoders", null);
+            if (guessedDecoders == null) {
+                return guessed;
+            } else {
+                List<ConfigSource> assumedDecoders = originalConfig.get(ConfigSourceList.class, "decoders", new ConfigSourceList());
+                ImmutableList.Builder<ConfigSource> added = ImmutableList.builder();
+                for (ConfigSource assuemed : assumedDecoders) {
+                    added.add(Exec.newConfigSource());
+                }
+                added.addAll(guessedDecoders);
+                return guessed.set("decoders", added.build());
+            }
         }
     }
 

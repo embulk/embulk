@@ -170,7 +170,20 @@ public class DataSourceImpl
 
     private static void mergeJsonArray(ArrayNode src, ArrayNode other)
     {
-        src.addAll(other);
+        for (int i=0; i < other.size(); i++) {
+            JsonNode s = src.get(i);
+            JsonNode v = other.get(i);
+            if (s == null) {
+                src.add(v);
+            } else if (v.isObject() && s.isObject()) {
+                mergeJsonObject((ObjectNode) s, (ObjectNode) v);
+            } else if (v.isArray() && s.isArray()) {
+                mergeJsonArray((ArrayNode) s, (ArrayNode) v);
+            } else {
+                src.remove(i);
+                src.insert(i, v);
+            }
+        }
     }
 
     @Override
