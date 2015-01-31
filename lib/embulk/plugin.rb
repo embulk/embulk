@@ -9,12 +9,13 @@ module Embulk
   #require 'embulk/formatter_plugin'
   #require 'embulk/decoder_plugin'
   #require 'embulk/encoder_plugin'
+  #require 'embulk/filter_plugin'
   require 'embulk/guess_plugin'
 
   class PluginManager
     def initialize
       @registries = {}
-      %w[input output parser formatter decoder encoder line_filter guess].each do |category|
+      %w[input output parser formatter decoder encoder line_filter filter guess].each do |category|
         @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}_")
       end
     end
@@ -42,6 +43,10 @@ module Embulk
 
     def register_encoder(type, klass)
       register_plugin(:encoder, type, klass, EncoderPlugin)
+    end
+
+    def register_filter(type, klass)
+      register_plugin(:filter, type, klass, FilterPlugin)
     end
 
     def register_guess(type, klass)
@@ -79,6 +84,11 @@ module Embulk
       lookup(:guess, type)
     end
 
+    def get_filter(type)
+      # TODO not implemented yet
+      lookup(:guess, type)
+    end
+
     def get_guess(type)
       # TODO not implemented yet
       lookup(:guess, type)
@@ -106,6 +116,10 @@ module Embulk
 
     def new_java_encoder(type)
       lookup(:encoder, type).java_object
+    end
+
+    def new_java_filter(type)
+      lookup(:filter, type).java_object
     end
 
     def new_java_guess(type)
@@ -146,6 +160,7 @@ module Embulk
   #      :register_formatter, :new_formatter, :new_java_formatter,
   #      :register_decoder, :new_decoder, :new_java_decoder,
   #      :register_encoder, :new_encoder, :new_java_encoder,
+  #      :register_filter, :new_filter, :new_java_filter
   #      :register_guess, :new_guess, :new_java_guess
   #  end
   #end

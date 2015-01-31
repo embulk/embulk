@@ -47,6 +47,10 @@ public class LocalExecutor
         @Config("in")
         public ConfigSource getInputConfig();
 
+        @Config("filters")
+        @ConfigDefault("[]")
+        public List<ConfigSource> getFilterConfigs();
+
         @Config("out")
         public ConfigSource getOutputConfig();
 
@@ -119,17 +123,24 @@ public class LocalExecutor
     private static class ProcessResult
     {
         private final CommitReport inputCommitReport;
+        private final List<CommitReport> filterCommitReports;
         private final CommitReport outputCommitReport;
 
-        public ProcessResult(CommitReport inputCommitReport, CommitReport outputCommitReport)
+        public ProcessResult(CommitReport inputCommitReport, List<CommitReport> filterCommitReports, CommitReport outputCommitReport)
         {
             this.inputCommitReport = inputCommitReport;
+            this.filterCommitReports = filterCommitReports;
             this.outputCommitReport = outputCommitReport;
         }
 
         public CommitReport getInputCommitReport()
         {
             return inputCommitReport;
+        }
+
+        public CommitReport getFilterCommitReports()
+        {
+            return filterCommitReports;
         }
 
         public CommitReport getOutputCommitReport()
@@ -141,6 +152,11 @@ public class LocalExecutor
     protected InputPlugin newInputPlugin(ExecutorTask task)
     {
         return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
+    }
+
+    protected List<FilterPlugin> newFilterPlugins(RunnerTask task)
+    {
+        return Filters.newFilterPlugins(Exec.session(), task.getFilterConfigs());
     }
 
     protected OutputPlugin newOutputPlugin(ExecutorTask task)
@@ -168,6 +184,7 @@ public class LocalExecutor
         final ExecutorTask task = config.loadConfig(ExecutorTask.class);
 
         final InputPlugin in = newInputPlugin(task);
+        final List<DecoderPlugin> filterPlugins = newFilterPlugins(task);
         final OutputPlugin out = newOutputPlugin(task);
 
         final ExecuteResultBuilder execResult = new ExecuteResultBuilder();
@@ -176,26 +193,34 @@ public class LocalExecutor
             public List<CommitReport> run(final TaskSource inputTask, final Schema schema, final int processorCount)
             {
                 final ImmutableList.Builder<CommitReport> inputCommitReports = ImmutableList.builder();
-                NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), schema, processorCount, new OutputPlugin.Control() {
-                    public List<CommitReport> run(final TaskSource outputTask)
+                Filters.transaction(filterPlugins, task.getFilterConfigs(), schema, new Filters.Control() {
+                    public List<List<CommitReport>> run(List<TaskSource> taskSources, List<Schema> outputSchemas)
                     {
-                        final ImmutableList.Builder<CommitReport> outputCommitReports = ImmutableList.builder();
-                        task.setInputTask(inputTask);
-                        task.setOutputTask(outputTask);
+                        final ImmutableList.Builder<List<CommitReport>> filterCommitReports = ImmutableList.builder();
+                        NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), schema, processorCount, new OutputPlugin.Control() {
+                            public List<CommitReport> run(final TaskSource outputTask)
+                            {
+                                final ImmutableList.Builder<CommitReport> outputCommitReports = ImmutableList.builder();
+                                task.setInputTask(inputTask);
+                                task.setOutputTask(outputTask);
 
-                        //log.debug("input: %s", task.getInputTask());
-                        //log.debug("output: %s", task.getOutputTask());
+                                //log.debug("input: %s", task.getInputTask());
+                                //log.debug("output: %s", task.getOutputTask());
 
-                        List<ProcessResult> results = process(task.dump(), schema, processorCount);
-                        for (ProcessResult result : results) {
-                            inputCommitReports.add(result.getInputCommitReport());
-                            outputCommitReports.add(result.getOutputCommitReport());
-                        }
+                                List<ProcessResult> results = process(task.dump(), schema, processorCount);
+                                for (ProcessResult result : results) {
+                                    inputCommitReports.add(result.getInputCommitReport());
+                                    filterCommitReports.add(result.getFilterCommitReports());
+                                    outputCommitReports.add(result.getOutputCommitReport());
+                                }
 
-                        return outputCommitReports.build();
+                                return outputCommitReports.build();
+                            }
+                        });
+                        execResult.setOutputNextConfig(outputNextConfig);
+                        return filterCommitReports.build();
                     }
                 });
-                execResult.setOutputNextConfig(outputNextConfig);
                 return inputCommitReports.build();
             }
         });
@@ -259,7 +284,7 @@ public class LocalExecutor
                         CommitReport inReport = in.run(task.getInputTask(), schema, index, tran);
                         CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
                         committed = true;
-                        return new ProcessResult(inReport, outReport);
+                        return new ProcessResult(inReport, filtReports, outReport);
                     } finally {
                         if (!committed) {
                             tran.abort();
