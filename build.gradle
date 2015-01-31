@@ -9,6 +9,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.7'
     }
 }
 
@@ -21,6 +22,10 @@ allprojects {
     apply plugin: 'idea'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
+
+    // determine which dependencies have updates
+    // $ gradle dependencyUpdates
+    apply plugin: 'com.github.ben-manes.versions'
 
     group = 'org.embulk'
     version = '0.2.1'
