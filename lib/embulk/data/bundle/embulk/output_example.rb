@@ -30,7 +30,7 @@ module Embulk
       def add(page)
         page.each do |record|
           hash = Hash[schema.names.zip(record)]
-          puts "#{@message}: #{hash.to_json}"
+          STDOUT.write "#{@message}: #{hash.to_json}\n"
           @records += 1
         end
       end
