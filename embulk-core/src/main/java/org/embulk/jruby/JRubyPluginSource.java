@@ -12,7 +12,7 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
-//import org.embulk.spi.LineFilterPlugin;
+import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.GuessPlugin;
 
 public class JRubyPluginSource
@@ -50,8 +50,8 @@ public class JRubyPluginSource
             category = "decoder";
         } else if (EncoderPlugin.class.isAssignableFrom(iface)) {
             category = "encoder";
-        //} else if (LineFilterPlugin.class.isAssignableFrom(iface)) {
-        //    category = "line_filter";
+        } else if (FilterPlugin.class.isAssignableFrom(iface)) {
+            category = "filter";
         } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
         } else {
