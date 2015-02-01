@@ -54,15 +54,16 @@ module Embulk
           out_schema = Schema.from_java_object(java_out_schema)
           page_builder = PageBuilder.new(out_schema, java_output)
           ruby_object = @ruby_class.new(task_source, in_schema, out_schema, page_builder)
-          return OutputAdapter.new(ruby_object, in_schema)
+          return OutputAdapter.new(ruby_object, in_schema, page_builder)
         end
 
         class OutputAdapter
           include Java::TransactionalPageOutput
 
-          def initialize(ruby_object, in_schema)
+          def initialize(ruby_object, in_schema, page_builder)
             @ruby_object = ruby_object
             @in_schema = in_schema
+            @page_builder = page_builder
           end
 
           def add(java_page)
@@ -75,6 +76,8 @@ module Embulk
 
           def close
             @ruby_object.close
+          ensure
+              @page_builder.close
           end
         end
       end

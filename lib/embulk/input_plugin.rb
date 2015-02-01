@@ -50,8 +50,12 @@ module Embulk
           task_source = DataSource.from_java_object(java_task_source)
           schema = Schema.from_java_object(java_schema)
           page_builder = PageBuilder.new(schema, java_output)
-          commit_report_hash = @ruby_class.new(task_source, schema, processor_index, page_builder).run
-          return DataSource.from_ruby_hash(commit_report_hash).java_object
+          begin
+            commit_report_hash = @ruby_class.new(task_source, schema, processor_index, page_builder).run
+            return DataSource.from_ruby_hash(commit_report_hash).java_object
+          ensure
+            page_builder.close
+          end
         end
       end
     end
