@@ -41,10 +41,6 @@ public class LocalExecutor
     private final int maxThreads;
     private final ExecutorService executor;
 
-    private Logger log;
-    private final AtomicInteger runningTaskCount;
-    private final AtomicInteger completedTaskCount;
-
     public interface ExecutorTask
             extends Task
     {
@@ -82,70 +78,211 @@ public class LocalExecutor
                         .setNameFormat("embulk-executor-%d")
                         .setDaemon(true)
                         .build());
-
-        this.runningTaskCount = new AtomicInteger(0);
-        this.completedTaskCount = new AtomicInteger(0);
     }
 
-    private static class ExecuteResultBuilder
+    private static class ProcessState
     {
-        private NextConfig inputNextConfig;
-        private NextConfig outputNextConfig;
+        private final Logger logger;
+        private volatile boolean[] started;
+        private volatile boolean[] finished;
+        private volatile Throwable[] exceptions;
+        private volatile CommitReport[] inputCommitReports;
+        private volatile CommitReport[] outputCommitReports;
+        private volatile NextConfig inputNextConfig;
+        private volatile NextConfig outputNextConfig;
+        private int processorCount;
 
-        public void setInputNextConfig(NextConfig inputNextConfig)
+        public ProcessState(Logger logger)
         {
-            this.inputNextConfig = inputNextConfig;
+            this.logger = logger;
+        }
+
+        public Logger getLogger()
+        {
+            return logger;
+        }
+
+        public void initialize(int count)
+        {
+            this.started = new boolean[count];
+            this.finished = new boolean[count];
+            this.exceptions = new Throwable[count];
+            this.inputCommitReports = new CommitReport[count];
+            this.outputCommitReports = new CommitReport[count];
+            this.processorCount = count;
+        }
+
+        public boolean isAnyStarted()
+        {
+            if (started == null) {
+                return false;
+            }
+            for (boolean b : started) {
+                if (b) { return true; }
+            }
+            return false;
+        }
+
+        public void start(int i)
+        {
+            started[i] = true;
+        }
+
+        public void finish(int i)
+        {
+            finished[i] = true;
+        }
+
+        public int getProcessrCount()
+        {
+            return processorCount;
+        }
+
+        public int getStartedCount()
+        {
+            int count = 0;
+            for (int i=0; i < started.length; i++) {
+                if (started[i]) { count++; }
+            }
+            return count;
+        }
+
+        public int getFinishedCount()
+        {
+            int count = 0;
+            for (int i=0; i < finished.length; i++) {
+                if (finished[i]) { count++; }
+            }
+            return count;
+        }
+
+        public void setInputCommitReport(int i, CommitReport inputCommitReport)
+        {
+            if (inputCommitReport == null) {
+                inputCommitReport = Exec.newCommitReport();
+            }
+            this.inputCommitReports[i] = inputCommitReport;
+        }
+
+        public void setOutputCommitReport(int i, CommitReport outputCommitReport)
+        {
+            if (outputCommitReport == null) {
+                outputCommitReport = Exec.newCommitReport();
+            }
+            this.outputCommitReports[i] = outputCommitReport;
+        }
+
+        public boolean isOutputCommitted(int i)
+        {
+            return outputCommitReports[i] != null;
+        }
+
+        public void setException(int i, Throwable exception)
+        {
+            this.exceptions[i] = exception;
+        }
+
+        public boolean isAllCommitted()
+        {
+            for (int i=0; i < processorCount; i++) {
+                if (!isOutputCommitted(i)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public boolean isAnyCommitted()
+        {
+            for (int i=0; i < processorCount; i++) {
+                if (isOutputCommitted(i)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void setOutputNextConfig(NextConfig outputNextConfig)
         {
+            if (outputNextConfig == null) {
+                outputNextConfig = Exec.newNextConfig();
+            }
             this.outputNextConfig = outputNextConfig;
         }
 
-        public NextConfig getInputNextConfig()
-        {
-            return inputNextConfig;
-        }
-
-        public NextConfig getOutputNextConfig()
-        {
-            return outputNextConfig;
-        }
-
-        public ExecuteResult build()
+        public void setInputNextConfig(NextConfig inputNextConfig)
         {
             if (inputNextConfig == null) {
                 inputNextConfig = Exec.newNextConfig();
             }
-            if (outputNextConfig == null) {
-                outputNextConfig = Exec.newNextConfig();
+            this.inputNextConfig = inputNextConfig;
+        }
+
+        public List<CommitReport> getInputCommitReports()
+        {
+            return ImmutableList.copyOf(inputCommitReports);
+        }
+
+        public List<CommitReport> getOutputCommitReports()
+        {
+            return ImmutableList.copyOf(outputCommitReports);
+        }
+
+        public RuntimeException getRepresentativeException()
+        {
+            for (Throwable ex : exceptions) {
+                if (ex != null) {
+                    // TODO
+                }
             }
+            if (isAnyCommitted()) {
+                // TODO
+            }
+            // TODO
+            return new RuntimeException();
+        }
+
+        public int getCommittedUnclosedCount()
+        {
+            int count = 0;
+            for (int i=0; i < exceptions.length; i++) {
+                if (exceptions[i] != null && isOutputCommitted(i)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public ExecuteResult buildExecuteResult()
+        {
+            return buildExecuteResultWithWarningException(null);
+        }
+
+        public ExecuteResult buildExecuteResultWithWarningException(Throwable ex)
+        {
             NextConfig nextConfig = Exec.newNextConfig();
             nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
             nextConfig.getNestedOrSetEmpty("out").merge(outputNextConfig);
-            return new ExecuteResult(nextConfig);
-        }
-    }
 
-    private static class ProcessResult
-    {
-        private final CommitReport inputCommitReport;
-        private final CommitReport outputCommitReport;
+            ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
+            for (Throwable e : exceptions) {
+                if (e != null) {
+                    ignoredExceptions.add(e);
+                }
+            }
+            if (ex != null) {
+                ignoredExceptions.add(ex);
+            }
 
-        public ProcessResult(CommitReport inputCommitReport, CommitReport outputCommitReport)
-        {
-            this.inputCommitReport = inputCommitReport;
-            this.outputCommitReport = outputCommitReport;
-        }
-
-        public CommitReport getInputCommitReport()
-        {
-            return inputCommitReport;
+            return new ExecuteResult(nextConfig, ignoredExceptions.build());
         }
 
-        public CommitReport getOutputCommitReport()
+        public PartialExecuteException buildPartialExecuteException(Throwable cause,
+                ExecutorTask task, ExecSession exec)
         {
-            return outputCommitReport;
+            return new PartialExecuteException(cause,
+                    task.getInputTask(), task.getOutputTask(),
+                    ImmutableList.copyOf(inputCommitReports), ImmutableList.copyOf(outputCommitReports));
         }
     }
 
@@ -166,7 +303,6 @@ public class LocalExecutor
 
     public ExecuteResult run(ExecSession exec, final ConfigSource config)
     {
-        log = exec.getLogger(LocalExecutor.class);
         try {
             return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
                 public ExecuteResult run()
@@ -187,120 +323,126 @@ public class LocalExecutor
         final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
         final OutputPlugin out = newOutputPlugin(task);
 
-        final ExecuteResultBuilder execResult = new ExecuteResultBuilder();
+        final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
+        try {
+            NextConfig inputNextConfig = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
+                {
+                    state.initialize(processorCount);
+                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
+                        {
+                            NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), last(filterSchemas), processorCount, new OutputPlugin.Control() {
+                                public List<CommitReport> run(final TaskSource outputTask)
+                                {
+                                    task.setInputTask(inputTask);
+                                    task.setFilterTasks(filterTasks);
+                                    task.setOutputTask(outputTask);
 
-        NextConfig inputNextConfig = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
-            public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
-            {
-                final ImmutableList.Builder<CommitReport> inputCommitReports = ImmutableList.builder();
-                Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                    public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
-                    {
-                        NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), last(filterSchemas), processorCount, new OutputPlugin.Control() {
-                            public List<CommitReport> run(final TaskSource outputTask)
-                            {
-                                final ImmutableList.Builder<CommitReport> outputCommitReports = ImmutableList.builder();
-                                task.setInputTask(inputTask);
-                                task.setFilterTasks(filterTasks);
-                                task.setOutputTask(outputTask);
+                                    //state.getLogger().debug("input: %s", task.getInputTask());
+                                    //state.getLogger().debug("output: %s", task.getOutputTask());
 
-                                //log.debug("input: %s", task.getInputTask());
-                                //log.debug("output: %s", task.getOutputTask());
-
-                                List<ProcessResult> results = process(task.dump(), filterSchemas, processorCount);
-                                for (ProcessResult result : results) {
-                                    inputCommitReports.add(result.getInputCommitReport());
-                                    outputCommitReports.add(result.getOutputCommitReport());
+                                    process(task.dump(), filterSchemas, processorCount, state);
+                                    if (!state.isAllCommitted()) {
+                                        throw state.getRepresentativeException();
+                                    }
+                                    return state.getOutputCommitReports();
                                 }
+                            });
+                            state.setOutputNextConfig(outputNextConfig);
+                        }
+                    });
+                    return state.getInputCommitReports();
+                }
+            });
+            state.setInputNextConfig(inputNextConfig);
 
-                                return outputCommitReports.build();
-                            }
-                        });
-                        execResult.setOutputNextConfig(outputNextConfig);
-                    }
-                });
-                return inputCommitReports.build();
+            return state.buildExecuteResult();
+
+        } catch (Throwable ex) {
+            if (state.isAllCommitted()) {
+                // ignore the exception
+                return state.buildExecuteResultWithWarningException(ex);
             }
-        });
-        execResult.setInputNextConfig(inputNextConfig);
-
-        return execResult.build();
+            if (!state.isAnyStarted()) {
+                throw ex;
+            }
+            throw state.buildPartialExecuteException(ex, task, Exec.session());
+        }
     }
 
-    private List<ProcessResult> process(TaskSource taskSource, List<Schema> filterSchemas, int processorCount)
+    private void process(TaskSource taskSource, List<Schema> filterSchemas, int processorCount,
+            ProcessState state)
     {
-        List<Future<ProcessResult>> futures = new ArrayList<>();
-        List<ProcessResult> joined = new ArrayList<>();
+        List<Future<Throwable>> futures = new ArrayList<>(processorCount);
         try {
-            log.info("Running {} tasks using {} local threads", processorCount, maxThreads);
-            showProgress(processorCount);
+            state.getLogger().info("Running {} tasks using {} local threads", processorCount, maxThreads);
             for (int i=0; i < processorCount; i++) {
-                futures.add(startProcessor(taskSource, filterSchemas, i));
+                futures.add(startProcessor(taskSource, filterSchemas, i, state));
             }
+            showProgress(state);
 
             for (int i=0; i < processorCount; i++) {
                 try {
-                    joined.add(futures.get(i).get());
-                    showProgress(processorCount);
-
+                    state.setException(i, futures.get(i).get());
                 } catch (ExecutionException ex) {
-                    throw Throwables.propagate(ex.getCause());
+                    state.setException(i, ex.getCause());
+                    //Throwables.propagate(ex.getCause());
                 } catch (InterruptedException ex) {
-                    throw new ExecuteInterruptedException(ex);
+                    state.setException(i, new ExecuteInterruptedException(ex));
                 }
+                showProgress(state);
             }
-            return joined;
         } finally {
-            for (int i=joined.size(); i < futures.size(); i++) {
-                futures.get(i).cancel(true);
-                // TODO join?
+            for (Future<Throwable> future : futures) {
+                if (!future.isDone()) {
+                    future.cancel(true);
+                    // TODO join?
+                }
             }
         }
     }
 
-    private void showProgress(int total)
+    private void showProgress(ProcessState state)
     {
-        int running = runningTaskCount.get();
-        int done = completedTaskCount.get();
-        log.info(String.format("{done:%3d / %d, running: %d}", done, total, running));
+        int total = state.getProcessrCount();
+        int finished = state.getFinishedCount();
+        int started = state.getStartedCount();
+        state.getLogger().info(String.format("{done:%3d / %d, running: %d}", finished, total, started - finished));
     }
 
-    private Future<ProcessResult> startProcessor(final TaskSource taskSource,
-            final List<Schema> filterSchemas, final int index)
+    private Future<Throwable> startProcessor(final TaskSource taskSource,
+            final List<Schema> filterSchemas, final int index,
+            final ProcessState state)
     {
-        return executor.submit(new Callable<ProcessResult>() {
-            public ProcessResult call()
+        return executor.submit(new Callable<Throwable>() {
+            public Throwable call()
             {
-                try {
-                    runningTaskCount.getAndIncrement();
-                    final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
-                    final InputPlugin in = newInputPlugin(task);
-                    final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
-                    final OutputPlugin out = newOutputPlugin(task);
+                final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+                final InputPlugin in = newInputPlugin(task);
+                final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
+                final OutputPlugin out = newOutputPlugin(task);
 
-                    TransactionalPageOutput tran = out.open(task.getOutputTask(), last(filterSchemas), index);
-                    boolean committed = false;
+                TransactionalPageOutput tran = out.open(task.getOutputTask(), last(filterSchemas), index);
+                PageOutput closeThis = tran;
+                state.start(index);
+                try {
+                    PageOutput filtered = closeThis = Filters.open(filterPlugins, task.getFilterTasks(), filterSchemas, tran);
+                    state.setInputCommitReport(index, in.run(task.getInputTask(), first(filterSchemas), index, filtered));
+                    state.setOutputCommitReport(index, tran.commit());  // TODO check output.finish() is called. wrap or abstract
+                    return null;
+                } finally {
                     try {
-                        PageOutput filtered = Filters.open(filterPlugins, task.getFilterTasks(), filterSchemas, tran);
                         try {
-                            CommitReport inReport = in.run(task.getInputTask(), first(filterSchemas), index, filtered);
-                            CommitReport outReport = tran.commit();  // TODO check output.finish() is called. wrap or abstract
-                            committed = true;
-                            return new ProcessResult(inReport, outReport);
-                        } finally {
-                            if (filtered != tran) {
-                                filtered.close();
+                            if (!state.isOutputCommitted(index)) {
+                                tran.abort();
                             }
+                        } finally {
+                            closeThis.close();
                         }
                     } finally {
-                        if (!committed) {
-                            tran.abort();
-                        }
-                        tran.close();
+                        state.finish(index);
                     }
-                } finally {
-                    runningTaskCount.getAndDecrement();
-                    completedTaskCount.getAndIncrement();
                 }
             }
         });
