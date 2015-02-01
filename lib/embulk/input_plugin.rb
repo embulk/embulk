@@ -9,6 +9,14 @@ module Embulk
       raise NotImplementedError, "InputPlugin.transaction(config, &control) must be implemented"
     end
 
+    def self.resume(task, schema, count, &control)
+      raise NotImplementedError, "#{self}.resume(task, schema, count, &control) is not implemented. This plugin is not resumable"
+    end
+
+    def self.cleanup(task, schema, count, commit_reports)
+      # do nothing by default
+    end
+
     def initialize(task, schema, index, page_builder)
       @task = task
       @schema = schema
@@ -44,6 +52,29 @@ module Embulk
           end
           # TODO check return type of #transaction
           return DataSource.from_ruby_hash(next_config_hash).java_object
+        end
+
+        def resume(java_task_source, java_schema, processor_count, java_control)
+          task_source = DataSource.from_java_object(java_task_source)
+          schema = Schema.from_java_object(java_schema)
+          next_config_hash = @ruby_class.resume(task_source, schema, processor_count) do |task_source_hash,columns,processor_count|
+            java_task_source = DataSource.from_ruby_hash(task_source_hash).java_object
+            java_schema = Schema.new(columns).java_object
+            java_commit_reports = java_control.run(java_task_source, java_schema, processor_count)
+            java_commit_reports.map {|java_commit_report|
+              DataSource.from_java_object(java_commit_report)
+            }
+          end
+          # TODO check return type of #resume
+          return DataSource.from_ruby_hash(next_config_hash).java_object
+        end
+
+        def cleanup(java_task_source, java_schema, processor_count, java_commit_reports)
+          task_source = DataSource.from_java_object(java_task_source)
+          schema = Schema.from_java_object(java_schema)
+          commit_reports = java_commit_reports.map {|c| DataSource.from_java_object(c) }
+          @ruby_class.cleanup(task_source, schema, commit_reports)
+          return nil
         end
 
         def run(java_task_source, java_schema, processor_index, java_output)

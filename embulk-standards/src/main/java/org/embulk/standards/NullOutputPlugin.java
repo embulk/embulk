@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
@@ -18,9 +19,21 @@ public class NullOutputPlugin
             Schema schema, int processorCount,
             OutputPlugin.Control control)
     {
-        control.run(Exec.newTaskSource());
+        return resume(Exec.newTaskSource(), schema, processorCount, control);
+    }
+
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            OutputPlugin.Control control)
+    {
+        control.run(taskSource);
         return Exec.newNextConfig();
     }
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports)
+    { }
 
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)

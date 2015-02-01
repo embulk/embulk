@@ -42,6 +42,21 @@ public class TestFileOutputRunner
         }
 
         @Override
+        public NextConfig resume(TaskSource taskSource,
+                int processorCount,
+                FileOutputPlugin.Control control)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void cleanup(TaskSource taskSource,
+                int processorCount,
+                List<CommitReport> successCommitReports)
+        {
+        }
+
+        @Override
         public TransactionalFileOutput open(TaskSource taskSource,
                 final int processorIndex)
         {

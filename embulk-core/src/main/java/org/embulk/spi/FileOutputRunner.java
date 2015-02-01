@@ -60,30 +60,63 @@ public class FileOutputRunner
             final OutputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
-        final List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
-        final FormatterPlugin formatterPlugin = newFormatterPlugin(task);
+        return fileOutputPlugin.transaction(config, processorCount, new RunnerControl(schema, task, control));
+    }
 
-        return fileOutputPlugin.transaction(config, processorCount, new FileOutputPlugin.Control() {
-            public List<CommitReport> run(final TaskSource fileOutputTaskSource)
-            {
-                final List<CommitReport> commitReports = new ArrayList<CommitReport>();
-                Encoders.transaction(encoderPlugins, task.getEncoderConfigs(), new Encoders.Control() {
-                    public void run(final List<TaskSource> encoderTaskSources)
-                    {
-                        formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
-                            public void run(final TaskSource formatterTaskSource)
-                            {
-                                task.setFileOutputTaskSource(fileOutputTaskSource);
-                                task.setEncoderTaskSources(encoderTaskSources);
-                                task.setFormatterTaskSource(formatterTaskSource);
-                                commitReports.addAll(control.run(task.dump()));
-                            }
-                        });
-                    }
-                });
-                return commitReports;
-            }
-        });
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            final OutputPlugin.Control control)
+    {
+        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        return fileOutputPlugin.resume(task.getFileOutputTaskSource(), processorCount, new RunnerControl(schema, task, control));
+    }
+
+    private class RunnerControl
+            implements FileOutputPlugin.Control
+    {
+        private final Schema schema;
+        private final RunnerTask task;
+        private final List<EncoderPlugin> encoderPlugins;
+        private final FormatterPlugin formatterPlugin;
+        private final OutputPlugin.Control nextControl;
+
+        public RunnerControl(Schema schema, RunnerTask task, OutputPlugin.Control nextControl)
+        {
+            this.schema = schema;
+            this.task = task;
+            // create plugins earlier than run() to throw exceptions early
+            this.encoderPlugins = newEncoderPlugins(task);
+            this.formatterPlugin = newFormatterPlugin(task);
+            this.nextControl = nextControl;
+        }
+
+        @Override
+        public List<CommitReport> run(final TaskSource fileOutputTaskSource)
+        {
+            final List<CommitReport> commitReports = new ArrayList<CommitReport>();
+            Encoders.transaction(encoderPlugins, task.getEncoderConfigs(), new Encoders.Control() {
+                public void run(final List<TaskSource> encoderTaskSources)
+                {
+                    formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
+                        public void run(final TaskSource formatterTaskSource)
+                        {
+                            task.setFileOutputTaskSource(fileOutputTaskSource);
+                            task.setEncoderTaskSources(encoderTaskSources);
+                            task.setFormatterTaskSource(formatterTaskSource);
+                            commitReports.addAll(nextControl.run(task.dump()));
+                        }
+                    });
+                }
+            });
+            return commitReports;
+        }
+    }
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports)
+    {
+        fileOutputPlugin.cleanup(taskSource, processorCount, successCommitReports);
     }
 
     @Override

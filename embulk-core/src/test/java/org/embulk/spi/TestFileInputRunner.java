@@ -43,11 +43,27 @@ public class TestFileInputRunner
             this.buffers = buffers;
         }
 
+        @Override
         public NextConfig transaction(ConfigSource config,
                 FileInputPlugin.Control control)
         {
             control.run(Exec.newTaskSource(), 1);
             return null;
+        }
+
+        @Override
+        public NextConfig resume(TaskSource taskSource,
+                int processorCount,
+                FileInputPlugin.Control control)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void cleanup(TaskSource taskSource,
+                int processorCount,
+                List<CommitReport> successCommitReports)
+        {
         }
 
         public TransactionalFileInput open(TaskSource taskSource,

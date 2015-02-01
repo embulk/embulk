@@ -17,5 +17,13 @@ public interface OutputPlugin
             Schema schema, int processorCount,
             OutputPlugin.Control control);
 
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            OutputPlugin.Control control);
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports);
+
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex);
 }

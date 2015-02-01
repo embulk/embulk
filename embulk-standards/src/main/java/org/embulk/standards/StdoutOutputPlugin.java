@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.NextConfig;
@@ -30,9 +31,22 @@ public class StdoutOutputPlugin
             OutputPlugin.Control control)
     {
         final PluginTask task = config.loadConfig(PluginTask.class);
-        control.run(task.dump());
+        return resume(task.dump(), schema, processorCount, control);
+    }
+
+    @Override
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            OutputPlugin.Control control)
+    {
+        control.run(taskSource);
         return Exec.newNextConfig();
     }
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports)
+    { }
 
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, final Schema schema,

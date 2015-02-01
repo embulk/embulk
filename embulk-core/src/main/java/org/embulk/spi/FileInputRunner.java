@@ -57,30 +57,61 @@ public class FileInputRunner
     public NextConfig transaction(ConfigSource config, final InputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
-        final List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
-        final ParserPlugin parserPlugin = newParserPlugin(task);
+        return fileInputPlugin.transaction(config, new RunnerControl(task, control));
+    }
 
-        return fileInputPlugin.transaction(config, new FileInputPlugin.Control() {
-            public List<CommitReport> run(final TaskSource fileInputTaskSource, final int processorCount)
-            {
-                final List<CommitReport> commitReports = new ArrayList<CommitReport>();
-                Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
-                    public void run(final List<TaskSource> decoderTaskSources)
-                    {
-                        parserPlugin.transaction(task.getParserConfig(), new ParserPlugin.Control() {
-                            public void run(final TaskSource parserTaskSource, final Schema schema)
-                            {
-                                task.setFileInputTaskSource(fileInputTaskSource);
-                                task.setDecoderTaskSources(decoderTaskSources);
-                                task.setParserTaskSource(parserTaskSource);
-                                commitReports.addAll(control.run(task.dump(), schema, processorCount));
-                            }
-                        });
-                    }
-                });
-                return commitReports;
-            }
-        });
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            InputPlugin.Control control)
+    {
+        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        return fileInputPlugin.resume(task.getFileInputTaskSource(), processorCount, new RunnerControl(task, control));
+    }
+
+    private class RunnerControl
+            implements FileInputPlugin.Control
+    {
+        private final RunnerTask task;
+        private final List<DecoderPlugin> decoderPlugins;
+        private final ParserPlugin parserPlugin;
+        private final InputPlugin.Control nextControl;
+
+        public RunnerControl(RunnerTask task, InputPlugin.Control nextControl)
+        {
+            this.task = task;
+            // create plugins earlier than run() to throw exceptions early
+            this.decoderPlugins = newDecoderPlugins(task);
+            this.parserPlugin = newParserPlugin(task);
+            this.nextControl = nextControl;
+        }
+
+        @Override
+        public List<CommitReport> run(final TaskSource fileInputTaskSource, final int processorCount)
+        {
+            final List<CommitReport> commitReports = new ArrayList<CommitReport>();
+            Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
+                public void run(final List<TaskSource> decoderTaskSources)
+                {
+                    parserPlugin.transaction(task.getParserConfig(), new ParserPlugin.Control() {
+                        public void run(final TaskSource parserTaskSource, final Schema schema)
+                        {
+                            task.setFileInputTaskSource(fileInputTaskSource);
+                            task.setDecoderTaskSources(decoderTaskSources);
+                            task.setParserTaskSource(parserTaskSource);
+                            commitReports.addAll(nextControl.run(task.dump(), schema, processorCount));
+                        }
+                    });
+                }
+            });
+            return commitReports;
+        }
+    }
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports)
+    {
+        fileInputPlugin.cleanup(taskSource, processorCount, successCommitReports);
     }
 
     @Override

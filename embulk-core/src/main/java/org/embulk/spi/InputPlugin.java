@@ -10,11 +10,22 @@ public interface InputPlugin
 {
     public interface Control
     {
-        public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount);
+        public List<CommitReport> run(TaskSource taskSource,
+                Schema schema, int processorCount);
     }
 
-    public NextConfig transaction(ConfigSource config, InputPlugin.Control control);
+    public NextConfig transaction(ConfigSource config,
+            InputPlugin.Control control);
 
-    public CommitReport run(TaskSource taskSource, Schema schema, int processorIndex,
+    public NextConfig resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            InputPlugin.Control control);
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports);
+
+    public CommitReport run(TaskSource taskSource,
+            Schema schema, int processorIndex,
             PageOutput output);
 }

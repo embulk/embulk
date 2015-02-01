@@ -158,7 +158,7 @@ public class GuessExecutor
     private static class BufferFileInputPlugin
             implements FileInputPlugin
     {
-        private final Buffer buffer;
+        private Buffer buffer;
 
         public BufferFileInputPlugin(Buffer buffer)
         {
@@ -169,6 +169,23 @@ public class GuessExecutor
         {
             control.run(Exec.newTaskSource(), 1);
             return Exec.newNextConfig();
+        }
+
+        public NextConfig resume(TaskSource taskSource,
+                int processorCount,
+                FileInputPlugin.Control control)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void cleanup(TaskSource taskSource,
+                int processorCount,
+                List<CommitReport> successCommitReports)
+        {
+            if (buffer != null) {
+                buffer.release();
+                buffer = null;
+            }
         }
 
         public TransactionalFileInput open(TaskSource taskSource, int processorIndex)

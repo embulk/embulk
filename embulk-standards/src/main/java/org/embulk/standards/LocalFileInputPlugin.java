@@ -56,11 +56,25 @@ public class LocalFileInputPlugin
         // list files recursively
         task.setFiles(listFiles(task));
 
-        // run with threads. number of processors is same with number of files
-        control.run(task.dump(), task.getFiles().size());
+        // number of processors is same with number of files
+        int processorCount = task.getFiles().size();
+        return resume(task.dump(), processorCount, control);
+    }
 
+    @Override
+    public NextConfig resume(TaskSource taskSource,
+            int processorCount,
+            FileInputPlugin.Control control)
+    {
+        control.run(taskSource, processorCount);
         return Exec.newNextConfig();
     }
+
+    @Override
+    public void cleanup(TaskSource taskSource,
+            int processorCount,
+            List<CommitReport> successCommitReports)
+    { }
 
     public List<String> listFiles(PluginTask task)
     {

@@ -77,12 +77,24 @@ public class S3FileInputPlugin
         task.setFiles(listFiles(task));
 
         // number of processors is same with number of files
+        int processorCount = task.getFiles().size();
+        return resume(task.dump(), processorCount, control);
+    }
 
-        // run
-        control.run(task.dump(), task.getFiles().size());
-
+    @Override
+    public NextConfig resume(TaskSource taskSource,
+            int processorCount,
+            FileInputPlugin.Control control)
+    {
+        control.run(taskSource, processorCount);
         return Exec.newNextConfig();
     }
+
+    @Override
+    public void cleanup(TaskSource taskSource,
+            int processorCount,
+            List<CommitReport> successCommitReports)
+    { }
 
     public static AWSCredentialsProvider getCredentialsProvider(PluginTask task)
     {

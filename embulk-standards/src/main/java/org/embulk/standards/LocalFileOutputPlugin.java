@@ -47,10 +47,23 @@ public class LocalFileOutputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        control.run(task.dump());
+        return resume(task.dump(), processorCount, control);
+    }
 
+    @Override
+    public NextConfig resume(TaskSource taskSource,
+            int processorCount,
+            FileOutputPlugin.Control control)
+    {
+        control.run(taskSource);
         return Exec.newNextConfig();
     }
+
+    @Override
+    public void cleanup(TaskSource taskSource,
+            int processorCount,
+            List<CommitReport> successCommitReports)
+    { }
 
     @Override
     public TransactionalFileOutput open(TaskSource taskSource, final int processorIndex)
