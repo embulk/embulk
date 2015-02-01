@@ -6,24 +6,30 @@ module Embulk
     def initialize(src)
       super
 
-      record_reader_script = "lambda do |reader|\n"
-      record_reader_script << "record = []\n"
+      record_reader_script =
+        "lambda do |reader|\n" <<
+        "record = []\n"
       each do |column|
+        idx = column.index
         column_script =
+          "if reader.isNull(#{idx})\n" <<
+          "record << nil\n" <<
+          "else\n" <<
           case column.type
           when :boolean
-            "record << reader.getBoolean(#{column.index})"
+            "record << reader.getBoolean(#{idx})"
           when :long
-            "record << reader.getLong(#{column.index})"
+            "record << reader.getLong(#{idx})"
           when :double
-            "record << reader.getDouble(#{column.index})"
+            "record << reader.getDouble(#{idx})"
           when :string
-            "record << reader.getString(#{column.index})"
+            "record << reader.getString(#{idx})"
           when :timestamp
-            "record << reader.getTimestamp(#{column.index}).getRubyTime(JRuby.runtime)"
+            "record << reader.getTimestamp(#{idx}).getRubyTime(JRuby.runtime)"
           else
             raise "Unknown type #{column.type.inspect}"
-          end
+          end <<
+          "end\n"
         record_reader_script << column_script << "\n"
       end
       record_reader_script << "record\n"
@@ -34,7 +40,8 @@ module Embulk
       record_writer_script << "java_timestamp_class = ::Embulk::Java::Timestamp\n"
       each do |column|
         idx = column.index
-        column_script = "if record[#{idx}].nil?\n" <<
+        column_script =
+          "if record[#{idx}].nil?\n" <<
           "builder.setNull(#{idx})\n" <<
           "else\n" <<
           case column.type
