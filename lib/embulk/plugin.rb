@@ -4,12 +4,12 @@ module Embulk
   require 'embulk/error'
   require 'embulk/plugin_registry'
   require 'embulk/input_plugin'
+  require 'embulk/filter_plugin'
   require 'embulk/output_plugin'
   #require 'embulk/parser_plugin'
   #require 'embulk/formatter_plugin'
   #require 'embulk/decoder_plugin'
   #require 'embulk/encoder_plugin'
-  #require 'embulk/filter_plugin'
   require 'embulk/guess_plugin'
 
   class PluginManager
