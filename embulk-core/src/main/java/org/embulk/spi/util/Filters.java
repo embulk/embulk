@@ -9,7 +9,7 @@ import org.embulk.config.NextConfig;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.Schema;
-import org.embulk.spi.TransactionalPageOutput;
+import org.embulk.spi.PageOutput;
 import org.embulk.spi.FilterPlugin;
 
 public abstract class Filters
@@ -27,27 +27,22 @@ public abstract class Filters
 
     public interface Control
     {
-        public List<List<CommitReport>> run(List<TaskSource> taskSources, List<Schema> outputSchemas);
+        public void run(List<TaskSource> taskSources, List<Schema> filterSchemas);
     }
 
-    public static List<NextConfig> transaction(List<FilterPlugin> plugins, List<ConfigSource> configs,
+    public static void transaction(List<FilterPlugin> plugins, List<ConfigSource> configs,
             Schema inputSchema, Filters.Control control)
     {
-        RecursiveControl c = new RecursiveControl(plugins, configs, control);
-        c.transaction(inputSchema);
-        return c.getNextConfigs();
+        new RecursiveControl(plugins, configs, control).transaction(inputSchema);
     }
 
-    public static TransactionalPageOutput open(List<FilterPlugin> plugins, List<TaskSource> taskSources,
-            Schema inputSchema, List<Schema> outputSchemas, TransactionalPageOutput output)
+    public static PageOutput open(List<FilterPlugin> plugins, List<TaskSource> taskSources,
+            List<Schema> filterSchemas, PageOutput output)
     {
-        TransactionalPageOutput out = output;
+        PageOutput out = output;
         int pos = 0;
         while (pos < plugins.size()) {
-            if (pos > 0) {
-                inputSchema = outputSchemas.get(pos - 1);
-            }
-            out = plugins.get(pos).open(taskSources.get(pos), inputSchema, outputSchemas.get(pos), out);
+            out = plugins.get(pos).open(taskSources.get(pos), filterSchemas.get(pos), filterSchemas.get(pos + 1), out);
             pos++;
         }
         return out;
@@ -59,10 +54,8 @@ public abstract class Filters
         private final List<ConfigSource> configs;
         private final Filters.Control finalControl;
         private final ImmutableList.Builder<TaskSource> taskSources;
-        private final ImmutableList.Builder<Schema> outputSchemas;
+        private final ImmutableList.Builder<Schema> filterSchemas;
         private int pos;
-        private List<List<CommitReport>> commitReports;
-        private final ImmutableList.Builder<NextConfig> nextConfigs;
 
         RecursiveControl(List<FilterPlugin> plugins, List<ConfigSource> configs,
                 Filters.Control finalControl)
@@ -71,32 +64,24 @@ public abstract class Filters
             this.configs = configs;
             this.finalControl = finalControl;
             this.taskSources = ImmutableList.builder();
-            this.outputSchemas = ImmutableList.builder();
-            this.nextConfigs = ImmutableList.builder();
+            this.filterSchemas = ImmutableList.builder();
         }
 
-        public void transaction(Schema previousSchema)
+        public void transaction(Schema inputSchema)
         {
+            filterSchemas.add(inputSchema);
             if (pos < plugins.size()) {
-                NextConfig nextConfig = plugins.get(pos).transaction(configs.get(pos), previousSchema, new FilterPlugin.Control() {
-                    public List<CommitReport> run(TaskSource taskSource, Schema outputSchema)
+                plugins.get(pos).transaction(configs.get(pos), inputSchema, new FilterPlugin.Control() {
+                    public void run(TaskSource taskSource, Schema outputSchema)
                     {
                         taskSources.add(taskSource);
-                        outputSchemas.add(outputSchema);
                         pos++;
                         transaction(outputSchema);
-                        return commitReports.get(pos);
                     }
                 });
-                nextConfigs.add(nextConfig);
             } else {
-                this.commitReports = finalControl.run(taskSources.build(), outputSchemas.build());
+                finalControl.run(taskSources.build(), filterSchemas.build());
             }
-        }
-
-        public List<NextConfig> getNextConfigs()
-        {
-            return nextConfigs.build();
         }
     }
 }

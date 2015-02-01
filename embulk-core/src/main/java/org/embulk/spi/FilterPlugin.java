@@ -10,12 +10,12 @@ public interface FilterPlugin
 {
     public interface Control
     {
-        public List<CommitReport> run(TaskSource taskSource, Schema outputSchema);
+        public void run(TaskSource taskSource, Schema outputSchema);
     }
 
-    public NextConfig transaction(ConfigSource config, Schema inputSchema,
+    public void transaction(ConfigSource config, Schema inputSchema,
             FilterPlugin.Control control);
 
-    public TransactionalPageOutput open(TaskSource taskSource, Schema inputSchema,
-            Schema outputSchema, TransactionalPageOutput output);
+    public PageOutput open(TaskSource taskSource, Schema inputSchema,
+            Schema outputSchema, PageOutput output);
 }
