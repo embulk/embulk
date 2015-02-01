@@ -13,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
@@ -85,6 +87,8 @@ public class LocalExecutor
         private final Logger logger;
         private volatile boolean[] started;
         private volatile boolean[] finished;
+        private volatile Schema inputSchema;
+        private volatile Schema outputSchema;
         private volatile Throwable[] exceptions;
         private volatile CommitReport[] inputCommitReports;
         private volatile CommitReport[] outputCommitReports;
@@ -110,6 +114,26 @@ public class LocalExecutor
             this.inputCommitReports = new CommitReport[count];
             this.outputCommitReports = new CommitReport[count];
             this.processorCount = count;
+        }
+
+        public void setInputSchema(Schema inputSchema)
+        {
+            this.inputSchema = inputSchema;
+        }
+
+        public void setOutputSchema(Schema outputSchema)
+        {
+            this.outputSchema = outputSchema;
+        }
+
+        public Schema getInputSchema()
+        {
+            return inputSchema;
+        }
+
+        public Schema getOutputSchema()
+        {
+            return outputSchema;
         }
 
         public boolean isAnyStarted()
@@ -230,16 +254,24 @@ public class LocalExecutor
 
         public RuntimeException getRepresentativeException()
         {
+            RuntimeException top = null;
             for (Throwable ex : exceptions) {
                 if (ex != null) {
-                    // TODO
+                    if (top != null) {
+                        top.addSuppressed(ex);
+                    } else {
+                        if (ex instanceof RuntimeException) {
+                            top = (RuntimeException) ex;
+                        } else {
+                            top = new RuntimeException(ex);
+                        }
+                    }
                 }
             }
-            if (isAnyCommitted()) {
-                // TODO
+            if (top == null) {
+                top = new RuntimeException("Some transactions are not committed");
             }
-            // TODO
-            return new RuntimeException();
+            return top;
         }
 
         public int getCommittedUnclosedCount()
@@ -280,9 +312,11 @@ public class LocalExecutor
         public PartialExecuteException buildPartialExecuteException(Throwable cause,
                 ExecutorTask task, ExecSession exec)
         {
-            return new PartialExecuteException(cause,
-                    task.getInputTask(), task.getOutputTask(),
-                    ImmutableList.copyOf(inputCommitReports), ImmutableList.copyOf(outputCommitReports));
+            return new PartialExecuteException(cause, new ResumeState(
+                        exec.getSessionTaskSource(),
+                        task.getInputTask(), task.getOutputTask(),
+                        inputSchema, outputSchema, processorCount,
+                        ImmutableList.copyOf(inputCommitReports), ImmutableList.copyOf(outputCommitReports)));
         }
     }
 
@@ -315,6 +349,39 @@ public class LocalExecutor
         }
     }
 
+    public ExecuteResult resume(final ConfigSource config, final ResumeState resume)
+    {
+        try {
+            ExecSession exec = new ExecSession(injector, resume.getExecSessionTaskSource());
+            return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
+                public ExecuteResult run()
+                {
+                    return doResume(config, resume);
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
+    }
+
+    public void cleanup(ConfigSource config, final ResumeState resume)
+    {
+        ExecutorTask task = config.loadConfig(ExecutorTask.class);
+        InputPlugin in = newInputPlugin(task);
+        OutputPlugin out = newOutputPlugin(task);
+
+        List<CommitReport> successInputCommitReports = ImmutableList.copyOf(
+                Iterables.filter(resume.getInputCommitReports(), Predicates.notNull()));
+        List<CommitReport> successOutputCommitReports = ImmutableList.copyOf(
+                Iterables.filter(resume.getOutputCommitReports(), Predicates.notNull()));
+
+        in.cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
+                resume.getProcessrCount(), successInputCommitReports);
+
+        out.cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
+                resume.getProcessrCount(), successOutputCommitReports);
+    }
+
     private ExecuteResult doRun(ConfigSource config)
     {
         final ExecutorTask task = config.loadConfig(ExecutorTask.class);
@@ -329,18 +396,77 @@ public class LocalExecutor
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
                 {
                     state.initialize(processorCount);
+                    state.setInputSchema(inputSchema);
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
                         {
-                            NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), last(filterSchemas), processorCount, new OutputPlugin.Control() {
+                            Schema outputSchema = last(filterSchemas);
+                            state.setOutputSchema(outputSchema);
+                            NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), outputSchema, processorCount, new OutputPlugin.Control() {
                                 public List<CommitReport> run(final TaskSource outputTask)
                                 {
                                     task.setInputTask(inputTask);
                                     task.setFilterTasks(filterTasks);
                                     task.setOutputTask(outputTask);
 
-                                    //state.getLogger().debug("input: %s", task.getInputTask());
-                                    //state.getLogger().debug("output: %s", task.getOutputTask());
+                                    process(task.dump(), filterSchemas, processorCount, state);
+                                    if (!state.isAllCommitted()) {
+                                        throw state.getRepresentativeException();
+                                    }
+                                    return state.getOutputCommitReports();
+                                }
+                            });
+                            state.setOutputNextConfig(outputNextConfig);
+                        }
+                    });
+                    return state.getInputCommitReports();
+                }
+            });
+            state.setInputNextConfig(inputNextConfig);
+
+            return state.buildExecuteResult();
+
+        } catch (Throwable ex) {
+            if (state.isAllCommitted()) {
+                // ignore the exception
+                return state.buildExecuteResultWithWarningException(ex);
+            }
+            if (!state.isAnyStarted()) {
+                throw ex;
+            }
+            throw state.buildPartialExecuteException(ex, task, Exec.session());
+        }
+    }
+
+    private ExecuteResult doResume(ConfigSource config, final ResumeState resume)
+    {
+        final ExecutorTask task = config.loadConfig(ExecutorTask.class);
+
+        final InputPlugin in = newInputPlugin(task);
+        final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
+        final OutputPlugin out = newOutputPlugin(task);
+
+        final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
+        try {
+            NextConfig inputNextConfig = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getProcessrCount(), new InputPlugin.Control() {
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
+                {
+                    // TODO validate inputTask?
+                    // TODO validate inputSchema
+                    // TODO validate processorCount
+                    state.initialize(processorCount);
+                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
+                        {
+                            Schema outputSchema = last(filterSchemas);
+                            state.setOutputSchema(outputSchema);
+                            NextConfig outputNextConfig = out.resume(resume.getOutputTaskSource(), outputSchema, processorCount, new OutputPlugin.Control() {
+                                public List<CommitReport> run(final TaskSource outputTask)
+                                {
+                                    // TODO validate outputTask?
+                                    task.setInputTask(inputTask);
+                                    task.setFilterTasks(filterTasks);
+                                    task.setOutputTask(outputTask);
 
                                     process(task.dump(), filterSchemas, processorCount, state);
                                     if (!state.isAllCommitted()) {

@@ -3,7 +3,11 @@ package org.embulk.spi;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
+import com.google.common.base.Optional;
 import com.google.inject.Injector;
+import org.embulk.config.Task;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
 import org.embulk.config.NextConfig;
@@ -26,18 +30,45 @@ public class ExecSession
     private final Timestamp transactionTime;
     private final DateTimeZone transactionTimeZone;
 
+    public interface SessionTask
+            extends Task
+    {
+        @Config("transaction_time")
+        @ConfigDefault("null")
+        Optional<Timestamp> getTransactionTime();
+
+        @Config("transaction_time_zone")
+        @ConfigDefault("\"UTC\"")
+        DateTimeZone getTransactionTimeZone();
+    }
+
     public ExecSession(Injector injector, ConfigSource execConfig)
     {
-        super();
+        this(injector, execConfig.loadConfig(SessionTask.class));
+    }
+
+    public ExecSession(Injector injector, TaskSource taskSource)
+    {
+        this(injector, taskSource.loadTask(SessionTask.class));
+    }
+
+    public ExecSession(Injector injector, SessionTask task)
+    {
         this.injector = injector;
         this.loggerFactory = injector.getInstance(ILoggerFactory.class);
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
-        this.transactionTime = execConfig.get(Timestamp.class, "transaction_time",
-                Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
-        this.transactionTimeZone = execConfig.get(DateTimeZone.class, "transaction_time_zone", DateTimeZone.UTC);
+        this.transactionTime = task.getTransactionTime().or(Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
+        this.transactionTimeZone = task.getTransactionTimeZone();
+    }
+
+    public TaskSource getSessionTaskSource()
+    {
+        return newTaskSource()
+            .set("transaction_time", transactionTime)
+            .set("transaction_time_zone", transactionTimeZone);
     }
 
     public Injector getInjector()

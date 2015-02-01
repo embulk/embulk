@@ -3,6 +3,7 @@ package org.embulk;
 import java.util.Random;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import com.google.inject.Injector;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import org.embulk.config.ConfigSource;
@@ -49,8 +50,9 @@ public class EmbulkTestRuntime
     public EmbulkTestRuntime()
     {
         super(new TestRuntimeModule());
-        ConfigSource execConfig = new DataSourceImpl(null);
-        this.exec = new ExecSession(getInjector(), execConfig);
+        Injector injector = getInjector();
+        ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
+        this.exec = new ExecSession(injector, execConfig);
     }
 
     public ExecSession getExec()
