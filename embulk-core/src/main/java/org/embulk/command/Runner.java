@@ -21,7 +21,7 @@ import org.embulk.config.NextConfig;
 import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
 import org.embulk.exec.LocalExecutor;
-import org.embulk.exec.ExecuteResult;
+import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
@@ -76,7 +76,7 @@ public class Runner
 
         ExecSession exec = newExecSession(config);
         LocalExecutor local = injector.getInstance(LocalExecutor.class);
-        ExecuteResult result = local.run(exec, config);
+        ExecutionResult result = local.run(exec, config);
         NextConfig nextConfig = result.getNextConfig();
 
         exec.getLogger(Runner.class).info("next config: {}", nextConfig.toString());

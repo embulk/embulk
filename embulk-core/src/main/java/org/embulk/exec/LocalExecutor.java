@@ -285,12 +285,12 @@ public class LocalExecutor
             return count;
         }
 
-        public ExecuteResult buildExecuteResult()
+        public ExecutionResult buildExecuteResult()
         {
             return buildExecuteResultWithWarningException(null);
         }
 
-        public ExecuteResult buildExecuteResultWithWarningException(Throwable ex)
+        public ExecutionResult buildExecuteResultWithWarningException(Throwable ex)
         {
             NextConfig nextConfig = Exec.newNextConfig();
             nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
@@ -306,13 +306,13 @@ public class LocalExecutor
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecuteResult(nextConfig, ignoredExceptions.build());
+            return new ExecutionResult(nextConfig, ignoredExceptions.build());
         }
 
-        public PartialExecuteException buildPartialExecuteException(Throwable cause,
+        public PartialExecutionException buildPartialExecuteException(Throwable cause,
                 ExecutorTask task, ExecSession exec)
         {
-            return new PartialExecuteException(cause, new ResumeState(
+            return new PartialExecutionException(cause, new ResumeState(
                         exec.getSessionTaskSource(),
                         task.getInputTask(), task.getOutputTask(),
                         inputSchema, outputSchema, processorCount,
@@ -335,11 +335,11 @@ public class LocalExecutor
         return Exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get(PluginType.class, "type"));
     }
 
-    public ExecuteResult run(ExecSession exec, final ConfigSource config)
+    public ExecutionResult run(ExecSession exec, final ConfigSource config)
     {
         try {
-            return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
-                public ExecuteResult run()
+            return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+                public ExecutionResult run()
                 {
                     return doRun(config);
                 }
@@ -349,12 +349,12 @@ public class LocalExecutor
         }
     }
 
-    public ExecuteResult resume(final ConfigSource config, final ResumeState resume)
+    public ExecutionResult resume(final ConfigSource config, final ResumeState resume)
     {
         try {
             ExecSession exec = new ExecSession(injector, resume.getExecSessionTaskSource());
-            return Exec.doWith(exec, new ExecAction<ExecuteResult>() {
-                public ExecuteResult run()
+            return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+                public ExecutionResult run()
                 {
                     return doResume(config, resume);
                 }
@@ -382,7 +382,7 @@ public class LocalExecutor
                 resume.getProcessrCount(), successOutputCommitReports);
     }
 
-    private ExecuteResult doRun(ConfigSource config)
+    private ExecutionResult doRun(ConfigSource config)
     {
         final ExecutorTask task = config.loadConfig(ExecutorTask.class);
 
@@ -438,7 +438,7 @@ public class LocalExecutor
         }
     }
 
-    private ExecuteResult doResume(ConfigSource config, final ResumeState resume)
+    private ExecutionResult doResume(ConfigSource config, final ResumeState resume)
     {
         final ExecutorTask task = config.loadConfig(ExecutorTask.class);
 
@@ -515,7 +515,7 @@ public class LocalExecutor
                     state.setException(i, ex.getCause());
                     //Throwables.propagate(ex.getCause());
                 } catch (InterruptedException ex) {
-                    state.setException(i, new ExecuteInterruptedException(ex));
+                    state.setException(i, new ExecutionInterruptedException(ex));
                 }
                 showProgress(state);
             }
