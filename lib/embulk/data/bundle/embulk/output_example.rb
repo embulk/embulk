@@ -5,16 +5,21 @@ module Embulk
       # output plugin file name must be: embulk/output_<name>.rb
       Plugin.register_output('example', self)
 
-      def self.transaction(config, schema, processor_count, &control)
+      def self.transaction(config, schema, count, &control)
         task = {
           'message' => config.param('message', :string, default: "record")
         }
 
+        resume(task, schema, count, &control)
+      end
+
+      def self.resume(task, schema, count, &control)
         puts "Example output started."
         commit_reports = yield(task)
         puts "Example output finished. Commit reports = #{commit_reports.to_json}"
 
-        return {}
+        next_config_diff = {}
+        return next_config_diff
       end
 
       def initialize(task, schema, index)

@@ -187,13 +187,13 @@ public class DataSourceImpl
     }
 
     @Override
-    public <T extends Task> T loadTask(Class<T> taskType)
+    public <T> T loadTask(Class<T> taskType)
     {
         return model.readObject(taskType, data.traverse());
     }
 
     @Override
-    public <T extends Task> T loadConfig(Class<T> taskType)
+    public <T> T loadConfig(Class<T> taskType)
     {
         return model.readObjectWithConfigSerDe(taskType, data.traverse());
     }

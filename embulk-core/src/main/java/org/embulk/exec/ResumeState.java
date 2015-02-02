@@ -4,13 +4,14 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.embulk.config.TaskSource;
+import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.Schema;
 import org.embulk.spi.ExecSession;
 
 public class ResumeState
 {
-    private final TaskSource execSessionTaskSource;
+    private final ConfigSource execSessionConfigSource;
     private final TaskSource inputTaskSource;
     private final TaskSource outputTaskSource;
     private final Schema inputSchema;
@@ -21,7 +22,7 @@ public class ResumeState
 
     @JsonCreator
     public ResumeState(
-            @JsonProperty("exec_task") TaskSource execSessionTaskSource,
+            @JsonProperty("exec_task") ConfigSource execSessionConfigSource,
             @JsonProperty("in_task") TaskSource inputTaskSource,
             @JsonProperty("out_task") TaskSource outputTaskSource,
             @JsonProperty("in_schema") Schema inputSchema,
@@ -30,7 +31,7 @@ public class ResumeState
             @JsonProperty("in_reports") List<CommitReport> inputCommitReports,
             @JsonProperty("out_reports") List<CommitReport> outputCommitReports)
     {
-        this.execSessionTaskSource = execSessionTaskSource;
+        this.execSessionConfigSource = execSessionConfigSource;
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
         this.inputSchema = inputSchema;
@@ -41,9 +42,9 @@ public class ResumeState
     }
 
     @JsonProperty("exec_task")
-    public TaskSource getExecSessionTaskSource()
+    public ConfigSource getExecSessionConfigSource()
     {
-        return execSessionTaskSource;
+        return execSessionConfigSource;
     }
 
     @JsonProperty("in_task")

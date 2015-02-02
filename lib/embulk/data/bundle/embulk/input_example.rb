@@ -19,8 +19,12 @@ module Embulk
           Column.new(3, 'col1', :double),
         ]
 
+        resume(task, columns, files.length, &control)
+      end
+
+      def self.resume(task, columns, count, &control)
         puts "Example input started."
-        commit_reports = yield(task, columns, files.length)
+        commit_reports = yield(task, columns, count)
         puts "Example input finished. Commit reports = #{commit_reports.to_json}"
 
         next_config_diff = {}

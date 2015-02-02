@@ -3,7 +3,7 @@ package org.embulk.config;
 public interface ConfigSource
         extends DataSource
 {
-    public <T extends Task> T loadConfig(Class<T> taskType);
+    public <T> T loadConfig(Class<T> taskType);
 
     @Override
     public ConfigSource getNested(String attrName);

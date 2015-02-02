@@ -51,6 +51,21 @@ module Embulk
       op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
         options[:nextConfigOutputPath] = path
       end
+      op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
+        options[:resumeStatePath] = path
+      end
+      args = 1..1
+
+    when :cleanup
+      op.banner = "Usage: run <config.yml>"
+      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
+      end
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+        load_paths << load_path
+      end
+      op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
+        options[:resumeStatePath] = path
+      end
       args = 1..1
 
     when :preview

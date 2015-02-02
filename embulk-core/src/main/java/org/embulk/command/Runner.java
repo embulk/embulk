@@ -25,6 +25,8 @@ import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
+import org.embulk.exec.ResumeState;
+import org.embulk.exec.PartialExecutionException;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.util.Pages;
@@ -36,6 +38,9 @@ public class Runner
     {
         private String nextConfigOutputPath;
         public String getNextConfigOutputPath() { return nextConfigOutputPath; }
+
+        private String resumeStatePath;
+        public String getResumeStatePath() { return resumeStatePath; }
     }
 
     private final Options options;
@@ -58,6 +63,9 @@ public class Runner
         case "run":
             run(args[0]);
             break;
+        case "cleanup":
+            cleanup(args[0]);
+            break;
         case "guess":
             guess(args[0]);
             break;
@@ -72,21 +80,85 @@ public class Runner
     public void run(String configPath)
     {
         ConfigSource config = loadYamlConfig(configPath);
-        checkNextConfigOutputPath(options.getNextConfigOutputPath());
+        checkFileWritable(options.getNextConfigOutputPath());
+        checkFileWritable(options.getResumeStatePath());
+
+        // load resume state file
+        ResumeState resume = null;
+        String resumePath = options.getResumeStatePath();
+        if (resumePath != null) {
+            ConfigSource resumeConfig = null;
+            try {
+                resumeConfig = loadYamlConfig(resumePath);
+                if (resumeConfig.isEmpty()) {
+                    resumeConfig = null;
+                }
+            } catch (RuntimeException ex) {
+                // leave resumeConfig == null
+            }
+            if (resumeConfig != null) {
+                resume = resumeConfig.loadConfig(ResumeState.class);
+            }
+        }
 
         ExecSession exec = newExecSession(config);
         LocalExecutor local = injector.getInstance(LocalExecutor.class);
-        ExecutionResult result = local.run(exec, config);
-        NextConfig nextConfig = result.getNextConfig();
+        ExecutionResult result;
+        try {
+            if (resume != null) {
+                result = local.resume(config, resume);
+            } else {
+                result = local.run(exec, config);
+            }
+        } catch (PartialExecutionException partial) {
+            if (options.getResumeStatePath() == null) {
+                // resume state path is not set. cleanup the transaction
+                exec.getLogger(Runner.class).info("Transaction partially failed. Cleaning up the intermediate data. Use -r option to make it resumable.");
+                try {
+                    local.cleanup(config, partial.getResumeState());
+                } catch (Throwable ex) {
+                    partial.addSuppressed(ex);
+                }
+                throw partial;
+            }
+            // save the resume state
+            exec.getLogger(Runner.class).info("Writing resume state to '{}'", options.getResumeStatePath());
+            writeYaml(options.getResumeStatePath(), partial.getResumeState());
+            exec.getLogger(Runner.class).info("Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data.");
+            throw partial;
+        }
 
+        // delete resume file
+        new File(options.getResumeStatePath()).delete();
+
+        // write next config
+        NextConfig nextConfig = result.getNextConfig();
         exec.getLogger(Runner.class).info("next config: {}", nextConfig.toString());
         writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
+    }
+
+    public void cleanup(String configPath)
+    {
+        String resumePath = options.getResumeStatePath();
+        if (resumePath == null) {
+            throw new IllegalArgumentException("Resume path is required for cleanup");
+        }
+        ConfigSource config = loadYamlConfig(configPath);
+        ConfigSource resumeConfig = loadYamlConfig(resumePath);
+        ResumeState resume = resumeConfig.loadConfig(ResumeState.class);
+
+        ExecSession exec = newExecSession(config);
+        LocalExecutor local = injector.getInstance(LocalExecutor.class);
+        local.cleanup(config, resume);
+
+        // delete resume file
+        new File(options.getResumeStatePath()).delete();
     }
 
     public void guess(String partialConfigPath)
     {
         ConfigSource config = loadYamlConfig(partialConfigPath);
-        checkNextConfigOutputPath(options.getNextConfigOutputPath());
+        checkFileWritable(options.getNextConfigOutputPath());
 
         ExecSession exec = newExecSession(config);
         GuessExecutor guess = injector.getInstance(GuessExecutor.class);
@@ -96,7 +168,7 @@ public class Runner
         System.err.println(yml);
     }
 
-    private void checkNextConfigOutputPath(String path)
+    private void checkFileWritable(String path)
     {
         if (path != null) {
             try (FileOutputStream in = new FileOutputStream(path, true)) {
@@ -109,7 +181,12 @@ public class Runner
 
     private String writeNextConfig(String path, ConfigSource originalConfig, NextConfig nextConfigDiff)
     {
-        String yml = dumpConfigInYaml(originalConfig.merge(nextConfigDiff));
+        return writeYaml(path, originalConfig.merge(nextConfigDiff));
+    }
+
+    private String writeYaml(String path, Object obj)
+    {
+        String yml = dumpYaml(obj);
         if (path != null) {
             if (path.equals("-")) {
                 System.out.print(yml);
@@ -181,7 +258,7 @@ public class Runner
         }
     }
 
-    private String dumpConfigInYaml(DataSource config)
+    private String dumpYaml(Object config)
     {
         ModelManager model = injector.getInstance(ModelManager.class);
         Map<String, Object> map = model.readObject(MapType.class, model.writeObject(config));

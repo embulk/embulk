@@ -9,8 +9,8 @@ module Embulk
       raise NotImplementedError, "InputPlugin.transaction(config, &control) must be implemented"
     end
 
-    def self.resume(task, schema, count, &control)
-      raise NotImplementedError, "#{self}.resume(task, schema, count, &control) is not implemented. This plugin is not resumable"
+    def self.resume(task, columns, count, &control)
+      raise NotImplementedError, "#{self}.resume(task, columns, count, &control) is not implemented. This plugin is not resumable"
     end
 
     def self.cleanup(task, schema, count, commit_reports)
@@ -73,7 +73,7 @@ module Embulk
           task_source = DataSource.from_java_object(java_task_source)
           schema = Schema.from_java_object(java_schema)
           commit_reports = java_commit_reports.map {|c| DataSource.from_java_object(c) }
-          @ruby_class.cleanup(task_source, schema, commit_reports)
+          @ruby_class.cleanup(task_source, schema, processor_count, commit_reports)
           return nil
         end
 

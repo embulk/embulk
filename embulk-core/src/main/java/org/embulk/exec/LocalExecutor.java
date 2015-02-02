@@ -1,6 +1,7 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -208,6 +209,10 @@ public class LocalExecutor
 
         public boolean isAllCommitted()
         {
+            if (processorCount <= 0) {
+                // not initialized
+                return false;
+            }
             for (int i=0; i < processorCount; i++) {
                 if (!isOutputCommitted(i)) {
                     return false;
@@ -293,8 +298,12 @@ public class LocalExecutor
         public ExecutionResult buildExecuteResultWithWarningException(Throwable ex)
         {
             NextConfig nextConfig = Exec.newNextConfig();
-            nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
-            nextConfig.getNestedOrSetEmpty("out").merge(outputNextConfig);
+            if (inputNextConfig != null) {
+                nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
+            }
+            if (outputNextConfig != null) {
+                nextConfig.getNestedOrSetEmpty("out").merge(outputNextConfig);
+            }
 
             ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
             for (Throwable e : exceptions) {
@@ -313,10 +322,10 @@ public class LocalExecutor
                 ExecutorTask task, ExecSession exec)
         {
             return new PartialExecutionException(cause, new ResumeState(
-                        exec.getSessionTaskSource(),
+                        exec.getSessionConfigSource(),
                         task.getInputTask(), task.getOutputTask(),
                         inputSchema, outputSchema, processorCount,
-                        ImmutableList.copyOf(inputCommitReports), ImmutableList.copyOf(outputCommitReports)));
+                        Arrays.asList(inputCommitReports), Arrays.asList(outputCommitReports)));
         }
     }
 
@@ -352,7 +361,7 @@ public class LocalExecutor
     public ExecutionResult resume(final ConfigSource config, final ResumeState resume)
     {
         try {
-            ExecSession exec = new ExecSession(injector, resume.getExecSessionTaskSource());
+            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
             return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
@@ -364,7 +373,23 @@ public class LocalExecutor
         }
     }
 
-    public void cleanup(ConfigSource config, final ResumeState resume)
+    public void cleanup(final ConfigSource config, final ResumeState resume)
+    {
+        try {
+            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
+            Exec.doWith(exec, new ExecAction<Void>() {
+                public Void run()
+                {
+                    doCleanup(config, resume);
+                    return null;
+                }
+            });
+        } catch (Exception ex) {
+            throw Throwables.propagate(ex);
+        }
+    }
+
+    public void doCleanup(ConfigSource config, ResumeState resume)
     {
         ExecutorTask task = config.loadConfig(ExecutorTask.class);
         InputPlugin in = newInputPlugin(task);
@@ -468,6 +493,15 @@ public class LocalExecutor
                                     task.setFilterTasks(filterTasks);
                                     task.setOutputTask(outputTask);
 
+                                    for (int i=0; i < resume.getOutputCommitReports().size(); i++) {
+                                        if (resume.getOutputCommitReports().get(i) != null) {
+                                            state.start(i);
+                                            state.setInputCommitReport(i, resume.getInputCommitReports().get(i));
+                                            state.setOutputCommitReport(i, resume.getOutputCommitReports().get(i));
+                                            state.finish(i);
+                                        }
+                                    }
+
                                     process(task.dump(), filterSchemas, processorCount, state);
                                     if (!state.isAllCommitted()) {
                                         throw state.getRepresentativeException();
@@ -502,13 +536,20 @@ public class LocalExecutor
     {
         List<Future<Throwable>> futures = new ArrayList<>(processorCount);
         try {
-            state.getLogger().info("Running {} tasks using {} local threads", processorCount, maxThreads);
             for (int i=0; i < processorCount; i++) {
-                futures.add(startProcessor(taskSource, filterSchemas, i, state));
+                if (state.isOutputCommitted(i)) {
+                    state.getLogger().warn("Skipped resumed task {}", i);
+                    futures.add(null);  // resumed
+                } else {
+                    futures.add(startProcessor(taskSource, filterSchemas, i, state));
+                }
             }
             showProgress(state);
 
             for (int i=0; i < processorCount; i++) {
+                if (futures.get(i) == null) {
+                    continue;
+                }
                 try {
                     state.setException(i, futures.get(i).get());
                 } catch (ExecutionException ex) {
@@ -521,7 +562,7 @@ public class LocalExecutor
             }
         } finally {
             for (Future<Throwable> future : futures) {
-                if (!future.isDone()) {
+                if (future != null && !future.isDone()) {
                     future.cancel(true);
                     // TODO join?
                 }

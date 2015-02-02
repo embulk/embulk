@@ -64,9 +64,9 @@ public class ExecSession
         this.transactionTimeZone = task.getTransactionTimeZone();
     }
 
-    public TaskSource getSessionTaskSource()
+    public ConfigSource getSessionConfigSource()
     {
-        return newTaskSource()
+        return newConfigSource()
             .set("transaction_time", transactionTime)
             .set("transaction_time_zone", transactionTimeZone);
     }
