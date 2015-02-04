@@ -1,4 +1,13 @@
 
+2015-02-04 version 0.3.2:
+
+* Fixed a problem where ruby input plugins can't use timestamp type (reported
+  by @shun0102)
+* Embulk::Page includes Enumerable to include map, each_with_index, and other
+   a lot of convenient methods (@niku++)
+* Fixed TimestampType::DEFAULT_FORMAT to use ':' as the separator of times
+
+
 2015-02-04 version 0.3.1:
 
 * Added -C, --classpath option to add java classpath
