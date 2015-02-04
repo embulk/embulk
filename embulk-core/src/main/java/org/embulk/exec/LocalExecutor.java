@@ -158,7 +158,7 @@ public class LocalExecutor
             finished[i] = true;
         }
 
-        public int getProcessrCount()
+        public int getProcessorCount()
         {
             return processorCount;
         }
@@ -324,7 +324,7 @@ public class LocalExecutor
             return new PartialExecutionException(cause, new ResumeState(
                         exec.getSessionConfigSource(),
                         task.getInputTask(), task.getOutputTask(),
-                        inputSchema, outputSchema, processorCount,
+                        inputSchema, outputSchema,
                         Arrays.asList(inputCommitReports), Arrays.asList(outputCommitReports)));
         }
     }
@@ -401,10 +401,10 @@ public class LocalExecutor
                 Iterables.filter(resume.getOutputCommitReports(), Predicates.notNull()));
 
         in.cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
-                resume.getProcessrCount(), successInputCommitReports);
+                resume.getInputCommitReports().size(), successInputCommitReports);
 
         out.cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
-                resume.getProcessrCount(), successOutputCommitReports);
+                resume.getOutputCommitReports().size(), successOutputCommitReports);
     }
 
     private ExecutionResult doRun(ConfigSource config)
@@ -473,7 +473,7 @@ public class LocalExecutor
 
         final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
         try {
-            NextConfig inputNextConfig = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getProcessrCount(), new InputPlugin.Control() {
+            NextConfig inputNextConfig = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
                 {
                     // TODO validate inputTask?
@@ -572,7 +572,7 @@ public class LocalExecutor
 
     private void showProgress(ProcessState state)
     {
-        int total = state.getProcessrCount();
+        int total = state.getProcessorCount();
         int finished = state.getFinishedCount();
         int started = state.getStartedCount();
         state.getLogger().info(String.format("{done:%3d / %d, running: %d}", finished, total, started - finished));

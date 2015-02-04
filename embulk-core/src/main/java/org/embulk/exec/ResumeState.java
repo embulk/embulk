@@ -16,7 +16,6 @@ public class ResumeState
     private final TaskSource outputTaskSource;
     private final Schema inputSchema;
     private final Schema outputSchema;
-    private final int processorCount;
     private final List<CommitReport> inputCommitReports;
     private final List<CommitReport> outputCommitReports;
 
@@ -27,7 +26,6 @@ public class ResumeState
             @JsonProperty("out_task") TaskSource outputTaskSource,
             @JsonProperty("in_schema") Schema inputSchema,
             @JsonProperty("out_schema") Schema outputSchema,
-            @JsonProperty("processors") int processorCount,
             @JsonProperty("in_reports") List<CommitReport> inputCommitReports,
             @JsonProperty("out_reports") List<CommitReport> outputCommitReports)
     {
@@ -36,7 +34,6 @@ public class ResumeState
         this.outputTaskSource = outputTaskSource;
         this.inputSchema = inputSchema;
         this.outputSchema = outputSchema;
-        this.processorCount = processorCount;
         this.inputCommitReports = inputCommitReports;
         this.outputCommitReports = outputCommitReports;
     }
@@ -69,12 +66,6 @@ public class ResumeState
     public Schema getOutputSchema()
     {
         return outputSchema;
-    }
-
-    @JsonProperty("processors")
-    public int getProcessrCount()
-    {
-        return processorCount;
     }
 
     @JsonProperty("in_reports")
