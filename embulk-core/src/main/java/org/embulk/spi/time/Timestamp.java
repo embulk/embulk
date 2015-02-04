@@ -95,7 +95,7 @@ public class Timestamp
         return time;
     }
 
-    public Timestamp fromRubyTime(RubyTime time)
+    public static Timestamp fromRubyTime(RubyTime time)
     {
         long msec = time.getDateTime().getMillis();
         long sec = msec / 1000;
