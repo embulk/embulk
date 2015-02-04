@@ -18,14 +18,17 @@ module Embulk
     usage nil unless i
     subcmd = argv.slice!(i)
 
-    load_paths = []
-    options = {}
-
     # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
     $LOAD_PATH << Embulk.home('lib')
 
+    require 'java'
     require 'optparse'
     op = OptionParser.new
+
+    load_paths = []
+    classpaths = []
+    classpath_separator = java.io.File.pathSeparator
+    options = {}
 
     op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       # only for help message. implemented at lib/embulk/command/embulk.rb
@@ -45,8 +48,11 @@ module Embulk
       op.banner = "Usage: run <config.yml>"
       op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
+      end
+      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
+        classpaths.concat classpath.split(classpath_separator)
       end
       op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
         options[:nextConfigOutputPath] = path
@@ -60,8 +66,11 @@ module Embulk
       op.banner = "Usage: run <config.yml>"
       op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
+      end
+      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
+        classpaths.concat classpath.split(classpath_separator)
       end
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
         options[:resumeStatePath] = path
@@ -72,8 +81,11 @@ module Embulk
       op.banner = "Usage: preview <config.yml>"
       op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
+      end
+      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
+        classpaths.concat classpath.split(classpath_separator)
       end
       args = 1..1
 
@@ -82,8 +94,11 @@ module Embulk
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
         options[:nextConfigOutputPath] = path
       end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path or jar file path') do |load_path|
+      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
+      end
+      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
+        classpaths.concat classpath.split(classpath_separator)
       end
       args = 1..1
 
@@ -122,6 +137,7 @@ module Embulk
       require 'fileutils'
       require 'rubygems/gem_runner'
       setup_load_paths(load_paths)
+      setup_classpaths(classpaths)
 
       unless File.exists?(path)
         puts "Initializing #{path}..."
@@ -206,6 +222,7 @@ module Embulk
       end
 
       setup_load_paths(load_paths)
+      setup_classpaths(classpaths)
 
       org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
     end
@@ -226,15 +243,17 @@ module Embulk
   end
 
   def self.setup_load_paths(load_paths)
+    # first $LOAD_PATH has highet priority. later load_paths should have highest priority.
     load_paths.each do |load_path|
-      if File.file?(load_path)
-        # jar files
-        require File.expand_path(load_path)
-      else
-        # ruby script directory (add at the beginning of $LOAD_PATH to make it highest priority)
-        $LOAD_PATH.unshift File.expand_path(load_path)
-      end
+      # ruby script directory (use unshift to make it highest priority)
+      $LOAD_PATH.unshift File.expand_path(load_path)
     end
+  end
+
+  def self.setup_classpaths(classpaths)
+    classpaths.each {|classpath|
+      $CLASSPATH << classpath  # $CLASSPATH object doesn't have concat method
+    }
   end
 
   def self.usage(message)
