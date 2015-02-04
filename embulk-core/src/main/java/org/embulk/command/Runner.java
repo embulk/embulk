@@ -129,7 +129,9 @@ public class Runner
         }
 
         // delete resume file
-        new File(options.getResumeStatePath()).delete();
+        if (options.getResumeStatePath() != null) {
+            new File(options.getResumeStatePath()).delete();
+        }
 
         // write next config
         NextConfig nextConfig = result.getNextConfig();
