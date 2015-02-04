@@ -4,6 +4,8 @@ module Embulk
   # TODO pure-ruby page reader
 
   class Page
+    include Enumerable
+
     def initialize(java_page, schema)
       @java_page = java_page
       @schema = schema
