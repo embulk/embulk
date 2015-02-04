@@ -1,4 +1,16 @@
 
+2015-02-03 version 0.3.0:
+
+* Added resume functionality. InputPlugin and OutputPlugin needs to implement
+  resume and cleanup methods.
+* cli: embulk-run supports -r, --resume-state PATH option.
+* Added FilterInputPlugin Java API.
+* Added FilterInputPlugin JRuby API.
+* Configuration file accepts filters: array entry.
+* Added gradle-versions-plugin to build.gradle (@seratch++)
+* Fixed broken dependencies at build.gradle (@thagikura++)
+
+
 2015-01-29 version 0.2.1:
 
 * Fixed LineEncoder#finish to flush all remaining buffer (reported by @aibou)
