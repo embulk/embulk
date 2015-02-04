@@ -1,20 +1,23 @@
-# Embulk
-
-A plugin-based parallel bulk data loader that makes painful data integration works relaxed.
-
-## What's Embulk?
+# What's Embulk?
 
 Embulk is a plugin-based parallel bulk data loader that helps **data transfer** between various **storages**, **databases**, **NoSQL** and **cloud services**.
 
-You can install input and output plugins to integrate many other file formats and storages.
-
-You also can release plugins to share your efforts of data cleaning, error handling, transaction control, and retrying. 
-Packaging effrots into plugins **brings OSS-style development to the data scripts** which **was tend to be one-time adhoc scripts**.
+You can release plugins to share your efforts of data cleaning, error handling, transaction control, and retrying. Packaging effrots into plugins **brings OSS-style development to the data scripts** which **was tend to be one-time adhoc scripts**.
 
 [Embulk, an open-source plugin-based parallel bulk data loader](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed) at Slideshare
 
 [![Embulk](https://gist.githubusercontent.com/frsyuki/f322a77ee2766a508ba9/raw/e8539b6b4fda1b3357e8c79d3966aa8148dbdbd3/embulk-overview.png)](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed/12)
 
+# Document
+
+* [Quick Start](#quick-start)
+  * [Using plugins](#using-plugins)
+  * [Using plugin bundle](#using-plugin-bundle)
+  * [Releasing plugins to RubyGems](#releasing-plugins-to-rubygems)
+  * [Resuming a failed transaction](#resuming-a-failed-transaction)
+* [Embulk Development](#embulk-development)
+  * [Build](#build)
+  * [Release](#release)
 
 ## Quick Start
 
