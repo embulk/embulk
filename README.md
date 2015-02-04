@@ -67,6 +67,28 @@ TODO: documents
 embulk-plugin-xyz
 ```
 
+### Resuming a failed transaction
+
+Embulk supports resuming failed transactions.
+To enable resuming, you need to start transaction with `-r PATH` option:
+
+```
+java -jar embulk.jar run config.yml -r resume-state.yml
+```
+
+If the transaction fails, embulk stores state some states to the yaml file. You can retry the transaction using exactly same command:
+
+```
+java -jar embulk.jar run config.yml -r resume-state.yml
+```
+
+If you giveup to resume the transaction, you can use `embulk cleanup` subcommand to delete intermediate data:
+
+```
+java -jar embulk.jar cleanup config.yml -r resume-state.yml
+```
+
+
 ## Embulk Development
 
 ### Build
