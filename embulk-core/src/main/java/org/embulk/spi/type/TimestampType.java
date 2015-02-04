@@ -7,7 +7,7 @@ public class TimestampType
 {
     static final TimestampType TIMESTAMP = new TimestampType();
 
-    private static final String DEFAULT_FORMAT = "%Y-%m-%d %H-%M-%S,%N %z";
+    private static final String DEFAULT_FORMAT = "%Y-%m-%d %H:%M:%S.%N %3z";
 
     private final String format;
 
