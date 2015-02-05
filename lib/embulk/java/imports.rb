@@ -22,6 +22,7 @@ module Embulk::Java
   java_import 'org.embulk.spi.Column'
   java_import 'org.embulk.spi.type.Type'
   java_import 'org.embulk.spi.type.Types'
+  java_import 'org.embulk.spi.PluginClassLoader'
 
   # TODO
 end
