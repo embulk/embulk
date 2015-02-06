@@ -95,35 +95,35 @@ module Embulk
     end
 
     def new_java_input(type)
-      lookup(:input, type).java_object
+      lookup(:input, type).to_java
     end
 
     def new_java_output(type)
-      lookup(:output, type).java_object
+      lookup(:output, type).to_java
     end
 
     def new_java_parser(type)
-      lookup(:parser, type).java_object
+      lookup(:parser, type).to_java
     end
 
     def new_java_formatter(type)
-      lookup(:formatter, type).java_object
+      lookup(:formatter, type).to_java
     end
 
     def new_java_decoder(type)
-      lookup(:decoder, type).java_object
+      lookup(:decoder, type).to_java
     end
 
     def new_java_encoder(type)
-      lookup(:encoder, type).java_object
+      lookup(:encoder, type).to_java
     end
 
     def new_java_filter(type)
-      lookup(:filter, type).java_object
+      lookup(:filter, type).to_java
     end
 
     def new_java_guess(type)
-      lookup(:guess, type).java_object
+      lookup(:guess, type).to_java
     end
 
     private

@@ -15,7 +15,7 @@ module Embulk
 
     def each
       schema = @schema
-      reader = Java::PageReader.new(schema.java_object)
+      reader = Java::PageReader.new(schema.to_java)
       begin
         reader.setPage(@java_page)
         while reader.nextRecord

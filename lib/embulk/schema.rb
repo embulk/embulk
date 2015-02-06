@@ -82,12 +82,12 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.from_java_object(java_schema)
-        new java_schema.getColumns.map {|column| Column.from_java_object(column) }
+      def self.from_java(java_schema)
+        new java_schema.getColumns.map {|column| Column.from_java(column) }
       end
 
-      def java_object
-        columns = self.map {|column| column.java_object }
+      def to_java
+        columns = self.map {|column| column.to_java }
         Java::Schema.new(columns)
       end
     end

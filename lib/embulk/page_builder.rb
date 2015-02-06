@@ -2,7 +2,7 @@ module Embulk
 
   class PageBuilder
     def initialize(schema, java_page_output)
-      @page_builder = Java::PageBuilder.new(Java::Injected::BufferAllocator, schema.java_object, java_page_output)
+      @page_builder = Java::PageBuilder.new(Java::Injected::BufferAllocator, schema.to_java, java_page_output)
       @schema = schema
     end
 

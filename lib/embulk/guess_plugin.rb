@@ -6,11 +6,11 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.java_object
+      def self.to_java
         JavaAdapter.new(new)
       end
 
-      def self.from_java_object(java_guess)
+      def self.from_java(java_guess)
         RubyAdapter.new(java_guess)
       end
 
@@ -20,13 +20,13 @@ module Embulk
         end
 
         def guess(config, sample)
-          java_config = config.java_object
-          java_sample = sample.java_object
+          java_config = config.to_java
+          java_sample = sample.to_java
           java_next_config = @java_guess.guess(java_config, java_sample)
-          return DataSource.from_java_object(java_next_config)
+          return DataSource.from_java(java_next_config)
         end
 
-        def java_object
+        def to_java
           @java_guess
         end
       end
@@ -39,10 +39,10 @@ module Embulk
         end
 
         def guess(java_config, java_sample)
-          config = DataSource.from_java_object(java_config)
-          sample = Buffer.from_java_object(java_sample)
+          config = DataSource.from_java(java_config)
+          sample = Buffer.from_java(java_sample)
           next_config_hash = @ruby_guess.guess(config, sample)
-          return DataSource.from_ruby_hash(next_config_hash).java_object
+          return DataSource.from_ruby_hash(next_config_hash).to_java
         end
       end
     end
@@ -60,7 +60,7 @@ module Embulk
         return DataSource.new
       end
 
-      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.java_object]]), task)
+      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), task)
       sample_text = ''
       while decoder.nextFile
         first = true
@@ -94,7 +94,7 @@ module Embulk
         return DataSource.new
       end
 
-      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.java_object]]), task)
+      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), task)
       sample_lines = []
       while decoder.nextFile
         while line = decoder.poll
