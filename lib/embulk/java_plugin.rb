@@ -1,0 +1,79 @@
+module Embulk
+
+  require 'embulk/plugin'
+
+  class JavaPlugin
+    def self.classloader(dir)
+      jars = Dir["#{dir}/**/*.jar"]
+      urls = jars.map {|jar| java.net.URL.new "file://#{File.expand_path(jar)}" }
+      classloader = Java::PluginClassLoader.new(JRuby.runtime, urls)
+    end
+
+    def self.register_input(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)  # TODO handle class not found error
+      Plugin.register_java_input(name, java_class)
+    end
+
+    def self.register_output(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_output(name, java_class)
+    end
+
+    def self.register_filter(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_filter(name, java_class)
+    end
+
+    def self.register_parser(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_parser(name, java_class)
+    end
+
+    def self.register_formatter(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_formatter(name, java_class)
+    end
+
+    def self.register_decoder(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_decoder(name, java_class)
+    end
+
+    def self.register_encoder(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_encoder(name, java_class)
+    end
+
+    def self.register_guess(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_guess(name, java_class)
+    end
+
+    def self.ruby_adapter_class(java_class, ruby_base_class, ruby_module)
+      Class.new(ruby_base_class) do
+        const_set(:JAVA_CLASS, java_class)
+
+        include ruby_module
+        extend ruby_module::ClassMethods
+
+        unless method_defined?(:java_object)
+          def java_object
+            @java_object ||= self.class.new_java
+          end
+        end
+
+        unless (class<<self;self;end).method_defined?(:java_class)
+          def self.java_class
+            self::JAVA_CLASS
+          end
+        end
+
+        unless (class<<self;self;end).method_defined?(:new_java)
+          def self.new_java
+            Java.injector.getInstance(java_class)
+          end
+        end
+      end
+    end
+  end
+end

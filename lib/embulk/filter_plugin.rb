@@ -1,5 +1,10 @@
 module Embulk
 
+  require 'embulk/data_source'
+  require 'embulk/schema'
+  require 'embulk/page'
+  require 'embulk/page_builder'
+
   class FilterPlugin
     def self.transaction(config, in_schema, &control)
       yield(config)
@@ -26,7 +31,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.java_object
+      def self.new_java
         JavaAdapter.new(self)
       end
 
@@ -38,20 +43,20 @@ module Embulk
         end
 
         def transaction(java_config, java_in_schema, java_control)
-          config = DataSource.from_java_object(java_config)
-          in_schema = Schema.from_java_object(java_in_schema)
+          config = DataSource.from_java(java_config)
+          in_schema = Schema.from_java(java_in_schema)
           @ruby_class.transaction(config, in_schema) do |task_source_hash, out_columns|
-            java_task_source = DataSource.from_ruby_hash(task_source_hash).java_object
-            java_out_schemas = Schema.new(out_columns).java_object
+            java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
+            java_out_schemas = Schema.new(out_columns).to_java
             java_control.run(java_task_source, java_out_schemas)
           end
           nil
         end
 
         def open(java_task_source, java_in_schema, java_out_schema, java_output)
-          task_source = DataSource.from_java_object(java_task_source)
-          in_schema = Schema.from_java_object(java_in_schema)
-          out_schema = Schema.from_java_object(java_out_schema)
+          task_source = DataSource.from_java(java_task_source)
+          in_schema = Schema.from_java(java_in_schema)
+          out_schema = Schema.from_java(java_out_schema)
           page_builder = PageBuilder.new(out_schema, java_output)
           ruby_object = @ruby_class.new(task_source, in_schema, out_schema, page_builder)
           return OutputAdapter.new(ruby_object, in_schema, page_builder)
@@ -77,9 +82,19 @@ module Embulk
           def close
             @ruby_object.close
           ensure
-              @page_builder.close
+            @page_builder.close
           end
         end
+      end
+
+      def self.from_java(java_class)
+        JavaPlugin.ruby_adapter_class(java_class, FilterPlugin, RubyAdapter)
+      end
+
+      module RubyAdapter
+        module ClassMethods
+        end
+        # TODO
       end
     end
   end

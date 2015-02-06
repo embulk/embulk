@@ -6,26 +6,26 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.from_java_object(java_column)
+      def self.from_java(java_column)
         Column.new(
           java_column.getIndex,
           java_column.getName,
-          Type.from_java_object(java_column.getType))
+          Type.from_java(java_column.getType))
       end
 
-      def java_object
-        Java::Column.new(index, name, Type.to_java_object(type))
+      def to_java
+        Java::Column.new(index, name, Type.new_java_type(type))
       end
     end
   end
 
   module Type
     if Embulk.java?
-      def self.from_java_object(java_type)
+      def self.from_java(java_type)
         java_type.getName.to_sym
       end
 
-      def self.to_java_object(ruby_type)
+      def self.new_java_type(ruby_type)
         case ruby_type
         when :boolean
           Java::Types::BOOLEAN

@@ -39,7 +39,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.from_java_object(java_data_source_impl)
+      def self.from_java(java_data_source_impl)
         json = java_data_source_impl.toString
         new.merge!(JSON.parse(json))
       end
@@ -48,7 +48,7 @@ module Embulk
         new.merge!(hash)
       end
 
-      def java_object
+      def to_java
         json = to_json
         Java::Injected::ModelManager.readObject(Java::DataSourceImpl.java_class, json.to_java)
       end

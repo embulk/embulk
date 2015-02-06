@@ -44,7 +44,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.java_object
+      def self.new_java
         JavaAdapter.new(self)
       end
 
@@ -56,44 +56,44 @@ module Embulk
         end
 
         def transaction(java_config, java_schema, processor_count, java_control)
-          config = DataSource.from_java_object(java_config)
-          schema = Schema.from_java_object(java_schema)
+          config = DataSource.from_java(java_config)
+          schema = Schema.from_java(java_schema)
           next_config_hash = @ruby_class.transaction(config, schema, processor_count) do |task_source_hash|
-            java_task_source = DataSource.from_ruby_hash(task_source_hash).java_object
+            java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_commit_reports = java_control.run(java_task_source)
             java_commit_reports.map {|java_commit_report|
-              DataSource.from_java_object(java_commit_report)
+              DataSource.from_java(java_commit_report)
             }
           end
           # TODO check return type of #transaction
-          return DataSource.from_ruby_hash(next_config_hash).java_object
+          return DataSource.from_ruby_hash(next_config_hash).to_java
         end
 
         def resume(java_task_source, java_schema, processor_count, java_control)
-          task_source = DataSource.from_java_object(java_task_source)
-          schema = Schema.from_java_object(java_schema)
+          task_source = DataSource.from_java(java_task_source)
+          schema = Schema.from_java(java_schema)
           next_config_hash = @ruby_class.resume(task_source, schema, processor_count) do |task_source_hash,columns,processor_count|
-            java_task_source = DataSource.from_ruby_hash(task_source_hash).java_object
+            java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_commit_reports = java_control.run(java_task_source)
             java_commit_reports.map {|java_commit_report|
-              DataSource.from_java_object(java_commit_report)
+              DataSource.from_java(java_commit_report)
             }
           end
           # TODO check return type of #resume
-          return DataSource.from_ruby_hash(next_config_hash).java_object
+          return DataSource.from_ruby_hash(next_config_hash).to_java
         end
 
         def cleanup(java_task_source, java_schema, processor_count, java_commit_reports)
-          task_source = DataSource.from_java_object(java_task_source)
-          schema = Schema.from_java_object(java_schema)
-          commit_reports = java_commit_reports.map {|c| DataSource.from_java_object(c) }
+          task_source = DataSource.from_java(java_task_source)
+          schema = Schema.from_java(java_schema)
+          commit_reports = java_commit_reports.map {|c| DataSource.from_java(c) }
           @ruby_class.cleanup(task_source, schema, processor_count, commit_reports)
           return nil
         end
 
         def open(java_task_source, java_schema, processor_index)
-          task_source = DataSource.from_java_object(java_task_source)
-          schema = Schema.from_java_object(java_schema)
+          task_source = DataSource.from_java(java_task_source)
+          schema = Schema.from_java(java_schema)
           ruby_object = @ruby_class.new(task_source, schema, processor_index)
           return OutputAdapter.new(ruby_object, schema)
         end
@@ -107,6 +107,7 @@ module Embulk
           end
 
           def add(java_page)
+            # TODO reuse page reader
             @ruby_object.add Page.new(java_page, @schema)
           end
 
@@ -124,9 +125,20 @@ module Embulk
 
           def commit
             commit_report_hash = @ruby_object.commit
-            return DataSource.from_ruby_hash(commit_report_hash).java_object
+            return DataSource.from_ruby_hash(commit_report_hash).to_java
           end
         end
+      end
+
+      def self.from_java(java_class)
+        JavaPlugin.ruby_adapter_class(java_class, OutputPlugin, RubyAdapter)
+      end
+
+      module RubyAdapter
+        module ClassMethods
+          # TODO transaction, resume, cleanup
+        end
+        # TODO add, finish, close, abort, commit
       end
     end
   end

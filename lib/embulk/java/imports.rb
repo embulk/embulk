@@ -13,6 +13,10 @@ module Embulk::Java
   java_import 'org.embulk.spi.OutputPlugin'
   java_import 'org.embulk.spi.FilterPlugin'
   java_import 'org.embulk.spi.InputPlugin'
+  java_import 'org.embulk.spi.ParserPlugin'
+  java_import 'org.embulk.spi.FormatterPlugin'
+  java_import 'org.embulk.spi.EncoderPlugin'
+  java_import 'org.embulk.spi.DecoderPlugin'
   java_import 'org.embulk.spi.TransactionalPageOutput'
   java_import 'org.embulk.spi.PageReader'
   java_import 'org.embulk.spi.PageBuilder'
@@ -22,6 +26,9 @@ module Embulk::Java
   java_import 'org.embulk.spi.Column'
   java_import 'org.embulk.spi.type.Type'
   java_import 'org.embulk.spi.type.Types'
+  java_import 'org.embulk.spi.PluginClassLoader'
+  java_import 'org.embulk.spi.FileInputRunner'
+  java_import 'org.embulk.spi.FileOutputRunner'
 
   # TODO
 end
