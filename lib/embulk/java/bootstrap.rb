@@ -8,5 +8,10 @@ module Embulk
       #   ModelManager
       #   BufferAllocator
     end
+
+    def self.injector
+      # TODO use org.embulk.spi.Exec.getInjector
+      Injector
+    end
   end
 end

@@ -11,6 +11,7 @@ module Embulk
   require 'embulk/decoder_plugin'
   require 'embulk/encoder_plugin'
   require 'embulk/guess_plugin'
+  require 'embulk/java_plugin' if Embulk.java?
 
   class PluginManager
     def initialize
@@ -29,12 +30,12 @@ module Embulk
                       "Output plugin #{klass} must extend OutputPlugin")
     end
 
-    ## TODO ParserPlugin JRuby API is not written by anyone yet
+    ## TODO FileInput is not implemented yet.
     #def register_parser(type, klass)
     #  register_plugin(:parser, type, klass, ParserPlugin)
     #end
 
-    ## TODO FormatterPlugin JRuby API is not written by anyone yet
+    ## TODO FileOutput is not implemented yet.
     #def register_formatter(type, klass)
     #  register_plugin(:formatter, type, klass, FormatterPlugin)
     #end
