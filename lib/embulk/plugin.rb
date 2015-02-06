@@ -6,10 +6,10 @@ module Embulk
   require 'embulk/input_plugin'
   require 'embulk/filter_plugin'
   require 'embulk/output_plugin'
-  #require 'embulk/parser_plugin'
-  #require 'embulk/formatter_plugin'
-  #require 'embulk/decoder_plugin'
-  #require 'embulk/encoder_plugin'
+  require 'embulk/parser_plugin'
+  require 'embulk/formatter_plugin'
+  require 'embulk/decoder_plugin'
+  require 'embulk/encoder_plugin'
   require 'embulk/guess_plugin'
 
   class PluginManager
@@ -29,21 +29,25 @@ module Embulk
                       "Output plugin #{klass} must extend OutputPlugin")
     end
 
-    def register_parser(type, klass)
-      register_plugin(:parser, type, klass, ParserPlugin)
-    end
+    ## TODO ParserPlugin JRuby API is not written by anyone yet
+    #def register_parser(type, klass)
+    #  register_plugin(:parser, type, klass, ParserPlugin)
+    #end
 
-    def register_formatter(type, klass)
-      register_plugin(:formatter, type, klass, FormatterPlugin)
-    end
+    ## TODO FormatterPlugin JRuby API is not written by anyone yet
+    #def register_formatter(type, klass)
+    #  register_plugin(:formatter, type, klass, FormatterPlugin)
+    #end
 
-    def register_decoder(type, klass)
-      register_plugin(:decoder, type, klass, DecoderPlugin)
-    end
+    ## TODO DecoderPlugin JRuby API is not written by anyone yet
+    #def register_decoder(type, klass)
+    #  register_plugin(:decoder, type, klass, DecoderPlugin)
+    #end
 
-    def register_encoder(type, klass)
-      register_plugin(:encoder, type, klass, EncoderPlugin)
-    end
+    ## TODO EncoderPlugin JRuby API is not written by anyone yet
+    #def register_encoder(type, klass)
+    #  register_plugin(:encoder, type, klass, EncoderPlugin)
+    #end
 
     def register_filter(type, klass)
       register_plugin(:filter, type, klass, FilterPlugin)
@@ -94,36 +98,76 @@ module Embulk
       lookup(:guess, type)
     end
 
+    def register_java_input(type, klass)
+      register_java_plugin(:input, type, klass, InputPlugin,
+                           org.embulk.spi.InputPlugin)
+    end
+
+    def register_java_output(type, klass)
+      register_java_plugin(:output, type, klass, OutputPlugin,
+                           org.embulk.spi.OutputPlugin)
+    end
+
+    def register_java_parser(type, klass)
+      register_java_plugin(:parser, type, klass, ParserPlugin,
+                           org.embulk.spi.ParserPlugin)
+    end
+
+    def register_java_formatter(type, klass)
+      register_java_plugin(:formatter, type, klass, FormatterPlugin,
+                           org.embulk.spi.FormatterPlugin)
+    end
+
+    def register_java_decoder(type, klass)
+      register_java_plugin(:decoder, type, klass, DecoderPlugin,
+                           org.embulk.spi.DecoderPlugin)
+    end
+
+    def register_java_encoder(type, klass)
+      register_java_plugin(:encoder, type, klass, EncoderPlugin,
+                           org.embulk.spi.EncoderPlugin)
+    end
+
+    def register_java_filter(type, klass)
+      register_java_plugin(:filter, type, klass, FilterPlugin,
+                           org.embulk.spi.FilterPlugin)
+    end
+
+    def register_java_guess(type, klass)
+      register_java_plugin(:guess, type, klass, GuessPlugin,
+                           org.embulk.spi.GuessPlugin)
+    end
+
     def new_java_input(type)
-      lookup(:input, type).to_java
+      lookup(:input, type).new_java
     end
 
     def new_java_output(type)
-      lookup(:output, type).to_java
+      lookup(:output, type).new_java
     end
 
     def new_java_parser(type)
-      lookup(:parser, type).to_java
+      lookup(:parser, type).new_java
     end
 
     def new_java_formatter(type)
-      lookup(:formatter, type).to_java
+      lookup(:formatter, type).new_java
     end
 
     def new_java_decoder(type)
-      lookup(:decoder, type).to_java
+      lookup(:decoder, type).new_java
     end
 
     def new_java_encoder(type)
-      lookup(:encoder, type).to_java
+      lookup(:encoder, type).new_java
     end
 
     def new_java_filter(type)
-      lookup(:filter, type).to_java
+      lookup(:filter, type).new_java
     end
 
     def new_java_guess(type)
-      lookup(:guess, type).to_java
+      lookup(:guess, type).new_java
     end
 
     private
@@ -136,12 +180,21 @@ module Embulk
       @registries[category].lookup(type)
     end
 
-    def register_plugin(category, type, klass, iface, message=nil)
-      unless klass < iface
-        message ||= "Plugin #{klass} must implement #{iface}"
+    def register_plugin(category, type, klass, base_class, message=nil)
+      unless klass < base_class
+        message ||= "Plugin #{klass} must inherit #{base_class}"
         raise message
       end
       @registries[category].register(type, klass)
+    end
+
+    def register_java_plugin(category, type, klass, ruby_base_class, iface, message=nil)
+      unless klass < iface
+        message ||= "Java plugin #{klass} must implement #{iface}"
+        raise message
+      end
+      adapted = ruby_base_class.from_java(klass)
+      @registries[category].register(type, adapted)
     end
   end
 

@@ -44,7 +44,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.to_java
+      def self.new_java
         JavaAdapter.new(self)
       end
 
@@ -107,6 +107,7 @@ module Embulk
           end
 
           def add(java_page)
+            # TODO reuse page reader
             @ruby_object.add Page.new(java_page, @schema)
           end
 
@@ -127,6 +128,21 @@ module Embulk
             return DataSource.from_ruby_hash(commit_report_hash).to_java
           end
         end
+      end
+
+      def self.from_java(java_class)
+        if java_class < org.embulk.spi.FileInputPlugin
+          FileOutputPlugin.from_java(java_class)
+        else
+          JavaPlugin.ruby_adapter_class(java_class, OutputPlugin, RubyAdapter)
+        end
+      end
+
+      module RubyAdapter
+        module ClassMethods
+          # TODO transaction, resume, cleanup
+        end
+        # TODO add, finish, close, abort, commit
       end
     end
   end

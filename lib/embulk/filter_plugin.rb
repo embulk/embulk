@@ -1,5 +1,10 @@
 module Embulk
 
+  require 'embulk/data_source'
+  require 'embulk/schema'
+  require 'embulk/page'
+  require 'embulk/page_builder'
+
   class FilterPlugin
     def self.transaction(config, in_schema, &control)
       yield(config)
@@ -26,7 +31,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.to_java
+      def self.new_java
         JavaAdapter.new(self)
       end
 
@@ -77,9 +82,19 @@ module Embulk
           def close
             @ruby_object.close
           ensure
-              @page_builder.close
+            @page_builder.close
           end
         end
+      end
+
+      def self.from_java(java_class)
+        JavaPlugin.ruby_adapter_class(java_class, FilterPlugin, RubyAdapter)
+      end
+
+      module RubyAdapter
+        module ClassMethods
+        end
+        # TODO
       end
     end
   end

@@ -29,7 +29,7 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.to_java
+      def self.new_java
         JavaAdapter.new(self)
       end
 
@@ -88,6 +88,20 @@ module Embulk
             page_builder.close
           end
         end
+      end
+
+      def self.from_java(java_class)
+        if java_class < org.embulk.spi.FileInputPlugin
+          FileInputPlugin.from_java(java_class)
+        else
+          JavaPlugin.ruby_adapter_class(java_class, InputPlugin, RubyAdapter)
+        end
+      end
+
+      module RubyAdapter
+        module ClassMethods
+        end
+        # TODO
       end
     end
   end

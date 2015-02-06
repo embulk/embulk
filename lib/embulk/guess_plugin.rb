@@ -6,29 +6,8 @@ module Embulk
     end
 
     if Embulk.java?
-      def self.to_java
+      def self.new_java
         JavaAdapter.new(new)
-      end
-
-      def self.from_java(java_guess)
-        RubyAdapter.new(java_guess)
-      end
-
-      class RubyAdapter < Embulk::GuessPlugin
-        def initialized(java_guess)
-          @java_guess = java_guess
-        end
-
-        def guess(config, sample)
-          java_config = config.to_java
-          java_sample = sample.to_java
-          java_next_config = @java_guess.guess(java_config, java_sample)
-          return DataSource.from_java(java_next_config)
-        end
-
-        def to_java
-          @java_guess
-        end
       end
 
       class JavaAdapter
@@ -43,6 +22,22 @@ module Embulk
           sample = Buffer.from_java(java_sample)
           next_config_hash = @ruby_guess.guess(config, sample)
           return DataSource.from_ruby_hash(next_config_hash).to_java
+        end
+      end
+
+      def self.from_java(java_class)
+        JavaPlugin.ruby_adapter(java_class, GuessPlugin, RubyAdapter)
+      end
+
+      module RubyAdapter
+        module ClassMethods
+        end
+
+        def guess(config, sample)
+          java_config = config.to_java
+          java_sample = sample.to_java
+          java_next_config = java_object.guess(java_config, java_sample)
+          return DataSource.from_java(java_next_config)
         end
       end
     end
