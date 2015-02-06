@@ -22,7 +22,6 @@ public class StandardPluginModule
 
         // input plugins
         registerPluginTo(binder, InputPlugin.class, "file", LocalFileInputPlugin.class);
-        registerPluginTo(binder, InputPlugin.class, "s3_file", S3FileInputPlugin.class);
 
         // parser plugins
         registerPluginTo(binder, ParserPlugin.class, "csv", CsvParserPlugin.class);
