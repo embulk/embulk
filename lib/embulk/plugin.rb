@@ -4,8 +4,10 @@ module Embulk
   require 'embulk/error'
   require 'embulk/plugin_registry'
   require 'embulk/input_plugin'
-  require 'embulk/filter_plugin'
+  require 'embulk/file_input_plugin'
   require 'embulk/output_plugin'
+  require 'embulk/file_output_plugin'
+  require 'embulk/filter_plugin'
   require 'embulk/parser_plugin'
   require 'embulk/formatter_plugin'
   require 'embulk/decoder_plugin'
@@ -30,6 +32,10 @@ module Embulk
                       "Output plugin #{klass} must extend OutputPlugin")
     end
 
+    def register_filter(type, klass)
+      register_plugin(:filter, type, klass, FilterPlugin)
+    end
+
     ## TODO FileInput is not implemented yet.
     #def register_parser(type, klass)
     #  register_plugin(:parser, type, klass, ParserPlugin)
@@ -50,93 +56,94 @@ module Embulk
     #  register_plugin(:encoder, type, klass, EncoderPlugin)
     #end
 
-    def register_filter(type, klass)
-      register_plugin(:filter, type, klass, FilterPlugin)
-    end
-
     def register_guess(type, klass)
       register_plugin(:guess, type, klass, GuessPlugin,
                      "Guess plugin #{klass} must extend GuessPlugin, LineGuessPlugin, or TextGuessPlugin class")
     end
 
-    def get_input(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO InputPlugin::RubyAdapter is not written by anyone yet
+    #def get_input(type)
+    #  lookup(:input, type)
+    #end
 
-    def get_output(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO OutputPlugin::RubyAdapter is not written by anyone yet
+    #def get_output(type)
+    #  lookup(:output, type)
+    #end
 
-    def get_parser(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO FilterPlugin::RubyAdapter is not written by anyone yet
+    #def get_filter(type)
+    #  lookup(:filter, type)
+    #end
 
-    def get_formatter(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO FilterPlugin::RubyAdapter is not written by anyone yet
+    #def get_parser(type)
+    #  # TODO not implemented yet
+    #  lookup(:parser, type)
+    #end
 
-    def get_decoder(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO FormatterPlugin::RubyAdapter is not written by anyone yet
+    #def get_formatter(type)
+    #  # TODO not implemented yet
+    #  lookup(:formatter, type)
+    #end
 
-    def get_encoder(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO DecoderPlugin::RubyAdapter is not written by anyone yet
+    #def get_decoder(type)
+    #  # TODO not implemented yet
+    #  lookup(:decoder, type)
+    #end
 
-    def get_filter(type)
-      # TODO not implemented yet
-      lookup(:guess, type)
-    end
+    # TODO EncoderPlugin::RubyAdapter is not written by anyone yet
+    #def get_encoder(type)
+    #  # TODO not implemented yet
+    #  lookup(:encoder, type)
+    #end
 
     def get_guess(type)
-      # TODO not implemented yet
       lookup(:guess, type)
     end
 
     def register_java_input(type, klass)
-      register_java_plugin(:input, type, klass, InputPlugin,
-                           org.embulk.spi.InputPlugin)
+      register_java_plugin(:input, type, klass,
+                           "org.embulk.spi.InputPlugin" => InputPlugin,
+                           "org.embulk.spi.FileInputPlugin" => FileInputPlugin)
     end
 
     def register_java_output(type, klass)
-      register_java_plugin(:output, type, klass, OutputPlugin,
-                           org.embulk.spi.OutputPlugin)
-    end
-
-    def register_java_parser(type, klass)
-      register_java_plugin(:parser, type, klass, ParserPlugin,
-                           org.embulk.spi.ParserPlugin)
-    end
-
-    def register_java_formatter(type, klass)
-      register_java_plugin(:formatter, type, klass, FormatterPlugin,
-                           org.embulk.spi.FormatterPlugin)
-    end
-
-    def register_java_decoder(type, klass)
-      register_java_plugin(:decoder, type, klass, DecoderPlugin,
-                           org.embulk.spi.DecoderPlugin)
-    end
-
-    def register_java_encoder(type, klass)
-      register_java_plugin(:encoder, type, klass, EncoderPlugin,
-                           org.embulk.spi.EncoderPlugin)
+      register_java_plugin(:output, type, klass,
+                           "org.embulk.spi.OutputPlugin" => OutputPlugin,
+                           "org.embulk.spi.FileOutputPlugin" => FileOutputPlugin)
     end
 
     def register_java_filter(type, klass)
-      register_java_plugin(:filter, type, klass, FilterPlugin,
-                           org.embulk.spi.FilterPlugin)
+      register_java_plugin(:filter, type, klass,
+                           "org.embulk.spi.FilterPlugin" => FilterPlugin)
+    end
+
+    def register_java_parser(type, klass)
+      register_java_plugin(:parser, type, klass,
+                           "org.embulk.spi.ParserPlugin" => ParserPlugin)
+    end
+
+    def register_java_formatter(type, klass)
+      register_java_plugin(:formatter, type, klass,
+                           "org.embulk.spi.FormatterPlugin" => FormatterPlugin)
+    end
+
+    def register_java_decoder(type, klass)
+      register_java_plugin(:decoder, type, klass,
+                           "org.embulk.spi.DecoderPlugin" => DecoderPlugin)
+    end
+
+    def register_java_encoder(type, klass)
+      register_java_plugin(:encoder, type, klass,
+                           "org.embulk.spi.EncoderPlugin" => EncoderPlugin)
     end
 
     def register_java_guess(type, klass)
-      register_java_plugin(:guess, type, klass, GuessPlugin,
-                           org.embulk.spi.GuessPlugin)
+      register_java_plugin(:guess, type, klass,
+                           "org.embulk.spi.GuessPlugin" => GuessPlugin)
     end
 
     def new_java_input(type)
@@ -145,6 +152,10 @@ module Embulk
 
     def new_java_output(type)
       lookup(:output, type).new_java
+    end
+
+    def new_java_filter(type)
+      lookup(:filter, type).new_java
     end
 
     def new_java_parser(type)
@@ -161,10 +172,6 @@ module Embulk
 
     def new_java_encoder(type)
       lookup(:encoder, type).new_java
-    end
-
-    def new_java_filter(type)
-      lookup(:filter, type).new_java
     end
 
     def new_java_guess(type)
@@ -189,12 +196,16 @@ module Embulk
       @registries[category].register(type, klass)
     end
 
-    def register_java_plugin(category, type, klass, ruby_base_class, iface, message=nil)
-      unless klass < iface
-        message ||= "Java plugin #{klass} must implement #{iface}"
+    def register_java_plugin(category, type, klass, iface_map, message=nil)
+      found = iface_map.find do |iface_name,ruby_base_class|
+        iface = JRuby.runtime.getJRubyClassLoader.load_class(iface_name)
+        iface.isAssignableFrom(klass)
+      end
+      unless found
+        message ||= "Java plugin #{klass} must implement #{iface_map.keys.join(' or ')}"
         raise message
       end
-      adapted = ruby_base_class.from_java(klass)
+      adapted = found.last.from_java(klass)
       @registries[category].register(type, adapted)
     end
   end
@@ -206,14 +217,14 @@ module Embulk
       extend Forwardable
 
       def_delegators 'INSTANCE',
-        :register_input, :get_input, :new_java_input,
-        :register_output, :get_output, :new_java_output,
-        :register_parser, :get_parser, :new_java_parser,
-        :register_formatter, :get_formatter, :new_java_formatter,
-        :register_decoder, :get_decoder, :new_java_decoder,
-        :register_encoder, :get_encoder, :new_java_encoder,
-        :register_filter, :get_filter, :new_java_filter,
-        :register_guess, :get_guess, :new_java_guess
+        :register_input, :get_input, :register_java_input, :new_java_input,
+        :register_output, :get_output, :register_java_output, :new_java_output,
+        :register_filter, :get_filter, :register_java_filter, :new_java_filter,
+        :register_parser, :get_parser, :register_java_parser, :new_java_parser,
+        :register_formatter, :get_formatter, :register_java_formatter, :new_java_formatter,
+        :register_decoder, :get_decoder, :register_java_decoder, :new_java_decoder,
+        :register_encoder, :get_encoder, :register_java_encoder, :new_java_encoder,
+        :register_guess, :get_guess, :register_java_guess, :new_java_guess
     end
   end
 end

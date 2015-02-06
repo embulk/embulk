@@ -48,7 +48,7 @@ public class PluginClassLoader
             }
 
             try {
-                return resolveClass(findClass(name), resolve);
+                return resolveClass(getParent().loadClass(name), resolve);
             } catch (ClassNotFoundException ignored) {
             }
 

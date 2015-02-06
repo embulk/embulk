@@ -131,11 +131,7 @@ module Embulk
       end
 
       def self.from_java(java_class)
-        if java_class < org.embulk.spi.FileInputPlugin
-          FileOutputPlugin.from_java(java_class)
-        else
-          JavaPlugin.ruby_adapter_class(java_class, OutputPlugin, RubyAdapter)
-        end
+        JavaPlugin.ruby_adapter_class(java_class, OutputPlugin, RubyAdapter)
       end
 
       module RubyAdapter
