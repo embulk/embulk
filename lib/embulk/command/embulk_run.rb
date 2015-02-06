@@ -14,12 +14,18 @@ module Embulk
       Gem.clear_paths  # force rubygems to reload GEM_HOME
     end
 
+    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
+    $LOAD_PATH << Embulk.home('lib')
+
+    if argv.include?('--version')
+      require 'embulk/version'
+      puts "embulk #{Embulk::VERSION}"
+      exit 1
+    end
+
     i = argv.find_index {|arg| arg !~ /^\-/ }
     usage nil unless i
     subcmd = argv.slice!(i)
-
-    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
-    $LOAD_PATH << Embulk.home('lib')
 
     require 'java'
     require 'optparse'
