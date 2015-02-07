@@ -5,7 +5,7 @@ import java.util.List;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -54,13 +54,13 @@ public class FileInputRunner
     }
 
     @Override
-    public NextConfig transaction(ConfigSource config, final InputPlugin.Control control)
+    public ConfigDiff transaction(ConfigSource config, final InputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
         return fileInputPlugin.transaction(config, new RunnerControl(task, control));
     }
 
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int processorCount,
             InputPlugin.Control control)
     {

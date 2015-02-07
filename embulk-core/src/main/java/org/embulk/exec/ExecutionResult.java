@@ -1,22 +1,22 @@
 package org.embulk.exec;
 
 import java.util.List;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 
 public class ExecutionResult
 {
-    private final NextConfig nextConfig;
+    private final ConfigDiff configDiff;
     private final List<Throwable> ignoredExceptions;
 
-    public ExecutionResult(NextConfig nextConfig, List<Throwable> ignoredExceptions)
+    public ExecutionResult(ConfigDiff configDiff, List<Throwable> ignoredExceptions)
     {
-        this.nextConfig = nextConfig;
+        this.configDiff = configDiff;
         this.ignoredExceptions = ignoredExceptions;
     }
 
-    public NextConfig getNextConfig()
+    public ConfigDiff getConfigDiff()
     {
-        return nextConfig;
+        return configDiff;
     }
 
     public List<Throwable> getIgnoredExceptions()

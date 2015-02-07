@@ -8,7 +8,7 @@ import com.google.inject.Injector;
 import com.google.common.base.Throwables;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.DataSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -64,11 +64,11 @@ public class GuessExecutor
                 new PluginType("csv"));
     }
 
-    public NextConfig guess(ExecSession exec, final ConfigSource config)
+    public ConfigDiff guess(ExecSession exec, final ConfigSource config)
     {
         try {
-            return Exec.doWith(exec, new ExecAction<NextConfig>() {
-                public NextConfig run()
+            return Exec.doWith(exec, new ExecAction<ConfigDiff>() {
+                public ConfigDiff run()
                 {
                     return doGuess(config);
                 }
@@ -78,7 +78,7 @@ public class GuessExecutor
         }
     }
 
-    private NextConfig doGuess(ConfigSource config)
+    private ConfigDiff doGuess(ConfigSource config)
     {
         Buffer sample = SamplingParserPlugin.runFileInputSampling(config);
         if (sample.limit() == 0) {
@@ -93,11 +93,11 @@ public class GuessExecutor
         return runGuessInput(sample, config, guessPlugins);
     }
 
-    private NextConfig runGuessInput(Buffer sample,
+    private ConfigDiff runGuessInput(Buffer sample,
             ConfigSource config, List<PluginType> guessPlugins)
     {
         // repeat guessing upto 10 times
-        NextConfig lastGuessed = Exec.newNextConfig();
+        ConfigDiff lastGuessed = Exec.newConfigDiff();
         for (int i=0; i < 10; i++) {
             // include last-guessed config to run guess input
             ConfigSource originalConfig = config.getNested("in").deepCopy().merge(lastGuessed);
@@ -109,7 +109,7 @@ public class GuessExecutor
 
             // run FileInputPlugin
             final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
-            NextConfig guessed;
+            ConfigDiff guessed;
             try {
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
                     public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int processorCount)
@@ -148,9 +148,9 @@ public class GuessExecutor
         return wrapInIn(lastGuessed);
     }
 
-    private static NextConfig wrapInIn(NextConfig lastGuessed)
+    private static ConfigDiff wrapInIn(ConfigDiff lastGuessed)
     {
-        NextConfig wrapped = Exec.newNextConfig();
+        ConfigDiff wrapped = Exec.newConfigDiff();
         wrapped.getNestedOrSetEmpty("in").merge(lastGuessed);
         return wrapped;
     }
@@ -165,13 +165,13 @@ public class GuessExecutor
             this.buffer = buffer;
         }
 
-        public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
+        public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control)
         {
             control.run(Exec.newTaskSource(), 1);
-            return Exec.newNextConfig();
+            return Exec.newConfigDiff();
         }
 
-        public NextConfig resume(TaskSource taskSource,
+        public ConfigDiff resume(TaskSource taskSource,
                 int processorCount,
                 FileInputPlugin.Control control)
         {
@@ -271,9 +271,9 @@ public class GuessExecutor
 
             // run guess plugins
             ConfigSource mergedConfig = originalConfig.deepCopy();
-            NextConfig mergedGuessed = Exec.newNextConfig();
+            ConfigDiff mergedGuessed = Exec.newConfigDiff();
             for (int i=0; i < guesses.size(); i++) {
-                NextConfig guessed = guesses.get(i).guess(originalConfig, sample);
+                ConfigDiff guessed = guesses.get(i).guess(originalConfig, sample);
                 guessed = addAssumedDecoderConfigs(originalConfig, guessed);
                 mergedGuessed.merge(guessed);
                 mergedConfig.merge(mergedGuessed);
@@ -308,7 +308,7 @@ public class GuessExecutor
 
         private static class ConfigSourceList extends ArrayList<ConfigSource> { };
 
-        private static NextConfig addAssumedDecoderConfigs(ConfigSource originalConfig, NextConfig guessed)
+        private static ConfigDiff addAssumedDecoderConfigs(ConfigSource originalConfig, ConfigDiff guessed)
         {
             List<ConfigSource> guessedDecoders = guessed.get(ConfigSourceList.class, "decoders", null);
             if (guessedDecoders == null) {
@@ -328,14 +328,14 @@ public class GuessExecutor
     public static class GuessedNoticeError
             extends Error
     {
-        private final NextConfig guessedConfig;
+        private final ConfigDiff guessedConfig;
 
-        public GuessedNoticeError(NextConfig guessedConfig)
+        public GuessedNoticeError(ConfigDiff guessedConfig)
         {
             this.guessedConfig = guessedConfig;
         }
 
-        public NextConfig getGuessedConfig()
+        public ConfigDiff getGuessedConfig()
         {
             return guessedConfig;
         }

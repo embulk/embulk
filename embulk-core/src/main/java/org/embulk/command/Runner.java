@@ -17,7 +17,7 @@ import com.google.inject.Injector;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.config.ConfigLoader;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
 import org.embulk.exec.LocalExecutor;
@@ -134,9 +134,9 @@ public class Runner
         }
 
         // write next config
-        NextConfig nextConfig = result.getNextConfig();
-        exec.getLogger(Runner.class).info("next config: {}", nextConfig.toString());
-        writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
+        ConfigDiff configDiff = result.getConfigDiff();
+        exec.getLogger(Runner.class).info("next config diff: {}", configDiff.toString());
+        writeNextConfig(options.getNextConfigOutputPath(), config, configDiff);
     }
 
     public void cleanup(String configPath)
@@ -164,9 +164,9 @@ public class Runner
 
         ExecSession exec = newExecSession(config);
         GuessExecutor guess = injector.getInstance(GuessExecutor.class);
-        NextConfig nextConfig = guess.guess(exec, config);
+        ConfigDiff configDiff = guess.guess(exec, config);
 
-        String yml = writeNextConfig(options.getNextConfigOutputPath(), config, nextConfig);
+        String yml = writeNextConfig(options.getNextConfigOutputPath(), config, configDiff);
         System.err.println(yml);
     }
 
@@ -181,9 +181,9 @@ public class Runner
         }
     }
 
-    private String writeNextConfig(String path, ConfigSource originalConfig, NextConfig nextConfigDiff)
+    private String writeNextConfig(String path, ConfigSource originalConfig, ConfigDiff configDiff)
     {
-        return writeYaml(path, originalConfig.merge(nextConfigDiff));
+        return writeYaml(path, originalConfig.merge(configDiff));
     }
 
     private String writeYaml(String path, Object obj)

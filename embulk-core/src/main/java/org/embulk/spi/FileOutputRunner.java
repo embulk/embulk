@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -55,7 +55,7 @@ public class FileOutputRunner
     }
 
     @Override
-    public NextConfig transaction(ConfigSource config,
+    public ConfigDiff transaction(ConfigSource config,
             final Schema schema, final int processorCount,
             final OutputPlugin.Control control)
     {
@@ -63,7 +63,7 @@ public class FileOutputRunner
         return fileOutputPlugin.transaction(config, processorCount, new RunnerControl(schema, task, control));
     }
 
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int processorCount,
             final OutputPlugin.Control control)
     {

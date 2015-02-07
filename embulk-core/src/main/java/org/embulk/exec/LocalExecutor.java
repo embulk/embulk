@@ -22,7 +22,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
@@ -93,8 +93,8 @@ public class LocalExecutor
         private volatile Throwable[] exceptions;
         private volatile CommitReport[] inputCommitReports;
         private volatile CommitReport[] outputCommitReports;
-        private volatile NextConfig inputNextConfig;
-        private volatile NextConfig outputNextConfig;
+        private volatile ConfigDiff inputConfigDiff;
+        private volatile ConfigDiff outputConfigDiff;
         private int processorCount;
 
         public ProcessState(Logger logger)
@@ -231,20 +231,20 @@ public class LocalExecutor
             return false;
         }
 
-        public void setOutputNextConfig(NextConfig outputNextConfig)
+        public void setOutputConfigDiff(ConfigDiff outputConfigDiff)
         {
-            if (outputNextConfig == null) {
-                outputNextConfig = Exec.newNextConfig();
+            if (outputConfigDiff == null) {
+                outputConfigDiff = Exec.newConfigDiff();
             }
-            this.outputNextConfig = outputNextConfig;
+            this.outputConfigDiff = outputConfigDiff;
         }
 
-        public void setInputNextConfig(NextConfig inputNextConfig)
+        public void setInputConfigDiff(ConfigDiff inputConfigDiff)
         {
-            if (inputNextConfig == null) {
-                inputNextConfig = Exec.newNextConfig();
+            if (inputConfigDiff == null) {
+                inputConfigDiff = Exec.newConfigDiff();
             }
-            this.inputNextConfig = inputNextConfig;
+            this.inputConfigDiff = inputConfigDiff;
         }
 
         public List<CommitReport> getInputCommitReports()
@@ -297,12 +297,12 @@ public class LocalExecutor
 
         public ExecutionResult buildExecuteResultWithWarningException(Throwable ex)
         {
-            NextConfig nextConfig = Exec.newNextConfig();
-            if (inputNextConfig != null) {
-                nextConfig.getNestedOrSetEmpty("in").merge(inputNextConfig);
+            ConfigDiff configDiff = Exec.newConfigDiff();
+            if (inputConfigDiff != null) {
+                configDiff.getNestedOrSetEmpty("in").merge(inputConfigDiff);
             }
-            if (outputNextConfig != null) {
-                nextConfig.getNestedOrSetEmpty("out").merge(outputNextConfig);
+            if (outputConfigDiff != null) {
+                configDiff.getNestedOrSetEmpty("out").merge(outputConfigDiff);
             }
 
             ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
@@ -315,7 +315,7 @@ public class LocalExecutor
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(nextConfig, ignoredExceptions.build());
+            return new ExecutionResult(configDiff, ignoredExceptions.build());
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause,
@@ -417,7 +417,7 @@ public class LocalExecutor
 
         final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
         try {
-            NextConfig inputNextConfig = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
+            ConfigDiff inputConfigDiff = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
                 {
                     state.initialize(processorCount);
@@ -427,7 +427,7 @@ public class LocalExecutor
                         {
                             Schema outputSchema = last(filterSchemas);
                             state.setOutputSchema(outputSchema);
-                            NextConfig outputNextConfig = out.transaction(task.getOutputConfig(), outputSchema, processorCount, new OutputPlugin.Control() {
+                            ConfigDiff outputConfigDiff = out.transaction(task.getOutputConfig(), outputSchema, processorCount, new OutputPlugin.Control() {
                                 public List<CommitReport> run(final TaskSource outputTask)
                                 {
                                     task.setInputTask(inputTask);
@@ -441,13 +441,13 @@ public class LocalExecutor
                                     return state.getOutputCommitReports();
                                 }
                             });
-                            state.setOutputNextConfig(outputNextConfig);
+                            state.setOutputConfigDiff(outputConfigDiff);
                         }
                     });
                     return state.getInputCommitReports();
                 }
             });
-            state.setInputNextConfig(inputNextConfig);
+            state.setInputConfigDiff(inputConfigDiff);
 
             return state.buildExecuteResult();
 
@@ -473,7 +473,7 @@ public class LocalExecutor
 
         final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
         try {
-            NextConfig inputNextConfig = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
+            ConfigDiff inputConfigDiff = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
                 {
                     // TODO validate inputTask?
@@ -485,7 +485,7 @@ public class LocalExecutor
                         {
                             Schema outputSchema = last(filterSchemas);
                             state.setOutputSchema(outputSchema);
-                            NextConfig outputNextConfig = out.resume(resume.getOutputTaskSource(), outputSchema, processorCount, new OutputPlugin.Control() {
+                            ConfigDiff outputConfigDiff = out.resume(resume.getOutputTaskSource(), outputSchema, processorCount, new OutputPlugin.Control() {
                                 public List<CommitReport> run(final TaskSource outputTask)
                                 {
                                     // TODO validate outputTask?
@@ -509,13 +509,13 @@ public class LocalExecutor
                                     return state.getOutputCommitReports();
                                 }
                             });
-                            state.setOutputNextConfig(outputNextConfig);
+                            state.setOutputConfigDiff(outputConfigDiff);
                         }
                     });
                     return state.getInputCommitReports();
                 }
             });
-            state.setInputNextConfig(inputNextConfig);
+            state.setInputConfigDiff(inputConfigDiff);
 
             return state.buildExecuteResult();
 

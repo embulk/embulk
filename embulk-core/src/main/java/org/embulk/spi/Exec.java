@@ -3,7 +3,7 @@ package org.embulk.spi;
 import org.slf4j.Logger;
 import org.embulk.config.Task;
 import org.embulk.config.CommitReport;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
@@ -59,9 +59,9 @@ public class Exec
         return session().newCommitReport();
     }
 
-    public static NextConfig newNextConfig()
+    public static ConfigDiff newConfigDiff()
     {
-        return session().newNextConfig();
+        return session().newConfigDiff();
     }
 
     public static ConfigSource newConfigSource()

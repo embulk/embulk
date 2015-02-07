@@ -18,7 +18,7 @@ import org.embulk.config.Config;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
@@ -49,7 +49,7 @@ public class LocalFileInputPlugin
     private final Logger log = Exec.getLogger(getClass());
 
     @Override
-    public NextConfig transaction(ConfigSource config, FileInputPlugin.Control control)
+    public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
@@ -62,12 +62,12 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             int processorCount,
             FileInputPlugin.Control control)
     {
         control.run(taskSource, processorCount);
-        return Exec.newNextConfig();
+        return Exec.newConfigDiff();
     }
 
     @Override

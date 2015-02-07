@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 public class DataSourceImpl
-        implements ConfigSource, TaskSource, CommitReport, NextConfig
+        implements ConfigSource, TaskSource, CommitReport, ConfigDiff
 {
     protected final ObjectNode data;
     protected final ModelManager model;

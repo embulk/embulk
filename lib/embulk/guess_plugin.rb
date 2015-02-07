@@ -20,8 +20,8 @@ module Embulk
         def guess(java_config, java_sample)
           config = DataSource.from_java(java_config)
           sample = Buffer.from_java(java_sample)
-          next_config_hash = @ruby_guess.guess(config, sample)
-          return DataSource.from_ruby_hash(next_config_hash).to_java
+          config_diff_hash = @ruby_guess.guess(config, sample)
+          return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
       end
 
@@ -36,8 +36,8 @@ module Embulk
         def guess(config, sample)
           java_config = config.to_java
           java_sample = sample.to_java
-          java_next_config = java_object.guess(java_config, java_sample)
-          return DataSource.from_java(java_next_config)
+          java_config_diff = java_object.guess(java_config, java_sample)
+          return DataSource.from_java(java_config_diff)
         end
       end
     end
