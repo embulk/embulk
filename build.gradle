@@ -152,8 +152,7 @@ project(':embulk-cli') {
     }
 }
 
-task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << {
-}
+task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << { }
 clean { delete 'classpath' }
 
 task cli(dependsOn: ':embulk-cli:shadowJar') << {

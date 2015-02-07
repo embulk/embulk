@@ -18,7 +18,7 @@ task :clean do
   sh "./gradlew clean"
 end
 
-desc "Run jar files to ./classpath"
+desc "Build and copy jar files to ./classpath"
 task :classpath do
   sh "./gradlew classpath"
 end
