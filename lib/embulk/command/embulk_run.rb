@@ -112,13 +112,13 @@ categories:
     ruby-filter                record filter plugin   (like add-hostname)
     java-input                 record input plugin    (like mysql)
     java-output                record output plugin   (like mysql)
+    java-filter                record filter plugin   (like add-hostname)
     java-file-input            file input plugin      (like ftp)
     java-file-output           file output plugin     (like ftp)
     java-parser                file parser plugin     (like csv)
     java-formatter             file formatter plugin  (like csv)
     java-encoder               file encoder plugin    (like gzip)
     java-decoder               file decoder plugin    (like gzip)
-    java-filter                record filter plugin   (like add-hostname)
 
 examples:
     new ruby-output hbase

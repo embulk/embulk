@@ -8,7 +8,7 @@ module Embulk
     embulk_category = :input if category == :file_input
     embulk_category = :output if category == :file_output
 
-    project_name = "embulk-#{category}-#{name}"
+    project_name = "embulk-#{embulk_category}-#{name}"
     plugin_path = "lib/embulk/#{embulk_category}/#{name}.rb"
 
     if File.exist?(project_name)
