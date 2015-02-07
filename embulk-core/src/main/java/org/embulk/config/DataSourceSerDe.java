@@ -57,6 +57,7 @@ public class DataSourceSerDe
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
         {
             JsonNode json = treeObjectMapper.readTree(jp);

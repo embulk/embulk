@@ -1,37 +1,97 @@
-// TODO this build.gradle file just works but not well-written yet...
 
-//plugins {
-//    id "com.jfrog.bintray" version "1.0"
-//}
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.7'
-    }
+plugins {
+    id 'com.jfrog.bintray' version '1.1'
+    id 'com.github.ben-manes.versions' version '0.7'
+    id 'com.github.jruby-gradle.base' version '0.1.5'
+    id 'com.github.johnrengelman.shadow' version '1.2.0'
+    id 'java'
 }
 
 allprojects {
+    group = 'org.embulk'
+    version = '0.3.2'
+}
+
+subprojects {
+    apply plugin: 'maven'  // install jar files to the local repo: $ gradle install
+    apply plugin: 'java'
+    apply plugin: 'findbugs'
+    apply plugin: 'jacoco'
+
     repositories {
         mavenCentral()
         jcenter()
     }
 
-    apply plugin: 'idea'
-    apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.bintray'
+    compileJava.options.encoding = 'UTF-8' // source encoding
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
-    // determine which dependencies have updates
-    // $ gradle dependencyUpdates
-    apply plugin: 'com.github.ben-manes.versions'
+    configurations {
+        // guice depends on asm and cglib but version of the libraries conflict
+        // with ones bundled in jruby-complete and cause bytecode compatibility error
+        compile.exclude group: 'asm', module: 'asm'
+        compile.exclude group: 'org.sonatype.sisu.inject', module: 'cglib'
+    }
 
-    group = 'org.embulk'
-    version = '0.3.2'
+    // determine which dependencies have updates: $ gradle dependencyUpdates
+    dependencies {
+        compile 'com.google.guava:guava:18.0'
+        compile 'com.google.inject:guice:3.0'
+        compile 'com.google.inject.extensions:guice-multibindings:3.0'
+        compile 'javax.inject:javax.inject:1'
+        compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.0'
+        compile 'com.fasterxml.jackson.core:jackson-core:2.5.0'
+        compile 'com.fasterxml.jackson.core:jackson-databind:2.5.0'
+        compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.5.0'
+        compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.5.0'
+        compile 'com.fasterxml.jackson.module:jackson-module-guice:2.5.0'
+        compile 'log4j:log4j:1.2.17'
+        compile 'org.slf4j:slf4j-api:1.7.10'
+        compile 'org.slf4j:slf4j-log4j12:1.7.10'
+        compile 'org.jruby:jruby-complete:1.7.19'
+        compile 'com.google.code.findbugs:annotations:3.0.0'
+        compile 'org.yaml:snakeyaml:1.14'
+        compile 'javax.validation:validation-api:1.1.0.Final'
+        compile 'org.apache.bval:bval-jsr303:0.5'
+        compile 'io.airlift:slice:0.9'
+        compile 'joda-time:joda-time:2.7'
+        compile 'io.netty:netty-buffer:5.0.0.Alpha1'
+        compile 'com.ibm.icu:icu4j:54.1.1'
 
-    // to upload artifacts to Bintray by gradle-bintray-plugin
-    // $ gradle bintrayUpload
+        testCompile 'junit:junit:4.12'
+    }
+
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
+        }
+        tasks.withType(FindBugs) {
+            reports {
+                xml.enabled = false
+                html.enabled = true
+            }
+        }
+    }
+
+    findbugs {
+        ignoreFailures = true
+    }
+
+    // add javadoc/source jar tasks as artifacts to be released
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+    artifacts {
+        archives sourcesJar, javadocJar
+    }
+
+    // upload artifacts to Bintray: $ gradle bintrayUpload
     bintray {
         // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
         // bintray_user=frsyuki
@@ -42,7 +102,7 @@ allprojects {
         publications = ['mavenJava']
 
         dryRun = false
-        publish = false  // TODO publish = project.publish
+        publish = false  // TODO automate uploading embulk.jar and make this true
 
         pkg {
             userOrg = 'embulk'
@@ -70,86 +130,102 @@ allprojects {
     }
 }
 
-subprojects {
-    apply plugin: 'java'
+project(':embulk-cli') {
+    apply plugin: 'com.github.johnrengelman.shadow'
 
-    // to install jar files to the local repo
-    // $ gradle install
-    apply plugin: 'maven'
-
-    compileJava.options.encoding = 'UTF-8' // source encoding
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
-
-    dependencies {
-        compile 'commons-logging:commons-logging:1.2',
-                'com.google.guava:guava:17.0',
-                'com.google.inject:guice:3.0',
-                'com.google.inject.extensions:guice-multibindings:3.0',
-                'javax.inject:javax.inject:1',
-                'com.fasterxml.jackson.core:jackson-annotations:2.4.3',
-                'com.fasterxml.jackson.core:jackson-core:2.4.3',
-                'com.fasterxml.jackson.core:jackson-databind:2.4.3',
-                'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.4.3',
-                'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.3',
-                'com.fasterxml.jackson.module:jackson-module-guice:2.4.3',
-                'log4j:log4j:1.2.17',
-                'org.slf4j:slf4j-api:1.7.9',
-                'org.slf4j:slf4j-log4j12:1.7.9',
-                'org.jruby:jruby-complete:1.7.16.1',
-                'com.google.code.findbugs:annotations:3.0.0',
-                'org.yaml:snakeyaml:1.14',
-                'javax.validation:validation-api:1.1.0.Final',
-                'org.apache.bval:bval-jsr303:0.5',
-                'io.airlift:slice:0.7',
-                'joda-time:joda-time:2.3',
-                'io.netty:netty-buffer:4.0.24.Final',
-                'com.ibm.icu:icu4j:53.1'
-
-        testCompile 'junit:junit:4.10',
-                    'org.mockito:mockito-core:1.9.5'
-    }
-
-    // custom tasks for creating source/javadoc jars
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    // add javadoc/source jar tasks as artifacts
-    artifacts {
-        archives sourcesJar, javadocJar
-    }
-
-    // $ gradle copyDependencies
-    task copyDependencies(type: Copy) {
-        println ":copy depend to $buildDir/libs/dependencies"
-        new File("$buildDir/libs/dependencies").mkdirs()
-
-        into "$buildDir/libs/dependencies"
-        from configurations.runtime.filter {
-            //  TODO avoid bytecode compatibility error
-            it.name != 'asm-3.1.jar' && it.name != 'cglib-2.2.1-v20090111.jar'
+    shadowJar {
+        manifest {
+            attributes 'Implementation-Title': project.name,
+                       'Implementation-Version': project.version,
+                       'Implementation-Vendor-Id': project.group,
+                       'Specification-Title': project.name,
+                       'Specification-Version': project.version,
+                       'Main-Class': 'org.embulk.cli.Main'
         }
+        append("${parent.projectDir}/COPYING")
     }
 
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                groupId project.group
-                artifactId project.name
-                version project.version
-
-                from components.java
-
-                artifact sourcesJar
-                artifact javadocJar
-            }
-        }
+    task classpath(type: Copy) {
+        doFirst { new File("${parent.projectDir}/classpath").mkdirs() }
+        from configurations.runtime
+        into "${parent.projectDir}/classpath"
     }
+}
+
+task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << {
+}
+clean { delete 'classpath' }
+
+task cli(dependsOn: ':embulk-cli:shadowJar') << {
+    File f = file("pkg/embulk-${project.version}.jar")
+    f.write('''\
+#!/bin/sh
+exec java -jar "$0" "$@"
+exit 127
+''')
+    f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
+    f.setExecutable(true)
+}
+
+import com.github.jrubygradle.JRubyExec
+task gem(type: JRubyExec) {
+    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)', 'build'
+    script 'build/gemspec'
+    doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
+}
+gem.dependsOn('gemspec')
+gem.dependsOn('classpath')
+
+task releaseCheck << {
+    if (!file("lib/embulk/version.rb").getText().contains("${project.version}")) {
+        throw new GradleException("lib/embulk/version.rb doesn't include ${project.version}")
+    }
+    String changeLogLine = "${new Date().format("yyyy-MM-dd")} version ${project.version}"
+    if (!file("ChangeLog").getText().contains(changeLogLine)) {
+        throw new GradleException("ChangeLog doesn't include entry for ${project.version}")
+    }
+    println "Ready. Run ./gradlew all"
+}
+
+task release(dependsOn: ["cli", "gem"]) << {
+    println """
+manual operations:
+
+  git commit -a -m v${project.version}
+  git tag v${project.version}
+  gem push pkg/embulk-${project.version}.gem"
+  ./gradlew bintrayUpload
+  open "https://bintray.com/embulk/maven/embulk/${project.version}/view"  # and upload pkg/embulk-${project.version}.jar
+
+"""
+}
+
+task gemspec << {
+    file('build').mkdirs()
+    file('build/gemspec').write($/
+Gem::Specification.new do |gem|
+  gem.name          = "embulk"
+  gem.version       = "${project.version}"
+
+  gem.summary       = "Embulk, a plugin-based parallel bulk data loader"
+  gem.description   = "Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control."
+  gem.authors       = ["Sadayuki Furuhashi"]
+  gem.email         = ["frsyuki@gmail.com"]
+  gem.license       = "Apache 2.0"
+  gem.homepage      = "https://github.com/embulk/embulk"
+
+  gem.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
+  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
+  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  gem.require_paths = ["lib"]
+  gem.has_rdoc      = false
+
+  gem.add_development_dependency "bundler", [">= 1.0"]
+  gem.add_development_dependency "rake", [">= 0.10.0"]
+  gem.add_development_dependency "rspec", ["~> 2.11"]
+  gem.add_development_dependency "json", ["~> 1.7"]
+  gem.add_development_dependency "yard", ["~> 0.8.7"]
+  gem.add_development_dependency "kramdown", ["~> 1.5.0"]
+end
+/$)
 }

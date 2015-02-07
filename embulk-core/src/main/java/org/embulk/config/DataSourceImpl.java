@@ -51,7 +51,7 @@ public class DataSourceImpl
     @Override
     public Iterable<Map.Entry<String, JsonNode>> getAttributes()
     {
-        return new Iterable() {
+        return new Iterable<Map.Entry<String,JsonNode>>() {
             public Iterator<Map.Entry<String, JsonNode>> iterator()
             {
                 return data.fields();

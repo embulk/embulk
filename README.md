@@ -97,24 +97,34 @@ java -jar embulk.jar cleanup config.yml -r resume-state.yml
 ### Build
 
 ```
-rake  # creates embulk-VERSION.jar
+./gradlew cli  # creates pkg/embulk-VERSION.jar
+./gradlew gem  # creates pkg/embulk-VERSION.gem
 ```
 
-You can see JaCoCo's test coverage report at ${project}/target/site/jacoco/index.html
+You can see JaCoCo's test coverage report at `${project}/build/reports/tests/index.html`
+You can see Findbug's report at `${project}/build/reports/findbug/main.html`  # FIXME coverage information is not included somehow
 
-To build by Gradle, run:
+You can use `classpath` task to use `./bin/embulk` for development:
+
 ```
-./gradlew build
+./gradlew classpath  # -x test: skip test
+./bin/embulk
 ```
-If you want to deploy artifacts on local maven repository like ~/.m2/repository/, run:
+
+To deploy artifacts to your local maven repository at ~/.m2/repository/:
+
 ```
 ./gradlew install
 ```
-If you want to compile the source code of embulk-core project only, run:
+
+To compile the source code of embulk-core project only:
+
 ```
 ./gradlew :embulk-core:compileJava
 ```
-The following command allows use to see the dependency tree of embulk-core project
+
+Task `dependencies` shows dependency tree of embulk-core project:
+
 ```
 ./gradlew :embulk-core:dependencies
 ```
@@ -128,24 +138,20 @@ bintray_user=(bintray user name)
 bintray_api_key=(bintray api key)
 ```
 
-Increment version number written at following 3 files (TODO improve this):
+Update following files:
 
-* build.gradle
-* pom.xml
-* lib/embulk/version.rb
+* ChangeLog: release note
+* build.gradle: version number
+* lib/embulk/version.rb: version number
 
 Then, build and upload using gradle:
 
 ```
+./gradlew releaseCheck
+./gradlew cli gem
 ./gradlew bintrayUpload
-```
-
-Finally, you need to manually upload the single-file jar package to bintray.
-Run `rake` and upload embulk-VERSION.jar from "Upload Files" link at https://bintray.com/embulk/maven/embulk/VERSION/upload.
-
-```
-rake
-# embulk-VERSION.jar is built
+gem push pkg/embulk-....gem
+open "https://bintray.com/embulk/maven/embulk"  # and upload pkg/embulk-....jar
 ```
 
 See also:

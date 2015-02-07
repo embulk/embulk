@@ -41,7 +41,7 @@ public class GuiceBinder
     public synchronized Injector getInjector()
     {
         if (injector == null) {
-            ImmutableList.Builder modules = ImmutableList.builder();
+            ImmutableList.Builder<Module> modules = ImmutableList.builder();
             modules.addAll(baseModules);
             modules.addAll(extraModules);
             injector = Guice.createInjector(modules.build());

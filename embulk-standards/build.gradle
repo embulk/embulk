@@ -1,6 +1,5 @@
 dependencies {
     compile project(':embulk-core')
-    compile 'com.amazonaws:aws-java-sdk:1.5.2'
 
     testCompile project(':embulk-core').sourceSets.test.output
 }
