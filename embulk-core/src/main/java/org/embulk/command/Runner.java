@@ -130,7 +130,7 @@ public class Runner
 
         // delete resume file
         if (options.getResumeStatePath() != null) {
-            new File(options.getResumeStatePath()).delete();
+            boolean dontCare = new File(options.getResumeStatePath()).delete();
         }
 
         // write next config
@@ -154,7 +154,7 @@ public class Runner
         local.cleanup(config, resume);
 
         // delete resume file
-        new File(options.getResumeStatePath()).delete();
+        boolean dontCare = new File(options.getResumeStatePath()).delete();
     }
 
     public void guess(String partialConfigPath)

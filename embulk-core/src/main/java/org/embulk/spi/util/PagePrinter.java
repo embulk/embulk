@@ -27,7 +27,7 @@ public class PagePrinter
             }
         }
 
-        this.record = new ArrayList(schema.getColumnCount());
+        this.record = new ArrayList<String>(schema.getColumnCount());
         for (int i=0; i < schema.getColumnCount(); i++) {
             record.add("");
         }

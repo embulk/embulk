@@ -22,6 +22,7 @@ public class MockPluginSource
         return typeConfig;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T newPlugin(Class<T> iface, PluginType typeConfig) throws PluginSourceNotMatchException
     {
         if (expectedIface.equals(iface)) {

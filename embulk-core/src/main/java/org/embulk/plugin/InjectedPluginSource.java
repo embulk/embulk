@@ -46,6 +46,7 @@ public class InjectedPluginSource
     {
         String name = type.getName();
         try {
+            @SuppressWarnings("unchecked")
             PluginFactory<T> factory = (PluginFactory<T>) injector.getInstance(
                     Key.get(PluginFactory.class, pluginFactoryName(iface, name)));
             return factory.newPlugin(injector);
@@ -60,6 +61,7 @@ public class InjectedPluginSource
         if (FileInputPlugin.class.isAssignableFrom(impl)) {
             Preconditions.checkArgument(InputPlugin.class.equals(iface));
             factory = new PluginFactory<T>() {
+                @SuppressWarnings("unchecked")
                 public T newPlugin(Injector injector)
                 {
                     return (T) new FileInputRunner((FileInputPlugin) injector.getInstance(impl));
@@ -68,6 +70,7 @@ public class InjectedPluginSource
         } else if (FileOutputPlugin.class.isAssignableFrom(impl)) {
             Preconditions.checkArgument(OutputPlugin.class.equals(iface));
             factory = new PluginFactory<T>() {
+                @SuppressWarnings("unchecked")
                 public T newPlugin(Injector injector)
                 {
                     return (T) new FileOutputRunner((FileOutputPlugin) injector.getInstance(impl));
@@ -76,6 +79,7 @@ public class InjectedPluginSource
         } else {
             Preconditions.checkArgument(iface.isAssignableFrom(impl));
             factory = new PluginFactory<T>() {
+                @SuppressWarnings("unchecked")
                 public T newPlugin(Injector injector)
                 {
                     return (T) injector.getInstance(impl);

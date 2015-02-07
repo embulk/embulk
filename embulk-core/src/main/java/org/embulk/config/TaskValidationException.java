@@ -15,6 +15,7 @@ public class TaskValidationException
         this.violations = violations;
     }
 
+    @SuppressWarnings("unchecked")
     public Set<ConstraintViolation<?>> getViolations()
     {
         return violations;

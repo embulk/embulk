@@ -137,6 +137,7 @@ class TaskSerDe
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
         {
             Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
@@ -317,6 +318,7 @@ class TaskSerDe
             });
         }
 
+        @SuppressWarnings("unchecked")
         protected JsonDeserializer<?> newTaskDeserializer(Class<?> raw)
         {
             return new TaskDeserializer(nestedObjectMapper, model, raw);
@@ -335,6 +337,7 @@ class TaskSerDe
         public String getModuleName() { return "embulk.config.ConfigTaskSerDe"; }
 
         @Override
+        @SuppressWarnings("unchecked")
         protected JsonDeserializer<?> newTaskDeserializer(Class<?> raw)
         {
             return new ConfigTaskDeserializer(nestedObjectMapper, model, raw);

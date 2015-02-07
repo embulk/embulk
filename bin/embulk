@@ -45,7 +45,7 @@ jruby_complete = Dir.entries(classpath_dir).find {|jar| jar =~ /jruby-complete-[
 unless jruby_complete
   STDERR.puts "Could not find jruby-complete at #{embulk_home}/classpath directory."
   if embulk_home == '.'
-    STDERR.puts "Did you run \`rake\`? You need to build java code and create ./classpath directory first."
+    STDERR.puts "Did you run ./gradlew classpath? You need to build java code and create ./classpath directory first."
   end
   raise SystemExit.new(1)
 end
