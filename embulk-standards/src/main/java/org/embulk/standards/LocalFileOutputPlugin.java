@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
@@ -25,18 +26,15 @@ public class LocalFileOutputPlugin
     public interface PluginTask
             extends Task
     {
-        @Config("directory")
-        public String getDirectory();
-
-        @Config("file_name")
-        public String getFileNameFormat();
+        @Config("path_prefix")
+        public String getPathPrefix();
 
         @Config("file_ext")
         public String getFileNameExtension();
 
-        // TODO support in FileInputPlugin and FileOutputPlugin
-        //@Config("compress_type")
-        //public String getCompressType();
+        @Config("sequence_format")
+        @ConfigDefault("\".%03d.%02d.\"")
+        public String getSequenceFormat();
     }
 
     private final Logger log = Exec.getLogger(getClass());
@@ -46,6 +44,9 @@ public class LocalFileOutputPlugin
             FileOutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
+
+        // validate sequence_format
+        String.format(task.getSequenceFormat(), 0, 0);
 
         return resume(task.dump(), processorCount, control);
     }
@@ -70,11 +71,9 @@ public class LocalFileOutputPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        // TODO format path using timestamp
-        final String fileName = task.getFileNameFormat();
-
-        final String pathPrefix = task.getDirectory() + File.separator + fileName;
+        final String pathPrefix = task.getPathPrefix();
         final String pathSuffix = task.getFileNameExtension();
+        final String sequenceFormat = task.getSequenceFormat();
 
         final List<String> fileNames = new ArrayList<>();
 
@@ -85,7 +84,7 @@ public class LocalFileOutputPlugin
             public void nextFile()
             {
                 closeFile();
-                String path = pathPrefix + String.format(".%03d.%02d.", processorIndex, fileIndex) + pathSuffix;
+                String path = pathPrefix + String.format(sequenceFormat, processorIndex, fileIndex) + pathSuffix;
                 log.info("Writing local file '{}'", path);
                 fileNames.add(path);
                 try {
