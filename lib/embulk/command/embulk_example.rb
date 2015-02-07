@@ -23,7 +23,7 @@ EOF
       f.write <<EOF
 in:
   type: file
-  paths: ["#{File.expand_path File.join(path, 'csv')}"]
+  path_prefix: "#{File.expand_path File.join(path, 'csv', 'sample_')}"
 out:
   type: stdout
 EOF
