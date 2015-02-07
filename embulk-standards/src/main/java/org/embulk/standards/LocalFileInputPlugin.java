@@ -13,8 +13,10 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
@@ -27,17 +29,18 @@ import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.slf4j.Logger;
 
-import static org.embulk.spi.util.Inputs.formatPath;
-
 public class LocalFileInputPlugin
         implements FileInputPlugin
 {
     public interface PluginTask
             extends Task
     {
-        @Config("paths")
-        @NotNull
-        public List<String> getPathPrefixes();
+        @Config("path_prefix")
+        public String getPathPrefix();
+
+        @Config("last_path")
+        @ConfigDefault("null")
+        public Optional<String> getLastPath();
 
         public List<String> getFiles();
         public void setFiles(List<String> files);
@@ -54,7 +57,9 @@ public class LocalFileInputPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
-        task.setFiles(listFiles(task));
+        List<String> files = listFiles(task);
+        log.info("Loading files {}", files);
+        task.setFiles(files);
 
         // number of processors is same with number of files
         int processorCount = task.getFiles().size();
@@ -78,22 +83,40 @@ public class LocalFileInputPlugin
 
     public List<String> listFiles(PluginTask task)
     {
+        Path pathPrefix = Paths.get(task.getPathPrefix()).normalize();
+        final Path directory;
+        final String fileNamePrefix;
+        if (Files.isDirectory(pathPrefix)) {
+            directory = pathPrefix;
+            fileNamePrefix = "";
+        } else {
+            fileNamePrefix = pathPrefix.getFileName().toString();
+            Path d = pathPrefix.getParent();
+            directory = (d == null ? Paths.get(".") : d);
+        }
+
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
-        for (String prefix : task.getPathPrefixes()) {
-            String formatted = formatPath(prefix);
-            try {
-                log.info("Listing local files with prefix '{}'", formatted);
-                Files.walkFileTree(Paths.get(formatted), new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes aAttrs)
-                    {
-                        builder.add(file.toString());
-                        return FileVisitResult.CONTINUE;
+        final String lastPath = task.getLastPath().orNull();
+        try {
+            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory, fileNamePrefix);
+            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path path, BasicFileAttributes aAttrs)
+                {
+                    if (lastPath == null || path.toString().compareTo(lastPath) > 0) {
+                        if (path.getParent().equals(directory)) {
+                            if (path.getFileName().toString().startsWith(fileNamePrefix)) {
+                                builder.add(path.toString());
+                            }
+                        } else {
+                            builder.add(path.toString());
+                        }
                     }
-                });
-            } catch (IOException ex) {
-                throw new RuntimeException(String.format("Failed get a list of local files at '%s'", formatted), ex);
-            }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException ex) {
+            throw new RuntimeException(String.format("Failed get a list of local files at '%s'", directory), ex);
         }
         return builder.build();
     }
