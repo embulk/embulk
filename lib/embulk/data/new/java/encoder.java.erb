@@ -1,0 +1,38 @@
+package org.embulk.<%= embulk_category %>;
+
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.EncoderPlugin;
+import org.embulk.spi.FileOutput;
+
+public class <%= java_class_name %>
+        implements EncoderPlugin
+{
+    public interface PluginTask
+            extends Task
+    {
+        @Config("property1")
+        public String getProperty1();
+
+        @Config("property2")
+        @ConfigDefault("0")
+        public int getProperty2();
+    }
+
+    @Override
+    public void transaction(ConfigSource config, EncoderPlugin.Control control)
+    {
+        PluginTask task = config.loadConfig(PluginTask.class);
+
+        control.run(task.dump());
+    }
+
+    @Override
+    public FileOutput open(TaskSource taskSource, FileOutput fileOutput)
+    {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+    }
+}

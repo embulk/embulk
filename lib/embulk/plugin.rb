@@ -19,7 +19,7 @@ module Embulk
     def initialize
       @registries = {}
       %w[input output parser formatter decoder encoder line_filter filter guess].each do |category|
-        @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}_")
+        @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}/")
       end
     end
 

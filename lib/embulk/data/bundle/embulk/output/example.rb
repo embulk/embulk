@@ -1,7 +1,7 @@
 module Embulk
-  module Plugin
+  module Output
 
-    class OutputExample < OutputPlugin
+    class Example < OutputPlugin
       # output plugin file name must be: embulk/output_<name>.rb
       Plugin.register_output('example', self)
 

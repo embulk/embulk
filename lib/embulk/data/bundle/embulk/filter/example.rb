@@ -1,7 +1,7 @@
 module Embulk
-  module Plugin
+  module Filter
 
-    class FilterExample < FilterPlugin
+    class Example < FilterPlugin
       # filter plugin file name must be: embulk/filter_<name>.rb
       Plugin.register_filter('example', self)
 

@@ -1,0 +1,59 @@
+module Embulk
+  module Output
+
+    class <%= ruby_class_name %> < OutputPlugin
+      Plugin.register_output(<%= name.dump %>, self)
+
+      def self.transaction(config, schema, count, &control)
+        # configuration code:
+        task = {
+          "property1" => config.param("property1", :string)
+          "property2" => config.param("property2", :integer, default: 0)
+        }
+
+        # resumable output:
+        # resume(task, schema, count, &control)
+
+        # non-resumable output:
+        commit_reports = yield(task)
+        next_config_diff = {}
+        return next_config_diff
+      end
+
+      #def self.resume(task, schema, count, &control)
+      #  commit_reports = yield(task)
+      #
+      #  next_config_diff = {}
+      #  return next_config_diff
+      #end
+
+      def init
+        # initialization code:
+        @property1 = task["property1"]
+        @property2 = task["property2"]
+      end
+
+      def close
+      end
+
+      def add(page)
+        # output code:
+        page.each do |record|
+          #hash = Hash[schema.names.zip(record)]
+        end
+      end
+
+      def finish
+      end
+
+      def abort
+      end
+
+      def commit
+        commit_report = {}
+        return commit_report
+      end
+    end
+
+  end
+end

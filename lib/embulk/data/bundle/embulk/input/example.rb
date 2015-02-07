@@ -1,7 +1,7 @@
 module Embulk
-  module Plugin
+  module Input
 
-    class InputExample < InputPlugin
+    class Example < InputPlugin
       # input plugin file name must be: embulk/input_<name>.rb
       Plugin.register_input('example', self)
 

@@ -1,0 +1,58 @@
+package org.embulk.<%= embulk_category %>;
+
+import java.util.List;
+import org.embulk.config.CommitReport;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.Exec;
+import org.embulk.spi.InputPlugin;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.Schema;
+
+public class <%= java_class_name %>
+        implements InputPlugin
+{
+    public interface PluginTask
+            extends Task
+    {
+        @Config("property1")
+        public String getProperty1();
+
+        @Config("property2")
+        @ConfigDefault("0")
+        public int getProperty2();
+    }
+
+    public ConfigDiff transaction(ConfigSource config,
+            InputPlugin.Control control)
+    {
+        PluginTask task = config.loadConfig(PluginTask.class);
+
+        return resume(task.dump(), processorCount, control);
+    }
+
+    public ConfigDiff resume(TaskSource taskSource,
+            Schema schema, int processorCount,
+            InputPlugin.Control control)
+    {
+        control.run(taskSource, schema, processorCount);
+        return Exec.newConfigDiff();
+    }
+
+    public void cleanup(TaskSource taskSource,
+            Schema schema, int processorCount,
+            List<CommitReport> successCommitReports)
+    {
+    }
+
+    public CommitReport run(TaskSource taskSource,
+            Schema schema, int processorIndex,
+            PageOutput output)
+    {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+    }
+}
