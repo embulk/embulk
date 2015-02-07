@@ -16,9 +16,13 @@ module Embulk
       @in_schema = in_schema
       @out_schema = out_schema
       @page_builder = page_builder
+      init
     end
 
     attr_reader :task, :in_schema, :out_schema, :page_builder
+
+    def init
+    end
 
     def add(page)
       raise NotImplementedError, "FilterPlugin#add(page) must be implemented"

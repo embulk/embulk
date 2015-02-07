@@ -14,6 +14,10 @@ module Embulk
       @task = task
       @schema = schema
       @page_builder = page_builder
+      init
+    end
+
+    def init
     end
 
     def run(file_input)

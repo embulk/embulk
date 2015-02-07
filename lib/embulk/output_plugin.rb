@@ -22,9 +22,13 @@ module Embulk
       @task = task
       @schema = schema
       @index = index
+      init
     end
 
     attr_reader :task, :schema, :index
+
+    def init
+    end
 
     def add(page)
       raise NotImplementedError, "OutputPlugin#add(page) must be implemented"

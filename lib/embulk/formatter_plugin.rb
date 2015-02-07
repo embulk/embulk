@@ -15,9 +15,13 @@ module Embulk
       @task = task
       @schema = schema
       @file_output
+      init
     end
 
     attr_reader :task, :schema, :file_output
+
+    def init
+    end
 
     def add(page)
       raise NotImplementedError, "FormatterPlugin#add(page) must be implemented"

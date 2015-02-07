@@ -22,6 +22,10 @@ module Embulk
       @schema = schema
       @index = index
       @page_builder = page_builder
+      init
+    end
+
+    def init
     end
 
     def run
