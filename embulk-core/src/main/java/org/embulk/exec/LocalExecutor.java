@@ -434,9 +434,13 @@ public class LocalExecutor
                                     task.setFilterTasks(filterTasks);
                                     task.setOutputTask(outputTask);
 
-                                    process(task.dump(), filterSchemas, processorCount, state);
-                                    if (!state.isAllCommitted()) {
-                                        throw state.getRepresentativeException();
+                                    if (processorCount > 0) {
+                                        process(task.dump(), filterSchemas, processorCount, state);
+                                        if (!state.isAllCommitted()) {
+                                            throw state.getRepresentativeException();
+                                        }
+                                    } else {
+                                        // TODO warning?
                                     }
                                     return state.getOutputCommitReports();
                                 }
@@ -502,9 +506,13 @@ public class LocalExecutor
                                         }
                                     }
 
-                                    process(task.dump(), filterSchemas, processorCount, state);
-                                    if (!state.isAllCommitted()) {
-                                        throw state.getRepresentativeException();
+                                    if (processorCount > 0) {
+                                        process(task.dump(), filterSchemas, processorCount, state);
+                                        if (!state.isAllCommitted()) {
+                                            throw state.getRepresentativeException();
+                                        }
+                                    } else {
+                                        // TODO warning?
                                     }
                                     return state.getOutputCommitReports();
                                 }
