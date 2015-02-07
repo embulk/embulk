@@ -10,7 +10,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.DataSourceImpl;
@@ -111,7 +111,7 @@ public class ExecSession
         return new DataSourceImpl(modelManager);
     }
 
-    public NextConfig newNextConfig()
+    public ConfigDiff newConfigDiff()
     {
         return new DataSourceImpl(modelManager);
     }

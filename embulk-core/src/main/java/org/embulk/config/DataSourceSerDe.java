@@ -38,9 +38,9 @@ public class DataSourceSerDe
             addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
             addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
 
-            // NextConfig
-            addSerializer(NextConfig.class, new DataSourceSerializer<NextConfig>());
-            addDeserializer(NextConfig.class, new DataSourceDeserializer<NextConfig>(model));
+            // ConfigDiff
+            addSerializer(ConfigDiff.class, new DataSourceSerializer<ConfigDiff>());
+            addDeserializer(ConfigDiff.class, new DataSourceDeserializer<ConfigDiff>(model));
         }
     }
 

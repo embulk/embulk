@@ -3,7 +3,7 @@ package org.embulk.standards;
 import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Task;
 import org.embulk.spi.time.TimestampFormatter;
@@ -26,7 +26,7 @@ public class StdoutOutputPlugin
     }
 
     @Override
-    public NextConfig transaction(ConfigSource config,
+    public ConfigDiff transaction(ConfigSource config,
             Schema schema, int processorCount,
             OutputPlugin.Control control)
     {
@@ -35,12 +35,12 @@ public class StdoutOutputPlugin
     }
 
     @Override
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int processorCount,
             OutputPlugin.Control control)
     {
         control.run(taskSource);
-        return Exec.newNextConfig();
+        return Exec.newConfigDiff();
     }
 
     public void cleanup(TaskSource taskSource,

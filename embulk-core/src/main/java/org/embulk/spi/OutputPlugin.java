@@ -3,7 +3,7 @@ package org.embulk.spi;
 import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 
 public interface OutputPlugin
@@ -13,11 +13,11 @@ public interface OutputPlugin
         public List<CommitReport> run(TaskSource taskSource);
     }
 
-    public NextConfig transaction(ConfigSource config,
+    public ConfigDiff transaction(ConfigSource config,
             Schema schema, int processorCount,
             OutputPlugin.Control control);
 
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int processorCount,
             OutputPlugin.Control control);
 

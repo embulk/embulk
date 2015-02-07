@@ -8,7 +8,7 @@ import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.time.Timestamp;
@@ -33,16 +33,16 @@ public class TestFileOutputRunner
         Boolean transactionCompleted = null;
 
         @Override
-        public NextConfig transaction(ConfigSource config, int processorCount,
+        public ConfigDiff transaction(ConfigSource config, int processorCount,
                 FileOutputPlugin.Control control)
         {
             PluginTask task = config.loadConfig(PluginTask.class);
             control.run(task.dump());
-            return Exec.newNextConfig();
+            return Exec.newConfigDiff();
         }
 
         @Override
-        public NextConfig resume(TaskSource taskSource,
+        public ConfigDiff resume(TaskSource taskSource,
                 int processorCount,
                 FileOutputPlugin.Control control)
         {

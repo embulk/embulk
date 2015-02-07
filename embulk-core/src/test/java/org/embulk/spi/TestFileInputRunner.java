@@ -15,7 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
@@ -44,7 +44,7 @@ public class TestFileInputRunner
         }
 
         @Override
-        public NextConfig transaction(ConfigSource config,
+        public ConfigDiff transaction(ConfigSource config,
                 FileInputPlugin.Control control)
         {
             control.run(Exec.newTaskSource(), 1);
@@ -52,7 +52,7 @@ public class TestFileInputRunner
         }
 
         @Override
-        public NextConfig resume(TaskSource taskSource,
+        public ConfigDiff resume(TaskSource taskSource,
                 int processorCount,
                 FileInputPlugin.Control control)
         {

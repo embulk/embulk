@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.NextConfig;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -42,7 +42,7 @@ public class LocalFileOutputPlugin
     private final Logger log = Exec.getLogger(getClass());
 
     @Override
-    public NextConfig transaction(ConfigSource config, int processorCount,
+    public ConfigDiff transaction(ConfigSource config, int processorCount,
             FileOutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
@@ -51,12 +51,12 @@ public class LocalFileOutputPlugin
     }
 
     @Override
-    public NextConfig resume(TaskSource taskSource,
+    public ConfigDiff resume(TaskSource taskSource,
             int processorCount,
             FileOutputPlugin.Control control)
     {
         control.run(taskSource);
-        return Exec.newNextConfig();
+        return Exec.newConfigDiff();
     }
 
     @Override

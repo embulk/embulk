@@ -42,7 +42,7 @@ module Embulk
 
         def transaction(java_config, java_control)
           config = DataSource.from_java(java_config)
-          next_config_hash = @ruby_class.transaction(config) do |task_source_hash,columns,processor_count|
+          config_diff_hash = @ruby_class.transaction(config) do |task_source_hash,columns,processor_count|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_schema = Schema.new(columns).to_java
             java_commit_reports = java_control.run(java_task_source, java_schema, processor_count)
@@ -51,13 +51,13 @@ module Embulk
             }
           end
           # TODO check return type of #transaction
-          return DataSource.from_ruby_hash(next_config_hash).to_java
+          return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
         def resume(java_task_source, java_schema, processor_count, java_control)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
-          next_config_hash = @ruby_class.resume(task_source, schema, processor_count) do |task_source_hash,columns,processor_count|
+          config_diff_hash = @ruby_class.resume(task_source, schema, processor_count) do |task_source_hash,columns,processor_count|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_schema = Schema.new(columns).to_java
             java_commit_reports = java_control.run(java_task_source, java_schema, processor_count)
@@ -66,7 +66,7 @@ module Embulk
             }
           end
           # TODO check return type of #resume
-          return DataSource.from_ruby_hash(next_config_hash).to_java
+          return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
         def cleanup(java_task_source, java_schema, processor_count, java_commit_reports)
