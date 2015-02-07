@@ -184,7 +184,7 @@ task releaseCheck << {
     if (!file("ChangeLog").getText().contains(changeLogLine)) {
         throw new GradleException("ChangeLog doesn't include entry for ${project.version}")
     }
-    println "Ready. Run ./gradlew all"
+    println "Ready. Run ./gradlew release"
 }
 
 task release(dependsOn: ["cli", "gem"]) << {
