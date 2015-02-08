@@ -9,12 +9,13 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Exec;
-import org.embulk.spi.InputPlugin;
+import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
+import org.embulk.spi.TransactionalPageOutput;
 
 public class <%= java_class_name %>
-        implements InputPlugin
+        implements OutputPlugin
 {
     public interface PluginTask
             extends Task
@@ -33,11 +34,11 @@ public class <%= java_class_name %>
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        // transactional output:
+        // retryable (idempotent) output:
         // return resume(task.dump(), schema, processorCount, control);
 
-        // non-transactional output:
-        control.run(taskSource);
+        // non-retryable (non-idempotent) output:
+        control.run(task.dump());
         return Exec.newConfigDiff();
     }
 
@@ -57,5 +58,7 @@ public class <%= java_class_name %>
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
     }
 }

@@ -6,6 +6,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.Column;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
@@ -30,6 +31,8 @@ public class <%= java_class_name %>
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
+        Schema outputSchema = inputSchema;
+
         control.run(task.dump(), outputSchema);
     }
 
@@ -38,5 +41,7 @@ public class <%= java_class_name %>
             Schema outputSchema, PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
     }
 }

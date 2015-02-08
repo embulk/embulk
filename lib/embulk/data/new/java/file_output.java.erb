@@ -32,11 +32,11 @@ public class <%= java_class_name %>
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        // transactional output:
+        // retryable (idempotent) output:
         // return resume(task.dump(), processorCount, control);
 
-        // non-transactional output:
-        control.run(taskSource);
+        // non-retryable (non-idempotent) output:
+        control.run(task.dump());
         return Exec.newConfigDiff();
     }
 
@@ -59,5 +59,7 @@ public class <%= java_class_name %>
     public TransactionalFileOutput open(TaskSource taskSource, final int processorIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
     }
 }

@@ -31,6 +31,9 @@ public class <%= java_class_name %>
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
+        // processorCount is usually number of input files
+        int processorCount = 1;  // number of run() method calls
+
         return resume(task.dump(), processorCount, control);
     }
 
@@ -54,5 +57,7 @@ public class <%= java_class_name %>
     public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
     }
 }

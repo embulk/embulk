@@ -25,7 +25,6 @@ public class <%= java_class_name %>
         public int getProperty2();
     }
 
-
     @Override
     public void transaction(ConfigSource config, Schema schema,
             FormatterPlugin.Control control)
@@ -40,5 +39,7 @@ public class <%= java_class_name %>
             FileOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
     }
 }
