@@ -223,24 +223,22 @@ examples:
       lang_cate = ARGV[0]
       name = ARGV[1]
 
-      language, category = {
-        "java-input"       => [:java, :input],
-        "java-file-input"  => [:java, :file_input],
-        "java-parser"      => [:java, :parser],
-        "java-decoder"     => [:java, :decoder],
-        "java-output"      => [:java, :output],
-        "java-file-output" => [:java, :file_output],
-        "java-formatter"   => [:java, :formatter],
-        "java-encoder"     => [:java, :encoder],
-        "java-filter"      => [:java, :filter],
-        "ruby-input"       => [:ruby, :input],
-        "ruby-output"      => [:ruby, :output],
-        "ruby-filter"      => [:ruby, :filter],
-      }[lang_cate]
-
-      unless language
-        usage_op op, "Unknown category #{lang_cate}"
-      end
+      language, category = case lang_cate
+        when "java-input"       then [:java, :input]
+        when "java-file-input"  then [:java, :file_input]
+        when "java-parser"      then [:java, :parser]
+        when "java-decoder"     then [:java, :decoder]
+        when "java-output"      then [:java, :output]
+        when "java-file-output" then [:java, :file_output]
+        when "java-formatter"   then [:java, :formatter]
+        when "java-encoder"     then [:java, :encoder]
+        when "java-filter"      then [:java, :filter]
+        when "ruby-input"       then [:ruby, :input]
+        when "ruby-output"      then [:ruby, :output]
+        when "ruby-filter"      then [:ruby, :filter]
+        else
+          usage_op op, "Unknown category '#{lang_cate}'"
+        end
 
       require 'embulk/command/embulk_new_plugin'
       Embulk.new_plugin(name, language, category)
