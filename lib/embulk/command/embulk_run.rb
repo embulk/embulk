@@ -107,18 +107,18 @@ module Embulk
       op.remove  # remove --bundle
       op.banner = "Usage: new <category> <name>" + %[
 categories:
-    ruby-input                 record input plugin    (like mysql)
-    ruby-output                record output plugin   (like mysql)
-    ruby-filter                record filter plugin   (like add-hostname)
-    java-input                 record input plugin    (like mysql)
-    java-output                record output plugin   (like mysql)
-    java-filter                record filter plugin   (like add-hostname)
-    java-file-input            file input plugin      (like ftp)
-    java-file-output           file output plugin     (like ftp)
-    java-parser                file parser plugin     (like csv)
-    java-formatter             file formatter plugin  (like csv)
-    java-encoder               file encoder plugin    (like gzip)
-    java-decoder               file decoder plugin    (like gzip)
+    ruby-input                 record input plugin    (like "mysql")
+    ruby-output                record output plugin   (like "mysql")
+    ruby-filter                record filter plugin   (like "add-hostname")
+    java-input                 record input plugin    (like "mysql")
+    java-output                record output plugin   (like "mysql")
+    java-filter                record filter plugin   (like "add-hostname")
+    java-file-input            file input plugin      (like "ftp")
+    java-file-output           file output plugin     (like "ftp")
+    java-parser                file parser plugin     (like "csv")
+    java-formatter             file formatter plugin  (like "csv")
+    java-encoder               file encoder plugin    (like "gzip")
+    java-decoder               file decoder plugin    (like "gzip")
 
 examples:
     new ruby-output hbase
@@ -303,6 +303,7 @@ examples:
     STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
     STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
+    STDERR.puts "   new       <category> <name>                        # generates new plugin template"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
     STDERR.puts ""
     if message
