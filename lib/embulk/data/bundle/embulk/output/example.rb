@@ -1,8 +1,8 @@
 module Embulk
   module Output
 
-    class Example < OutputPlugin
-      # output plugin file name must be: embulk/output_<name>.rb
+    class ExampleOutputPlugin < OutputPlugin
+      # output plugin file name must be: embulk/output/<name>.rb
       Plugin.register_output('example', self)
 
       def self.transaction(config, schema, count, &control)
