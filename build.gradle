@@ -146,7 +146,7 @@ project(':embulk-cli') {
     }
 
     task classpath(type: Copy) {
-        doFirst { new File("${parent.projectDir}/classpath").mkdirs() }
+        doFirst { file("${parent.projectDir}/classpath").mkdirs() }
         from configurations.runtime
         into "${parent.projectDir}/classpath"
     }
@@ -156,6 +156,7 @@ task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << { }
 clean { delete 'classpath' }
 
 task cli(dependsOn: ':embulk-cli:shadowJar') << {
+    file('pkg').mkdirs()
     File f = file("pkg/embulk-${project.version}.jar")
     f.write('''\
 #!/bin/sh
@@ -214,8 +215,8 @@ Gem::Specification.new do |gem|
   gem.homepage      = "https://github.com/embulk/embulk"
 
   gem.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
-  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  gem.test_files    = gem.files.grep(%r"^(test|spec)/")
+  gem.executables   = gem.files.grep(%r"^bin/").map{ |f| File.basename(f) }
   gem.require_paths = ["lib"]
   gem.has_rdoc      = false
 
