@@ -26,6 +26,7 @@ task classpath(type: Copy) {
     from (configurations.runtime - configurations.provided + files(jar.archivePath))
     into "classpath"
 }
+clean { delete 'classpath' }
 
 task gem(type: JRubyExec, dependsOn: ["build", "gemspec", "classpath"]) {
     jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "build"
