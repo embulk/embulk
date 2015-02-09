@@ -33,7 +33,7 @@ public class LocalFileOutputPlugin
         public String getFileNameExtension();
 
         @Config("sequence_format")
-        @ConfigDefault("\".%03d.%02d.\"")
+        @ConfigDefault("\".%03d.%02d\"")
         public String getSequenceFormat();
     }
 
