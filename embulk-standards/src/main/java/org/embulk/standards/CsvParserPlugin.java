@@ -14,7 +14,7 @@ import org.embulk.spi.time.TimestampParseException;
 import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Exec;
@@ -120,7 +120,7 @@ public class CsvParserPlugin
                             break;
                         }
 
-                        schema.visitColumns(new SchemaVisitor() {
+                        schema.visitColumns(new ColumnVisitor() {
                             public void booleanColumn(Column column)
                             {
                                 String v = nextColumn(schema, tokenizer, nullStringOrNull);

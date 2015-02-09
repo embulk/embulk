@@ -5,7 +5,7 @@ import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
@@ -36,7 +36,7 @@ public class Pages
     public static Object[] toObjects(final PageReader record)
     {
         final Object[] values = new Object[record.getSchema().getColumns().size()];
-        record.getSchema().visitColumns(new ObjectSchemaVisitor(record) {
+        record.getSchema().visitColumns(new ObjectColumnVisitor(record) {
             @Override
             public void visit(Column column, Object object)
             {
@@ -46,12 +46,12 @@ public class Pages
         return values;
     }
 
-    public static abstract class ObjectSchemaVisitor
-            implements SchemaVisitor
+    public static abstract class ObjectColumnVisitor
+            implements ColumnVisitor
     {
         private final PageReader record;
 
-        public ObjectSchemaVisitor(PageReader record)
+        public ObjectColumnVisitor(PageReader record)
         {
             this.record = record;
         }
@@ -117,7 +117,7 @@ public class Pages
     }
 
     private static class GetObjectColumnVisitor
-            extends ObjectSchemaVisitor
+            extends ObjectColumnVisitor
     {
         private Object object;
 

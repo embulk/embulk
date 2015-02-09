@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-public interface SchemaVisitor
+public interface ColumnVisitor
 {
     public void booleanColumn(Column column);
 

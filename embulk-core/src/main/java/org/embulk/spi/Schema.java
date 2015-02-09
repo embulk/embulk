@@ -42,7 +42,7 @@ public class Schema
         return getColumn(index).getType();
     }
 
-    public void visitColumns(SchemaVisitor visitor)
+    public void visitColumns(ColumnVisitor visitor)
     {
         for (Column column : columns) {
             column.visit(visitor);
