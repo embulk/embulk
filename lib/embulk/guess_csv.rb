@@ -12,6 +12,15 @@ module Embulk
       "\"", "'"
     ]
 
+    # CsvParserPlugin.TRUE_STRINGS
+    TRUE_STRINGS = Hash[*%w[
+      true True TRUE
+      yes Yes YES
+      y Y
+      on On ON
+      1
+    ].map {|k| [k, true] }]
+
     def guess_lines(config, sample_lines)
       delim = guess_delimiter(sample_lines)
       unless delim
@@ -152,7 +161,7 @@ module Embulk
     end
 
     def guess_type(str)
-      if ["true", "false"].include?(str)
+      if TRUE_STRINGS[str]
         return "boolean"
       end
 

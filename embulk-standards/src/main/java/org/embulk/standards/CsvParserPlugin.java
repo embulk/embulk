@@ -29,6 +29,14 @@ import java.util.Map;
 public class CsvParserPlugin
         implements ParserPlugin
 {
+    private static final ImmutableSet<String> TRUE_STRINGS =
+        ImmutableSet.<String>of(
+                "true", "True", "TRUE",
+                "yes", "Yes", "YES",
+                "y", "Y",
+                "on", "On", "ON",
+                "1");
+
     public interface PluginTask
             extends Task, LineDecoder.DecoderTask, TimestampParser.ParserTask
     {
@@ -127,7 +135,7 @@ public class CsvParserPlugin
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
-                                    pageBuilder.setBoolean(column, Boolean.parseBoolean(v));
+                                    pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
                                 }
                             }
 
