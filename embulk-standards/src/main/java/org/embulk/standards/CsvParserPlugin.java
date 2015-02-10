@@ -3,6 +3,7 @@ package org.embulk.standards;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -30,7 +31,7 @@ public class CsvParserPlugin
         implements ParserPlugin
 {
     private static final ImmutableSet<String> TRUE_STRINGS =
-        ImmutableSet.<String>of(
+        ImmutableSet.of(
                 "true", "True", "TRUE",
                 "yes", "Yes", "YES",
                 "y", "Y",
