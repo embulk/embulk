@@ -75,7 +75,7 @@ public class PreviewExecutor
         InputPlugin input = newInputPlugin(task);
 
         try {
-            input.transaction(task.getInputConfig(), new InputPlugin.Control() {
+            input.transaction(task.getInputConfig().set("preview", "yes"), new InputPlugin.Control() {
                 public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
                 {
                     InputPlugin input = newInputPlugin(task);
