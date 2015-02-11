@@ -318,14 +318,19 @@ public class LocalExecutor
             return new ExecutionResult(configDiff, ignoredExceptions.build());
         }
 
+        public ResumeState buildResumeState(ExecutorTask task, ExecSession exec)
+        {
+            return new ResumeState(
+                    exec.getSessionConfigSource(),
+                    task.getInputTask(), task.getOutputTask(),
+                    inputSchema, outputSchema,
+                    Arrays.asList(inputCommitReports), Arrays.asList(outputCommitReports));
+        }
+
         public PartialExecutionException buildPartialExecuteException(Throwable cause,
                 ExecutorTask task, ExecSession exec)
         {
-            return new PartialExecutionException(cause, new ResumeState(
-                        exec.getSessionConfigSource(),
-                        task.getInputTask(), task.getOutputTask(),
-                        inputSchema, outputSchema,
-                        Arrays.asList(inputCommitReports), Arrays.asList(outputCommitReports)));
+            return new PartialExecutionException(cause, buildResumeState(task, exec));
         }
     }
 
@@ -453,6 +458,12 @@ public class LocalExecutor
             });
             state.setInputConfigDiff(inputConfigDiff);
 
+            try {
+                doCleanup(config, state.buildResumeState(task, Exec.session()));
+            } catch (Exception ex) {
+                state.logger.warn("Commit succeeded but cleanup failed. Ignoring this exception.", ex);  // TODO
+            }
+
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
@@ -524,6 +535,12 @@ public class LocalExecutor
                 }
             });
             state.setInputConfigDiff(inputConfigDiff);
+
+            try {
+                doCleanup(config, state.buildResumeState(task, Exec.session()));
+            } catch (Exception ex) {
+                state.logger.warn("Commit succeeded but cleanup failed. Ignoring this exception.", ex);  // TODO
+            }
 
             return state.buildExecuteResult();
 

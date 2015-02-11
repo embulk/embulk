@@ -135,7 +135,8 @@ public class Runner
 
         // write next config
         ConfigDiff configDiff = result.getConfigDiff();
-        exec.getLogger(Runner.class).info("next config diff: {}", configDiff.toString());
+        exec.getLogger(Runner.class).info("Committed.");
+        exec.getLogger(Runner.class).info("Next config diff: {}", configDiff.toString());
         writeNextConfig(options.getNextConfigOutputPath(), config, configDiff);
     }
 
