@@ -2,6 +2,7 @@ package org.embulk.plugin;
 
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -23,12 +24,26 @@ public class PluginManager
 
     public <T> T newPlugin(Class<T> iface, PluginType type)
     {
+        if (sources.isEmpty()) {
+            throw new ConfigException("No PluginSource is installed");
+        }
+
+        List<Throwable> causes = new ArrayList<Throwable>();
         for (PluginSource source : sources) {
             try {
                 return source.newPlugin(iface, type);
             } catch (PluginSourceNotMatchException e) {
+                if (e.getCause() != null) {
+                    causes.add(e.getCause());
+                }
             }
         }
-        throw new ConfigException("Plugin not found");  // TODO exception message should include type in original format
+
+        ConfigException e = new ConfigException(String.format("%s '%s' is not found",
+                    iface.getSimpleName(), type.getName()), causes.remove(causes.size()-1));
+        for (Throwable cause : causes) {
+            e.addSuppressed(cause);
+        }
+        throw e;
     }
 }

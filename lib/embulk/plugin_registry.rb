@@ -21,19 +21,26 @@ module Embulk
       if value = @map[type]
         return value
       end
-      search(type)
-      if value = @map[type]
-        return value
+      if search(type)
+        if value = @map[type]
+          return value
+        end
+        raise PluginLoadError, "Unknown #{@category} plugin '#{type}'. Succeeded found #{@search_prefix}#{type}.rb from installed gems but it did not correctly register plugin."
+      else
+        raise PluginLoadError, "Unknown #{@category} plugin '#{type}'. #{@search_prefix}#{type}.rb is not installed. Run 'gem search -rd embulk-#{@category}' command to find the plugin gem."
       end
-      raise ConfigError, "Unknown #{@category} plugin '#{type}'."
     end
 
     def search(type)
       name = "#{@search_prefix}#{type}"
       begin
         require name
-        return
-      rescue LoadError
+        return true
+      rescue LoadError => e
+        # catch LoadError but don't catch ClassNotFoundException
+        # TODO: the best code here is to raise exception only if
+        #       `name` file is not in $LOAD_PATH.
+        raise e if e.to_s =~ /java.lang.ClassNotFoundException/
       end
 
       # search from $LOAD_PATH
@@ -46,8 +53,9 @@ module Embulk
       paths.each do |path|
         begin
           require path
-          return
-        rescue LoadError
+          return true
+        rescue LoadError => e
+          raise e if e.to_s =~ /java.lang.ClassNotFoundException/
         end
       end
 
@@ -63,8 +71,11 @@ module Embulk
           spec.require_paths.each do |lib|
             require "#{spec.full_gem_path}/#{lib}/#{name}"
           end
+          return true
         end
       end
+
+      return false
     end
   end
 end
