@@ -8,7 +8,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 
 public class MockFormatterPlugin implements FormatterPlugin
 {
@@ -56,7 +56,7 @@ public class MockFormatterPlugin implements FormatterPlugin
             pageReader.setPage(page);
             while (pageReader.nextRecord()) {
                 final List<Object> record = new ArrayList<>();
-                schema.visitColumns(new SchemaVisitor()
+                schema.visitColumns(new ColumnVisitor()
                 {
                     public void booleanColumn(Column column)
                     {

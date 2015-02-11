@@ -3,6 +3,7 @@ package org.embulk.standards;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -14,7 +15,7 @@ import org.embulk.spi.time.TimestampParseException;
 import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Exec;
@@ -29,6 +30,14 @@ import java.util.Map;
 public class CsvParserPlugin
         implements ParserPlugin
 {
+    private static final ImmutableSet<String> TRUE_STRINGS =
+        ImmutableSet.of(
+                "true", "True", "TRUE",
+                "yes", "Yes", "YES",
+                "y", "Y",
+                "on", "On", "ON",
+                "1");
+
     public interface PluginTask
             extends Task, LineDecoder.DecoderTask, TimestampParser.ParserTask
     {
@@ -120,14 +129,14 @@ public class CsvParserPlugin
                             break;
                         }
 
-                        schema.visitColumns(new SchemaVisitor() {
+                        schema.visitColumns(new ColumnVisitor() {
                             public void booleanColumn(Column column)
                             {
                                 String v = nextColumn(schema, tokenizer, nullStringOrNull);
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
-                                    pageBuilder.setBoolean(column, Boolean.parseBoolean(v));
+                                    pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
                                 }
                             }
 

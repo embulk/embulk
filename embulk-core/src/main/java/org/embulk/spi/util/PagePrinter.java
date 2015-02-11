@@ -7,7 +7,7 @@ import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.type.TimestampType;
 
 public class PagePrinter
@@ -58,18 +58,18 @@ public class PagePrinter
         if (reader.isNull(column)) {
             return "";
         }
-        ToStringSchemaVisitor visitor = new ToStringSchemaVisitor(reader);
+        ToStringColumnVisitor visitor = new ToStringColumnVisitor(reader);
         column.visit(visitor);
         return visitor.string;
     }
 
-    private class ToStringSchemaVisitor
-            implements SchemaVisitor
+    private class ToStringColumnVisitor
+            implements ColumnVisitor
     {
         private final PageReader reader;
         String string = "";
 
-        public ToStringSchemaVisitor(PageReader reader)
+        public ToStringColumnVisitor(PageReader reader)
         {
             this.reader = reader;
         }

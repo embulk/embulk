@@ -45,7 +45,7 @@ public class Column
         return type;
     }
 
-    public void visit(SchemaVisitor visitor)
+    public void visit(ColumnVisitor visitor)
     {
         if (type instanceof BooleanType) {
             visitor.booleanColumn(this);

@@ -8,7 +8,7 @@ import org.embulk.config.CommitReport;
 import org.embulk.config.Task;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
 import org.embulk.spi.Exec;

@@ -11,7 +11,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaVisitor;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
@@ -78,7 +78,7 @@ public class CsvFormatterPlugin
             {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
-                    schema.visitColumns(new SchemaVisitor() {
+                    schema.visitColumns(new ColumnVisitor() {
                         public void booleanColumn(Column column)
                         {
                             addDelimiter(column);

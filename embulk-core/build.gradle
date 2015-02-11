@@ -1,6 +1,6 @@
 sourceSets {
     main.resources {
         srcDirs 'src/main/resources'
-        srcDirs '../lib'
+        srcDirs "${parent.projectDir}/lib"
     }
 }
