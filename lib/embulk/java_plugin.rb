@@ -68,7 +68,12 @@ module Embulk
           end
         end
 
-        unless (class<<self;self;end).method_defined?(:new_java)
+        # TODO ruby_base_class already implements new_java. So
+        #      this line returns always true:
+        #unless (class<<self;self;end).method_defined?(:new_java)
+        #      but this line could return false unexpectedly if
+        #      ruby_module::ClassMethods includes other modules.
+        unless ruby_module::ClassMethods.method_defined?(:new_java)
           def self.new_java
             Java.injector.getInstance(java_class)
           end
