@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.annotation.JacksonInject;
 
 class TaskSerDe
 {
@@ -93,7 +92,7 @@ class TaskSerDe
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
 
-                if (getterMethod.getAnnotation(JacksonInject.class) != null) {
+                if (getterMethod.getAnnotation(ConfigInject.class) != null) {
                     // InjectEntry
                     continue;
                 }
@@ -117,7 +116,7 @@ class TaskSerDe
             for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
-                JacksonInject inject = getterMethod.getAnnotation(JacksonInject.class);
+                ConfigInject inject = getterMethod.getAnnotation(ConfigInject.class);
                 if (inject != null) {
                     // InjectEntry
                     builder.add(new InjectEntry(fieldName, getterMethod.getReturnType()));
