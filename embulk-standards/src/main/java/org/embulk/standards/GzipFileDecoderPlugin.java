@@ -3,10 +3,10 @@ package org.embulk.standards;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ConfigInject;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileInput;
@@ -19,7 +19,7 @@ public class GzipFileDecoderPlugin
     public interface PluginTask
             extends Task
     {
-        @JacksonInject
+        @ConfigInject
         public BufferAllocator getBufferAllocator();
     }
 
