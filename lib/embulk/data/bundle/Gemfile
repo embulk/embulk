@@ -8,10 +8,10 @@ source 'https://rubygems.org/'
 #
 # RubyGems Plugins
 #
-#gem 'embulk-input-foo'
-#gem 'embulk-input-bar', '~> 0.1.0'
-#gem 'embulk-output-baz', '= 0.2.0'
-#gem 'embulk-output-xyz', '>= 0.3.0'
+#gem 'embulk-output-mysql'
+#gem 'embulk-output-postgresql', '>= 0.1.0'
+#gem 'embulk-input-baz', '= 0.2.0'
+#gem 'embulk-input-xyz', '~> 0.3.0'
 #
 
 #
