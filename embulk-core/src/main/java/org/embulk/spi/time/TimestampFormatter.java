@@ -5,9 +5,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.RubyDateFormat;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.spi.util.LineEncoder;
@@ -21,7 +21,7 @@ public class TimestampFormatter
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getTimeZone();
 
-        @JacksonInject
+        @ConfigInject
         public ScriptingContainer getJRuby();
     }
 

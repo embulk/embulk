@@ -14,8 +14,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
@@ -45,7 +45,7 @@ public class LocalFileInputPlugin
         public List<String> getFiles();
         public void setFiles(List<String> files);
 
-        @JacksonInject
+        @ConfigInject
         public BufferAllocator getBufferAllocator();
     }
 

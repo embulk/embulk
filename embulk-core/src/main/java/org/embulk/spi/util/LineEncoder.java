@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.FileOutput;
 import org.embulk.spi.BufferAllocator;
@@ -29,7 +29,7 @@ public class LineEncoder
         @ConfigDefault("\"CRLF\"")
         public Newline getNewline();
 
-        @JacksonInject
+        @ConfigInject
         public BufferAllocator getBufferAllocator();
     }
 

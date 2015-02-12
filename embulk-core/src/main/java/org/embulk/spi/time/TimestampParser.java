@@ -2,9 +2,9 @@ package org.embulk.spi.time;
 
 import org.joda.time.DateTimeZone;
 import org.jruby.embed.ScriptingContainer;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
@@ -18,7 +18,7 @@ public class TimestampParser
         @ConfigDefault("\"UTC\"")
         public DateTimeZone getDefaultTimeZone();
 
-        @JacksonInject
+        @ConfigInject
         public ScriptingContainer getJRuby();
     }
 
