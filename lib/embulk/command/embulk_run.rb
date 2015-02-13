@@ -107,18 +107,24 @@ module Embulk
       op.remove  # remove --bundle
       op.banner = "Usage: new <category> <name>" + %[
 categories:
-    ruby-input                 record input plugin    (like "mysql")
-    ruby-output                record output plugin   (like "mysql")
-    ruby-filter                record filter plugin   (like "add-hostname")
-    java-input                 record input plugin    (like "mysql")
-    java-output                record output plugin   (like "mysql")
-    java-filter                record filter plugin   (like "add-hostname")
-    java-file-input            file input plugin      (like "ftp")
-    java-file-output           file output plugin     (like "ftp")
-    java-parser                file parser plugin     (like "csv")
-    java-formatter             file formatter plugin  (like "csv")
-    java-encoder               file encoder plugin    (like "gzip")
-    java-decoder               file decoder plugin    (like "gzip")
+    ruby-input                 Ruby record input plugin    (like "mysql")
+    ruby-output                Ruby record output plugin   (like "mysql")
+    ruby-filter                Ruby record filter plugin   (like "add-hostname")
+    #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
+    #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
+    #ruby-parser               Ruby file parser plugin     (like "csv")          # not implemented yet [#33]
+    #ruby-formatter            Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
+    #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
+    #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
+    java-input                 Java record input plugin    (like "mysql")
+    java-output                Java record output plugin   (like "mysql")
+    java-filter                Java record filter plugin   (like "add-hostname")
+    java-file-input            Java file input plugin      (like "ftp")
+    java-file-output           Java file output plugin     (like "ftp")
+    java-parser                Java file parser plugin     (like "csv")
+    java-formatter             Java file formatter plugin  (like "csv")
+    java-decoder               Java file decoder plugin    (like "gzip")
+    java-encoder               Java file encoder plugin    (like "gzip")
 
 examples:
     new ruby-output hbase
@@ -225,17 +231,23 @@ examples:
 
       language, category = case lang_cate
         when "java-input"       then [:java, :input]
-        when "java-file-input"  then [:java, :file_input]
-        when "java-parser"      then [:java, :parser]
-        when "java-decoder"     then [:java, :decoder]
         when "java-output"      then [:java, :output]
-        when "java-file-output" then [:java, :file_output]
-        when "java-formatter"   then [:java, :formatter]
-        when "java-encoder"     then [:java, :encoder]
         when "java-filter"      then [:java, :filter]
+        when "java-file-input"  then [:java, :file_input]
+        when "java-file-output" then [:java, :file_output]
+        when "java-parser"      then [:java, :parser]
+        when "java-formatter"   then [:java, :formatter]
+        when "java-decoder"     then [:java, :decoder]
+        when "java-encoder"     then [:java, :encoder]
         when "ruby-input"       then [:ruby, :input]
         when "ruby-output"      then [:ruby, :output]
         when "ruby-filter"      then [:ruby, :filter]
+        when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
+        when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
+        when "ruby-parser"      then raise "ruby-parser is not implemented yet. See #33 on github." #[:ruby, :parser]
+        when "ruby-formatter"   then raise "ruby-formatter is not implemented yet. See #34 on github." #[:ruby, :formatter]
+        when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
+        when "ruby-encoder"     then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
         else
           usage_op op, "Unknown category '#{lang_cate}'"
         end
