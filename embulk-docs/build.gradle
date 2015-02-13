@@ -1,0 +1,20 @@
+task sphinx_html(type: Exec) {
+    workingDir '.'
+    commandLine 'make'
+    args 'html'
+}
+
+task javadoc_html(type: Copy, dependsOn: [':embulk-core:javadoc']) {
+    doFirst { file('build/html/javadoc').mkdirs() }
+    from project(':embulk-core').javadoc.destinationDir
+    into 'build/html/javadoc'
+}
+
+task rdoc_html(type: Exec) {
+    workingDir '..'
+    commandLine 'yardoc'
+    args '-o', 'build/html/rdoc', 'lib'
+}
+
+task site(type: Copy, dependsOn: ['sphinx_html', 'rdoc_html', 'javadoc_html']) {
+}
