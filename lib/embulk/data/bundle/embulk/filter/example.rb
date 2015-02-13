@@ -1,8 +1,8 @@
 module Embulk
-  module Plugin
+  module Filter
 
-    class FilterExample < FilterPlugin
-      # filter plugin file name must be: embulk/filter_<name>.rb
+    class ExampleFilterPlugin < FilterPlugin
+      # filter plugin file name must be: embulk/filter/<name>.rb
       Plugin.register_filter('example', self)
 
       def self.transaction(config, in_schema, &control)

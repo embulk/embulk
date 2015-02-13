@@ -1,0 +1,45 @@
+package org.embulk.<%= embulk_category %>;
+
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.FileOutput;
+import org.embulk.spi.Schema;
+
+public class <%= java_class_name %>
+        implements FormatterPlugin
+{
+    public interface PluginTask
+            extends Task
+    {
+        @Config("property1")
+        public String getProperty1();
+
+        @Config("property2")
+        @ConfigDefault("0")
+        public int getProperty2();
+    }
+
+    @Override
+    public void transaction(ConfigSource config, Schema schema,
+            FormatterPlugin.Control control)
+    {
+        PluginTask task = config.loadConfig(PluginTask.class);
+
+        control.run(task.dump());
+    }
+
+    @Override
+    public PageOutput open(TaskSource taskSource, Schema schema,
+            FileOutput output)
+    {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        // TODO
+    }
+}

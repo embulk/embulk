@@ -1,0 +1,75 @@
+# <%= display_name %> <%= display_category %> plugin for Embulk
+
+TODO: Write short description here
+
+## Overview
+
+* **Plugin type**: <%= embulk_category %>
+* **Load all or nothing**: yes
+* **Resume supported**: no
+
+## Configuration
+
+- **property1**: description (string, required)
+- **property2**: description (integer, default: default-value)
+
+## Example
+
+```yaml
+%case category
+%when :input, :file_input
+in:
+  type: <%= name %>
+  property1: example1
+  property2: example2
+%when :output, :file_output
+out:
+  type: <%= name %>
+  property1: example1
+  property2: example2
+%when :filter
+filters:
+  - type: <%= name %>
+    property1: example1
+    property2: example2
+%when :parser
+in:
+  type: any file input plugin type
+  parser:
+    type: <%= name %>
+    property1: example1
+    property2: example2
+%when :formatter
+out:
+  type: any output input plugin type
+  formatter:
+    type: <%= name %>
+    property1: example1
+    property2: example2
+%when :decoder
+in:
+  type: any output input plugin type
+  decoders:
+    - type: <%= name %>
+      property1: example1
+      property2: example2
+%when :encoder
+out:
+  type: any output input plugin type
+  encoders:
+    - type: <%= name %>
+      property1: example1
+      property2: example2
+%end
+```
+
+## Build
+
+```
+%case language
+%when :ruby
+$ rake
+%when :java
+$ ./gradlew gem
+% end
+```

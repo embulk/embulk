@@ -42,6 +42,7 @@ module Embulk
 
     case subcmd.to_sym
     when :bundle
+      op.remove  # remove --bundle
       if default_bundle_path
         op.banner = "Usage: bundle [directory=#{default_bundle_path}]"
         args = 0..1
@@ -52,8 +53,6 @@ module Embulk
 
     when :run
       op.banner = "Usage: run <config.yml>"
-      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-      end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
@@ -70,8 +69,6 @@ module Embulk
 
     when :cleanup
       op.banner = "Usage: run <config.yml>"
-      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-      end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
@@ -85,8 +82,6 @@ module Embulk
 
     when :preview
       op.banner = "Usage: preview <config.yml>"
-      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-      end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
@@ -108,8 +103,34 @@ module Embulk
       end
       args = 1..1
 
-    #when :generate  # or :new
-      # TODO create plugin templates
+    when :new
+      op.remove  # remove --bundle
+      op.banner = "Usage: new <category> <name>" + %[
+categories:
+    ruby-input                 Ruby record input plugin    (like "mysql")
+    ruby-output                Ruby record output plugin   (like "mysql")
+    ruby-filter                Ruby record filter plugin   (like "add-hostname")
+    #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
+    #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
+    #ruby-parser               Ruby file parser plugin     (like "csv")          # not implemented yet [#33]
+    #ruby-formatter            Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
+    #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
+    #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
+    java-input                 Java record input plugin    (like "mysql")
+    java-output                Java record output plugin   (like "mysql")
+    java-filter                Java record filter plugin   (like "add-hostname")
+    java-file-input            Java file input plugin      (like "ftp")
+    java-file-output           Java file output plugin     (like "ftp")
+    java-parser                Java file parser plugin     (like "csv")
+    java-formatter             Java file formatter plugin  (like "csv")
+    java-decoder               Java file decoder plugin    (like "gzip")
+    java-encoder               Java file encoder plugin    (like "gzip")
+
+examples:
+    new ruby-output hbase
+    new ruby-filter int-to-string
+]
+      args = 2..2
 
     when :gem
       require 'rubygems/gem_runner'
@@ -130,10 +151,10 @@ module Embulk
     begin
       op.parse!(argv)
       unless args.include?(argv.length)
-        usage nil
+        usage_op op, nil
       end
     rescue => e
-      usage e.to_s
+      usage_op op, e.to_s
     end
 
     case subcmd.to_sym
@@ -152,19 +173,10 @@ module Embulk
           success = false
 
           # copy embulk/data/bundle/ directory
-          if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
-            # data is in embulk-core jar
-            resource_class = org.embulk.command.Runner.java_class
-            %w[.bundle/config embulk/input_example.rb embulk/filter_example.rb embulk/output_example.rb Gemfile Gemfile.lock].each do |file|  # TODO get file list from the jar
-              url = resource_class.resource("/embulk/data/bundle/#{file}").to_s
-              dst = File.join(path, file)
-              FileUtils.mkdir_p File.dirname(dst)
-              FileUtils.cp(url, dst)
-            end
-          else
-            #tmpl = File.join(File.dirname(__FILE__), '../data/bundle')
-            tmpl = File.join(Embulk.home('lib'), 'embulk', 'data', 'bundle')
-            FileUtils.cp_r tmpl, path
+          require 'embulk/data/package_data'
+          pkg = PackageData.new("bundle", path)
+          %w[.bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb Gemfile].each do |file|
+            pkg.cp(file, file)
           end
 
           ## TODO this is disabled for now. enable this if you want to use
@@ -212,6 +224,36 @@ module Embulk
       puts "   2. preview config.yml"
       puts "   3. run config.yml"
       puts ""
+
+    when :new
+      lang_cate = ARGV[0]
+      name = ARGV[1]
+
+      language, category = case lang_cate
+        when "java-input"       then [:java, :input]
+        when "java-output"      then [:java, :output]
+        when "java-filter"      then [:java, :filter]
+        when "java-file-input"  then [:java, :file_input]
+        when "java-file-output" then [:java, :file_output]
+        when "java-parser"      then [:java, :parser]
+        when "java-formatter"   then [:java, :formatter]
+        when "java-decoder"     then [:java, :decoder]
+        when "java-encoder"     then [:java, :encoder]
+        when "ruby-input"       then [:ruby, :input]
+        when "ruby-output"      then [:ruby, :output]
+        when "ruby-filter"      then [:ruby, :filter]
+        when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
+        when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
+        when "ruby-parser"      then raise "ruby-parser is not implemented yet. See #33 on github." #[:ruby, :parser]
+        when "ruby-formatter"   then raise "ruby-formatter is not implemented yet. See #34 on github." #[:ruby, :formatter]
+        when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
+        when "ruby-encoder"     then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
+        else
+          usage_op op, "Unknown category '#{lang_cate}'"
+        end
+
+      require 'embulk/command/embulk_new_plugin'
+      Embulk.new_plugin(name, language, category)
 
     else
       require 'json'
@@ -271,12 +313,22 @@ module Embulk
     STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
     STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
+    STDERR.puts "   new       <category> <name>                        # generates new plugin template"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"
     else
       STDERR.puts "Use \`<command> --help\` to see description of the commands."
+    end
+    exit 1
+  end
+
+  def self.usage_op(op, message)
+    STDERR.puts op.help
+    STDERR.puts
+    if message
+      STDERR.puts message
     end
     exit 1
   end
