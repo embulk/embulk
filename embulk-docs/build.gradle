@@ -13,7 +13,7 @@ task javadoc_html(type: Copy, dependsOn: [':embulk-core:javadoc']) {
 task rdoc_html(type: Exec) {
     workingDir '..'
     commandLine 'yardoc'
-    args '-o', 'build/html/rdoc', 'lib'
+    args '-o', 'embulk-docs/build/html/rdoc', 'lib'
 }
 
 task site(type: Copy, dependsOn: ['sphinx_html', 'rdoc_html', 'javadoc_html']) {
