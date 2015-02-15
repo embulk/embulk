@@ -1,0 +1,16 @@
+language: java
+jdk:
+  - oraclejdk8
+sudo: false
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y sphinx yardoc
+  - free -m
+script:
+  - ./gradlew check
+  - ./embulk-docs/push-gh-pages.sh
+env:
+  global:
+    GIT_USER_NAME: travis
+    GIT_USER_NAME: travis@embulk.org
+    secure: ZiDtC073/oAXtPkXZYP9MoVBidLrrjeAV8PeXICtTzVMxR4Td5QDifiTy2NNStVLT+1g6NgzjSK9XFpDyVFb2cNy+9EOP+FoSC6Q0gRD/9nIrvB/LAtiDDfLqRtUrvPjN6U8BF3Zm2IvwTP77ml8bZZy3SH9ob4NQhxxEXVtynI=

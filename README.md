@@ -129,6 +129,18 @@ Task `dependencies` shows dependency tree of embulk-core project:
 ./gradlew :embulk-core:dependencies
 ```
 
+### Documents
+
+Embulk uses Sphinx, YARD (Ruby API) and JavaDoc (Java API) for document generation.
+
+```
+brew install python
+pip install sphinx
+gem install yard
+./gradlew site
+# documents are: embulk-docs/build/html
+```
+
 ### Release
 
 You need to add your bintray account information to ~/.gradle/gradle.properties

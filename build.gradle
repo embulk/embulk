@@ -91,6 +91,13 @@ subprojects {
         archives sourcesJar, javadocJar
     }
 
+    javadoc {
+        options {
+            locale = 'en_US'
+            encoding = 'UTF-8'
+        }
+    }
+
     // upload artifacts to Bintray: $ gradle bintrayUpload
     bintray {
         // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
