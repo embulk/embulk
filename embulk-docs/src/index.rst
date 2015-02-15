@@ -6,6 +6,8 @@
 Embulk documentation
 ==================================
 
+https://github.com/embulk/embulk
+
 .. toctree::
    :maxdepth: 2
 
