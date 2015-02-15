@@ -152,9 +152,9 @@ bintray_api_key=(bintray api key)
 
 Update following files:
 
-* ChangeLog: release note
-* build.gradle: version number
-* lib/embulk/version.rb: version number
+* embulk-docs/src/release/release-VERSION.rst (release note)
+* build.gradle (version number)
+* lib/embulk/version.rb (version number)
 
 Then, build and upload using gradle:
 
