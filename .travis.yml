@@ -2,10 +2,10 @@ language: java
 jdk:
   - oraclejdk8
 sudo: false
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y sphinx yardoc
-  - free -m
+addons:
+  apt_packages:
+    - sphinx
+    - yardoc
 script:
   - ./gradlew check
   - ./embulk-docs/push-gh-pages.sh
