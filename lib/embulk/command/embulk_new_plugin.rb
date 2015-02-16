@@ -34,23 +34,23 @@ module Embulk
       description =
         case category
         when :input
-          %[that loads records from #{display_name} so that any output plugins can receive the records. Search the output plugins by "embulk-output" keyword.]
+          %[that loads records from #{display_name} so that any output plugins can receive the records. Search the output plugins by 'embulk-output' keyword.]
         when :file_input
-          %[that reads files from #{display_name} and parses the file using any parser plugins. Search the parser plugins by "embulk-parser" keyword.]
+          %[that reads files from #{display_name} and parses the file using any parser plugins. Search the parser plugins by 'embulk-parser' keyword.]
         when :parser
-          %[that parses #{display_name} file format read by any file input plugins. Search the file input plugins by "embulk-input file" keywords.]
+          %[that parses #{display_name} file format read by any file input plugins. Search the file input plugins by 'embulk-input file' keywords.]
         when :decoder
-          %[that decodes files encoded by #{display_name} read by any file input plugins. Search the file input plugins by "embulk-input file" keywords.]
+          %[that decodes files encoded by #{display_name} read by any file input plugins. Search the file input plugins by 'embulk-input file' keywords.]
         when :output
-          %[that loads records to #{display_name} read by any input plugins. Search the input plugins by "embulk-input" keyword.]
+          %[that loads records to #{display_name} read by any input plugins. Search the input plugins by 'embulk-input' keyword.]
         when :file_output
-          %[that stores files to #{display_name} formatted by any formatter plugins. Search the formatter plugins by "embulk-formatter" keyword.]
+          %[that stores files to #{display_name} formatted by any formatter plugins. Search the formatter plugins by 'embulk-formatter' keyword.]
         when :formtter
-          %[that formats records using #{display_name} file format and so that any file output plugins can store the files. Search the file output plugins by "embulk-output file" keywords.]
+          %[that formats records using #{display_name} file format and so that any file output plugins can store the files. Search the file output plugins by 'embulk-output file' keywords.]
         when :encoder
-          %[that encodes files using #{display_name} so that any file output plugins can store the files. Search the file output plugins by "embulk-output file" keywords.]
+          %[that encodes files using #{display_name} so that any file output plugins can store the files. Search the file output plugins by 'embulk-output file' keywords.]
         when :filter
-          %[that converts records read by an input plugin before passing it to an output plugins. Search the input and plugins by "embulk-input" and "embulk-output" plugins.]
+          %[that converts records read by an input plugin before passing it to an output plugins. Search the input and plugins by 'embulk-input' and 'embulk-output' plugins.]
         end
 
       pkg = Embulk::PackageData.new("new", project_name, binding())
