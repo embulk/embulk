@@ -2,9 +2,11 @@ language: java
 jdk:
   - oraclejdk8
 sudo: false
+install:
+  - pip install --user sphinx
 script:
   - ./gradlew check
-  - ./embulk-docs/push-gh-pages.sh
+  - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
 env:
   global:
     GIT_USER_NAME: travis
