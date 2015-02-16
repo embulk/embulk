@@ -15,7 +15,7 @@ function r() {
 #[ "$TRAVIS_PULL_REQUEST" != "false" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
-remote="$(git config remote.origin.url | sed "s+^git:+http:+")"
+remote="$(git config remote.origin.url | sed "s+^git:+https:+")"
 re ./gradlew site
 
 r git fetch --unshallow || echo "using complete repository."
@@ -42,8 +42,7 @@ if [ $? -ne 0 ];then
     exit 0
 fi
 
-re mkdir -p "$HOME/.git"
-re git config credential.helper "store --file=.git/credentials"
-echo "https://$GITHUB_TOKEN:@github.com" > "$HOME/.git/credentials"
-trap "rm -rf $HOME/.git/credentials" EXIT
+re git config credential.helper "store --file=$HOME/.git_credentials"
+echo "https://$GITHUB_TOKEN:@github.com" > "$HOME/.git_credentials"
+trap "rm -rf $HOME/.git_credentials" EXIT
 re git push travis_push gh-pages
