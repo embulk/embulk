@@ -11,4 +11,5 @@ Release Notes
     release/release-0.3.1
     release/release-0.3.2
     release/release-0.4.0
+    release/release-0.4.1
 
