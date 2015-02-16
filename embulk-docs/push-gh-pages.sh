@@ -7,6 +7,8 @@ revision="$(git rev-parse HEAD)"
 remote="$(git config remote.origin.url | sed "s+^git:+http://+")"
 ./gradlew site
 
+git fetch --unshallow || echo "using complete repository."
+
 rm -rf gh_pages
 git clone . gh_pages
 cd gh_pages
