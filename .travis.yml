@@ -6,6 +6,7 @@ install:
   - pip install --user sphinx
 script:
   - ./gradlew check
+after_success:
   - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
 env:
   global:

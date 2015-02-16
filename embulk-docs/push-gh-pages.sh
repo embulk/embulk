@@ -12,7 +12,8 @@ function r() {
     "$@"
 }
 
-#[ "$TRAVIS_PULL_REQUEST" != "false" ] && exit 0
+[ "$TRAVIS_PULL_REQUEST" != "false" ] && exit 0
+[ "$TRAVIS_BRANCH" != "master" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
 remote="$(git config remote.origin.url | sed "s+^git:+https:+")"
