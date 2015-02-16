@@ -24,7 +24,7 @@ You can release plugins to share your efforts of data cleaning, error handling, 
 The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java:
 
 ```
-wget https://bintray.com/artifact/download/embulk/maven/embulk-0.3.2.jar -O embulk.jar
+wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.0.jar -O embulk.jar
 java -jar embulk.jar --help
 ```
 
