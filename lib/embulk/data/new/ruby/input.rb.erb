@@ -2,7 +2,7 @@ module Embulk
   module Input
 
     class <%= ruby_class_name %> < InputPlugin
-      Plugin.register_input(<%= name %>, self)
+      Plugin.register_input(<%= name.dump %>, self)
 
       def self.transaction(config, &control)
         # configuration code:

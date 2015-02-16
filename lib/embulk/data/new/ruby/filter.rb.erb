@@ -2,7 +2,7 @@ module Embulk
   module Filter
 
     class <%= ruby_class_name %> < FilterPlugin
-      Plugin.register_filter(<%= name %>, self)
+      Plugin.register_filter(<%= name.dump %>, self)
 
       def self.transaction(config, in_schema, &control)
         # configuration code:
