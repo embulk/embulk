@@ -13,7 +13,49 @@ allprojects {
 
     apply plugin: 'maven'  // install jar files to the local repo: $ gradle install
     apply plugin: 'maven-publish'
+    apply plugin: 'com.jfrog.bintray'
     apply plugin: 'java'
+
+    // upload artifacts to Bintray: $ gradle bintrayUpload
+    bintray {
+        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
+        // bintray_user=frsyuki
+        // bintray_api_key=xxxxxxxxxxx
+        user = project.hasProperty('bintray_user') ? bintray_user : ''
+        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
+
+        publications = ['mavenJava']
+
+        dryRun = false
+        publish = false  // TODO automate uploading embulk.jar and make this true
+
+        pkg {
+            userOrg = 'embulk'
+            repo = 'maven'
+            name = 'embulk'
+            desc = 'Embulk, a plugin-based parallel bulk data loader'
+            websiteUrl = 'https://github.com/embulk/embulk'
+            issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
+            vcsUrl = 'https://github.com/embulk/embulk.git'
+            licenses = ['Apache-2.0']
+            labels = ['embulk', 'ruby', 'java']
+            publicDownloadNumbers = true
+
+            version {
+                name = project.version
+                // TODO
+                //mavenCentralSync {
+                //    sync = true
+                //    user = 'userToken'
+                //    password = 'paasword'
+                //    close = '1'
+                //}
+            }
+        }
+    }
+}
+
+subprojects {
     apply plugin: 'findbugs'
     apply plugin: 'jacoco'
 
@@ -77,6 +119,13 @@ allprojects {
         ignoreFailures = true
     }
 
+    javadoc {
+        options {
+            locale = 'en_US'
+            encoding = 'UTF-8'
+        }
+    }
+
     // add javadoc/source jar tasks as artifacts to be released
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
@@ -90,60 +139,17 @@ allprojects {
         archives sourcesJar, javadocJar
     }
 
-    javadoc {
-        options {
-            locale = 'en_US'
-            encoding = 'UTF-8'
-        }
-    }
-
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                groupId project.group
-                artifactId project.name
-                version project.version
-                from components.java
-                artifact sourcesJar
-                artifact javadocJar
-            }
-        }
-    }
-
-    // upload artifacts to Bintray: $ gradle bintrayUpload
-    bintray {
-        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
-        // bintray_user=frsyuki
-        // bintray_api_key=xxxxxxxxxxx
-        user = project.hasProperty('bintray_user') ? bintray_user : ''
-        key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
-
-        publications = ['mavenJava']
-
-        dryRun = false
-        publish = false  // TODO automate uploading embulk.jar and make this true
-
-        pkg {
-            userOrg = 'embulk'
-            repo = 'maven'
-            name = 'embulk'
-            desc = 'Embulk, a plugin-based parallel bulk data loader'
-            websiteUrl = 'https://github.com/embulk/embulk'
-            issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
-            vcsUrl = 'https://github.com/embulk/embulk.git'
-            licenses = ['Apache-2.0']
-            labels = ['embulk', 'ruby', 'java']
-            publicDownloadNumbers = true
-
-            version {
-                name = project.version
-                // TODO
-                //mavenCentralSync {
-                //    sync = true
-                //    user = 'userToken'
-                //    password = 'paasword'
-                //    close = '1'
-                //}
+            if (!project.name.equals("embulk-docs")) {
+                mavenJava(MavenPublication) {
+                    groupId project.group
+                    artifactId project.name
+                    version project.version
+                    from components.java
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
             }
         }
     }
