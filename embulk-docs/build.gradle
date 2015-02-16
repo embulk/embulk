@@ -1,3 +1,9 @@
+apply plugin: 'com.github.jruby-gradle.base'
+
+dependencies {
+    jrubyExec 'rubygems:yard:0.8.7.6'
+}
+
 task sphinx_html(type: Exec) {
     workingDir '.'
     commandLine 'make'
@@ -10,10 +16,11 @@ task javadoc_html(type: Copy, dependsOn: [':embulk-core:javadoc']) {
     into 'build/html/javadoc'
 }
 
-task rdoc_html(type: Exec) {
+import com.github.jrubygradle.JRubyExec
+task rdoc_html(type: JRubyExec) {
     workingDir '..'
-    commandLine 'yardoc'
-    args '-o', 'embulk-docs/build/html/rdoc', 'lib'
+    jrubyArgs '-ryard', '-eYARD::CLI::Yardoc.run(*ARGV)', '--', '-o', 'embulk-docs/build/html/rdoc'
+    script 'lib'
 }
 
 task site(type: Copy, dependsOn: ['sphinx_html', 'rdoc_html', 'javadoc_html']) {
