@@ -224,9 +224,9 @@ manual operations:
 
   git commit -a -m v${project.version}
   git tag v${project.version}
-  gem push pkg/embulk-${project.version}.gem"
+  gem push pkg/embulk-${project.version}.gem
   ./gradlew bintrayUpload
-  open "https://bintray.com/embulk/maven/embulk/${project.version}/view"  # and upload pkg/embulk-${project.version}.jar
+  open "https://bintray.com/embulk/maven/embulk/${project.version}/view#files"  # and upload pkg/embulk-${project.version}.jar
 
 """
 }
