@@ -39,4 +39,4 @@ r git commit -m "Updated document $revision"
 re git config credential.helper "store --file=.git_credential_helper"
 echo "https://$GITHUB_TOKEN:@github.com" > "$HOME/.git_credential_helper"
 trap "rm -rf $HOME/.git_credential_helper" EXIT
-#re git push travis_push gh-pages
+re git push travis_push gh-pages
