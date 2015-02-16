@@ -169,6 +169,7 @@ public class Runner
 
         String yml = writeNextConfig(options.getNextConfigOutputPath(), config, configDiff);
         System.err.println(yml);
+        System.out.println("Created "+options.getNextConfigOutputPath());
     }
 
     private void checkFileWritable(String path)
@@ -191,14 +192,10 @@ public class Runner
     {
         String yml = dumpYaml(obj);
         if (path != null) {
-            if (path.equals("-")) {
-                System.out.print(yml);
-            } else {
-                try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path), "UTF-8"))) {
-                    writer.write(yml);
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path), "UTF-8"))) {
+                writer.write(yml);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         }
         return yml;
