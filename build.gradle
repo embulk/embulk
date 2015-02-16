@@ -10,10 +10,9 @@ plugins {
 allprojects {
     group = 'org.embulk'
     version = '0.4.0'
-}
 
-subprojects {
     apply plugin: 'maven'  // install jar files to the local repo: $ gradle install
+    apply plugin: 'maven-publish'
     apply plugin: 'java'
     apply plugin: 'findbugs'
     apply plugin: 'jacoco'
@@ -95,6 +94,19 @@ subprojects {
         options {
             locale = 'en_US'
             encoding = 'UTF-8'
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version project.version
+                from components.java
+                artifact sourcesJar
+                artifact javadocJar
+            }
         }
     }
 
