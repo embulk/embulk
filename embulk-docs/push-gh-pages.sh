@@ -30,7 +30,7 @@ re git fetch travis_push
 re git checkout -b gh-pages travis_push/gh-pages
 re rm -rf docs
 re cp -a ../embulk-docs/build/html docs
-re git add docs
+re git add --all docs
 
 re git config user.name "$GIT_USER_NAME"
 re git config user.email "$GIT_USER_EMAIL"
