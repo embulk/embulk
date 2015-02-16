@@ -15,7 +15,7 @@ function r() {
 #[ "$TRAVIS_PULL_REQUEST" != "false" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
-remote="$(git config remote.origin.url | sed "s+^git:+http://+")"
+remote="$(git config remote.origin.url | sed "s+^git:+http:+")"
 re ./gradlew site
 
 r git fetch --unshallow || echo "using complete repository."
