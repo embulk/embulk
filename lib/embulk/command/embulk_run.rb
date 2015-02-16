@@ -20,7 +20,7 @@ module Embulk
     if argv.include?('--version')
       require 'embulk/version'
       puts "embulk #{Embulk::VERSION}"
-      exit 1
+      exit 0
     end
 
     i = argv.find_index {|arg| arg !~ /^\-/ }
