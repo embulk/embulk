@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = 'org.embulk'
-    version = '0.4.1'
+    version = '0.4.2'
 
     apply plugin: 'maven'  // install jar files to the local repo: $ gradle install
     apply plugin: 'maven-publish'
