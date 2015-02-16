@@ -8,7 +8,6 @@ script:
   - ./gradlew check
   - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
 env:
-  global:
-    GIT_USER_NAME: travis
-    GIT_USER_NAME: travis@embulk.org
-    secure: ZiDtC073/oAXtPkXZYP9MoVBidLrrjeAV8PeXICtTzVMxR4Td5QDifiTy2NNStVLT+1g6NgzjSK9XFpDyVFb2cNy+9EOP+FoSC6Q0gRD/9nIrvB/LAtiDDfLqRtUrvPjN6U8BF3Zm2IvwTP77ml8bZZy3SH9ob4NQhxxEXVtynI=
+  - GIT_USER_NAME: travis
+  - GIT_USER_EMAIL: travis@embulk.org
+  - secure: ZiDtC073/oAXtPkXZYP9MoVBidLrrjeAV8PeXICtTzVMxR4Td5QDifiTy2NNStVLT+1g6NgzjSK9XFpDyVFb2cNy+9EOP+FoSC6Q0gRD/9nIrvB/LAtiDDfLqRtUrvPjN6U8BF3Zm2IvwTP77ml8bZZy3SH9ob4NQhxxEXVtynI=
