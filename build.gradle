@@ -205,9 +205,12 @@ task releaseCheck << {
     if (!file("lib/embulk/version.rb").getText().contains("${project.version}")) {
         throw new GradleException("lib/embulk/version.rb doesn't include ${project.version}")
     }
+    if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
+        throw new GradleException("Release note for ${project.version} doesn't exist")
+    }
     String date = new Date().format("yyyy-MM-dd")
     if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains(date)) {
-        throw new GradleException("ChangeLog doesn't include entry for ${project.version}")
+        throw new GradleException("Release note doesn't have today's release date")
     }
     println "Ready. Run ./gradlew release"
 }
