@@ -1,6 +1,41 @@
+// include ruby scripts
 sourceSets {
     main.resources {
-        srcDirs 'src/main/resources'
-        srcDirs "${parent.projectDir}/lib"
+        srcDirs "${rootProject.projectDir}/lib"
     }
+}
+
+configurations {
+    // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
+    // with ones bundled in jruby-complete and cause bytecode compatibility error
+    compile.exclude group: 'asm', module: 'asm'
+    compile.exclude group: 'org.sonatype.sisu.inject', module: 'cglib'
+}
+
+// determine which dependencies have updates: $ gradle dependencyUpdates
+dependencies {
+    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.inject:guice:3.0'
+    compile 'com.google.inject.extensions:guice-multibindings:3.0'
+    compile 'javax.inject:javax.inject:1'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.0'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.5.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.0'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.5.0'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.5.0'
+    compile 'com.fasterxml.jackson.module:jackson-module-guice:2.5.0'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.slf4j:slf4j-api:1.7.10'
+    compile 'org.slf4j:slf4j-log4j12:1.7.10'
+    compile 'org.jruby:jruby-complete:1.7.19'
+    compile 'com.google.code.findbugs:annotations:3.0.0'
+    compile 'org.yaml:snakeyaml:1.14'
+    compile 'javax.validation:validation-api:1.1.0.Final'
+    compile 'org.apache.bval:bval-jsr303:0.5'
+    compile 'io.airlift:slice:0.9'
+    compile 'joda-time:joda-time:2.7'
+    compile 'io.netty:netty-buffer:5.0.0.Alpha1'
+
+    // for embulk/guess/charset.rb
+    compile 'com.ibm.icu:icu4j:54.1.1'
 }
