@@ -13,7 +13,7 @@ while i = ARGV.find_index {|arg| arg =~ /^\-D/ }
     end
     ARGV.slice!(i, 2)
   else
-    java_args << ARGV[i]
+    java_args << ARGV[i][2..-1]
     ARGV.slice!(i)
   end
 end
