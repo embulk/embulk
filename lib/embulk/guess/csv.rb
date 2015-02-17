@@ -13,6 +13,17 @@ module Embulk
         "\"", "'"
       ]
 
+      ESCAPE_CANDIDATES = [
+        "\\"
+      ]
+
+      NULL_STRING_CANDIDATES = [
+        "null",
+        "NULL",
+        "#N/A",
+        "\\N",  # MySQL LOAD, Hive STORED AS TEXTFILE
+      ]
+
       # CsvParserPlugin.TRUE_STRINGS
       TRUE_STRINGS = Hash[*%w[
         true True TRUE
@@ -34,6 +45,13 @@ module Embulk
 
         quote = guess_quote(sample_lines, delim)
         parser_guessed["quote"] = quote ? quote : ''
+
+        escape = guess_escape(sample_lines, delim, quote)
+        parser_guessed["escape"] = escape ? escape : ''
+
+        null_string = guess_null_string(sample_lines, delim)
+        parser_guessed["null_string"] = null_string if null_string
+        # don't even set null_string to avoid confusion of null and 'null' in YAML format
 
         sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
         first_types = guess_field_types(sample_records[0, 1])
@@ -117,6 +135,28 @@ module Embulk
         else
           return nil
         end
+      end
+
+      def guess_escape(sample_lines, delim, quote)
+        guessed = ESCAPE_CANDIDATES.map do |str|
+          regexp = /#{Regexp.quote(str)}(?:#{Regexp.quote(delim)}|#{Regexp.quote(quote)})/
+          counts = sample_lines.map {|line| line.scan(regexp).count }
+          count = counts.inject(0) {|r,c| r + c }
+          [str, count]
+        end.select {|str,count| count > 0 }.sort_by {|str,count| -count }
+        found = guessed.first
+        return found ? found[0] : nil
+      end
+
+      def guess_null_string(sample_lines, delim)
+        guessed = NULL_STRING_CANDIDATES.map do |str|
+          regexp = /(?:^|#{Regexp.quote(delim)})#{Regexp.quote(str)}(?:$|#{Regexp.quote(delim)})/
+          counts = sample_lines.map {|line| line.scan(regexp).count }
+          count = counts.inject(0) {|r,c| r + c }
+          [str, count]
+        end.select {|str,count| count > 0 }.sort_by {|str,count| -count }
+        found = guessed.first
+        return found ? found[0] : nil
       end
 
       def guess_field_types(field_lines)
