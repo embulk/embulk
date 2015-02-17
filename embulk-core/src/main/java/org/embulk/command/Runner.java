@@ -172,7 +172,7 @@ public class Runner
         if (options.getNextConfigOutputPath() == null) {
             System.out.println("Use -o PATH option to write the guessed config file to a file.");
         } else {
-            System.out.println("Created "+options.getNextConfigOutputPath());
+            System.out.println("Created '"+options.getNextConfigOutputPath()+"' file.");
         }
     }
 
