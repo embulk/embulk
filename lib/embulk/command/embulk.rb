@@ -1,3 +1,7 @@
+# reset context class loader set by org.jruby.Main.main to nil. embulk manages
+# multiple classloaders. default classloader should be Plugin.class.getClassloader().
+java.lang.Thread.current_thread.set_context_class_loader(nil)
+
 bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
 
