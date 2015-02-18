@@ -42,10 +42,16 @@ module Embulk
     op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       # only for help message. implemented at lib/embulk/command/embulk.rb
     end
+    op.on('-l', '--log-level LEVEL', 'Specify the global log level') do |level|
+      options[:logLevel] = level
+    end
 
     case subcmd.to_sym
     when :bundle
       op.remove  # remove --bundle
+      op.on('-l', '--log-level LEVEL', 'Specify the global log level') do |level|
+        # only for help message.
+      end
       if default_bundle_path
         op.banner = "Usage: bundle [directory=#{default_bundle_path}]"
         args = 0..1
@@ -108,6 +114,9 @@ module Embulk
 
     when :new
       op.remove  # remove --bundle
+      op.on('-l', '--log-level LEVEL', 'Specify the global log level') do |level|
+        # only for help message.
+      end
       op.banner = "Usage: new <category> <name>" + %[
 categories:
     ruby-input                 Ruby record input plugin    (like "mysql")
