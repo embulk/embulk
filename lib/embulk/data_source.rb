@@ -17,7 +17,7 @@ module Embulk
             !!v  # TODO validation
           when :hash
             raise ArgumentError, "Invalid value for :hash" unless v.is_a?(Hash)
-            v.dup
+            DataSource.new.merge!(v)
           when :array
             raise ArgumentError, "Invalid value for :array" unless v.is_a?(Array)
             v.dup
