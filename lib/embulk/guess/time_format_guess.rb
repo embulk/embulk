@@ -227,7 +227,6 @@ module Embulk::Guess
             part_options << tm["frac"].size
           end
 
-
           rest = tm["rest"]
         end
 
