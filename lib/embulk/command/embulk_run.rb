@@ -71,7 +71,7 @@ module Embulk
       args = 1..1
 
     when :cleanup
-      op.banner = "Usage: run <config.yml>"
+      op.banner = "Usage: cleanup <config.yml>"
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
