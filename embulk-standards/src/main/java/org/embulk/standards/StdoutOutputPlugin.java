@@ -50,7 +50,7 @@ public class StdoutOutputPlugin
 
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, final Schema schema,
-            int processorIndex)
+            int taskIndex)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 

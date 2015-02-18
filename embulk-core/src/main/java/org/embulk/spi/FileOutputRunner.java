@@ -120,7 +120,7 @@ public class FileOutputRunner
     }
 
     @Override
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
@@ -130,7 +130,7 @@ public class FileOutputRunner
         FileOutput fileOutput = null;
         PageOutput output = null;
         try {
-            fileOutput = tran = fileOutputPlugin.open(task.getFileOutputTaskSource(), processorIndex);
+            fileOutput = tran = fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex);
 
             fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), fileOutput);
             output = formatterPlugin.open(task.getFormatterTaskSource(), schema, fileOutput);

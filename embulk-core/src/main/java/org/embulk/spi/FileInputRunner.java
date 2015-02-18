@@ -115,14 +115,14 @@ public class FileInputRunner
     }
 
     @Override
-    public CommitReport run(TaskSource taskSource, Schema schema, int processorIndex,
+    public CommitReport run(TaskSource taskSource, Schema schema, int taskIndex,
             PageOutput output)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), processorIndex);
+        TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
         FileInput fileInput = tran;
         try {
             fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);

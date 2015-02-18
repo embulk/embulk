@@ -26,5 +26,5 @@ public interface FileInputPlugin
             List<CommitReport> successCommitReports);
 
     public TransactionalFileInput open(TaskSource taskSource,
-            int processorIndex);
+            int taskIndex);
 }

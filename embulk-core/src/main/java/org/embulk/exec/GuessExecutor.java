@@ -116,7 +116,7 @@ public class GuessExecutor
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
                     public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int processorCount)
                     {
-                        // TODO repeat runwith processorIndex++ if NoSampleException happens
+                        // TODO repeat runwith taskIndex++ if NoSampleException happens
                         input.run(inputTaskSource, null, 0, new PageOutput() {
                             @Override
                             public void add(Page page)
@@ -190,7 +190,7 @@ public class GuessExecutor
             }
         }
 
-        public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
+        public TransactionalFileInput open(TaskSource taskSource, int taskIndex)
         {
             return new BufferTransactionalFileInput(buffer);
         }

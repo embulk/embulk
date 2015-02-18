@@ -58,7 +58,7 @@ public class <%= java_class_name %>
     }
 
     public CommitReport run(TaskSource taskSource,
-            Schema schema, int processorIndex,
+            Schema schema, int taskIndex,
             PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);

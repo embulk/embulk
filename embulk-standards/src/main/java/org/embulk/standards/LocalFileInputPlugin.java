@@ -155,10 +155,10 @@ public class LocalFileInputPlugin
     }
 
     @Override
-    public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
+    public TransactionalFileInput open(TaskSource taskSource, int taskIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new LocalFileInput(task, processorIndex);
+        return new LocalFileInput(task, taskIndex);
     }
 
     public static class LocalFileInput
@@ -191,9 +191,9 @@ public class LocalFileInputPlugin
             public void close() { }
         }
 
-        public LocalFileInput(PluginTask task, int processorIndex)
+        public LocalFileInput(PluginTask task, int taskIndex)
         {
-            super(task.getBufferAllocator(), new SingleFileProvider(new File(task.getFiles().get(processorIndex))));
+            super(task.getBufferAllocator(), new SingleFileProvider(new File(task.getFiles().get(taskIndex))));
         }
 
         @Override

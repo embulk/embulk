@@ -67,7 +67,7 @@ public class TestFileInputRunner
         }
 
         public TransactionalFileInput open(TaskSource taskSource,
-                int processorIndex)
+                int taskIndex)
         {
             return new TransactionalFileInput()
             {

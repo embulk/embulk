@@ -25,5 +25,5 @@ public interface OutputPlugin
             Schema schema, int processorCount,
             List<CommitReport> successCommitReports);
 
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex);
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);
 }

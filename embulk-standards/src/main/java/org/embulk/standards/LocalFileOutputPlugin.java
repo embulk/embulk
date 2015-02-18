@@ -67,7 +67,7 @@ public class LocalFileOutputPlugin
     { }
 
     @Override
-    public TransactionalFileOutput open(TaskSource taskSource, final int processorIndex)
+    public TransactionalFileOutput open(TaskSource taskSource, final int taskIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
@@ -84,7 +84,7 @@ public class LocalFileOutputPlugin
             public void nextFile()
             {
                 closeFile();
-                String path = pathPrefix + String.format(sequenceFormat, processorIndex, fileIndex) + pathSuffix;
+                String path = pathPrefix + String.format(sequenceFormat, taskIndex, fileIndex) + pathSuffix;
                 log.info("Writing local file '{}'", path);
                 fileNames.add(path);
                 try {

@@ -36,7 +36,7 @@ public class NullOutputPlugin
     { }
 
     @Override
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex)
     {
         return new TransactionalPageOutput() {
             public void add(Page page)

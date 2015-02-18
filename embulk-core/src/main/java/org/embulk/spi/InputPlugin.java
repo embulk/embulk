@@ -26,6 +26,6 @@ public interface InputPlugin
             List<CommitReport> successCommitReports);
 
     public CommitReport run(TaskSource taskSource,
-            Schema schema, int processorIndex,
+            Schema schema, int taskIndex,
             PageOutput output);
 }

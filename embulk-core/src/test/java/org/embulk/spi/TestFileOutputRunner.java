@@ -58,7 +58,7 @@ public class TestFileOutputRunner
 
         @Override
         public TransactionalFileOutput open(TaskSource taskSource,
-                final int processorIndex)
+                final int taskIndex)
         {
             return new TransactionalFileOutput()
             {

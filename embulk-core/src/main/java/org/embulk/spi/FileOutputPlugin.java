@@ -24,5 +24,5 @@ public interface FileOutputPlugin
             int processorCount,
             List<CommitReport> successCommitReports);
 
-    public TransactionalFileOutput open(TaskSource taskSource, int processorIndex);
+    public TransactionalFileOutput open(TaskSource taskSource, int taskIndex);
 }

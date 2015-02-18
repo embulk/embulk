@@ -55,7 +55,7 @@ public class <%= java_class_name %>
     {
     }
 
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int processorIndex)
+    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 

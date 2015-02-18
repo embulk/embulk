@@ -54,7 +54,7 @@ public class <%= java_class_name %>
     }
 
     @Override
-    public TransactionalFileInput open(TaskSource taskSource, int processorIndex)
+    public TransactionalFileInput open(TaskSource taskSource, int taskIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
