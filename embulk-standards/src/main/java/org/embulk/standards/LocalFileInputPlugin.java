@@ -51,6 +51,8 @@ public class LocalFileInputPlugin
 
     private final Logger log = Exec.getLogger(getClass());
 
+    private final static Path CURRENT_DIR = Paths.get(".").normalize();
+
     @Override
     public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control)
     {
@@ -92,27 +94,58 @@ public class LocalFileInputPlugin
         } else {
             fileNamePrefix = pathPrefix.getFileName().toString();
             Path d = pathPrefix.getParent();
-            directory = (d == null ? Paths.get(".") : d);
+            directory = (d == null ? CURRENT_DIR : d);
         }
 
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         final String lastPath = task.getLastPath().orNull();
         try {
-            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory, fileNamePrefix);
+            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory.equals(CURRENT_DIR) ? "." : directory.toString(), fileNamePrefix);
             Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult visitFile(Path path, BasicFileAttributes aAttrs)
+                public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs)
                 {
-                    if (lastPath == null || path.toString().compareTo(lastPath) > 0) {
-                        if (path.getParent().equals(directory)) {
+                    if (path.equals(directory)) {
+                        return FileVisitResult.CONTINUE;
+                    } else if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    } else {
+                        Path parent = path.getParent();
+                        if (parent == null) {
+                            parent = CURRENT_DIR;
+                        }
+                        if (parent.equals(directory)) {
+                            if (path.getFileName().toString().startsWith(fileNamePrefix)) {
+                                return FileVisitResult.CONTINUE;
+                            } else {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
+                        } else {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    }
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
+                {
+                    if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        Path parent = path.getParent();
+                        if (parent == null) {
+                            parent = CURRENT_DIR;
+                        }
+                        if (parent.equals(directory)) {
                             if (path.getFileName().toString().startsWith(fileNamePrefix)) {
                                 builder.add(path.toString());
+                                return FileVisitResult.CONTINUE;
                             }
                         } else {
                             builder.add(path.toString());
                         }
+                        return FileVisitResult.CONTINUE;
                     }
-                    return FileVisitResult.CONTINUE;
                 }
             });
         } catch (IOException ex) {
