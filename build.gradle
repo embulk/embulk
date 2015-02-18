@@ -32,7 +32,7 @@ allprojects {
         filesSpec {
             // include embulk-<version>.jar built by 'cli' task
             from "pkg/embulk-${project.version}.jar"
-            into "embulk-${project.version}.jar"
+            into ""
         }
 
         dryRun = false
