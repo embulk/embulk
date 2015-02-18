@@ -12,15 +12,15 @@ module Embulk
           when :float
             Float(v)
           when :string
-            String(v)
+            String(v).dup
           when :bool
             !!v  # TODO validation
           when :hash
             raise ArgumentError, "Invalid value for :hash" unless v.is_a?(Hash)
-            v
+            DataSource.new.merge!(v)
           when :array
             raise ArgumentError, "Invalid value for :array" unless v.is_a?(Array)
-            v
+            v.dup
           else
             unless type.respond_to?(:load)
               raise ArgumentError, "Unknown type #{type.to_s.dump}"
