@@ -53,7 +53,7 @@ public class TestFileInputRunner
 
         @Override
         public ConfigDiff resume(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 FileInputPlugin.Control control)
         {
             throw new UnsupportedOperationException();
@@ -61,7 +61,7 @@ public class TestFileInputRunner
 
         @Override
         public void cleanup(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 List<CommitReport> successCommitReports)
         {
         }
@@ -127,7 +127,7 @@ public class TestFileInputRunner
         runner.transaction(config, new InputPlugin.Control()
         {
             public List<CommitReport> run(TaskSource inputTaskSource,
-                    Schema schema, int processorCount)
+                    Schema schema, int taskCount)
             {
                 List<CommitReport> reports = new ArrayList<>();
                 reports.add(runner.run(inputTaskSource, schema, 0, output));
@@ -181,7 +181,7 @@ public class TestFileInputRunner
             runner.transaction(config, new InputPlugin.Control()
             {
                 public List<CommitReport> run(TaskSource inputTaskSource,
-                        Schema schema, int processorCount)
+                        Schema schema, int taskCount)
                 {
                     List<CommitReport> reports = new ArrayList<>();
                     reports.add(runner.run(inputTaskSource, schema, 0, output));

@@ -33,7 +33,7 @@ public class TestFileOutputRunner
         Boolean transactionCompleted = null;
 
         @Override
-        public ConfigDiff transaction(ConfigSource config, int processorCount,
+        public ConfigDiff transaction(ConfigSource config, int taskCount,
                 FileOutputPlugin.Control control)
         {
             PluginTask task = config.loadConfig(PluginTask.class);
@@ -43,7 +43,7 @@ public class TestFileOutputRunner
 
         @Override
         public ConfigDiff resume(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 FileOutputPlugin.Control control)
         {
             throw new UnsupportedOperationException();
@@ -51,7 +51,7 @@ public class TestFileOutputRunner
 
         @Override
         public void cleanup(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 List<CommitReport> successCommitReports)
         {
         }

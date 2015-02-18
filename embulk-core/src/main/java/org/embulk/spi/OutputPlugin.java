@@ -14,15 +14,15 @@ public interface OutputPlugin
     }
 
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control);
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control);
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports);
 
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);

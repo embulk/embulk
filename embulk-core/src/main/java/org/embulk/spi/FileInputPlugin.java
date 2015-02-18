@@ -11,18 +11,18 @@ public interface FileInputPlugin
     public interface Control
     {
         public List<CommitReport> run(TaskSource taskSource,
-                int processorCount);
+                int taskCount);
     }
 
     public ConfigDiff transaction(ConfigSource config,
             FileInputPlugin.Control control);
 
     public ConfigDiff resume(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             FileInputPlugin.Control control);
 
     public void cleanup(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             List<CommitReport> successCommitReports);
 
     public TransactionalFileInput open(TaskSource taskSource,

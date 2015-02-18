@@ -46,10 +46,10 @@ module Embulk
 
         def transaction(java_config, java_control)
           config = DataSource.from_java(java_config)
-          config_diff_hash = @ruby_class.transaction(config) do |task_source_hash,columns,processor_count|
+          config_diff_hash = @ruby_class.transaction(config) do |task_source_hash,columns,task_count|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_schema = Schema.new(columns).to_java
-            java_commit_reports = java_control.run(java_task_source, java_schema, processor_count)
+            java_commit_reports = java_control.run(java_task_source, java_schema, task_count)
             java_commit_reports.map {|java_commit_report|
               DataSource.from_java(java_commit_report)
             }
@@ -58,13 +58,13 @@ module Embulk
           return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
-        def resume(java_task_source, java_schema, processor_count, java_control)
+        def resume(java_task_source, java_schema, task_count, java_control)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
-          config_diff_hash = @ruby_class.resume(task_source, schema, processor_count) do |task_source_hash,columns,processor_count|
+          config_diff_hash = @ruby_class.resume(task_source, schema, task_count) do |task_source_hash,columns,task_count|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
             java_schema = Schema.new(columns).to_java
-            java_commit_reports = java_control.run(java_task_source, java_schema, processor_count)
+            java_commit_reports = java_control.run(java_task_source, java_schema, task_count)
             java_commit_reports.map {|java_commit_report|
               DataSource.from_java(java_commit_report)
             }
@@ -73,11 +73,11 @@ module Embulk
           return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
-        def cleanup(java_task_source, java_schema, processor_count, java_commit_reports)
+        def cleanup(java_task_source, java_schema, task_count, java_commit_reports)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
           commit_reports = java_commit_reports.map {|c| DataSource.from_java(c) }
-          @ruby_class.cleanup(task_source, schema, processor_count, commit_reports)
+          @ruby_class.cleanup(task_source, schema, task_count, commit_reports)
           return nil
         end
 

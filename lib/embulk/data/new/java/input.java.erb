@@ -38,21 +38,21 @@ public class <%= java_class_name %>
         PluginTask task = config.loadConfig(PluginTask.class);
 
         Schema schema = task.getColumns().toSchema();
-        int processorCount = 1;  // number of run() method calls
+        int taskCount = 1;  // number of run() method calls
 
-        return resume(task.dump(), schema, processorCount, control);
+        return resume(task.dump(), schema, taskCount, control);
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             InputPlugin.Control control)
     {
-        control.run(taskSource, schema, processorCount);
+        control.run(taskSource, schema, taskCount);
         return Exec.newConfigDiff();
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
     }

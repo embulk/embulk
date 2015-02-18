@@ -53,7 +53,7 @@ class SamplingParserPlugin
         final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get(PluginType.class, "type"));
         try {
             input.transaction(samplingInputConfig, new InputPlugin.Control() {
-                public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
+                public List<CommitReport> run(TaskSource taskSource, Schema schema, int taskCount)
                 {
                     input.run(taskSource, schema, 0, new PageOutput() {
                         @Override

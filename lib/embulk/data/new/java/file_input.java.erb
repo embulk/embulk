@@ -31,24 +31,24 @@ public class <%= java_class_name %>
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        // processorCount is usually number of input files
-        int processorCount = 1;  // number of run() method calls
+        // taskCount is usually number of input files
+        int taskCount = 1;  // number of run() method calls
 
-        return resume(task.dump(), processorCount, control);
+        return resume(task.dump(), taskCount, control);
     }
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             FileInputPlugin.Control control)
     {
-        control.run(taskSource, processorCount);
+        control.run(taskSource, taskCount);
         return Exec.newConfigDiff();
     }
 
     @Override
     public void cleanup(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             List<CommitReport> successCommitReports)
     {
     }

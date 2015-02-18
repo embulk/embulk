@@ -114,7 +114,7 @@ public class GuessExecutor
             ConfigDiff guessed;
             try {
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
-                    public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int processorCount)
+                    public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int taskCount)
                     {
                         // TODO repeat runwith taskIndex++ if NoSampleException happens
                         input.run(inputTaskSource, null, 0, new PageOutput() {
@@ -174,14 +174,14 @@ public class GuessExecutor
         }
 
         public ConfigDiff resume(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 FileInputPlugin.Control control)
         {
             throw new UnsupportedOperationException();
         }
 
         public void cleanup(TaskSource taskSource,
-                int processorCount,
+                int taskCount,
                 List<CommitReport> successCommitReports)
         {
             if (buffer != null) {

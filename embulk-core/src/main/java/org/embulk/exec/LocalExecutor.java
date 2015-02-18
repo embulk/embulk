@@ -95,7 +95,7 @@ public class LocalExecutor
         private volatile CommitReport[] outputCommitReports;
         private volatile ConfigDiff inputConfigDiff;
         private volatile ConfigDiff outputConfigDiff;
-        private int processorCount;
+        private int taskCount;
 
         public ProcessState(Logger logger)
         {
@@ -114,7 +114,7 @@ public class LocalExecutor
             this.exceptions = new Throwable[count];
             this.inputCommitReports = new CommitReport[count];
             this.outputCommitReports = new CommitReport[count];
-            this.processorCount = count;
+            this.taskCount = count;
         }
 
         public void setInputSchema(Schema inputSchema)
@@ -158,9 +158,9 @@ public class LocalExecutor
             finished[i] = true;
         }
 
-        public int getProcessorCount()
+        public int getTaskCount()
         {
-            return processorCount;
+            return taskCount;
         }
 
         public int getStartedCount()
@@ -209,11 +209,11 @@ public class LocalExecutor
 
         public boolean isAllCommitted()
         {
-            if (processorCount <= 0) {
+            if (taskCount <= 0) {
                 // not initialized
                 return false;
             }
-            for (int i=0; i < processorCount; i++) {
+            for (int i=0; i < taskCount; i++) {
                 if (!isOutputCommitted(i)) {
                     return false;
                 }
@@ -223,7 +223,7 @@ public class LocalExecutor
 
         public boolean isAnyCommitted()
         {
-            for (int i=0; i < processorCount; i++) {
+            for (int i=0; i < taskCount; i++) {
                 if (isOutputCommitted(i)) {
                     return true;
                 }
@@ -429,24 +429,24 @@ public class LocalExecutor
         final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
         try {
             ConfigDiff inputConfigDiff = in.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int taskCount)
                 {
-                    state.initialize(processorCount);
+                    state.initialize(taskCount);
                     state.setInputSchema(inputSchema);
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
                         {
                             Schema outputSchema = last(filterSchemas);
                             state.setOutputSchema(outputSchema);
-                            ConfigDiff outputConfigDiff = out.transaction(task.getOutputConfig(), outputSchema, processorCount, new OutputPlugin.Control() {
+                            ConfigDiff outputConfigDiff = out.transaction(task.getOutputConfig(), outputSchema, taskCount, new OutputPlugin.Control() {
                                 public List<CommitReport> run(final TaskSource outputTask)
                                 {
                                     task.setInputTask(inputTask);
                                     task.setFilterTasks(filterTasks);
                                     task.setOutputTask(outputTask);
 
-                                    if (processorCount > 0) {
-                                        process(task.dump(), filterSchemas, processorCount, state);
+                                    if (taskCount > 0) {
+                                        process(task.dump(), filterSchemas, taskCount, state);
                                         if (!state.isAllCommitted()) {
                                             throw state.getRepresentativeException();
                                         }
@@ -495,18 +495,18 @@ public class LocalExecutor
         final ProcessState state = new ProcessState(Exec.getLogger(LocalExecutor.class));
         try {
             ConfigDiff inputConfigDiff = in.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int processorCount)
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int taskCount)
                 {
                     // TODO validate inputTask?
                     // TODO validate inputSchema
-                    // TODO validate processorCount
-                    state.initialize(processorCount);
+                    // TODO validate taskCount
+                    state.initialize(taskCount);
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
                         {
                             Schema outputSchema = last(filterSchemas);
                             state.setOutputSchema(outputSchema);
-                            ConfigDiff outputConfigDiff = out.resume(resume.getOutputTaskSource(), outputSchema, processorCount, new OutputPlugin.Control() {
+                            ConfigDiff outputConfigDiff = out.resume(resume.getOutputTaskSource(), outputSchema, taskCount, new OutputPlugin.Control() {
                                 public List<CommitReport> run(final TaskSource outputTask)
                                 {
                                     // TODO validate outputTask?
@@ -523,8 +523,8 @@ public class LocalExecutor
                                         }
                                     }
 
-                                    if (processorCount > 0) {
-                                        process(task.dump(), filterSchemas, processorCount, state);
+                                    if (taskCount > 0) {
+                                        process(task.dump(), filterSchemas, taskCount, state);
                                         if (!state.isAllCommitted()) {
                                             throw state.getRepresentativeException();
                                         }
@@ -562,12 +562,12 @@ public class LocalExecutor
         }
     }
 
-    private void process(TaskSource taskSource, List<Schema> filterSchemas, int processorCount,
+    private void process(TaskSource taskSource, List<Schema> filterSchemas, int taskCount,
             ProcessState state)
     {
-        List<Future<Throwable>> futures = new ArrayList<>(processorCount);
+        List<Future<Throwable>> futures = new ArrayList<>(taskCount);
         try {
-            for (int i=0; i < processorCount; i++) {
+            for (int i=0; i < taskCount; i++) {
                 if (state.isOutputCommitted(i)) {
                     state.getLogger().warn("Skipped resumed task {}", i);
                     futures.add(null);  // resumed
@@ -577,7 +577,7 @@ public class LocalExecutor
             }
             showProgress(state);
 
-            for (int i=0; i < processorCount; i++) {
+            for (int i=0; i < taskCount; i++) {
                 if (futures.get(i) == null) {
                     continue;
                 }
@@ -603,7 +603,7 @@ public class LocalExecutor
 
     private void showProgress(ProcessState state)
     {
-        int total = state.getProcessorCount();
+        int total = state.getTaskCount();
         int finished = state.getFinishedCount();
         int started = state.getStartedCount();
         state.getLogger().info(String.format("{done:%3d / %d, running: %d}", finished, total, started - finished));

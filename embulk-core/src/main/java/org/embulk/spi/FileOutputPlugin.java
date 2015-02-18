@@ -13,15 +13,15 @@ public interface FileOutputPlugin
         public List<CommitReport> run(TaskSource taskSource);
     }
 
-    public ConfigDiff transaction(ConfigSource config, int processorCount,
+    public ConfigDiff transaction(ConfigSource config, int taskCount,
             FileOutputPlugin.Control control);
 
     public ConfigDiff resume(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             FileOutputPlugin.Control control);
 
     public void cleanup(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             List<CommitReport> successCommitReports);
 
     public TransactionalFileOutput open(TaskSource taskSource, int taskIndex);

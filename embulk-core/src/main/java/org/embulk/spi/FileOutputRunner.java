@@ -56,19 +56,19 @@ public class FileOutputRunner
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            final Schema schema, final int processorCount,
+            final Schema schema, final int taskCount,
             final OutputPlugin.Control control)
     {
         final RunnerTask task = config.loadConfig(RunnerTask.class);
-        return fileOutputPlugin.transaction(config, processorCount, new RunnerControl(schema, task, control));
+        return fileOutputPlugin.transaction(config, taskCount, new RunnerControl(schema, task, control));
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             final OutputPlugin.Control control)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
-        return fileOutputPlugin.resume(task.getFileOutputTaskSource(), processorCount, new RunnerControl(schema, task, control));
+        return fileOutputPlugin.resume(task.getFileOutputTaskSource(), taskCount, new RunnerControl(schema, task, control));
     }
 
     private class RunnerControl
@@ -113,10 +113,10 @@ public class FileOutputRunner
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
-        fileOutputPlugin.cleanup(taskSource, processorCount, successCommitReports);
+        fileOutputPlugin.cleanup(taskSource, taskCount, successCommitReports);
     }
 
     @Override

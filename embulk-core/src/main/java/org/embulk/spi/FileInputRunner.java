@@ -61,11 +61,11 @@ public class FileInputRunner
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             InputPlugin.Control control)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
-        return fileInputPlugin.resume(task.getFileInputTaskSource(), processorCount, new RunnerControl(task, control));
+        return fileInputPlugin.resume(task.getFileInputTaskSource(), taskCount, new RunnerControl(task, control));
     }
 
     private class RunnerControl
@@ -86,7 +86,7 @@ public class FileInputRunner
         }
 
         @Override
-        public List<CommitReport> run(final TaskSource fileInputTaskSource, final int processorCount)
+        public List<CommitReport> run(final TaskSource fileInputTaskSource, final int taskCount)
         {
             final List<CommitReport> commitReports = new ArrayList<CommitReport>();
             Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
@@ -98,7 +98,7 @@ public class FileInputRunner
                             task.setFileInputTaskSource(fileInputTaskSource);
                             task.setDecoderTaskSources(decoderTaskSources);
                             task.setParserTaskSource(parserTaskSource);
-                            commitReports.addAll(nextControl.run(task.dump(), schema, processorCount));
+                            commitReports.addAll(nextControl.run(task.dump(), schema, taskCount));
                         }
                     });
                 }
@@ -108,10 +108,10 @@ public class FileInputRunner
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
-        fileInputPlugin.cleanup(taskSource, processorCount, successCommitReports);
+        fileInputPlugin.cleanup(taskSource, taskCount, successCommitReports);
     }
 
     @Override

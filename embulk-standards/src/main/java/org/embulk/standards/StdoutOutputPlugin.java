@@ -27,16 +27,16 @@ public class StdoutOutputPlugin
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         final PluginTask task = config.loadConfig(PluginTask.class);
-        return resume(task.dump(), schema, processorCount, control);
+        return resume(task.dump(), schema, taskCount, control);
     }
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         control.run(taskSource);
@@ -44,7 +44,7 @@ public class StdoutOutputPlugin
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     { }
 

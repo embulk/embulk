@@ -40,7 +40,7 @@ public class LocalFileOutputPlugin
     private final Logger log = Exec.getLogger(getClass());
 
     @Override
-    public ConfigDiff transaction(ConfigSource config, int processorCount,
+    public ConfigDiff transaction(ConfigSource config, int taskCount,
             FileOutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
@@ -48,12 +48,12 @@ public class LocalFileOutputPlugin
         // validate sequence_format
         String.format(task.getSequenceFormat(), 0, 0);
 
-        return resume(task.dump(), processorCount, control);
+        return resume(task.dump(), taskCount, control);
     }
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             FileOutputPlugin.Control control)
     {
         control.run(taskSource);
@@ -62,7 +62,7 @@ public class LocalFileOutputPlugin
 
     @Override
     public void cleanup(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             List<CommitReport> successCommitReports)
     { }
 

@@ -91,7 +91,7 @@ public class PreviewExecutor
 
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, int processorCount)
+                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, int taskCount)
                 {
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)

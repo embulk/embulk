@@ -16,14 +16,14 @@ public class NullOutputPlugin
 {
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
-        return resume(Exec.newTaskSource(), schema, processorCount, control);
+        return resume(Exec.newTaskSource(), schema, taskCount, control);
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         control.run(taskSource);
@@ -31,7 +31,7 @@ public class NullOutputPlugin
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     { }
 

@@ -64,22 +64,22 @@ public class LocalFileInputPlugin
         task.setFiles(files);
 
         // number of processors is same with number of files
-        int processorCount = task.getFiles().size();
-        return resume(task.dump(), processorCount, control);
+        int taskCount = task.getFiles().size();
+        return resume(task.dump(), taskCount, control);
     }
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             FileInputPlugin.Control control)
     {
-        control.run(taskSource, processorCount);
+        control.run(taskSource, taskCount);
         return Exec.newConfigDiff();
     }
 
     @Override
     public void cleanup(TaskSource taskSource,
-            int processorCount,
+            int taskCount,
             List<CommitReport> successCommitReports)
     { }
 

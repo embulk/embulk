@@ -29,13 +29,13 @@ public class <%= java_class_name %>
     }
 
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // retryable (idempotent) output:
-        // return resume(task.dump(), schema, processorCount, control);
+        // return resume(task.dump(), schema, taskCount, control);
 
         // non-retryable (non-idempotent) output:
         control.run(task.dump());
@@ -43,14 +43,14 @@ public class <%= java_class_name %>
     }
 
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             OutputPlugin.Control control)
     {
         throw new UnsupportedOperationException("<%= name %> output plugin does not support resuming");
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int processorCount,
+            Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
     }
