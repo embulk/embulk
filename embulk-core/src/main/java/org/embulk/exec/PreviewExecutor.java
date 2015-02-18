@@ -52,6 +52,7 @@ public class PreviewExecutor
 
     public PreviewResult preview(ExecSession exec, final ConfigSource config)
     {
+        exec.setPreview(true);
         try {
             return Exec.doWith(exec, new ExecAction<PreviewResult>() {
                 public PreviewResult run()
