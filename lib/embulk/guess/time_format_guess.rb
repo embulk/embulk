@@ -227,11 +227,12 @@ module Embulk::Guess
             part_options << tm["frac"].size
           end
 
+
           rest = tm["rest"]
         end
 
         if zm = /^#{TZ}$/.match(rest)
-          delimiters << zm["zone_space"] || ''
+          delimiters << (zm["zone_space"] || '')
           if zm["z"]
             # TODO ISO 8601
             parts << :zone_off
