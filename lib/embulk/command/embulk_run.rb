@@ -17,8 +17,9 @@ module Embulk
     # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
     $LOAD_PATH << Embulk.home('lib')
 
+    require 'embulk/version'
+
     if argv.include?('--version')
-      require 'embulk/version'
       puts "embulk #{Embulk::VERSION}"
       exit 0
     end
@@ -30,6 +31,8 @@ module Embulk
     require 'java'
     require 'optparse'
     op = OptionParser.new
+
+    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S %Z")}: Embulk v#{Embulk::VERSION}"
 
     load_paths = []
     classpaths = []
