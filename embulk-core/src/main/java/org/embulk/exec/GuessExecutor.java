@@ -70,7 +70,9 @@ public class GuessExecutor
             return Exec.doWith(exec, new ExecAction<ConfigDiff>() {
                 public ConfigDiff run()
                 {
-                    return doGuess(config);
+                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName("guess")) {
+                        return doGuess(config);
+                    }
                 }
             });
         } catch (Exception ex) {

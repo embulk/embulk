@@ -355,7 +355,9 @@ public class LocalExecutor
             return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
-                    return doRun(config);
+                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName("transaction")) {
+                        return doRun(config);
+                    }
                 }
             });
         } catch (Exception ex) {
@@ -370,7 +372,9 @@ public class LocalExecutor
             return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
-                    return doResume(config, resume);
+                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName("resume")) {
+                        return doResume(config, resume);
+                    }
                 }
             });
         } catch (Exception ex) {
@@ -385,8 +389,10 @@ public class LocalExecutor
             Exec.doWith(exec, new ExecAction<Void>() {
                 public Void run()
                 {
-                    doCleanup(config, resume);
-                    return null;
+                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName("cleanup")) {
+                        doCleanup(config, resume);
+                        return null;
+                    }
                 }
             });
         } catch (Exception ex) {
@@ -610,30 +616,32 @@ public class LocalExecutor
         return executor.submit(new Callable<Throwable>() {
             public Throwable call()
             {
-                final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
-                final InputPlugin in = newInputPlugin(task);
-                final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
-                final OutputPlugin out = newOutputPlugin(task);
+                try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", index))) {
+                    final ExecutorTask task = taskSource.loadTask(ExecutorTask.class);
+                    final InputPlugin in = newInputPlugin(task);
+                    final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
+                    final OutputPlugin out = newOutputPlugin(task);
 
-                TransactionalPageOutput tran = out.open(task.getOutputTask(), last(filterSchemas), index);
-                PageOutput closeThis = tran;
-                state.start(index);
-                try {
-                    PageOutput filtered = closeThis = Filters.open(filterPlugins, task.getFilterTasks(), filterSchemas, tran);
-                    state.setInputCommitReport(index, in.run(task.getInputTask(), first(filterSchemas), index, filtered));
-                    state.setOutputCommitReport(index, tran.commit());  // TODO check output.finish() is called. wrap or abstract
-                    return null;
-                } finally {
+                    TransactionalPageOutput tran = out.open(task.getOutputTask(), last(filterSchemas), index);
+                    PageOutput closeThis = tran;
+                    state.start(index);
                     try {
+                        PageOutput filtered = closeThis = Filters.open(filterPlugins, task.getFilterTasks(), filterSchemas, tran);
+                        state.setInputCommitReport(index, in.run(task.getInputTask(), first(filterSchemas), index, filtered));
+                        state.setOutputCommitReport(index, tran.commit());  // TODO check output.finish() is called. wrap or abstract
+                        return null;
+                    } finally {
                         try {
-                            if (!state.isOutputCommitted(index)) {
-                                tran.abort();
+                            try {
+                                if (!state.isOutputCommitted(index)) {
+                                    tran.abort();
+                                }
+                            } finally {
+                                closeThis.close();
                             }
                         } finally {
-                            closeThis.close();
+                            state.finish(index);
                         }
-                    } finally {
-                        state.finish(index);
                     }
                 }
             }

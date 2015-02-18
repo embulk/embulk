@@ -34,7 +34,7 @@ public class LoggerProvider
         prop.setProperty("log4j.rootLogger", level+",root");
         prop.setProperty("log4j.appender.root", "org.apache.log4j.ConsoleAppender");
         prop.setProperty("log4j.appender.root.layout", "org.apache.log4j.PatternLayout");
-        prop.setProperty("log4j.appender.root.layout.ConversionPattern", "%d [%p]: %t:%c: %m%n");
+        prop.setProperty("log4j.appender.root.layout.ConversionPattern", "%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%p] (%t): %m%n");
 
         // TODO
         PropertyConfigurator.configure(prop);
