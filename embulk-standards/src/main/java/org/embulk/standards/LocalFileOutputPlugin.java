@@ -112,6 +112,8 @@ public class LocalFileOutputPlugin
                     output.write(buffer.array(), buffer.offset(), buffer.limit());
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
+                } finally {
+                    buffer.release();
                 }
             }
 
