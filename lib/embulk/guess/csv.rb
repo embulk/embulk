@@ -137,9 +137,13 @@ module Embulk
         end
       end
 
-      def guess_escape(sample_lines, delim, quote)
+      def guess_escape(sample_lines, delim, optional_quote)
         guessed = ESCAPE_CANDIDATES.map do |str|
-          regexp = /#{Regexp.quote(str)}(?:#{Regexp.quote(delim)}|#{Regexp.quote(quote)})/
+          if optional_quote
+            regexp = /#{Regexp.quote(str)}(?:#{Regexp.quote(delim)}|#{Regexp.quote(optional_quote)})/
+          else
+            regexp = /#{Regexp.quote(str)}#{Regexp.quote(delim)}/
+          end
           counts = sample_lines.map {|line| line.scan(regexp).count }
           count = counts.inject(0) {|r,c| r + c }
           [str, count]
