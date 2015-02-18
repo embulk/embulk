@@ -53,7 +53,7 @@ public class PreviewExecutor
     public PreviewResult preview(ExecSession exec, final ConfigSource config)
     {
         try {
-            return Exec.doWith(exec, new ExecAction<PreviewResult>() {
+            return Exec.doWith(exec.copyForPreview(), new ExecAction<PreviewResult>() {
                 public PreviewResult run()
                 {
                     return doPreview(config);

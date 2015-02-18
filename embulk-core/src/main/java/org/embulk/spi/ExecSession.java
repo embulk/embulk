@@ -29,6 +29,7 @@ public class ExecSession
     private final BufferAllocator bufferAllocator;
     private final Timestamp transactionTime;
     private final DateTimeZone transactionTimeZone;
+    private final boolean preview;
 
     public interface SessionTask
             extends Task
@@ -62,6 +63,24 @@ public class ExecSession
 
         this.transactionTime = task.getTransactionTime().or(Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
         this.transactionTimeZone = task.getTransactionTimeZone();
+        this.preview = false;
+    }
+
+    private ExecSession(ExecSession copy, boolean preview)
+    {
+        this.injector = copy.injector;
+        this.loggerFactory = copy.loggerFactory;
+        this.modelManager = copy.modelManager;
+        this.pluginManager = copy.pluginManager;
+        this.bufferAllocator = copy.bufferAllocator;
+        this.transactionTime = copy.transactionTime;
+        this.transactionTimeZone = copy.transactionTimeZone;
+        this.preview = preview;
+    }
+
+    public ExecSession copyForPreview()
+    {
+        return new ExecSession(this, true);
     }
 
     public ConfigSource getSessionConfigSource()
@@ -132,5 +151,10 @@ public class ExecSession
         config.set("timezone", timezone.getID());
         FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
         return new TimestampFormatter(format, formatterTask);
+    }
+
+    public boolean isPreview()
+    {
+        return preview;
     }
 }
