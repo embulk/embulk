@@ -18,9 +18,11 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.InputPlugin;
+import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
+import org.embulk.spi.util.Filters;
 
 public class PreviewExecutor
 {
@@ -34,6 +36,11 @@ public class PreviewExecutor
         @NotNull
         public ConfigSource getInputConfig();
 
+        @Config("filters")
+        @ConfigDefault("[]")
+        public List<ConfigSource> getFilterConfigs();
+
+        // TODO take preview_sample_rows from exec: config
         @Config("preview_sample_rows")
         @ConfigDefault("15")
         public int getSampleRows();
@@ -69,19 +76,38 @@ public class PreviewExecutor
         return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
     }
 
+    protected List<FilterPlugin> newFilterPlugins(PreviewTask task)
+    {
+        return Filters.newFilterPlugins(Exec.session(), task.getFilterConfigs());
+    }
+
     private PreviewResult doPreview(ConfigSource config)
     {
         final PreviewTask task = config.loadConfig(PreviewTask.class);
-        InputPlugin input = newInputPlugin(task);
+        final InputPlugin input = newInputPlugin(task);
+        final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(TaskSource taskSource, Schema schema, int processorCount)
+                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, int processorCount)
                 {
-                    InputPlugin input = newInputPlugin(task);
-                    try (SamplingPageOutput out = new SamplingPageOutput(task.getSampleRows(), schema)) {
-                        input.run(taskSource, schema, 0, out);
-                    }
+                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
+                        {
+                            InputPlugin input = newInputPlugin(task);
+                            List<FilterPlugin> filterPlugins = newFilterPlugins(task);
+                            Schema filteredSchema = filterSchemas.get(filterSchemas.size() - 1);
+
+                            PageOutput out = new SamplingPageOutput(task.getSampleRows(), filteredSchema);
+                            try {
+                                out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
+                                input.run(inputTask, filteredSchema, 0, out);
+                            } finally {
+                                out.close();
+                            }
+                        }
+                    });
+                    // program never reaches here because SamplingPageOutput.finish throws an error.
                     throw new NoSampleException("No input records to preview");
                 }
             });
@@ -130,8 +156,11 @@ public class PreviewExecutor
         @Override
         public void close()
         {
-            for (Page page : pages) {
-                page.release();
+            if (pages != null) {
+                for (Page page : pages) {
+                    page.release();
+                }
+                pages = null;
             }
         }
     }
