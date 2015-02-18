@@ -56,7 +56,9 @@ public class PreviewExecutor
             return Exec.doWith(exec, new ExecAction<PreviewResult>() {
                 public PreviewResult run()
                 {
-                    return doPreview(config);
+                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName("preview")) {
+                        return doPreview(config);
+                    }
                 }
             });
         } catch (Exception ex) {
