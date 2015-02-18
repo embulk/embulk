@@ -47,7 +47,7 @@ module Embulk
     def guess(config, sample)
       # TODO pure-ruby LineDecoder implementation?
       begin
-        task = config.load_config(Java::LineDecoder::DecoderTask)
+        parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
       rescue
         # TODO log?
         p $!
@@ -55,7 +55,7 @@ module Embulk
         return DataSource.new
       end
 
-      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), task)
+      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), parser_task)
       sample_text = ''
       while decoder.nextFile
         first = true
@@ -63,7 +63,7 @@ module Embulk
           if first
             first = false
           else
-            sample_text << task.getNewline().getString()
+            sample_text << parser_task.getNewline().getString()
           end
           sample_text << line
         end
@@ -81,7 +81,7 @@ module Embulk
     def guess(config, sample)
       # TODO pure-ruby LineDecoder implementation?
       begin
-        task = config.load_config(Java::LineDecoder::DecoderTask)
+        parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
       rescue
         # TODO log?
         p $!
@@ -89,7 +89,7 @@ module Embulk
         return DataSource.new
       end
 
-      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), task)
+      decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), parser_task)
       sample_lines = []
       while decoder.nextFile
         while line = decoder.poll
