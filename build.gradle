@@ -258,3 +258,63 @@ Gem::Specification.new do |gem|
 end
 /$)
 }
+
+//
+// change 'VERSION = "X.Y.Z"' in version file.
+//
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+task change_source_ver << {
+  Matcher matcher
+  String new_ver
+
+  // 1:version = '
+  // 3:version number
+  // 4:'
+  String regex = "^(\\s+version\\s+=\\s+['\"])(\\d+\\.\\d+\\.\\d+)(['\"])"
+  Pattern pattern = Pattern.compile(regex,Pattern.MULTILINE |
+                                          Pattern.CASE_INSENSITIVE )
+
+  File f = file('lib/embulk/version.rb')
+  String contents =  f.getText()
+
+  matcher  = contents =~ pattern
+  if( matcher.find() ){
+//    println("match")
+
+  new_ver = matcher.group(1) + "${project.version}" + matcher.group(3)
+    contents = matcher.replaceAll(new_ver)
+  }
+
+  file('lib/embulk/version.rb').write(contents)
+}
+
+//
+// change 'wget embulk-x.y.z.jar' version in README.md
+//
+task change_readme_ver << {
+  Matcher matcher
+  String new_ver
+
+  // 1:wget
+  // 2:version number
+  // 3:.jar...
+  String regex = "^(wget.*)(\\d+\\.\\d+\\.\\d+)(.*)"
+  Pattern pattern = Pattern.compile(regex,Pattern.MULTILINE)
+
+  File f = file('README.md')
+  String contents =  f.getText()
+
+  matcher  = contents =~ pattern
+  if( matcher.find() ){
+//    println("match")
+
+    new_ver = matcher.group(1) + "${project.version}" + matcher.group(3)
+    contents = matcher.replaceAll(new_ver)
+  }
+
+  file('README.md').write(contents)
+
+}
+
+task change_version(dependsOn: ['change_readme_ver', 'change_source_ver']) << {}
