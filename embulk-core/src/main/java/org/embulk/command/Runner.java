@@ -41,6 +41,9 @@ public class Runner
 
         private String resumeStatePath;
         public String getResumeStatePath() { return resumeStatePath; }
+
+        private String logLevel;
+        public String getLogLevel() { return logLevel; }
     }
 
     private final Options options;
@@ -53,6 +56,10 @@ public class Runner
         ModelManager bootstrapModelManager = new ModelManager(null, new ObjectMapper());
         this.options = bootstrapModelManager.readObject(Options.class, optionJson);
         this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
+        String logLevel = options.getLogLevel();
+        if (logLevel != null) {
+            systemConfig.set("logLevel", logLevel);
+        }
         this.service = new EmbulkService(systemConfig);
         this.injector = service.getInjector();
     }
