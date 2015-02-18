@@ -41,7 +41,7 @@ public class TimestampFormat
     public static DateTimeZone parseDateTimeZone(String s)
     {
         if(s.startsWith("+") || s.startsWith("-")) {
-            return DateTimeZone.forID("GMT"+s);
+            return DateTimeZone.forID(s);
 
         } else {
             try {
