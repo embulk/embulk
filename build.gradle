@@ -190,7 +190,7 @@ gem.dependsOn('classpath')
 //
 // rubyGemsUpload task
 //
-task rubyGemsUpload(type: JRubyExec) {
+task rubyGemsUpload(type: JRubyExec, dependsOn: ["gem"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)', 'push'
     script "pkg/embulk-${project.version}.gem"
 }
