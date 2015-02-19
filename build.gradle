@@ -229,6 +229,26 @@ Manual operations:
 bintrayUpload.mustRunAfter('releaseCheck')
 rubyGemsUpload.mustRunAfter('releaseCheck')
 
+task set_version << {
+    if (!project.hasProperty("to")) {
+        throw new GradleException("Usage: ./gradlew -Pto=VERSION")
+    }
+
+    File gradle_ver = file('build.gradle')
+    gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
+
+    File ruby_ver = file('lib/embulk/version.rb')
+    ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
+
+    File readme_ver = file('README.md')
+    readme_ver.write(readme_ver.getText().replaceFirst('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
+
+    file("embulk-docs/src/release/release-${to}.rst").append("")
+    "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
+
+    println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
+}
+
 task gemspec << {
     file('build').mkdirs()
     file('build/gemspec').write($/
