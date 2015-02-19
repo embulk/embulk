@@ -10,19 +10,33 @@ public class FileOutputOutputStream
 {
     private final FileOutput out;
     private final BufferAllocator allocator;
+    private final CloseMode closeMode;
     private int pos;
     private Buffer buffer;
 
-    public FileOutputOutputStream(FileOutput out, BufferAllocator allocator)
+    public static enum CloseMode {
+        FLUSH,
+        FLUSH_FINISH,
+        FLUSH_FINISH_CLOSE,
+        CLOSE;
+    }
+
+    public FileOutputOutputStream(FileOutput out, BufferAllocator allocator, CloseMode closeMode)
     {
         this.out = out;
         this.allocator = allocator;
         this.buffer = allocator.allocate();
+        this.closeMode = closeMode;
     }
 
     public void nextFile()
     {
         out.nextFile();
+    }
+
+    public void finish()
+    {
+        out.finish();
     }
 
     @Override
@@ -77,16 +91,26 @@ public class FileOutputOutputStream
         }
     }
 
-    public void finish()
-    {
-        doFlush();
-        out.finish();
-    }
-
     @Override
     public void close()
     {
-        out.close();
+        switch (closeMode) {
+        case FLUSH:
+            doFlush();
+            break;
+        case FLUSH_FINISH:
+            doFlush();
+            out.finish();
+            break;
+        case FLUSH_FINISH_CLOSE:
+            doFlush();
+            out.finish();
+            out.close();
+            break;
+        case CLOSE:
+            out.close();
+            break;
+        }
         buffer.release();
         buffer = Buffer.EMPTY;
         pos = 0;

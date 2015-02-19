@@ -64,7 +64,7 @@ public class InputStreamFileInput
     {
         // TODO check current != null and throw Illegal State - file is not opened
         if (current == null) {
-            throw new IllegalStateException("openNext must be called before poll()");
+            throw new IllegalStateException("nextFile() must be called before poll()");
         }
         Buffer buffer = allocator.allocate();
         try {

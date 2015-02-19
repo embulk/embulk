@@ -44,7 +44,7 @@ public class LineEncoder
             .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
             .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.newline = task.getNewline().getString();
-        this.outputStream = new FileOutputOutputStream(out, task.getBufferAllocator());
+        this.outputStream = new FileOutputOutputStream(out, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
         this.writer = new OutputStreamWriter(outputStream, encoder);
     }
 
@@ -93,12 +93,11 @@ public class LineEncoder
     public void finish()
     {
         try {
-            writer.flush();   // flush all remaining buffer in writer because FileOutputOutputStream.close() doesn't flush buffer
-            outputStream.finish();
-            writer.close();
+            writer.flush();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+        outputStream.finish();
     }
 
     @Override
