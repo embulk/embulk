@@ -19,18 +19,20 @@ module Embulk
 
     require 'embulk/version'
 
-    if argv.include?('--version')
-      puts "embulk #{Embulk::VERSION}"
-      exit 0
-    end
-
     i = argv.find_index {|arg| arg !~ /^\-/ }
-    usage nil unless i
+    unless i
+      if argv.include?('--version')
+        puts "embulk #{Embulk::VERSION}"
+        exit 0
+      end
+      usage nil
+    end
     subcmd = argv.slice!(i)
 
     require 'java'
     require 'optparse'
     op = OptionParser.new
+    op.version = Embulk::VERSION
 
     puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S,%3N %z")}: Embulk v#{Embulk::VERSION}"
 
