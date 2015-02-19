@@ -150,20 +150,17 @@ bintray_user=(bintray user name)
 bintray_api_key=(bintray api key)
 ```
 
-Update following files:
+Run following commands and follow its instruction:
 
-* embulk-docs/src/release/release-VERSION.rst (release note)
-* build.gradle (version number)
-* lib/embulk/version.rb (version number)
-
-Then, build and upload using gradle:
+```
+./gradlew set_version -Pto=$VERSION
+```
 
 ```
 ./gradlew releaseCheck
-./gradlew cli gem
-./gradlew bintrayUpload
-gem push pkg/embulk-....gem
-open "https://bintray.com/embulk/maven/embulk"  # and upload pkg/embulk-....jar
+./gradlew release
+git commit -am v$VERSION
+git tag v$VERSION
 ```
 
 See also:
