@@ -25,7 +25,7 @@ public class TestFileInputInputStream
     private void newOutputStream()
     {
         fileOutput = new MockFileOutput();
-        out = new FileOutputOutputStream(fileOutput, runtime.getBufferAllocator());
+        out = new FileOutputOutputStream(fileOutput, runtime.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
     }
 
     private void newInputStream()
