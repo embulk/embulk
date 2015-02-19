@@ -3,7 +3,7 @@ module Embulk
   require 'embulk/data_source'
   require 'embulk/schema'
   require 'embulk/page_builder'
-  #require 'embulk/file_input'  TODO not implemented
+  require 'embulk/file_input'
 
   class ParserPlugin
     def self.transaction(config, &control)
@@ -49,7 +49,7 @@ module Embulk
         def run(java_task_source, java_schema, java_file_input, java_output)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
-          file_input = FileInput.from_java(java_file_input)
+          file_input = FileInput.new(java_file_input)
           page_builder = PageBuilder.new(schema, java_output)
           begin
             @ruby_class.new(task_source, schema, page_builder).run(file_input)

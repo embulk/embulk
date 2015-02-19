@@ -7,8 +7,8 @@ module Embulk
       def self.transaction(config, schema, count, &control)
         # configuration code:
         task = {
-          "property1" => config.param("property1", :string)
-          "property2" => config.param("property2", :integer, default: 0)
+          "property1" => config.param("property1", :string),
+          "property2" => config.param("property2", :integer, default: 0),
         }
 
         # resumable output:
