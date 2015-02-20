@@ -43,6 +43,9 @@ public class TimestampFormat
         if(s.startsWith("+") || s.startsWith("-")) {
             return DateTimeZone.forID(s);
 
+        } else if (s.equals("Z")) {
+            return DateTimeZone.UTC;
+
         } else {
             try {
                 int rawOffset = (int) DateTimeFormat.forPattern("z").parseMillis(s);

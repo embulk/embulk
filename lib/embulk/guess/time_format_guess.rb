@@ -16,6 +16,9 @@ module Embulk::Guess
 
       WEEKDAY_NAME_SHORT = /Sun|Mon|Tue|Wed|Thu|Fri|Sat/
       WEEKDAY_NAME_FULL = /Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday/
+
+      ZONE_OFF = /(?:Z|[\-\+]\d\d(?::?\d\d)?)/
+      ZONE_ABB = /[A-Z]{1,3}/
     end
 
     class GuessMatch
@@ -119,9 +122,17 @@ module Embulk::Guess
       end
 
       def mergeable_group
-        [@delimiters, @parts]
+        # MDY is mergible with DMY
+        if i = array_sequence_find(@parts, [:day, :month, :year])
+          ps = @parts.dup
+          ps[i, 3] = [:month, :day, :year]
+          [@delimiters, ps]
+        else
+          [@delimiters, @parts]
+        end
       end
 
+      attr_reader :parts
       attr_reader :part_options
 
       def merge!(another_in_group)
@@ -136,27 +147,44 @@ module Embulk::Guess
             [@part_options[i], part_options[i]].sort.last
           end
         end
+
+        # if DMY matches, MDY is likely false match of DMY.
+        dmy = array_sequence_find(another_in_group.parts, [:day, :month, :year])
+        mdy = array_sequence_find(@parts, [:month, :day, :year])
+        if mdy && dmy
+          @parts[mdy, 3] = [:day, :month, :year]
+        end
+      end
+
+      def array_sequence_find(array, seq)
+        (array.size - seq.size + 1).times {|i|
+          return i if array[i, seq.size] == seq
+        }
+        return nil
       end
     end
 
     class GuessPattern
       include Parts
 
-      date_delims = /[\/\-]/
+      date_delims = /[\/\-\.]/
       # yyyy-MM-dd
       YMD         = /(?<year>#{YEAR})(?<date_delim>#{date_delims})(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/
       YMD_NODELIM = /(?<year>#{YEAR})(?<month>#{MONTH_NODELIM})(?<day>#{DAY_NODELIM})/
-      # dd/MM/yyyy
-      DMY         = /(?<year>#{YEAR})(?<date_delim>#{date_delims})(?<month>#{MONTH})\k<date_delim>(?<day>#{DAY})/
-      DMY_NODELIM = /(?<year>#{YEAR})(?<month>#{MONTH_NODELIM})(?<day>#{DAY_NODELIM})/
+      # MM/dd/yyyy
+      MDY         = /(?<month>#{MONTH})(?<date_delim>#{date_delims})(?<day>#{DAY})\k<date_delim>(?<year>#{YEAR})/
+      MDY_NODELIM = /(?<month>#{MONTH_NODELIM})(?<day>#{DAY_NODELIM})(?<year>#{YEAR})/
+      # dd.MM.yyyy
+      DMY         = /(?<day>#{DAY})(?<date_delim>#{date_delims})(?<month>#{MONTH})\k<date_delim>(?<year>#{YEAR})/
+      DMY_NODELIM = /(?<day>#{DAY_NODELIM})(?<month>#{MONTH_NODELIM})(?<year>#{YEAR})/
 
-      frac = /[0-9]{1,24}/
+      frac = /[0-9]{1,9}/
       time_delims = /[\:\-]/
       frac_delims = /[\.\,]/
-      TIME         = /(?<hour>#{HOUR})(?<time_delim>#{time_delims})(?<minute>#{MINUTE})(?:\k<time_delim>(?<second>#{SECOND})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?/
-      TIME_NODELIM = /(?<hour>#{HOUR_NODELIM})(?<minute>#{MINUTE_NODELIM})((?<second>#{SECOND_NODELIM})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?/
+      TIME         = /(?<hour>#{HOUR})(?:(?<time_delim>#{time_delims})(?<minute>#{MINUTE})(?:\k<time_delim>(?<second>#{SECOND})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?)?/
+      TIME_NODELIM = /(?<hour>#{HOUR_NODELIM})(?:(?<minute>#{MINUTE_NODELIM})((?<second>#{SECOND_NODELIM})(?:(?<frac_delim>#{frac_delims})(?<frac>#{frac}))?)?)?/
 
-      TZ = /(?<zone_space> )?(?<zone>(?<zone_off>[\-\+]\d\d(?::?\d\d)?)|(?<zone_abb>[A-Z]{3}))|(?<z>Z)/
+      ZONE = /(?<zone_space> )?(?<zone>(?<zone_off>#{ZONE_OFF})|(?<zone_abb>#{ZONE_ABB}))/
 
       def match(text)
         delimiters = []
@@ -176,6 +204,21 @@ module Embulk::Guess
 
           parts << :day
           part_options << part_heading_option(dm["day"])
+
+        elsif dm = (/^#{MDY}(?<rest>.*?)$/.match(text) or /^#{MDY_NODELIM}(?<rest>.*?)$/.match(text))
+          date_delim = dm["date_delim"] rescue ""
+
+          parts << :month
+          part_options << part_heading_option(dm["month"])
+          delimiters << date_delim
+
+          parts << :day
+          part_options << part_heading_option(dm["day"])
+          delimiters << date_delim
+
+          parts << :year
+          part_options << nil
+          delimiters << date_delim
 
         elsif dm = (/^#{DMY}(?<rest>.*?)$/.match(text) or /^#{DMY_NODELIM}(?<rest>.*?)$/.match(text))
           date_delim = dm["date_delim"] rescue ""
@@ -198,7 +241,7 @@ module Embulk::Guess
         end
         rest = dm["rest"]
 
-        date_time_delims = /[ _T]/
+        date_time_delims = /(:? |_|T|\. ?)/
         if tm = (
               /^(?<date_time_delim>#{date_time_delims})#{TIME}(?<rest>.*?)?$/.match(rest) or
               /^(?<date_time_delim>#{date_time_delims})#{TIME_NODELIM}(?<rest>.*?)?$/.match(rest) or
@@ -211,31 +254,30 @@ module Embulk::Guess
           parts << :hour
           part_options << part_heading_option(tm["hour"])
 
-          delimiters << time_delim
-          parts << :minute
-          part_options << part_heading_option(tm["minute"])
-
-          if tm["second"]
+          if tm["minute"]
             delimiters << time_delim
-            parts << :second
-            part_options << part_heading_option(tm["second"])
-          end
+            parts << :minute
+            part_options << part_heading_option(tm["minute"])
 
-          if tm["frac"]
-            delimiters << tm["frac_delim"]
-            parts << :frac
-            part_options << tm["frac"].size
+            if tm["second"]
+              delimiters << time_delim
+              parts << :second
+              part_options << part_heading_option(tm["second"])
+
+              if tm["frac"]
+                delimiters << tm["frac_delim"]
+                parts << :frac
+                part_options << tm["frac"].size
+              end
+            end
           end
 
           rest = tm["rest"]
         end
 
-        if zm = /^#{TZ}$/.match(rest)
+        if zm = /^#{ZONE}$/.match(rest)
           delimiters << (zm["zone_space"] || '')
-          if zm["z"]
-            # TODO ISO 8601
-            parts << :zone_off
-          elsif zm["zone_off"]
+          if zm["zone_off"]
             parts << :zone_off
           else
             parts << :zone_abb
@@ -265,9 +307,9 @@ module Embulk::Guess
       end
     end
 
-    class RegexpMatch
+    class SimpleMatch
       def initialize(format)
-        @format
+        @format = format
       end
 
       attr_reader :format
@@ -280,10 +322,33 @@ module Embulk::Guess
       end
     end
 
+    class Rfc2822Pattern
+      include Parts
+
+      def initialize
+        @regexp = /^(?<weekday>#{WEEKDAY_NAME_SHORT}, )?\d\d #{MONTH_NAME_SHORT} \d\d\d\d(?<time> \d\d:\d\d(?<second>:\d\d)? (?:(?<zone_off>#{ZONE_OFF})|(?<zone_abb>#{ZONE_ABB})))?$/
+      end
+
+      def match(text)
+        if m = @regexp.match(text)
+          format = ''
+          format << "%a, " if m['weekday']
+          format << "%d %b %Y"
+          format << " %H:%M" if m['time']
+          format << ":%S" if m['second']
+          format << " %z" if m['zone_off']
+          format << " %Z" if m['zone_abb']
+          SimpleMatch.new(format)
+        else
+          nil
+        end
+      end
+    end
+
     class RegexpPattern
       def initialize(regexp, format)
         @regexp = regexp
-        @match = RegexpMatch.new(format)
+        @match = SimpleMatch.new(format)
       end
 
       def match(text)
@@ -298,18 +363,15 @@ module Embulk::Guess
     module StandardPatterns
       include Parts
 
-      RFC_822_1123 = /^#{WEEKDAY_NAME_SHORT}, \d\d #{MONTH_NAME_SHORT} \d\d\d\d \d\d:\d\d:\d\d [a-zA-Z]{3}$/
-      RFC_850_1035 = /^#{WEEKDAY_NAME_FULL}, \d\d-#{MONTH_NAME_SHORT}-\d\d \d\d:\d\d:\d\d [a-zA-Z]{3}$/
-      APACHE_CLF = /^\d\d\/#{MONTH_NAME_SHORT}\/\d\d\d\d \d\d:\d\d:\d\d [\-\+]\d\d(?::?\d\d)?$/
+      APACHE_CLF = /^\d\d\/#{MONTH_NAME_SHORT}\/\d\d\d\d:\d\d:\d\d:\d\d #{ZONE_OFF}?$/
       ANSI_C_ASCTIME = /^#{WEEKDAY_NAME_SHORT} #{MONTH_NAME_SHORT} \d\d? \d\d:\d\d:\d\d \d\d\d\d$/
     end
 
     PATTERNS = [
       GuessPattern.new,
-      RegexpPattern.new(StandardPatterns::RFC_822_1123, "%a, %d %b %Y %H:%M:%S %z"),
-      RegexpPattern.new(StandardPatterns::RFC_850_1035, "%A, %d-%b-%y %H:%M:%S %z"),
-      RegexpPattern.new(StandardPatterns::APACHE_CLF, "%d/%b/%Y %H:%M:%S %Z"),
-      RegexpPattern.new(StandardPatterns::ANSI_C_ASCTIME, "$a %b %e %H:%M:%S %Y"),
+      Rfc2822Pattern.new,
+      RegexpPattern.new(StandardPatterns::APACHE_CLF, "%d/%b/%Y:%H:%M:%S %z"),
+      RegexpPattern.new(StandardPatterns::ANSI_C_ASCTIME, "%a %b %e %H:%M:%S %Y"),
     ]
 
     def self.guess(texts)
@@ -322,8 +384,8 @@ module Embulk::Guess
       elsif matches.size == 1
         return matches[0].format
       else
-        match_groups = matches.group_by {|match| match.mergeable_group }
-        best_match_group = match_groups.sort_by {|group| group.size }.last[1]
+        match_groups = matches.group_by {|match| match.mergeable_group }.values
+        best_match_group = match_groups.sort_by {|group| group.size }.last
         best_match = best_match_group.shift
         best_match_group.each {|m| best_match.merge!(m) }
         return best_match.format
