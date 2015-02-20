@@ -5,6 +5,7 @@ plugins {
     id 'com.github.jruby-gradle.base' version '0.1.5'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
+import com.github.jrubygradle.JRubyExec
 
 def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli")]
 def release_projects = [project(":embulk-core"), project(":embulk-standards")]
@@ -131,6 +132,10 @@ subprojects {
     }
 }
 
+dependencies {
+    jrubyExec 'rubygems:test-unit:3.0.+'
+}
+
 //
 // classpath task
 //
@@ -175,16 +180,19 @@ project(':embulk-cli') {
     }
 }
 
+task rubyTest(type: JRubyExec) {
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '-eTest::Unit::AutoRunner.run(true, *ARGV)'
+    script 'test'
+}
+
 //
 // gem task
 //
-import com.github.jrubygradle.JRubyExec
 task gem(type: JRubyExec) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)', 'build'
-    script 'build/gemspec'
+    script 'embulk.gemspec'
     doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
 }
-gem.dependsOn('gemspec')
 gem.dependsOn('classpath')
 
 //
@@ -194,7 +202,6 @@ task rubyGemsUpload(type: JRubyExec, dependsOn: ["gem"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)', 'push'
     script "pkg/embulk-${project.version}.gem"
 }
-gem.dependsOn('gemspec')
 
 //
 // releaseCheck and release tasks
@@ -247,34 +254,4 @@ task set_version << {
     "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
 
     println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
-}
-
-task gemspec << {
-    file('build').mkdirs()
-    file('build/gemspec').write($/
-Gem::Specification.new do |gem|
-  gem.name          = "embulk"
-  gem.version       = "${project.version}"
-
-  gem.summary       = "Embulk, a plugin-based parallel bulk data loader"
-  gem.description   = "Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control."
-  gem.authors       = ["Sadayuki Furuhashi"]
-  gem.email         = ["frsyuki@gmail.com"]
-  gem.license       = "Apache 2.0"
-  gem.homepage      = "https://github.com/embulk/embulk"
-
-  gem.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
-  gem.test_files    = gem.files.grep(%r"^(test|spec)/")
-  gem.executables   = gem.files.grep(%r"^bin/").map{ |f| File.basename(f) }
-  gem.require_paths = ["lib"]
-  gem.has_rdoc      = false
-
-  gem.add_development_dependency "bundler", [">= 1.0"]
-  gem.add_development_dependency "rake", [">= 0.10.0"]
-  gem.add_development_dependency "rspec", ["~> 2.11"]
-  gem.add_development_dependency "json", ["~> 1.7"]
-  gem.add_development_dependency "yard", ["~> 0.8.7"]
-  gem.add_development_dependency "kramdown", ["~> 1.5.0"]
-end
-/$)
 }
