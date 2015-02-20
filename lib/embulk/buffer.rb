@@ -9,6 +9,11 @@ module Embulk
         buffer
       end
 
+      def self.from_ruby_string(string)
+        b = Buffer.new(string)
+        b.force_encoding('ASCII-8BIT')
+      end
+
       def to_java
         Java::Buffer.wrap(to_java_bytes)
       end

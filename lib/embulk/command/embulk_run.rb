@@ -130,7 +130,7 @@ categories:
     #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
     #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
     ruby-parser                Ruby file parser plugin     (like "csv")          # not implemented yet [#33]
-    #ruby-formatter            Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
+    ruby-formatter             Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
     #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
     #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
     java-input                 Java record input plugin    (like "mysql")
@@ -262,7 +262,7 @@ examples:
         when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
         when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
         when "ruby-parser"      then [:ruby, :parser]
-        when "ruby-formatter"   then raise "ruby-formatter is not implemented yet. See #34 on github." #[:ruby, :formatter]
+        when "ruby-formatter"   then [:ruby, :formatter]
         when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
         when "ruby-encoder"     then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
         else

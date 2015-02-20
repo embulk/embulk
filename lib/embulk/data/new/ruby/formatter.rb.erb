@@ -1,0 +1,47 @@
+module Embulk
+  module Formatter
+
+    class <%= ruby_class_name %> < FormatterPlugin
+      Plugin.register_formatter(<%= name.dump %>, self)
+
+      def self.transaction(config, schema, &control)
+        # configuration code:
+        task = {
+          "property1" => config.param("property1", :string),
+          "property2" => config.param("property2", :integer, default: 0),
+        }
+
+        yield(task)
+      end
+
+      def init
+        # initialization code:
+        @property1 = task["property1"]
+        @property2 = task["property2"]
+
+        # your data
+        @current_file == nil
+        @current_file_size = 0
+      end
+
+      def close
+      end
+
+      def add(page)
+        # output code:
+        page.each do |record|
+          if @current_file == nil || @current_file_size > 32*1024
+            @current_file = @file_output.next_file
+            @current_file_size = 0
+          end
+          @current_file.write "|mydata|"
+        end
+      end
+
+      def finish
+        @file_output.finish
+      end
+    end
+
+  end
+end

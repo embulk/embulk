@@ -3,7 +3,7 @@ module Embulk
   require 'embulk/data_source'
   require 'embulk/schema'
   require 'embulk/page'
-  #require 'embulk/file_output'  TODO not implemented
+  require 'embulk/file_output'
 
   class FormatterPlugin
     def self.transaction(config, schema, &control)
@@ -14,7 +14,7 @@ module Embulk
     def initialize(task, schema, file_output)
       @task = task
       @schema = schema
-      @file_output
+      @file_output = file_output
       init
     end
 
@@ -58,7 +58,7 @@ module Embulk
         def open(java_task_source, java_schema, java_file_output)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
-          file_output = FileOutput.from_java(java_file_output)
+          file_output = FileOutput.new(java_file_output)
           ruby_object = @ruby_class.new(task_source, schema, file_output)
           return OutputAdapter.new(ruby_object, schema, file_output)
         end
