@@ -36,15 +36,13 @@ module Embulk
       register_plugin(:filter, type, klass, FilterPlugin)
     end
 
-    ## TODO FileInput is not implemented yet.
-    #def register_parser(type, klass)
-    #  register_plugin(:parser, type, klass, ParserPlugin)
-    #end
+    def register_parser(type, klass)
+      register_plugin(:parser, type, klass, ParserPlugin)
+    end
 
-    ## TODO FileOutput is not implemented yet.
-    #def register_formatter(type, klass)
-    #  register_plugin(:formatter, type, klass, FormatterPlugin)
-    #end
+    def register_formatter(type, klass)
+      register_plugin(:formatter, type, klass, FormatterPlugin)
+    end
 
     ## TODO DecoderPlugin JRuby API is not written by anyone yet
     #def register_decoder(type, klass)
