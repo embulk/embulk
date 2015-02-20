@@ -10,7 +10,7 @@ module Embulk
     # GEM_HOME is already set by embulk/command/embulk.rb
     gem_home = ENV['GEM_HOME'].to_s
     if gem_home.empty?
-      ENV['GEM_HOME'] = File.expand_path File.join(ENV['HOME'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
+      ENV['GEM_HOME'] = default_gem_home
       Gem.clear_paths  # force rubygems to reload GEM_HOME
     end
 
@@ -296,6 +296,17 @@ examples:
   def self.home(dir)
     home = File.expand_path('../../..', File.dirname(__FILE__))
     File.join(home, dir)
+  end
+
+  def self.default_gem_home
+    if RUBY_PLATFORM =~ /java/i
+      user_home = java.lang.System.properties["user.home"]
+    end
+    user_home ||= ENV['HOME']
+    unless user_home
+      raise "HOME environment variable is not set."
+    end
+    File.expand_path File.join(user_home, '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
   end
 
   private
