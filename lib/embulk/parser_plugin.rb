@@ -17,6 +17,8 @@ module Embulk
       init
     end
 
+    attr_reader :task, :schema, :page_builder
+
     def init
     end
 
