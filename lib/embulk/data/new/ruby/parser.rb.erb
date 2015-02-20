@@ -22,8 +22,8 @@ module Embulk
 
       def init
         # initialization code:
-        @property1 = task["property1"]
-        @property2 = task["property2"]
+        @property1 = @task["property1"]
+        @property2 = @task["property2"]
       end
 
       def run(file_input)
