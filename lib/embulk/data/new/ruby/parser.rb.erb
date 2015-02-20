@@ -22,8 +22,8 @@ module Embulk
 
       def init
         # initialization code:
-        @property1 = @task["property1"]
-        @property2 = @task["property2"]
+        @property1 = task["property1"]
+        @property2 = task["property2"]
       end
 
       def run(file_input)
@@ -31,10 +31,10 @@ module Embulk
           file.each do |buffer|
             # parsering code
             record = ["col1", 2, 3.0]
-            @page_builder.add(record)
+            page_builder.add(record)
           end
         end
-        @page_builder.finish
+        page_builder.finish
       end
     end
 

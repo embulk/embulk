@@ -26,12 +26,12 @@ module Embulk
       def add(page)
         # filtering code:
         page.each do |record|
-          @page_builder.add(record)
+          page_builder.add(record)
         end
       end
 
       def finish
-        @page_builder.finish
+        page_builder.finish
       end
     end
 
