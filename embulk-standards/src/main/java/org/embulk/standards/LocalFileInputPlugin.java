@@ -1,6 +1,8 @@
 package org.embulk.standards;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -73,8 +75,14 @@ public class LocalFileInputPlugin
             int taskCount,
             FileInputPlugin.Control control)
     {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+
         control.run(taskSource, taskCount);
-        return Exec.newConfigDiff();
+
+        List<String> files = new ArrayList<String>(task.getFiles());
+        Collections.sort(files);
+        return Exec.newConfigDiff().
+            set("last_path", files.get(files.size() - 1));
     }
 
     @Override
