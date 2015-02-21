@@ -25,8 +25,10 @@ The single-file package is the simplest way to try Embulk. You can download the 
 
 ### Linux & Mac & BSD
 
+Following 4 commans install embulk to your home directory:
+
 ```
-curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar
+curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.6.jar
 chmod +x ~/.embulk/bin/embulk
 echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
@@ -41,7 +43,6 @@ curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-
 ```
 
 ### Trying examples
-
 
 Let's load a CSV file, for example. `embulk example` subcommand generates a csv file and config file for you.
 

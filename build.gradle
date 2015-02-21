@@ -12,7 +12,7 @@ def release_projects = [project(":embulk-core"), project(":embulk-standards")]
 
 allprojects {
     group = 'org.embulk'
-    version = '0.4.5'
+    version = '0.4.6'
 
     apply plugin: 'java'
     apply plugin: 'maven-publish'
