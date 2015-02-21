@@ -21,20 +21,35 @@ You can release plugins to share your efforts of data cleaning, error handling, 
 
 ## Quick Start
 
-The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java:
+The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java.
+
+### Linux & Mac & BSD
 
 ```
-wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar -O embulk.jar
-java -jar embulk.jar --help
+curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar
+chmod +x ~/.embulk/bin/embulk
+echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
+
+### Windows
+
+You can assume the jar file is a .bat file.
+
+```
+curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar
+```
+
+### Trying examples
+
 
 Let's load a CSV file, for example. `embulk example` subcommand generates a csv file and config file for you.
 
 ```
-java -jar embulk.jar example ./try1
-java -jar embulk.jar guess   ./try1/example.yml -o config.yml
-java -jar embulk.jar preview config.yml
-java -jar embulk.jar run     config.yml
+embulk example ./try1
+embulk guess   ./try1/example.yml -o config.yml
+embulk preview config.yml
+embulk run     config.yml
 ```
 
 ### Using plugins
@@ -43,8 +58,8 @@ You can use plugins to load data from/to various systems and file formats.
 An example is [embulk-output-postgres-json](https://github.com/frsyuki/embulk-output-postgres-json) plugin. It outputs data into PostgreSQL server using "json" column type.
 
 ```
-java -jar embulk.jar gem install embulk-output-postgres-json
-java -jar embulk.jar gem list
+embulk gem install embulk-output-postgres-json
+embulk gem list
 ```
 
 You can search plugins on RubyGems: [search for "embulk"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk).
@@ -57,9 +72,9 @@ You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also gene
 See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
-java -jar embulk.jar bundle ./embulk_bundle
-java -jar embulk.jar guess  -b ./embulk_bundle ...
-java -jar embulk.jar run    -b ./embulk_bundle ...
+embulk bundle ./embulk_bundle
+embulk guess  -b ./embulk_bundle ...
+embulk run    -b ./embulk_bundle ...
 ```
 
 ### Releasing plugins to RubyGems
@@ -76,19 +91,19 @@ Embulk supports resuming failed transactions.
 To enable resuming, you need to start transaction with `-r PATH` option:
 
 ```
-java -jar embulk.jar run config.yml -r resume-state.yml
+embulk run config.yml -r resume-state.yml
 ```
 
 If the transaction fails, embulk stores state some states to the yaml file. You can retry the transaction using exactly same command:
 
 ```
-java -jar embulk.jar run config.yml -r resume-state.yml
+embulk run config.yml -r resume-state.yml
 ```
 
 If you giveup to resume the transaction, you can use `embulk cleanup` subcommand to delete intermediate data:
 
 ```
-java -jar embulk.jar cleanup config.yml -r resume-state.yml
+embulk cleanup config.yml -r resume-state.yml
 ```
 
 
