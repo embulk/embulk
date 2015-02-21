@@ -333,6 +333,7 @@ examples:
   end
 
   def self.usage(message)
+    STDERR.puts "Embulk v#{Embulk::VERSION}"
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
     STDERR.puts "   bundle    [directory]                              # create or update plugin environment."
