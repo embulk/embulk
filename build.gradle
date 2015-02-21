@@ -148,11 +148,8 @@ clean { delete 'classpath' }
 task cli(dependsOn: ':embulk-cli:shadowJar') << {
     file('pkg').mkdirs()
     File f = file("pkg/embulk-${project.version}.jar")
-    f.write('''\
-#!/bin/sh
-exec java -jar "$0" "$@"
-exit 127
-''')
+    f.write("")
+    f.append(file("embulk-cli/src/main/sh/selfrun.sh").readBytes())
     f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
     f.setExecutable(true)
 }
