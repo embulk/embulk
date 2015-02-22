@@ -25,7 +25,7 @@ The single-file package is the simplest way to try Embulk. You can download the 
 
 ### Linux & Mac & BSD
 
-Following 4 commans install embulk to your home directory:
+Following 4 commands install embulk to your home directory:
 
 ```
 curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.6.jar
