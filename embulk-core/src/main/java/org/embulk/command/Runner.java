@@ -77,7 +77,10 @@ public class Runner
             guess(args[0]);
             break;
         case "preview":
-            preview(args[0]);
+            preview(args[0], false);
+            break;
+        case "previewrow":
+            preview(args[0], true);
             break;
         default:
             throw new RuntimeException("Unsupported command: "+command);
@@ -212,7 +215,7 @@ public class Runner
         return yml;
     }
 
-    public void preview(String partialConfigPath)
+    public void preview(String partialConfigPath, boolean rowstyle)
     {
         ConfigSource config = loadYamlConfig(partialConfigPath);
         ExecSession exec = newExecSession(config);
@@ -226,28 +229,13 @@ public class Runner
             header[i] = result.getSchema().getColumnName(i) + ":" + result.getSchema().getColumnType(i);
         }
 
-        TablePrinter printer = new TablePrinter(System.out, header) {
-            private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-            protected String valueToString(Object obj)
-            {
-                if (obj instanceof String) {
-                    return (String) obj;
-                } else if (obj instanceof Number) {
-                    if (obj instanceof Integer) {
-                        return numberFormat.format(((Integer) obj).longValue());
-                    }
-                    if (obj instanceof Long) {
-                        return numberFormat.format(((Long) obj).longValue());
-                    }
-                    return obj.toString();
-                } else if (obj instanceof Timestamp) {
-                    return obj.toString();
-                } else {
-                    return model.writeObject(obj);
-                }
-            }
-        };
+        PreviewPrinter printer;
+        if (rowstyle) {
+            printer = new TablePrinter(System.out, model, header);
+        }
+        else {
+            printer = new VerticalPrinter(System.out, model, header);
+        }
 
         try {
             for (Object[] record : records) {
