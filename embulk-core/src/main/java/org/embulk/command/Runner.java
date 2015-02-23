@@ -44,6 +44,9 @@ public class Runner
 
         private String logLevel;
         public String getLogLevel() { return logLevel; }
+
+        private String outputStyle;
+        public String getOutputStyle() { return outputStyle; }
     }
 
     private final Options options;
@@ -226,28 +229,13 @@ public class Runner
             header[i] = result.getSchema().getColumnName(i) + ":" + result.getSchema().getColumnType(i);
         }
 
-        TablePrinter printer = new TablePrinter(System.out, header) {
-            private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-            protected String valueToString(Object obj)
-            {
-                if (obj instanceof String) {
-                    return (String) obj;
-                } else if (obj instanceof Number) {
-                    if (obj instanceof Integer) {
-                        return numberFormat.format(((Integer) obj).longValue());
-                    }
-                    if (obj instanceof Long) {
-                        return numberFormat.format(((Long) obj).longValue());
-                    }
-                    return obj.toString();
-                } else if (obj instanceof Timestamp) {
-                    return obj.toString();
-                } else {
-                    return model.writeObject(obj);
-                }
-            }
-        };
+        PreviewPrinter printer;
+        if ("vertical".equalsIgnoreCase(options.getOutputStyle())) {
+            printer = new VerticalPrinter(System.out, model, header);
+        }
+        else {
+            printer = new TablePrinter(System.out, model, header);
+        }
 
         try {
             for (Object[] record : records) {
