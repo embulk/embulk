@@ -102,6 +102,9 @@ module Embulk
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
       end
+      op.on('-G', '--vertical', "Use vertical output format", TrueClass) do |b|
+        options[:previewOutputFormat] = "vertical"
+      end
       args = 1..1
 
     when :guess
