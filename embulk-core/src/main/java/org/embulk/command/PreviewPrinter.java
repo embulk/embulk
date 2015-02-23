@@ -29,7 +29,6 @@ abstract class PreviewPrinter
         this.header = header;
         this.model = model;
         this.samples = new ArrayList<Object[]>(SAMPLES);
-        samples.add(header);
     }
 
     public void add(Object... values) throws IOException

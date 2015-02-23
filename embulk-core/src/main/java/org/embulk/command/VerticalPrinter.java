@@ -18,14 +18,25 @@ class VerticalPrinter extends PreviewPrinter
 
     protected void flushSamples()
     {
-        for( int i = 1 ; i < samples.size() ; i++ ) {
-            out.format("******************* %d **********************\n",i);
+        int maxHeaderLen = maxHeaderLength() + 1;
+        for( int i = 0 ; i < samples.size() ; i++ ) {
+            out.format("******************* %d **********************\n",i+1);
             Object[] sample = samples.get(i);
             for( int j = 0 ; j < header.length ; j++ ) {
-                out.format("%s: %s\n",valueToString(header[j]),valueToString(sample[j]));
+                out.format("%" + maxHeaderLen +"s: %s\n",header[j],valueToString(sample[j]));
             }
             out.println("");
         }
+    }
+
+    protected int maxHeaderLength()
+    {
+        int maxlength = 0;
+        for( int i = 0 ; i < header.length ; i++ ) {
+            int len = header[i].length();
+            if (len > maxlength) maxlength = len;
+        }
+        return maxlength;
     }
 
 }

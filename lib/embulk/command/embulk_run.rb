@@ -102,6 +102,9 @@ module Embulk
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
       end
+      op.on('-S', '--output-style SYTLE', 'Preview output style (table or vertical)') do |style|
+        options[:outputStyle] = style
+      end
       args = 1..1
 
     when :guess

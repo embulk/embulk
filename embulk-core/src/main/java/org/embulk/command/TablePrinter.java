@@ -17,6 +17,7 @@ class TablePrinter extends PreviewPrinter
     public TablePrinter(PrintStream out, ModelManager model, String... header)
     {
         super(out, model, header);
+        samples.add(header);
     }
 
     protected void flushSamples()

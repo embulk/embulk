@@ -44,6 +44,9 @@ public class Runner
 
         private String logLevel;
         public String getLogLevel() { return logLevel; }
+
+        private String outputStyle;
+        public String getOutputStyle() { return outputStyle; }
     }
 
     private final Options options;
@@ -77,10 +80,7 @@ public class Runner
             guess(args[0]);
             break;
         case "preview":
-            preview(args[0], false);
-            break;
-        case "previewrow":
-            preview(args[0], true);
+            preview(args[0]);
             break;
         default:
             throw new RuntimeException("Unsupported command: "+command);
@@ -215,7 +215,7 @@ public class Runner
         return yml;
     }
 
-    public void preview(String partialConfigPath, boolean rowstyle)
+    public void preview(String partialConfigPath)
     {
         ConfigSource config = loadYamlConfig(partialConfigPath);
         ExecSession exec = newExecSession(config);
@@ -230,11 +230,11 @@ public class Runner
         }
 
         PreviewPrinter printer;
-        if (rowstyle) {
-            printer = new TablePrinter(System.out, model, header);
+        if ("vertical".equalsIgnoreCase(options.getOutputStyle())) {
+            printer = new VerticalPrinter(System.out, model, header);
         }
         else {
-            printer = new VerticalPrinter(System.out, model, header);
+            printer = new TablePrinter(System.out, model, header);
         }
 
         try {
