@@ -13,13 +13,15 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
+import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.PageOutput;
+import org.embulk.exec.ForSystemConfig;
 import static org.embulk.spi.util.Inputs.each;
 
 /*
- * Used by GuessExecutor
+ * Used by FileInputRunner.guess
  */
-class SamplingParserPlugin
+public class SamplingParserPlugin
         implements ParserPlugin
 {
     private final int maxSampleSize;
@@ -44,13 +46,12 @@ class SamplingParserPlugin
         throw new SampledNoticeError(buffer);
     }
 
-    static Buffer runFileInputSampling(ConfigSource config)
+    public static Buffer runFileInputSampling(final FileInputRunner input, ConfigSource inputConfig)
     {
         // override in.parser.type so that FileInputRunner creates GuessParserPlugin
-        ConfigSource samplingInputConfig = config.getNested("in").deepCopy();
+        ConfigSource samplingInputConfig = inputConfig.deepCopy();
         samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
 
-        final InputPlugin input = Exec.newPlugin(InputPlugin.class, samplingInputConfig.get(PluginType.class, "type"));
         try {
             input.transaction(samplingInputConfig, new InputPlugin.Control() {
                 public List<CommitReport> run(TaskSource taskSource, Schema schema, int taskCount)

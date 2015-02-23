@@ -289,7 +289,17 @@ examples:
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
-      org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
+      begin
+        org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
+      rescue => ex
+        puts ex.to_s
+        ex.backtrace.each do |ex|
+          puts "    #{ex}"
+        end
+        puts ""
+        puts "Error: #{ex}"
+        raise SystemExit.new(1, ex.to_s)
+      end
     end
   end
 

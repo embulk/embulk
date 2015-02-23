@@ -27,8 +27,11 @@ public class ExecSession
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
+
+    private final ConfigSource execConfig;
     private final Timestamp transactionTime;
     private final DateTimeZone transactionTimeZone;
+
     private final boolean preview;
 
     public interface SessionTask
@@ -45,24 +48,17 @@ public class ExecSession
 
     public ExecSession(Injector injector, ConfigSource execConfig)
     {
-        this(injector, execConfig.loadConfig(SessionTask.class));
-    }
-
-    public ExecSession(Injector injector, TaskSource taskSource)
-    {
-        this(injector, taskSource.loadTask(SessionTask.class));
-    }
-
-    public ExecSession(Injector injector, SessionTask task)
-    {
         this.injector = injector;
         this.loggerFactory = injector.getInstance(ILoggerFactory.class);
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
+        this.execConfig = execConfig.deepCopy();
+        SessionTask task = execConfig.loadConfig(SessionTask.class);
         this.transactionTime = task.getTransactionTime().or(Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
         this.transactionTimeZone = task.getTransactionTimeZone();
+
         this.preview = false;
     }
 
@@ -73,8 +69,11 @@ public class ExecSession
         this.modelManager = copy.modelManager;
         this.pluginManager = copy.pluginManager;
         this.bufferAllocator = copy.bufferAllocator;
+
+        this.execConfig = copy.execConfig;
         this.transactionTime = copy.transactionTime;
         this.transactionTimeZone = copy.transactionTimeZone;
+
         this.preview = preview;
     }
 
@@ -118,6 +117,11 @@ public class ExecSession
     public BufferAllocator getBufferAllocator()
     {
         return bufferAllocator;
+    }
+
+    public ConfigSource getExecConfig()
+    {
+        return execConfig;
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type)
