@@ -5,7 +5,14 @@ module Embulk
   class JavaPlugin
     def self.classloader(dir)
       jars = Dir["#{dir}/**/*.jar"]
-      urls = jars.map {|jar| java.net.URL.new "file://#{File.expand_path(jar)}" }
+      urls = jars.map do |jar|
+        path = File.expand_path(jar)
+        if path[0] == "/"
+          java.net.URL.new "file:#{path}"
+        else
+          java.net.URL.new "file:/#{path}"  # Windows
+        end
+      end
       classloader = Java::PluginClassLoader.new(JRuby.runtime, urls)
     end
 
