@@ -3,16 +3,15 @@ package org.embulk.command;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Locale;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.text.NumberFormat;
 import org.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
 import com.google.inject.Injector;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
@@ -29,7 +28,6 @@ import org.embulk.exec.ResumeState;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.ExecSession;
-import org.embulk.spi.util.Pages;
 import org.embulk.EmbulkService;
 
 public class Runner
@@ -44,6 +42,9 @@ public class Runner
 
         private String logLevel;
         public String getLogLevel() { return logLevel; }
+
+        private String previewOutputFormat;
+        public String getPreviewOutputFormat() { return previewOutputFormat; };
     }
 
     private final Options options;
@@ -218,41 +219,27 @@ public class Runner
         ExecSession exec = newExecSession(config);
         PreviewExecutor preview = injector.getInstance(PreviewExecutor.class);
         PreviewResult result = preview.preview(exec, config);
-        List<Object[]> records = Pages.toObjects(result.getSchema(), result.getPages());
-        final ModelManager model = injector.getInstance(ModelManager.class);
+        ModelManager modelManager = injector.getInstance(ModelManager.class);
 
-        String[] header = new String[result.getSchema().getColumnCount()];
-        for (int i=0; i < header.length; i++) {
-            header[i] = result.getSchema().getColumnName(i) + ":" + result.getSchema().getColumnType(i);
+        PreviewPrinter printer;
+
+        String format = options.getPreviewOutputFormat();
+        if (format == null) {
+            format = "table";
+        }
+        switch (format) {
+        case "table":
+            printer = new TablePreviewPrinter(System.out, modelManager, result.getSchema());
+            break;
+        case "vertical":
+            printer = new VerticalPreviewPrinter(System.out, modelManager, result.getSchema());
+            break;
+        default:
+            throw new IllegalArgumentException(String.format("Unknown preview output format '%s'. Supported formats: table, vertical", format));
         }
 
-        TablePrinter printer = new TablePrinter(System.out, header) {
-            private NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
-
-            protected String valueToString(Object obj)
-            {
-                if (obj instanceof String) {
-                    return (String) obj;
-                } else if (obj instanceof Number) {
-                    if (obj instanceof Integer) {
-                        return numberFormat.format(((Integer) obj).longValue());
-                    }
-                    if (obj instanceof Long) {
-                        return numberFormat.format(((Long) obj).longValue());
-                    }
-                    return obj.toString();
-                } else if (obj instanceof Timestamp) {
-                    return obj.toString();
-                } else {
-                    return model.writeObject(obj);
-                }
-            }
-        };
-
         try {
-            for (Object[] record : records) {
-                printer.add(record);
-            }
+            printer.printAllPages(result.getPages());
             printer.finish();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
