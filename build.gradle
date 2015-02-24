@@ -245,7 +245,7 @@ task set_version << {
     ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
 
     File readme_ver = file('README.md')
-    readme_ver.write(readme_ver.getText().replaceFirst('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
+    readme_ver.write(readme_ver.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
 
     file("embulk-docs/src/release/release-${to}.rst").append("")
     "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
