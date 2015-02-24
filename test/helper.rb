@@ -1,6 +1,5 @@
 require 'test/unit'
 
-module Embulk
-end
+require 'embulk'
 
 # TODO simplecov
