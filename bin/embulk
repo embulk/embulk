@@ -1,28 +1,47 @@
 #!/usr/bin/env ruby
 
-# TODO cygwin check
-cygwin = false
-
 java_args = []
-while i = ARGV.find_index {|arg| arg =~ /^\-D/ }
-  if ARGV[i] == "-D"
-    prop_path = ARGV[i + 1]
+jruby_args = []
+default_optimize = false
+overwrite_optimize = nil
+
+until ARGV.empty?
+  v = ARGV[0]
+  case v
+  when "-J+O"
+    overwrite_optimize = true
+    ARGV.shift
+  when "-J-O"
+    overwrite_optimize = false
+    ARGV.shift
+  when "-J"
+    prop_path = ARGV[1]
     unless prop_path
-      STDERR.puts "-D option requires an option"
+      STDERR.puts "-J option requires an option"
       exit 1
     end
-    ARGV.slice!(i, 2)
+    props = File.read(prop_path)
+    java_props = props.split("\n").reject {|prop| prop.strip.empty? }
+    java_args = java_props + java_args
+    ARGV.shift
+    ARGV.shift
+  when /-J(.*)/
+    java_args << v[2..-1]
+    ARGV.shift
+  when /-R(.*)/
+    jruby_args << v[2..-1]
+    ARGV.shift
+  when "run"
+    default_optimize = true
+    ARGV.shift
+    break
   else
-    java_args << ARGV[i][2..-1]
-    ARGV.slice!(i)
+    break
   end
 end
 
-if prop_path
-  props = File.read(prop_path)
-  java_props = props.split("\n").reject {|prop| prop.strip.empty? }
-  java_args = java_props + java_args
-end
+# TODO cygwin check
+cygwin = false
 
 java_cmd = ENV['JAVACMD']
 unless java_cmd
@@ -50,10 +69,17 @@ unless jruby_complete
   raise SystemExit.new(1)
 end
 
+if overwrite_optimize == true || (default_optimize == true && overwrite_optimize != false)
+    java_args = %w[-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC] + java_args
+else
+    java_args = %w[-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none] + java_args
+end
+
 # java ... -jar ruby-complete.jar $EMBULK_HOME/lib/embulk/command/embulk.rb "$@"
 cmdline = [java_cmd]
 cmdline.concat java_args
 cmdline << '-jar' << File.join(classpath_dir, jruby_complete)
+cmdline.concat jruby_args
 cmdline << File.join(lib_dir, 'embulk/command/embulk.rb')
 cmdline.concat ARGV
 exec *cmdline
