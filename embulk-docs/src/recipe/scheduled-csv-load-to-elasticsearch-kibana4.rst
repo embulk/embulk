@@ -11,7 +11,7 @@ This article shows how to:
 * Visualize the data with Kibana interactively.
 * Schedule the data loading every hour using cron.
 
-This guide assumes you are using Ubuntu 12.0 Precise.
+This guide assumes you are using Ubuntu 12.0 Precise or Mac OS X.
 
 Setup Elasticsearch and Kibana 4
 ------------------
@@ -24,7 +24,6 @@ For the smallest setup, you can unzip the package and run `./bin/elasticsearch` 
 
 .. code-block:: console
 
-    $ ls
     $ wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.4.zip
     $ unzip elasticsearch-1.4.4.zip
     $ cd elasticsearch-1.4.4
@@ -39,7 +38,10 @@ You can find releases from the `Kibana website <http://www.elasticsearch.org/ove
 
     $ wget https://download.elasticsearch.org/kibana/kibana/kibana-4.0.0-linux-x64.tar.gz
     $ tar zxvf kibana-4.0.0-linux-x64.tar.gz
+    $ cd kibana-4.0.0-linux-x64
     $ ./bin/kibana
+
+Note: If you're using Mac OS X, https://download.elasticsearch.org/kibana/kibana/kibana-4.0.0-darwin-x64.tar.gz is the URL to download.
 
 Now Elasticsearch and Kibana started. Open http://localhost:5601/ using your browser to see the Kibana's graphical interface.
 
