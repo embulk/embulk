@@ -1,23 +1,30 @@
 Scheduled bulk data loading to Elasticsearch + Kibana 4 from CSV files
 ==================================
 
+.. contents::
+   :local:
+   :depth: 2
+
 This article shows how to:
 
-* Collect CSV files to Elasticsearch.
+* Bulk load CSV files to Elasticsearch.
+* Visualize the data with Kibana interactively.
 * Schedule the data loading every hour using cron.
-* Visualize the data with Kibana in real-time.
 
 This guide assumes you are using Ubuntu 12.0 Precise.
 
-Setup: Elasticsearch and Kibana 4
+Setup Elasticsearch and Kibana 4
 ------------------
 
 Step 1. Download and start Elasticsearch.
 ~~~~~~~~~~~~~~~~~~
 
-You can find releases from [Elasticsearch website](http://www.elasticsearch.org/download/).
+You can find releases from the `Elasticsearch website <http://www.elasticsearch.org/download/>`_.
 For the smallest setup, you can unzip the package and run `./bin/elasticsearch` command:
 
+.. code-block:: console
+
+    $ ls
     $ wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.4.zip
     $ unzip elasticsearch-1.4.4.zip
     $ cd elasticsearch-1.4.4
@@ -26,7 +33,9 @@ For the smallest setup, you can unzip the package and run `./bin/elasticsearch` 
 Step 2. Download and unzip Kibana:
 ~~~~~~~~~~~~~~~~~~
 
-You can find releases from [Kibana website](http://www.elasticsearch.org/overview/kibana/installation/). Open new terminal and run following commands:
+You can find releases from the `Kibana website <http://www.elasticsearch.org/overview/kibana/installation/>`_. Open a new console and run following commands:
+
+.. code-block:: console
 
     $ wget https://download.elasticsearch.org/kibana/kibana/kibana-4.0.0-linux-x64.tar.gz
     $ tar zxvf kibana-4.0.0-linux-x64.tar.gz
@@ -35,13 +44,15 @@ You can find releases from [Kibana website](http://www.elasticsearch.org/overvie
 Now Elasticsearch and Kibana started. Open http://localhost:5601/ using your browser to see the Kibana's graphical interface.
 
 
-Setup: Embulk
+Setup Embulk
 ------------------
 
 Step 1. Download Embulk binary:
 ~~~~~~~~~~~~~~~~~~
 
-You can find the latest embulk binary from the [releases](https://bintray.com/embulk/maven/embulk/view#files). Because Embulk is a single executable binary, you can simply download it to /usr/local/bin directory and set executable flag as following:
+You can find the latest embulk binary from the `releases <https://bintray.com/embulk/maven/embulk/view#files>`_. Because Embulk is a single executable binary, you can simply download it to /usr/local/bin directory and set executable flag as following:
+
+.. code-block:: console
 
     $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar -O /usr/local/bin/embulk
     $ sudo chmod +x /usr/local/bin/embulk
@@ -49,7 +60,9 @@ You can find the latest embulk binary from the [releases](https://bintray.com/em
 Step 2. Install Elasticsearch plugin
 ~~~~~~~~~~~~~~~~~~
 
-To load data to Elasticsearch, you also need Elasticsearch plugin for Embulk. You can install the plugin with this command:
+You also need Elasticsearch plugin for Embulk. You can install the plugin with this command:
+
+.. code-block:: console
 
     $ embulk gem install embulk-output-elasticsearch
 
@@ -60,7 +73,9 @@ Loading a CSV file
 
 Assuming you have a CSV files at ``./mydata/csv/`` directory. If you don't have CSV files, you can create ones using ``embulk example ./mydata`` command.
 
-Create this configuration file named ``config.yml``:
+Create this configuration file and save as ``config.yml``:
+
+.. code-block:: yaml
 
     in:
       type: file
@@ -72,12 +87,15 @@ Create this configuration file named ``config.yml``:
       nodes:
         - host: localhost
 
-In fact, this configuration file lacks some important information. However, embulk guesses the other information. So, next step is to order embulk to guess them:
+In fact, this configuration lacks some important information. However, embulk guesses the other information. So, next step is to order embulk to guess them:
+
+.. code-block:: console
 
     $ embulk guess config.yml -o config-complete.yml
 
-The created config-complete.yml file should include complete information to run the loading as following:
+The generated config-complete.yml file should include complete information as following:
 
+.. code-block:: yaml
 
     in:
       type: file
@@ -108,19 +126,26 @@ The created config-complete.yml file should include complete information to run 
 
 Now, you can run the bulk loading:
 
+.. code-block:: console
+
     $ embulk run config-complete.yml -o next-config.yml
 
-Scheduling bulk loading by cron
+Scheduling loading by cron
 ------------------
 
-At the last step, you ran embulk command with ``-o next-config.yml`` file. This file should include a parameter named ``last_path``:
+At the last step, you ran embulk command with ``-o next-config.yml`` file. The ``next-config.yml`` file should include a parameter named ``last_path``:
+
+.. code-block:: yaml
 
     last_path: mydata/csv/sample_01.csv.gz
 
 With this configuration, embulk loads the files newer than this file in alphabetical order.
-For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only. And the next next-config.yml file has ``last_path: mydata/csv/sample_01.csv.gz`` for the next next execution.
 
-So, if you want to loads newly created files, you can setup this cron schedule:
+For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only next time. And the next next-config.yml file has ``last_path: mydata/csv/sample_02.csv.gz`` for the next next execution.
+
+So, if you want to loads newly created files every day, you can setup this cron schedule:
+
+.. code-block:: cron
 
     0 * * * * embulk run /path/to/next-config.yml -o /path/to/next-config.yml
 
