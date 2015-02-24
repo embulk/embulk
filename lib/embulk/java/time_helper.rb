@@ -30,7 +30,7 @@ module Embulk
         end
 
         if seconds = hash[:seconds]
-          return seconds * 1_000_000
+          return seconds * 1_000
 
         else
           year = hash[:year]
