@@ -39,7 +39,7 @@ source ~/.bashrc
 You can assume the jar file is a .bat file.
 
 ```
-curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar
+curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.7.jar
 ```
 
 ### Trying examples
