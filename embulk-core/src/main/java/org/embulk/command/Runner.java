@@ -158,7 +158,7 @@ public class Runner
         ConfigSource resumeConfig = loadYamlConfig(resumePath);
         ResumeState resume = resumeConfig.loadConfig(ResumeState.class);
 
-        ExecSession exec = newExecSession(config);
+        //ExecSession exec = newExecSession(config);  // not necessary
         LocalExecutor local = injector.getInstance(LocalExecutor.class);
         local.cleanup(config, resume);
 

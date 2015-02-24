@@ -7,7 +7,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.IllegalFormatException;
 import org.embulk.config.Config;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
@@ -46,7 +49,11 @@ public class LocalFileOutputPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // validate sequence_format
-        String.format(task.getSequenceFormat(), 0, 0);
+        try {
+            String dontCare = String.format(Locale.ENGLISH, task.getSequenceFormat(), 0, 0);
+        } catch (IllegalFormatException ex) {
+            throw new ConfigException("Invalid sequence_format: parameter for file output plugin", ex);
+        }
 
         return resume(task.dump(), taskCount, control);
     }

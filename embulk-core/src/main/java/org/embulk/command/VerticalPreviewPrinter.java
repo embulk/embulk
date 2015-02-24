@@ -14,7 +14,7 @@ public class VerticalPreviewPrinter
     public VerticalPreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema)
     {
         super(out, modelManager, schema);
-        this.format = "%" + maxColumnNameLength(schema) + "s (%" + maxColumnTypeNameLength(schema)+ "s) : %s\n";
+        this.format = "%" + maxColumnNameLength(schema) + "s (%" + maxColumnTypeNameLength(schema)+ "s) : %s%n";
     }
 
     private static int maxColumnNameLength(Schema schema)
@@ -39,7 +39,7 @@ public class VerticalPreviewPrinter
     protected void printRecord(String[] values) throws IOException
     {
         count++;
-        out.format("*************************** %d ***************************\n", count);
+        out.format("*************************** %d ***************************%n", count);
         for (int i=0; i < schema.getColumnCount(); i++) {
             out.format(format, schema.getColumnName(i), schema.getColumnType(i), values[i]);
         }
