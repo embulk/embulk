@@ -13,18 +13,18 @@ module Embulk::Guess
     end
 
     class << self
-      def schema_from_hash(array_of_hash)
+      def from_hash_records(array_of_hash)
         array_of_hash = Array(array_of_hash)
         if array_of_hash.empty?
           raise "SchemaGuess Can't guess schema from no records"
         end
         column_names = array_of_hash.first.keys
         samples = array_of_hash.to_a.map {|hash| column_names.map {|name| hash[name] } }
-        schema_from_array(column_names, samples)
+        from_array_records(column_names, samples)
       end
 
-      def schema_from_array(column_names, samples)
-        column_types = types_from_array(samples)
+      def from_array_records(column_names, samples)
+        column_types = types_from_array_records(samples)
         columns = column_types.zip(column_names).map do |(type,name)|
           hash = {name: name, type: type.to_sym}
           hash[:format] = type.format if type.is_a?(TimestampTypeMatch)
@@ -33,7 +33,8 @@ module Embulk::Guess
         return Embulk::Schema.new(columns)
       end
 
-      def types_from_array(samples)
+      # TODO this method will be private once guess/csv is refactored
+      def types_from_array_records(samples)
         columnar_types = []
         samples.each do |record|
           record.each_with_index {|str,i| (columnar_types[i] ||= []) << guess_type(str) }
