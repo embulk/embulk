@@ -11,6 +11,7 @@ https://github.com/embulk/embulk
 .. toctree::
    :maxdepth: 2
 
+   recipe
    release
 
 * `JavaDoc <javadoc/index.html>`_
