@@ -1,6 +1,9 @@
 language: java
 jdk:
   - oraclejdk8
+cache:
+  directories:  # run "travis cache --delete" to delete caches
+    - $HOME/.gradle
 sudo: false
 install:
   - pip install --user sphinx
