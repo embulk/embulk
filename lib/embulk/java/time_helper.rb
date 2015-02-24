@@ -23,14 +23,14 @@ module Embulk
       end
 
       # Override
-      def strptime(text)
+      def strptimeUsec(text)
         hash = Date._strptime(text, @format_string)
         unless hash
           raise Java::TimestampParseException.new
         end
 
         if seconds = hash[:seconds]
-          return seconds * 1_000
+          return seconds * 1_000_000
 
         else
           year = hash[:year]
@@ -64,7 +64,7 @@ module Embulk
 
           @zone = zone
           time = Time.utc(year, mon, day, hour, min, sec, usec)
-          return time.tv_sec * 1000 + time.tv_usec / 1000
+          return time.tv_sec * 1_000_000 + time.tv_usec
         end
       end
 

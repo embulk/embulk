@@ -41,7 +41,7 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        long localMillis = helper.strptime(text);
+        long localUsec = helper.strptimeUsec(text);
         String zone = helper.getZone();
 
         DateTimeZone timeZone = defaultTimeZone;
@@ -53,8 +53,10 @@ public class TimestampParser
             }
         }
 
-        long milli = timeZone.convertLocalToUTC(localMillis, false);
+        long localSec = localUsec / 1000000;
+        long usec = localUsec % 1000000;
+        long sec = timeZone.convertLocalToUTC(localSec*1000, false) / 1000;
 
-        return Timestamp.ofEpochMilli(milli);
+        return Timestamp.ofEpochSecond(sec, usec * 1000);
     }
 }

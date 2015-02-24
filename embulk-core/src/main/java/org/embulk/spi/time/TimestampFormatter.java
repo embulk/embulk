@@ -48,7 +48,7 @@ public class TimestampFormatter
     public String format(Timestamp value)
     {
         // TODO optimize by using reused StringBuilder
-        dateFormat.setDateTime(new DateTime(value.toEpochMilli(), timeZone));
+        dateFormat.setDateTime(new DateTime(value.getEpochSecond()*1000, timeZone));
         dateFormat.setNSec(value.getNano());
         return dateFormat.format(null);
     }
