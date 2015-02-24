@@ -158,7 +158,7 @@ examples:
       args = 0..1
 
     when :exec
-      exec *argv
+      exec(*argv)
       exit 127
 
     else
@@ -293,8 +293,8 @@ examples:
         org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
       rescue => ex
         puts ex.to_s
-        ex.backtrace.each do |ex|
-          puts "    #{ex}"
+        ex.backtrace.each do |bt|
+          puts "    #{bt}"
         end
         puts ""
         puts "Error: #{ex}"
