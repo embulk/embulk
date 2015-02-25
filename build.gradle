@@ -244,8 +244,14 @@ task set_version << {
     File ruby_ver = file('lib/embulk/version.rb')
     ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
 
-    File readme_ver = file('README.md')
-    readme_ver.write(readme_ver.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
+    List<String> docs = [
+        'README.md',
+        'embulk-docs/src/recipe/scheduled-csv-load-to-elasticsearch-kibana4.rst'
+    ]
+    docs.each() { path ->
+        File doc = file(path)
+        doc.write(doc.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
+    }
 
     file("embulk-docs/src/release/release-${to}.rst").append("")
     "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
