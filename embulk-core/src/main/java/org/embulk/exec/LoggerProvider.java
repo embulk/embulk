@@ -6,32 +6,19 @@ import org.slf4j.LoggerFactory;
 import org.apache.log4j.PropertyConfigurator;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import org.embulk.config.Task;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 
 public class LoggerProvider
         implements Provider<ILoggerFactory>
 {
-    private interface LoggerProviderSystemTask
-            extends Task
-    {
-        @Config("log_level")
-        @ConfigDefault("\"info\"")
-        public String getLogLevel();
-    }
-
     @Inject
     public LoggerProvider(@ForSystemConfig ConfigSource systemConfig)
     {
         // TODO system config
         Properties prop = new Properties();
 
-        LoggerProviderSystemTask systemTask = systemConfig.loadConfig(LoggerProviderSystemTask.class);
-
         final String level;
-        String logLevel = systemTask.getLogLevel();
+        String logLevel = systemConfig.get(String.class, "log_level", "info");  // here can't use loadConfig because ModelManager uses LoggerProvider
         switch (logLevel) {
         case "fatal": level = "FATAL"; break;
         case "error": level = "ERROR"; break;
