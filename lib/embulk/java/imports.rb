@@ -9,6 +9,7 @@ module Embulk::Java
 
   java_import 'org.embulk.config.DataSourceImpl'
   java_import 'org.embulk.spi.time.Timestamp'
+  java_import 'org.embulk.spi.time.TimestampParseException'
   java_import 'org.embulk.spi.GuessPlugin'
   java_import 'org.embulk.spi.OutputPlugin'
   java_import 'org.embulk.spi.FilterPlugin'
