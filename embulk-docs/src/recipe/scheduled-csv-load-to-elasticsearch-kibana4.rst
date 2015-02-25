@@ -56,7 +56,7 @@ You can find the latest embulk binary from the `releases <https://bintray.com/em
 
 .. code-block:: console
 
-    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.5.jar -O /usr/local/bin/embulk
+    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.8.jar -O /usr/local/bin/embulk
     $ sudo chmod +x /usr/local/bin/embulk
 
 Step 2. Install Elasticsearch plugin
