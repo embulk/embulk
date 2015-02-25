@@ -34,8 +34,9 @@ public class LineEncoder
     }
 
     private final String newline;
+    private final FileOutput underlyingFileOutput;
     private final FileOutputOutputStream outputStream;
-    private final Writer writer;
+    private Writer writer;
 
     public LineEncoder(FileOutput out, EncoderTask task)
     {
@@ -44,7 +45,8 @@ public class LineEncoder
             .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
             .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.newline = task.getNewline().getString();
-        this.outputStream = new FileOutputOutputStream(out, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
+        this.underlyingFileOutput = out;
+        this.outputStream = new FileOutputOutputStream(underlyingFileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH_FINISH);
         this.writer = new OutputStreamWriter(outputStream, encoder);
     }
 
@@ -93,18 +95,25 @@ public class LineEncoder
     public void finish()
     {
         try {
-            writer.flush();
+            if (writer != null) {
+                writer.close();  // FLUSH_FINISH
+                writer = null;
+                // underlyingFileOutput.finish() is already called by close() because CloseMode is FLUSH_FINISH
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-        outputStream.finish();
     }
 
     @Override
     public void close()
     {
         try {
-            writer.close();
+            if (writer != null) {
+                writer.close();  // FLUSH_FINISH
+                writer = null;
+            }
+            underlyingFileOutput.close();  // this is necessary because CloseMode is not FLUSH_FINISH_CLOSE
         } catch (IOException ex) {
             // unexpected
             throw new RuntimeException(ex);

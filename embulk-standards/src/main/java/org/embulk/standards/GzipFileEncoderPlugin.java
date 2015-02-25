@@ -41,7 +41,7 @@ public class GzipFileEncoderPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
+        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
 
         return new OutputStreamFileOutput(new OutputStreamFileOutput.Provider() {
             public OutputStream openNext() throws IOException
