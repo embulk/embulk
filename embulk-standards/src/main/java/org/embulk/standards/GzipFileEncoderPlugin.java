@@ -3,6 +3,8 @@ package org.embulk.standards;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Max;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
@@ -22,7 +24,9 @@ public class GzipFileEncoderPlugin
             extends Task
     {
         @Config("level")
-        @ConfigDefault("-1")
+        @ConfigDefault("6")
+        @Min(0)
+        @Max(9)
         public int getLevel();
 
         @ConfigInject
