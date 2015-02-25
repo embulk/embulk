@@ -34,21 +34,21 @@ module Embulk
       description =
         case category
         when :input
-          %[Loads records from #{display_name}]
+          %[Loads records from #{display_name}.]
         when :file_input
-          %[Reads files stored on #{display_name}]
+          %[Reads files stored on #{display_name}.]
         when :parser
-          %[Parses #{display_name} files read by other file input plugins]
+          %[Parses #{display_name} files read by other file input plugins.]
         when :decoder
-          %[Decodes #{display_name}-encoded files read by other file input plugins]
+          %[Decodes #{display_name}-encoded files read by other file input plugins.]
         when :output
-          %[Dumps records to #{display_name}]
+          %[Dumps records to #{display_name}.]
         when :file_output
-          %[Stores files on #{display_name}]
+          %[Stores files on #{display_name}.]
         when :formtter
-          %[Formats #{display_name} files for other file output plugins]
+          %[Formats #{display_name} files for other file output plugins.]
         when :encoder
-          %[Encodes files using #{display_name} for other file output plugins]
+          %[Encodes files using #{display_name} for other file output plugins.]
         when :filter
           %[#{display_name}]
         end
