@@ -2,7 +2,7 @@
 : <<BAT
 @echo off
 
-java -jar %0 %*
+java -jar %~f0 %*
 
 exit /B
 BAT
