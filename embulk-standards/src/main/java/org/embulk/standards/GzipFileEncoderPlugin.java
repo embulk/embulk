@@ -21,10 +21,9 @@ public class GzipFileEncoderPlugin
     public interface PluginTask
             extends Task
     {
-        // TODO java.util.zip.GZIPOutputStream doesn't support compression level
-        //@Config("level")
-        //@ConfigDefault("6")
-        //public int getLevel();
+        @Config("level")
+        @ConfigDefault("-1")
+        public int getLevel();
 
         @ConfigInject
         public BufferAllocator getBufferAllocator();
@@ -39,7 +38,7 @@ public class GzipFileEncoderPlugin
     @Override
     public FileOutput open(TaskSource taskSource, final FileOutput fileOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
 
@@ -47,7 +46,12 @@ public class GzipFileEncoderPlugin
             public OutputStream openNext() throws IOException
             {
                 output.nextFile();
-                return new GZIPOutputStream(output);
+                return new GZIPOutputStream(output) {
+                    {
+                        this.def.setLevel(task.getLevel());
+                    }
+                };
+
             }
 
             public void finish() throws IOException
