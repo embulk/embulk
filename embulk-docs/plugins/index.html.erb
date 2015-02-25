@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>List of plugins | Embulk</title>
+    <link rel="stylesheet" href="../docs/_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../docs/_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="plugins.css" type="text/css" />
+    <link rel="top" title="Embulk 0.4 documentation" href="../docs/index.html" />
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../docs/index.html">
+        <span>Embulk plugins</span></a></h1>
+      <h2 class="heading"><span>Embulk plugins</span></h2>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <h1>Plugins</h1>
+
+        <% categories.each do |category,gems| %>
+        <div class="section">
+          <h2><%= category.upcase %></h2>
+          <table class="plugins">
+            <thead>
+              <tr>
+                  <th>Star</th>
+                  <th>Name</th>
+                  <th>Author</th>
+                  <th>About</th>
+                  <th>Version</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% gems.each do |gem| %>
+              <tr>
+                <td style="width:80px">
+                  <div class="github-btn-container">
+                    <span class="github-btn" class="github-stargazers">
+                      <a class="gh-btn" href="https://github.com/<%=e gem[:owner] %>/<%=e gem[:repo] %>" target="_blank">
+                        <span class="gh-ico"></span>
+                        <span class="gh-text">Star</span>
+                      </a>
+                      <a class="gh-count" href="https://github.com/<%=e gem[:owner] %>/<%=e gem[:repo] %>/stargazers" target="_blank" style="display: block"><%=h gem[:stargazers_count] %></a>
+                    </span>
+                  </div>
+                <td style="width:9em"><a href="<%=h gem[:url] %>"><%=h gem[:name] %></a></td>
+                <td style="width:15em"><%=h gem[:author] %>
+                  <% if gem[:avatar_url] %>
+                  <img src="<%=h gem[:avatar_url] %>" height=32 width=32></img></td>
+                  <% else %>
+                </td>
+                <% end %>
+                <td><%=h gem[:info] %></td>
+                <td style="width:3em"><%=h gem[:version] %></td>
+              </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <% end %>
+
+      </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2015, Embulk Project.
+        Created using <a href="https://github.com/embulk/site-plugins">Embulk plugin crawler</a>.
+    </div>
+  </body>
+</html>
