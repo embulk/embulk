@@ -8,6 +8,8 @@ Embulk documentation
 
 https://github.com/embulk/embulk
 
+* `List of Plugins by Category <http://www.embulk.org/plugins/>`_
+
 .. toctree::
    :maxdepth: 2
 
