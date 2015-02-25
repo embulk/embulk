@@ -30,7 +30,9 @@ module Embulk
         end
 
         if seconds = hash[:seconds]
-          return seconds * 1_000_000
+          sec_fraction = hash[:sec_fraction]  # Rational
+          usec = sec_fraction * 1_000_000 if sec_fraction
+          return seconds * 1_000_000 + usec.to_i
 
         else
           year = hash[:year]
@@ -40,8 +42,8 @@ module Embulk
           min = hash[:min]
           sec = hash[:sec]
           sec_fraction = hash[:sec_fraction]
+          usec = sec_fraction * 1_000_000 if sec_fraction
           zone = hash[:zone]
-          usec = hash[:sec_fraction] ? hash[:sec_fraction] * 1000000 : nil
 
           now = @default_time
           begin
