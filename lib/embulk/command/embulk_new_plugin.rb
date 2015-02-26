@@ -45,7 +45,7 @@ module Embulk
           %[Dumps records to #{display_name}.]
         when :file_output
           %[Stores files on #{display_name}.]
-        when :formtter
+        when :formatter
           %[Formats #{display_name} files for other file output plugins.]
         when :encoder
           %[Encodes files using #{display_name} for other file output plugins.]
