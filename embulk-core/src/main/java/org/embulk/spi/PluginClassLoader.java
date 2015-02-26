@@ -1,7 +1,9 @@
 package org.embulk.spi;
 
+import java.nio.file.Path;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.MalformedURLException;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.jruby.Ruby;
@@ -27,6 +29,20 @@ public class PluginClassLoader
     public PluginClassLoader(List<URL> urls, ClassLoader parent)
     {
         super(urls.toArray(new URL[urls.size()]), parent);
+    }
+
+    public void addPath(Path path)
+    {
+        try {
+            addUrl(path.toUri().toURL());
+        } catch (MalformedURLException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    public void addUrl(URL url)
+    {
+        super.addURL(url);
     }
 
     @Override
