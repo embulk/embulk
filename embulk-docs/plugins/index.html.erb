@@ -45,10 +45,11 @@
                       <a class="gh-count" href="https://github.com/<%=e gem[:owner] %>/<%=e gem[:repo] %>/stargazers" target="_blank" style="display: block"><%=h gem[:stargazers_count] %></a>
                     </span>
                   </div>
-                <td style="width:9em"><a href="<%=h gem[:url] %>"><%=h gem[:name] %></a></td>
-                <td style="width:15em"><%=h gem[:author] %>
+                </td>
+                <td style="min-width:9em"><a href="<%=h gem[:url] %>"><%=h gem[:name] %></a><pre class="install">$ embulk gem install <%=h gem[:gem_name] %></pre></td>
+                <td style="min-width:13em"><%=h gem[:author] %>
                   <% if gem[:avatar_url] %>
-                  <img src="<%=h gem[:avatar_url] %>" height=32 width=32></img></td>
+                  <img src="<%=h gem[:avatar_url] %>" height=32 width=32></img>
                   <% else %>
                 </td>
                 <% end %>

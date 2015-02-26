@@ -1,15 +1,22 @@
 body {
   max-width: 90em;
+  font-size: 105%;
 }
 .plugins {
   border-collapse: collapse
 }
 .plugins th, td {
-  padding: 5px 20px;
+  padding: 8px 20px;
   border: 1px solid #eee;
   vertical-align: middle;
 }
-.author-avator {
+.plugins pre.install {
+  font-size: 50%;
+  padding: 7px 0 2px 0;
+  margin: 0;
+  background: none;
+  border: none;
+  color: #999;
 }
 
 .github-btn-container {
