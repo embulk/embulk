@@ -43,7 +43,7 @@ Gem::Specification.new do |spec|
   spec.description   = %[<%= "#{description}".dump %>]
   spec.email         = [<%= email.dump %>]
   spec.licenses      = ["MIT"]
-  # TODO: spec.homepage      = <%= "https://github.com/#{email[/([^@]*)/]}/#{project_name}".dump %>
+  spec.homepage      = <%= "https://github.com/#{email[/([^@]*)/]}/#{project_name}".dump %>
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   spec.test_files    = spec.files.grep(%r"^(test|spec)/")
