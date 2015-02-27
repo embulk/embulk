@@ -139,7 +139,7 @@ dependencies {
 //
 // classpath task
 //
-task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << { }
+task classpath(dependsOn: ['clean', 'build', ':embulk-cli:classpath']) << { }
 clean { delete 'classpath' }
 
 //
