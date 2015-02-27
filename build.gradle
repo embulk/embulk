@@ -171,9 +171,10 @@ project(':embulk-cli') {
     }
 
     task classpath(type: Copy) {
-        doFirst { file("${rootProject.projectDir}/classpath").mkdirs() }
+        File dest = file("${rootProject.projectDir}/classpath")
+        doFirst { dest.deleteDir() }
         from configurations.runtime
-        into "${rootProject.projectDir}/classpath"
+        into dest
     }
 }
 
