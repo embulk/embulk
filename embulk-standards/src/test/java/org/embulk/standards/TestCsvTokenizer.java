@@ -6,6 +6,8 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -13,6 +15,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
@@ -255,21 +260,41 @@ public class TestCsvTokenizer
                     "\"trailing\n3\"  ,\"trailing\n4\"  "));
     }
 
-    /*
-    @Test(expected = CsvTokenizer.CsvValueValidateException.class)
-    public void parseTooLargeSizedValues() throws Exception
+    @Test
+    public void throwQuotedSizeExceededException() throws Exception
     {
-        config.set("max_quoted_column_size", 8L);
-        reloadPluginTask();
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "aaa,bbb", "\n", "\"cccccccc\",ddd", "\n"));
+        int limit = 16;
+        Random rand = new Random();
 
-        assertEquals(Arrays.asList(
-                        Arrays.asList("aaa", "bbb"),
-                        Arrays.asList("ccc", "ddd")),
-                parsed);
+        byte[] bytes = new byte[limit + rand.nextInt(10)];
+        rand.nextBytes(bytes);
+        String column = new String(bytes, "UTF-8");
+
+        try {
+            config.set("max_quoted_size_limit", limit);
+            reloadPluginTask();
+            parse(task,
+                    "  \"heading1\",  \"heading2\"",
+                    "\"trailing1\"  ,\""+column+"\"");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeExceededException);
+        }
+
+        try {
+            int len = column.length() / 2;
+            String first = column.substring(0, len), second = column.substring(len, column.length());
+
+            config.set("max_quoted_size_limit", limit);
+            reloadPluginTask();
+            parse(task,
+                    "  \"heading1\",  \"heading2\"",
+                    "\"trailing1\"  ,\""+first+"\n"+second+"\"");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeExceededException);
+        }
     }
-    */
 
     /*
     @Test
