@@ -26,10 +26,10 @@
             <thead>
               <tr>
                   <th>Star</th>
-                  <th>Download</th>
                   <th>Name</th>
                   <th>Author</th>
                   <th>About</th>
+                  <th>Download</th>
                   <th>Version</th>
               </tr>
             </thead>
@@ -47,7 +47,6 @@
                     </span>
                   </div>
                 </td>
-                <td style="width:2em"><%=h gem[:downloads] %></td>
                 <td style="min-width:9em"><a href="<%=h gem[:url] %>"><%=h gem[:name] %></a><pre class="install">$ embulk gem install <%=h gem[:gem_name] %></pre></td>
                 <td style="min-width:13em"><%=h gem[:author] %>
                   <% if gem[:avatar_url] %>
@@ -56,6 +55,7 @@
                 </td>
                 <% end %>
                 <td><%=h gem[:info] %></td>
+                <td style="width:3em"><%=h gem[:downloads] %></td>
                 <td style="width:3em"><%=h gem[:version] %></td>
               </tr>
               <% end %>
