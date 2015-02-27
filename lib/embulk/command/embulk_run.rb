@@ -34,7 +34,7 @@ module Embulk
     op = OptionParser.new
     op.version = Embulk::VERSION
 
-    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S,%3N %z")}: Embulk v#{Embulk::VERSION}"
+    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{Embulk::VERSION}"
 
     load_paths = []
     classpaths = []
