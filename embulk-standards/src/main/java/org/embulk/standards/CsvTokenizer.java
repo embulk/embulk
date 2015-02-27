@@ -27,7 +27,7 @@ public class CsvTokenizer
     private final char escape;
     private final String newline;
     private final boolean trimIfNotQuoted;
-    private final long maxQuotedSizeLimit;  // TODO not used yet
+    private final long maxQuotedSizeLimit;
     private final LineDecoder input;
 
     private RecordState recordState = RecordState.END;  // initial state is end of a record. nextRecord() must be called first
@@ -274,6 +274,9 @@ public class CsvTokenizer
                         }
 
                     } else {
+                        if ((linePos - valueStartPos) + quotedValue.length() > maxQuotedSizeLimit) {
+                            throw new QuotedSizeLimitExceededException("The size of the quoted value exceeds the limit size ("+maxQuotedSizeLimit+")");
+                        }
                         // keep QUOTED_VALUE state
                     }
                     break;
@@ -350,5 +353,14 @@ public class CsvTokenizer
     private boolean isEscape(char c)
     {
         return c == escape;
+    }
+
+    static class QuotedSizeLimitExceededException
+            extends RuntimeException
+    {
+        QuotedSizeLimitExceededException(String message)
+        {
+            super(message);
+        }
     }
 }

@@ -6,6 +6,8 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -13,6 +15,9 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
@@ -255,21 +260,73 @@ public class TestCsvTokenizer
                     "\"trailing\n3\"  ,\"trailing\n4\"  "));
     }
 
-    /*
-    @Test(expected = CsvTokenizer.CsvValueValidateException.class)
-    public void parseTooLargeSizedValues() throws Exception
+    @Test
+    public void throwQuotedSizeLimitExceededException() throws Exception
     {
-        config.set("max_quoted_column_size", 8L);
+        config.set("max_quoted_size_limit", 8);
         reloadPluginTask();
-        List<List<String>> parsed = doParse(task, bufferList("utf-8",
-                "aaa,bbb", "\n", "\"cccccccc\",ddd", "\n"));
 
-        assertEquals(Arrays.asList(
-                        Arrays.asList("aaa", "bbb"),
-                        Arrays.asList("ccc", "ddd")),
-                parsed);
+        try {
+            parse(task,
+                    "v1,v2",
+                    "v3,\"0123456789\"");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
+        }
+
+        // multi-line
+        try {
+            parse(task,
+                    "v1,v2",
+                    "\"012345\n6789\",v3");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
+        }
     }
-    */
+
+    @Test
+    public void recoverFromQuotedSizeLimitExceededException() throws Exception
+    {
+        config.set("max_quoted_size_limit", 12);
+        reloadPluginTask();
+
+        String[] lines = new String[] {
+            "v1,v2",
+            "v3,\"0123",  // this is a broken line and should be skipped
+            "v4,v5",      // this line should be not be skiped
+            "v6,v7",      // this line should be not be skiped
+        };
+        FileInput input = newFileInputFromLines(task, lines);
+        LineDecoder decoder = new LineDecoder(input, task);
+        CsvTokenizer tokenizer = new CsvTokenizer(decoder, task);
+        Schema schema = task.getSchemaConfig().toSchema();
+
+        tokenizer.nextFile();
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v1", tokenizer.nextColumn());
+        assertEquals("v2", tokenizer.nextColumn());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v3", tokenizer.nextColumn());
+        try {
+            tokenizer.nextColumn();
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
+        }
+        assertEquals("v3,\"0123", tokenizer.skipCurrentLine());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v4", tokenizer.nextColumn());
+        assertEquals("v5", tokenizer.nextColumn());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v6", tokenizer.nextColumn());
+        assertEquals("v7", tokenizer.nextColumn());
+    }
 
     /*
     @Test
