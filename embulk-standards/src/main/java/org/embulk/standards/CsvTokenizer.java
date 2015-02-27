@@ -275,7 +275,7 @@ public class CsvTokenizer
 
                     } else {
                         if ((linePos - valueStartPos) + quotedValue.length() > maxQuotedSizeLimit) {
-                            throw new QuotedSizeExceededException("The size of the quoted value exceeds the limit size ("+maxQuotedSizeLimit+")");
+                            throw new QuotedSizeLimitExceededException("The size of the quoted value exceeds the limit size ("+maxQuotedSizeLimit+")");
                         }
                         // keep QUOTED_VALUE state
                     }
@@ -355,10 +355,10 @@ public class CsvTokenizer
         return c == escape;
     }
 
-    static class QuotedSizeExceededException
+    static class QuotedSizeLimitExceededException
             extends RuntimeException
     {
-        QuotedSizeExceededException(String message)
+        QuotedSizeLimitExceededException(String message)
         {
             super(message);
         }

@@ -261,39 +261,71 @@ public class TestCsvTokenizer
     }
 
     @Test
-    public void throwQuotedSizeExceededException() throws Exception
+    public void throwQuotedSizeLimitExceededException() throws Exception
     {
-        int limit = 16;
-        Random rand = new Random();
-
-        byte[] bytes = new byte[limit + rand.nextInt(10)];
-        rand.nextBytes(bytes);
-        String column = new String(bytes, "UTF-8");
+        config.set("max_quoted_size_limit", 8);
+        reloadPluginTask();
 
         try {
-            config.set("max_quoted_size_limit", limit);
-            reloadPluginTask();
             parse(task,
-                    "  \"heading1\",  \"heading2\"",
-                    "\"trailing1\"  ,\""+column+"\"");
+                    "v1,v2",
+                    "v3,\"0123456789\"");
             fail();
         } catch (Exception e) {
-            assertTrue(e instanceof CsvTokenizer.QuotedSizeExceededException);
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
         }
 
+        // multi-line
         try {
-            int len = column.length() / 2;
-            String first = column.substring(0, len), second = column.substring(len, column.length());
-
-            config.set("max_quoted_size_limit", limit);
-            reloadPluginTask();
             parse(task,
-                    "  \"heading1\",  \"heading2\"",
-                    "\"trailing1\"  ,\""+first+"\n"+second+"\"");
+                    "v1,v2",
+                    "\"012345\n6789\",v3");
             fail();
         } catch (Exception e) {
-            assertTrue(e instanceof CsvTokenizer.QuotedSizeExceededException);
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
         }
+    }
+
+    @Test
+    public void recoverFromQuotedSizeLimitExceededException() throws Exception
+    {
+        config.set("max_quoted_size_limit", 12);
+        reloadPluginTask();
+
+        String[] lines = new String[] {
+            "v1,v2",
+            "v3,\"0123",  // this is a broken line and should be skipped
+            "v4,v5",      // this line should be not be skiped
+            "v6,v7",      // this line should be not be skiped
+        };
+        FileInput input = newFileInputFromLines(task, lines);
+        LineDecoder decoder = new LineDecoder(input, task);
+        CsvTokenizer tokenizer = new CsvTokenizer(decoder, task);
+        Schema schema = task.getSchemaConfig().toSchema();
+
+        tokenizer.nextFile();
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v1", tokenizer.nextColumn());
+        assertEquals("v2", tokenizer.nextColumn());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v3", tokenizer.nextColumn());
+        try {
+            tokenizer.nextColumn();
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.QuotedSizeLimitExceededException);
+        }
+        assertEquals("v3,\"0123", tokenizer.skipCurrentLine());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v4", tokenizer.nextColumn());
+        assertEquals("v5", tokenizer.nextColumn());
+
+        assertTrue(tokenizer.nextRecord());
+        assertEquals("v6", tokenizer.nextColumn());
+        assertEquals("v7", tokenizer.nextColumn());
     }
 
     /*
