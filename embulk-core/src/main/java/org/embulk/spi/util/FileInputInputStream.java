@@ -80,7 +80,8 @@ public class FileInputInputStream
     @Override
     public long skip(long len)
     {
-        return read(null, 0, (int) Math.min(len, Integer.MAX_VALUE));
+        int skipped = read(null, 0, (int) Math.min(len, Integer.MAX_VALUE));
+        return skipped > 0 ? skipped : 0;
     }
 
     private boolean nextBuffer()
