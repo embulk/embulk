@@ -1,6 +1,6 @@
 module Embulk
   module Guess
-    require_relative 'time_format_guess'
+    require_relative 'schema_guess'
 
     class CsvGuessPlugin < LineGuessPlugin
       Plugin.register_guess('csv', self)
@@ -24,15 +24,6 @@ module Embulk
         "\\N",  # MySQL LOAD, Hive STORED AS TEXTFILE
       ]
 
-      # CsvParserPlugin.TRUE_STRINGS
-      TRUE_STRINGS = Hash[*%w[
-        true True TRUE
-        yes Yes YES
-        y Y
-        on On ON
-        1
-      ].map {|k| [k, true] }]
-
       def guess_lines(config, sample_lines)
         delim = guess_delimiter(sample_lines)
         unless delim
@@ -54,8 +45,8 @@ module Embulk
         # don't even set null_string to avoid confusion of null and 'null' in YAML format
 
         sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
-        first_types = guess_field_types(sample_records[0, 1])
-        other_types = guess_field_types(sample_records[1..-1])
+        first_types = SchemaGuess.types_from_array(sample_records[0, 1])
+        other_types = SchemaGuess.types_from_array(sample_records[1..-1])
 
         if first_types.size <= 1 || other_types.size <= 1
           # guess failed
@@ -63,7 +54,7 @@ module Embulk
         end
 
         unless parser_config.has_key?("header_line")
-          parser_guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != ["string"] })
+          parser_guessed["header_line"] = (first_types != other_types && !first_types.any? {|t| t != "string" })
         end
 
         unless parser_config.has_key?("columns")
@@ -73,10 +64,10 @@ module Embulk
             column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
           end
           schema = []
-          column_names.zip(other_types).each do |name,(type,format)|
+          column_names.zip(other_types).each do |name,type|
             if name && type
-              if format
-                schema << {"name" => name, "type" => type, "format" => format}
+              if type.is_a?(SchemaGuess::TimestampTypeMatch)
+                schema << {"name" => name, "type" => type, "format" => type.format}
               else
                 schema << {"name" => name, "type" => type}
               end
@@ -161,71 +152,6 @@ module Embulk
         end.select {|str,count| count > 0 }.sort_by {|str,count| -count }
         found = guessed.first
         return found ? found[0] : nil
-      end
-
-      def guess_field_types(field_lines)
-        column_lines = []
-        field_lines.each do |fields|
-          fields.each_with_index {|field,i| (column_lines[i] ||= []) << guess_type(field) }
-        end
-        columns = column_lines.map do |types|
-          t = types.inject(nil) {|r,t| merge_type(r,t) } || "string"
-          if t.is_a?(TimestampMatch)
-            format = TimeFormatGuess.guess(types.map {|type| type.text })
-            ["timestamp", format]
-          else
-            [t]
-          end
-        end
-        return columns
-      end
-
-      TYPE_COALESCE = Hash[{
-        long: :double,
-        boolean: :long,
-      }.map {|k,v|
-        [[k.to_s, v.to_s].sort, v.to_s]
-      }]
-
-      def merge_type(type1, type2)
-        if type1 == type2
-          type1
-        elsif type1.nil? || type2.nil?
-          type1 || type2
-        else
-          TYPE_COALESCE[[type1, type2].sort] || "string"
-        end
-      end
-
-      class TimestampMatch < String
-        def initialize(text)
-          super("timestamp")
-          @text = text
-        end
-        attr_reader :text
-      end
-
-      def guess_type(str)
-        if TRUE_STRINGS[str]
-          return "boolean"
-        end
-
-        if TimeFormatGuess.guess(str)
-          return TimestampMatch.new(str)
-        end
-
-        if str.to_i.to_s == str
-          return "long"
-        end
-
-        if str.include?('.')
-          a, b = str.split(".", 2)
-          if a.to_i.to_s == a && b.to_i.to_s == b
-            return "double"
-          end
-        end
-
-        return "string"
       end
 
       def array_sum(array)

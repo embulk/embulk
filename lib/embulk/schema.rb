@@ -3,8 +3,15 @@ module Embulk
   require 'embulk/column'
 
   class Schema < Array
-    def initialize(src)
-      super
+    def initialize(columns)
+      columns = columns.map.with_index {|c,index|
+        if c.index && c.index != index
+          # TODO ignore this error?
+          raise "Index of column '#{c.name}' is #{c.index} but it is at column #{index}."
+        end
+        Column.new(index, c.name, c.type, c.format)
+      }
+      super(columns)
 
       record_reader_script =
         "lambda do |reader|\n" <<
