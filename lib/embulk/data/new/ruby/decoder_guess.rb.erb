@@ -1,0 +1,25 @@
+module Embulk
+  module Guess
+
+    # TODO implement guess plugin to make this command work:
+    #      $ embulk guess -g <%= name.dump %> partial-config.yml
+%if language == :ruby
+
+    #require <%= "embulk/#{embulk_category}/#{name}.rb".dump %>
+%end
+
+    #class <%= ruby_class_name.sub('Plugin', 'GuessPlugin') %> < GuessPlugin
+    #  Plugin.register_guess(<%= name.dump %>, self)
+    #
+    #  FOO_BAR_HEADER = "\x1f\x8b".force_encoding('ASCII-8BIT').freeze
+    #
+    #  def guess(config, sample_buffer)
+    #    if sample_buffer[0,2] == FOO_BAR_HEADER
+    #      return {"decoders" => [{"type" => <%= name.dump %>}]}
+    #    end
+    #    return {}
+    #  end
+    #end
+
+  end
+end

@@ -17,10 +17,18 @@ TODO: Write short description here.
 * **Load all or nothing**: no
 * **Resume supported**: no
 * **Cleanup supported**: yes
-%when :input, :file_input
+%when :file_input
 * **Plugin type**: <%= display_category %>
 * **Resume supported**: yes
 * **Cleanup supported**: yes
+%when :input
+* **Plugin type**: <%= display_category %>
+* **Resume supported**: yes
+* **Cleanup supported**: yes
+* **Guess supported**: no
+%when :parser, :decoder
+* **Plugin type**: <%= display_category %>
+* **Guess supported**: no
 %else
 * **Plugin type**: <%= display_category %>
 %end
@@ -79,6 +87,16 @@ out:
       property2: example2
 %end
 ```
+
+%case category
+%when :parser, :decoder
+(If guess supported) you don't have to write `<%= category %>:` section in the configuration file. After writing `in:` section, you can let embulk guess `<%= category %>:` section using this command:
+
+```
+$ embulk install <%= project_name %>
+$ embulk guess -g <%= name %> config.yml -o guessed.yml
+```
+%end
 
 ## Build
 

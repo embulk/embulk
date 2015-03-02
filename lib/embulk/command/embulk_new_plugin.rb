@@ -9,7 +9,8 @@ module Embulk
     embulk_category = :output if category == :file_output
 
     project_name = "embulk-#{embulk_category}-#{name}"
-    plugin_path = "lib/embulk/#{embulk_category}/#{name}.rb"
+    plugin_dir = "lib/embulk"
+    plugin_path = "#{plugin_dir}/#{embulk_category}/#{name}.rb"
 
     if File.exist?(project_name)
       raise "./#{project_name} already exists. Please delete it first."
@@ -31,27 +32,30 @@ module Embulk
       display_name = name.split('-').map {|a| a.capitalize }.join(' ')
       display_category = category.to_s.gsub('_', ' ')
 
-      description =
-        case category
-        when :input
-          %[Loads records from #{display_name}.]
-        when :file_input
-          %[Reads files stored on #{display_name}.]
-        when :parser
-          %[Parses #{display_name} files read by other file input plugins.]
-        when :decoder
-          %[Decodes #{display_name}-encoded files read by other file input plugins.]
-        when :output
-          %[Dumps records to #{display_name}.]
-        when :file_output
-          %[Stores files on #{display_name}.]
-        when :formatter
-          %[Formats #{display_name} files for other file output plugins.]
-        when :encoder
-          %[Encodes files using #{display_name} for other file output plugins.]
-        when :filter
-          %[#{display_name}]
-        end
+      extra_guess_erb = {}
+
+      case category
+      when :input
+        description = %[Loads records from #{display_name}.]
+      when :file_input
+        description = %[Reads files stored on #{display_name}.]
+      when :parser
+        description = %[Parses #{display_name} files read by other file input plugins.]
+        extra_guess_erb["ruby/parser_guess.rb.erb"] = "#{plugin_dir}/guess/#{name}.rb"
+      when :decoder
+        description = %[Decodes #{display_name}-encoded files read by other file input plugins.]
+        extra_guess_erb["ruby/decoder_guess.rb.erb"] = "#{plugin_dir}/guess/#{name}.rb"
+      when :output
+        description = %[Dumps records to #{display_name}.]
+      when :file_output
+        description = %[Stores files on #{display_name}.]
+      when :formatter
+        description = %[Formats #{display_name} files for other file output plugins.]
+      when :encoder
+        description = %[Encodes files using #{display_name} for other file output plugins.]
+      when :filter
+        description = %[#{display_name}]
+      end
 
       pkg = Embulk::PackageData.new("new", project_name, binding())
 
@@ -76,6 +80,10 @@ module Embulk
         pkg.cp_erb("java/plugin_loader.rb.erb", plugin_path)
         pkg.cp_erb("java/#{category}.java.erb", "src/main/java/org/embulk/#{embulk_category}/#{java_class_name}.java")
         pkg.cp_erb("java/test.java.erb", "src/test/java/org/embulk/#{embulk_category}/Test#{java_class_name}.java")
+      end
+
+      extra_guess_erb.each_pair do |erb,dest|
+        pkg.cp_erb(erb, dest)
       end
 
       success = true
