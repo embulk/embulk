@@ -45,8 +45,8 @@ module Embulk
         # don't even set null_string to avoid confusion of null and 'null' in YAML format
 
         sample_records = sample_lines.map {|line| line.split(delim) }  # TODO use CsvTokenizer
-        first_types = SchemaGuess.types_from_array(sample_records[0, 1])
-        other_types = SchemaGuess.types_from_array(sample_records[1..-1])
+        first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
+        other_types = SchemaGuess.types_from_array_records(sample_records[1..-1])
 
         if first_types.size <= 1 || other_types.size <= 1
           # guess failed

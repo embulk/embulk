@@ -44,6 +44,8 @@ module Embulk
     #end
 
     #class <%= ruby_class_name.sub('Plugin', 'GuessPlugin') %> < LineGuessPlugin
+    #  Plugin.register_guess(<%= name.dump %>, self)
+    #
     #  def guess_lines(config, sample_lines)
     #    all_line_matched = sample_lines.all? do |line|
     #      line =~ /mypattern/
