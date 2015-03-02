@@ -46,8 +46,7 @@ public class StandardPluginModule
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
-        registerDefaultGuessPluginTo(binder, new PluginType("charset"));
-        registerDefaultGuessPluginTo(binder, new PluginType("newline"));
         registerDefaultGuessPluginTo(binder, new PluginType("csv"));
+        // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
 }
