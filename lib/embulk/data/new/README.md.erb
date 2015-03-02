@@ -1,12 +1,29 @@
 # <%= display_name %> <%= display_category %> plugin for Embulk
 
-TODO: Write short description here
+%case language
+%when :ruby
+TODO: Write short description here and <%= project_name %>.gemspec file.
+%when :java
+TODO: Write short description here and build.gradle file.
+%else
+TODO: Write short description here.
+%end
 
 ## Overview
 
+%case category
+%when :output, :file_output
 * **Plugin type**: <%= display_category %>
-* **Load all or nothing**: yes
+* **Load all or nothing**: no
 * **Resume supported**: no
+* **Cleanup supported**: yes
+%when :input, :file_input
+* **Plugin type**: <%= display_category %>
+* **Resume supported**: yes
+* **Cleanup supported**: yes
+%else
+* **Plugin type**: <%= display_category %>
+%end
 
 ## Configuration
 
