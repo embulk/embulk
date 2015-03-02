@@ -1,6 +1,7 @@
 package org.embulk.command;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.File;
@@ -19,6 +20,7 @@ import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
+import org.embulk.plugin.PluginType;
 import org.embulk.exec.LocalExecutor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
@@ -45,6 +47,9 @@ public class Runner
 
         private String previewOutputFormat;
         public String getPreviewOutputFormat() { return previewOutputFormat; };
+
+        private List<PluginType> guessPlugins;
+        public List<PluginType> getGuessPlugins() { return guessPlugins; }
     }
 
     private final Options options;
@@ -57,12 +62,26 @@ public class Runner
         ModelManager bootstrapModelManager = new ModelManager(null, new ObjectMapper());
         this.options = bootstrapModelManager.readObject(Options.class, optionJson);
         this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
-        String logLevel = options.getLogLevel();
-        if (logLevel != null) {
-            systemConfig.set("logLevel", logLevel);
-        }
+        mergeOptionsToSystemConfig(options, systemConfig);
         this.service = new EmbulkService(systemConfig);
         this.injector = service.getInjector();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void mergeOptionsToSystemConfig(Options options, ConfigSource systemConfig)
+    {
+        String logLevel = options.getLogLevel();
+        if (logLevel != null) {
+            systemConfig.set("log_level", logLevel);
+        }
+
+        List<PluginType> guessPlugins = options.getGuessPlugins();
+        if (guessPlugins != null && !guessPlugins.isEmpty()) {
+            List<PluginType> list = new ArrayList<PluginType>() { };
+            list = systemConfig.get((Class<List<PluginType>>) list.getClass(), "guess_plugins", list);
+            list.addAll(guessPlugins);
+            systemConfig.set("guess_plugins", list);
+        }
     }
 
     public void main(String command, String[] args)

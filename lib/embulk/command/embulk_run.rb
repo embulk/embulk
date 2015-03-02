@@ -121,6 +121,9 @@ module Embulk
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
       end
+      op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
+        (options[:guessPlugins] ||= []).concat names.split(",")
+      end
       args = 1..1
 
     when :new
