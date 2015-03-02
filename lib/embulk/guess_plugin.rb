@@ -45,6 +45,12 @@ module Embulk
 
   class TextGuessPlugin < GuessPlugin
     def guess(config, sample)
+      if config.fetch('parser', {}).fetch('charset', nil).nil?
+        require 'embulk/guess/charset'
+        charset_guess = Guess::CharsetGuessPlugin.new
+        return charset_guess.guess(config, sample)
+      end
+
       # TODO pure-ruby LineDecoder implementation?
       begin
         parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
@@ -79,6 +85,18 @@ module Embulk
 
   class LineGuessPlugin < GuessPlugin
     def guess(config, sample)
+      if config.fetch('parser', {}).fetch('charset', nil).nil?
+        require 'embulk/guess/charset'
+        charset_guess = Guess::CharsetGuessPlugin.new
+        return charset_guess.guess(config, sample)
+      end
+
+      if config.fetch('parser', {}).fetch('newline', nil).nil?
+        require 'embulk/guess/newline'
+        newline_guess = Guess::NewlineGuessPlugin.new
+        return newline_guess.guess(config, sample)
+      end
+
       # TODO pure-ruby LineDecoder implementation?
       begin
         parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
