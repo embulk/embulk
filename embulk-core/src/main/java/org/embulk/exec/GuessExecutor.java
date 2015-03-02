@@ -1,11 +1,15 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Set;
 import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.common.base.Throwables;
+import com.google.inject.Binder;
+import com.google.inject.multibindings.Multibinder;
+import org.embulk.plugin.PluginType;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -14,7 +18,6 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
-import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
@@ -33,8 +36,15 @@ import org.embulk.spi.FileInputRunner;
 
 public class GuessExecutor
 {
-    private final ConfigSource systemConfig;
     private final List<PluginType> defaultGuessPlugins;
+
+    private interface GuessExecutorSystemTask
+            extends Task
+    {
+        @Config("guess_plugins")
+        @ConfigDefault("[]")
+        public List<PluginType> getGuessPlugins();
+    }
 
     private interface GuessExecutorTask
             extends Task
@@ -48,17 +58,22 @@ public class GuessExecutor
         public List<PluginType> getExcludeGuessPlugins();
     }
 
-    @Inject
-    public GuessExecutor(@ForSystemConfig ConfigSource systemConfig)
+    public static void registerDefaultGuessPluginTo(Binder binder, PluginType type)
     {
-        this.systemConfig = systemConfig;
+        Multibinder<PluginType> multibinder = Multibinder.newSetBinder(binder, PluginType.class, ForGuess.class);
+        multibinder.addBinding().toInstance(type);
+    }
 
-        // TODO get default guess plugins from injector using Multibinder
-        this.defaultGuessPlugins = ImmutableList.of(
-                new PluginType("gzip"),
-                new PluginType("charset"),
-                new PluginType("newline"),
-                new PluginType("csv"));
+    @Inject
+    public GuessExecutor(@ForSystemConfig ConfigSource systemConfig,
+            @ForGuess Set<PluginType> defaultGuessPlugins)
+    {
+        GuessExecutorSystemTask systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
+
+        ImmutableList.Builder<PluginType> list = ImmutableList.builder();
+        list.addAll(defaultGuessPlugins);
+        list.addAll(systemTask.getGuessPlugins());
+        this.defaultGuessPlugins = list.build();
     }
 
     public ConfigDiff guess(ExecSession exec, final ConfigSource config)
@@ -105,6 +120,7 @@ public class GuessExecutor
     public ConfigDiff guessParserConfig(Buffer sample, ConfigSource inputConfig, ConfigSource execConfig)
     {
         List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
+
         GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
         guessPlugins.addAll(task.getGuessPlugins());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());

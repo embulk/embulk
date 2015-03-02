@@ -18,7 +18,7 @@ public class LoggerProvider
         Properties prop = new Properties();
 
         final String level;
-        String logLevel = systemConfig.get(String.class, "logLevel", "info");
+        String logLevel = systemConfig.get(String.class, "log_level", "info");  // here can't use loadConfig because ModelManager uses LoggerProvider
         switch (logLevel) {
         case "fatal": level = "FATAL"; break;
         case "error": level = "ERROR"; break;
