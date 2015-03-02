@@ -28,4 +28,6 @@ public interface InputPlugin
     public CommitReport run(TaskSource taskSource,
             Schema schema, int taskIndex,
             PageOutput output);
+
+    public ConfigDiff guess(ConfigSource config);
 }

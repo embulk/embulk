@@ -17,6 +17,10 @@ module Embulk
       # do nothing by default
     end
 
+    def self.guess(config)
+      raise NotImplementedError, "#{self}.guess(config) is not implemented. This input plugin does not support guess."
+    end
+
     def initialize(task, schema, index, page_builder)
       @task = task
       @schema = schema
@@ -81,6 +85,12 @@ module Embulk
           commit_reports = java_commit_reports.map {|c| DataSource.from_java(c) }
           @ruby_class.cleanup(task_source, schema, task_count, commit_reports)
           return nil
+        end
+
+        def guess(java_config)
+          config = DataSource.from_java(java_config)
+          config_diff_hash = @ruby_class.guess(config)
+          return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
         def run(java_task_source, java_schema, processor_index, java_output)
