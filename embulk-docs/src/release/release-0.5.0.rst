@@ -18,6 +18,8 @@ Embulk v0.5.0 supports dynamically loadable guess plugins.
 
   * ``guess`` subcommand executes the new guess method and takes the return value of the method.
 
+Plugins can use new ``Guess::SchemaGuess`` utility class for ease of implementation.
+
 For example, if you write a parser plugin named ``myparser``, you can use this configuration file first:
 
 .. code-block:: yaml
@@ -50,6 +52,12 @@ The ``embulk guess`` command finds the ``InputPlugin.guess`` of the input plugin
 
     $ embulk gem install embulk-input-myinput
     $ embulk guess config.yml -o guessed.yml
+
+Plugin API
+------------------
+
+* Added ``Guess::SchemaGuess`` class. This utility class inputs array of hash objects or array of array objects and returns schema.
+
 
 Plugin SPI
 ------------------
