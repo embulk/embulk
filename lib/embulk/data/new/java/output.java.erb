@@ -28,6 +28,7 @@ public class <%= java_class_name %>
         public int getProperty2();
     }
 
+    @Override
     public ConfigDiff transaction(ConfigSource config,
             Schema schema, int taskCount,
             OutputPlugin.Control control)
@@ -42,6 +43,7 @@ public class <%= java_class_name %>
         return Exec.newConfigDiff();
     }
 
+    @Override
     public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int taskCount,
             OutputPlugin.Control control)
@@ -49,12 +51,14 @@ public class <%= java_class_name %>
         throw new UnsupportedOperationException("<%= name %> output plugin does not support resuming");
     }
 
+    @Override
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
     }
 
+    @Override
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
