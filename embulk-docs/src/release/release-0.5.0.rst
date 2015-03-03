@@ -74,5 +74,8 @@ General Changes
 
 * ``spi.util.FileInputInputStream#skip`` method never returns -1 to follow the Java API standard (@hata++).
 * Plugin template generator creates appropriate "Overview" section in README.md file depending on the plugin type.
- 
 
+
+Release Date
+------------------
+2015-03-02
