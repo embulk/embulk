@@ -1,5 +1,7 @@
 module Embulk
 
+  require 'embulk/guess/schema_guess'
+
   class GuessPlugin
     def guess(config, sample_buffer)
       raise NotImplementedError, "GuessPlugin#guess(config, sample_buffer) must be implemented"

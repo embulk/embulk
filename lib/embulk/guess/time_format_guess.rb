@@ -375,7 +375,8 @@ module Embulk::Guess
     ]
 
     def self.guess(texts)
-      texts = Array(texts).select {|text| text != "" }
+      texts = Array(texts).map {|text| text.to_s }
+      texts.reject! {|text| text == "" }
       matches = texts.map do |text|
         PATTERNS.map {|pattern| pattern.match(text) }.compact
       end.flatten

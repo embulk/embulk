@@ -1,6 +1,6 @@
 module Embulk::Guess
   require 'embulk/column'
-  require_relative 'time_format_guess'
+  require 'embulk/guess/time_format_guess'
 
   module SchemaGuess
     class TimestampTypeMatch < String
@@ -37,7 +37,7 @@ module Embulk::Guess
       def types_from_array_records(samples)
         columnar_types = []
         samples.each do |record|
-          record.each_with_index {|str,i| (columnar_types[i] ||= []) << guess_type(str) }
+          record.each_with_index {|value,i| (columnar_types[i] ||= []) << guess_type(value.to_s) }
         end
         columnar_types.map {|types| merge_types(types) }
       end
