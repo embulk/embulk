@@ -84,7 +84,7 @@ Create this configuration file and save as ``config.yml``:
       path_prefix: ./mydata/csv/
     out:
       type: elasticsearch
-      index_name: embulk
+      index: embulk
       index_type: embulk
       nodes:
         - host: localhost
@@ -121,7 +121,7 @@ The generated config-complete.yml file should include complete information as fo
         - {name: comment, type: string}
     out:
       type: elasticsearch
-      index_name: embulk
+      index: embulk
       index_type: embulk
       nodes:
       - {host: localhost}
