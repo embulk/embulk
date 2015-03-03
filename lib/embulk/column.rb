@@ -12,6 +12,14 @@ module Embulk
       end
     end
 
+    def to_json(*args)
+      if type == :timestamp && format
+        {"index"=>index, "name"=>name, "type"=>type, "format"=>format}.to_json(*args)
+      else
+        {"index"=>index, "name"=>name, "type"=>type}.to_json(*args)
+      end
+    end
+
     if Embulk.java?
       def self.from_java(java_column)
         type = Type.from_java(java_column.getType)
