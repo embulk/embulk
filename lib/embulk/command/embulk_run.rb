@@ -135,8 +135,8 @@ categories:
     ruby-filter                Ruby record filter plugin   (like "add-hostname")
     #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
     #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
-    ruby-parser                Ruby file parser plugin     (like "csv")          # not implemented yet [#33]
-    ruby-formatter             Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
+    ruby-parser                Ruby file parser plugin     (like "csv")
+    ruby-formatter             Ruby file formatter plugin  (like "csv")
     #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
     #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
     java-input                 Java record input plugin    (like "mysql")
