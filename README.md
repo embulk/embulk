@@ -28,7 +28,7 @@ The single-file package is the simplest way to try Embulk. You can download the 
 Following 4 commands install embulk to your home directory:
 
 ```
-curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.10.jar
+curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.5.0.jar
 chmod +x ~/.embulk/bin/embulk
 echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
@@ -39,7 +39,7 @@ source ~/.bashrc
 You can assume the jar file is a .bat file.
 
 ```
-curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.10.jar
+curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.5.0.jar
 ```
 
 ### Trying examples
