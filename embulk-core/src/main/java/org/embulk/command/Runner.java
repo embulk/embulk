@@ -21,7 +21,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ModelManager;
 import org.embulk.config.ConfigException;
 import org.embulk.plugin.PluginType;
-import org.embulk.exec.LocalExecutor;
+import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PreviewExecutor;
@@ -129,20 +129,20 @@ public class Runner
         }
 
         ExecSession exec = newExecSession(config);
-        LocalExecutor local = injector.getInstance(LocalExecutor.class);
+        BulkLoader loader = injector.getInstance(BulkLoader.class);
         ExecutionResult result;
         try {
             if (resume != null) {
-                result = local.resume(config, resume);
+                result = loader.resume(config, resume);
             } else {
-                result = local.run(exec, config);
+                result = loader.run(exec, config);
             }
         } catch (PartialExecutionException partial) {
             if (options.getResumeStatePath() == null) {
                 // resume state path is not set. cleanup the transaction
                 exec.getLogger(Runner.class).info("Transaction partially failed. Cleaning up the intermediate data. Use -r option to make it resumable.");
                 try {
-                    local.cleanup(config, partial.getResumeState());
+                    loader.cleanup(config, partial.getResumeState());
                 } catch (Throwable ex) {
                     partial.addSuppressed(ex);
                 }
@@ -178,8 +178,8 @@ public class Runner
         ResumeState resume = resumeConfig.loadConfig(ResumeState.class);
 
         //ExecSession exec = newExecSession(config);  // not necessary
-        LocalExecutor local = injector.getInstance(LocalExecutor.class);
-        local.cleanup(config, resume);
+        BulkLoader loader = injector.getInstance(BulkLoader.class);
+        loader.cleanup(config, resume);
 
         // delete resume file
         boolean dontCare = new File(options.getResumeStatePath()).delete();
