@@ -39,7 +39,7 @@ source ~/.bashrc
 You can assume the jar file is a .bat file.
 
 ```
-curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.5.0.jar
+PowerShell -Command "& {Invoke-WebRequest https://bintray.com/artifact/download/embulk/maven/embulk-0.5.0.jar -OutFile embulk.bat}"
 ```
 
 ### Trying examples
