@@ -3,6 +3,7 @@ package org.embulk.spi;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.embulk.plugin.PluginType;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Schema;
@@ -82,11 +83,13 @@ public class ProcessTask
         return schemas;
     }
 
+    @JsonIgnore
     public Schema getInputSchema()
     {
         return Executors.getInputSchema(schemas);
     }
 
+    @JsonIgnore
     public Schema getOutputSchema()
     {
         return Executors.getOutputSchema(schemas);
