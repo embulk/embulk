@@ -41,22 +41,19 @@ module Embulk
         # TODO: the best code here is to raise exception only if
         #       `name` file is not in $LOAD_PATH.
         raise e if e.to_s =~ /java.lang.ClassNotFoundException/
+        raise e if $LOAD_PATH.any? {|dir| File.exists? File.join(dir, "#{name}.rb") }
       end
 
       # search from $LOAD_PATH
-      load_paths = $LOAD_PATH.map do |lp|
+      load_path_files = $LOAD_PATH.map do |lp|
         lpath = File.expand_path(File.join(lp, "#{name}.rb"))
         File.exist?(lpath) ? lpath : nil
       end
 
-      paths = [name] + load_paths.compact.sort  # sort to prefer newer version
+      paths = load_path_files.compact.sort  # sort to prefer newer version
       paths.each do |path|
-        begin
-          require path
-          return true
-        rescue LoadError => e
-          raise e if e.to_s =~ /java.lang.ClassNotFoundException/
-        end
+        require path
+        return true
       end
 
       # search gems
