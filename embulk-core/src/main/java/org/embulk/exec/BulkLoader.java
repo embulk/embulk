@@ -2,7 +2,7 @@ package org.embulk.exec;
 
 import java.util.List;
 import java.util.Arrays;
-
+import java.util.concurrent.ExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -350,8 +350,8 @@ public class BulkLoader
                     }
                 }
             });
-        } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+        } catch (ExecutionException ex) {
+            throw Throwables.propagate(ex.getCause());
         }
     }
 
@@ -367,8 +367,8 @@ public class BulkLoader
                     }
                 }
             });
-        } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+        } catch (ExecutionException ex) {
+            throw Throwables.propagate(ex.getCause());
         }
     }
 
@@ -385,8 +385,8 @@ public class BulkLoader
                     }
                 }
             });
-        } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+        } catch (ExecutionException ex) {
+            throw Throwables.propagate(ex.getCause());
         }
     }
 
