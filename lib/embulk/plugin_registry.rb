@@ -38,8 +38,6 @@ module Embulk
         return true
       rescue LoadError => e
         # catch LoadError but don't catch ClassNotFoundException
-        # TODO: the best code here is to raise exception only if
-        #       `name` file is not in $LOAD_PATH.
         raise e if e.to_s =~ /java.lang.ClassNotFoundException/
         raise e if $LOAD_PATH.any? {|dir| File.exists? File.join(dir, "#{name}.rb") }
       end
