@@ -72,7 +72,7 @@ public class CsvFormatterPlugin
         }
 
         return new PageOutput() {
-            private final PageReader pageReader = new PageReader(schema);
+            private final PageReader pageReader = new PageReader(schema, false);
 
             public void add(Page page)
             {
@@ -131,6 +131,7 @@ public class CsvFormatterPlugin
 
                     encoder.addNewLine();
                 }
+                page.release();
             }
 
             public void finish()
