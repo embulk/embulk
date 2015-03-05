@@ -18,14 +18,21 @@ public class PageReader
     private int readCount = 0;
     private int position;
     private final byte[] nullBitSet;
+    private boolean releasePage;
 
     private static final Page SENTINEL = Page.wrap(Buffer.wrap(new byte[4]));  // buffer().release() does nothing
 
     public PageReader(Schema schema)
     {
+        this(schema, true);
+    }
+
+    public PageReader(Schema schema, boolean releasePage)
+    {
         this.schema = schema;
         this.columnOffsets = PageFormat.columnOffsets(schema);
         this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
+        this.releasePage = releasePage;
     }
 
     public static int getRecordCount(Page page)
@@ -37,7 +44,9 @@ public class PageReader
 
     public void setPage(Page page)
     {
-        this.page.buffer().release();
+        if (releasePage) {
+            this.page.buffer().release();
+        }
         this.page = SENTINEL;
 
         Buffer pageBuffer = page.buffer();
@@ -151,7 +160,9 @@ public class PageReader
     @Override
     public void close()
     {
-        page.buffer().release();
+        if (releasePage) {
+            page.buffer().release();
+        }
         page = SENTINEL;
     }
 

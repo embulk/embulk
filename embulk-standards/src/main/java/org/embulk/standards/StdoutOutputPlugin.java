@@ -55,7 +55,7 @@ public class StdoutOutputPlugin
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         return new TransactionalPageOutput() {
-            private final PageReader reader = new PageReader(schema);
+            private final PageReader reader = new PageReader(schema, false);
             private final PagePrinter printer = new PagePrinter(schema, task);
 
             public void add(Page page)
