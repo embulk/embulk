@@ -35,12 +35,21 @@ public class PluginManager
             } catch (PluginSourceNotMatchException e) {
                 if (e.getCause() != null) {
                     causes.add(e.getCause());
+                } else {
+                    causes.add(e);
                 }
             }
         }
 
-        ConfigException e = new ConfigException(String.format("%s '%s' is not found",
-                    iface.getSimpleName(), type.getName()), causes.remove(causes.size()-1));
+        StringBuilder message = new StringBuilder();
+        message.append(String.format("%s '%s' is not found.", iface.getSimpleName(), type.getName()));
+        for (Throwable cause : causes) {
+            if (cause.getMessage() != null) {
+                message.append(String.format("%n"));
+                message.append(cause.getMessage());
+            }
+        }
+        ConfigException e = new ConfigException(message.toString());
         for (Throwable cause : causes) {
             e.addSuppressed(cause);
         }
