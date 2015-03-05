@@ -1,11 +1,16 @@
 package org.embulk.spi;
 
+import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
-import java.util.List;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import org.jruby.Ruby;
 
 public class PluginClassLoader
@@ -15,6 +20,12 @@ public class PluginClassLoader
         "io.netty.",
         "org.yaml.",
         "com.ibm.icu.",
+    };
+
+    private static final String[] CHILD_FIRST_PATHS = new String[] {
+        "io/netty/",
+        "org/yaml/",
+        "com/ibm/icu/",
     };
 
     public PluginClassLoader(Ruby pluginJRubyRuntime, List<URL> urls)
@@ -80,10 +91,71 @@ public class PluginClassLoader
         return clazz;
     }
 
+    @Override
+    public URL getResource(String name)
+    {
+        boolean childFirst = isInChildFirstPath(name);
+
+        if (childFirst) {
+            URL childUrl = findResource(name);
+            if (childUrl != null) {
+                return childUrl;
+            }
+        }
+
+        URL parentUrl = getParent().getResource(name);
+        if (parentUrl != null) {
+            return parentUrl;
+        }
+
+        if (!childFirst) {
+            URL childUrl = findResource(name);
+            if (childUrl != null) {
+                return childUrl;
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name)
+            throws IOException
+    {
+        List<Iterator<URL>> resources = new ArrayList<>();
+
+        boolean childFirst = isInChildFirstPath(name);
+
+        if (childFirst) {
+            Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
+            resources.add(childResources);
+        }
+
+        Iterator<URL> parentResources = Iterators.forEnumeration(getParent().getResources(name));
+        resources.add(parentResources);
+
+        if (!childFirst) {
+            Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
+            resources.add(childResources);
+        }
+
+        return Iterators.asEnumeration(Iterators.concat(resources.iterator()));
+    }
+
     private boolean isInChildFirstPackage(String name)
     {
         for (String pkg : CHILD_FIRST_PACKAGES) {
             if (name.startsWith(pkg)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isInChildFirstPath(String name)
+    {
+        for (String path : CHILD_FIRST_PATHS) {
+            if (name.startsWith(path)) {
                 return true;
             }
         }
