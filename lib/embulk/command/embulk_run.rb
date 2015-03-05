@@ -298,10 +298,7 @@ examples:
       begin
         org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
       rescue => ex
-        puts ex.to_s
-        ex.backtrace.each do |bt|
-          puts "    #{bt}"
-        end
+        print_exception(ex)
         puts ""
         puts "Error: #{ex}"
         raise SystemExit.new(1, ex.to_s)
@@ -376,5 +373,16 @@ examples:
       STDERR.puts message
     end
     exit 1
+  end
+
+  def self.print_exception(ex)
+    if ex.respond_to?(:to_java)
+      ex.to_java.printStackTrace(java.lang.System.out)
+    else
+      puts "#{ex.to_s}"
+      ex.backtrace.each do |bt|
+        puts "    #{bt}"
+      end
+    end
   end
 end
