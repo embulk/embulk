@@ -319,8 +319,8 @@ public class BulkLoader
 
     protected ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
     {
-        // TODO
-        return injector.getInstance(LocalExecutorPlugin.class);
+        return Exec.newPlugin(ExecutorPlugin.class,
+                task.getExecConfig().get(PluginType.class, "type", new PluginType("local")));
     }
 
     protected InputPlugin newInputPlugin(BulkLoaderTask task)

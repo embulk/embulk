@@ -49,6 +49,11 @@ module Embulk
       Plugin.register_java_guess(name, java_class)
     end
 
+    def self.register_executor(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_executor(name, java_class)
+    end
+
     def self.ruby_adapter_class(java_class, ruby_base_class, ruby_module)
       Class.new(ruby_base_class) do
         const_set(:JAVA_CLASS, java_class)
