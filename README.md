@@ -73,14 +73,14 @@ embulk gem install embulk-output-postgres-json
 embulk gem list
 ```
 
-You can search plugins on RubyGems: [search for "embulk"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk).
+You can find plugins at the [list of plugins by category](http://www.embulk.org/plugins/).
 
 ### Using plugin bundle
 
-`embulk bundle` subcommand creates (or updates if already exists) a *plugin bundle* directory.
+`embulk bundle` subcommand creates (or updates if already exists) a private (isolated) bundle of a plugins.
 You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
 
-See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
+See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
 embulk bundle ./embulk_bundle
