@@ -25,6 +25,8 @@ The single-file package is the simplest way to try Embulk. You can download the 
 
 ### Linux & Mac & BSD
 
+Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+
 Following 4 commands install embulk to your home directory:
 
 ```
@@ -34,13 +36,19 @@ echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+Next step: [Trying examples](#trying-examples)
+
 ### Windows
+
+Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 You can assume the jar file is a .bat file.
 
 ```
 PowerShell -Command "& {Invoke-WebRequest https://bintray.com/artifact/download/embulk/maven/embulk-0.5.1.jar -OutFile embulk.bat}"
 ```
+
+Next step: [Trying examples](#trying-examples)
 
 ### Trying examples
 
@@ -52,6 +60,8 @@ embulk guess   ./try1/example.yml -o config.yml
 embulk preview config.yml
 embulk run     config.yml
 ```
+
+Next step: [Using plugins](#using-plugins)
 
 ### Using plugins
 

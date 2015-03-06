@@ -8,6 +8,12 @@ Embulk documentation
 
 https://github.com/embulk/embulk
 
+* `Quick Start <https://github.com/embulk/embulk#quick-start>`_
+
+  * `Linux and Mac OS X <https://github.com/embulk/embulk#linux--mac--bsd>`_
+
+  * `Windows <https://github.com/embulk/embulk#windows>`_
+
 * `List of Plugins by Category <http://www.embulk.org/plugins/>`_
 
 .. toctree::
