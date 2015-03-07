@@ -50,6 +50,7 @@ public class CsvParserPlugin
         public Optional<Boolean> getHeaderLine();
 
         @Config("skip_header_lines")
+        @ConfigDefault("0")
         public int getSkipHeaderLines();
         public void setSkipHeaderLines(int n);
 
