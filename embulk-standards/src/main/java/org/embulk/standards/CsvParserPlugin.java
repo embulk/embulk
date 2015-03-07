@@ -1,7 +1,6 @@
 package org.embulk.standards;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Task;
@@ -24,8 +23,6 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.util.LineDecoder;
 import org.slf4j.Logger;
-
-import java.util.Map;
 
 public class CsvParserPlugin
         implements ParserPlugin
@@ -89,17 +86,17 @@ public class CsvParserPlugin
         control.run(task.dump(), task.getSchemaConfig().toSchema());
     }
 
-    private Map<Integer, TimestampParser> newTimestampParsers(
+    private TimestampParser[] newTimestampParsers(
             TimestampParser.ParserTask task, Schema schema)
     {
-        ImmutableMap.Builder<Integer, TimestampParser> builder = new ImmutableMap.Builder<>();
+        TimestampParser[] parsers = new TimestampParser[schema.getColumnCount()];
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
                 TimestampType tt = (TimestampType) column.getType();
-                builder.put(column.getIndex(), new TimestampParser(tt.getFormat(), task));
+                parsers[column.getIndex()] = new TimestampParser(tt.getFormat(), task);
             }
         }
-        return builder.build();
+        return parsers;
     }
 
     @Override
@@ -107,7 +104,7 @@ public class CsvParserPlugin
             FileInput input, PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        final Map<Integer, TimestampParser> timestampFormatters = newTimestampParsers(task, schema);
+        final TimestampParser[] timestampFormatters = newTimestampParsers(task, schema);
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
         final String nullStringOrNull = task.getNullString().orNull();
         boolean skipHeaderLine = task.getHeaderLine();
@@ -187,7 +184,7 @@ public class CsvParserPlugin
                                     pageBuilder.setNull(column);
                                 } else {
                                     try {
-                                        pageBuilder.setTimestamp(column, (timestampFormatters.get(column.getIndex()).parse(v)));
+                                        pageBuilder.setTimestamp(column, timestampFormatters[column.getIndex()].parse(v));
                                     } catch (TimestampParseException e) {
                                         // TODO support default value
                                         throw new CsvRecordValidateException(e);
