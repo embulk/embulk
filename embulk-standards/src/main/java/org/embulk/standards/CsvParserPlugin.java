@@ -98,7 +98,11 @@ public class CsvParserPlugin
             if (task.getSkipHeaderLines() > 0) {
                 throw new ConfigException("'header_line' option is invalid if 'skip_header_lines' is set.");
             }
-            task.setSkipHeaderLines(1);
+            if (task.getHeaderLine().get()) {
+                task.setSkipHeaderLines(1);
+            } else {
+                task.setSkipHeaderLines(0);
+            }
         }
 
         control.run(task.dump(), task.getSchemaConfig().toSchema());
