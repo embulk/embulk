@@ -376,7 +376,7 @@ examples:
   end
 
   def self.print_exception(ex)
-    if ex.respond_to?(:to_java)
+    if ex.respond_to?(:to_java) && ex.is_a?(java.lang.Throwable)
       ex.to_java.printStackTrace(java.lang.System.out)
     else
       puts "#{ex.to_s}"
