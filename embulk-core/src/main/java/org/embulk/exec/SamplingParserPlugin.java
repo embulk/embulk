@@ -46,17 +46,17 @@ public class SamplingParserPlugin
         throw new SampledNoticeError(buffer);
     }
 
-    public static Buffer runFileInputSampling(final FileInputRunner input, ConfigSource inputConfig)
+    public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig)
     {
         // override in.parser.type so that FileInputRunner creates GuessParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
         samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
 
         try {
-            input.transaction(samplingInputConfig, new InputPlugin.Control() {
+            runner.transaction(samplingInputConfig, new InputPlugin.Control() {
                 public List<CommitReport> run(TaskSource taskSource, Schema schema, int taskCount)
                 {
-                    input.run(taskSource, schema, 0, new PageOutput() {
+                    runner.run(taskSource, schema, 0, new PageOutput() {
                         @Override
                         public void add(Page page)
                         {
