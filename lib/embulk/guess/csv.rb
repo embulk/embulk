@@ -25,6 +25,7 @@ module Embulk
       ]
 
       MAX_SKIP_LINES = 10
+      NO_SKIP_DETECT_LINES = 10
 
       def guess_lines(config, sample_lines)
         delim = guess_delimiter(sample_lines)
@@ -191,9 +192,9 @@ module Embulk
 
       def guess_skip_header_lines(sample_records)
         counts = sample_records.map {|records| records.size }
-        (1..MAX_SKIP_LINES).each do |i|
+        (1..[MAX_SKIP_LINES, counts.length - 1].min).each do |i|
           check_row_count = counts[i-1]
-          if counts[i..-1].all? {|c| c <= check_row_count }
+          if counts[i, NO_SKIP_DETECT_LINES].all? {|c| c == check_row_count }
             return i - 1
           end
         end
