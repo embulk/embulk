@@ -122,18 +122,17 @@ public class CsvParserPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final Map<Integer, TimestampParser> timestampFormatters = newTimestampParsers(task, schema);
-        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
+        LineDecoder lineDecoder = new LineDecoder(input, task);
+        final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
         final String nullStringOrNull = task.getNullString().orNull();
         int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (tokenizer.nextFile()) {
+                // skip the header lines for each file
                 for (; skipHeaderLines > 0; skipHeaderLines--) {
-                    // skip the first line
-                    if (tokenizer.nextRecord()) {
-                        while (tokenizer.hasNextColumn()) {
-                            tokenizer.nextColumn();  // TODO check return value?
-                        }
+                    if (lineDecoder.poll() == null) {
+                        break;
                     }
                 }
 
