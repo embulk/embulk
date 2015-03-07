@@ -35,7 +35,7 @@ public class PooledBufferAllocator
             extends Buffer
     {
         private ByteBuf buf;
-        private Exception doubleFreeCheck;
+        private BufferReleasedBeforeAt doubleFreeCheck;
 
         public NettyByteBufBuffer(ByteBuf buf)
         {
@@ -46,13 +46,26 @@ public class PooledBufferAllocator
         public void release()
         {
             if (doubleFreeCheck != null) {
-                doubleFreeCheck.printStackTrace();
+                new BufferDoubleReleasedException(doubleFreeCheck).printStackTrace();
             }
             if (buf != null) {
                 buf.release();
                 buf = null;
-                doubleFreeCheck = new NullPointerException();
+                doubleFreeCheck = new BufferReleasedBeforeAt();
             }
+        }
+    }
+
+    static class BufferReleasedBeforeAt
+            extends Throwable
+    { }
+
+    static class BufferDoubleReleasedException
+            extends IllegalStateException
+    {
+        public BufferDoubleReleasedException(BufferReleasedBeforeAt releasedAt)
+        {
+            super("Detected double release() call of a buffer", releasedAt);
         }
     }
 }
