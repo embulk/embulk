@@ -66,13 +66,14 @@ public class CsvFormatterPlugin
         final LineEncoder encoder = new LineEncoder(output, task);
         final Map<Integer, TimestampFormatter> timestampFormatters =
                 newTimestampFormatters(task, schema);
+        final String delimiter = task.getDelimiterChar();
 
         // create a file
         encoder.nextFile();
 
         // write header
         if (task.getHeaderLine()) {
-            writeHeader(schema, encoder);
+            writeHeader(schema, encoder, delimiter);
         }
 
         return new PageOutput() {
@@ -128,7 +129,7 @@ public class CsvFormatterPlugin
                         private void addDelimiter(Column column)
                         {
                             if (column.getIndex() != 0) {
-                                encoder.addText(task.getDelimiterChar());
+                                encoder.addText(delimiter);
                             }
                         }
                     });
@@ -149,11 +150,11 @@ public class CsvFormatterPlugin
         };
     }
 
-    private void writeHeader(Schema schema, LineEncoder encoder)
+    private void writeHeader(Schema schema, LineEncoder encoder, String delimiter)
     {
         for (Column column : schema.getColumns()) {
             if (column.getIndex() != 0) {
-                encoder.addText(",");
+                encoder.addText(delimiter);
             }
             encoder.addText(column.getName());
         }
