@@ -31,6 +31,10 @@ public class CsvFormatterPlugin
         @Config("header_line")
         @ConfigDefault("true")
         public boolean getHeaderLine();
+
+        @Config("delimiter")
+        @ConfigDefault("\",\"")
+        public String getDelimiterChar();
     }
 
     @Override
@@ -124,7 +128,7 @@ public class CsvFormatterPlugin
                         private void addDelimiter(Column column)
                         {
                             if (column.getIndex() != 0) {
-                                encoder.addText(",");
+                                encoder.addText(task.getDelimiterChar());
                             }
                         }
                     });
