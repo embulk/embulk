@@ -34,6 +34,7 @@ module Embulk
     def flush
       unless @buffer.empty?
         @java_file_output.add(@buffer.to_java)
+        @buffer.clear
       end
       nil
     end
@@ -44,7 +45,7 @@ module Embulk
     end
 
     def close
-      @java_file_output.finish
+      @java_file_output.close
     end
   end
 
