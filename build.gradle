@@ -105,7 +105,11 @@ subprojects {
             }
         }
 
-        // add javadoc/source jar tasks as artifacts to be released
+        // add tests/javadoc/source jar tasks as artifacts to be released
+        task testJar(type: Jar, dependsOn: classes) {
+            classifier = 'tests'
+            from sourceSets.test.output
+        }
         task sourcesJar(type: Jar, dependsOn: classes) {
             classifier = 'sources'
             from sourceSets.main.allSource
@@ -115,7 +119,7 @@ subprojects {
             from javadoc.destinationDir
         }
         artifacts {
-            archives sourcesJar, javadocJar
+            archives testJar, sourcesJar, javadocJar
         }
     }
 
@@ -124,6 +128,7 @@ subprojects {
             if (release_projects.contains(project)) {
                 bintrayMavenRelease(MavenPublication) {
                     from components.java
+                    artifact testJar
                     artifact sourcesJar
                     artifact javadocJar
                 }
