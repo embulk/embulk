@@ -7,6 +7,7 @@ import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.time.TimestampParser;
@@ -41,9 +42,14 @@ public class CsvParserPlugin
         @Config("columns")
         public SchemaConfig getSchemaConfig();
 
-        @Config("header_line") // how to set default value?? TODO @Default("true")
-        @ConfigDefault("false")
-        public boolean getHeaderLine();
+        @Config("header_line")
+        @ConfigDefault("null")
+        public Optional<Boolean> getHeaderLine();
+
+        @Config("skip_header_lines")
+        @ConfigDefault("0")
+        public int getSkipHeaderLines();
+        public void setSkipHeaderLines(int n);
 
         @Config("delimiter")
         @ConfigDefault("\",\"")
@@ -83,6 +89,19 @@ public class CsvParserPlugin
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
+
+        // backward compatibility
+        if (task.getHeaderLine().isPresent()) {
+            if (task.getSkipHeaderLines() > 0) {
+                throw new ConfigException("'header_line' option is invalid if 'skip_header_lines' is set.");
+            }
+            if (task.getHeaderLine().get()) {
+                task.setSkipHeaderLines(1);
+            } else {
+                task.setSkipHeaderLines(0);
+            }
+        }
+
         control.run(task.dump(), task.getSchemaConfig().toSchema());
     }
 
@@ -105,18 +124,17 @@ public class CsvParserPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final TimestampParser[] timestampFormatters = newTimestampParsers(task, schema);
-        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
+        LineDecoder lineDecoder = new LineDecoder(input, task);
+        final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
         final String nullStringOrNull = task.getNullString().orNull();
-        boolean skipHeaderLine = task.getHeaderLine();
+        int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (tokenizer.nextFile()) {
-                if (skipHeaderLine) {
-                    // skip the first line
-                    if (tokenizer.nextRecord()) {
-                        for (int i=0; i < schema.getColumnCount(); i++) {
-                            tokenizer.nextColumn();  // TODO check return value?
-                        }
+                // skip the header lines for each file
+                for (; skipHeaderLines > 0; skipHeaderLines--) {
+                    if (lineDecoder.poll() == null) {
+                        break;
                     }
                 }
 

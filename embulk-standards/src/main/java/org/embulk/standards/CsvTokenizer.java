@@ -115,9 +115,14 @@ public class CsvTokenizer
         }
     }
 
+    public boolean hasNextColumn()
+    {
+        return recordState == RecordState.NOT_END;
+    }
+
     public String nextColumn()
     {
-        Preconditions.checkState(recordState == RecordState.NOT_END, "doesn't have enough columns");  // TODO exception class
+        Preconditions.checkState(hasNextColumn(), "doesn't have enough columns");  // TODO exception class
 
         // reset last state
         wasQuotedColumn = false;
