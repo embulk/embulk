@@ -14,7 +14,7 @@ module Embulk
         columns = [
           Column.new(0, "example", :string),
           Column.new(1, "column", :long),
-          Column.new(2, "name", :double),
+          Column.new(2, "value", :double),
         ]
 
         resume(task, columns, 1, &control)
@@ -26,6 +26,16 @@ module Embulk
         next_config_diff = {}
         return next_config_diff
       end
+
+      # TODO
+      #def self.guess(config)
+      #  sample_records = [
+      #    {"example"=>"a", "column"=>1, "value"=>0.1},
+      #    {"example"=>"a", "column"=>2, "value"=>0.2},
+      #  ]
+      #  columns = Guess::SchemaGuess.from_hash_records(sample_records)
+      #  return {"columns" => columns}
+      #end
 
       def init
         # initialization code:

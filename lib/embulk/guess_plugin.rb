@@ -1,5 +1,7 @@
 module Embulk
 
+  require 'embulk/guess/schema_guess'
+
   class GuessPlugin
     def guess(config, sample_buffer)
       raise NotImplementedError, "GuessPlugin#guess(config, sample_buffer) must be implemented"
@@ -45,6 +47,12 @@ module Embulk
 
   class TextGuessPlugin < GuessPlugin
     def guess(config, sample)
+      if config.fetch('parser', {}).fetch('charset', nil).nil?
+        require 'embulk/guess/charset'
+        charset_guess = Guess::CharsetGuessPlugin.new
+        return charset_guess.guess(config, sample)
+      end
+
       # TODO pure-ruby LineDecoder implementation?
       begin
         parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
@@ -79,6 +87,18 @@ module Embulk
 
   class LineGuessPlugin < GuessPlugin
     def guess(config, sample)
+      if config.fetch('parser', {}).fetch('charset', nil).nil?
+        require 'embulk/guess/charset'
+        charset_guess = Guess::CharsetGuessPlugin.new
+        return charset_guess.guess(config, sample)
+      end
+
+      if config.fetch('parser', {}).fetch('newline', nil).nil?
+        require 'embulk/guess/newline'
+        newline_guess = Guess::NewlineGuessPlugin.new
+        return newline_guess.guess(config, sample)
+      end
+
       # TODO pure-ruby LineDecoder implementation?
       begin
         parser_task = config.param("parser", :hash, default: {}).load_config(Java::LineDecoder::DecoderTask)
@@ -95,6 +115,7 @@ module Embulk
         while line = decoder.poll
           sample_lines << line
         end
+        sample_lines.pop unless sample_lines.empty?  # last line can be partial
       end
 
       return guess_lines(config, sample_lines);

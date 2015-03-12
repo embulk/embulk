@@ -25,22 +25,30 @@ The single-file package is the simplest way to try Embulk. You can download the 
 
 ### Linux & Mac & BSD
 
+Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+
 Following 4 commands install embulk to your home directory:
 
 ```
-curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.8.jar
+curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.5.2.jar
 chmod +x ~/.embulk/bin/embulk
 echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+Next step: [Trying examples](#trying-examples)
+
 ### Windows
+
+Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 You can assume the jar file is a .bat file.
 
 ```
-curl -o embulk.bat -L https://bintray.com/artifact/download/embulk/maven/embulk-0.4.8.jar
+PowerShell -Command "& {Invoke-WebRequest https://bintray.com/artifact/download/embulk/maven/embulk-0.5.2.jar -OutFile embulk.bat}"
 ```
+
+Next step: [Trying examples](#trying-examples)
 
 ### Trying examples
 
@@ -53,6 +61,8 @@ embulk preview config.yml
 embulk run     config.yml
 ```
 
+Next step: [Using plugins](#using-plugins)
+
 ### Using plugins
 
 You can use plugins to load data from/to various systems and file formats.
@@ -63,14 +73,14 @@ embulk gem install embulk-output-postgres-json
 embulk gem list
 ```
 
-You can search plugins on RubyGems: [search for "embulk"](https://rubygems.org/search?utf8=%E2%9C%93&query=embulk).
+You can find plugins at the [list of plugins by category](http://www.embulk.org/plugins/).
 
 ### Using plugin bundle
 
-`embulk bundle` subcommand creates (or updates if already exists) a *plugin bundle* directory.
+`embulk bundle` subcommand creates (or updates if already exists) a private (isolated) bundle of a plugins.
 You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
 
-See generated \<bundle_dir>/Gemfile file how to plugin bundles work.
+See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
 embulk bundle ./embulk_bundle

@@ -3,6 +3,8 @@ package org.embulk.standards;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Max;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
@@ -21,10 +23,11 @@ public class GzipFileEncoderPlugin
     public interface PluginTask
             extends Task
     {
-        // TODO java.util.zip.GZIPOutputStream doesn't support compression level
-        //@Config("level")
-        //@ConfigDefault("6")
-        //public int getLevel();
+        @Config("level")
+        @ConfigDefault("6")
+        @Min(0)
+        @Max(9)
+        public int getLevel();
 
         @ConfigInject
         public BufferAllocator getBufferAllocator();
@@ -39,15 +42,20 @@ public class GzipFileEncoderPlugin
     @Override
     public FileOutput open(TaskSource taskSource, final FileOutput fileOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
+        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
 
         return new OutputStreamFileOutput(new OutputStreamFileOutput.Provider() {
             public OutputStream openNext() throws IOException
             {
                 output.nextFile();
-                return new GZIPOutputStream(output);
+                return new GZIPOutputStream(output) {
+                    {
+                        this.def.setLevel(task.getLevel());
+                    }
+                };
+
             }
 
             public void finish() throws IOException

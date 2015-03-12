@@ -32,6 +32,7 @@ public class <%= java_class_name %>
         public SchemaConfig getColumns();
     }
 
+    @Override
     public ConfigDiff transaction(ConfigSource config,
             InputPlugin.Control control)
     {
@@ -43,6 +44,7 @@ public class <%= java_class_name %>
         return resume(task.dump(), schema, taskCount, control);
     }
 
+    @Override
     public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int taskCount,
             InputPlugin.Control control)
@@ -51,12 +53,14 @@ public class <%= java_class_name %>
         return Exec.newConfigDiff();
     }
 
+    @Override
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
             List<CommitReport> successCommitReports)
     {
     }
 
+    @Override
     public CommitReport run(TaskSource taskSource,
             Schema schema, int taskIndex,
             PageOutput output)
@@ -65,5 +69,15 @@ public class <%= java_class_name %>
 
         // TODO
         throw new UnsupportedOperationException("The 'run' method needs to be implemented");
+    }
+
+    @Override
+    public ConfigDiff guess(ConfigSource config)
+    {
+        // TODO
+        throw new UnsupportedOperationException("'<%= name %>' input plugin does not support guessing.");
+        //ConfigDiff diff = Exec.newConfigDiff();
+        //diff.set("property1", "value");
+        //return diff;
     }
 }

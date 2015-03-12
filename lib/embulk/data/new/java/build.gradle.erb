@@ -40,10 +40,10 @@ Gem::Specification.new do |spec|
   spec.version       = "${project.version}"
   spec.authors       = [<%= author.dump %>]
   spec.summary       = %[<%= display_name %> <%= display_category %> plugin for Embulk]
-  spec.description   = %[<%= display_name %> <%= display_category %> plugin is an Embulk plugin <%= description %>]
+  spec.description   = %[<%= "#{description}".dump %>]
   spec.email         = [<%= email.dump %>]
   spec.licenses      = ["MIT"]
-  # TODO: spec.homepage      = <%= "https://github.com/#{email[/([^@]*)/]}/#{project_name}".dump %>
+  # TODO set this: spec.homepage      = <%= "https://github.com/#{email[/([^@]*)/]}/#{project_name}".dump %>
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   spec.test_files    = spec.files.grep(%r"^(test|spec)/")

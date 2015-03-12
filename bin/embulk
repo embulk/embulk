@@ -33,7 +33,6 @@ until ARGV.empty?
     ARGV.shift
   when "run"
     default_optimize = true
-    ARGV.shift
     break
   else
     break

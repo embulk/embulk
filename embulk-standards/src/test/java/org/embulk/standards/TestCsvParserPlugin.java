@@ -31,7 +31,7 @@ public class TestCsvParserPlugin
         CsvParserPlugin.PluginTask task = config.loadConfig(CsvParserPlugin.PluginTask.class);
         assertEquals(Charset.forName("utf-8"), task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
-        assertEquals(false, task.getHeaderLine());
+        assertEquals(false, task.getHeaderLine().or(false));
         assertEquals(',', task.getDelimiterChar());
         assertEquals('\"', task.getQuoteChar());
     }
@@ -62,7 +62,7 @@ public class TestCsvParserPlugin
         CsvParserPlugin.PluginTask task = config.loadConfig(CsvParserPlugin.PluginTask.class);
         assertEquals(Charset.forName("utf-16"), task.getCharset());
         assertEquals(Newline.LF, task.getNewline());
-        assertEquals(true, task.getHeaderLine());
+        assertEquals(true, task.getHeaderLine().or(false));
         assertEquals('\t', task.getDelimiterChar());
         assertEquals('\\', task.getQuoteChar());
     }

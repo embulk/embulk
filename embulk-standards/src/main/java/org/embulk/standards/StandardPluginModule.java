@@ -4,13 +4,17 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
+import com.google.inject.multibindings.Multibinder;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
+import org.embulk.exec.GuessExecutor;
+import org.embulk.plugin.PluginType;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
+import static org.embulk.exec.GuessExecutor.registerDefaultGuessPluginTo;
 
 public class StandardPluginModule
         implements Module
@@ -39,5 +43,10 @@ public class StandardPluginModule
 
         // file encoder plugins
         registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
+
+        // default guess plugins
+        registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
+        registerDefaultGuessPluginTo(binder, new PluginType("csv"));
+        // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
 }

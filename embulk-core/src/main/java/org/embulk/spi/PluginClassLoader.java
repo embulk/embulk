@@ -1,7 +1,9 @@
 package org.embulk.spi;
 
+import java.nio.file.Path;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.MalformedURLException;
 import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.jruby.Ruby;
@@ -9,14 +11,10 @@ import org.jruby.Ruby;
 public class PluginClassLoader
         extends URLClassLoader
 {
-    private static final String[] PARENT_FIRST_PACKAGES = new String[] {
-        "org.embulk.",
-        "io.airlift.slice.",
-        "com.fasterxml.jackson.",
-        "com.google.inject.",
-        "org.jruby.",
-        "javax.inject.",
-        "java.",
+    private static final String[] CHILD_FIRST_PACKAGES = new String[] {
+        "io.netty.",
+        "org.yaml.",
+        "com.ibm.icu.",
     };
 
     public PluginClassLoader(Ruby pluginJRubyRuntime, List<URL> urls)
@@ -29,6 +27,20 @@ public class PluginClassLoader
         super(urls.toArray(new URL[urls.size()]), parent);
     }
 
+    public void addPath(Path path)
+    {
+        try {
+            addUrl(path.toUri().toURL());
+        } catch (MalformedURLException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    public void addUrl(URL url)
+    {
+        super.addURL(url);
+    }
+
     @Override
     protected Class<?> loadClass(String name, boolean resolve)
             throws ClassNotFoundException
@@ -39,8 +51,8 @@ public class PluginClassLoader
                 return resolveClass(loadedClass, resolve);
             }
 
-            boolean parentFirst = isInParentFirstPackage(name);
-            if (!parentFirst) {
+            boolean childFirst = isInChildFirstPackage(name);
+            if (childFirst) {
                 try {
                     return resolveClass(findClass(name), resolve);
                 } catch (ClassNotFoundException ignored) {
@@ -52,7 +64,7 @@ public class PluginClassLoader
             } catch (ClassNotFoundException ignored) {
             }
 
-            if (parentFirst) {
+            if (!childFirst) {
                 return resolveClass(findClass(name), resolve);
             }
 
@@ -68,9 +80,9 @@ public class PluginClassLoader
         return clazz;
     }
 
-    private boolean isInParentFirstPackage(String name)
+    private boolean isInChildFirstPackage(String name)
     {
-        for (String pkg : PARENT_FIRST_PACKAGES) {
+        for (String pkg : CHILD_FIRST_PACKAGES) {
             if (name.startsWith(pkg)) {
                 return true;
             }

@@ -56,7 +56,7 @@ You can find the latest embulk binary from the `releases <https://bintray.com/em
 
 .. code-block:: console
 
-    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.4.8.jar -O /usr/local/bin/embulk
+    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.5.2.jar -O /usr/local/bin/embulk
     $ sudo chmod +x /usr/local/bin/embulk
 
 Step 2. Install Elasticsearch plugin
@@ -84,7 +84,7 @@ Create this configuration file and save as ``config.yml``:
       path_prefix: ./mydata/csv/
     out:
       type: elasticsearch
-      index_name: embulk
+      index: embulk
       index_type: embulk
       nodes:
         - host: localhost
@@ -121,7 +121,7 @@ The generated config-complete.yml file should include complete information as fo
         - {name: comment, type: string}
     out:
       type: elasticsearch
-      index_name: embulk
+      index: embulk
       index_type: embulk
       nodes:
       - {host: localhost}

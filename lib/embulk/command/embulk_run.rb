@@ -34,7 +34,7 @@ module Embulk
     op = OptionParser.new
     op.version = Embulk::VERSION
 
-    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S,%3N %z")}: Embulk v#{Embulk::VERSION}"
+    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{Embulk::VERSION}"
 
     load_paths = []
     classpaths = []
@@ -58,7 +58,7 @@ module Embulk
 
     when :run
       op.banner = "Usage: run <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
@@ -77,7 +77,7 @@ module Embulk
 
     when :cleanup
       op.banner = "Usage: cleanup <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
@@ -93,7 +93,7 @@ module Embulk
 
     when :preview
       op.banner = "Usage: preview <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
@@ -109,7 +109,7 @@ module Embulk
 
     when :guess
       op.banner = "Usage: guess <partial-config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
@@ -120,6 +120,9 @@ module Embulk
       end
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
+      end
+      op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
+        (options[:guessPlugins] ||= []).concat names.split(",")
       end
       args = 1..1
 
@@ -132,8 +135,8 @@ categories:
     ruby-filter                Ruby record filter plugin   (like "add-hostname")
     #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
     #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
-    ruby-parser                Ruby file parser plugin     (like "csv")          # not implemented yet [#33]
-    ruby-formatter             Ruby file formatter plugin  (like "csv")          # not implemented yet [#34]
+    ruby-parser                Ruby file parser plugin     (like "csv")
+    ruby-formatter             Ruby file formatter plugin  (like "csv")
     #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
     #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
     java-input                 Java record input plugin    (like "mysql")
@@ -161,7 +164,7 @@ examples:
       args = 0..1
 
     when :exec
-      exec *argv
+      exec(*argv)
       exit 127
 
     else
@@ -292,7 +295,14 @@ examples:
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
-      org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
+      begin
+        org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
+      rescue => ex
+        print_exception(ex)
+        puts ""
+        puts "Error: #{ex}"
+        raise SystemExit.new(1, ex.to_s)
+      end
     end
   end
 
@@ -363,5 +373,16 @@ examples:
       STDERR.puts message
     end
     exit 1
+  end
+
+  def self.print_exception(ex)
+    if ex.respond_to?(:to_java) && ex.is_a?(java.lang.Throwable)
+      ex.to_java.printStackTrace(java.lang.System.out)
+    else
+      puts "#{ex.to_s}"
+      ex.backtrace.each do |bt|
+        puts "    #{bt}"
+      end
+    end
   end
 end

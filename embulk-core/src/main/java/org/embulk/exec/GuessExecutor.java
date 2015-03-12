@@ -1,11 +1,15 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Set;
 import java.util.ArrayList;
 import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.common.base.Throwables;
+import com.google.inject.Binder;
+import com.google.inject.multibindings.Multibinder;
+import org.embulk.plugin.PluginType;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -14,7 +18,6 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
-import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
@@ -33,9 +36,15 @@ import org.embulk.spi.FileInputRunner;
 
 public class GuessExecutor
 {
-    private final Injector injector;
-    private final ConfigSource systemConfig;
     private final List<PluginType> defaultGuessPlugins;
+
+    private interface GuessExecutorSystemTask
+            extends Task
+    {
+        @Config("guess_plugins")
+        @ConfigDefault("[]")
+        public List<PluginType> getGuessPlugins();
+    }
 
     private interface GuessExecutorTask
             extends Task
@@ -49,19 +58,22 @@ public class GuessExecutor
         public List<PluginType> getExcludeGuessPlugins();
     }
 
-    @Inject
-    public GuessExecutor(Injector injector,
-            @ForSystemConfig ConfigSource systemConfig)
+    public static void registerDefaultGuessPluginTo(Binder binder, PluginType type)
     {
-        this.injector = injector;
-        this.systemConfig = systemConfig;
+        Multibinder<PluginType> multibinder = Multibinder.newSetBinder(binder, PluginType.class, ForGuess.class);
+        multibinder.addBinding().toInstance(type);
+    }
 
-        // TODO get default guess plugins from injector using Multibinder
-        this.defaultGuessPlugins = ImmutableList.of(
-                new PluginType("gzip"),
-                new PluginType("charset"),
-                new PluginType("newline"),
-                new PluginType("csv"));
+    @Inject
+    public GuessExecutor(@ForSystemConfig ConfigSource systemConfig,
+            @ForGuess Set<PluginType> defaultGuessPlugins)
+    {
+        GuessExecutorSystemTask systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
+
+        ImmutableList.Builder<PluginType> list = ImmutableList.builder();
+        list.addAll(defaultGuessPlugins);
+        list.addAll(systemTask.getGuessPlugins());
+        this.defaultGuessPlugins = list.build();
     }
 
     public ConfigDiff guess(ExecSession exec, final ConfigSource config)
@@ -80,29 +92,50 @@ public class GuessExecutor
         }
     }
 
+    protected InputPlugin newInputPlugin(ConfigSource inputConfig)
+    {
+        return Exec.newPlugin(InputPlugin.class, inputConfig.get(PluginType.class, "type"));
+    }
+
     private ConfigDiff doGuess(ConfigSource config)
     {
-        Buffer sample = SamplingParserPlugin.runFileInputSampling(config);
-        if (sample.limit() == 0) {
-            throw new NoSampleException("Can't get sample data because the first input file is empty");
+        ConfigSource inputConfig = config.getNested("in");
+
+        InputPlugin input = newInputPlugin(inputConfig);
+
+        ConfigDiff inputGuessed;
+        try {
+            inputGuessed = input.guess(inputConfig);
+        } catch (AbstractMethodError ex) {
+            // for backward compatibility with embulk v0.4 interface
+            throw new UnsupportedOperationException(input.getClass().getSimpleName()+".guess(ConfigSource) is not implemented. This input plugin does not support guessing.");
         }
 
+        ConfigDiff wrapped = Exec.newConfigDiff();
+        wrapped.getNestedOrSetEmpty("in").merge(inputGuessed);
+        return wrapped;
+    }
+
+    // called by FileInputRunner
+    public ConfigDiff guessParserConfig(Buffer sample, ConfigSource inputConfig, ConfigSource execConfig)
+    {
         List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
-        GuessExecutorTask task = config.getNestedOrSetEmpty("exec").loadConfig(GuessExecutorTask.class);
+
+        GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
         guessPlugins.addAll(task.getGuessPlugins());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
 
-        return runGuessInput(sample, config, guessPlugins);
+        return guessParserConfig(sample, inputConfig, guessPlugins);
     }
 
-    private ConfigDiff runGuessInput(Buffer sample,
+    private ConfigDiff guessParserConfig(Buffer sample,
             ConfigSource config, List<PluginType> guessPlugins)
     {
         // repeat guessing upto 10 times
         ConfigDiff lastGuessed = Exec.newConfigDiff();
         for (int i=0; i < 10; i++) {
             // include last-guessed config to run guess input
-            ConfigSource originalConfig = config.getNested("in").deepCopy().merge(lastGuessed);
+            ConfigSource originalConfig = config.deepCopy().merge(lastGuessed);
             ConfigSource guessInputConfig = originalConfig.deepCopy();
             guessInputConfig.getNestedOrSetEmpty("parser")
                 .set("type", "system_guess")  // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
@@ -142,19 +175,12 @@ public class GuessExecutor
             // merge to the last-guessed config
             if (lastGuessed.equals(guessed)) {
                 // not changed
-                return wrapInIn(lastGuessed);
+                return lastGuessed;
             }
             lastGuessed = guessed;
         }
 
-        return wrapInIn(lastGuessed);
-    }
-
-    private static ConfigDiff wrapInIn(ConfigDiff lastGuessed)
-    {
-        ConfigDiff wrapped = Exec.newConfigDiff();
-        wrapped.getNestedOrSetEmpty("in").merge(lastGuessed);
-        return wrapped;
+        return lastGuessed;
     }
 
     private static class BufferFileInputPlugin

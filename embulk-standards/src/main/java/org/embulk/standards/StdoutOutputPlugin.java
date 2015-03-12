@@ -64,7 +64,6 @@ public class StdoutOutputPlugin
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));
                 }
-                page.release();
             }
 
             public void finish()
@@ -72,7 +71,10 @@ public class StdoutOutputPlugin
                 System.out.flush();
             }
 
-            public void close() { }
+            public void close()
+            {
+                reader.close();
+            }
 
             public void abort() { }
 

@@ -64,4 +64,26 @@ public class TestFileInputInputStream
         assertEquals(expected.length, pos);
         assertArrayEquals(expected, actual);
     }
+
+    @Test
+    public void testSkipReturnsZeroForNoData() {
+        FileInputInputStream in = new FileInputInputStream(new MockFileInput());
+        assertEquals("Verify skip() returns 0 when there is no data.", 0L, in.skip(1));
+    }
+
+    private static class MockFileInput implements FileInput {
+        @Override
+        public boolean nextFile() {
+            return false;
+        }
+
+        @Override
+        public Buffer poll() {
+            return null;
+        }
+
+        @Override
+        public void close() {
+        }
+    }
 }
