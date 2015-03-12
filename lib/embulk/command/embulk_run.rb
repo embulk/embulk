@@ -58,7 +58,7 @@ module Embulk
 
     when :run
       op.banner = "Usage: run <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
