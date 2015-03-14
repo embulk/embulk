@@ -78,7 +78,7 @@ module Embulk::Guess
       end
 
       # taken from CsvParserPlugin.TRUE_STRINGS
-      TRUE_STRINGS = Hash[*%w[
+      TRUE_STRINGS = Hash[%w[
         true True TRUE
         yes Yes YES
         y Y
