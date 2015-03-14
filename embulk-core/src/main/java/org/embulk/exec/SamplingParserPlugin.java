@@ -51,6 +51,7 @@ public class SamplingParserPlugin
         // override in.parser.type so that FileInputRunner creates GuessParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
         samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
+        samplingInputConfig.set("decoders", null);
 
         try {
             runner.transaction(samplingInputConfig, new InputPlugin.Control() {
