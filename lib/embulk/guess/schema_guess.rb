@@ -84,7 +84,7 @@ module Embulk::Guess
         y Y
         on On ON
         1
-      ].map {|k| [k, true] }]
+      ].map {|k| [k, true] }.flatten]
 
       TYPE_COALESCE = Hash[{
         long: :double,
