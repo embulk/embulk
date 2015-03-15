@@ -7,6 +7,7 @@ SET default_optimize=0
 SET overwrite_optimize=0
 SET file_args=
 SET FILE_FLAG=0
+SET OTHER_FLAG=
 
 if "%1" == "" goto :OPT_END
 
@@ -53,7 +54,7 @@ if /i "%OPTION%" == "-J" (
 )
 
 rem Other *)
-goto :OPT_END
+SET OTHER_FLAG=%OTHER_FLAG% %ARGS%
 
 :SHIFT
 shift /1
@@ -70,6 +71,6 @@ if %FLAG% == TRUE (
   SET java_args=-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none %java_args%
 )
 
-echo java %java_args% -jar %~0 %jruby_args% %*
+echo java %java_args% -jar %~0 %jruby_args% %OTHER_FLAG%
 
 exit /B
