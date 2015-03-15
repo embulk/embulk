@@ -9,6 +9,7 @@ SET default_optimize=0
 SET overwrite_optimize=0
 SET file_args=
 SET FILE_FLAG=0
+SET JRUBY_FILE_FLAG=0
 SET OTHER_FLAG=
 
 if "%1" == "" goto :OPT_END
@@ -29,8 +30,12 @@ echo %FILE_FLAG%
 if %FILE_FLAG% == 1 (
   echo flag
   rem hmm...
-  goto FILE_READ
-  :FILE_READ_RESUME
+  if NOT EXIST %ARGS% (
+    SET java_args=%java_args% %ARGS%
+    goto:JARGS_FILE_READ_RESUME
+  )
+  goto JARGS_FILE_READ
+  :JARGS_FILE_READ_RESUME
   SET java_args=%java_args% %file_args%
   SET FILE_FLAG=0
   goto SHIFT
@@ -57,6 +62,17 @@ if /i "%OPTION%" == "-J" (
   goto SHIFT
 )
 
+if /i "%OPTION%" == "-R" (
+  rem jruby flag(file)
+  if "%OPTION_ARG%" == "" (
+    SET JRUBY_FILE_FLAG=1
+    goto SHIFT
+  )
+  
+  SET java_args=%OPTION_ARG%
+  goto SHIFT
+)
+
 rem Other *)
 SET OTHER_FLAG=%OTHER_FLAG% %ARGS%
 
@@ -64,11 +80,12 @@ SET OTHER_FLAG=%OTHER_FLAG% %ARGS%
 shift /1
 goto :OPT_START
 
-:FILE_READ
+:JARGS_FILE_READ
 for /f "usebackq  delims=" %%a in ("%ARGS%") do (
     SET file_args=%%a
 )
-goto FILE_READ_RESUME
+echo !ERRORLEVEL!
+goto JARGS_FILE_READ_RESUME
 
 :OPT_END
 
