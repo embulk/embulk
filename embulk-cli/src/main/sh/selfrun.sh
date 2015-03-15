@@ -1,6 +1,6 @@
 
 : <<BAT
-@echo on
+@echo off
 setlocal enabledelayedexpansion
 
 SET java_args=
@@ -8,7 +8,7 @@ SET jruby_args=
 SET default_optimize=0
 SET overwrite_optimize=0
 SET file_args=
-SET FILE_FLAG=0
+SET JAVA_FILE_FLAG=0
 SET JRUBY_FILE_FLAG=0
 SET OTHER_FLAG=
 
@@ -26,18 +26,29 @@ if /i "%ARGS%" == "run" (
     goto SHIFT
 )
 
-echo %FILE_FLAG%
-if %FILE_FLAG% == 1 (
-  echo flag
+if %JAVA_FILE_FLAG% == 1 (
   rem hmm...
-  if NOT EXIST %ARGS% (
+  if NOT EXIST "%ARGS%" (
     SET java_args=%java_args% %ARGS%
-    goto:JARGS_FILE_READ_RESUME
+    goto ARGS_FILE_READ_RESUME
   )
-  goto JARGS_FILE_READ
-  :JARGS_FILE_READ_RESUME
+  goto ARGS_FILE_READ
+  :ARGS_FILE_READ_RESUME
   SET java_args=%java_args% %file_args%
-  SET FILE_FLAG=0
+  SET JAVA_FILE_FLAG=0
+  goto SHIFT
+)
+
+if %JRUBY_FILE_FLAG% == 1 (
+  rem hmm...
+  if NOT EXIST "%ARGS%" (
+    SET jruby_args=%jruby_args% %ARGS%
+    goto ARGS_FILE_READ_RESUME
+  )
+  goto ARGS_FILE_READ
+  :ARGS_FILE_READ_RESUME
+  SET jruby_args=%jruby_args% %file_args%
+  SET JRUBY_FILE_FLAG=0
   goto SHIFT
 )
 
@@ -54,7 +65,7 @@ if /i "%OPTION%" == "-J" (
   )
   rem java flag(file)
   if "%OPTION_ARG%" == "" (
-    SET FILE_FLAG=1
+    SET JAVA_FILE_FLAG=1
     goto SHIFT
   )
   
@@ -80,12 +91,11 @@ SET OTHER_FLAG=%OTHER_FLAG% %ARGS%
 shift /1
 goto :OPT_START
 
-:JARGS_FILE_READ
+:ARGS_FILE_READ
 for /f "usebackq  delims=" %%a in ("%ARGS%") do (
     SET file_args=%%a
 )
-echo !ERRORLEVEL!
-goto JARGS_FILE_READ_RESUME
+goto ARGS_FILE_READ_RESUME
 
 :OPT_END
 
@@ -98,7 +108,7 @@ if %FLAG% == TRUE (
   SET java_args=-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none %java_args%
 )
 
-echo java %java_args% -jar %~0 %jruby_args% %OTHER_FLAG%
+java %java_args% -jar %~0 %jruby_args% %OTHER_FLAG%
 
 exit /B
 BAT
