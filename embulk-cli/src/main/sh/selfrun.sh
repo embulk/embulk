@@ -13,7 +13,7 @@ if "%1" == "" goto :OPT_END
 
 :OPT_START
 rem Get args
-SET ARGS=%1
+SET ARGS=%~1
 rem Argument is to empty if OPT_END
 if "%ARGS%"== "" goto :OPT_END
 
@@ -25,8 +25,10 @@ if /i "%ARGS%" == "run" (
 
 echo %FILE_FLAG%
 if %FILE_FLAG% == 1 (
-  rem for /f %%i in ("%ARGS%") do SET file_args=%%i
-  SET /P file_args=<"%ARGS%"
+  echo flag
+  rem hmm...
+  goto FILE_READ
+  :FILE_READ_RESUME
   SET java_args=%java_args% %file_args%
   SET FILE_FLAG=0
   goto SHIFT
@@ -59,6 +61,12 @@ SET OTHER_FLAG=%OTHER_FLAG% %ARGS%
 :SHIFT
 shift /1
 goto :OPT_START
+
+:FILE_READ
+for /f "usebackq  delims=" %%a in ("%ARGS%") do (
+    SET file_args=%%a
+)
+goto FILE_READ_RESUME
 
 :OPT_END
 
