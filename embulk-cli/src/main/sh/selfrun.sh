@@ -4,10 +4,10 @@
 setlocal enabledelayedexpansion
 
 rem 変数宣言
-SET java_args=
-SET jruby_args=
-SET default_optimize=0
-SET overwrite_optimize=0
+SET JAVA_ARGS=
+SET JRUBY_ARGS=
+SET DEFAULT_OPTIMIZE=0
+SET OVERWRITE_OPTIMIZE=0
 SET file_args=
 SET JAVA_FILE_FLAG=0
 SET JRUBY_FILE_FLAG=0
@@ -28,7 +28,7 @@ if "%ARGS%"== "" goto :OPT_END
 rem runオプション
 rem デフォルト最適化オプションフラグを有効化
 if /i "%ARGS%" == "run" (
-    SET default_optimize=1
+    SET DEFAULT_OPTIMIZE=1
     rem 次の引数をパースする
     goto SHIFT
 )
@@ -40,7 +40,7 @@ if %JAVA_FILE_FLAG% == 1 (
   rem ファイルが存在しない場合には
   rem 引数と見なす
   if NOT EXIST "%ARGS%" (
-    SET java_args=%java_args% %ARGS%
+    SET JAVA_ARGS=%JAVA_ARGS% %ARGS%
     goto ARGS_FILE_READ_RESUME
   )
   rem ファイルからオプションを読み込む
@@ -50,7 +50,7 @@ if %JAVA_FILE_FLAG% == 1 (
   rem ARGS_FILE_READからここに戻る
   :ARGS_FILE_READ_RESUME
   rem 読み込んだ内容を反映する
-  SET java_args=%java_args% %file_args%
+  SET JAVA_ARGS=%JAVA_ARGS% %file_args%
   rem ファイル読み込みフラグを折る
   rem こうしないと延々とファイルとして扱ってしまう
   SET JAVA_FILE_FLAG=0
@@ -61,7 +61,7 @@ if %JRUBY_FILE_FLAG% == 1 (
   rem ファイルが存在しない場合には
   rem 引数と見なす
   if NOT EXIST "%ARGS%" (
-    SET jruby_args=%jruby_args% %ARGS%
+    SET JRUBY_ARGS=%JRUBY_ARGS% %ARGS%
     goto ARGS_FILE_READ_RESUME
   )
   rem ファイルからオプションを読み込む
@@ -73,7 +73,7 @@ if %JRUBY_FILE_FLAG% == 1 (
   rem ARGS_FILE_READから戻ってくる
   :JRUBY_ARGS_FILE_READ_RESUME
   rem 読み込んだ内容を反映する
-  SET jruby_args=%jruby_args% %file_args%
+  SET JRUBY_ARGS=%JRUBY_ARGS% %file_args%
   rem ファイル読み込みフラグを折る
   rem こうしないと延々とファイルとして扱ってしまう
   SET JRUBY_FILE_FLAG=0
@@ -92,12 +92,12 @@ rem -Jオプション
 if /i "%OPTION%" == "-J" (
   rem -J+O
   if /i "%OPTION_ARG%" == "+O" (
-    SET overwrite_optimize=1
+    SET OVERWRITE_OPTIMIZE=1
     goto SHIFT
   )
   rem -J-O
   if /i "%OPTION_ARG%" == "-O" (
-    SET overwrite_optimize=0
+    SET OVERWRITE_OPTIMIZE=0
     goto SHIFT
   )
   rem ファイルの引数指定
@@ -106,7 +106,7 @@ if /i "%OPTION%" == "-J" (
     goto SHIFT
   )
   rem -Jjavaoption
-  SET java_args=%java_args% %OPTION_ARG%
+  SET JAVA_ARGS=%JAVA_ARGS% %OPTION_ARG%
   goto SHIFT
 )
 
@@ -118,7 +118,7 @@ if /i "%OPTION%" == "-R" (
     goto SHIFT
   )
   rem -Rjrubyoption
-  SET jruby_args=%jruby_args% %OPTION_ARG%
+  SET JRUBY_ARGS=%JRUBY_ARGS% %OPTION_ARG%
   goto SHIFT
 )
 
@@ -151,17 +151,17 @@ rem オプションパーサコア終了
 
 rem Win32 BATではORが使えないので強引にORを作り出す
 SET FLAG=FALSE
-if %overwrite_optimize% == 1 SET FLAG=TRUE
-if %default_optimize% == 1 SET FLAG=TRUE
-rem ここは if overwrite_optimize OR default_optimize then となる
+if %OVERWRITE_OPTIMIZE% == 1 SET FLAG=TRUE
+if %DEFAULT_OPTIMIZE% == 1 SET FLAG=TRUE
+rem ここは if OVERWRITE_OPTIMIZE OR DEFAULT_OPTIMIZE then となる
 if %FLAG% == TRUE (
-  SET java_args=-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC %java_args%
+  SET JAVA_ARGS=-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC %JAVA_ARGS%
 ) ELSE (
-  SET java_args=-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none %java_args%
+  SET JAVA_ARGS=-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none %JAVA_ARGS%
 )
 
 rem 実際に実行する
-java %java_args% -jar %~0 %jruby_args% %OTHER_FLAG%
+java %JAVA_ARGS% -jar %~0 %JRUBY_ARGS% %OTHER_FLAG%
 
 exit /B
 BAT
