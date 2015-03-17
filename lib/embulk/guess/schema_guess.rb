@@ -45,7 +45,7 @@ module Embulk::Guess
       private
 
       def guess_type(str)
-        if TRUE_STRINGS[str]
+        if TRUE_STRINGS[str] || FALSE_STRINGS[str]
           return "boolean"
         end
 
@@ -78,12 +78,21 @@ module Embulk::Guess
       end
 
       # taken from CsvParserPlugin.TRUE_STRINGS
-      TRUE_STRINGS = Hash[*%w[
+      TRUE_STRINGS = Hash[%w[
         true True TRUE
         yes Yes YES
         y Y
         on On ON
         1
+      ].map {|k| [k, true] }]
+
+      # When matching to false string, then retrun 'true'
+      FALSE_STRINGS = Hash[%w[
+        false False FALSE
+        no No NO
+        n N
+        off Off OFF
+        0
       ].map {|k| [k, true] }]
 
       TYPE_COALESCE = Hash[{

@@ -12,7 +12,7 @@ def release_projects = [project(":embulk-core"), project(":embulk-standards")]
 
 allprojects {
     group = 'org.embulk'
-    version = '0.5.1'
+    version = '0.5.3'
 
     apply plugin: 'java'
     apply plugin: 'maven-publish'
@@ -105,7 +105,11 @@ subprojects {
             }
         }
 
-        // add javadoc/source jar tasks as artifacts to be released
+        // add tests/javadoc/source jar tasks as artifacts to be released
+        task testsJar(type: Jar, dependsOn: classes) {
+            classifier = 'tests'
+            from sourceSets.test.output
+        }
         task sourcesJar(type: Jar, dependsOn: classes) {
             classifier = 'sources'
             from sourceSets.main.allSource
@@ -115,7 +119,7 @@ subprojects {
             from javadoc.destinationDir
         }
         artifacts {
-            archives sourcesJar, javadocJar
+            archives testsJar, sourcesJar, javadocJar
         }
     }
 
@@ -124,6 +128,7 @@ subprojects {
             if (release_projects.contains(project)) {
                 bintrayMavenRelease(MavenPublication) {
                     from components.java
+                    artifact testsJar
                     artifact sourcesJar
                     artifact javadocJar
                 }

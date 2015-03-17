@@ -98,12 +98,13 @@ public class PreviewExecutor
                         {
                             InputPlugin input = newInputPlugin(task);
                             List<FilterPlugin> filterPlugins = newFilterPlugins(task);
-                            Schema filteredSchema = filterSchemas.get(filterSchemas.size() - 1);
+                            Schema inputSchema = filterSchemas.get(0);
+                            Schema outputSchema = filterSchemas.get(filterSchemas.size() - 1);
 
-                            PageOutput out = new SamplingPageOutput(task.getSampleRows(), filteredSchema);
+                            PageOutput out = new SamplingPageOutput(task.getSampleRows(), outputSchema);
                             try {
                                 out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
-                                input.run(inputTask, filteredSchema, 0, out);
+                                input.run(inputTask, inputSchema, 0, out);
                             } finally {
                                 out.close();
                             }

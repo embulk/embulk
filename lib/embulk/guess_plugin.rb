@@ -115,6 +115,7 @@ module Embulk
         while line = decoder.poll
           sample_lines << line
         end
+        sample_lines.pop unless sample_lines.empty?  # last line can be partial
       end
 
       return guess_lines(config, sample_lines);

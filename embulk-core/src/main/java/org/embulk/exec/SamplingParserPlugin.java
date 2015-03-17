@@ -51,6 +51,7 @@ public class SamplingParserPlugin
         // override in.parser.type so that FileInputRunner creates GuessParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
         samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
+        samplingInputConfig.set("decoders", null);
 
         try {
             runner.transaction(samplingInputConfig, new InputPlugin.Control() {
@@ -78,23 +79,23 @@ public class SamplingParserPlugin
 
     private static Buffer getSample(FileInput fileInput, int maxSampleSize)
     {
+        if (!fileInput.nextFile()) {
+            // no input files
+            return Buffer.EMPTY;
+        }
+
         Buffer sample = Buffer.allocate(maxSampleSize);
         int sampleSize = 0;
 
-        while (fileInput.nextFile()) {
-            for (Buffer buffer : each(fileInput)) {
-                if (sampleSize >= maxSampleSize) {
-                    // skip remaining all buffers so that FileInputPlugin.runInput doesn't
-                    // throw exceptions at channel.join()
-                } else {
-                    int size = Math.min(buffer.limit(), sample.capacity() - sampleSize);
-                    sample.setBytes(sampleSize, buffer, 0, size);
-                    sampleSize += size;
-                }
-                buffer.release();
+        for (Buffer buffer : each(fileInput)) {
+            int size = Math.min(buffer.limit(), sample.capacity() - sampleSize);
+            sample.setBytes(sampleSize, buffer, 0, size);
+            sampleSize += size;
+            buffer.release();
+            if (sampleSize >= maxSampleSize) {
+                break;
             }
         }
-
         sample.limit(sampleSize);
         return sample;
     }
