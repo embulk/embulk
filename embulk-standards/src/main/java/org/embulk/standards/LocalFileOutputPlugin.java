@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -86,7 +87,7 @@ public class LocalFileOutputPlugin
 
         return new TransactionalFileOutput() {
             private int fileIndex = 0;
-            private FileOutputStream output = null;
+            private OutputStream output = null;
 
             public void nextFile()
             {
@@ -95,7 +96,7 @@ public class LocalFileOutputPlugin
                 log.info("Writing local file '{}'", path);
                 fileNames.add(path);
                 try {
-                    output = new FileOutputStream(new File(path));
+                    output = new BufferedOutputStream(new FileOutputStream(new File(path)));
                 } catch (FileNotFoundException ex) {
                     throw new RuntimeException(ex);  // TODO exception class
                 }
