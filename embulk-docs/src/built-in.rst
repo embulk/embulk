@@ -150,7 +150,9 @@ CSV parser plugins
 +----------------------------+-----------------------------------------------+
 | null\_string               | null string                                   |
 +----------------------------+-----------------------------------------------+
-| header\_line               | true,false use as header line first row       |
+| header\_line(Obsolate)     | true,false use as header line first row       |
++----------------------------+-----------------------------------------------+
+| skip\_header\_lines        | number of skip header lines(v0.5.2)           |
 +----------------------------+-----------------------------------------------+
 | newline                    | newline characters CR, CRLF and LF            |
 +----------------------------+-----------------------------------------------+
