@@ -6,7 +6,6 @@ import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.Closeable;
 import java.io.IOException;
-
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.BufferAllocator;
