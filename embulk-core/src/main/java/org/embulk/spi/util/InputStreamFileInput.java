@@ -49,7 +49,7 @@ public class InputStreamFileInput
         }
     }
 
-	// because when sun.nio.cs.StreamDecoder#readBytes calls java.io.InputStream#read(byte[], off, len), len is 8192.
+    // because when sun.nio.cs.StreamDecoder#readBytes calls java.io.InputStream#read(byte[], off, len), len is 8192.
     private static final int BUFFER_SIZE = 8192;
     private final BufferAllocator allocator;
     private final Provider provider;
