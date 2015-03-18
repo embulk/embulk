@@ -49,6 +49,7 @@ public class InputStreamFileInput
         }
     }
 
+    private static final int BUFFER_SIZE = 8192;
     private final BufferAllocator allocator;
     private final Provider provider;
     private InputStream current;
@@ -66,7 +67,7 @@ public class InputStreamFileInput
         if (current == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");
         }
-        Buffer buffer = allocator.allocate();
+        Buffer buffer = allocator.allocate(BUFFER_SIZE);
         try {
             int n = current.read(buffer.array(), buffer.offset(), buffer.capacity());
             if (n < 0) {
