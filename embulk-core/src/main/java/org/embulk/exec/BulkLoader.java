@@ -3,6 +3,7 @@ package org.embulk.exec;
 import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -13,6 +14,7 @@ import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.CommitReport;
@@ -24,6 +26,7 @@ import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
+import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -70,21 +73,17 @@ public class BulkLoader
         private PluginType inputPluginType;
         private PluginType outputPluginType;
         private List<PluginType> filterPluginTypes;
-        private int taskCount;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
         private volatile List<Schema> schemas;
 
-        private volatile boolean[] started;
-        private volatile boolean[] finished;
-
-        private volatile CommitReport[] inputCommitReports;
-        private volatile CommitReport[] outputCommitReports;
         private volatile ConfigDiff inputConfigDiff;
         private volatile ConfigDiff outputConfigDiff;
-        private volatile Throwable[] exceptions;
+
+        private volatile List<TaskState> inputTaskStates;
+        private volatile List<TaskState> outputTaskStates;
 
         public LoaderState(Logger logger)
         {
@@ -101,16 +100,6 @@ public class BulkLoader
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
             this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
-        }
-
-        public void initialize(int count)
-        {
-            this.started = new boolean[count];
-            this.finished = new boolean[count];
-            this.exceptions = new Throwable[count];
-            this.inputCommitReports = new CommitReport[count];
-            this.outputCommitReports = new CommitReport[count];
-            this.taskCount = count;
         }
 
         public void setSchemas(List<Schema> schemas)
@@ -142,73 +131,49 @@ public class BulkLoader
         }
 
         @Override
-        public void start(int taskIndex)
+        public void initialize(int inputTaskCount, int outputTaskCount)
         {
-            started[taskIndex] = true;
-        }
-
-        @Override
-        public void finish(int taskIndex)
-        {
-            finished[taskIndex] = true;
-        }
-
-        @Override
-        public boolean isStarted(int taskIndex)
-        {
-            return started[taskIndex];
-        }
-
-        @Override
-        public boolean isFinished(int taskIndex)
-        {
-            return finished[taskIndex];
-        }
-
-        @Override
-        public void setInputCommitReport(int taskIndex, CommitReport inputCommitReport)
-        {
-            if (inputCommitReport == null) {
-                inputCommitReport = Exec.newCommitReport();
+            if (inputTaskStates != null || outputTaskStates != null) {
+                // initialize is called twice if resume (by restoreResumedCommitReports and ExecutorPlugin.execute)
+                if (inputTaskStates.size() != inputTaskCount || outputTaskStates.size() != outputTaskCount) {
+                    throw new ConfigException(String.format(
+                                "input task count and output task (%d and %d) must be same with the first execution (%d and %d) whenre resumed",
+                                inputTaskCount, outputTaskCount, inputTaskStates.size(), outputTaskStates.size()));
+                }
+            } else {
+                ImmutableList.Builder<TaskState> inputTaskStates = ImmutableList.builder();
+                ImmutableList.Builder<TaskState> outputTaskStates = ImmutableList.builder();
+                for (int i=0; i < inputTaskCount; i++) {
+                    inputTaskStates.add(new TaskState());
+                }
+                for (int i=0; i < outputTaskCount; i++) {
+                    outputTaskStates.add(new TaskState());
+                }
+                this.inputTaskStates = inputTaskStates.build();
+                this.outputTaskStates = outputTaskStates.build();
             }
-            this.inputCommitReports[taskIndex] = inputCommitReport;
         }
 
         @Override
-        public void setOutputCommitReport(int taskIndex, CommitReport outputCommitReport)
+        public TaskState getInputTaskState(int inputTaskIndex)
         {
-            if (outputCommitReport == null) {
-                outputCommitReport = Exec.newCommitReport();
-            }
-            this.outputCommitReports[taskIndex] = outputCommitReport;
+            return inputTaskStates.get(inputTaskIndex);
         }
 
         @Override
-        public boolean isOutputCommitted(int taskIndex)
+        public TaskState getOutputTaskState(int outputTaskIndex)
         {
-            return outputCommitReports[taskIndex] != null;
-        }
-
-        @Override
-        public void setException(int taskIndex, Throwable exception)
-        {
-            this.exceptions[taskIndex] = exception;
-        }
-
-        @Override
-        public boolean isExceptionSet(int taskIndex)
-        {
-            return this.exceptions[taskIndex] != null;
+            return outputTaskStates.get(outputTaskIndex);
         }
 
         public boolean isAllCommitted()
         {
-            if (taskCount <= 0) {
+            if (outputTaskStates == null) {
                 // not initialized
                 return false;
             }
-            for (int i=0; i < taskCount; i++) {
-                if (!isOutputCommitted(i)) {
+            for (TaskState outputTaskState : outputTaskStates) {
+                if (!outputTaskState.isCommitted()) {
                     return false;
                 }
             }
@@ -217,11 +182,14 @@ public class BulkLoader
 
         public boolean isAnyStarted()
         {
-            if (started == null) {
+            if (inputTaskStates == null) {
+                // not initialized
                 return false;
             }
-            for (boolean b : started) {
-                if (b) { return true; }
+            for (TaskState inputTaskState : inputTaskStates) {
+                if (inputTaskState.isStarted()) {
+                    return true;
+                }
             }
             return false;
         }
@@ -242,29 +210,71 @@ public class BulkLoader
             this.inputConfigDiff = inputConfigDiff;
         }
 
-        public List<CommitReport> getInputCommitReports()
+        private List<Optional<CommitReport>> getInputCommitReports()
         {
-            return ImmutableList.copyOf(inputCommitReports);
+            ImmutableList.Builder<Optional<CommitReport>> builder = ImmutableList.builder();
+            for (TaskState inputTaskState : inputTaskStates) {
+                builder.add(inputTaskState.getCommitReport());
+            }
+            return builder.build();
         }
 
-        public List<CommitReport> getOutputCommitReports()
+        private List<Optional<CommitReport>> getOutputCommitReports()
         {
-            return ImmutableList.copyOf(outputCommitReports);
+            ImmutableList.Builder<Optional<CommitReport>> builder = ImmutableList.builder();
+            for (TaskState outputTaskState : outputTaskStates) {
+                builder.add(outputTaskState.getCommitReport());
+            }
+            return builder.build();
+        }
+
+        public List<CommitReport> getAllInputCommitReports()
+        {
+            ImmutableList.Builder<CommitReport> builder = ImmutableList.builder();
+            for (TaskState inputTaskState : inputTaskStates) {
+                builder.add(inputTaskState.getCommitReport().get());
+            }
+            return builder.build();
+        }
+
+        public List<CommitReport> getAllOutputCommitReports()
+        {
+            ImmutableList.Builder<CommitReport> builder = ImmutableList.builder();
+            for (TaskState outputTaskState : outputTaskStates) {
+                builder.add(outputTaskState.getCommitReport().get());
+            }
+            return builder.build();
+        }
+
+        public List<Throwable> getExceptions()
+        {
+            ImmutableList.Builder<Throwable> builder = ImmutableList.builder();
+            for (TaskState inputTaskState : inputTaskStates) {
+                Optional<Throwable> exception = inputTaskState.getException();
+                if (exception.isPresent()) {
+                    builder.add(exception.get());
+                }
+            }
+            for (TaskState outputTaskState : outputTaskStates) {
+                Optional<Throwable> exception = outputTaskState.getException();
+                if (exception.isPresent()) {
+                    builder.add(exception.get());
+                }
+            }
+            return builder.build();
         }
 
         public RuntimeException getRepresentativeException()
         {
             RuntimeException top = null;
-            for (Throwable ex : exceptions) {
-                if (ex != null) {
-                    if (top != null) {
-                        top.addSuppressed(ex);
+            for (Throwable ex : getExceptions()) {
+                if (top != null) {
+                    top.addSuppressed(ex);
+                } else {
+                    if (ex instanceof RuntimeException) {
+                        top = (RuntimeException) ex;
                     } else {
-                        if (ex instanceof RuntimeException) {
-                            top = (RuntimeException) ex;
-                        } else {
-                            top = new RuntimeException(ex);
-                        }
+                        top = new RuntimeException(ex);
                     }
                 }
             }
@@ -290,10 +300,8 @@ public class BulkLoader
             }
 
             ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
-            for (Throwable e : exceptions) {
-                if (e != null) {
-                    ignoredExceptions.add(e);
-                }
+            for (Throwable e : getExceptions()) {
+                ignoredExceptions.add(e);
             }
             if (ex != null) {
                 ignoredExceptions.add(ex);
@@ -308,7 +316,7 @@ public class BulkLoader
                     exec.getSessionConfigSource(),
                     inputTaskSource, outputTaskSource,
                     first(schemas), last(schemas),
-                    Arrays.asList(inputCommitReports), Arrays.asList(outputCommitReports));
+                    getInputCommitReports(), getOutputCommitReports());
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec)
@@ -396,16 +404,24 @@ public class BulkLoader
         InputPlugin inputPlugin = newInputPlugin(task);
         OutputPlugin outputPlugin = newOutputPlugin(task);
 
-        List<CommitReport> successInputCommitReports = ImmutableList.copyOf(
-                Iterables.filter(resume.getInputCommitReports(), Predicates.notNull()));
-        List<CommitReport> successOutputCommitReports = ImmutableList.copyOf(
-                Iterables.filter(resume.getOutputCommitReports(), Predicates.notNull()));
+        ImmutableList.Builder<CommitReport> successfulInputCommitReports = ImmutableList.builder();
+        ImmutableList.Builder<CommitReport> successfulOutputCommitReports = ImmutableList.builder();
+        for (Optional<CommitReport> inputCommitReport : resume.getInputCommitReports()) {
+            if (inputCommitReport.isPresent()) {
+                successfulInputCommitReports.add(inputCommitReport.get());
+            }
+        }
+        for (Optional<CommitReport> outputCommitReport : resume.getOutputCommitReports()) {
+            if (outputCommitReport.isPresent()) {
+                successfulOutputCommitReports.add(outputCommitReport.get());
+            }
+        }
 
         inputPlugin.cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
-                resume.getInputCommitReports().size(), successInputCommitReports);
+                resume.getInputCommitReports().size(), successfulInputCommitReports.build());
 
         outputPlugin.cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
-                resume.getOutputCommitReports().size(), successOutputCommitReports);
+                resume.getOutputCommitReports().size(), successfulOutputCommitReports.build());
     }
 
     private ExecutionResult doRun(ConfigSource config)
@@ -425,29 +441,28 @@ public class BulkLoader
                 {
                     ConfigDiff inputConfigDiff = inputPlugin.transaction(task.getInputConfig(),
                     new InputPlugin.Control() {
-                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int taskCount)
+                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                         {
-                            state.initialize(taskCount);
                             state.setInputTaskSource(inputTask);
                             Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                                 public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                                 {
                                     state.setSchemas(schemas);
                                     state.setFilterTaskSources(filterTasks);
-                                    ConfigDiff outputConfigDiff = outputPlugin.transaction(task.getOutputConfig(), last(schemas), taskCount, new OutputPlugin.Control() {
+                                    ConfigDiff outputConfigDiff = outputPlugin.transaction(task.getOutputConfig(), last(schemas), inputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
 
-                                            execute(task, executor, taskCount, state);
+                                            execute(task, executor, inputTaskCount, state);
 
-                                            return state.getOutputCommitReports();
+                                            return state.getAllOutputCommitReports();
                                         }
                                     });
                                     state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
-                            return state.getInputCommitReports();
+                            return state.getAllInputCommitReports();
                         }
                     });
                     state.setInputConfigDiff(inputConfigDiff);
@@ -486,34 +501,32 @@ public class BulkLoader
                 public void transaction(final ExecutorPlugin.Executor executor)
                 {
                     ConfigDiff inputConfigDiff = inputPlugin.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
-                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int taskCount)
+                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                         {
                             // TODO validate inputTask?
                             // TODO validate inputSchema
-                            // TODO validate taskCount
-                            state.initialize(taskCount);
                             state.setInputTaskSource(inputTask);
                             Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                                 public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                                 {
                                     state.setSchemas(schemas);
                                     state.setFilterTaskSources(filterTasks);
-                                    ConfigDiff outputConfigDiff = outputPlugin.resume(resume.getOutputTaskSource(), last(schemas), taskCount, new OutputPlugin.Control() {
+                                    ConfigDiff outputConfigDiff = outputPlugin.resume(resume.getOutputTaskSource(), last(schemas), inputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             // TODO validate outputTask?
                                             state.setOutputTaskSource(outputTask);
 
-                                            restoreResumedCommitReports(resume, taskCount, state);
-                                            execute(task, executor, taskCount, state);
+                                            restoreResumedCommitReports(resume, state);
+                                            execute(task, executor, inputTaskCount, state);
 
-                                            return state.getOutputCommitReports();
+                                            return state.getAllOutputCommitReports();
                                         }
                                     });
                                     state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
-                            return state.getInputCommitReports();
+                            return state.getAllInputCommitReports();
                         }
                     });
                     state.setInputConfigDiff(inputConfigDiff);
@@ -536,29 +549,45 @@ public class BulkLoader
         }
     }
 
-    private static void restoreResumedCommitReports(ResumeState resume, int taskCount, LoaderState state)
+    private static void restoreResumedCommitReports(ResumeState resume, LoaderState state)
     {
-        for (int i=0; i < taskCount; i++) {
-            if (resume.getOutputCommitReports().get(i) != null) {
-                state.start(i);
-                state.setInputCommitReport(i, resume.getInputCommitReports().get(i));
-                state.setOutputCommitReport(i, resume.getOutputCommitReports().get(i));
-                state.finish(i);
+        int inputTaskCount = resume.getInputCommitReports().size();
+        int outputTaskCount = resume.getOutputCommitReports().size();
+
+        state.initialize(inputTaskCount, outputTaskCount);
+
+        for (int i=0; i < inputTaskCount; i++) {
+            Optional<CommitReport> report = resume.getInputCommitReports().get(i);
+            if (report.isPresent()) {
+                TaskState task = state.getInputTaskState(i);
+                task.start();
+                task.setCommitReport(report.get());
+                task.finish();
+            }
+        }
+
+        for (int i=0; i < outputTaskCount; i++) {
+            Optional<CommitReport> report = resume.getOutputCommitReports().get(i);
+            if (report.isPresent()) {
+                TaskState task = state.getOutputTaskState(i);
+                task.start();
+                task.setCommitReport(report.get());
+                task.finish();
             }
         }
     }
 
     private void execute(BulkLoaderTask task, ExecutorPlugin.Executor executor,
-            int taskCount, LoaderState state)
+            int inputTaskCount, LoaderState state)
     {
-        if (taskCount <= 0) {
+        if (inputTaskCount <= 0) {
             // TODO warning?
             return;
         }
 
         ProcessTask procTask = state.buildProcessTask();
 
-        executor.execute(procTask, taskCount, state);
+        executor.execute(procTask, inputTaskCount, state);
 
         if (!state.isAllCommitted()) {
             throw state.getRepresentativeException();

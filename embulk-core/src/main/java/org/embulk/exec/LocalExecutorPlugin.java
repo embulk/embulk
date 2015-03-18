@@ -12,12 +12,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecutorPlugin;
-import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
+import org.embulk.spi.ProcessState;
+import org.embulk.spi.TaskState;
 import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;
-import static org.embulk.spi.util.Executors.getStartedCount;
-import static org.embulk.spi.util.Executors.getFinishedCount;
 
 public class LocalExecutorPlugin
         implements ExecutorPlugin
@@ -33,42 +32,46 @@ public class LocalExecutorPlugin
     public void transaction(ConfigSource config, ExecutorPlugin.Control control)
     {
         control.transaction(new Executor() {
-            public void execute(ProcessTask task, int taskCount, ProcessState state)
+            public void execute(ProcessTask task, int inputTaskCount, ProcessState state)
             {
-                localExecute(task, taskCount, state);
+                localExecute(task, inputTaskCount, state);
             }
         });
     }
 
-    private void localExecute(ProcessTask task, int taskCount, ProcessState state)
+    private void localExecute(ProcessTask task, int inputTaskCount, ProcessState state)
     {
-        Logger logger = Exec.getLogger(LocalExecutorPlugin.class);
+        Logger log = Exec.getLogger(LocalExecutorPlugin.class);
+
+        // simple use outputTaskCount == inputTaskCount in LocalExecutorPlugin
+        int taskCount = inputTaskCount;
+        state.initialize(taskCount, taskCount);
 
         List<Future<Throwable>> futures = new ArrayList<>(taskCount);
         try {
             for (int i=0; i < taskCount; i++) {
-                if (state.isOutputCommitted(i)) {
-                    logger.warn("Skipped resumed task {}", i);
+                if (state.getOutputTaskState(i).isCommitted()) {
+                    log.warn("Skipped resumed task {}", i);
                     futures.add(null);  // resumed
                 } else {
                     futures.add(startProcessor(task, i, state));
                 }
             }
-            showProgress(logger, state, taskCount);
+            showProgress(log, state, taskCount);
 
             for (int i=0; i < taskCount; i++) {
                 if (futures.get(i) == null) {
                     continue;
                 }
                 try {
-                    state.setException(i, futures.get(i).get());
+                    state.getInputTaskState(i).setException(futures.get(i).get());
                 } catch (ExecutionException ex) {
-                    state.setException(i, ex.getCause());
+                    state.getInputTaskState(i).setException(ex.getCause());
                     //Throwables.propagate(ex.getCause());
                 } catch (InterruptedException ex) {
-                    state.setException(i, new ExecutionInterruptedException(ex));
+                    state.getInputTaskState(i).setException(new ExecutionInterruptedException(ex));
                 }
-                showProgress(logger, state, taskCount);
+                showProgress(log, state, taskCount);
             }
         } finally {
             for (Future<Throwable> future : futures) {
@@ -80,11 +83,16 @@ public class LocalExecutorPlugin
         }
     }
 
-    private void showProgress(Logger logger, ProcessState state, int taskCount)
+    private void showProgress(Logger log, ProcessState state, int taskCount)
     {
-        int finished = getStartedCount(state, taskCount);
-        int started = getFinishedCount(state, taskCount);
-        logger.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
+        int started = 0;
+        int finished = 0;
+        for (int i=0; i < taskCount; i++) {
+            if (state.getInputTaskState(i).isStarted()) { started++; }
+            if (state.getOutputTaskState(i).isFinished()) { finished++; }
+        }
+
+        log.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
     }
 
     private Future<Throwable> startProcessor(final ProcessTask task, final int taskIndex, final ProcessState state)
@@ -96,25 +104,24 @@ public class LocalExecutorPlugin
                     Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
                         public void started()
                         {
-                            state.start(taskIndex);
+                            state.getInputTaskState(taskIndex).start();
+                            state.getOutputTaskState(taskIndex).start();
                         }
 
                         public void inputCommitted(CommitReport report)
                         {
-                            state.setInputCommitReport(taskIndex, report);
+                            state.getInputTaskState(taskIndex).setCommitReport(report);
                         }
 
                         public void outputCommitted(CommitReport report)
                         {
-                            state.setOutputCommitReport(taskIndex, report);
-                        }
-
-                        public void finished()
-                        {
-                            state.finish(taskIndex);
+                            state.getOutputTaskState(taskIndex).setCommitReport(report);
                         }
                     });
                     return null;
+                } finally {
+                    state.getInputTaskState(taskIndex).finish();
+                    state.getOutputTaskState(taskIndex).finish();
                 }
             }
         });

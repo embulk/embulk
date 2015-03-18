@@ -23,8 +23,6 @@ public abstract class Executors
         public void inputCommitted(CommitReport report);
 
         public void outputCommitted(CommitReport report);
-
-        public void finished();
     }
 
     public static void process(ExecSession exec,
@@ -42,10 +40,16 @@ public abstract class Executors
             PageOutput filtered = closeThis = Filters.open(filterPlugins, task.getFilterTaskSources(), task.getFilterSchemas(), tran);
 
             CommitReport inputCommitReport = inputPlugin.run(task.getInputTaskSource(), task.getInputSchema(), taskIndex, filtered);
+            if (inputCommitReport == null) {
+                inputCommitReport = exec.newCommitReport();
+            }
             callback.inputCommitted(inputCommitReport);
 
             CommitReport outputCommitReport = tran.commit();
             tran = null;
+            if (outputCommitReport == null) {
+                outputCommitReport = exec.newCommitReport();
+            }
             callback.outputCommitted(outputCommitReport);  // TODO check output.finish() is called. wrap or abstract
 
         } finally {
@@ -67,23 +71,5 @@ public abstract class Executors
     public static Schema getOutputSchema(List<Schema> schemas)
     {
         return schemas.get(schemas.size() - 1);
-    }
-
-    public static int getStartedCount(ProcessState state, int taskCount)
-    {
-        int count = 0;
-        for (int i=0; i < taskCount; i++) {
-            if (state.isStarted(i)) { count++; }
-        }
-        return count;
-    }
-
-    public static int getFinishedCount(ProcessState state, int taskCount)
-    {
-        int count = 0;
-        for (int i=0; i < taskCount; i++) {
-            if (state.isFinished(i)) { count++; }
-        }
-        return count;
     }
 }

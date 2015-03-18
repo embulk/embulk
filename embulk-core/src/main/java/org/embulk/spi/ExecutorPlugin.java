@@ -6,7 +6,7 @@ public interface ExecutorPlugin
 {
     public interface Executor
     {
-        public void execute(ProcessTask task, int taskCount, ProcessState state);
+        public void execute(ProcessTask task, int inputTaskCount, ProcessState state);
     }
 
     public interface Control
