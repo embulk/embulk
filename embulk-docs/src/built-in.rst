@@ -200,22 +200,22 @@ Output plugin
 
 You can use three types output plugins.
 
-+----------+-------------------+
-| name     | description       |
-+==========+===================+
-| stdout   | standard output   |
-+----------+-------------------+
-| file     | file output       |
-+----------+-------------------+
-| null     | dummy output      |
-+----------+-------------------+
++----------+---------------------------+
+| name     | description               |
++==========+===========================+
+| stdout   | standard output           |
++----------+---------------------------+
+| file     | file output               |
++----------+---------------------------+
+| "null"   | dummy output. need quote  |
++----------+---------------------------+
 
 stdout and null output are no options.
 
 ::
 
     #out: {type: stdout}
-    #out: {type: null}
+    #out: {type: "null" } # need quote
     out:
       type: file
       path_prefix: ./sample
