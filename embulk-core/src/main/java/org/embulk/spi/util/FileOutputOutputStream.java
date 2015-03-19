@@ -39,6 +39,7 @@ public class FileOutputOutputStream
 
     public void finish()
     {
+        doFlush();
         out.finish();
     }
 
