@@ -49,8 +49,6 @@ public class InputStreamFileInput
         }
     }
 
-    // because when sun.nio.cs.StreamDecoder#readBytes calls java.io.InputStream#read(byte[], off, len), len is 8192.
-    private static final int BUFFER_SIZE = 8192;
     private final BufferAllocator allocator;
     private final Provider provider;
     private InputStream current;
@@ -68,7 +66,7 @@ public class InputStreamFileInput
         if (current == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");
         }
-        Buffer buffer = allocator.allocate(BUFFER_SIZE);
+        Buffer buffer = allocator.allocate();
         try {
             int n = current.read(buffer.array(), buffer.offset(), buffer.capacity());
             if (n < 0) {
