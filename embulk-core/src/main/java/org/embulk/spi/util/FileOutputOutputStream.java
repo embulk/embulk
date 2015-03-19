@@ -8,6 +8,9 @@ import org.embulk.spi.FileOutput;
 public class FileOutputOutputStream
         extends OutputStream
 {
+    // default buffer size of Buffer class is 256, it's too small.
+    private static final int BUFFER_SIZE = 8192;
+
     private final FileOutput out;
     private final BufferAllocator allocator;
     private final CloseMode closeMode;
@@ -25,7 +28,7 @@ public class FileOutputOutputStream
     {
         this.out = out;
         this.allocator = allocator;
-        this.buffer = allocator.allocate();
+        this.buffer = allocator.allocate(BUFFER_SIZE);
         this.closeMode = closeMode;
     }
 
@@ -87,7 +90,7 @@ public class FileOutputOutputStream
     public void flush()
     {
         if (doFlush()) {
-            buffer = allocator.allocate();
+            buffer = allocator.allocate(BUFFER_SIZE);
         }
     }
 
