@@ -200,10 +200,13 @@ public class PageBuilder
 
     public void flush()
     {
-        doFlush();
-        if (buffer == null) {
-            newBuffer();
-        }
+    	try {
+            doFlush();
+    	} finally {
+            if (buffer == null) {
+                newBuffer();
+            }
+    	}
     }
 
     public void finish()
