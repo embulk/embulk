@@ -29,11 +29,22 @@ public abstract class Executors
             ProcessTask task, int taskIndex,
             ProcessStateCallback callback)
     {
-        final InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
-        final List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
-        final OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
+        InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
+        List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
+        OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
 
+        process(exec, task, taskIndex,
+                inputPlugin, filterPlugins, outputPlugin,
+                callback);
+    }
+
+    public static void process(ExecSession exec,
+            ProcessTask task, int taskIndex,
+            InputPlugin inputPlugin, List<FilterPlugin> filterPlugins, OutputPlugin outputPlugin,
+            ProcessStateCallback callback)
+    {
         TransactionalPageOutput tran = outputPlugin.open(task.getOutputTaskSource(), task.getOutputSchema(), taskIndex);
+
         PageOutput closeThis = tran;
         callback.started();
         try {

@@ -29,6 +29,7 @@ public class LocalExecutorPlugin
         this.executor = executor.getExecutorService();
     }
 
+    @Override
     public void transaction(ConfigSource config, ExecutorPlugin.Control control)
     {
         control.transaction(new Executor() {
