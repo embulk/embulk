@@ -212,8 +212,7 @@ public class CsvParserPlugin
                         });
                         pageBuilder.addRecord();
 
-                    } catch (Exception e) {
-                        // TODO logging
+                    } catch (CsvTokenizer.InvalidFormatException e) {
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
                         log.warn(String.format("Skipped (line %d): %s", lineNumber, skippedLine), e);

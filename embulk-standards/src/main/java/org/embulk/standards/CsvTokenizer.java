@@ -81,7 +81,10 @@ public class CsvTokenizer
     public boolean nextRecord()
     {
         // If at the end of record, read the next line and initialize the state
-        Preconditions.checkState(recordState == RecordState.END, "too many columns");  // TODO exception class
+        if (recordState != RecordState.END) {
+            throw new TooManyColumnsException("Too many columns");
+        }
+
         boolean hasNext = nextLine(true);
         if (hasNext) {
             recordState = RecordState.NOT_END;
@@ -122,7 +125,9 @@ public class CsvTokenizer
 
     public String nextColumn()
     {
-        Preconditions.checkState(hasNextColumn(), "doesn't have enough columns");  // TODO exception class
+        if (!hasNextColumn()) {
+            throw new TooFewColumnsException("Too few columns");
+        }
 
         // reset last state
         wasQuotedColumn = false;
@@ -138,7 +143,7 @@ public class CsvTokenizer
             final char c = nextChar();
             if (TRACE) {
                 System.out.println("#MN c: " + c + " (" + columnState + "," + recordState + ")");
-                try { Thread.sleep(100); } catch (Exception e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
             }
 
             switch (columnState) {
@@ -241,7 +246,7 @@ public class CsvTokenizer
                         quotedValue.append(newline);
                         quotedValueLines.add(line);
                         if (!nextLine(false)) {
-                            throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
+                            throw new InvalidValueException("Unexpected end of line during parsing a quoted value");
                         }
                         valueStartPos = 0;
 
@@ -269,7 +274,7 @@ public class CsvTokenizer
                             quotedValue.append(line.substring(valueStartPos, linePos));
                             quotedValueLines.add(line);
                             if (!nextLine(false)) {
-                                throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
+                                throw new InvalidValueException("Unexpected end of line during parsing a quoted value");
                             }
                             valueStartPos = 0;
                         } else if (isQuote(next) || isEscape(next)) { // escaped quote
@@ -298,7 +303,7 @@ public class CsvTokenizer
                         // column has trailing spaces and quoted. TODO should this be rejected?
 
                     } else {
-                        throw new RuntimeException("Unexpected extra character after quoted value");  // TODO exception class
+                        throw new InvalidValueException("Unexpected extra character after quoted value");
                     }
                     break;
 
@@ -360,10 +365,46 @@ public class CsvTokenizer
         return c == escape;
     }
 
-    static class QuotedSizeLimitExceededException
+    public static class InvalidFormatException
             extends RuntimeException
     {
-        QuotedSizeLimitExceededException(String message)
+        public InvalidFormatException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public static class InvalidValueException
+            extends RuntimeException
+    {
+        public InvalidValueException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public static class QuotedSizeLimitExceededException
+            extends InvalidValueException
+    {
+        public QuotedSizeLimitExceededException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public class TooManyColumnsException
+            extends InvalidFormatException
+    {
+        public TooManyColumnsException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public class TooFewColumnsException
+            extends InvalidFormatException
+    {
+        public TooFewColumnsException(String message)
         {
             super(message);
         }
