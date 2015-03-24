@@ -9,6 +9,9 @@ Embulk
 .. image:: _static/embulk-logo.png
    :width: 512px
 
+What's Embulk?
+------------------
+
 Embulk is a open-source bulk data loader that helps data transfer between various databases, storages, file formats, and cloud services.
 
 Embulk supports:
@@ -21,12 +24,21 @@ Embulk supports:
 
 You can define a bulk data flow by combination of input and output plugins. For example, `this tutorial <recipe/scheduled-csv-load-to-elasticsearch-kibana4.html>`_ shows how to use **file** input plugin with **csv** parser plugin and **gzip** decoder plugin to read files, and **elasticsearch** output plugin to load the records to Elasticsearch.
 
+Documents
+------------------
+
 * `Quick Start <https://github.com/embulk/embulk#quick-start>`_
 
-  * `Linux and Mac OS X <https://github.com/embulk/embulk#linux--mac--bsd>`_
+  * `Linux <https://github.com/embulk/embulk#linux--mac--bsd>`_
+
+  * `Mac OS X <https://github.com/embulk/embulk#linux--mac--bsd>`_
 
   * `Windows <https://github.com/embulk/embulk#windows>`_
 
+.. toctree::
+   :maxdepth: 2
+
+   recipe
 
 * `List of Plugins by Category <http://www.embulk.org/plugins/>`_
 
@@ -43,9 +55,7 @@ You can define a bulk data flow by combination of input and output plugins. For 
 .. toctree::
    :maxdepth: 2
 
-   recipe
    release
-
 
 * `JavaDoc <javadoc/index.html>`_
 
