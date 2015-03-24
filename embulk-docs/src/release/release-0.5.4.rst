@@ -16,6 +16,8 @@ General Changes
 
 * If plugin type is null, suggest to use ``{type: "null"}`` (@hito4t++)
 
+* Embulk logo is available! See the orca: https://github.com/embulk/embulk/issues/12
+
 
 Release Date
 ------------------
