@@ -19,10 +19,10 @@ https://github.com/embulk/embulk
 .. toctree::
    :maxdepth: 2
 
+   built-in
    recipe
    release
 
 * `JavaDoc <javadoc/index.html>`_
 
 * `RDoc <rdoc/_index.html>`_
-
