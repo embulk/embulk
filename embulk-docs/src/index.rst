@@ -8,6 +8,7 @@ Embulk
 
 .. image:: _static/embulk-logo.png
    :width: 512px
+   :target: https://github.com/embulk/embulk
 
 What's Embulk?
 ------------------
@@ -16,13 +17,13 @@ Embulk is a open-source bulk data loader that helps data transfer between variou
 
 Embulk supports:
 
-* Automatic guessing of file formats
-* Resuming
+* Automatic guessing of input file formats
 * Parallel & distributed execution to deal with big data sets
 * Transaction control to guarantee All-or-Nothing
+* Resuming
 * Plugins released on RubyGems.org
 
-You can define a bulk data flow by combination of input and output plugins. For example, `this tutorial <recipe/scheduled-csv-load-to-elasticsearch-kibana4.html>`_ shows how to use **file** input plugin with **csv** parser plugin and **gzip** decoder plugin to read files, and **elasticsearch** output plugin to load the records to Elasticsearch.
+You can define a bulk data loading using combination of input and output plugins. For example, `this tutorial <recipe/scheduled-csv-load-to-elasticsearch-kibana4.html>`_ describes how to use **file** input plugin with **csv** parser plugin and **gzip** decoder plugin to read CSV files, and **elasticsearch** output plugin to load the records to Elasticsearch.
 
 Documents
 ------------------
