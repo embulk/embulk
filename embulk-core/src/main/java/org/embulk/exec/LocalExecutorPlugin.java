@@ -15,6 +15,7 @@ import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.TaskState;
+import org.embulk.spi.Schema;
 import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;
 
@@ -30,22 +31,21 @@ public class LocalExecutorPlugin
     }
 
     @Override
-    public void transaction(ConfigSource config, ExecutorPlugin.Control control)
+    public void transaction(ConfigSource config, Schema outputSchema, final int inputTaskCount,
+            ExecutorPlugin.Control control)
     {
-        control.transaction(new Executor() {
-            public void execute(ProcessTask task, int inputTaskCount, ProcessState state)
+        control.transaction(outputSchema, inputTaskCount, new Executor() {
+            public void execute(ProcessTask task, ProcessState state)
             {
                 localExecute(task, inputTaskCount, state);
             }
         });
     }
 
-    private void localExecute(ProcessTask task, int inputTaskCount, ProcessState state)
+    private void localExecute(ProcessTask task, int taskCount, ProcessState state)
     {
         Logger log = Exec.getLogger(LocalExecutorPlugin.class);
 
-        // simple use outputTaskCount == inputTaskCount in LocalExecutorPlugin
-        int taskCount = inputTaskCount;
         state.initialize(taskCount, taskCount);
 
         List<Future<Throwable>> futures = new ArrayList<>(taskCount);

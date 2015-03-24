@@ -28,6 +28,12 @@ public class Page
         return this;
     }
 
+    public List<String> getStringReferences()
+    {
+        // TODO used by mapreduce executor
+        return stringReferences;
+    }
+
     public String getStringReference(int index)
     {
         return stringReferences.get(index);

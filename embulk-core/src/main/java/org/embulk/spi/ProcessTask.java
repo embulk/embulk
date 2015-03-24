@@ -18,6 +18,7 @@ public class ProcessTask
     private final TaskSource outputTaskSource;
     private final List<TaskSource> filterTaskSources;
     private final List<Schema> schemas;
+    private final Schema executorSchema;
     private TaskSource executorTaskSource;
 
     @JsonCreator
@@ -29,6 +30,7 @@ public class ProcessTask
             @JsonProperty("outputTask") TaskSource outputTaskSource,
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
             @JsonProperty("schemas") List<Schema> schemas,
+            @JsonProperty("executorSchema") Schema executorSchema,
             @JsonProperty("executorTask") TaskSource executorTaskSource)
     {
         this.inputPluginType = inputPluginType;
@@ -38,6 +40,7 @@ public class ProcessTask
         this.outputTaskSource = outputTaskSource;
         this.filterTaskSources = filterTaskSources;
         this.schemas = schemas;
+        this.executorSchema = executorSchema;
         this.executorTaskSource = executorTaskSource;
     }
 
@@ -83,6 +86,12 @@ public class ProcessTask
         return schemas;
     }
 
+    @JsonProperty("executorSchema")
+    public Schema getExecutorSchema()
+    {
+        return executorSchema;
+    }
+
     @JsonIgnore
     public Schema getInputSchema()
     {
@@ -95,6 +104,7 @@ public class ProcessTask
         return Executors.getOutputSchema(schemas);
     }
 
+    @JsonIgnore
     public void setExecutorTaskSource(TaskSource executorTaskSource)
     {
         this.executorTaskSource = executorTaskSource;

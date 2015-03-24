@@ -6,13 +6,14 @@ public interface ExecutorPlugin
 {
     public interface Executor
     {
-        public void execute(ProcessTask task, int inputTaskCount, ProcessState state);
+        public void execute(ProcessTask task, ProcessState state);
     }
 
     public interface Control
     {
-        public void transaction(Executor executor);
+        public void transaction(Schema executorSchema, int outputTaskCount, Executor executor);
     }
 
-    public void transaction(ConfigSource config, ExecutorPlugin.Control control);
+    public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount,
+            ExecutorPlugin.Control control);
 }

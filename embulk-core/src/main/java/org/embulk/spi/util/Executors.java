@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
 import java.util.List;
+import org.embulk.config.TaskSource;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ProcessState;
@@ -33,24 +34,29 @@ public abstract class Executors
         List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
         OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
 
-        process(exec, task, taskIndex,
-                inputPlugin, filterPlugins, outputPlugin,
+        // TODO assert task.getExecutorSchema().equals task.getOutputSchema()
+
+        process(exec, taskIndex,
+                inputPlugin, task.getInputSchema(), task.getInputTaskSource(),
+                filterPlugins, task.getFilterSchemas(), task.getFilterTaskSources(),
+                outputPlugin, task.getOutputSchema(), task.getOutputTaskSource(),
                 callback);
     }
 
-    public static void process(ExecSession exec,
-            ProcessTask task, int taskIndex,
-            InputPlugin inputPlugin, List<FilterPlugin> filterPlugins, OutputPlugin outputPlugin,
+    public static void process(ExecSession exec, int taskIndex,
+            InputPlugin inputPlugin, Schema inputSchema, TaskSource inputTaskSource,
+            List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources,
+            OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
             ProcessStateCallback callback)
     {
-        TransactionalPageOutput tran = outputPlugin.open(task.getOutputTaskSource(), task.getOutputSchema(), taskIndex);
+        TransactionalPageOutput tran = outputPlugin.open(outputTaskSource, outputSchema, taskIndex);
 
         PageOutput closeThis = tran;
         callback.started();
         try {
-            PageOutput filtered = closeThis = Filters.open(filterPlugins, task.getFilterTaskSources(), task.getFilterSchemas(), tran);
+            PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
 
-            CommitReport inputCommitReport = inputPlugin.run(task.getInputTaskSource(), task.getInputSchema(), taskIndex, filtered);
+            CommitReport inputCommitReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
             if (inputCommitReport == null) {
                 inputCommitReport = exec.newCommitReport();
             }

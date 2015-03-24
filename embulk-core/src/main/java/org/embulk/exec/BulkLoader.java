@@ -78,6 +78,7 @@ public class BulkLoader
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
         private volatile List<Schema> schemas;
+        private volatile Schema executorSchema;
 
         private volatile ConfigDiff inputConfigDiff;
         private volatile ConfigDiff outputConfigDiff;
@@ -107,6 +108,11 @@ public class BulkLoader
             this.schemas = schemas;
         }
 
+        public void setExecutorSchema(Schema executorSchema)
+        {
+            this.executorSchema = executorSchema;
+        }
+
         public void setInputTaskSource(TaskSource inputTaskSource)
         {
             this.inputTaskSource = inputTaskSource;
@@ -127,7 +133,7 @@ public class BulkLoader
             return new ProcessTask(
                     inputPluginType, outputPluginType, filterPluginTypes,
                     inputTaskSource, outputTaskSource, filterTaskSources,
-                    schemas, Exec.newTaskSource());
+                    schemas, executorSchema, Exec.newTaskSource());
         }
 
         @Override
@@ -315,7 +321,7 @@ public class BulkLoader
             return new ResumeState(
                     exec.getSessionConfigSource(),
                     inputTaskSource, outputTaskSource,
-                    first(schemas), last(schemas),
+                    first(schemas), executorSchema,
                     getInputCommitReports(), getOutputCommitReports());
         }
 
@@ -436,25 +442,27 @@ public class BulkLoader
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class));
         state.setPluginTypes(task);
         try {
-            exec.transaction(task.getExecConfig(), new ExecutorPlugin.Control() {
-                public void transaction(final ExecutorPlugin.Executor executor)
+            ConfigDiff inputConfigDiff = inputPlugin.transaction(task.getInputConfig(), new InputPlugin.Control() {
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
-                    ConfigDiff inputConfigDiff = inputPlugin.transaction(task.getInputConfig(),
-                    new InputPlugin.Control() {
-                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+                    state.setInputTaskSource(inputTask);
+                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                         {
-                            state.setInputTaskSource(inputTask);
-                            Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                                public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
+                            state.setSchemas(schemas);
+                            state.setFilterTaskSources(filterTasks);
+                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
                                 {
-                                    state.setSchemas(schemas);
-                                    state.setFilterTaskSources(filterTasks);
-                                    ConfigDiff outputConfigDiff = outputPlugin.transaction(task.getOutputConfig(), last(schemas), inputTaskCount, new OutputPlugin.Control() {
+                                    state.setExecutorSchema(executorSchema);
+                                    ConfigDiff outputConfigDiff = outputPlugin.transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
 
-                                            execute(task, executor, inputTaskCount, state);
+                                            if (!state.isAllCommitted()) {  // inputTaskCount == 0
+                                                execute(task, executor, state);
+                                            }
 
                                             return state.getAllOutputCommitReports();
                                         }
@@ -462,12 +470,12 @@ public class BulkLoader
                                     state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
-                            return state.getAllInputCommitReports();
                         }
                     });
-                    state.setInputConfigDiff(inputConfigDiff);
+                    return state.getAllInputCommitReports();
                 }
             });
+            state.setInputConfigDiff(inputConfigDiff);
 
             cleanupCommittedTransaction(config, state);
 
@@ -497,28 +505,32 @@ public class BulkLoader
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class));
         state.setPluginTypes(task);
         try {
-            exec.transaction(task.getExecConfig(), new ExecutorPlugin.Control() {
-                public void transaction(final ExecutorPlugin.Executor executor)
+            ConfigDiff inputConfigDiff = inputPlugin.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
+                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
-                    ConfigDiff inputConfigDiff = inputPlugin.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
-                        public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+                    // TODO validate inputTask?
+                    // TODO validate inputSchema
+                    state.setInputTaskSource(inputTask);
+                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                         {
-                            // TODO validate inputTask?
-                            // TODO validate inputSchema
-                            state.setInputTaskSource(inputTask);
-                            Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                                public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
+                            state.setSchemas(schemas);
+                            state.setFilterTaskSources(filterTasks);
+                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
                                 {
-                                    state.setSchemas(schemas);
-                                    state.setFilterTaskSources(filterTasks);
-                                    ConfigDiff outputConfigDiff = outputPlugin.resume(resume.getOutputTaskSource(), last(schemas), inputTaskCount, new OutputPlugin.Control() {
+                                    // TODO validate executorSchema
+                                    state.setExecutorSchema(executorSchema);
+                                    ConfigDiff outputConfigDiff = outputPlugin.resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             // TODO validate outputTask?
                                             state.setOutputTaskSource(outputTask);
 
                                             restoreResumedCommitReports(resume, state);
-                                            execute(task, executor, inputTaskCount, state);
+                                            if (!state.isAllCommitted()) {
+                                                execute(task, executor, state);
+                                            }
 
                                             return state.getAllOutputCommitReports();
                                         }
@@ -526,12 +538,12 @@ public class BulkLoader
                                     state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
-                            return state.getAllInputCommitReports();
                         }
                     });
-                    state.setInputConfigDiff(inputConfigDiff);
+                    return state.getAllInputCommitReports();
                 }
             });
+            state.setInputConfigDiff(inputConfigDiff);
 
             cleanupCommittedTransaction(config, state);
 
@@ -577,17 +589,11 @@ public class BulkLoader
         }
     }
 
-    private void execute(BulkLoaderTask task, ExecutorPlugin.Executor executor,
-            int inputTaskCount, LoaderState state)
+    private void execute(BulkLoaderTask task, ExecutorPlugin.Executor executor, LoaderState state)
     {
-        if (inputTaskCount <= 0) {
-            // TODO warning?
-            return;
-        }
-
         ProcessTask procTask = state.buildProcessTask();
 
-        executor.execute(procTask, inputTaskCount, state);
+        executor.execute(procTask, state);
 
         if (!state.isAllCommitted()) {
             throw state.getRepresentativeException();
