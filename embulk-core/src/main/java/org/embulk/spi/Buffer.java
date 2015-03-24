@@ -111,6 +111,38 @@ public class Buffer
     {
     }
 
-    // TODO equals
-    // TODO hashCode
+    @Override
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof Buffer)) {
+            return false;
+        }
+        Buffer o = (Buffer) other;
+
+        // TODO optimize
+        if (limit() != o.limit()) {
+            return false;
+        }
+        int i = offset;
+        int io = o.offset;
+        while (i < filled) {
+            if (array[i] != o.array[io]) {
+                return false;
+            }
+            i++;
+            io++;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        // TODO optimize
+        int result = 1;
+        for (int i = offset; i < filled; i++) {
+            result = 31 * result + array[i];
+        }
+        return result;
+    }
 }
