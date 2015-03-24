@@ -112,7 +112,7 @@ The generated config-complete.yml file should include complete information as fo
         quote: '"'
         escape: ''
         null_string: 'NULL'
-        header_line: true
+        skip_header_lines: 1
         columns:
         - {name: id, type: long}
         - {name: account, type: long}

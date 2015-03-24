@@ -56,6 +56,7 @@ Documents
 .. toctree::
    :maxdepth: 2
 
+   built-in
    release
 
 * `JavaDoc <javadoc/index.html>`_
