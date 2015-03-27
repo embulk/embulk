@@ -119,6 +119,11 @@ public class ExecSession
         return bufferAllocator;
     }
 
+    public ModelManager getModelManager()
+    {
+        return modelManager;
+    }
+
     public ConfigSource getExecConfig()
     {
         return execConfig;

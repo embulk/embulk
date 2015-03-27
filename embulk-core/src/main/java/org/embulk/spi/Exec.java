@@ -49,6 +49,11 @@ public class Exec
         return session().getBufferAllocator();
     }
 
+    public static ModelManager getModelManager()
+    {
+        return session().getModelManager();
+    }
+
     public static <T> T newPlugin(Class<T> iface, PluginType type)
     {
         return session().newPlugin(iface, type);
