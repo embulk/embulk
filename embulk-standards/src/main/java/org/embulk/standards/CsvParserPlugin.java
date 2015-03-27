@@ -150,7 +150,7 @@ public class CsvParserPlugin
                         schema.visitColumns(new ColumnVisitor() {
                             public void booleanColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull, allowOptionalColumns);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -160,7 +160,7 @@ public class CsvParserPlugin
 
                             public void longColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull, allowOptionalColumns);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -175,7 +175,7 @@ public class CsvParserPlugin
 
                             public void doubleColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull, allowOptionalColumns);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -190,7 +190,7 @@ public class CsvParserPlugin
 
                             public void stringColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull, allowOptionalColumns);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -200,7 +200,7 @@ public class CsvParserPlugin
 
                             public void timestampColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull, allowOptionalColumns);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -210,6 +210,24 @@ public class CsvParserPlugin
                                         // TODO support default value
                                         throw new CsvRecordValidateException(e);
                                     }
+                                }
+                            }
+
+                            private String nextColumn()
+                            {
+                                if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
+                                    return null;
+                                }
+                                String v = tokenizer.nextColumn();
+                                if (!v.isEmpty()) {
+                                    if (v.equals(nullStringOrNull)) {
+                                        return null;
+                                    }
+                                    return v;
+                                } else if (tokenizer.wasQuotedColumn()) {
+                                    return "";
+                                } else {
+                                    return null;
                                 }
                             }
                         });
@@ -225,24 +243,6 @@ public class CsvParserPlugin
             }
 
             pageBuilder.finish();
-        }
-    }
-
-    private static String nextColumn(Schema schema, CsvTokenizer tokenizer, String nullStringOrNull, boolean allowOptionalColumns)
-    {
-        if(allowOptionalColumns && !tokenizer.hasNextColumn()) {
-            return null;
-        }
-        String v = tokenizer.nextColumn();
-        if (!v.isEmpty()) {
-            if (v.equals(nullStringOrNull)) {
-                return null;
-            }
-            return v;
-        } else if (tokenizer.wasQuotedColumn()) {
-            return "";
-        } else {
-            return null;
         }
     }
 
