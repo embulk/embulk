@@ -63,11 +63,11 @@ public class CsvFormatterPlugin
 
         return new PageOutput() {
             private final PageReader pageReader = new PageReader(schema);
+            private CsvColumnVisitor columnVisitor = new CsvColumnVisitor(pageReader, encoder, task, schema);
 
             public void add(Page page)
             {
                 pageReader.setPage(page);
-                CsvColumnVisitor columnVisitor = new CsvColumnVisitor(pageReader, encoder, task, schema);
                 while (pageReader.nextRecord()) {
                     schema.visitColumns(columnVisitor);
                     encoder.addNewLine();
