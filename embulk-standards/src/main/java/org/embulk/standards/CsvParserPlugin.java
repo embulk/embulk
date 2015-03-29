@@ -107,32 +107,18 @@ public class CsvParserPlugin
         control.run(task.dump(), task.getSchemaConfig().toSchema());
     }
 
-    private TimestampParser[] newTimestampParsers(
-            TimestampParser.ParserTask task, Schema schema)
-    {
-        TimestampParser[] parsers = new TimestampParser[schema.getColumnCount()];
-        for (Column column : schema.getColumns()) {
-            if (column.getType() instanceof TimestampType) {
-                TimestampType tt = (TimestampType) column.getType();
-                parsers[column.getIndex()] = new TimestampParser(tt.getFormat(), task);
-            }
-        }
-        return parsers;
-    }
-
     @Override
     public void run(TaskSource taskSource, final Schema schema,
             FileInput input, PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        final TimestampParser[] timestampFormatters = newTimestampParsers(task, schema);
         LineDecoder lineDecoder = new LineDecoder(input, task);
         final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
-        final String nullStringOrNull = task.getNullString().orNull();
-        final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
+            CsvColumnVisitor columnVisitor = new CsvColumnVisitor(pageBuilder, tokenizer, task, schema);
+
             while (tokenizer.nextFile()) {
                 // skip the header lines for each file
                 for (; skipHeaderLines > 0; skipHeaderLines--) {
@@ -147,90 +133,7 @@ public class CsvParserPlugin
                             break;
                         }
 
-                        schema.visitColumns(new ColumnVisitor() {
-                            public void booleanColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
-                                }
-                            }
-
-                            public void longColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setLong(column, Long.parseLong(v));
-                                    } catch (NumberFormatException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
-                                    }
-                                }
-                            }
-
-                            public void doubleColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setDouble(column, Double.parseDouble(v));
-                                    } catch (NumberFormatException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
-                                    }
-                                }
-                            }
-
-                            public void stringColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    pageBuilder.setString(column, v);
-                                }
-                            }
-
-                            public void timestampColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setTimestamp(column, timestampFormatters[column.getIndex()].parse(v));
-                                    } catch (TimestampParseException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
-                                    }
-                                }
-                            }
-
-                            private String nextColumn()
-                            {
-                                if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
-                                    return null;
-                                }
-                                String v = tokenizer.nextColumn();
-                                if (!v.isEmpty()) {
-                                    if (v.equals(nullStringOrNull)) {
-                                        return null;
-                                    }
-                                    return v;
-                                } else if (tokenizer.wasQuotedColumn()) {
-                                    return "";
-                                } else {
-                                    return null;
-                                }
-                            }
-                        });
+                        schema.visitColumns(columnVisitor);
                         pageBuilder.addRecord();
 
                     } catch (CsvTokenizer.InvalidFormatException e) {
@@ -252,6 +155,120 @@ public class CsvParserPlugin
         CsvRecordValidateException(Throwable cause)
         {
             super(cause);
+        }
+    }
+
+    static class CsvColumnVisitor implements ColumnVisitor
+    {
+        private PageBuilder pageBuilder;
+        private TimestampParser[] timestampFormatters;
+        private CsvTokenizer tokenizer;
+        private String nullStringOrNull;
+        private boolean allowOptionalColumns;
+
+        CsvColumnVisitor(PageBuilder pageBuilder, CsvTokenizer tokenizer, PluginTask task, Schema schema)
+        {
+            this.pageBuilder = pageBuilder;
+            this.timestampFormatters = newTimestampParsers(task, schema);
+            this.tokenizer = tokenizer;
+            this.nullStringOrNull = task.getNullString().orNull();
+            this.allowOptionalColumns = task.getAllowOptionalColumns();
+        }
+
+        public void booleanColumn(Column column)
+        {
+            String v = nextColumn();
+            if (v == null) {
+                pageBuilder.setNull(column);
+            } else {
+                pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
+            }
+        }
+
+        public void longColumn(Column column)
+        {
+            String v = nextColumn();
+            if (v == null) {
+                pageBuilder.setNull(column);
+            } else {
+                try {
+                    pageBuilder.setLong(column, Long.parseLong(v));
+                } catch (NumberFormatException e) {
+                    // TODO support default value
+                    throw new CsvRecordValidateException(e);
+                }
+            }
+        }
+
+        public void doubleColumn(Column column)
+        {
+            String v = nextColumn();
+            if (v == null) {
+                pageBuilder.setNull(column);
+            } else {
+                try {
+                    pageBuilder.setDouble(column, Double.parseDouble(v));
+                } catch (NumberFormatException e) {
+                    // TODO support default value
+                    throw new CsvRecordValidateException(e);
+                }
+            }
+        }
+
+        public void stringColumn(Column column)
+        {
+            String v = nextColumn();
+            if (v == null) {
+                pageBuilder.setNull(column);
+            } else {
+                pageBuilder.setString(column, v);
+            }
+        }
+
+        public void timestampColumn(Column column)
+        {
+            String v = nextColumn();
+            if (v == null) {
+                pageBuilder.setNull(column);
+            } else {
+                try {
+                    pageBuilder.setTimestamp(column, timestampFormatters[column.getIndex()].parse(v));
+                } catch (TimestampParseException e) {
+                    // TODO support default value
+                    throw new CsvRecordValidateException(e);
+                }
+            }
+        }
+
+        private String nextColumn()
+        {
+            if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
+                return null;
+            }
+            String v = tokenizer.nextColumn();
+            if (!v.isEmpty()) {
+                if (v.equals(nullStringOrNull)) {
+                    return null;
+                }
+                return v;
+            } else if (tokenizer.wasQuotedColumn()) {
+                return "";
+            } else {
+                return null;
+            }
+        }
+
+        private TimestampParser[] newTimestampParsers(
+                TimestampParser.ParserTask task, Schema schema)
+        {
+            TimestampParser[] parsers = new TimestampParser[schema.getColumnCount()];
+            for (Column column : schema.getColumns()) {
+                if (column.getType() instanceof TimestampType) {
+                    TimestampType tt = (TimestampType) column.getType();
+                    parsers[column.getIndex()] = new TimestampParser(tt.getFormat(), task);
+                }
+            }
+            return parsers;
         }
     }
 }
