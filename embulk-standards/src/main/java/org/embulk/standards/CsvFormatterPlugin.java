@@ -45,27 +45,12 @@ public class CsvFormatterPlugin
         control.run(task.dump());
     }
 
-    private Map<Integer, TimestampFormatter> newTimestampFormatters(
-            TimestampFormatter.FormatterTask task, Schema schema)
-    {
-        ImmutableMap.Builder<Integer, TimestampFormatter> builder = new ImmutableBiMap.Builder<>();
-        for (Column column : schema.getColumns()) {
-            if (column.getType() instanceof TimestampType) {
-                TimestampType tt = (TimestampType) column.getType();
-                builder.put(column.getIndex(), new TimestampFormatter(tt.getFormat(), task));
-            }
-        }
-        return builder.build();
-    }
-
     @Override
     public PageOutput open(TaskSource taskSource, final Schema schema,
             FileOutput output)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final LineEncoder encoder = new LineEncoder(output, task);
-        final Map<Integer, TimestampFormatter> timestampFormatters =
-                newTimestampFormatters(task, schema);
         final String delimiter = task.getDelimiterChar();
 
         // create a file
@@ -78,62 +63,13 @@ public class CsvFormatterPlugin
 
         return new PageOutput() {
             private final PageReader pageReader = new PageReader(schema);
+            private CsvColumnVisitor columnVisitor = new CsvColumnVisitor(pageReader, encoder, task, schema);
 
             public void add(Page page)
             {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
-                    schema.visitColumns(new ColumnVisitor() {
-                        public void booleanColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                encoder.addText(Boolean.toString(pageReader.getBoolean(column)));
-                            }
-                        }
-
-                        public void longColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                encoder.addText(Long.toString(pageReader.getLong(column)));
-                            }
-                        }
-
-                        public void doubleColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                encoder.addText(Double.toString(pageReader.getDouble(column)));
-                            }
-                        }
-
-                        public void stringColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                // TODO escape and quoting
-                                encoder.addText(pageReader.getString(column));
-                            }
-                        }
-
-                        public void timestampColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                Timestamp value = pageReader.getTimestamp(column);
-                                encoder.addText(timestampFormatters.get(column.getIndex()).format(value));
-                            }
-                        }
-
-                        private void addDelimiter(Column column)
-                        {
-                            if (column.getIndex() != 0) {
-                                encoder.addText(delimiter);
-                            }
-                        }
-                    });
-
+                    schema.visitColumns(columnVisitor);
                     encoder.addNewLine();
                 }
             }
@@ -159,5 +95,83 @@ public class CsvFormatterPlugin
             encoder.addText(column.getName());
         }
         encoder.addNewLine();
+    }
+
+    static class CsvColumnVisitor implements ColumnVisitor
+    {
+        private PageReader pageReader;
+        private LineEncoder encoder;
+        private Map<Integer, TimestampFormatter> timestampFormatters;
+        private String delimiter;
+
+        CsvColumnVisitor(PageReader pageReader, LineEncoder encoder, PluginTask task, Schema schema)
+        {
+            this.pageReader = pageReader;
+            this.encoder = encoder;
+            this.timestampFormatters = newTimestampFormatters(task, schema);
+            this.delimiter = task.getDelimiterChar();
+        }
+
+        public void booleanColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                encoder.addText(Boolean.toString(pageReader.getBoolean(column)));
+            }
+        }
+
+        public void longColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                encoder.addText(Long.toString(pageReader.getLong(column)));
+            }
+        }
+
+        public void doubleColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                encoder.addText(Double.toString(pageReader.getDouble(column)));
+            }
+        }
+
+        public void stringColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                // TODO escape and quoting
+                encoder.addText(pageReader.getString(column));
+            }
+        }
+
+        public void timestampColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                Timestamp value = pageReader.getTimestamp(column);
+                encoder.addText(timestampFormatters.get(column.getIndex()).format(value));
+            }
+        }
+
+        private void addDelimiter(Column column)
+        {
+            if (column.getIndex() != 0) {
+                encoder.addText(delimiter);
+            }
+        }
+
+        private Map<Integer, TimestampFormatter> newTimestampFormatters(
+                TimestampFormatter.FormatterTask task, Schema schema)
+        {
+            ImmutableMap.Builder<Integer, TimestampFormatter> builder = new ImmutableBiMap.Builder<>();
+            for (Column column : schema.getColumns()) {
+                if (column.getType() instanceof TimestampType) {
+                    TimestampType tt = (TimestampType) column.getType();
+                    builder.put(column.getIndex(), new TimestampFormatter(tt.getFormat(), task));
+                }
+            }
+            return builder.build();
+        }
     }
 }
