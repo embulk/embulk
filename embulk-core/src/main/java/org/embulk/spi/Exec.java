@@ -3,6 +3,7 @@ package org.embulk.spi;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.embulk.config.Task;
+import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -50,6 +51,11 @@ public class Exec
     public static BufferAllocator getBufferAllocator()
     {
         return session().getBufferAllocator();
+    }
+
+    public static ModelManager getModelManager()
+    {
+        return session().getModelManager();
     }
 
     public static <T> T newPlugin(Class<T> iface, PluginType type)

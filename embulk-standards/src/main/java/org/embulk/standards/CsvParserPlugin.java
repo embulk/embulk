@@ -1,6 +1,5 @@
 package org.embulk.standards;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Task;
@@ -21,7 +20,6 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.PageOutput;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.util.LineDecoder;
 import org.slf4j.Logger;
 
@@ -76,6 +74,10 @@ public class CsvParserPlugin
         @Config("max_quoted_size_limit")
         @ConfigDefault("131072") //128kB
         public long getMaxQuotedSizeLimit();
+
+        @Config("allow_optional_columns")
+        @ConfigDefault("false")
+        public boolean getAllowOptionalColumns();
     }
 
     private final Logger log;
@@ -127,6 +129,7 @@ public class CsvParserPlugin
         LineDecoder lineDecoder = new LineDecoder(input, task);
         final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
         final String nullStringOrNull = task.getNullString().orNull();
+        final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
@@ -147,7 +150,7 @@ public class CsvParserPlugin
                         schema.visitColumns(new ColumnVisitor() {
                             public void booleanColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -157,7 +160,7 @@ public class CsvParserPlugin
 
                             public void longColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -172,7 +175,7 @@ public class CsvParserPlugin
 
                             public void doubleColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -187,7 +190,7 @@ public class CsvParserPlugin
 
                             public void stringColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -197,7 +200,7 @@ public class CsvParserPlugin
 
                             public void timestampColumn(Column column)
                             {
-                                String v = nextColumn(schema, tokenizer, nullStringOrNull);
+                                String v = nextColumn();
                                 if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
@@ -209,11 +212,28 @@ public class CsvParserPlugin
                                     }
                                 }
                             }
+
+                            private String nextColumn()
+                            {
+                                if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
+                                    return null;
+                                }
+                                String v = tokenizer.nextColumn();
+                                if (!v.isEmpty()) {
+                                    if (v.equals(nullStringOrNull)) {
+                                        return null;
+                                    }
+                                    return v;
+                                } else if (tokenizer.wasQuotedColumn()) {
+                                    return "";
+                                } else {
+                                    return null;
+                                }
+                            }
                         });
                         pageBuilder.addRecord();
 
-                    } catch (Exception e) {
-                        // TODO logging
+                    } catch (CsvTokenizer.InvalidFormatException e) {
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
                         log.warn(String.format("Skipped (line %d): %s", lineNumber, skippedLine), e);
@@ -223,21 +243,6 @@ public class CsvParserPlugin
             }
 
             pageBuilder.finish();
-        }
-    }
-
-    private static String nextColumn(Schema schema, CsvTokenizer tokenizer, String nullStringOrNull)
-    {
-        String v = tokenizer.nextColumn();
-        if (!v.isEmpty()) {
-            if (v.equals(nullStringOrNull)) {
-                return null;
-            }
-            return v;
-        } else if (tokenizer.wasQuotedColumn()) {
-            return "";
-        } else {
-            return null;
         }
     }
 

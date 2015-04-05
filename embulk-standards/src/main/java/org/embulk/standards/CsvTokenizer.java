@@ -20,7 +20,6 @@ public class CsvTokenizer
     }
 
     private static final char END_OF_LINE = '\0';
-    private static final boolean TRACE = false;
 
     private final char delimiter;
     private final char quote;
@@ -81,7 +80,10 @@ public class CsvTokenizer
     public boolean nextRecord()
     {
         // If at the end of record, read the next line and initialize the state
-        Preconditions.checkState(recordState == RecordState.END, "too many columns");  // TODO exception class
+        if (recordState != RecordState.END) {
+            throw new TooManyColumnsException("Too many columns");
+        }
+
         boolean hasNext = nextLine(true);
         if (hasNext) {
             recordState = RecordState.NOT_END;
@@ -105,10 +107,6 @@ public class CsvTokenizer
             linePos = 0;
             lineNumber++;
 
-            if (TRACE) {
-                System.out.println("#MN line: " + line + " (" + lineNumber + ")");
-            }
-
             if (!line.isEmpty() || !ignoreEmptyLine) {
                 return true;
             }
@@ -122,7 +120,9 @@ public class CsvTokenizer
 
     public String nextColumn()
     {
-        Preconditions.checkState(hasNextColumn(), "doesn't have enough columns");  // TODO exception class
+        if (!hasNextColumn()) {
+            throw new TooFewColumnsException("Too few columns");
+        }
 
         // reset last state
         wasQuotedColumn = false;
@@ -136,10 +136,6 @@ public class CsvTokenizer
 
         while (true) {
             final char c = nextChar();
-            if (TRACE) {
-                System.out.println("#MN c: " + c + " (" + columnState + "," + recordState + ")");
-                try { Thread.sleep(100); } catch (Exception e) {}
-            }
 
             switch (columnState) {
                 case BEGIN:
@@ -241,15 +237,12 @@ public class CsvTokenizer
                         quotedValue.append(newline);
                         quotedValueLines.add(line);
                         if (!nextLine(false)) {
-                            throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
+                            throw new InvalidValueException("Unexpected end of line during parsing a quoted value");
                         }
                         valueStartPos = 0;
 
                     } else if (isQuote(c)) {
                         char next = peekNextChar();
-                        if (TRACE) {
-                            System.out.println("#MN peeked c: " + next + " (" + columnState + "," + recordState + ")");
-                        }
                         if (isQuote(next)) { // escaped quote
                             quotedValue.append(line.substring(valueStartPos, linePos));
                             valueStartPos = ++linePos;
@@ -261,15 +254,12 @@ public class CsvTokenizer
                     } else if (isEscape(c)) {  // isQuote must be checked first in case of quote == escape
                         // In RFC 4180, CSV's escape char is '\"'. But '\\' is often used.
                         char next = peekNextChar();
-                        if (TRACE) {
-                            System.out.println("#MN peeked c: " + next + " (" + columnState + "," + recordState + ")");
-                        }
                         if (isEndOfLine(c)) {
                             // escape end of line. TODO assuming multi-line quoted value without newline?
                             quotedValue.append(line.substring(valueStartPos, linePos));
                             quotedValueLines.add(line);
                             if (!nextLine(false)) {
-                                throw new RuntimeException("Unexpected end of line during parsing a quoted value");  // TODO exception class
+                                throw new InvalidValueException("Unexpected end of line during parsing a quoted value");
                             }
                             valueStartPos = 0;
                         } else if (isQuote(next) || isEscape(next)) { // escaped quote
@@ -298,7 +288,7 @@ public class CsvTokenizer
                         // column has trailing spaces and quoted. TODO should this be rejected?
 
                     } else {
-                        throw new RuntimeException("Unexpected extra character after quoted value");  // TODO exception class
+                        throw new InvalidValueException("Unexpected extra character after quoted value");
                     }
                     break;
 
@@ -360,10 +350,46 @@ public class CsvTokenizer
         return c == escape;
     }
 
-    static class QuotedSizeLimitExceededException
+    public static class InvalidFormatException
             extends RuntimeException
     {
-        QuotedSizeLimitExceededException(String message)
+        public InvalidFormatException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public static class InvalidValueException
+            extends RuntimeException
+    {
+        public InvalidValueException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public static class QuotedSizeLimitExceededException
+            extends InvalidValueException
+    {
+        public QuotedSizeLimitExceededException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public class TooManyColumnsException
+            extends InvalidFormatException
+    {
+        public TooManyColumnsException(String message)
+        {
+            super(message);
+        }
+    }
+
+    public class TooFewColumnsException
+            extends InvalidFormatException
+    {
+        public TooFewColumnsException(String message)
         {
             super(message);
         }

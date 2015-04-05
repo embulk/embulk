@@ -11,6 +11,9 @@ public class PooledBufferAllocator
 {
     private PooledByteBufAllocator nettyBuffer;
 
+    private int DEFAULT_BUFFER_SIZE = 32*1024;
+    private int MINIMUM_BUFFER_SIZE = 8*1024;
+
     public PooledBufferAllocator()
     {
         // TODO configure parameters
@@ -19,12 +22,12 @@ public class PooledBufferAllocator
 
     public Buffer allocate()
     {
-        return new NettyByteBufBuffer(nettyBuffer.buffer());
+        return allocate(DEFAULT_BUFFER_SIZE);
     }
 
     public Buffer allocate(int minimumCapacity)
     {
-        int size = 32*1024;
+        int size = MINIMUM_BUFFER_SIZE;
         while (size < minimumCapacity) {
             size *= 2;
         }

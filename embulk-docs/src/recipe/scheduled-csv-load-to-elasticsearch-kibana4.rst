@@ -56,7 +56,7 @@ You can find the latest embulk binary from the `releases <https://bintray.com/em
 
 .. code-block:: console
 
-    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.5.3.jar -O /usr/local/bin/embulk
+    $ sudo wget https://bintray.com/artifact/download/embulk/maven/embulk-0.5.4.jar -O /usr/local/bin/embulk
     $ sudo chmod +x /usr/local/bin/embulk
 
 Step 2. Install Elasticsearch plugin
@@ -112,7 +112,7 @@ The generated config-complete.yml file should include complete information as fo
         quote: '"'
         escape: ''
         null_string: 'NULL'
-        header_line: true
+        skip_header_lines: 1
         columns:
         - {name: id, type: long}
         - {name: account, type: long}

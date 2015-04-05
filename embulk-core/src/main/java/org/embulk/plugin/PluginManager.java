@@ -28,6 +28,10 @@ public class PluginManager
             throw new ConfigException("No PluginSource is installed");
         }
 
+        if (type == null) {
+            throw new ConfigException(String.format("%s type is not set (if you intend to use NullOutputPlugin, you should enclose null in quotes such as {type: \"null\"}.", iface.getSimpleName()));
+        }
+
         List<Throwable> causes = new ArrayList<Throwable>();
         for (PluginSource source : sources) {
             try {

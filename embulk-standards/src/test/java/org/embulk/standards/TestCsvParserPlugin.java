@@ -1,7 +1,6 @@
 package org.embulk.standards;
 
 import org.junit.Rule;
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import java.nio.charset.Charset;
@@ -34,6 +33,7 @@ public class TestCsvParserPlugin
         assertEquals(false, task.getHeaderLine().or(false));
         assertEquals(',', task.getDelimiterChar());
         assertEquals('\"', task.getQuoteChar());
+        assertEquals(false, task.getAllowOptionalColumns());
     }
 
     @Test(expected = ConfigException.class)
@@ -53,6 +53,7 @@ public class TestCsvParserPlugin
                 .set("header_line", true)
                 .set("delimiter", "\t")
                 .set("quote", "\\")
+                .set("allow_optional_columns", true)
                 .set("columns", ImmutableList.of(
                             ImmutableMap.of(
                                 "name", "date_code",
@@ -65,5 +66,6 @@ public class TestCsvParserPlugin
         assertEquals(true, task.getHeaderLine().or(false));
         assertEquals('\t', task.getDelimiterChar());
         assertEquals('\\', task.getQuoteChar());
+        assertEquals(true, task.getAllowOptionalColumns());
     }
 }
