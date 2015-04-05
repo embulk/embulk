@@ -255,16 +255,20 @@ public class BulkLoader
         public List<Throwable> getExceptions()
         {
             ImmutableList.Builder<Throwable> builder = ImmutableList.builder();
-            for (TaskState inputTaskState : inputTaskStates) {
-                Optional<Throwable> exception = inputTaskState.getException();
-                if (exception.isPresent()) {
-                    builder.add(exception.get());
+            if (inputTaskStates != null) {  // null if not initialized yet
+                for (TaskState inputTaskState : inputTaskStates) {
+                    Optional<Throwable> exception = inputTaskState.getException();
+                    if (exception.isPresent()) {
+                        builder.add(exception.get());
+                    }
                 }
             }
-            for (TaskState outputTaskState : outputTaskStates) {
-                Optional<Throwable> exception = outputTaskState.getException();
-                if (exception.isPresent()) {
-                    builder.add(exception.get());
+            if (outputTaskStates != null) {  // null if not initialized yet
+                for (TaskState outputTaskState : outputTaskStates) {
+                    Optional<Throwable> exception = outputTaskState.getException();
+                    if (exception.isPresent()) {
+                        builder.add(exception.get());
+                    }
                 }
             }
             return builder.build();
@@ -459,6 +463,8 @@ public class BulkLoader
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
+
+                                            state.initialize(inputTaskCount, outputTaskCount);
 
                                             if (!state.isAllCommitted()) {  // inputTaskCount == 0
                                                 execute(task, executor, state);

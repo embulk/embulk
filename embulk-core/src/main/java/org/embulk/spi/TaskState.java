@@ -37,6 +37,12 @@ public class TaskState
         }
     }
 
+    public void resetException()
+    {
+        this.started = true;
+        this.exception = Optional.absent();
+    }
+
     public boolean isStarted()
     {
         return started;
