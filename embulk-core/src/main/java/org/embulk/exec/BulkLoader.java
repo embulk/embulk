@@ -70,9 +70,7 @@ public class BulkLoader
     {
         private final Logger logger;
 
-        private PluginType inputPluginType;
-        private PluginType outputPluginType;
-        private List<PluginType> filterPluginTypes;
+        private final ProcessPluginSet plugins;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
@@ -86,21 +84,15 @@ public class BulkLoader
         private volatile List<TaskState> inputTaskStates;
         private volatile List<TaskState> outputTaskStates;
 
-        public LoaderState(Logger logger)
+        public LoaderState(Logger logger, ProcessPluginSet plugins)
         {
             this.logger = logger;
+            this.plugins = plugins;
         }
 
         public Logger getLogger()
         {
             return logger;
-        }
-
-        public void setPluginTypes(BulkLoaderTask task)
-        {
-            this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
-            this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
-            this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
         }
 
         public void setSchemas(List<Schema> schemas)
@@ -131,7 +123,7 @@ public class BulkLoader
         public ProcessTask buildProcessTask()
         {
             return new ProcessTask(
-                    inputPluginType, outputPluginType, filterPluginTypes,
+                    plugins.getInputPluginType(), plugins.getOutputPluginType(), plugins.getFilterPluginTypes(),
                     inputTaskSource, outputTaskSource, filterTaskSources,
                     schemas, executorSchema, Exec.newTaskSource());
         }
@@ -434,23 +426,71 @@ public class BulkLoader
                 resume.getOutputCommitReports().size(), successfulOutputCommitReports.build());
     }
 
+    private static class ProcessPluginSet
+    {
+        private final PluginType inputPluginType;
+        private final PluginType outputPluginType;
+        private final List<PluginType> filterPluginTypes;
+
+        private final InputPlugin inputPlugin;
+        private final OutputPlugin outputPlugin;
+        private final List<FilterPlugin> filterPlugins;
+
+        public ProcessPluginSet(BulkLoaderTask task)
+        {
+            this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
+            this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
+            this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
+            this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
+            this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
+            this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
+        }
+
+        public PluginType getInputPluginType()
+        {
+            return inputPluginType;
+        }
+
+        public PluginType getOutputPluginType()
+        {
+            return outputPluginType;
+        }
+
+        public List<PluginType> getFilterPluginTypes()
+        {
+            return filterPluginTypes;
+        }
+
+        public InputPlugin getInputPlugin()
+        {
+            return inputPlugin;
+        }
+
+        public OutputPlugin getOutputPlugin()
+        {
+            return outputPlugin;
+        }
+
+        public List<FilterPlugin> getFilterPlugins()
+        {
+            return filterPlugins;
+        }
+    }
+
     private ExecutionResult doRun(ConfigSource config)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
         final ExecutorPlugin exec = newExecutorPlugin(task);
-        final InputPlugin inputPlugin = newInputPlugin(task);
-        final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
-        final OutputPlugin outputPlugin = newOutputPlugin(task);
+        final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class));
-        state.setPluginTypes(task);
+        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            ConfigDiff inputConfigDiff = inputPlugin.transaction(task.getInputConfig(), new InputPlugin.Control() {
+            ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
                     state.setInputTaskSource(inputTask);
-                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                         {
                             state.setSchemas(schemas);
@@ -459,7 +499,7 @@ public class BulkLoader
                                 public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
                                 {
                                     state.setExecutorSchema(executorSchema);
-                                    ConfigDiff outputConfigDiff = outputPlugin.transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
@@ -504,20 +544,17 @@ public class BulkLoader
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
         final ExecutorPlugin exec = newExecutorPlugin(task);
-        final InputPlugin inputPlugin = newInputPlugin(task);
-        final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
-        final OutputPlugin outputPlugin = newOutputPlugin(task);
+        final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class));
-        state.setPluginTypes(task);
+        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            ConfigDiff inputConfigDiff = inputPlugin.resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
+            ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
                 public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
                     // TODO validate inputTask?
                     // TODO validate inputSchema
                     state.setInputTaskSource(inputTask);
-                    Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                         {
                             state.setSchemas(schemas);
@@ -527,7 +564,7 @@ public class BulkLoader
                                 {
                                     // TODO validate executorSchema
                                     state.setExecutorSchema(executorSchema);
-                                    ConfigDiff outputConfigDiff = outputPlugin.resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
                                         public List<CommitReport> run(final TaskSource outputTask)
                                         {
                                             // TODO validate outputTask?
