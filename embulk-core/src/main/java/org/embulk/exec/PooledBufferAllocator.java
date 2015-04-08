@@ -9,10 +9,10 @@ import org.embulk.spi.BufferAllocator;
 public class PooledBufferAllocator
         implements BufferAllocator
 {
-    private PooledByteBufAllocator nettyBuffer;
+    private static final int DEFAULT_BUFFER_SIZE = 32*1024;
+    private static final int MINIMUM_BUFFER_SIZE = 8*1024;
 
-    private int DEFAULT_BUFFER_SIZE = 32*1024;
-    private int MINIMUM_BUFFER_SIZE = 8*1024;
+    private final PooledByteBufAllocator nettyBuffer;
 
     public PooledBufferAllocator()
     {

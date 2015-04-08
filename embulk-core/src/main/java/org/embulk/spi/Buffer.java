@@ -8,7 +8,7 @@ public class Buffer
 {
     public static final Buffer EMPTY = Buffer.allocate(0);
 
-    private byte[] array;
+    private final byte[] array;
     private int offset;
     private int filled;
     private final int capacity;
