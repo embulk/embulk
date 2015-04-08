@@ -1,6 +1,7 @@
 package org.embulk.exec;
 
 import java.util.List;
+import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.embulk.config.TaskSource;
@@ -16,8 +17,8 @@ public class ResumeState
     private final TaskSource outputTaskSource;
     private final Schema inputSchema;
     private final Schema outputSchema;
-    private final List<CommitReport> inputCommitReports;
-    private final List<CommitReport> outputCommitReports;
+    private final List<Optional<CommitReport>> inputCommitReports;
+    private final List<Optional<CommitReport>> outputCommitReports;
 
     @JsonCreator
     public ResumeState(
@@ -26,8 +27,8 @@ public class ResumeState
             @JsonProperty("out_task") TaskSource outputTaskSource,
             @JsonProperty("in_schema") Schema inputSchema,
             @JsonProperty("out_schema") Schema outputSchema,
-            @JsonProperty("in_reports") List<CommitReport> inputCommitReports,
-            @JsonProperty("out_reports") List<CommitReport> outputCommitReports)
+            @JsonProperty("in_reports") List<Optional<CommitReport>> inputCommitReports,
+            @JsonProperty("out_reports") List<Optional<CommitReport>> outputCommitReports)
     {
         this.execSessionConfigSource = execSessionConfigSource;
         this.inputTaskSource = inputTaskSource;
@@ -69,13 +70,13 @@ public class ResumeState
     }
 
     @JsonProperty("in_reports")
-    public List<CommitReport> getInputCommitReports()
+    public List<Optional<CommitReport>> getInputCommitReports()
     {
         return inputCommitReports;
     }
 
     @JsonProperty("out_reports")
-    public List<CommitReport> getOutputCommitReports()
+    public List<Optional<CommitReport>> getOutputCommitReports()
     {
         return outputCommitReports;
     }

@@ -80,7 +80,7 @@ public class PreviewExecutor
 
     protected List<FilterPlugin> newFilterPlugins(PreviewTask task)
     {
-        return Filters.newFilterPlugins(Exec.session(), task.getFilterConfigs());
+        return Filters.newFilterPluginsFromConfigSources(Exec.session(), task.getFilterConfigs());
     }
 
     private PreviewResult doPreview(ConfigSource config)

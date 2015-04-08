@@ -14,6 +14,7 @@ import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.GuessPlugin;
+import org.embulk.spi.ExecutorPlugin;
 
 public class JRubyPluginSource
         implements PluginSource
@@ -54,6 +55,8 @@ public class JRubyPluginSource
             category = "filter";
         } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
+        } else if (ExecutorPlugin.class.isAssignableFrom(iface)) {
+            category = "executor";
         } else {
             // unsupported plugin category
             throw new PluginSourceNotMatchException("Plugin interface "+iface+" is not supported in JRuby");

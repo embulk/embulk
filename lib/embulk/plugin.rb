@@ -13,12 +13,13 @@ module Embulk
   require 'embulk/decoder_plugin'
   require 'embulk/encoder_plugin'
   require 'embulk/guess_plugin'
+  require 'embulk/executor_plugin'
   require 'embulk/java_plugin' if Embulk.java?
 
   class PluginManager
     def initialize
       @registries = {}
-      %w[input output parser formatter decoder encoder line_filter filter guess].each do |category|
+      %w[input output parser formatter decoder encoder line_filter filter guess executor].each do |category|
         @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}/")
       end
     end
@@ -144,6 +145,11 @@ module Embulk
                            "org.embulk.spi.GuessPlugin" => GuessPlugin)
     end
 
+    def register_java_executor(type, klass)
+      register_java_plugin(:executor, type, klass,
+                           "org.embulk.spi.ExecutorPlugin" => ExecutorPlugin)
+    end
+
     def new_java_input(type)
       lookup(:input, type).new_java
     end
@@ -174,6 +180,10 @@ module Embulk
 
     def new_java_guess(type)
       lookup(:guess, type).new_java
+    end
+
+    def new_java_executor(type)
+      lookup(:executor, type).new_java
     end
 
     private
@@ -222,7 +232,8 @@ module Embulk
         :register_formatter, :get_formatter, :register_java_formatter, :new_java_formatter,
         :register_decoder, :get_decoder, :register_java_decoder, :new_java_decoder,
         :register_encoder, :get_encoder, :register_java_encoder, :new_java_encoder,
-        :register_guess, :get_guess, :register_java_guess, :new_java_guess
+        :register_guess, :get_guess, :register_java_guess, :new_java_guess,
+        :register_executor, :get_executor, :register_java_executor, :new_java_executor
     end
   end
 end

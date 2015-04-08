@@ -13,6 +13,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.spi.time.DateTimeZoneSerDe;
 import org.embulk.spi.time.TimestampSerDe;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.util.CharsetSerDe;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
@@ -32,6 +33,10 @@ public class ExecModule
         // GuessExecutor
         registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
         registerPluginTo(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
+
+        // LocalExecutorPlugin
+        binder.bind(LocalThreadExecutor.class).in(Scopes.SINGLETON);
+        registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

@@ -16,11 +16,25 @@ public abstract class Filters
 {
     private Filters() { }
 
-    public static List<FilterPlugin> newFilterPlugins(ExecSession exec, List<ConfigSource> configs)
+    public static List<PluginType> getPluginTypes(List<ConfigSource> configs)
+    {
+        ImmutableList.Builder<PluginType> builder = ImmutableList.builder();
+        for (ConfigSource config : configs) {
+            builder.add(config.get(PluginType.class, "type"));
+        }
+        return builder.build();
+    }
+
+    public static List<FilterPlugin> newFilterPluginsFromConfigSources(ExecSession exec, List<ConfigSource> configs)
+    {
+        return newFilterPlugins(exec, getPluginTypes(configs));
+    }
+
+    public static List<FilterPlugin> newFilterPlugins(ExecSession exec, List<PluginType> pluginTypes)
     {
         ImmutableList.Builder<FilterPlugin> builder = ImmutableList.builder();
-        for (ConfigSource config : configs) {
-            builder.add(exec.newPlugin(FilterPlugin.class, config.get(PluginType.class, "type")));
+        for (PluginType pluginType : pluginTypes) {
+            builder.add(exec.newPlugin(FilterPlugin.class, pluginType));
         }
         return builder.build();
     }

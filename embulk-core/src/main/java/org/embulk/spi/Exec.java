@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
@@ -15,11 +16,13 @@ public class Exec
 
     private Exec() { }
 
-    public static <T> T doWith(ExecSession session, ExecAction<T> action) throws Exception
+    public static <T> T doWith(ExecSession session, ExecAction<T> action) throws ExecutionException
     {
         Exec.session.set(session);
         try {
             return action.run();
+        } catch (Exception ex) {
+            throw new ExecutionException(ex);
         } finally {
             Exec.session.set(null);
         }
