@@ -36,7 +36,7 @@ echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Next step: [Trying examples](#trying-examples)
+Next step: [Trying the example](#trying-the-example)
 
 ### Windows
 
@@ -48,9 +48,9 @@ You can assume the jar file is a .bat file.
 PowerShell -Command "& {Invoke-WebRequest https://bintray.com/artifact/download/embulk/maven/embulk-0.6.0.jar -OutFile embulk.bat}"
 ```
 
-Next step: [Trying examples](#trying-examples)
+Next step: [Trying the example](#trying-the-example)
 
-### Trying examples
+### Trying the example
 
 Let's load a CSV file, for example. `embulk example` subcommand generates a csv file and config file for you.
 
@@ -65,15 +65,30 @@ Next step: [Using plugins](#using-plugins)
 
 ### Using plugins
 
-You can use plugins to load data from/to various systems and file formats.
-An example is [embulk-output-postgres-json](https://github.com/frsyuki/embulk-output-postgres-json) plugin. It outputs data into PostgreSQL server using "json" column type.
+You can use plugins to load data from/to various systems and file formats. Here is the list of publicly released plugins: [list of plugins by category](http://www.embulk.org/plugins/).
+
+An example is [embulk-output-command](https://github.com/embulk/embulk-output-command) plugin. It executes an external command to output the records.
+
+To install plugins, you can use `embulk gem install <name>` command:
 
 ```
-embulk gem install embulk-output-postgres-json
+embulk gem install embulk-output-command
 embulk gem list
 ```
 
-You can find plugins at the [list of plugins by category](http://www.embulk.org/plugins/).
+Embulk bundles some built-in plugins such as `embulk-encoder-gzip` or `embulk-formatter-csv`. You can use those plugins with following configuration file:
+
+```
+in:
+  # ...
+out:
+  type: command
+  command: "cat - > task.$INDEX.$SEQID.csv.gz"
+  encoders:
+    - {type: gzip}
+  formatter:
+    type: csv
+```
 
 ### Using plugin bundle
 
