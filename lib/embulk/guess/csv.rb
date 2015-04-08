@@ -28,7 +28,8 @@ module Embulk
       NO_SKIP_DETECT_LINES = 10
 
       def guess_lines(config, sample_lines)
-        return {} unless config.fetch("type", "csv") == "csv"
+        parser_config = config["parser"] || {}
+        return {} unless parser_config.fetch("type", "csv") == "csv"
 
         delim = guess_delimiter(sample_lines)
         unless delim
@@ -36,7 +37,6 @@ module Embulk
           return {}
         end
 
-        parser_config = config["parser"] || {}
         parser_guessed = DataSource.new.merge({"type" => "csv", "delimiter" => delim})
 
         quote = guess_quote(sample_lines, delim)
