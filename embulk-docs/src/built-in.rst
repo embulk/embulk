@@ -145,6 +145,8 @@ Options
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | allow\_optional\_columns   | boolean  | If true, set null to insufficient columns. Otherwise, skip the row in case of insufficient number of columns   | ``false`` by default   |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
+| allow\_extra\_columns      | boolean  | If true, ignore too many columns. Otherwise, skip the row in case of too many columns                          | ``false`` by default   |
++----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | max\_quoted\_size\_limit   | integer  | Maximum number of bytes of a quoted value. If a value exceeds the limit, the row will be skipped               | ``131072`` by default  |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | default\_timezone          | string   | Time zone of timestamp columns if the value itself doesn't include time zone description (eg. Asia/Tokyo)      | ``UTC`` by default     |

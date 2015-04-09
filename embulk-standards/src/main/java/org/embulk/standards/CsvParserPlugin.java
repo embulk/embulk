@@ -78,6 +78,10 @@ public class CsvParserPlugin
         @Config("allow_optional_columns")
         @ConfigDefault("false")
         public boolean getAllowOptionalColumns();
+
+        @Config("allow_extra_columns")
+        @ConfigDefault("false")
+        public boolean getAllowExtraColumns();
     }
 
     private final Logger log;
@@ -130,6 +134,7 @@ public class CsvParserPlugin
         final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
         final String nullStringOrNull = task.getNullString().orNull();
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
+        final boolean allowExtraColumns = task.getAllowExtraColumns();
         int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
@@ -141,12 +146,15 @@ public class CsvParserPlugin
                     }
                 }
 
-                while (true) {
-                    try {
-                        if (!tokenizer.nextRecord()) {
-                            break;
-                        }
+                if (!tokenizer.nextRecord()) {
+                    // empty file
+                    continue;
+                }
 
+                while (true) {
+                    boolean hasNextRecord;
+
+                    try {
                         schema.visitColumns(new ColumnVisitor() {
                             public void booleanColumn(Column column)
                             {
@@ -216,6 +224,7 @@ public class CsvParserPlugin
                             private String nextColumn()
                             {
                                 if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
+                                    //TODO warning
                                     return null;
                                 }
                                 String v = tokenizer.nextColumn();
@@ -231,13 +240,32 @@ public class CsvParserPlugin
                                 }
                             }
                         });
+
+                        try {
+                            hasNextRecord = tokenizer.nextRecord();
+                        } catch (CsvTokenizer.TooManyColumnsException ex) {
+                            if (allowExtraColumns) {
+                                String tooManyColumnsLine = tokenizer.skipCurrentLine();
+                                // TODO warning
+                                hasNextRecord = tokenizer.nextRecord();
+                            } else {
+                                // this line will be skipped at the following catch section
+                                throw ex;
+                            }
+                        }
                         pageBuilder.addRecord();
 
                     } catch (CsvTokenizer.InvalidFormatException | CsvRecordValidateException e) {
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
-                        log.warn(String.format("Skipped (line %d): %s", lineNumber, skippedLine), e);
+                        log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
+
+                        hasNextRecord = tokenizer.nextRecord();
+                    }
+
+                    if (!hasNextRecord) {
+                        break;
                     }
                 }
             }
