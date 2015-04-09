@@ -28,7 +28,7 @@ module Embulk
       NO_SKIP_DETECT_LINES = 10
 
       def guess_lines(config, sample_lines)
-        return {} unless config.fetch("type", "csv") == "csv"
+        return {} unless config.fetch("parser", {}).fetch("type", "csv") == "csv"
 
         delim = guess_delimiter(sample_lines)
         unless delim
