@@ -327,28 +327,6 @@ public class BulkLoader
         }
     }
 
-    protected ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
-    {
-        return Exec.newPlugin(ExecutorPlugin.class,
-                task.getExecConfig().get(PluginType.class, "type", new PluginType("local")));
-    }
-
-    protected InputPlugin newInputPlugin(BulkLoaderTask task)
-    {
-        return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
-    }
-
-    protected List<FilterPlugin> newFilterPlugins(BulkLoaderTask task)
-    {
-        return Filters.newFilterPlugins(Exec.session(),
-                Filters.getPluginTypes(task.getFilterConfigs()));
-    }
-
-    protected OutputPlugin newOutputPlugin(BulkLoaderTask task)
-    {
-        return Exec.newPlugin(OutputPlugin.class, task.getOutputConfig().get(PluginType.class, "type"));
-    }
-
     public ExecutionResult run(ExecSession exec, final ConfigSource config)
     {
         try {
@@ -400,32 +378,6 @@ public class BulkLoader
         }
     }
 
-    public void doCleanup(ConfigSource config, ResumeState resume)
-    {
-        BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
-        InputPlugin inputPlugin = newInputPlugin(task);
-        OutputPlugin outputPlugin = newOutputPlugin(task);
-
-        ImmutableList.Builder<CommitReport> successfulInputCommitReports = ImmutableList.builder();
-        ImmutableList.Builder<CommitReport> successfulOutputCommitReports = ImmutableList.builder();
-        for (Optional<CommitReport> inputCommitReport : resume.getInputCommitReports()) {
-            if (inputCommitReport.isPresent()) {
-                successfulInputCommitReports.add(inputCommitReport.get());
-            }
-        }
-        for (Optional<CommitReport> outputCommitReport : resume.getOutputCommitReports()) {
-            if (outputCommitReport.isPresent()) {
-                successfulOutputCommitReports.add(outputCommitReport.get());
-            }
-        }
-
-        inputPlugin.cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
-                resume.getInputCommitReports().size(), successfulInputCommitReports.build());
-
-        outputPlugin.cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
-                resume.getOutputCommitReports().size(), successfulOutputCommitReports.build());
-    }
-
     private static class ProcessPluginSet
     {
         private final PluginType inputPluginType;
@@ -475,6 +427,37 @@ public class BulkLoader
         {
             return filterPlugins;
         }
+    }
+
+    public void doCleanup(ConfigSource config, ResumeState resume)
+    {
+        BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
+        ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
+
+        ImmutableList.Builder<CommitReport> successfulInputCommitReports = ImmutableList.builder();
+        ImmutableList.Builder<CommitReport> successfulOutputCommitReports = ImmutableList.builder();
+        for (Optional<CommitReport> inputCommitReport : resume.getInputCommitReports()) {
+            if (inputCommitReport.isPresent()) {
+                successfulInputCommitReports.add(inputCommitReport.get());
+            }
+        }
+        for (Optional<CommitReport> outputCommitReport : resume.getOutputCommitReports()) {
+            if (outputCommitReport.isPresent()) {
+                successfulOutputCommitReports.add(outputCommitReport.get());
+            }
+        }
+
+        plugins.getInputPlugin().cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
+                resume.getInputCommitReports().size(), successfulInputCommitReports.build());
+
+        plugins.getOutputPlugin().cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
+                resume.getOutputCommitReports().size(), successfulOutputCommitReports.build());
+    }
+
+    private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
+    {
+        return Exec.newPlugin(ExecutorPlugin.class,
+                task.getExecConfig().get(PluginType.class, "type", new PluginType("local")));
     }
 
     private ExecutionResult doRun(ConfigSource config)
