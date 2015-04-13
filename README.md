@@ -30,7 +30,7 @@ Embulk is a Java application. Please make sure that you installed [Java](http://
 Following 4 commands install embulk to your home directory:
 
 ```
-curl --create-dirs -o ~/.embulk/bin/embulk -L https://bintray.com/artifact/download/embulk/maven/embulk-0.6.1.jar
+curl --create-dirs -o ~/.embulk/bin/embulk -L "http://dl.embulk.org/embulk-latest.jar"
 chmod +x ~/.embulk/bin/embulk
 echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
@@ -45,7 +45,7 @@ Embulk is a Java application. Please make sure that you installed [Java](http://
 You can assume the jar file is a .bat file.
 
 ```
-PowerShell -Command "& {Invoke-WebRequest https://bintray.com/artifact/download/embulk/maven/embulk-0.6.1.jar -OutFile embulk.bat}"
+PowerShell -Command "& {Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
 ```
 
 Next step: [Trying the example](#trying-the-example)
