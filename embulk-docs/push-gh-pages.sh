@@ -16,7 +16,7 @@ function r() {
 [ "$TRAVIS_BRANCH" != "master" -a "$TRAVIS_BRANCH" != "$(git describe --tags --always HEAD)" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
-remote="$(git config remote.origin.url | sed "s+^git:+https:+")"
+remote="https://github.com/embulk/embulk.github.io.git"
 re ./gradlew site
 
 r git fetch --unshallow || echo "using complete repository."
@@ -28,7 +28,7 @@ re cd gh_pages
 re git remote add travis_push "$remote"
 re git fetch travis_push
 
-re git checkout -b gh-pages travis_push/gh-pages
+re git checkout -b gh-pages travis_push/master
 re rm -rf docs
 re cp -a ../embulk-docs/build/html docs
 re git add --all docs
@@ -46,4 +46,4 @@ fi
 re git config credential.helper "store --file=$HOME/.git_credentials"
 echo "https://$GITHUB_TOKEN:@github.com" > "$HOME/.git_credentials"
 trap "rm -rf $HOME/.git_credentials" EXIT
-re git push travis_push gh-pages
+re git push travis_push gh-pages:master
