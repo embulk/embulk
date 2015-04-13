@@ -252,7 +252,6 @@ task set_version << {
 
     List<String> docs = [
         'README.md',
-        'embulk-docs/src/recipe/scheduled-csv-load-to-elasticsearch-kibana4.rst'
     ]
     docs.each() { path ->
         File doc = file(path)
