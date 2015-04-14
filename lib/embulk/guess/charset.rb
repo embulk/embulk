@@ -4,6 +4,16 @@ module Embulk
     class CharsetGuessPlugin < GuessPlugin
       Plugin.register_guess('charset', self)
 
+      STATIC_MAPPING = {
+        # ISO-8859-1 means ASCII which is a subset of UTF-8 in most of cases
+        # due to lack of sample data set.
+        "ISO-8859-1" => "UTF-8",
+
+        # Shift_JIS is used almost only by Windows that uses "CP932" in fact.
+        # And "CP932" called by Microsoft actually means "MS932" in Java.
+        "Shift_JIS" => "MS932",
+      }
+
       def guess(config, sample_buffer)
         # ICU4J
         detector = com.ibm.icu.text.CharsetDetector.new
@@ -13,11 +23,8 @@ module Embulk
           name = "UTF-8"
         else
           name = best_match.getName
-          if name == "ISO-8859-1"
-            # ISO-8859-1 means ASCII which is a subset
-            # of UTF-8 in most of cases due to lack of
-            # sample data set
-            name = "UTF-8"
+          if mapped_name = STATIC_MAPPING[name]
+            name = mapped_name
           end
         end
         return {"parser" => {"charset" => name}}
