@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.embulk.spi.type.Type;
@@ -72,15 +72,15 @@ public class Column
             return false;
         }
         Column other = (Column) obj;
-        return Objects.equal(index, other.index) &&
-            Objects.equal(name, other.name) &&
-            Objects.equal(type, other.type);
+        return Objects.equals(index, other.index) &&
+            Objects.equals(name, other.name) &&
+            Objects.equals(type, other.type);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(index, name, type);
+        return Objects.hash(index, name, type);
     }
 
     @Override

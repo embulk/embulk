@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
 import java.util.List;
-import com.google.common.base.Objects;
+import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -41,7 +41,7 @@ public class SchemaConfig
             return false;
         }
         SchemaConfig other = (SchemaConfig) obj;
-        return Objects.equal(columns, other.columns);
+        return Objects.equals(columns, other.columns);
     }
 
     @Override

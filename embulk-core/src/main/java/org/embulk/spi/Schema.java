@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
 import java.util.List;
-import com.google.common.base.Objects;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.spi.type.Type;
@@ -78,7 +78,7 @@ public class Schema
             return false;
         }
         Schema other = (Schema) obj;
-        return Objects.equal(columns, other.columns);
+        return Objects.equals(columns, other.columns);
     }
 
     @Override
