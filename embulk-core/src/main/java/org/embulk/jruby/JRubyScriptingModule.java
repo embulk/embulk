@@ -16,10 +16,12 @@ import com.google.inject.Key;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
 import org.jruby.CompatVersion;
+import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.plugin.PluginSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
+import org.embulk.exec.ForSystemConfig;
 import org.embulk.spi.BufferAllocator;
 
 public class JRubyScriptingModule
@@ -27,15 +29,12 @@ public class JRubyScriptingModule
 {
     public JRubyScriptingModule(ConfigSource systemConfig)
     {
-        // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
-        // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
     }
 
     @Override
     public void configure(Binder binder)
     {
         binder.bind(ScriptingContainer.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
-        //binder.bind(JRubyModule.class).in(Scopes.SINGLETON);
 
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
         multibinder.addBinding().to(JRubyPluginSource.class);
@@ -45,16 +44,25 @@ public class JRubyScriptingModule
             implements ProviderWithDependencies<ScriptingContainer>
     {
         private final Injector injector;
+        private final boolean useGlobalRubyRuntime;
 
         @Inject
-        public ScriptingContainerProvider(Injector injector)
+        public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
         {
             this.injector = injector;
+
+            // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
+            // instantiated in this JVM.
+            this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
+
+            // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
+            // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
         }
 
         public ScriptingContainer get()
         {
-            ScriptingContainer jruby = new ScriptingContainer();
+            LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
+            ScriptingContainer jruby = new ScriptingContainer(scope);
             jruby.setCompatVersion(CompatVersion.RUBY1_9);
 
             // Search embulk/java/bootstrap.rb from a $LOAD_PATH.
@@ -72,9 +80,13 @@ public class JRubyScriptingModule
             // jruby searches embulk/java/bootstrap.rb from the beginning of $LOAD_PATH.
             jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
+            // TODO validate Embulk::Java::Injected::Injector doesn't exist? If it already exists,
+            //      Injector is created more than once in this JVM although use_global_ruby_runtime
+            //      is set to true.
+
             // set some constants
             jruby.callMethod(
-                    jruby.runScriptlet("Embulk::Java"),
+                    jruby.runScriptlet("Embulk::Java::Injected"),
                     "const_set", "Injector", injector);
             jruby.callMethod(
                     jruby.runScriptlet("Embulk::Java::Injected"),

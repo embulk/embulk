@@ -50,6 +50,9 @@ public class Runner
 
         private List<PluginType> guessPlugins;
         public List<PluginType> getGuessPlugins() { return guessPlugins; }
+
+        private boolean useGlobalRubyRuntime;
+        public boolean getUseGlobalRubyRuntime() { return useGlobalRubyRuntime; }
     }
 
     private final Options options;
@@ -72,15 +75,22 @@ public class Runner
     {
         String logLevel = options.getLogLevel();
         if (logLevel != null) {
+            // used by LoggerProvider
             systemConfig.set("log_level", logLevel);
         }
 
         List<PluginType> guessPlugins = options.getGuessPlugins();
         if (guessPlugins != null && !guessPlugins.isEmpty()) {
+            // used by GuessExecutor
             List<PluginType> list = new ArrayList<PluginType>() { };
             list = systemConfig.get((Class<List<PluginType>>) list.getClass(), "guess_plugins", list);
             list.addAll(guessPlugins);
             systemConfig.set("guess_plugins", list);
+        }
+
+        if (options.getUseGlobalRubyRuntime()) {
+            // used by JRubyScriptingModule
+            systemConfig.set("use_global_ruby_runtime", true);
         }
     }
 

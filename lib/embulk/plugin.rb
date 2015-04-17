@@ -190,7 +190,7 @@ module Embulk
 
     # TODO lookup should fallback to Java PluginSource
     # if not found so that ruby plugins can call java plugins.
-    # call injector.newPlugin and wrap the instance in a reverse bridge object.
+    # call Java.injector.newPlugin and wrap the instance in a reverse bridge object.
 
     def lookup(category, type)
       @registries[category].lookup(type)

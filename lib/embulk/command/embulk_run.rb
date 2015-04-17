@@ -39,7 +39,12 @@ module Embulk
     load_paths = []
     classpaths = []
     classpath_separator = java.io.File.pathSeparator
-    options = {}
+
+    options = {
+      # use the global ruby runtime (the jruby Runtime running this embulk_run.rb script) for all
+      # ScriptingContainer injected by the org.embulk.command.Runner.
+      useGlobalRubyRuntime: true,
+    }
 
     op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
       # only for help message. implemented at lib/embulk/command/embulk.rb
