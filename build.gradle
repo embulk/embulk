@@ -14,6 +14,11 @@ allprojects {
     group = 'org.embulk'
     version = '0.6.2'
 
+    jruby {
+        // for JRubyExec
+        execVersion = '1.7.19'
+    }
+
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
@@ -187,6 +192,7 @@ task rubyTest(type: JRubyExec) {
     jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '-eTest::Unit::AutoRunner.run(true, *ARGV)'
     script 'test'
 }
+rubyTest.dependsOn('classpath')
 
 //
 // gem task

@@ -69,9 +69,9 @@ unless jruby_complete
 end
 
 if overwrite_optimize == true || (default_optimize == true && overwrite_optimize != false)
-    java_args = %w[-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC] + java_args
+  java_args = %w[-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC] + java_args
 else
-    java_args = %w[-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none] + java_args
+  java_args = %w[-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none] + java_args
 end
 
 # java ... -jar ruby-complete.jar $EMBULK_HOME/lib/embulk/command/embulk.rb "$@"
