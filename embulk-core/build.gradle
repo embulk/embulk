@@ -27,7 +27,7 @@ dependencies {
     compile 'log4j:log4j:1.2.17'
     compile 'org.slf4j:slf4j-api:1.7.10'
     compile 'org.slf4j:slf4j-log4j12:1.7.10'
-    compile 'org.jruby:jruby-complete:1.7.19'
+    compile 'org.jruby:jruby-complete:' + project.jrubyVersion
     compile 'com.google.code.findbugs:annotations:3.0.0'
     compile 'org.yaml:snakeyaml:1.14'
     compile 'javax.validation:validation-api:1.1.0.Final'

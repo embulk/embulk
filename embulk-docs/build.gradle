@@ -1,5 +1,10 @@
 apply plugin: 'com.github.jruby-gradle.base'
 
+import com.github.jrubygradle.JRubyExec
+jruby {
+    execVersion = project.jrubyVersion
+}
+
 dependencies {
     jrubyExec 'rubygems:yard:0.8.7.6'
 }
@@ -16,7 +21,6 @@ task javadoc_html(type: Copy, dependsOn: [':embulk-core:javadoc']) {
     into 'build/html/javadoc'
 }
 
-import com.github.jrubygradle.JRubyExec
 task rdoc_html(type: JRubyExec) {
     workingDir '..'
     jrubyArgs '-ryard', '-eYARD::CLI::Yardoc.run(*ARGV)', '--', '-o', 'embulk-docs/build/html/rdoc'

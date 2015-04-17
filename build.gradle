@@ -5,7 +5,6 @@ plugins {
     id 'com.github.jruby-gradle.base' version '0.1.5'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
-import com.github.jrubygradle.JRubyExec
 
 def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli")]
 def release_projects = [project(":embulk-core"), project(":embulk-standards")]
@@ -14,9 +13,8 @@ allprojects {
     group = 'org.embulk'
     version = '0.6.2'
 
-    jruby {
-        // for JRubyExec
-        execVersion = '1.7.19'
+    ext {
+        jrubyVersion = '1.7.19'
     }
 
     apply plugin: 'java'
@@ -140,6 +138,11 @@ subprojects {
             }
         }
     }
+}
+
+import com.github.jrubygradle.JRubyExec
+jruby {
+    execVersion = project.jrubyVersion
 }
 
 dependencies {
