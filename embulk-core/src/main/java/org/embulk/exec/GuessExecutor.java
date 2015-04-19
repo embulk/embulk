@@ -3,6 +3,7 @@ package org.embulk.exec;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
@@ -87,8 +88,8 @@ public class GuessExecutor
                     }
                 }
             });
-        } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+        } catch (ExecutionException ex) {
+            throw Throwables.propagate(ex.getCause());
         }
     }
 
