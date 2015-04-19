@@ -69,7 +69,7 @@ public class PreviewExecutor
                 }
             });
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            throw Throwables.propagate(ex.getCause());
         }
     }
 
