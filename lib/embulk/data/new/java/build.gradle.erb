@@ -26,15 +26,29 @@ task classpath(type: Copy, dependsOn: ["jar"]) {
     from (configurations.runtime - configurations.provided + files(jar.archivePath))
     into "classpath"
 }
-clean { delete 'classpath' }
+clean { delete "classpath" }
 
-task gem(type: JRubyExec, dependsOn: ["build", "gemspec", "classpath"]) {
+task gem(type: JRubyExec, dependsOn: ["gemspec", "classpath"]) {
     jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "build"
-    script "build/gemspec"
+    script "${project.name}.gemspec"
     doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
 }
 
-task gemspec << { file("build/gemspec").write($/
+task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
+    jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "push"
+    script "${project.name}-${project.version}.gem"
+}
+
+task "package"(dependsOn: ["gemspec", "classpath"]) << {
+    println "> Build succeeded."
+    println "> You can run embulk with '-L ${file(".").absolutePath}' argument."
+}
+
+task gemspec {
+    ext.gemspecFile = file("${project.name}.gemspec")
+    inputs.file "build.gradle"
+    outputs.file gemspecFile
+    doLast { gemspecFile.write($/
 Gem::Specification.new do |spec|
   spec.name          = "${project.name}"
   spec.version       = "${project.version}"
@@ -54,4 +68,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', ['>= 10.0']
 end
 /$)
+    }
 }
+clean { delete "${project.name}.gemspec" }

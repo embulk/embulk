@@ -36,6 +36,7 @@ module Embulk
 
     puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{Embulk::VERSION}"
 
+    plugin_paths = []
     load_paths = []
     classpaths = []
     classpath_separator = java.io.File.pathSeparator
@@ -66,6 +67,9 @@ module Embulk
       op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
+      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
+        plugin_paths << plugin_path
+      end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
@@ -85,6 +89,9 @@ module Embulk
       op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
+      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
+        plugin_paths << plugin_path
+      end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
       end
@@ -100,6 +107,9 @@ module Embulk
       op.banner = "Usage: preview <config.yml>"
       op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
+      end
+      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
+        plugin_paths << plugin_path
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
@@ -119,6 +129,9 @@ module Embulk
       end
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
         options[:nextConfigOutputPath] = path
+      end
+      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
+        plugin_paths << plugin_path
       end
       op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
         load_paths << load_path
@@ -191,6 +204,7 @@ examples:
 
       require 'fileutils'
       require 'rubygems/gem_runner'
+      setup_plugin_paths(plugin_paths)
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
@@ -297,6 +311,7 @@ examples:
         end
       end
 
+      setup_plugin_paths(plugin_paths)
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
@@ -336,6 +351,24 @@ examples:
     Gem.clear_paths  # force rubygems to reload GEM_HOME
   end
 
+  def self.setup_plugin_paths(plugin_paths)
+    plugin_paths.each do |path|
+      unless File.directory?(path)
+        raise "Path '#{path}' is not a directory"
+      end
+      specs = Dir[File.join(File.expand_path(path), "*.gemspec")]
+      if specs.empty?
+        raise "Path '#{path}' does not include *.gemspec file. Hint: Did you run './gradlew package' command?"
+      end
+      specs.each do |spec|
+        gem_path = File.dirname(spec)
+        stub = Gem::StubSpecification.new(spec)
+        stub.define_singleton_method(:full_gem_path) { gem_path }
+        Gem::Specification.add_spec(stub)
+      end
+    end
+  end
+
   def self.setup_load_paths(load_paths)
     # first $LOAD_PATH has highet priority. later load_paths should have highest priority.
     load_paths.each do |load_path|
@@ -345,9 +378,9 @@ examples:
   end
 
   def self.setup_classpaths(classpaths)
-    classpaths.each {|classpath|
+    classpaths.each do |classpath|
       $CLASSPATH << classpath  # $CLASSPATH object doesn't have concat method
-    }
+    end
   end
 
   def self.usage(message)
