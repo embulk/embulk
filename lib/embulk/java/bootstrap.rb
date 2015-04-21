@@ -5,13 +5,13 @@ module Embulk
 
     module Injected
       # Following constats are set by org.embulk.jruby.JRubyScriptingModule:
+      #   Injector
       #   ModelManager
       #   BufferAllocator
     end
 
     def self.injector
-      # TODO use org.embulk.spi.Exec.getInjector
-      Injector
+      Injected::Injector
     end
   end
 end

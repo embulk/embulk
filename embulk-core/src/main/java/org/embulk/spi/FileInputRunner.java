@@ -80,7 +80,7 @@ public class FileInputRunner
             throw new NoSampleException("Can't get sample data because the first input file is empty");
         }
 
-        GuessExecutor guessExecutor = Exec.session().getInjector().getInstance(GuessExecutor.class);
+        GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
         return guessExecutor.guessParserConfig(sample, config, Exec.session().getExecConfig());
     }
 
