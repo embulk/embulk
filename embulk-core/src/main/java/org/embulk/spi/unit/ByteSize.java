@@ -27,6 +27,14 @@ public class ByteSize
         this.displayUnit = unit;
     }
 
+    @JsonCreator
+    public ByteSize(long bytes)
+    {
+        Preconditions.checkArgument(bytes >= 0, "size is negative");
+        this.bytes = bytes;
+        this.displayUnit = Unit.BYTES;
+    }
+
     public long getBytes()
     {
         return bytes;
