@@ -63,11 +63,20 @@ Documents
    :maxdepth: 2
 
    built-in
-   release
+
+.. toctree::
+   :maxdepth: 3
+
+   customization
 
 * `JavaDoc <javadoc/index.html>`_
 
 * `RDoc <rdoc/_index.html>`_
 
 * `Github <https://github.com/embulk/embulk>`_
+
+.. toctree::
+   :maxdepth: 2
+
+   release
 
