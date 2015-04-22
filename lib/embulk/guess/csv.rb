@@ -1,6 +1,6 @@
 module Embulk
   module Guess
-    require_relative 'schema_guess'
+    require 'embulk/guess/schema_guess'
 
     class CsvGuessPlugin < LineGuessPlugin
       Plugin.register_guess('csv', self)
