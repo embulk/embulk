@@ -102,14 +102,19 @@ module Embulk
         rows = []
         while tokenizer.nextFile
           while tokenizer.nextRecord
-            columns = []
-            while true
-              begin
-                columns << tokenizer.nextColumn
-              rescue java.lang.IllegalStateException  # TODO exception class
-                rows << columns
-                break
+            begin
+              columns = []
+              while true
+                begin
+                  columns << tokenizer.nextColumn
+                rescue org.embulk.standards.CsvTokenizer::TooFewColumnsException
+                  rows << columns
+                  break
+                end
               end
+            rescue org.embulk.standards.CsvTokenizer::InvalidValueException
+              # TODO warning
+              tokenizer.skipCurrentLine
             end
           end
         end
