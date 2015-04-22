@@ -100,7 +100,7 @@ module Embulk
       private
 
       def split_lines(parser_config, sample_lines, delim)
-        parser_task = parser_config.merge({"columns" => []}).load_config(org.embulk.standards.CsvParserPlugin::PluginTask)
+        parser_task = parser_config.merge({"charset" => "UTF-8", "columns" => []}).load_config(org.embulk.standards.CsvParserPlugin::PluginTask)
         data = sample_lines.map {|x| x.force_encoding('UTF-8') }.join(parser_task.getNewline.getString.encode('UTF-8'))
         sample = Buffer.from_ruby_string(data)
         decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), parser_task)
