@@ -37,17 +37,23 @@ module Embulk
         end
 
         parser_config = config["parser"] || {}
-        parser_guessed = DataSource.new.merge({"type" => "csv", "delimiter" => delim})
+        parser_guessed = DataSource.new.merge(parser_config).merge({"type" => "csv", "delimiter" => delim})
 
-        quote = guess_quote(sample_lines, delim)
-        parser_guessed["quote"] = quote ? quote : ''
+        unless parser_guessed.has_key?("quote")
+          quote = guess_quote(sample_lines, delim)
+          parser_guessed["quote"] = quote ? quote : ''
+        end
 
-        escape = guess_escape(sample_lines, delim, quote)
-        parser_guessed["escape"] = escape ? escape : ''
+        unless parser_guessed.has_key?("escape")
+          escape = guess_escape(sample_lines, delim, quote)
+          parser_guessed["escape"] = escape ? escape : ''
+        end
 
-        null_string = guess_null_string(sample_lines, delim)
-        parser_guessed["null_string"] = null_string if null_string
-        # don't even set null_string to avoid confusion of null and 'null' in YAML format
+        unless parser_guessed.has_key?("null_string")
+          null_string = guess_null_string(sample_lines, delim)
+          parser_guessed["null_string"] = null_string if null_string
+          # don't even set null_string to avoid confusion of null and 'null' in YAML format
+        end
 
         sample_records = split_lines(parser_guessed, sample_lines, delim)
         skip_header_lines = guess_skip_header_lines(sample_records)
