@@ -67,7 +67,7 @@ module Embulk
           return {}
         end
 
-        header_line = (first_types != other_types && !first_types.any? {|t| t != "string" })
+        header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) })
 
         if header_line
           parser_guessed["skip_header_lines"] = skip_header_lines + 1

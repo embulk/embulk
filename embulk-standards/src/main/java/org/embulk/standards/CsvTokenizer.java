@@ -288,7 +288,7 @@ public class CsvTokenizer
                         // column has trailing spaces and quoted. TODO should this be rejected?
 
                     } else {
-                        throw new InvalidValueException("Unexpected extra character after quoted value");
+                        throw new InvalidValueException(String.format("Unexpected extra character (%c) after quoted value in %s", c, line));
                     }
                     break;
 
