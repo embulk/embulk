@@ -75,7 +75,7 @@ Step 3: Confirm it works
 
 The next step is to actually use the plugin.
 
-Let's supporse you have a configuration file named ``your-config.yml``. You can use the plugin using embulk with ``-L`` argument:
+Let's suppose you have a configuration file named ``your-config.yml``. You can use the plugin using embulk with ``-L`` argument:
 
 ::
 
