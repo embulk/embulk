@@ -30,7 +30,7 @@ public class CsvParserPlugin
         ImmutableSet.of(
                 "true", "True", "TRUE",
                 "yes", "Yes", "YES",
-                "y", "Y",
+                "t", "T", "y", "Y",
                 "on", "On", "ON",
                 "1");
 

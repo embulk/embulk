@@ -64,13 +64,17 @@ module Embulk::Guess
           end
         end
 
+        if str.empty?
+          return nil
+        end
+
         return "string"
       end
 
       def merge_types(types)
         t = types.inject(nil) {|r,t| merge_type(r,t) } || "string"
         if t.is_a?(TimestampTypeMatch)
-          format = TimeFormatGuess.guess(types.map {|type| type.format })
+          format = TimeFormatGuess.guess(types.map {|type| type.is_a?(TimestampTypeMatch) ? type.format : nil }.compact)
           return TimestampTypeMatch.new(format)
         else
           return t
@@ -81,7 +85,7 @@ module Embulk::Guess
       TRUE_STRINGS = Hash[%w[
         true True TRUE
         yes Yes YES
-        t y Y
+        t T y Y
         on On ON
         1
       ].map {|k| [k, true] }]
@@ -90,7 +94,7 @@ module Embulk::Guess
       FALSE_STRINGS = Hash[%w[
         false False FALSE
         no No NO
-        f n N
+        f N n N
         off Off OFF
         0
       ].map {|k| [k, true] }]
