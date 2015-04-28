@@ -81,7 +81,7 @@ module Embulk::Guess
       TRUE_STRINGS = Hash[%w[
         true True TRUE
         yes Yes YES
-        y Y
+        t y Y
         on On ON
         1
       ].map {|k| [k, true] }]
@@ -90,7 +90,7 @@ module Embulk::Guess
       FALSE_STRINGS = Hash[%w[
         false False FALSE
         no No NO
-        n N
+        f n N
         off Off OFF
         0
       ].map {|k| [k, true] }]
