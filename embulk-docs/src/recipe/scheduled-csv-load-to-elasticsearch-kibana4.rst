@@ -11,7 +11,7 @@ This article shows how to:
 * Visualize the data with Kibana interactively.
 * Schedule the data loading every hour using cron.
 
-This guide assumes you are using Ubuntu 12.0 Precise or Mac OS X.
+This guide assumes you are using Ubuntu 12.04 Precise or Mac OS X.
 
 Setup Elasticsearch and Kibana 4
 ------------------
