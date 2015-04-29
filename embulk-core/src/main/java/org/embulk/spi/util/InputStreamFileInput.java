@@ -103,7 +103,14 @@ public class InputStreamFileInput
     public void close()
     {
         try {
-            provider.close();
+            try {
+                if (current != null) {
+                    current.close();
+                    current = null;
+                }
+            } finally {
+                provider.close();
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
