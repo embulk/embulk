@@ -36,7 +36,7 @@ task gem(type: JRubyExec, dependsOn: ["gemspec", "classpath"]) {
 
 task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
     jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "push"
-    script "${project.name}-${project.version}.gem"
+    script "pkg/${project.name}-${project.version}.gem"
 }
 
 task "package"(dependsOn: ["gemspec", "classpath"]) << {
