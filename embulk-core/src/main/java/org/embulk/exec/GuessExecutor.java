@@ -150,6 +150,9 @@ public class GuessExecutor
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
                     public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int taskCount)
                     {
+                        if (taskCount == 0) {
+                            throw new NoSampleException("No input files to guess");
+                        }
                         // TODO repeat runwith taskIndex++ if NoSampleException happens
                         input.run(inputTaskSource, null, 0, new PageOutput() {
                             @Override

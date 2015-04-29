@@ -57,6 +57,10 @@ public class SamplingParserPlugin
             runner.transaction(samplingInputConfig, new InputPlugin.Control() {
                 public List<CommitReport> run(TaskSource taskSource, Schema schema, int taskCount)
                 {
+                    if (taskCount == 0) {
+                        throw new NoSampleException("No input files to read sample data");
+                    }
+                    // TODO repeat runwith taskIndex++ if NoSampleException happens
                     runner.run(taskSource, schema, 0, new PageOutput() {
                         @Override
                         public void add(Page page)
