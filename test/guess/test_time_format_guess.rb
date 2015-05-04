@@ -47,6 +47,10 @@ class TimeFormatGuessTest < ::Test::Unit::TestCase
     assert_guess "%d/%m/%Y", "21/01/2014"
   end
 
+  def test_format_borders
+    assert_guess "%Y-%m-%d %H:%M:%S.%N",    "2014-12-31 23:59:59.999999999"
+  end
+
   def test_format_iso8601
     assert_guess "%Y-%m-%d", "1981-04-05"
     assert_guess "%Y-%m-%dT%H", "2007-04-06T13"
