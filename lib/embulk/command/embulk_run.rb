@@ -327,8 +327,14 @@ examples:
   end
 
   def self.home(dir)
-    home = File.expand_path('../../..', File.dirname(__FILE__))
-    File.join(home, dir)
+    jar, resource = __FILE__.split("!")
+    if resource
+      home = resource.split("/")[0..-3].join("/")
+      "#{jar}!#{home}/#{dir}"
+    else
+      home = File.expand_path('../../..', File.dirname(__FILE__))
+      File.join(home, dir)
+    end
   end
 
   def self.default_gem_home
