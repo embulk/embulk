@@ -173,6 +173,13 @@ examples:
 ]
       args = 2..2
 
+    when :selfupdate
+      op.remove  # remove --bundle
+      op.on('-f', "Skip corruption check", TrueClass) do |b|
+        options[:force] = true
+      end
+      args = 0..0
+
     when :gem
       require 'rubygems/gem_runner'
       Gem::GemRunner.new.run argv
@@ -297,6 +304,10 @@ examples:
       require 'embulk/command/embulk_new_plugin'
       Embulk.new_plugin(name, language, category)
 
+    when :selfupdate
+      require 'embulk/command/embulk_selfupdate'
+      Embulk.selfupdate(options)
+
     else
       require 'json'
 
@@ -401,6 +412,7 @@ examples:
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
     STDERR.puts "   new       <category> <name>                        # generates new plugin template"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
+    STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"
