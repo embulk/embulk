@@ -412,6 +412,7 @@ examples:
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
     STDERR.puts "   new       <category> <name>                        # generates new plugin template"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
+    STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
     STDERR.puts ""
     if message
       STDERR.puts "error: #{message}"
