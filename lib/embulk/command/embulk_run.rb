@@ -173,6 +173,13 @@ examples:
 ]
       args = 2..2
 
+    when :selfupdate
+      op.remove  # remove --bundle
+      op.on('-f', "Skip corruption check", TrueClass) do |b|
+        options[:force] = true
+      end
+      args = 0..0
+
     when :gem
       require 'rubygems/gem_runner'
       Gem::GemRunner.new.run argv
@@ -296,6 +303,10 @@ examples:
 
       require 'embulk/command/embulk_new_plugin'
       Embulk.new_plugin(name, language, category)
+
+    when :selfupdate
+      require 'embulk/command/embulk_selfupdate'
+      Embulk.selfupdate(options)
 
     else
       require 'json'
