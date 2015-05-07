@@ -1,6 +1,4 @@
 module Embulk
-  EMBULK_JAR_URL = "http://dl.embulk.org/embulk-latest.jar"
-
   def self.selfupdate(options={})
     require 'uri'
 
