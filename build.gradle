@@ -40,7 +40,7 @@ allprojects {
         }
 
         dryRun = false
-        publish = false  // TODO automate uploading embulk.jar and make this true
+        publish = true
 
         pkg {
             userOrg = 'embulk'
