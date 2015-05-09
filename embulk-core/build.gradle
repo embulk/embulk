@@ -1,10 +1,4 @@
 // include ruby scripts
-sourceSets {
-    main.resources {
-        srcDirs "${rootProject.projectDir}/lib"
-    }
-}
-
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
     // with ones bundled in jruby-complete and cause bytecode compatibility error
