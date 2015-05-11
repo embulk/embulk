@@ -1,9 +1,6 @@
-// include ruby scripts
-sourceSets {
-    main.resources {
-        srcDirs "${rootProject.projectDir}/lib"
-    }
-}
+// include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
+// because IntelliJ causes error if srcDirs includes files out of projectDir.
+processResources.from "${rootProject.projectDir}/lib"
 
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
