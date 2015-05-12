@@ -164,7 +164,7 @@ public class BulkLoader
             return outputTaskStates.get(outputTaskIndex);
         }
 
-        public boolean isAllCommitted()
+        public boolean isAllTasksCommitted()
         {
             if (outputTaskStates == null) {
                 // not initialized
@@ -176,6 +176,11 @@ public class BulkLoader
                 }
             }
             return true;
+        }
+
+        public boolean isAllTransactionsCommitted()
+        {
+            return inputConfigDiff != null && outputConfigDiff != null;
         }
 
         public boolean isAnyStarted()
@@ -489,7 +494,7 @@ public class BulkLoader
 
                                             state.initialize(inputTaskCount, outputTaskCount);
 
-                                            if (!state.isAllCommitted()) {  // inputTaskCount == 0
+                                            if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
                                                 execute(task, executor, state);
                                             }
 
@@ -511,7 +516,7 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllCommitted()) {
+            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
@@ -554,7 +559,7 @@ public class BulkLoader
                                             state.setOutputTaskSource(outputTask);
 
                                             restoreResumedCommitReports(resume, state);
-                                            if (!state.isAllCommitted()) {
+                                            if (!state.isAllTasksCommitted()) {
                                                 execute(task, executor, state);
                                             }
 
@@ -576,7 +581,7 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllCommitted()) {
+            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
@@ -621,7 +626,7 @@ public class BulkLoader
 
         executor.execute(procTask, state);
 
-        if (!state.isAllCommitted()) {
+        if (!state.isAllTasksCommitted()) {
             throw state.getRepresentativeException();
         }
     }
