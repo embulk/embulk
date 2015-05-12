@@ -30,6 +30,11 @@ public class TimestampParser
         this(task.getJRuby(), format, task.getDefaultTimeZone());
     }
 
+    public DateTimeZone getDefaultTimeZone()
+    {
+        return defaultTimeZone;
+    }
+
     // TODO this is still private because this might need current time
     private TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
