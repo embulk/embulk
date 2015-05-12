@@ -39,6 +39,11 @@ public class TimestampFormatter
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
     }
 
+    public DateTimeZone getTimeZone()
+    {
+        return timeZone;
+    }
+
     public void format(Timestamp value, LineEncoder encoder)
     {
         // TODO optimize by directly appending to internal buffer
