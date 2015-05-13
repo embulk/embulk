@@ -75,9 +75,6 @@ module Embulk
           parser_guessed["skip_header_lines"] = skip_header_lines
         end
 
-        parser_guessed["allow_extra_columns"] = false
-        parser_guessed["allow_optional_columns"] = false
-
         if header_line
           column_names = sample_records.first
         else
