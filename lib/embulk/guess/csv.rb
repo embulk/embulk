@@ -75,24 +75,22 @@ module Embulk
           parser_guessed["skip_header_lines"] = skip_header_lines
         end
 
-        unless parser_config.has_key?("columns")
-          if header_line
-            column_names = sample_records.first
-          else
-            column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
-          end
-          schema = []
-          column_names.zip(other_types).each do |name,type|
-            if name && type
-              if type.is_a?(SchemaGuess::TimestampTypeMatch)
-                schema << {"name" => name, "type" => type, "format" => type.format}
-              else
-                schema << {"name" => name, "type" => type}
-              end
+        if header_line
+          column_names = sample_records.first
+        else
+          column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
+        end
+        schema = []
+        column_names.zip(other_types).each do |name,type|
+          if name && type
+            if type.is_a?(SchemaGuess::TimestampTypeMatch)
+              schema << {"name" => name, "type" => type, "format" => type.format}
+            else
+              schema << {"name" => name, "type" => type}
             end
           end
-          parser_guessed["columns"] = schema
         end
+        parser_guessed["columns"] = schema
 
         return {"parser" => parser_guessed}
       end
