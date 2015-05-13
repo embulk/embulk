@@ -11,6 +11,8 @@ configurations {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
+    compile project(':embulk-jruby-extension')
+
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-multibindings:4.0'
