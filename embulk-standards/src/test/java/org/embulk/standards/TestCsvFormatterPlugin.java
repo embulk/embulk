@@ -30,7 +30,7 @@ public class TestCsvFormatterPlugin
         assertEquals(',', task.getDelimiterChar());
         assertEquals('\"', task.getQuoteChar());
         assertEquals(CsvFormatterPlugin.QuotePolicy.MINIMAL, task.getQuotePolicy());
-        assertEquals('\\', task.getEscapeChar());
+        assertEquals(false, task.getEscapeChar().isPresent());
         assertEquals(Newline.LF, task.getNewlineInField());
     }
 
@@ -54,7 +54,7 @@ public class TestCsvFormatterPlugin
         assertEquals('\t', task.getDelimiterChar());
         assertEquals('\\', task.getQuoteChar());
         assertEquals(CsvFormatterPlugin.QuotePolicy.ALL, task.getQuotePolicy());
-        assertEquals('\"', task.getEscapeChar());
+        assertEquals('\"', (char) task.getEscapeChar().get());
         assertEquals(Newline.CRLF, task.getNewlineInField());
     }
 

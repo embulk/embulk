@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
@@ -65,8 +66,8 @@ public class CsvFormatterPlugin
         public QuotePolicy getQuotePolicy();
 
         @Config("escape")
-        @ConfigDefault("\"\\\\\"")
-        public char getEscapeChar();
+        @ConfigDefault("null")
+        public Optional<Character> getEscapeChar();
 
         @Config("newline_in_field")
         @ConfigDefault("\"LF\"")
@@ -105,7 +106,7 @@ public class CsvFormatterPlugin
         final char delimiter = task.getDelimiterChar();
         final QuotePolicy quotePolicy = task.getQuotePolicy();
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
-        final char escape = task.getEscapeChar();
+        final char escape = task.getEscapeChar().or(quotePolicy == QuotePolicy.NONE ? '\\' : '\"');
         final String newlineInField = task.getNewlineInField().getString();
 
         // create a file
