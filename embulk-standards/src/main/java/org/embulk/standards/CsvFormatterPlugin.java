@@ -81,7 +81,7 @@ public class CsvFormatterPlugin
         control.run(task.dump());
     }
 
-    private Map<Integer, TimestampFormatter> newTimestampFormatters(
+    private static Map<Integer, TimestampFormatter> newTimestampFormatters(
             TimestampFormatter.FormatterTask task, Schema schema)
     {
         ImmutableMap.Builder<Integer, TimestampFormatter> builder = new ImmutableBiMap.Builder<>();
@@ -98,10 +98,8 @@ public class CsvFormatterPlugin
     public PageOutput open(TaskSource taskSource, final Schema schema,
             FileOutput output)
     {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
         final LineEncoder encoder = new LineEncoder(output, task);
-        final Map<Integer, TimestampFormatter> timestampFormatters =
-                newTimestampFormatters(task, schema);
         final char delimiter = task.getDelimiterChar();
         final QuotePolicy quotePolicy = task.getQuotePolicy();
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
@@ -116,85 +114,29 @@ public class CsvFormatterPlugin
             writeHeader(schema, encoder, delimiter, quotePolicy, quote, escape, newlineInField);
         }
 
-        return new PageOutput() {
-            private final PageReader pageReader = new PageReader(schema);
-            private final String delimiterString = String.valueOf(delimiter);
+        final PageReader pageReader = new PageReader(schema);
 
+        final ColumnVisitor rowWriter;
+        switch (quotePolicy) {
+        case NONE:
+            rowWriter = new QuoteNoneRowWriter(pageReader, task, encoder, schema);
+            break;
+        case ALL:
+            rowWriter = new QuoteAllRowWriter(pageReader, task, encoder, schema);
+            break;
+        case MINIMAL:
+            rowWriter = new QuoteMinimalRowWriter(pageReader, task, encoder, schema);
+            break;
+        default:
+            throw new AssertionError();
+        }
+
+        return new PageOutput() {
             public void add(Page page)
             {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
-                    schema.visitColumns(new ColumnVisitor() {
-                        public void booleanColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Boolean.toString(pageReader.getBoolean(column)));
-                            } else {
-                                addEmptyValue();
-                            }
-                        }
-
-                        public void longColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Long.toString(pageReader.getLong(column)));
-                            } else {
-                                addEmptyValue();
-                            }
-                        }
-
-                        public void doubleColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Double.toString(pageReader.getDouble(column)));
-                            } else {
-                                addEmptyValue();
-                            }
-                        }
-
-                        public void stringColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(pageReader.getString(column));
-                            } else {
-                                addEmptyValue();
-                            }
-                        }
-
-                        public void timestampColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                Timestamp value = pageReader.getTimestamp(column);
-                                addValue(timestampFormatters.get(column.getIndex()).format(value));
-                            } else {
-                                addEmptyValue();
-                            }
-                        }
-
-                        private void addDelimiter(Column column)
-                        {
-                            if (column.getIndex() != 0) {
-                                encoder.addText(delimiterString);
-                            }
-                        }
-
-                        private void addValue(String v)
-                        {
-                            encoder.addText(setEscapeAndQuoteValue(v, delimiter, quotePolicy, quote, escape, newlineInField));
-                        }
-
-                        private void addEmptyValue()
-                        {
-                            if (quotePolicy == QuotePolicy.ALL) {
-                                encoder.addText(setQuoteValue("", quote));
-                            }
-                        }
-                    });
+                    schema.visitColumns(rowWriter);
                     encoder.addNewLine();
                 }
             }
@@ -264,19 +206,360 @@ public class CsvFormatterPlugin
         }
 
         if (policy != QuotePolicy.NONE && isRequireQuote) {
-            return setQuoteValue(escapedValue.toString(), quote);
+            StringBuilder sb = new StringBuilder();
+            sb.append(quote);
+            sb.append(escapedValue);
+            sb.append(quote);
+            return sb.toString();
         } else {
             return escapedValue.toString();
         }
     }
 
-    private String setQuoteValue(String v, char quote)
+    private static abstract class AbstractRowWriter
+            implements ColumnVisitor
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(quote);
-        sb.append(v);
-        sb.append(quote);
+        protected final PageReader pageReader;
+        protected final LineEncoder encoder;
+        protected final Map<Integer, TimestampFormatter> timestampFormatters;
+        protected final String delimiterString;
+        protected final char delimiter;
+        protected final char quote;
+        protected final char escape;
+        protected final String newlineInField;
 
-        return sb.toString();
+        public AbstractRowWriter(PageReader pageReader, PluginTask task, LineEncoder encoder, Schema schema)
+        {
+            this.pageReader = pageReader;
+            this.encoder = encoder;
+            this.timestampFormatters = newTimestampFormatters(task, schema);
+            this.delimiter = task.getDelimiterChar();
+            this.quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
+            this.escape = task.getEscapeChar();
+            this.newlineInField = task.getNewlineInField().getString();
+            this.delimiterString = String.valueOf(delimiter);
+        }
+
+        protected void addDelimiter(Column column)
+        {
+            if (column.getIndex() != 0) {
+                encoder.addText(delimiterString);
+            }
+        }
+
+        protected void addValue(String v)
+        {
+            encoder.addText(v);
+        }
+
+        public abstract void booleanColumn(Column column);
+        public abstract void longColumn(Column column);
+        public abstract void doubleColumn(Column column);
+        public abstract void stringColumn(Column column);
+        public abstract void timestampColumn(Column column);
+    }
+
+    private static class QuoteNoneRowWriter
+            extends AbstractRowWriter
+    {
+        public QuoteNoneRowWriter(PageReader pageReader, PluginTask task, LineEncoder encoder, Schema schema)
+        {
+            super(pageReader, task, encoder, schema);
+        }
+
+        public void booleanColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Boolean.toString(pageReader.getBoolean(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void longColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Long.toString(pageReader.getLong(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void doubleColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Double.toString(pageReader.getDouble(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void stringColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addEscapedValue(pageReader.getString(column));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void timestampColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                Timestamp value = pageReader.getTimestamp(column);
+                addEscapedValue(timestampFormatters.get(column.getIndex()).format(value));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        private void addEmptyValue()
+        { }
+
+        private void addEscapedValue(String v)
+        {
+            StringBuilder escapedValue = new StringBuilder();
+            char previousChar = ' ';
+
+            for (int i = 0; i < v.length(); i++) {
+                char c = v.charAt(i);
+
+                if (c == quote) {
+                    escapedValue.append(escape);
+                    escapedValue.append(c);
+                } else if (c == '\r') {
+                    escapedValue.append(escape);
+                    escapedValue.append(newlineInField);
+                } else if (c == '\n') {
+                    if (previousChar != '\r') {
+                        escapedValue.append(escape);
+                        escapedValue.append(newlineInField);
+                    }
+                } else if (c == delimiter) {
+                    escapedValue.append(escape);
+                    escapedValue.append(c);
+                } else {
+                    escapedValue.append(c);
+                }
+                previousChar = c;
+            }
+
+            encoder.addText(escapedValue.toString());
+        }
+    }
+
+    private static class QuoteAllRowWriter
+            extends AbstractRowWriter
+    {
+        private final String quoteString;
+
+        public QuoteAllRowWriter(PageReader pageReader, PluginTask task, LineEncoder encoder, Schema schema)
+        {
+            super(pageReader, task, encoder, schema);
+            this.quoteString = new String(new char[] { quote });
+        }
+
+        public void booleanColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addQuotedValue(Boolean.toString(pageReader.getBoolean(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void longColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addQuotedValue(Long.toString(pageReader.getLong(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void doubleColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addQuotedValue(Double.toString(pageReader.getDouble(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void stringColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addQuotedAndEscapedValue(pageReader.getString(column));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void timestampColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                Timestamp value = pageReader.getTimestamp(column);
+                addQuotedAndEscapedValue(timestampFormatters.get(column.getIndex()).format(value));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        private void addEmptyValue()
+        { }
+
+        private void addQuotedValue(String v)
+        {
+            encoder.addText(quoteString);
+            encoder.addText(v);
+            encoder.addText(quoteString);
+        }
+
+        private void addQuotedAndEscapedValue(String v)
+        {
+            StringBuilder escapedValue = new StringBuilder();
+            escapedValue.append(quote);
+
+            char previousChar = ' ';
+
+            for (int i = 0; i < v.length(); i++) {
+                char c = v.charAt(i);
+
+                if (c == quote) {
+                    escapedValue.append(escape);
+                    escapedValue.append(c);
+                } else if (c == '\r') {
+                    escapedValue.append(newlineInField);
+                } else if (c == '\n') {
+                    if (previousChar != '\r') {
+                        escapedValue.append(newlineInField);
+                    }
+                } else if (c == delimiter) {
+                    escapedValue.append(c);
+                } else {
+                    escapedValue.append(c);
+                }
+                previousChar = c;
+            }
+
+            escapedValue.append(quote);
+            encoder.addText(escapedValue.toString());
+        }
+    }
+
+    private static class QuoteMinimalRowWriter
+            extends AbstractRowWriter
+    {
+        private final String quoteString;
+
+        public QuoteMinimalRowWriter(PageReader pageReader, PluginTask task, LineEncoder encoder, Schema schema)
+        {
+            super(pageReader, task, encoder, schema);
+            this.quoteString = new String(new char[] { quote });
+        }
+
+        public void booleanColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Boolean.toString(pageReader.getBoolean(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void longColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Long.toString(pageReader.getLong(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void doubleColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addValue(Double.toString(pageReader.getDouble(column)));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void stringColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                addEscapeAndQuoteValue(pageReader.getString(column));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        public void timestampColumn(Column column)
+        {
+            addDelimiter(column);
+            if (!pageReader.isNull(column)) {
+                Timestamp value = pageReader.getTimestamp(column);
+                addEscapeAndQuoteValue(timestampFormatters.get(column.getIndex()).format(value));
+            } else {
+                addEmptyValue();
+            }
+        }
+
+        private void addEmptyValue()
+        { }
+
+        private void addEscapeAndQuoteValue(String v)
+        {
+            StringBuilder escapedValue = new StringBuilder();
+            char previousChar = ' ';
+
+            boolean isRequireQuote = false;
+
+            for (int i = 0; i < v.length(); i++) {
+                char c = v.charAt(i);
+
+                if (c == quote) {
+                    escapedValue.append(escape);
+                    escapedValue.append(c);
+                    isRequireQuote = true;
+                } else if (c == '\r') {
+                    escapedValue.append(newlineInField);
+                    isRequireQuote = true;
+                } else if (c == '\n') {
+                    if (previousChar != '\r') {
+                        escapedValue.append(newlineInField);
+                        isRequireQuote = true;
+                    }
+                } else if (c == delimiter) {
+                    escapedValue.append(c);
+                    isRequireQuote = true;
+                } else {
+                    escapedValue.append(c);
+                }
+                previousChar = c;
+            }
+
+            if (isRequireQuote) {
+                encoder.addText(quoteString);
+                encoder.addText(escapedValue.toString());
+                encoder.addText(quoteString);
+            } else {
+                encoder.addText(escapedValue.toString());
+            }
+        }
     }
 }
