@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
 import java.io.Writer;
+import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -47,7 +48,7 @@ public class LineEncoder
         this.newline = task.getNewline().getString();
         this.underlyingFileOutput = out;
         this.outputStream = new FileOutputOutputStream(underlyingFileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH_FINISH);
-        this.writer = new OutputStreamWriter(outputStream, encoder);
+        this.writer = new BufferedWriter(new OutputStreamWriter(outputStream, encoder), 32*1024);
     }
 
     public void addNewLine()
