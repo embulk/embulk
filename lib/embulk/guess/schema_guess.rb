@@ -87,7 +87,6 @@ module Embulk::Guess
         yes Yes YES
         t T y Y
         on On ON
-        1
       ].map {|k| [k, true] }]
 
       # When matching to false string, then retrun 'true'
@@ -96,7 +95,6 @@ module Embulk::Guess
         no No NO
         f N n N
         off Off OFF
-        0
       ].map {|k| [k, true] }]
 
       TYPE_COALESCE = Hash[{
