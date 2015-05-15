@@ -328,13 +328,14 @@ Example
       ...
       formatter:
       - type: csv
-        delimiter: "\t"
+        delimiter: '\t'
         newline: CRLF
         newline_in_field: LF
         charset: UTF-8
         quote_policy: MINIMAL
         quote: '"'
-        escape: '"'
+        escape: '\\'
+        null_string: '\\N'
 
 Gzip encoder plugin
 ------------------
