@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jruby.Ruby;
 import org.jruby.RubyString;
 import org.jruby.runtime.ThreadContext;
 
@@ -34,8 +35,8 @@ public class RubyDateParser
                     "(?:gmt|utc?)?[-+]\\d+(?:[,.:]\\d+(?::\\d+)?)?" +
                     "|(?-i:[[\\p{Alpha}].\\s]+)(?:standard|daylight)\\s+time\\b" +
                     "|(?-i:[[\\p{Alpha}]]+)(?:\\s+dst)?\\b" +
-                    ")"
-    );
+                    ")",
+            Pattern.CASE_INSENSITIVE);
 
     private int matchAtPatterns(String text, int pos, String[] patterns)
     {
@@ -111,6 +112,10 @@ public class RubyDateParser
 
     private static boolean matchAtNumPatterns(Token token) // NUM_PATTERN_P
     {
+        if (token == null) {
+            return false;
+        }
+
         // TODO
         Format f = token.getFormat();
         if (f == Format.FORMAT_STRING && isDigit(((String)token.getData()).charAt(0))) {
@@ -136,6 +141,11 @@ public class RubyDateParser
     private int pos;
     private String text;
 
+    public RubyDateParser()
+    {
+        this(Ruby.newInstance().getCurrentContext());
+    }
+
     public RubyDateParser(ThreadContext context)
     {
         this.context = context;
@@ -152,6 +162,20 @@ public class RubyDateParser
         return dateFormat.compilePattern(format, dateLibrary);
     }
 
+    private static Token getToken(List<Token> compiledPattern, int index)
+    {
+        return compiledPattern.get(index);
+    }
+
+    private static Token nextToken(List<Token> compiledPattern, int index)
+    {
+        if (compiledPattern.size() <= index + 1) {
+            return null;
+        } else {
+            return compiledPattern.get(index + 1);
+        }
+    }
+
     // TODO RubyTime parse(RubyString format, RubyString text);
     // TODO RubyTime parse(List<Token> compiledPattern, RubyString text);
 
@@ -161,6 +185,25 @@ public class RubyDateParser
         return Temporal.newTemporal(values);
     }
 
+    private void readSpecialChars(Token token)
+    {
+        try {
+            while (true) {
+                char c = text.charAt(pos); // IndexOutOfBounds
+                if (c == '\t' || c == '\n' || c == '\u000b' || c == '\f' || c == '\r') {
+                    pos++;
+                } else if (c == ' ' && token.getFormat() == Format.FORMAT_STRING &&
+                        (token.getData().toString().equals("\t") || token.getData().toString().equals("\n"))) {
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+        } catch (IndexOutOfBoundsException e) {
+            // ignorable error
+        }
+    }
+
     ParsedValues date_strptime_internal(List<Token> compiledPattern, String text)
     {
         pos = 0;
@@ -168,15 +211,29 @@ public class RubyDateParser
 
         ParsedValues values = new ParsedValues();
 
-        for (Token token : compiledPattern) {
+        for (int i = 0; i < compiledPattern.size(); i++) {
+            Token token = getToken(compiledPattern, i);
+
+            readSpecialChars(token);
+
             switch (token.getFormat()) {
                 case FORMAT_ENCODING:
                     continue; // skip
                 case FORMAT_OUTPUT:
                     continue; // skip
                 case FORMAT_STRING:
-                    pos += token.getData().toString().length();
+                {
+                    String s = token.getData().toString();
+                    if (s.equals("\t") || s.equals("\n")) {
+                        // %t, %n - Any white space.
+                        // readSpecialChars method already reads white spaces.
+                    } else if (s.equals("\\s")) {
+                        ;
+                    } else {
+                        pos += s.length();
+                    }
                     break;
+                }
                 case FORMAT_WEEK_LONG: // %A - The full weekday name (``Sunday'')
                 case FORMAT_WEEK_SHORT: // %a - The abbreviated name (``Sun'')
                 {
@@ -204,7 +261,7 @@ public class RubyDateParser
                 case FORMAT_CENTURY: // %C - year / 100 (round down.  20 in 2009)
                 {
                     int c;
-                    if (matchAtNumPatterns(token)) {
+                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         c = readDigits(2);
                     } else {
                         c = readDigitsMax();
@@ -232,7 +289,7 @@ public class RubyDateParser
                 case FORMAT_WEEKYEAR: // %G - The week-based year
                 {
                     int y;
-                    if (matchAtNumPatterns(token)) {
+                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
@@ -247,7 +304,7 @@ public class RubyDateParser
                         values.fail();
                     }
                     values.cwyear = v;
-                    if (values._cent < 0) {
+                    if (!values.has(values._cent)) {
                         values._cent = v >= 69 ? 19 : 20;
                     }
                     break;
@@ -306,7 +363,7 @@ public class RubyDateParser
                         pos++;
                     }
 
-                    if (matchAtNumPatterns(token)) {
+                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         v = token.getFormat() == Format.FORMAT_MILLISEC ?
                                 readDigits(3) : readDigits(9);
                     } else {
@@ -342,6 +399,7 @@ public class RubyDateParser
                     int meridIndex = matchAtPatterns(text, pos, meridNames);
                     if (meridIndex >= 0) {
                         values._merid = meridIndex % 2 == 0 ? 0 : 12;
+                        pos += meridNames[meridIndex].length();
                     } else {
                         values.fail();
                     }
@@ -438,7 +496,7 @@ public class RubyDateParser
                         pos++;
                     }
 
-                    if (matchAtNumPatterns(token)) {
+                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
@@ -454,7 +512,7 @@ public class RubyDateParser
                         values.fail();
                     }
                     values.year = y;
-                    if (values._cent < 0) {
+                    if (!values.has(values._cent)) {
                         values._cent = y >= 69 ? 19 : 20;
                     }
                     break;
@@ -489,17 +547,17 @@ public class RubyDateParser
             }
         }
 
-        if (values._cent >= 0) {
-            if (values.cwyear >= 0) {
+        if (values.has(values._cent)) {
+            if (values.has(values.cwyear)) {
                 values.cwyear += values._cent * 100;
             }
-            if (values.year >= 0) {
+            if (values.has(values.year)) {
                 values.year += values._cent * 100;
             }
         }
 
-        if (values._merid >= 0) {
-            if (values.hour >= 0) {
+        if (values.has(values._merid)) {
+            if (values.has(values.hour)) {
                 values.hour %= 12;
                 values.hour += values._merid;
             }
@@ -518,7 +576,6 @@ public class RubyDateParser
         try {
             for (int i = 0; i < len; i++) {
                 char c = text.charAt(pos); // IndexOutOfBounds
-                pos += 1;
                 if (!isDigit(c)) {
                     if (i > 0) {
                         break;
@@ -526,8 +583,9 @@ public class RubyDateParser
                         throw newInvalidDataException();
                     }
                 } else {
-                    v += v * 10 + toInt(c);
+                    v = v * 10 + toInt(c);
                 }
+                pos += 1;
             }
         } catch (IndexOutOfBoundsException e) {
             // ignorable error

@@ -5,18 +5,15 @@ import org.joda.time.DateTimeZone;
 
 public class Temporal // TODO better naming
 {
+    // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
     public static Temporal newTemporal(ParsedValues values)
     {
-        // TODO
-        // use DateTime to convert TimeHash-like-internal-class to Temporal.
-        // See https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
-
         long sec = 0;
         int nsec = 0;
 
-        if (values.seconds >= 0) {
+        if (values.seconds != Integer.MIN_VALUE) {
             int u = 0;
-            if (values.sec_fraction >= 0) {
+            if (values.sec_fraction != Integer.MIN_VALUE) {
                 if (values.sec_fraction_rational == 1000) {
                     u = values.sec_fraction * 1000;
                 } else { // 1000_000_000
@@ -25,7 +22,7 @@ public class Temporal // TODO better naming
             }
 
             int seconds;
-            if (values.seconds_rational >= 0) { // Rational
+            if (values.seconds_rational != Integer.MIN_VALUE) { // Rational
                 seconds = values.seconds * 1000000;
             } else { // 1000 // int
                 seconds = values.seconds * 1000;
@@ -43,23 +40,23 @@ public class Temporal // TODO better naming
 
             // set up with min values and then add to allow rolling over
             DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-            if (values.mon >= 0) {
+            if (values.mon != Integer.MIN_VALUE) {
                 dt.plusMonths(values.mon - 1);
             }
-            if (values.mday >= 0) {
+            if (values.mday != Integer.MIN_VALUE) {
                 dt.plusDays(values.mday - 1);
             }
-            if (values.hour >= 0) {
+            if (values.hour != Integer.MIN_VALUE) {
                 dt.plusHours(values.hour);
             }
-            if (values.min >= 0) {
+            if (values.min != Integer.MIN_VALUE) {
                 dt.plusMinutes(values.min);
             }
-            if (values.sec >= 0) {
+            if (values.sec != Integer.MIN_VALUE) {
                 dt.plusMinutes(values.sec);
             }
 
-            if (values.sec_fraction >= 0) {
+            if (values.sec_fraction != Integer.MIN_VALUE) {
                 int u;
                 if (values.sec_fraction_rational == 1000) {
                     u = values.sec_fraction * 1000;

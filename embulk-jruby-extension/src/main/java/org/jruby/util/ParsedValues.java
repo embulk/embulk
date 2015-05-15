@@ -187,7 +187,7 @@ public class ParsedValues
     public static int toDiff(String zone)
     {
         String z = zone.toLowerCase();
-        int offset = 0;
+        int offset = Integer.MIN_VALUE;
 
         boolean dst = false;
         if (z.endsWith(" daylight time")) {
@@ -216,7 +216,7 @@ public class ParsedValues
 
         if (!isSign(z.charAt(0))) {
             // if z doesn't have "+" or "-", invalid
-            return 0;
+            return offset;
         }
 
         boolean sign = false;
@@ -242,13 +242,13 @@ public class ParsedValues
 
         } else {
             int len = z.length();
-            if (len % 2 == 0) {
+            if (len % 2 != 0) {
                 if (len >= 1)
                     hour = parseInt(z.substring(0, 1));
                 if (len >= 3)
                     min = parseInt(z.substring(1, 3));
                 if (len >= 5)
-                    min = parseInt(z.substring(3, 5));
+                    sec = parseInt(z.substring(3, 5));
 
             } else {
                 if (len >= 2)
@@ -256,7 +256,7 @@ public class ParsedValues
                 if (len >= 4)
                     min = parseInt(z.substring(2, 4));
                 if (len >= 6)
-                    min = parseInt(z.substring(4, 6));
+                    sec = parseInt(z.substring(4, 6));
             }
         }
 
@@ -273,7 +273,7 @@ public class ParsedValues
                 if (!isDigit(c)) {
                     break;
                 } else {
-                    v += v * 10 + toInt(c);
+                    v = v * 10 + toInt(c);
                 }
             }
         } catch (IndexOutOfBoundsException e) {
@@ -282,30 +282,30 @@ public class ParsedValues
         return v;
     }
 
-    int mday = -1;
-    int wday = -1;
-    int cwday = -1;
-    int yday = -1;
-    int cweek = -1;
-    int cwyear = -1;
-    int min = -1;
-    int mon = -1;
-    int hour = -1;
-    int year = -1;
-    int sec = -1;
-    int wnum0 = -1;
-    int wnum1 = -1;
+    int mday = Integer.MIN_VALUE;
+    int wday = Integer.MIN_VALUE;
+    int cwday = Integer.MIN_VALUE;
+    int yday = Integer.MIN_VALUE;
+    int cweek = Integer.MIN_VALUE;
+    int cwyear = Integer.MIN_VALUE;
+    int min = Integer.MIN_VALUE;
+    int mon = Integer.MIN_VALUE;
+    int hour = Integer.MIN_VALUE;
+    int year = Integer.MIN_VALUE;
+    int sec = -Integer.MIN_VALUE;
+    int wnum0 = Integer.MIN_VALUE;
+    int wnum1 = Integer.MIN_VALUE;
 
     String zone = null;
 
-    int sec_fraction = -1; // Rational
-    int sec_fraction_rational = -1;
+    int sec_fraction = Integer.MIN_VALUE;; // Rational
+    int sec_fraction_rational = Integer.MIN_VALUE;;
 
-    int seconds = -1; // int or Rational
-    int seconds_rational = -1;
+    int seconds = Integer.MIN_VALUE;; // int or Rational
+    int seconds_rational = Integer.MIN_VALUE;;
 
-    int _merid = -1;
-    int _cent = -1;
+    int _merid = Integer.MIN_VALUE;;
+    int _cent = Integer.MIN_VALUE;;
 
     boolean fail = false;
     String leftover = null;
@@ -319,72 +319,79 @@ public class ParsedValues
         fail = true;
     }
 
+    boolean has(int v)
+    {
+        return v != Integer.MIN_VALUE;
+    }
+
     public HashMap<String, Object> toMap()
     {
         HashMap<String, Object> map = new HashMap<>();
-        if (mday >= 0)
+        if (has(mday)) {
             map.put("mday", mday);
-
-        if (wday >= 0)
+        }
+        if (has(wday)) {
             map.put("wday", wday);
-
-        if (cwday >= 0)
+        }
+        if (has(cwday)) {
             map.put("cwday", cwday);
-
-        if (yday >= 0)
+        }
+        if (has(yday)) {
             map.put("yday", yday);
-
-        if (cweek >= 0)
+        }
+        if (has(cweek)) {
             map.put("cweek", cweek);
-
-        if (cwyear >= 0)
+        }
+        if (has(cwyear)) {
             map.put("cwyear", cwyear);
-
-        if (min >= 0)
+        }
+        if (has(min)) {
             map.put("min", min);
-
-        if (mon >= 0)
+        }
+        if (has(mon)) {
             map.put("mon", mon);
-
-        if (hour >= 0)
+        }
+        if (has(hour)) {
             map.put("hour", hour);
-
-        if (year >= 0)
+        }
+        if (has(year)) {
             map.put("year", year);
-
-        if (sec >= 0)
+        }
+        if (has(sec)) {
             map.put("sec", sec);
-
-        if (wnum0 >= 0)
+        }
+        if (has(wnum0)) {
             map.put("wnum0", wnum0);
-
-        if (wnum1 >= 0)
+        }
+        if (has(wnum1)) {
             map.put("wnum1", wnum1);
-
+        }
         if (zone != null) {
             map.put("zone", zone);
-            map.put("offset", toDiff(zone));
+            int offset = toDiff(zone);
+            if (offset != Integer.MIN_VALUE) {
+                map.put("offset", offset);
+            }
         }
-
-        if (sec_fraction >= 0) {
+        if (has(sec_fraction)) {
+            map.put("sec_fraction", ((float) sec_fraction / sec_fraction_rational));
             // TODO return Rational
-            map.put("sec_fraction", ((float)sec_fraction / sec_fraction_rational));
         }
-
-        if (seconds >= 0) {
-            if (seconds_rational >= 0) {
-                map.put("seconds", ((float)seconds / seconds_rational));
+        if (has(seconds)) {
+            if (has(seconds_rational)) {
+                map.put("seconds", ((float) seconds / seconds_rational));
             } else {
                 map.put("seconds", seconds);
             }
         }
-
-        if (_merid >= 0)
+        if (has(_merid)) {
             map.put("_merid", _merid);
-
-        if (_cent >= 0)
+        }
+        if (has(_cent)) {
             map.put("_cent", _cent);
+        }
 
+        System.out.println("map: "+ map);
         return map;
     }
 }
