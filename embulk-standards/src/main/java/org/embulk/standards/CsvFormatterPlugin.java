@@ -69,6 +69,10 @@ public class CsvFormatterPlugin
         @ConfigDefault("null")
         public Optional<Character> getEscapeChar();
 
+        @Config("null_string")
+        @ConfigDefault("\"\"")
+        public String getNullString();
+
         @Config("newline_in_field")
         @ConfigDefault("\"LF\"")
         public Newline getNewlineInField();
@@ -108,13 +112,14 @@ public class CsvFormatterPlugin
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
         final char escape = task.getEscapeChar().or(quotePolicy == QuotePolicy.NONE ? '\\' : '\"');
         final String newlineInField = task.getNewlineInField().getString();
+        final String nullString = task.getNullString();
 
         // create a file
         encoder.nextFile();
 
         // write header
         if (task.getHeaderLine()) {
-            writeHeader(schema, encoder, delimiter, quotePolicy, quote, escape, newlineInField);
+            writeHeader(schema, encoder, delimiter, quotePolicy, quote, escape, newlineInField, nullString);
         }
 
         return new PageOutput() {
@@ -132,7 +137,7 @@ public class CsvFormatterPlugin
                             if (!pageReader.isNull(column)) {
                                 addValue(Boolean.toString(pageReader.getBoolean(column)));
                             } else {
-                                addEmptyValue();
+                                addNullString();
                             }
                         }
 
@@ -142,7 +147,7 @@ public class CsvFormatterPlugin
                             if (!pageReader.isNull(column)) {
                                 addValue(Long.toString(pageReader.getLong(column)));
                             } else {
-                                addEmptyValue();
+                                addNullString();
                             }
                         }
 
@@ -152,7 +157,7 @@ public class CsvFormatterPlugin
                             if (!pageReader.isNull(column)) {
                                 addValue(Double.toString(pageReader.getDouble(column)));
                             } else {
-                                addEmptyValue();
+                                addNullString();
                             }
                         }
 
@@ -162,7 +167,7 @@ public class CsvFormatterPlugin
                             if (!pageReader.isNull(column)) {
                                 addValue(pageReader.getString(column));
                             } else {
-                                addEmptyValue();
+                                addNullString();
                             }
                         }
 
@@ -173,7 +178,7 @@ public class CsvFormatterPlugin
                                 Timestamp value = pageReader.getTimestamp(column);
                                 addValue(timestampFormatters.get(column.getIndex()).format(value));
                             } else {
-                                addEmptyValue();
+                                addNullString();
                             }
                         }
 
@@ -186,14 +191,12 @@ public class CsvFormatterPlugin
 
                         private void addValue(String v)
                         {
-                            encoder.addText(setEscapeAndQuoteValue(v, delimiter, quotePolicy, quote, escape, newlineInField));
+                            encoder.addText(setEscapeAndQuoteValue(v, delimiter, quotePolicy, quote, escape, newlineInField, nullString));
                         }
 
-                        private void addEmptyValue()
+                        private void addNullString()
                         {
-                            if (quotePolicy == QuotePolicy.ALL) {
-                                encoder.addText(setQuoteValue("", quote));
-                            }
+                            encoder.addText(nullString);
                         }
                     });
                     encoder.addNewLine();
@@ -212,24 +215,24 @@ public class CsvFormatterPlugin
         };
     }
 
-    private void writeHeader(Schema schema, LineEncoder encoder, char delimiter, QuotePolicy policy, char quote, char escape, String newline)
+    private void writeHeader(Schema schema, LineEncoder encoder, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString)
     {
         String delimiterString = String.valueOf(delimiter);
         for (Column column : schema.getColumns()) {
             if (column.getIndex() != 0) {
                 encoder.addText(delimiterString);
             }
-            encoder.addText(setEscapeAndQuoteValue(column.getName(), delimiter, policy, quote, escape, newline));
+            encoder.addText(setEscapeAndQuoteValue(column.getName(), delimiter, policy, quote, escape, newline, nullString));
         }
         encoder.addNewLine();
     }
 
-    private String setEscapeAndQuoteValue(String v, char delimiter, QuotePolicy policy, char quote, char escape, String newline)
+    private String setEscapeAndQuoteValue(String v, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString)
     {
         StringBuilder escapedValue = new StringBuilder();
         char previousChar = ' ';
 
-        boolean isRequireQuote = policy == QuotePolicy.ALL ? true : false;
+        boolean isRequireQuote = (policy == QuotePolicy.ALL || policy == QuotePolicy.MINIMAL && v.equals(nullString)) ? true : false;
 
         for (int i = 0; i < v.length(); i++) {
             char c = v.charAt(i);

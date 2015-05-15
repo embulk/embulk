@@ -31,6 +31,7 @@ public class TestCsvFormatterPlugin
         assertEquals('\"', task.getQuoteChar());
         assertEquals(CsvFormatterPlugin.QuotePolicy.MINIMAL, task.getQuotePolicy());
         assertEquals(false, task.getEscapeChar().isPresent());
+        assertEquals("", task.getNullString());
         assertEquals(Newline.LF, task.getNewlineInField());
     }
 
@@ -45,6 +46,7 @@ public class TestCsvFormatterPlugin
                 .set("quote", "\\")
                 .set("quote_policy", "ALL")
                 .set("escape", "\"")
+                .set("null_string", "\\N")
                 .set("newline_in_field", "CRLF");
 
         CsvFormatterPlugin.PluginTask task = config.loadConfig(CsvFormatterPlugin.PluginTask.class);
@@ -55,6 +57,7 @@ public class TestCsvFormatterPlugin
         assertEquals('\\', task.getQuoteChar());
         assertEquals(CsvFormatterPlugin.QuotePolicy.ALL, task.getQuotePolicy());
         assertEquals('\"', (char) task.getEscapeChar().get());
+        assertEquals("\\N", task.getNullString());
         assertEquals(Newline.CRLF, task.getNewlineInField());
     }
 
@@ -77,7 +80,7 @@ public class TestCsvFormatterPlugin
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
-                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class);
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
 
@@ -85,8 +88,8 @@ public class TestCsvFormatterPlugin
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.MINIMAL;
         String newline = Newline.LF.getString();
 
-        assertEquals("\"AB\\\"CD\"", method.invoke(formatter, "AB\"CD", delimiter, policy, '"', '\\', newline));
-        assertEquals("\"AB\"\"CD\"", method.invoke(formatter, "AB\"CD", delimiter, policy, '"', '"', newline));
+        assertEquals("\"AB\\\"CD\"", method.invoke(formatter, "AB\"CD", delimiter, policy, '"', '\\', newline, ""));
+        assertEquals("\"AB\"\"CD\"", method.invoke(formatter, "AB\"CD", delimiter, policy, '"', '"', newline, ""));
     }
 
     @Test
@@ -94,7 +97,7 @@ public class TestCsvFormatterPlugin
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
-                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class);
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
 
@@ -103,6 +106,7 @@ public class TestCsvFormatterPlugin
         char escape = '"';
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.ALL;
         String newline = Newline.LF.getString();
+        String nullString = "";
 
         @SuppressWarnings("unchecked")
         ImmutableList<ImmutableMap<String, String>> testCases = ImmutableList.of(
@@ -128,7 +132,7 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
     }
 
@@ -137,7 +141,7 @@ public class TestCsvFormatterPlugin
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
-                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class);
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
 
@@ -146,6 +150,7 @@ public class TestCsvFormatterPlugin
         char escape = '"';
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.MINIMAL;
         String newline = Newline.LF.getString();
+        String nullString = "";
 
         @SuppressWarnings("unchecked")
         ImmutableList<ImmutableMap<String, String>> testCases = ImmutableList.of(
@@ -163,7 +168,7 @@ public class TestCsvFormatterPlugin
                 ImmutableMap.of("expected", "ABC", "actual", "ABC"),
                 ImmutableMap.of("expected", "\"ABC\"\"DEF\"", "actual", "ABC\"DEF"),
                 ImmutableMap.of("expected", "\"ABC\nDEF\"", "actual", "ABC\nDEF"),
-                ImmutableMap.of("expected", "", "actual", ""),
+                ImmutableMap.of("expected", "\"\"", "actual", ""),
                 ImmutableMap.of("expected", "NULL", "actual", "NULL"),
                 ImmutableMap.of("expected", "2015-01-01 12:01:01", "actual", "2015-01-01 12:01:01"),
                 ImmutableMap.of("expected", "20150101", "actual", "20150101"));
@@ -171,7 +176,7 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
     }
 
@@ -180,7 +185,7 @@ public class TestCsvFormatterPlugin
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
-                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class);
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
 
@@ -189,6 +194,7 @@ public class TestCsvFormatterPlugin
         char escape = '"';
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.NONE;
         String newline = Newline.LF.getString();
+        String nullString = "";
 
         @SuppressWarnings("unchecked")
         ImmutableList<ImmutableMap<String, String>> testCases = ImmutableList.of(
@@ -214,7 +220,7 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
     }
 
@@ -223,7 +229,7 @@ public class TestCsvFormatterPlugin
             throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
     {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
-                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class);
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
 
@@ -232,6 +238,7 @@ public class TestCsvFormatterPlugin
         char escape = '"';
         String newline;
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.MINIMAL;
+        String nullString = "";
 
         ImmutableList<ImmutableMap<String, String>> testCases;
 
@@ -244,7 +251,7 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
 
 
@@ -257,7 +264,7 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
 
 
@@ -270,7 +277,33 @@ public class TestCsvFormatterPlugin
         for (ImmutableMap testCase : testCases) {
             String expected = (String) testCase.get("expected");
             String actual = (String) testCase.get("actual");
-            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline));
+            assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
+    }
+
+    @Test
+    public void testNullString()
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+    {
+        Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
+                CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
+        method.setAccessible(true);
+        CsvFormatterPlugin formatter = new CsvFormatterPlugin();
+
+        char delimiter = ',';
+        char quote = '"';
+        char escape = '"';
+        CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.MINIMAL;
+        String newline = Newline.LF.getString();
+
+        assertEquals("\"\"", method.invoke(formatter, "", delimiter, CsvFormatterPlugin.QuotePolicy.MINIMAL, quote, escape, newline, ""));
+        assertEquals("N/A", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.MINIMAL, quote, escape, newline, ""));
+        assertEquals("", method.invoke(formatter, "", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, ""));
+        assertEquals("N/A", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, ""));
+
+        assertEquals("", method.invoke(formatter, "", delimiter, CsvFormatterPlugin.QuotePolicy.MINIMAL, quote, escape, newline, "N/A"));
+        assertEquals("\"N/A\"", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.MINIMAL, quote, escape, newline, "N/A"));
+        assertEquals("", method.invoke(formatter, "", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, "N/A"));
+        assertEquals("N/A", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, "N/A"));
     }
 }
