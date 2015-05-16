@@ -61,6 +61,12 @@ public class RubyDateParser
         return lower <= v && v <= upper;
     }
 
+    private static boolean isSpace(char c)
+    {
+        return c == ' ' || c == '\t' || c == '\n' ||
+                c == '\u000b' || c == '\f' || c == '\r';
+    }
+
     static boolean isDigit(char c)
     {
         return '0' <= c && c <= '9';
@@ -185,23 +191,10 @@ public class RubyDateParser
         return Temporal.newTemporal(values);
     }
 
-    private void readSpecialChars(Token token)
+    ParsedValues date_strptime_internal(String format, String text)
     {
-        try {
-            while (true) {
-                char c = text.charAt(pos); // IndexOutOfBounds
-                if (c == '\t' || c == '\n' || c == '\u000b' || c == '\f' || c == '\r') {
-                    pos++;
-                } else if (c == ' ' && token.getFormat() == Format.FORMAT_STRING &&
-                        (token.getData().toString().equals("\t") || token.getData().toString().equals("\n"))) {
-                    pos++;
-                } else {
-                    break;
-                }
-            }
-        } catch (IndexOutOfBoundsException e) {
-            // ignorable error
-        }
+        List<Token> compiledPattern = compilePattern(context.runtime.newString(format), false);
+        return date_strptime_internal(compiledPattern, text);
     }
 
     ParsedValues date_strptime_internal(List<Token> compiledPattern, String text)
@@ -214,8 +207,6 @@ public class RubyDateParser
         for (int i = 0; i < compiledPattern.size(); i++) {
             Token token = getToken(compiledPattern, i);
 
-            readSpecialChars(token);
-
             switch (token.getFormat()) {
                 case FORMAT_ENCODING:
                     continue; // skip
@@ -224,13 +215,18 @@ public class RubyDateParser
                 case FORMAT_STRING:
                 {
                     String s = token.getData().toString();
-                    if (s.equals("\t") || s.equals("\n")) {
-                        // %t, %n - Any white space.
-                        // readSpecialChars method already reads white spaces.
-                    } else if (s.equals("\\s")) {
-                        ;
-                    } else {
-                        pos += s.length();
+                    for (int si = 0; si < s.length(); ) {
+                        char sc = s.charAt(si);
+                        if (isSpace(sc)) {
+                            while (pos < text.length() && isSpace(text.charAt(pos))) {
+                                pos++;
+                            }
+                        } else if (pos >= text.length() || sc != text.charAt(pos)) {
+                            values.fail();
+                        } else {
+                            pos++;
+                        }
+                        si++;
                     }
                     break;
                 }
@@ -320,7 +316,7 @@ public class RubyDateParser
                         h = readDigits(2);
                     }
 
-                    if (!isValidRange(h, 0, 23)) {
+                    if (!isValidRange(h, 0, 24)) {
                         values.fail();
                     }
                     values.hour = h;
@@ -346,7 +342,7 @@ public class RubyDateParser
                 case FORMAT_DAY_YEAR: // %j - Day of the year (001..366)
                 {
                     int d = readDigits(3);
-                    if (!isValidRange(d, 1, 366)) {
+                    if (!isValidRange(d, 1, 365)) {
                         values.fail();
                     }
                     values.yday = d;
@@ -423,7 +419,7 @@ public class RubyDateParser
                 case FORMAT_SECONDS: // %S - Second of the minute (00..59)
                 {
                     int sec = readDigits(2);
-                    if (!isValidRange(sec, 0, 59)) {
+                    if (!isValidRange(sec, 0, 60)) {
                         values.fail();
                     }
                     values.sec = sec;
@@ -547,6 +543,14 @@ public class RubyDateParser
             }
         }
 
+        if (values.fail) {
+            return null;
+        }
+
+        if (text.length() > pos) {
+            values.leftover = text.substring(pos, text.length());
+        }
+
         if (values.has(values._cent)) {
             if (values.has(values.cwyear)) {
                 values.cwyear += values._cent * 100;
@@ -561,10 +565,6 @@ public class RubyDateParser
                 values.hour %= 12;
                 values.hour += values._merid;
             }
-        }
-
-        if (text.length() > pos) {
-            values.leftover = text.substring(pos, text.length());
         }
 
         return values;

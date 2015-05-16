@@ -390,8 +390,10 @@ public class ParsedValues
         if (has(_cent)) {
             map.put("_cent", _cent);
         }
+        if (leftover != null) {
+            map.put("leftover", leftover);
+        }
 
-        System.out.println("map: "+ map);
         return map;
     }
 }
