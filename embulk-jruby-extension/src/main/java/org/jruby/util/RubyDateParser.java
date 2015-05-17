@@ -1,6 +1,5 @@
 package org.jruby.util;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -160,7 +159,7 @@ public class RubyDateParser
 
     public List<Token> compilePattern(String format)
     {
-        return compilePattern(context.runtime.newString(format), false);
+        return compilePattern(context.runtime.newString(format), true);
     }
 
     public List<Token> compilePattern(RubyString format, boolean dateLibrary)
@@ -359,16 +358,19 @@ public class RubyDateParser
                         pos++;
                     }
 
+                    int init_pos = pos;
                     if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
-                        v = token.getFormat() == Format.FORMAT_MILLISEC ?
-                                readDigits(3) : readDigits(9);
+                        if (token.getFormat() == Format.FORMAT_MILLISEC) {
+                            v = readDigits(3);
+                        } else {
+                            v = readDigits(9);
+                        }
                     } else {
-                        v = (int)readDigitsMax();
+                        v = readDigitsMax();
                     }
 
                     values.sec_fraction = (int)(!negative ? v : -v);
-                    values.sec_fraction_rational = token.getFormat() == Format.FORMAT_MILLISEC ?
-                            1000 : 1000000000;
+                    values.sec_fraction_size = pos - init_pos;
                     break;
                 }
                 case FORMAT_MINUTES: // %M, %OM - Minute of the hour (00..59)
@@ -413,7 +415,7 @@ public class RubyDateParser
 
                     sec = readDigitsMax();
                     values.seconds = !negative ? sec : -sec;
-                    values.seconds_rational = 1000;
+                    values.seconds_size = 3;
                     break;
                 }
                 case FORMAT_SECONDS: // %S - Second of the minute (00..59)

@@ -299,10 +299,10 @@ public class ParsedValues
     String zone = null;
 
     int sec_fraction = Integer.MIN_VALUE; // Rational
-    int sec_fraction_rational = Integer.MIN_VALUE;
+    int sec_fraction_size = Integer.MIN_VALUE;
 
     long seconds = Long.MIN_VALUE; // long or Rational
-    int seconds_rational = Integer.MIN_VALUE;
+    int seconds_size = Integer.MIN_VALUE;
 
     int _merid = Integer.MIN_VALUE;
     int _cent = Integer.MIN_VALUE;
@@ -322,6 +322,11 @@ public class ParsedValues
     boolean has(int v)
     {
         return v != Integer.MIN_VALUE;
+    }
+
+    boolean hasSeconds()
+    {
+        return seconds != Long.MIN_VALUE;
     }
 
     public HashMap<String, Object> toMap()
@@ -374,11 +379,13 @@ public class ParsedValues
             }
         }
         if (has(sec_fraction)) {
+            int sec_fraction_rational = (int)Math.pow(10, sec_fraction_size);
             map.put("sec_fraction", ((float) sec_fraction / sec_fraction_rational));
             // TODO return Rational
         }
-        if (seconds != Long.MIN_VALUE) {
-            if (has(seconds_rational)) {
+        if (hasSeconds()) {
+            if (has(seconds_size)) {
+                int seconds_rational = (int)Math.pow(10, seconds_size);
                 map.put("seconds", ((float) seconds / seconds_rational));
             } else {
                 map.put("seconds", seconds);

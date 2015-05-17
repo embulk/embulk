@@ -8,70 +8,58 @@ public class Temporal // TODO better naming
     // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
     public static Temporal newTemporal(ParsedValues values)
     {
-        long sec = 0;
-        int nsec = 0;
+        long sec;
+        long nsec = 0;
 
-        if (values.seconds != Integer.MIN_VALUE) {
-            int u = 0;
-            if (values.sec_fraction != Integer.MIN_VALUE) {
-                if (values.sec_fraction_rational == 1000) {
-                    u = values.sec_fraction * 1000;
-                } else { // 1000_000_000
-                    u = values.sec_fraction;
-                }
+        if (values.hasSeconds()) {
+            if (values.has(values.sec_fraction)) {
+                nsec = values.sec_fraction * (int)Math.pow(10, 9 - values.sec_fraction_size);
             }
 
-            long seconds;
-            if (values.seconds_rational != Integer.MIN_VALUE) { // Rational
-                seconds = values.seconds * 1000000;
-            } else { // 1000 // int
-                seconds = values.seconds * 1000;
+            if (values.has(values.seconds_size)) { // Rational
+                sec = values.seconds / (int)Math.pow(10, values.seconds_size);
+            } else { // int
+                sec = values.seconds;
             }
 
-            sec = (seconds + u) / 1000000;
-            nsec = u * 1000;
         } else {
             DateTimeZone dtz = DateTimeZone.UTC;
 
-            int year = 1970; // 1970, 1, 1, 0, 0, 0, 0
-            if (values.year >= 0) {
+            int year;
+            if (values.has(values.year)) {
                 year = values.year;
+            } else {
+                year = 1970;
             }
 
             // set up with min values and then add to allow rolling over
             DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-            if (values.mon != Integer.MIN_VALUE) {
-                dt.plusMonths(values.mon - 1);
+            if (values.has(values.mon)) {
+                dt = dt.plusMonths(values.mon - 1);
             }
-            if (values.mday != Integer.MIN_VALUE) {
-                dt.plusDays(values.mday - 1);
+            if (values.has(values.mday)) {
+                dt = dt.plusDays(values.mday - 1);
             }
-            if (values.hour != Integer.MIN_VALUE) {
-                dt.plusHours(values.hour);
+            if (values.has(values.hour)) {
+                dt = dt.plusHours(values.hour);
             }
-            if (values.min != Integer.MIN_VALUE) {
-                dt.plusMinutes(values.min);
+            if (values.has(values.min)) {
+                dt = dt.plusMinutes(values.min);
             }
-            if (values.sec != Integer.MIN_VALUE) {
-                dt.plusMinutes(values.sec);
+            if (values.has(values.sec)) {
+                dt = dt.plusSeconds(values.sec);
             }
 
-            if (values.sec_fraction != Integer.MIN_VALUE) {
-                int u;
-                if (values.sec_fraction_rational == 1000) {
-                    u = values.sec_fraction * 1000;
-                } else { // 1000_000_000
-                    u = values.sec_fraction;
-                }
-                dt.plusMillis(u * 1000 % 1000);
-                nsec = u * 1000000000 % 1000000;
+            if (values.has(values.sec_fraction)) {
+                nsec = values.sec_fraction * (int)Math.pow(10, 9 - values.sec_fraction_size);
+                dt = dt.plusMillis((int)nsec / 1000000);
             }
 
             dt = dt.withZoneRetainFields(dtz);
             sec = dt.getMillis() / 1000;
         }
 
-        return new Temporal(sec, nsec, values.zone);
+        return new Temporal(sec, (int)nsec, values.zone);
     }
 
     private final long sec;
