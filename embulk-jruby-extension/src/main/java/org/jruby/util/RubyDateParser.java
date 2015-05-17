@@ -56,7 +56,7 @@ public class RubyDateParser
         return patIndex;
     }
 
-    private static boolean isValidRange(int v, int lower, int upper)
+    private static boolean isValidRange(long v, int lower, int upper)
     {
         return lower <= v && v <= upper;
     }
@@ -193,7 +193,7 @@ public class RubyDateParser
 
     ParsedValues date_strptime_internal(String format, String text)
     {
-        List<Token> compiledPattern = compilePattern(context.runtime.newString(format), false);
+        List<Token> compiledPattern = compilePattern(context.runtime.newString(format), true);
         return date_strptime_internal(compiledPattern, text);
     }
 
@@ -256,19 +256,19 @@ public class RubyDateParser
                 }
                 case FORMAT_CENTURY: // %C - year / 100 (round down.  20 in 2009)
                 {
-                    int c;
+                    long c;
                     if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         c = readDigits(2);
                     } else {
                         c = readDigitsMax();
                     }
-                    values._cent = c;
+                    values._cent = (int)c;
                     break;
                 }
                 case FORMAT_DAY: // %d, %Od - Day of the month, zero-padded (01..31)
                 case FORMAT_DAY_S: // %e, %Oe - Day of the month, blank-padded ( 1..31)
                 {
-                    int d;
+                    long d;
                     if (text.charAt(pos) == ' ') { // brank or not
                         pos += 1; // brank
                         d = readDigits(1);
@@ -279,27 +279,27 @@ public class RubyDateParser
                     if (!isValidRange(d, 1, 31)) {
                         values.fail();
                     }
-                    values.mday = d;
+                    values.mday = (int)d;
                     break;
                 }
                 case FORMAT_WEEKYEAR: // %G - The week-based year
                 {
-                    int y;
+                    long y;
                     if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
                     }
-                    values.cwyear = y;
+                    values.cwyear = (int)y;
                     break;
                 }
                 case FORMAT_WEEKYEAR_SHORT: // %g - The last 2 digits of the week-based year (00..99)
                 {
-                    int v = readDigits(2);
+                    long v = readDigits(2);
                     if (!isValidRange(v, 0, 99)) {
                         values.fail();
                     }
-                    values.cwyear = v;
+                    values.cwyear = (int)v;
                     if (!values.has(values._cent)) {
                         values._cent = v >= 69 ? 19 : 20;
                     }
@@ -308,7 +308,7 @@ public class RubyDateParser
                 case FORMAT_HOUR: // %H, %OH - Hour of the day, 24-hour clock, zero-padded (00..23)
                 case FORMAT_HOUR_BLANK: // %k - Hour of the day, 24-hour clock, blank-padded ( 0..23)
                 {
-                    int h;
+                    long h;
                     if (text.charAt(pos) == ' ') { // brank or not
                         pos += 1; // brank
                         h = readDigits(1);
@@ -319,13 +319,13 @@ public class RubyDateParser
                     if (!isValidRange(h, 0, 24)) {
                         values.fail();
                     }
-                    values.hour = h;
+                    values.hour = (int)h;
                     break;
                 }
                 case FORMAT_HOUR_M: // %I, %OI - Hour of the day, 12-hour clock, zero-padded (01..12)
                 case FORMAT_HOUR_S: // %l - Hour of the day, 12-hour clock, blank-padded ( 1..12)
                 {
-                    int h;
+                    long h;
                     if (text.charAt(pos) == ' ') { // brank or not
                         pos += 1; // brank
                         h = readDigits(1);
@@ -336,22 +336,22 @@ public class RubyDateParser
                     if (!isValidRange(h, 1, 12)) {
                         values.fail();
                     }
-                    values.hour = h;
+                    values.hour = (int)h;
                     break;
                 }
                 case FORMAT_DAY_YEAR: // %j - Day of the year (001..366)
                 {
-                    int d = readDigits(3);
+                    long d = readDigits(3);
                     if (!isValidRange(d, 1, 365)) {
                         values.fail();
                     }
-                    values.yday = d;
+                    values.yday = (int)d;
                     break;
                 }
                 case FORMAT_MILLISEC: // %L - Millisecond of the second (000..999)
                 case FORMAT_NANOSEC: // %N - Fractional seconds digits, default is 9 digits (nanosecond)
                 {
-                    int v;
+                    long v;
                     boolean negative = false;
 
                     if (isSign(text.charAt(pos))) {
@@ -363,30 +363,30 @@ public class RubyDateParser
                         v = token.getFormat() == Format.FORMAT_MILLISEC ?
                                 readDigits(3) : readDigits(9);
                     } else {
-                        v = readDigitsMax();
+                        v = (int)readDigitsMax();
                     }
 
-                    values.sec_fraction = !negative ? v : -v;
+                    values.sec_fraction = (int)(!negative ? v : -v);
                     values.sec_fraction_rational = token.getFormat() == Format.FORMAT_MILLISEC ?
                             1000 : 1000000000;
                     break;
                 }
                 case FORMAT_MINUTES: // %M, %OM - Minute of the hour (00..59)
                 {
-                    int min = readDigits(2);
+                    long min = readDigits(2);
                     if (!isValidRange(min, 0, 59)) {
                         values.fail();
                     }
-                    values.min = min;
+                    values.min = (int)min;
                     break;
                 }
                 case FORMAT_MONTH: // %m, %Om - Month of the year, zero-padded (01..12)
                 {
-                    int mon = readDigits(2);
+                    long mon = readDigits(2);
                     if (!isValidRange(mon, 1, 12)) {
                         values.fail();
                     }
-                    values.mon = mon;
+                    values.mon = (int)mon;
                     break;
                 }
                 case FORMAT_MERIDIAN: // %P - Meridian indicator, lowercase (``am'' or ``pm'')
@@ -403,7 +403,7 @@ public class RubyDateParser
                 }
                 case FORMAT_MICROSEC_EPOCH: // %Q - Number of microseconds since 1970-01-01 00:00:00 UTC.
                 {
-                    int sec;
+                    long sec;
                     boolean negative = false;
 
                     if (text.charAt(pos) == '-') {
@@ -418,16 +418,16 @@ public class RubyDateParser
                 }
                 case FORMAT_SECONDS: // %S - Second of the minute (00..59)
                 {
-                    int sec = readDigits(2);
+                    long sec = readDigits(2);
                     if (!isValidRange(sec, 0, 60)) {
                         values.fail();
                     }
-                    values.sec = sec;
+                    values.sec = (int)sec;
                     break;
                 }
                 case FORMAT_EPOCH: // %s - Number of seconds since 1970-01-01 00:00:00 UTC.
                 {
-                    int sec;
+                    long sec;
                     boolean negative = false;
 
                     if (text.charAt(pos) == '-') {
@@ -435,56 +435,55 @@ public class RubyDateParser
                         pos++;
                     }
                     sec = readDigitsMax();
-                    values.seconds = !negative ? sec : -sec;
+                    values.seconds = (int)(!negative ? sec : -sec);
                     break;
                 }
                 case FORMAT_WEEK_YEAR_S: // %U, %OU - Week number of the year.  The week starts with Sunday.  (00..53)
                 case FORMAT_WEEK_YEAR_M: // %W, %OW - Week number of the year.  The week starts with Monday.  (00..53)
                 {
-                    int w = readDigits(2);
+                    long w = readDigits(2);
                     if (!isValidRange(w, 0, 53)) {
                         values.fail();
                     }
 
                     if (token.getFormat() == Format.FORMAT_WEEK_YEAR_S) {
-                        values.wnum0 = w;
+                        values.wnum0 = (int)w;
                     } else {
-                        values.wnum1 = w;
+                        values.wnum1 = (int)w;
                     }
                     break;
                 }
                 case FORMAT_DAY_WEEK2: // %u, %Ou - Day of the week (Monday is 1, 1..7)
                 {
-                    int d = readDigits(1);
+                    long d = readDigits(1);
                     if (!isValidRange(d, 1, 7)) {
                         values.fail();
                     }
-                    values.cwday = d;
+                    values.cwday = (int)d;
                     break;
                 }
                 case FORMAT_WEEK_WEEKYEAR: // %V, %OV - Week number of the week-based year (01..53)
                 {
-                    int w = readDigits(2);
+                    long w = readDigits(2);
                     if (!isValidRange(w, 1, 53)) {
                         values.fail();
                     }
-                    values.cweek = w;
+                    values.cweek = (int)w;
                     break;
                 }
                 case FORMAT_DAY_WEEK: // %w - Day of the week (Sunday is 0, 0..6)
                 {
-                    int d = readDigits(1);
+                    long d = readDigits(1);
                     if (!isValidRange(d, 0, 6)) {
                         values.fail();
                     }
-                    values.wday = d;
+                    values.wday = (int)d;
                     break;
                 }
                 case FORMAT_YEAR_LONG:
                     // %Y, %EY - Year with century (can be negative, 4 digits at least)
                     //           -0001, 0000, 1995, 2009, 14292, etc.
                 {
-                    int y;
                     boolean negative = false;
 
                     if (isSign(text.charAt(pos))) {
@@ -492,22 +491,23 @@ public class RubyDateParser
                         pos++;
                     }
 
+                    long y;
                     if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
                     }
 
-                    values.year = !negative ? y : -y;
+                    values.year = (int)(!negative ? y : -y);
                     break;
                 }
                 case FORMAT_YEAR_SHORT: // %y, %Ey, %Oy - year % 100 (00..99)
                 {
-                    int y = readDigits(2);
+                    long y = readDigits(2);
                     if (!isValidRange(y, 0, 99)) {
                         values.fail();
                     }
-                    values.year = y;
+                    values.year = (int)y;
                     if (!values.has(values._cent)) {
                         values._cent = y >= 69 ? 19 : 20;
                     }
@@ -558,6 +558,9 @@ public class RubyDateParser
             if (values.has(values.year)) {
                 values.year += values._cent * 100;
             }
+
+            // delete values._cent
+            values._cent = Integer.MIN_VALUE;
         }
 
         if (values.has(values._merid)) {
@@ -565,14 +568,17 @@ public class RubyDateParser
                 values.hour %= 12;
                 values.hour += values._merid;
             }
+
+            // delete values._merid
+            values._merid = Integer.MIN_VALUE;
         }
 
         return values;
     }
 
-    private int readDigits(int len)
+    private long readDigits(int len)
     {
-        int v = 0;
+        long v = 0;
         try {
             for (int i = 0; i < len; i++) {
                 char c = text.charAt(pos); // IndexOutOfBounds
@@ -593,7 +599,7 @@ public class RubyDateParser
         return v;
     }
 
-    private int readDigitsMax()
+    private long readDigitsMax()
     {
         return readDigits(Integer.MAX_VALUE);
     }

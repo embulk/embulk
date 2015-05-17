@@ -21,7 +21,7 @@ public class Temporal // TODO better naming
                 }
             }
 
-            int seconds;
+            long seconds;
             if (values.seconds_rational != Integer.MIN_VALUE) { // Rational
                 seconds = values.seconds * 1000000;
             } else { // 1000 // int

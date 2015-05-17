@@ -292,20 +292,20 @@ public class ParsedValues
     int mon = Integer.MIN_VALUE;
     int hour = Integer.MIN_VALUE;
     int year = Integer.MIN_VALUE;
-    int sec = -Integer.MIN_VALUE;
+    int sec = Integer.MIN_VALUE;
     int wnum0 = Integer.MIN_VALUE;
     int wnum1 = Integer.MIN_VALUE;
 
     String zone = null;
 
-    int sec_fraction = Integer.MIN_VALUE;; // Rational
-    int sec_fraction_rational = Integer.MIN_VALUE;;
+    int sec_fraction = Integer.MIN_VALUE; // Rational
+    int sec_fraction_rational = Integer.MIN_VALUE;
 
-    int seconds = Integer.MIN_VALUE;; // int or Rational
-    int seconds_rational = Integer.MIN_VALUE;;
+    long seconds = Long.MIN_VALUE; // long or Rational
+    int seconds_rational = Integer.MIN_VALUE;
 
-    int _merid = Integer.MIN_VALUE;;
-    int _cent = Integer.MIN_VALUE;;
+    int _merid = Integer.MIN_VALUE;
+    int _cent = Integer.MIN_VALUE;
 
     boolean fail = false;
     String leftover = null;
@@ -377,7 +377,7 @@ public class ParsedValues
             map.put("sec_fraction", ((float) sec_fraction / sec_fraction_rational));
             // TODO return Rational
         }
-        if (has(seconds)) {
+        if (seconds != Long.MIN_VALUE) {
             if (has(seconds_rational)) {
                 map.put("seconds", ((float) seconds / seconds_rational));
             } else {
