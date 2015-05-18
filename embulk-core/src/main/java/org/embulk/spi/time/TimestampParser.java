@@ -49,10 +49,6 @@ public class TimestampParser
     public Timestamp parse(String text) throws TimestampParseException
     {
         Temporal tmp = parser.date_strptime(compiledPattern, text);
-        if (tmp == null) {
-            throw new TimestampParseException();
-        }
-
         String zone = tmp.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {

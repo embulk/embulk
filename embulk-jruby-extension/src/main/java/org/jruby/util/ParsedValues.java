@@ -9,6 +9,8 @@ import static org.jruby.util.RubyDateParser.toInt;
 
 public class ParsedValues
 {
+    // @see zones_source in date_parse.c
+    // https://github.com/ruby/ruby/blob/trunk/ext/date/date_parse.c#L341
     private static final Map<String, Integer> ZONE_OFFSET_MAP;
     static {
         ZONE_OFFSET_MAP = new HashMap<>();
@@ -184,6 +186,8 @@ public class ParsedValues
         ZONE_OFFSET_MAP.put("yakutsk",                 32400);
     }
 
+    // @see date_zone_to_diff in date_parse.c
+    // https://github.com/ruby/ruby/blob/trunk/ext/date/date_parse.c#L420
     public static int toDiff(String zone)
     {
         String z = zone.toLowerCase();
@@ -267,17 +271,13 @@ public class ParsedValues
     private static int parseInt(String text)
     {
         int v = 0;
-        try {
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i); // IndexOutOfBounds
-                if (!isDigit(c)) {
-                    break;
-                } else {
-                    v = v * 10 + toInt(c);
-                }
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (!isDigit(c)) {
+                break;
+            } else {
+                v = v * 10 + toInt(c);
             }
-        } catch (IndexOutOfBoundsException e) {
-            // ignorable error
         }
         return v;
     }

@@ -62,6 +62,8 @@ public class RubyDateParser
 
     private static boolean isSpace(char c)
     {
+        // @see space characters are declared in date_strptime.c
+        // https://github.com/ruby/ruby/blob/trunk/ext/date/date_strptime.c#L624
         return c == ' ' || c == '\t' || c == '\n' ||
                 c == '\u000b' || c == '\f' || c == '\r';
     }
@@ -121,7 +123,6 @@ public class RubyDateParser
             return false;
         }
 
-        // TODO
         Format f = token.getFormat();
         if (f == Format.FORMAT_STRING && isDigit(((String)token.getData()).charAt(0))) {
             return true;
@@ -133,11 +134,6 @@ public class RubyDateParser
         return false;
     }
 
-    private static RuntimeException newInvalidDataException() // Token token, int v
-    {
-        return new RuntimeException("Invalid Data"); // TODO InvalidDataException
-    }
-
     private final ThreadContext context;
     // Use RubyDateFormatter temporarily because it has useful lexer, token and format types
     private final RubyDateFormatter dateFormat;
@@ -145,6 +141,7 @@ public class RubyDateParser
     private List<Token> compiledPattern;
     private int pos;
     private String text;
+    private ParsedValues values;
 
     public RubyDateParser()
     {
@@ -200,8 +197,7 @@ public class RubyDateParser
     {
         pos = 0;
         this.text = text;
-
-        ParsedValues values = new ParsedValues();
+        this.values = new ParsedValues();
 
         for (int i = 0; i < compiledPattern.size(); i++) {
             Token token = getToken(compiledPattern, i);
@@ -581,14 +577,15 @@ public class RubyDateParser
     private long readDigits(int len)
     {
         long v = 0;
+        int init_pos = pos;
         try {
             for (int i = 0; i < len; i++) {
                 char c = text.charAt(pos); // IndexOutOfBounds
                 if (!isDigit(c)) {
-                    if (i > 0) {
+                    if (pos - init_pos != 0) {
                         break;
                     } else {
-                        throw newInvalidDataException();
+                        values.fail();
                     }
                 } else {
                     v = v * 10 + toInt(c);
