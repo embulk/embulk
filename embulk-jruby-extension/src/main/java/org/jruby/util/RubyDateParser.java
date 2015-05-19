@@ -254,7 +254,7 @@ public class RubyDateParser
                     Format.FORMAT_YEAR_SHORT // 'y'
         ));
 
-    public static class ParsedValues
+    public static class FormatBag
     {
         int mday = Integer.MIN_VALUE;
         int wday = Integer.MIN_VALUE;
@@ -284,7 +284,7 @@ public class RubyDateParser
         boolean fail = false;
         String leftover = null;
 
-        public ParsedValues()
+        public FormatBag()
         {
         }
 
@@ -382,52 +382,52 @@ public class RubyDateParser
     public static class Temporal // TODO better naming
     {
         // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
-        public static Temporal newTemporal(ParsedValues values)
+        public static Temporal newTemporal(FormatBag bag)
         {
             long sec;
             long nsec = 0;
 
-            if (values.hasSeconds()) {
-                if (values.has(values.sec_fraction)) {
-                    nsec = values.sec_fraction * (int)Math.pow(10, 9 - values.sec_fraction_size);
+            if (bag.hasSeconds()) {
+                if (bag.has(bag.sec_fraction)) {
+                    nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
                 }
 
-                if (values.has(values.seconds_size)) { // Rational
-                    sec = values.seconds / (int)Math.pow(10, values.seconds_size);
+                if (bag.has(bag.seconds_size)) { // Rational
+                    sec = bag.seconds / (int)Math.pow(10, bag.seconds_size);
                 } else { // int
-                    sec = values.seconds;
+                    sec = bag.seconds;
                 }
 
             } else {
                 DateTimeZone dtz = DateTimeZone.UTC;
 
                 int year;
-                if (values.has(values.year)) {
-                    year = values.year;
+                if (bag.has(bag.year)) {
+                    year = bag.year;
                 } else {
                     year = 1970;
                 }
 
-                // set up with min values and then add to allow rolling over
+                // set up with min bag and then add to allow rolling over
                 DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-                if (values.has(values.mon)) {
-                    dt = dt.plusMonths(values.mon - 1);
+                if (bag.has(bag.mon)) {
+                    dt = dt.plusMonths(bag.mon - 1);
                 }
-                if (values.has(values.mday)) {
-                    dt = dt.plusDays(values.mday - 1);
+                if (bag.has(bag.mday)) {
+                    dt = dt.plusDays(bag.mday - 1);
                 }
-                if (values.has(values.hour)) {
-                    dt = dt.plusHours(values.hour);
+                if (bag.has(bag.hour)) {
+                    dt = dt.plusHours(bag.hour);
                 }
-                if (values.has(values.min)) {
-                    dt = dt.plusMinutes(values.min);
+                if (bag.has(bag.min)) {
+                    dt = dt.plusMinutes(bag.min);
                 }
-                if (values.has(values.sec)) {
-                    dt = dt.plusSeconds(values.sec);
+                if (bag.has(bag.sec)) {
+                    dt = dt.plusSeconds(bag.sec);
                 }
 
-                if (values.has(values.sec_fraction)) {
-                    nsec = values.sec_fraction * (int)Math.pow(10, 9 - values.sec_fraction_size);
+                if (bag.has(bag.sec_fraction)) {
+                    nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
                     dt = dt.plusMillis((int)nsec / 1000000);
                 }
 
@@ -435,7 +435,7 @@ public class RubyDateParser
                 sec = dt.getMillis() / 1000;
             }
 
-            return new Temporal(sec, (int)nsec, values.zone);
+            return new Temporal(sec, (int)nsec, bag.zone);
         }
 
         private final long sec;
@@ -472,7 +472,7 @@ public class RubyDateParser
     private List<Token> compiledPattern;
     private int pos;
     private String text;
-    private ParsedValues values;
+    private FormatBag bag;
 
     public RubyDateParser(ThreadContext context)
     {
@@ -490,22 +490,22 @@ public class RubyDateParser
 
     public Temporal parse(List<Token> compiledPattern, String text)
     {
-        ParsedValues values = parseInternal(compiledPattern, text);
-        return Temporal.newTemporal(values);
+        FormatBag bag = parseInternal(compiledPattern, text);
+        return Temporal.newTemporal(bag);
     }
 
     /* Visible for testing */
-    ParsedValues parseInternal(String format, String text)
+    FormatBag parseInternal(String format, String text)
     {
         List<Token> compiledPattern = compilePattern(context.runtime.newString(format), true);
         return parseInternal(compiledPattern, text);
     }
 
-    ParsedValues parseInternal(List<Token> compiledPattern, String text)
+    FormatBag parseInternal(List<Token> compiledPattern, String text)
     {
         pos = 0;
         this.text = text;
-        this.values = new ParsedValues();
+        this.bag = new FormatBag();
 
         for (int i = 0; i < compiledPattern.size(); i++) {
             Token token = compiledPattern.get(i);
@@ -525,7 +525,7 @@ public class RubyDateParser
                                 pos++;
                             }
                         } else if (pos >= text.length() || sc != text.charAt(pos)) {
-                            values.fail();
+                            bag.fail();
                         } else {
                             pos++;
                         }
@@ -538,10 +538,10 @@ public class RubyDateParser
                 {
                     int dayIndex = matchAtPatterns(text, pos, dayNames);
                     if (dayIndex >= 0) {
-                        values.wday = dayIndex % 7;
+                        bag.wday = dayIndex % 7;
                         pos += dayNames[dayIndex].length();
                     } else {
-                        values.fail();
+                        bag.fail();
                     }
                     break;
                 }
@@ -550,10 +550,10 @@ public class RubyDateParser
                 {
                     int monIndex = matchAtPatterns(text, pos, monNames);
                     if (monIndex >= 0) {
-                        values.mon = monIndex % 12 + 1;
+                        bag.mon = monIndex % 12 + 1;
                         pos += monNames[monIndex].length();
                     } else {
-                        values.fail();
+                        bag.fail();
                     }
                     break;
                 }
@@ -565,7 +565,7 @@ public class RubyDateParser
                     } else {
                         c = readDigitsMax();
                     }
-                    values._cent = (int)c;
+                    bag._cent = (int)c;
                     break;
                 }
                 case FORMAT_DAY: // %d, %Od - Day of the month, zero-padded (01..31)
@@ -580,9 +580,9 @@ public class RubyDateParser
                     }
 
                     if (!isInRange(d, 1, 31)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.mday = (int)d;
+                    bag.mday = (int)d;
                     break;
                 }
                 case FORMAT_WEEKYEAR: // %G - The week-based year
@@ -593,18 +593,18 @@ public class RubyDateParser
                     } else {
                         y = readDigitsMax();
                     }
-                    values.cwyear = (int)y;
+                    bag.cwyear = (int)y;
                     break;
                 }
                 case FORMAT_WEEKYEAR_SHORT: // %g - The last 2 digits of the week-based year (00..99)
                 {
                     long v = readDigits(2);
                     if (!isInRange(v, 0, 99)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.cwyear = (int)v;
-                    if (!values.has(values._cent)) {
-                        values._cent = v >= 69 ? 19 : 20;
+                    bag.cwyear = (int)v;
+                    if (!bag.has(bag._cent)) {
+                        bag._cent = v >= 69 ? 19 : 20;
                     }
                     break;
                 }
@@ -620,9 +620,9 @@ public class RubyDateParser
                     }
 
                     if (!isInRange(h, 0, 24)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.hour = (int)h;
+                    bag.hour = (int)h;
                     break;
                 }
                 case FORMAT_HOUR_M: // %I, %OI - Hour of the day, 12-hour clock, zero-padded (01..12)
@@ -637,18 +637,18 @@ public class RubyDateParser
                     }
 
                     if (!isInRange(h, 1, 12)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.hour = (int)h;
+                    bag.hour = (int)h;
                     break;
                 }
                 case FORMAT_DAY_YEAR: // %j - Day of the year (001..366)
                 {
                     long d = readDigits(3);
                     if (!isInRange(d, 1, 365)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.yday = (int)d;
+                    bag.yday = (int)d;
                     break;
                 }
                 case FORMAT_MILLISEC: // %L - Millisecond of the second (000..999)
@@ -673,26 +673,26 @@ public class RubyDateParser
                         v = readDigitsMax();
                     }
 
-                    values.sec_fraction = (int)(!negative ? v : -v);
-                    values.sec_fraction_size = pos - init_pos;
+                    bag.sec_fraction = (int)(!negative ? v : -v);
+                    bag.sec_fraction_size = pos - init_pos;
                     break;
                 }
                 case FORMAT_MINUTES: // %M, %OM - Minute of the hour (00..59)
                 {
                     long min = readDigits(2);
                     if (!isInRange(min, 0, 59)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.min = (int)min;
+                    bag.min = (int)min;
                     break;
                 }
                 case FORMAT_MONTH: // %m, %Om - Month of the year, zero-padded (01..12)
                 {
                     long mon = readDigits(2);
                     if (!isInRange(mon, 1, 12)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.mon = (int)mon;
+                    bag.mon = (int)mon;
                     break;
                 }
                 case FORMAT_MERIDIAN: // %P - Meridian indicator, lowercase (``am'' or ``pm'')
@@ -700,10 +700,10 @@ public class RubyDateParser
                 {
                     int meridIndex = matchAtPatterns(text, pos, meridNames);
                     if (meridIndex >= 0) {
-                        values._merid = meridIndex % 2 == 0 ? 0 : 12;
+                        bag._merid = meridIndex % 2 == 0 ? 0 : 12;
                         pos += meridNames[meridIndex].length();
                     } else {
-                        values.fail();
+                        bag.fail();
                     }
                     break;
                 }
@@ -718,17 +718,17 @@ public class RubyDateParser
                     }
 
                     sec = readDigitsMax();
-                    values.seconds = !negative ? sec : -sec;
-                    values.seconds_size = 3;
+                    bag.seconds = !negative ? sec : -sec;
+                    bag.seconds_size = 3;
                     break;
                 }
                 case FORMAT_SECONDS: // %S - Second of the minute (00..59)
                 {
                     long sec = readDigits(2);
                     if (!isInRange(sec, 0, 60)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.sec = (int)sec;
+                    bag.sec = (int)sec;
                     break;
                 }
                 case FORMAT_EPOCH: // %s - Number of seconds since 1970-01-01 00:00:00 UTC.
@@ -741,7 +741,7 @@ public class RubyDateParser
                         pos++;
                     }
                     sec = readDigitsMax();
-                    values.seconds = (int)(!negative ? sec : -sec);
+                    bag.seconds = (int)(!negative ? sec : -sec);
                     break;
                 }
                 case FORMAT_WEEK_YEAR_S: // %U, %OU - Week number of the year.  The week starts with Sunday.  (00..53)
@@ -749,13 +749,13 @@ public class RubyDateParser
                 {
                     long w = readDigits(2);
                     if (!isInRange(w, 0, 53)) {
-                        values.fail();
+                        bag.fail();
                     }
 
                     if (token.getFormat() == Format.FORMAT_WEEK_YEAR_S) {
-                        values.wnum0 = (int)w;
+                        bag.wnum0 = (int)w;
                     } else {
-                        values.wnum1 = (int)w;
+                        bag.wnum1 = (int)w;
                     }
                     break;
                 }
@@ -763,27 +763,27 @@ public class RubyDateParser
                 {
                     long d = readDigits(1);
                     if (!isInRange(d, 1, 7)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.cwday = (int)d;
+                    bag.cwday = (int)d;
                     break;
                 }
                 case FORMAT_WEEK_WEEKYEAR: // %V, %OV - Week number of the week-based year (01..53)
                 {
                     long w = readDigits(2);
                     if (!isInRange(w, 1, 53)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.cweek = (int)w;
+                    bag.cweek = (int)w;
                     break;
                 }
                 case FORMAT_DAY_WEEK: // %w - Day of the week (Sunday is 0, 0..6)
                 {
                     long d = readDigits(1);
                     if (!isInRange(d, 0, 6)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.wday = (int)d;
+                    bag.wday = (int)d;
                     break;
                 }
                 case FORMAT_YEAR_LONG:
@@ -804,18 +804,18 @@ public class RubyDateParser
                         y = readDigitsMax();
                     }
 
-                    values.year = (int)(!negative ? y : -y);
+                    bag.year = (int)(!negative ? y : -y);
                     break;
                 }
                 case FORMAT_YEAR_SHORT: // %y, %Ey, %Oy - year % 100 (00..99)
                 {
                     long y = readDigits(2);
                     if (!isInRange(y, 0, 99)) {
-                        values.fail();
+                        bag.fail();
                     }
-                    values.year = (int)y;
-                    if (!values.has(values._cent)) {
-                        values._cent = y >= 69 ? 19 : 20;
+                    bag.year = (int)y;
+                    if (!bag.has(bag._cent)) {
+                        bag._cent = y >= 69 ? 19 : 20;
                     }
                     break;
                 }
@@ -831,14 +831,14 @@ public class RubyDateParser
                     if (m.find()) {
                         // zone
                         String zone = text.substring(pos, pos + m.end());
-                        values.zone = zone;
+                        bag.zone = zone;
                         pos += zone.length();
 
                         // TODO not calcurate offset here
                         //// offset
-                        //hash.put("offset", ParsedValues.dateZoneToDiff(zone));
+                        //hash.put("offset", FormatBag.dateZoneToDiff(zone));
                     } else {
-                        values.fail();
+                        bag.fail();
                     }
                     break;
                 }
@@ -849,37 +849,37 @@ public class RubyDateParser
             }
         }
 
-        if (values.fail) {
+        if (bag.fail) {
             return null;
         }
 
         if (text.length() > pos) {
-            values.leftover = text.substring(pos, text.length());
+            bag.leftover = text.substring(pos, text.length());
         }
 
-        if (values.has(values._cent)) {
-            if (values.has(values.cwyear)) {
-                values.cwyear += values._cent * 100;
+        if (bag.has(bag._cent)) {
+            if (bag.has(bag.cwyear)) {
+                bag.cwyear += bag._cent * 100;
             }
-            if (values.has(values.year)) {
-                values.year += values._cent * 100;
+            if (bag.has(bag.year)) {
+                bag.year += bag._cent * 100;
             }
 
-            // delete values._cent
-            values._cent = Integer.MIN_VALUE;
+            // delete bag._cent
+            bag._cent = Integer.MIN_VALUE;
         }
 
-        if (values.has(values._merid)) {
-            if (values.has(values.hour)) {
-                values.hour %= 12;
-                values.hour += values._merid;
+        if (bag.has(bag._merid)) {
+            if (bag.has(bag.hour)) {
+                bag.hour %= 12;
+                bag.hour += bag._merid;
             }
 
-            // delete values._merid
-            values._merid = Integer.MIN_VALUE;
+            // delete bag._merid
+            bag._merid = Integer.MIN_VALUE;
         }
 
-        return values;
+        return bag;
     }
 
     // @see date_zone_to_diff in date_parse.c
@@ -976,7 +976,7 @@ public class RubyDateParser
                     if (pos - init_pos != 0) {
                         break;
                     } else {
-                        values.fail();
+                        bag.fail();
                     }
                 } else {
                     v = v * 10 + toInt(c);
