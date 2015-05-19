@@ -13,6 +13,7 @@ import org.joda.time.DateTimeZone;
 
 import org.jruby.Ruby;
 import org.jruby.RubyString;
+import org.jruby.RubyTime;
 import org.jruby.runtime.ThreadContext;
 
 import static org.jruby.util.RubyDateFormatter.Format;
@@ -293,13 +294,13 @@ public class RubyDateParser
         public LocalTime makeLocalTime()
         {
             long sec;
-            long nsec = 0;
+            long sec_fraction_nsec = 0;
+
+            if (has(this.sec_fraction)) {
+                sec_fraction_nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
+            }
 
             if (hasSeconds()) {
-                if (has(this.sec_fraction)) {
-                    nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
-                }
-
                 if (has(this.seconds_size)) { // Rational
                     sec = this.seconds / (int)Math.pow(10, this.seconds_size);
                 } else { // int
@@ -307,8 +308,6 @@ public class RubyDateParser
                 }
 
             } else {
-                DateTimeZone dtz = DateTimeZone.UTC;
-
                 int year;
                 if (has(this.year)) {
                     year = this.year;
@@ -333,17 +332,10 @@ public class RubyDateParser
                 if (has(this.sec)) {
                     dt = dt.plusSeconds(this.sec);
                 }
-
-                if (has(this.sec_fraction)) {
-                    nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
-                    dt = dt.plusMillis((int)nsec / 1000000);
-                }
-
-                dt = dt.withZoneRetainFields(dtz);
                 sec = dt.getMillis() / 1000;
             }
 
-            return new LocalTime(sec, (int)nsec, this.zone);
+            return new LocalTime(sec, sec_fraction_nsec, zone);
         }
 
         public HashMap<String, Object> toMap()
@@ -434,25 +426,25 @@ public class RubyDateParser
 
     public static class LocalTime
     {
-        private final long sec;
-        private final int nsec;
+        private final long seconds;
+        private final long nsecFraction;
         private final String zone;  // +0900, JST, UTC
 
-        public LocalTime(long sec, int nsec, String zone)
+        public LocalTime(long seconds, long nsecFraction, String zone)
         {
-            this.sec = sec;
-            this.nsec = nsec;
+            this.seconds = seconds;
+            this.nsecFraction = nsecFraction;
             this.zone = zone;
         }
 
-        public long getSec()
+        public long getSeconds()
         {
-            return sec;
+            return seconds;
         }
 
-        public int getNsec()
+        public long getNsecFraction()
         {
-            return nsec;
+            return nsecFraction;
         }
 
         public String getZone()
@@ -476,18 +468,25 @@ public class RubyDateParser
         this.dateFormat = new RubyDateFormatter(context);
     }
 
+    /** Convenience method when using no pattern caching */
+    public RubyTime compileAndParse(RubyString format, boolean dateLibrary, RubyString text)
+    {
+        return parse(compilePattern(format, dateLibrary), text.decodeString());
+    }
+
     public List<Token> compilePattern(RubyString format, boolean dateLibrary)
     {
         return dateFormat.compilePattern(format, dateLibrary);
     }
 
-    // TODO RubyTime compileAndParse(RubyString format, RubyString text);
-    // TODO RubyTime parse(List<Token> compiledPattern, RubyString text);
-
-    public LocalTime parse(List<Token> compiledPattern, String text)
+    public RubyTime parse(List<Token> compiledPattern, String text)
     {
         FormatBag bag = parseInternal(compiledPattern, text);
-        return bag.makeLocalTime();
+        LocalTime local = bag.makeLocalTime();
+        long sec = local.getSeconds() + dateZoneToDiff(local.getZone());
+        long msec = sec + local.getNsecFraction() / 1000000;
+        int nsec = (int) (local.getNsecFraction() % 1000000);
+        return RubyTime.newTime(context.runtime, new DateTime(msec, DateTimeZone.UTC), nsec);
     }
 
     public FormatBag parseInternal(String format, String text)

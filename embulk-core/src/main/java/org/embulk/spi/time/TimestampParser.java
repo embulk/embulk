@@ -50,8 +50,9 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        LocalTime tmp = parser.parseInternal(compiledPattern, text).makeLocalTime();
-        String zone = tmp.getZone();
+        LocalTime local = parser.parseInternal(compiledPattern, text).makeLocalTime();
+
+        String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
             // TODO cache parsed zone?
@@ -61,9 +62,8 @@ public class TimestampParser
             }
         }
 
-        long localSec = tmp.getSec();
-        long sec = timeZone.convertLocalToUTC(localSec*1000, false) / 1000;
+        long sec = timeZone.convertLocalToUTC(local.getSeconds()*1000, false) / 1000;
 
-        return Timestamp.ofEpochSecond(sec, tmp.getNsec()); // maybe millisec/usec convert
+        return Timestamp.ofEpochSecond(sec, local.getNsecFraction());
     }
 }
