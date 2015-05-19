@@ -293,13 +293,12 @@ public class RubyDateParser
         // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
         public LocalTime makeLocalTime()
         {
-            long sec;
             long sec_fraction_nsec = 0;
-
             if (has(this.sec_fraction)) {
                 sec_fraction_nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
             }
 
+            long sec;
             if (hasSeconds()) {
                 if (has(this.seconds_size)) { // Rational
                     sec = this.seconds / (int)Math.pow(10, this.seconds_size);
@@ -457,11 +456,6 @@ public class RubyDateParser
     // Use RubyDateFormatter temporarily because it has useful lexer, token and format types
     private final RubyDateFormatter dateFormat;
 
-    private List<Token> compiledPattern;
-    private int pos;
-    private String text;
-    private FormatBag bag;
-
     public RubyDateParser(ThreadContext context)
     {
         this.context = context;
@@ -497,379 +491,7 @@ public class RubyDateParser
 
     public FormatBag parseInternal(List<Token> compiledPattern, String text)
     {
-        pos = 0;
-        this.text = text;
-        this.bag = new FormatBag();
-
-        for (int i = 0; i < compiledPattern.size(); i++) {
-            Token token = compiledPattern.get(i);
-
-            switch (token.getFormat()) {
-                case FORMAT_ENCODING:
-                    continue; // skip
-                case FORMAT_OUTPUT:
-                    continue; // skip
-                case FORMAT_STRING:
-                {
-                    String s = token.getData().toString();
-                    for (int si = 0; si < s.length(); ) {
-                        char sc = s.charAt(si);
-                        if (isSpace(sc)) {
-                            while (pos < text.length() && isSpace(text.charAt(pos))) {
-                                pos++;
-                            }
-                        } else if (pos >= text.length() || sc != text.charAt(pos)) {
-                            bag.fail();
-                        } else {
-                            pos++;
-                        }
-                        si++;
-                    }
-                    break;
-                }
-                case FORMAT_WEEK_LONG: // %A - The full weekday name (``Sunday'')
-                case FORMAT_WEEK_SHORT: // %a - The abbreviated name (``Sun'')
-                {
-                    int dayIndex = matchAtPatterns(text, pos, dayNames);
-                    if (dayIndex >= 0) {
-                        bag.wday = dayIndex % 7;
-                        pos += dayNames[dayIndex].length();
-                    } else {
-                        bag.fail();
-                    }
-                    break;
-                }
-                case FORMAT_MONTH_LONG: // %B - The full month name (``January'')
-                case FORMAT_MONTH_SHORT: // %b, %h - The abbreviated month name (``Jan'')
-                {
-                    int monIndex = matchAtPatterns(text, pos, monNames);
-                    if (monIndex >= 0) {
-                        bag.mon = monIndex % 12 + 1;
-                        pos += monNames[monIndex].length();
-                    } else {
-                        bag.fail();
-                    }
-                    break;
-                }
-                case FORMAT_CENTURY: // %C - year / 100 (round down.  20 in 2009)
-                {
-                    long c;
-                    if (isNextTokenNumberPattern(compiledPattern, i)) {
-                        c = readDigits(2);
-                    } else {
-                        c = readDigitsMax();
-                    }
-                    bag._cent = (int)c;
-                    break;
-                }
-                case FORMAT_DAY: // %d, %Od - Day of the month, zero-padded (01..31)
-                case FORMAT_DAY_S: // %e, %Oe - Day of the month, blank-padded ( 1..31)
-                {
-                    long d;
-                    if (text.charAt(pos) == ' ') { // brank or not
-                        pos += 1; // brank
-                        d = readDigits(1);
-                    } else {
-                        d = readDigits(2);
-                    }
-
-                    if (!isInRange(d, 1, 31)) {
-                        bag.fail();
-                    }
-                    bag.mday = (int)d;
-                    break;
-                }
-                case FORMAT_WEEKYEAR: // %G - The week-based year
-                {
-                    long y;
-                    if (isNextTokenNumberPattern(compiledPattern, i)) {
-                        y = readDigits(4);
-                    } else {
-                        y = readDigitsMax();
-                    }
-                    bag.cwyear = (int)y;
-                    break;
-                }
-                case FORMAT_WEEKYEAR_SHORT: // %g - The last 2 digits of the week-based year (00..99)
-                {
-                    long v = readDigits(2);
-                    if (!isInRange(v, 0, 99)) {
-                        bag.fail();
-                    }
-                    bag.cwyear = (int)v;
-                    if (!bag.has(bag._cent)) {
-                        bag._cent = v >= 69 ? 19 : 20;
-                    }
-                    break;
-                }
-                case FORMAT_HOUR: // %H, %OH - Hour of the day, 24-hour clock, zero-padded (00..23)
-                case FORMAT_HOUR_BLANK: // %k - Hour of the day, 24-hour clock, blank-padded ( 0..23)
-                {
-                    long h;
-                    if (text.charAt(pos) == ' ') { // brank or not
-                        pos += 1; // brank
-                        h = readDigits(1);
-                    } else {
-                        h = readDigits(2);
-                    }
-
-                    if (!isInRange(h, 0, 24)) {
-                        bag.fail();
-                    }
-                    bag.hour = (int)h;
-                    break;
-                }
-                case FORMAT_HOUR_M: // %I, %OI - Hour of the day, 12-hour clock, zero-padded (01..12)
-                case FORMAT_HOUR_S: // %l - Hour of the day, 12-hour clock, blank-padded ( 1..12)
-                {
-                    long h;
-                    if (text.charAt(pos) == ' ') { // brank or not
-                        pos += 1; // brank
-                        h = readDigits(1);
-                    } else {
-                        h = readDigits(2);
-                    }
-
-                    if (!isInRange(h, 1, 12)) {
-                        bag.fail();
-                    }
-                    bag.hour = (int)h;
-                    break;
-                }
-                case FORMAT_DAY_YEAR: // %j - Day of the year (001..366)
-                {
-                    long d = readDigits(3);
-                    if (!isInRange(d, 1, 365)) {
-                        bag.fail();
-                    }
-                    bag.yday = (int)d;
-                    break;
-                }
-                case FORMAT_MILLISEC: // %L - Millisecond of the second (000..999)
-                case FORMAT_NANOSEC: // %N - Fractional seconds digits, default is 9 digits (nanosecond)
-                {
-                    long v;
-                    boolean negative = false;
-
-                    if (isSign(text.charAt(pos))) {
-                        negative = text.charAt(pos) == '-';
-                        pos++;
-                    }
-
-                    int init_pos = pos;
-                    if (isNextTokenNumberPattern(compiledPattern, i)) {
-                        if (token.getFormat() == Format.FORMAT_MILLISEC) {
-                            v = readDigits(3);
-                        } else {
-                            v = readDigits(9);
-                        }
-                    } else {
-                        v = readDigitsMax();
-                    }
-
-                    bag.sec_fraction = (int)(!negative ? v : -v);
-                    bag.sec_fraction_size = pos - init_pos;
-                    break;
-                }
-                case FORMAT_MINUTES: // %M, %OM - Minute of the hour (00..59)
-                {
-                    long min = readDigits(2);
-                    if (!isInRange(min, 0, 59)) {
-                        bag.fail();
-                    }
-                    bag.min = (int)min;
-                    break;
-                }
-                case FORMAT_MONTH: // %m, %Om - Month of the year, zero-padded (01..12)
-                {
-                    long mon = readDigits(2);
-                    if (!isInRange(mon, 1, 12)) {
-                        bag.fail();
-                    }
-                    bag.mon = (int)mon;
-                    break;
-                }
-                case FORMAT_MERIDIAN: // %P - Meridian indicator, lowercase (``am'' or ``pm'')
-                case FORMAT_MERIDIAN_LOWER_CASE: // %p - Meridian indicator, uppercase (``AM'' or ``PM'')
-                {
-                    int meridIndex = matchAtPatterns(text, pos, meridNames);
-                    if (meridIndex >= 0) {
-                        bag._merid = meridIndex % 2 == 0 ? 0 : 12;
-                        pos += meridNames[meridIndex].length();
-                    } else {
-                        bag.fail();
-                    }
-                    break;
-                }
-                case FORMAT_MICROSEC_EPOCH: // %Q - Number of microseconds since 1970-01-01 00:00:00 UTC.
-                {
-                    long sec;
-                    boolean negative = false;
-
-                    if (text.charAt(pos) == '-') {
-                        negative = true;
-                        pos++;
-                    }
-
-                    sec = readDigitsMax();
-                    bag.seconds = !negative ? sec : -sec;
-                    bag.seconds_size = 3;
-                    break;
-                }
-                case FORMAT_SECONDS: // %S - Second of the minute (00..59)
-                {
-                    long sec = readDigits(2);
-                    if (!isInRange(sec, 0, 60)) {
-                        bag.fail();
-                    }
-                    bag.sec = (int)sec;
-                    break;
-                }
-                case FORMAT_EPOCH: // %s - Number of seconds since 1970-01-01 00:00:00 UTC.
-                {
-                    long sec;
-                    boolean negative = false;
-
-                    if (text.charAt(pos) == '-') {
-                        negative = true;
-                        pos++;
-                    }
-                    sec = readDigitsMax();
-                    bag.seconds = (int)(!negative ? sec : -sec);
-                    break;
-                }
-                case FORMAT_WEEK_YEAR_S: // %U, %OU - Week number of the year.  The week starts with Sunday.  (00..53)
-                case FORMAT_WEEK_YEAR_M: // %W, %OW - Week number of the year.  The week starts with Monday.  (00..53)
-                {
-                    long w = readDigits(2);
-                    if (!isInRange(w, 0, 53)) {
-                        bag.fail();
-                    }
-
-                    if (token.getFormat() == Format.FORMAT_WEEK_YEAR_S) {
-                        bag.wnum0 = (int)w;
-                    } else {
-                        bag.wnum1 = (int)w;
-                    }
-                    break;
-                }
-                case FORMAT_DAY_WEEK2: // %u, %Ou - Day of the week (Monday is 1, 1..7)
-                {
-                    long d = readDigits(1);
-                    if (!isInRange(d, 1, 7)) {
-                        bag.fail();
-                    }
-                    bag.cwday = (int)d;
-                    break;
-                }
-                case FORMAT_WEEK_WEEKYEAR: // %V, %OV - Week number of the week-based year (01..53)
-                {
-                    long w = readDigits(2);
-                    if (!isInRange(w, 1, 53)) {
-                        bag.fail();
-                    }
-                    bag.cweek = (int)w;
-                    break;
-                }
-                case FORMAT_DAY_WEEK: // %w - Day of the week (Sunday is 0, 0..6)
-                {
-                    long d = readDigits(1);
-                    if (!isInRange(d, 0, 6)) {
-                        bag.fail();
-                    }
-                    bag.wday = (int)d;
-                    break;
-                }
-                case FORMAT_YEAR_LONG:
-                    // %Y, %EY - Year with century (can be negative, 4 digits at least)
-                    //           -0001, 0000, 1995, 2009, 14292, etc.
-                {
-                    boolean negative = false;
-
-                    if (isSign(text.charAt(pos))) {
-                        negative = text.charAt(pos) == '-';
-                        pos++;
-                    }
-
-                    long y;
-                    if (isNextTokenNumberPattern(compiledPattern, i)) {
-                        y = readDigits(4);
-                    } else {
-                        y = readDigitsMax();
-                    }
-
-                    bag.year = (int)(!negative ? y : -y);
-                    break;
-                }
-                case FORMAT_YEAR_SHORT: // %y, %Ey, %Oy - year % 100 (00..99)
-                {
-                    long y = readDigits(2);
-                    if (!isInRange(y, 0, 99)) {
-                        bag.fail();
-                    }
-                    bag.year = (int)y;
-                    if (!bag.has(bag._cent)) {
-                        bag._cent = y >= 69 ? 19 : 20;
-                    }
-                    break;
-                }
-                case FORMAT_ZONE_ID: // %Z - Time zone abbreviation name
-                case FORMAT_COLON_ZONE_OFF:
-                    // %z - Time zone as hour and minute offset from UTC (e.g. +0900)
-                    //      %:z - hour and minute offset from UTC with a colon (e.g. +09:00)
-                    //      %::z - hour, minute and second offset from UTC (e.g. +09:00:00)
-                    //      %:::z - hour, minute and second offset from UTC
-                    //          (e.g. +09, +09:30, +09:30:30)
-                {
-                    Matcher m = ZONE_PARSE_REGEX.matcher(text.substring(pos));
-                    if (m.find()) {
-                        // zone
-                        String zone = text.substring(pos, pos + m.end());
-                        bag.zone = zone;
-                        pos += zone.length();
-                    } else {
-                        bag.fail();
-                    }
-                    break;
-                }
-                case FORMAT_SPECIAL:
-                {
-                    throw new Error("FORMAT_SPECIAL is a special token only for the lexer.");
-                }
-            }
-        }
-
-        if (bag.fail) {
-            return null;
-        }
-
-        if (text.length() > pos) {
-            bag.leftover = text.substring(pos, text.length());
-        }
-
-        if (bag.has(bag._cent)) {
-            if (bag.has(bag.cwyear)) {
-                bag.cwyear += bag._cent * 100;
-            }
-            if (bag.has(bag.year)) {
-                bag.year += bag._cent * 100;
-            }
-
-            // delete bag._cent
-            bag._cent = Integer.MIN_VALUE;
-        }
-
-        if (bag.has(bag._merid)) {
-            if (bag.has(bag.hour)) {
-                bag.hour %= 12;
-                bag.hour += bag._merid;
-            }
-
-            // delete bag._merid
-            bag._merid = Integer.MIN_VALUE;
-        }
-
-        return bag;
+        return new Parser(text).parse(compiledPattern);
     }
 
     // @see date_zone_to_diff in date_parse.c
@@ -877,23 +499,23 @@ public class RubyDateParser
     public static int dateZoneToDiff(String zone)
     {
         String z = zone.toLowerCase();
-        int offset = Integer.MIN_VALUE;
 
-        boolean dst = false;
+        boolean dst;
         if (z.endsWith(" daylight time")) {
             z = z.substring(0, z.length() - " daylight time".length());
             dst = true;
-
         } else if (z.endsWith(" standard time")) {
             z = z.substring(0, z.length() - " standard time".length());
             dst = false;
-
         } else if (z.endsWith(" dst")) {
             z = z.substring(0, z.length() - " dst".length());
             dst = true;
+        } else {
+            dst = false;
         }
+
         if (ZONE_OFFSET_MAP.containsKey(z)) {
-            offset = ZONE_OFFSET_MAP.get(z);
+            int offset = ZONE_OFFSET_MAP.get(z);
             if (dst) {
                 offset += 3600;
             }
@@ -904,14 +526,16 @@ public class RubyDateParser
             z = z.substring(3, z.length()); // remove "gmt" or "utc"
         }
 
-        if (!isSign(z.charAt(0))) {
-            // if z doesn't have "+" or "-", invalid
-            return offset;
+        boolean sign;
+        if (z.charAt(0) == '+') {
+            sign = true;
+        } else if (z.charAt(0) == '-') {
+            sign = false;
+        } else {
+            // if z doesn't start with "+" or "-", invalid
+            return Integer.MIN_VALUE;
         }
-
-        boolean sign = false;
-        sign = z.charAt(0) == '+';
-        z = z.substring(1, z.length());
+        z = z.substring(1);
 
         int hour = 0, min = 0, sec = 0;
         if (z.contains(":")) {
@@ -950,100 +574,486 @@ public class RubyDateParser
             }
         }
 
-        offset = hour * 3600 + min * 60 + sec;
+        int offset = hour * 3600 + min * 60 + sec;
         return sign ? offset : -offset;
     }
 
-
-    private long readDigits(int len)
+    private static class Parser
     {
-        long v = 0;
-        int init_pos = pos;
-        try {
-            for (int i = 0; i < len; i++) {
-                char c = text.charAt(pos); // IndexOutOfBounds
-                if (!isDigit(c)) {
-                    if (pos - init_pos != 0) {
-                        break;
-                    } else {
-                        bag.fail();
-                    }
-                } else {
-                    v = v * 10 + toInt(c);
-                }
-                pos += 1;
-            }
-        } catch (IndexOutOfBoundsException e) {
-            // ignorable error
+        private int pos;
+        private String text;
+        private FormatBag bag;
+
+        public Parser(String text)
+        {
+            this.pos = pos;
+            this.text = text;
+            this.bag = new FormatBag();
         }
-        return v;
-    }
 
-    private long readDigitsMax()
-    {
-        return readDigits(Integer.MAX_VALUE);
-    }
+        public FormatBag parse(List<Token> compiledPattern)
+        {
+            for (int i = 0; i < compiledPattern.size(); i++) {
+                Token token = compiledPattern.get(i);
 
-    private int matchAtPatterns(String text, int pos, String[] patterns)
-    {
-        int patIndex = -1;
-        for (int i = 0; i < patterns.length; i++) {
-            String pattern = patterns[i];
-            int len = pattern.length();
+                switch (token.getFormat()) {
+                    case FORMAT_ENCODING:
+                        continue; // skip
+                    case FORMAT_OUTPUT:
+                        continue; // skip
+                    case FORMAT_STRING:
+                    {
+                        String s = token.getData().toString();
+                        for (int si = 0; si < s.length(); ) {
+                            char sc = s.charAt(si);
+                            if (isSpace(sc)) {
+                                while (pos < text.length() && isSpace(text.charAt(pos))) {
+                                    pos++;
+                                }
+                            } else if (pos >= text.length() || sc != text.charAt(pos)) {
+                                bag.fail();
+                            } else {
+                                pos++;
+                            }
+                            si++;
+                        }
+                        break;
+                    }
+                    case FORMAT_WEEK_LONG: // %A - The full weekday name (``Sunday'')
+                    case FORMAT_WEEK_SHORT: // %a - The abbreviated name (``Sun'')
+                    {
+                        int dayIndex = matchAtPatterns(text, pos, dayNames);
+                        if (dayIndex >= 0) {
+                            bag.wday = dayIndex % 7;
+                            pos += dayNames[dayIndex].length();
+                        } else {
+                            bag.fail();
+                        }
+                        break;
+                    }
+                    case FORMAT_MONTH_LONG: // %B - The full month name (``January'')
+                    case FORMAT_MONTH_SHORT: // %b, %h - The abbreviated month name (``Jan'')
+                    {
+                        int monIndex = matchAtPatterns(text, pos, monNames);
+                        if (monIndex >= 0) {
+                            bag.mon = monIndex % 12 + 1;
+                            pos += monNames[monIndex].length();
+                        } else {
+                            bag.fail();
+                        }
+                        break;
+                    }
+                    case FORMAT_CENTURY: // %C - year / 100 (round down.  20 in 2009)
+                    {
+                        long c;
+                        if (isNextTokenNumberPattern(compiledPattern, i)) {
+                            c = readDigits(2);
+                        } else {
+                            c = readDigitsMax();
+                        }
+                        bag._cent = (int)c;
+                        break;
+                    }
+                    case FORMAT_DAY: // %d, %Od - Day of the month, zero-padded (01..31)
+                    case FORMAT_DAY_S: // %e, %Oe - Day of the month, blank-padded ( 1..31)
+                    {
+                        long d;
+                        if (text.charAt(pos) == ' ') { // brank or not
+                            pos += 1; // brank
+                            d = readDigits(1);
+                        } else {
+                            d = readDigits(2);
+                        }
+
+                        if (!isInRange(d, 1, 31)) {
+                            bag.fail();
+                        }
+                        bag.mday = (int)d;
+                        break;
+                    }
+                    case FORMAT_WEEKYEAR: // %G - The week-based year
+                    {
+                        long y;
+                        if (isNextTokenNumberPattern(compiledPattern, i)) {
+                            y = readDigits(4);
+                        } else {
+                            y = readDigitsMax();
+                        }
+                        bag.cwyear = (int)y;
+                        break;
+                    }
+                    case FORMAT_WEEKYEAR_SHORT: // %g - The last 2 digits of the week-based year (00..99)
+                    {
+                        long v = readDigits(2);
+                        if (!isInRange(v, 0, 99)) {
+                            bag.fail();
+                        }
+                        bag.cwyear = (int)v;
+                        if (!bag.has(bag._cent)) {
+                            bag._cent = v >= 69 ? 19 : 20;
+                        }
+                        break;
+                    }
+                    case FORMAT_HOUR: // %H, %OH - Hour of the day, 24-hour clock, zero-padded (00..23)
+                    case FORMAT_HOUR_BLANK: // %k - Hour of the day, 24-hour clock, blank-padded ( 0..23)
+                    {
+                        long h;
+                        if (text.charAt(pos) == ' ') { // brank or not
+                            pos += 1; // brank
+                            h = readDigits(1);
+                        } else {
+                            h = readDigits(2);
+                        }
+
+                        if (!isInRange(h, 0, 24)) {
+                            bag.fail();
+                        }
+                        bag.hour = (int)h;
+                        break;
+                    }
+                    case FORMAT_HOUR_M: // %I, %OI - Hour of the day, 12-hour clock, zero-padded (01..12)
+                    case FORMAT_HOUR_S: // %l - Hour of the day, 12-hour clock, blank-padded ( 1..12)
+                    {
+                        long h;
+                        if (text.charAt(pos) == ' ') { // brank or not
+                            pos += 1; // brank
+                            h = readDigits(1);
+                        } else {
+                            h = readDigits(2);
+                        }
+
+                        if (!isInRange(h, 1, 12)) {
+                            bag.fail();
+                        }
+                        bag.hour = (int)h;
+                        break;
+                    }
+                    case FORMAT_DAY_YEAR: // %j - Day of the year (001..366)
+                    {
+                        long d = readDigits(3);
+                        if (!isInRange(d, 1, 365)) {
+                            bag.fail();
+                        }
+                        bag.yday = (int)d;
+                        break;
+                    }
+                    case FORMAT_MILLISEC: // %L - Millisecond of the second (000..999)
+                    case FORMAT_NANOSEC: // %N - Fractional seconds digits, default is 9 digits (nanosecond)
+                    {
+                        long v;
+                        boolean negative = false;
+
+                        if (isSign(text.charAt(pos))) {
+                            negative = text.charAt(pos) == '-';
+                            pos++;
+                        }
+
+                        int init_pos = pos;
+                        if (isNextTokenNumberPattern(compiledPattern, i)) {
+                            if (token.getFormat() == Format.FORMAT_MILLISEC) {
+                                v = readDigits(3);
+                            } else {
+                                v = readDigits(9);
+                            }
+                        } else {
+                            v = readDigitsMax();
+                        }
+
+                        bag.sec_fraction = (int)(!negative ? v : -v);
+                        bag.sec_fraction_size = pos - init_pos;
+                        break;
+                    }
+                    case FORMAT_MINUTES: // %M, %OM - Minute of the hour (00..59)
+                    {
+                        long min = readDigits(2);
+                        if (!isInRange(min, 0, 59)) {
+                            bag.fail();
+                        }
+                        bag.min = (int)min;
+                        break;
+                    }
+                    case FORMAT_MONTH: // %m, %Om - Month of the year, zero-padded (01..12)
+                    {
+                        long mon = readDigits(2);
+                        if (!isInRange(mon, 1, 12)) {
+                            bag.fail();
+                        }
+                        bag.mon = (int)mon;
+                        break;
+                    }
+                    case FORMAT_MERIDIAN: // %P - Meridian indicator, lowercase (``am'' or ``pm'')
+                    case FORMAT_MERIDIAN_LOWER_CASE: // %p - Meridian indicator, uppercase (``AM'' or ``PM'')
+                    {
+                        int meridIndex = matchAtPatterns(text, pos, meridNames);
+                        if (meridIndex >= 0) {
+                            bag._merid = meridIndex % 2 == 0 ? 0 : 12;
+                            pos += meridNames[meridIndex].length();
+                        } else {
+                            bag.fail();
+                        }
+                        break;
+                    }
+                    case FORMAT_MICROSEC_EPOCH: // %Q - Number of microseconds since 1970-01-01 00:00:00 UTC.
+                    {
+                        long sec;
+                        boolean negative = false;
+
+                        if (text.charAt(pos) == '-') {
+                            negative = true;
+                            pos++;
+                        }
+
+                        sec = readDigitsMax();
+                        bag.seconds = !negative ? sec : -sec;
+                        bag.seconds_size = 3;
+                        break;
+                    }
+                    case FORMAT_SECONDS: // %S - Second of the minute (00..59)
+                    {
+                        long sec = readDigits(2);
+                        if (!isInRange(sec, 0, 60)) {
+                            bag.fail();
+                        }
+                        bag.sec = (int)sec;
+                        break;
+                    }
+                    case FORMAT_EPOCH: // %s - Number of seconds since 1970-01-01 00:00:00 UTC.
+                    {
+                        long sec;
+                        boolean negative = false;
+
+                        if (text.charAt(pos) == '-') {
+                            negative = true;
+                            pos++;
+                        }
+                        sec = readDigitsMax();
+                        bag.seconds = (int)(!negative ? sec : -sec);
+                        break;
+                    }
+                    case FORMAT_WEEK_YEAR_S: // %U, %OU - Week number of the year.  The week starts with Sunday.  (00..53)
+                    case FORMAT_WEEK_YEAR_M: // %W, %OW - Week number of the year.  The week starts with Monday.  (00..53)
+                    {
+                        long w = readDigits(2);
+                        if (!isInRange(w, 0, 53)) {
+                            bag.fail();
+                        }
+
+                        if (token.getFormat() == Format.FORMAT_WEEK_YEAR_S) {
+                            bag.wnum0 = (int)w;
+                        } else {
+                            bag.wnum1 = (int)w;
+                        }
+                        break;
+                    }
+                    case FORMAT_DAY_WEEK2: // %u, %Ou - Day of the week (Monday is 1, 1..7)
+                    {
+                        long d = readDigits(1);
+                        if (!isInRange(d, 1, 7)) {
+                            bag.fail();
+                        }
+                        bag.cwday = (int)d;
+                        break;
+                    }
+                    case FORMAT_WEEK_WEEKYEAR: // %V, %OV - Week number of the week-based year (01..53)
+                    {
+                        long w = readDigits(2);
+                        if (!isInRange(w, 1, 53)) {
+                            bag.fail();
+                        }
+                        bag.cweek = (int)w;
+                        break;
+                    }
+                    case FORMAT_DAY_WEEK: // %w - Day of the week (Sunday is 0, 0..6)
+                    {
+                        long d = readDigits(1);
+                        if (!isInRange(d, 0, 6)) {
+                            bag.fail();
+                        }
+                        bag.wday = (int)d;
+                        break;
+                    }
+                    case FORMAT_YEAR_LONG:
+                        // %Y, %EY - Year with century (can be negative, 4 digits at least)
+                        //           -0001, 0000, 1995, 2009, 14292, etc.
+                    {
+                        boolean negative = false;
+
+                        if (isSign(text.charAt(pos))) {
+                            negative = text.charAt(pos) == '-';
+                            pos++;
+                        }
+
+                        long y;
+                        if (isNextTokenNumberPattern(compiledPattern, i)) {
+                            y = readDigits(4);
+                        } else {
+                            y = readDigitsMax();
+                        }
+
+                        bag.year = (int)(!negative ? y : -y);
+                        break;
+                    }
+                    case FORMAT_YEAR_SHORT: // %y, %Ey, %Oy - year % 100 (00..99)
+                    {
+                        long y = readDigits(2);
+                        if (!isInRange(y, 0, 99)) {
+                            bag.fail();
+                        }
+                        bag.year = (int)y;
+                        if (!bag.has(bag._cent)) {
+                            bag._cent = y >= 69 ? 19 : 20;
+                        }
+                        break;
+                    }
+                    case FORMAT_ZONE_ID: // %Z - Time zone abbreviation name
+                    case FORMAT_COLON_ZONE_OFF:
+                        // %z - Time zone as hour and minute offset from UTC (e.g. +0900)
+                        //      %:z - hour and minute offset from UTC with a colon (e.g. +09:00)
+                        //      %::z - hour, minute and second offset from UTC (e.g. +09:00:00)
+                        //      %:::z - hour, minute and second offset from UTC
+                        //          (e.g. +09, +09:30, +09:30:30)
+                    {
+                        Matcher m = ZONE_PARSE_REGEX.matcher(text.substring(pos));
+                        if (m.find()) {
+                            // zone
+                            String zone = text.substring(pos, pos + m.end());
+                            bag.zone = zone;
+                            pos += zone.length();
+                        } else {
+                            bag.fail();
+                        }
+                        break;
+                    }
+                    case FORMAT_SPECIAL:
+                    {
+                        throw new Error("FORMAT_SPECIAL is a special token only for the lexer.");
+                    }
+                }
+            }
+
+            if (bag.fail) {
+                return null;
+            }
+
+            if (text.length() > pos) {
+                bag.leftover = text.substring(pos, text.length());
+            }
+
+            if (bag.has(bag._cent)) {
+                if (bag.has(bag.cwyear)) {
+                    bag.cwyear += bag._cent * 100;
+                }
+                if (bag.has(bag.year)) {
+                    bag.year += bag._cent * 100;
+                }
+
+                // delete bag._cent
+                bag._cent = Integer.MIN_VALUE;
+            }
+
+            if (bag.has(bag._merid)) {
+                if (bag.has(bag.hour)) {
+                    bag.hour %= 12;
+                    bag.hour += bag._merid;
+                }
+
+                // delete bag._merid
+                bag._merid = Integer.MIN_VALUE;
+            }
+
+            return bag;
+        }
+
+        private long readDigits(int len)
+        {
+            long v = 0;
+            int init_pos = pos;
             try {
-                if (pattern.equalsIgnoreCase(text.substring(pos, pos + len))) { // IndexOutOfBounds
-                    patIndex = i;
-                    break;
+                for (int i = 0; i < len; i++) {
+                    char c = text.charAt(pos); // IndexOutOfBounds
+                    if (!isDigit(c)) {
+                        if (pos - init_pos != 0) {
+                            break;
+                        } else {
+                            bag.fail();
+                        }
+                    } else {
+                        v = v * 10 + toInt(c);
+                    }
+                    pos += 1;
                 }
             } catch (IndexOutOfBoundsException e) {
                 // ignorable error
             }
+            return v;
         }
-        return patIndex;
-    }
 
-    private static boolean isNextTokenNumberPattern(List<Token> compiledPattern, int index)
-    {
-        if (compiledPattern.size() <= index + 1) {
-            return false;
-        } else {
-            Token nextToken = compiledPattern.get(index + 1);
+        private long readDigitsMax()
+        {
+            return readDigits(Integer.MAX_VALUE);
+        }
 
-            Format f = nextToken.getFormat();
-            if (f == Format.FORMAT_STRING && isDigit(((String)nextToken.getData()).charAt(0))) {
-                return true;
-            } else if (NUMBER_PATTERNS.contains(f)) {
-                return true;
+        private int matchAtPatterns(String text, int pos, String[] patterns)
+        {
+            int patIndex = -1;
+            for (int i = 0; i < patterns.length; i++) {
+                String pattern = patterns[i];
+                int len = pattern.length();
+                try {
+                    if (pattern.equalsIgnoreCase(text.substring(pos, pos + len))) { // IndexOutOfBounds
+                        patIndex = i;
+                        break;
+                    }
+                } catch (IndexOutOfBoundsException e) {
+                    // ignorable error
+                }
             }
-            return false;
+            return patIndex;
         }
-    }
 
-    private static boolean isInRange(long v, int lower, int upper)
-    {
-        return lower <= v && v <= upper;
-    }
+        private static boolean isNextTokenNumberPattern(List<Token> compiledPattern, int i)
+        {
+            if (compiledPattern.size() <= i + 1) {
+                return false;
+            } else {
+                Token nextToken = compiledPattern.get(i + 1);
 
-    private static boolean isSpace(char c)
-    {
-        // @see space characters are declared in date_strptime.c
-        // https://github.com/ruby/ruby/blob/trunk/ext/date/date_strptime.c#L624
-        return c == ' ' || c == '\t' || c == '\n' ||
-                c == '\u000b' || c == '\f' || c == '\r';
-    }
+                Format f = nextToken.getFormat();
+                if (f == Format.FORMAT_STRING && isDigit(((String)nextToken.getData()).charAt(0))) {
+                    return true;
+                } else if (NUMBER_PATTERNS.contains(f)) {
+                    return true;
+                }
+                return false;
+            }
+        }
 
-    static boolean isDigit(char c)
-    {
-        return '0' <= c && c <= '9';
-    }
+        private static boolean isInRange(long v, int lower, int upper)
+        {
+            return lower <= v && v <= upper;
+        }
 
-    static boolean isSign(char c)
-    {
-        return c == '+' || c == '-';
-    }
+        private static boolean isSpace(char c)
+        {
+            // @see space characters are declared in date_strptime.c
+            // https://github.com/ruby/ruby/blob/trunk/ext/date/date_strptime.c#L624
+            return c == ' ' || c == '\t' || c == '\n' ||
+                    c == '\u000b' || c == '\f' || c == '\r';
+        }
 
-    static int toInt(char c)
-    {
-        return c - '0';
+        static boolean isDigit(char c)
+        {
+            return '0' <= c && c <= '9';
+        }
+
+        static boolean isSign(char c)
+        {
+            return c == '+' || c == '-';
+        }
+
+        static int toInt(char c)
+        {
+            return c - '0';
+        }
     }
 }
