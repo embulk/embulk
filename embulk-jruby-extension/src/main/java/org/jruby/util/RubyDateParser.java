@@ -548,6 +548,7 @@ public class RubyDateParser
                 min = Integer.parseInt(splited[1]);
                 sec = Integer.parseInt(splited[2]);
             }
+
         } else if (z.contains(",") || z.contains(".")) {
             // TODO min = Rational(fr.to_i, 10**fr.size) * 60
             String[] splited = z.split("[\\.,]");
@@ -629,7 +630,7 @@ public class RubyDateParser
                     case FORMAT_WEEK_LONG: // %A - The full weekday name (``Sunday'')
                     case FORMAT_WEEK_SHORT: // %a - The abbreviated name (``Sun'')
                     {
-                        int dayIndex = matchAtPatterns(text, pos, dayNames);
+                        int dayIndex = matchPatternsAt(text, pos, dayNames);
                         if (dayIndex >= 0) {
                             bag.wday = dayIndex % 7;
                             pos += dayNames[dayIndex].length();
@@ -641,7 +642,7 @@ public class RubyDateParser
                     case FORMAT_MONTH_LONG: // %B - The full month name (``January'')
                     case FORMAT_MONTH_SHORT: // %b, %h - The abbreviated month name (``Jan'')
                     {
-                        int monIndex = matchAtPatterns(text, pos, monNames);
+                        int monIndex = matchPatternsAt(text, pos, monNames);
                         if (monIndex >= 0) {
                             bag.mon = monIndex % 12 + 1;
                             pos += monNames[monIndex].length();
@@ -791,7 +792,7 @@ public class RubyDateParser
                     case FORMAT_MERIDIAN: // %P - Meridian indicator, lowercase (``am'' or ``pm'')
                     case FORMAT_MERIDIAN_LOWER_CASE: // %p - Meridian indicator, uppercase (``AM'' or ``PM'')
                     {
-                        int meridIndex = matchAtPatterns(text, pos, meridNames);
+                        int meridIndex = matchPatternsAt(text, pos, meridNames);
                         if (meridIndex >= 0) {
                             bag._merid = meridIndex % 2 == 0 ? 0 : 12;
                             pos += meridNames[meridIndex].length();
@@ -1000,7 +1001,7 @@ public class RubyDateParser
             return readDigits(Integer.MAX_VALUE);
         }
 
-        private int matchAtPatterns(String text, int pos, String[] patterns)
+        private static int matchPatternsAt(String text, int pos, String[] patterns)
         {
             int patIndex = -1;
             for (int i = 0; i < patterns.length; i++) {
