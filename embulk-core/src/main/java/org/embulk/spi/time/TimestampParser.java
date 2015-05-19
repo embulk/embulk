@@ -9,7 +9,7 @@ import org.embulk.config.ConfigDefault;
 import org.jruby.Ruby;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
-import org.jruby.util.RubyDateParser.Temporal;
+import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        Temporal tmp = parser.parse(compiledPattern, text);
+        LocalTime tmp = parser.parseInternal(compiledPattern, text).makeLocalTime();
         String zone = tmp.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {

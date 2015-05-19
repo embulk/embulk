@@ -284,23 +284,66 @@ public class RubyDateParser
         boolean fail = false;
         String leftover = null;
 
-        public FormatBag()
-        {
-        }
-
         void fail()
         {
             fail = true;
         }
 
-        boolean has(int v)
+        // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
+        public LocalTime makeLocalTime()
         {
-            return v != Integer.MIN_VALUE;
-        }
+            long sec;
+            long nsec = 0;
 
-        boolean hasSeconds()
-        {
-            return seconds != Long.MIN_VALUE;
+            if (hasSeconds()) {
+                if (has(this.sec_fraction)) {
+                    nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
+                }
+
+                if (has(this.seconds_size)) { // Rational
+                    sec = this.seconds / (int)Math.pow(10, this.seconds_size);
+                } else { // int
+                    sec = this.seconds;
+                }
+
+            } else {
+                DateTimeZone dtz = DateTimeZone.UTC;
+
+                int year;
+                if (has(this.year)) {
+                    year = this.year;
+                } else {
+                    year = 1970;
+                }
+
+                // set up with min this and then add to allow rolling over
+                DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
+                if (has(this.mon)) {
+                    dt = dt.plusMonths(this.mon - 1);
+                }
+                if (has(this.mday)) {
+                    dt = dt.plusDays(this.mday - 1);
+                }
+                if (has(this.hour)) {
+                    dt = dt.plusHours(this.hour);
+                }
+                if (has(this.min)) {
+                    dt = dt.plusMinutes(this.min);
+                }
+                if (has(this.sec)) {
+                    dt = dt.plusSeconds(this.sec);
+                }
+
+                if (has(this.sec_fraction)) {
+                    nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
+                    dt = dt.plusMillis((int)nsec / 1000000);
+                }
+
+                dt = dt.withZoneRetainFields(dtz);
+                sec = dt.getMillis() / 1000;
+            }
+
+            return new LocalTime(sec, (int)nsec, this.zone);
         }
 
         public HashMap<String, Object> toMap()
@@ -377,72 +420,25 @@ public class RubyDateParser
 
             return map;
         }
-    }
 
-    public static class Temporal // TODO better naming
-    {
-        // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
-        public static Temporal newTemporal(FormatBag bag)
+        private boolean hasSeconds()
         {
-            long sec;
-            long nsec = 0;
-
-            if (bag.hasSeconds()) {
-                if (bag.has(bag.sec_fraction)) {
-                    nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
-                }
-
-                if (bag.has(bag.seconds_size)) { // Rational
-                    sec = bag.seconds / (int)Math.pow(10, bag.seconds_size);
-                } else { // int
-                    sec = bag.seconds;
-                }
-
-            } else {
-                DateTimeZone dtz = DateTimeZone.UTC;
-
-                int year;
-                if (bag.has(bag.year)) {
-                    year = bag.year;
-                } else {
-                    year = 1970;
-                }
-
-                // set up with min bag and then add to allow rolling over
-                DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-                if (bag.has(bag.mon)) {
-                    dt = dt.plusMonths(bag.mon - 1);
-                }
-                if (bag.has(bag.mday)) {
-                    dt = dt.plusDays(bag.mday - 1);
-                }
-                if (bag.has(bag.hour)) {
-                    dt = dt.plusHours(bag.hour);
-                }
-                if (bag.has(bag.min)) {
-                    dt = dt.plusMinutes(bag.min);
-                }
-                if (bag.has(bag.sec)) {
-                    dt = dt.plusSeconds(bag.sec);
-                }
-
-                if (bag.has(bag.sec_fraction)) {
-                    nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
-                    dt = dt.plusMillis((int)nsec / 1000000);
-                }
-
-                dt = dt.withZoneRetainFields(dtz);
-                sec = dt.getMillis() / 1000;
-            }
-
-            return new Temporal(sec, (int)nsec, bag.zone);
+            return seconds != Long.MIN_VALUE;
         }
 
+        private static boolean has(int v)
+        {
+            return v != Integer.MIN_VALUE;
+        }
+    }
+
+    public static class LocalTime
+    {
         private final long sec;
         private final int nsec;
         private final String zone;  // +0900, JST, UTC
 
-        public Temporal(long sec, int nsec, String zone)
+        public LocalTime(long sec, int nsec, String zone)
         {
             this.sec = sec;
             this.nsec = nsec;
@@ -488,20 +484,19 @@ public class RubyDateParser
     // TODO RubyTime compileAndParse(RubyString format, RubyString text);
     // TODO RubyTime parse(List<Token> compiledPattern, RubyString text);
 
-    public Temporal parse(List<Token> compiledPattern, String text)
+    public LocalTime parse(List<Token> compiledPattern, String text)
     {
         FormatBag bag = parseInternal(compiledPattern, text);
-        return Temporal.newTemporal(bag);
+        return bag.makeLocalTime();
     }
 
-    /* Visible for testing */
-    FormatBag parseInternal(String format, String text)
+    public FormatBag parseInternal(String format, String text)
     {
         List<Token> compiledPattern = compilePattern(context.runtime.newString(format), true);
         return parseInternal(compiledPattern, text);
     }
 
-    FormatBag parseInternal(List<Token> compiledPattern, String text)
+    public FormatBag parseInternal(List<Token> compiledPattern, String text)
     {
         pos = 0;
         this.text = text;
@@ -833,10 +828,6 @@ public class RubyDateParser
                         String zone = text.substring(pos, pos + m.end());
                         bag.zone = zone;
                         pos += zone.length();
-
-                        // TODO not calcurate offset here
-                        //// offset
-                        //hash.put("offset", FormatBag.dateZoneToDiff(zone));
                     } else {
                         bag.fail();
                     }
