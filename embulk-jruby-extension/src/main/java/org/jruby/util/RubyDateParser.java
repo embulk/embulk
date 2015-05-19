@@ -491,7 +491,7 @@ public class RubyDateParser
 
     public FormatBag parseInternal(List<Token> compiledPattern, String text)
     {
-        return new Parser(text).parse(compiledPattern);
+        return Parser.parse(compiledPattern, text);
     }
 
     // @see date_zone_to_diff in date_parse.c
@@ -580,18 +580,25 @@ public class RubyDateParser
 
     private static class Parser
     {
-        private int pos;
-        private String text;
-        private FormatBag bag;
-
-        public Parser(String text)
+        public static FormatBag parse(List<Token> compiledPattern, String text)
         {
-            this.pos = pos;
-            this.text = text;
-            this.bag = new FormatBag();
+            return new Parser(text).parse(compiledPattern);
         }
 
-        public FormatBag parse(List<Token> compiledPattern)
+        private final String text;
+        private final FormatBag bag;
+        private int pos;
+        private boolean fail;
+
+        private Parser(String text)
+        {
+            this.pos = 0;
+            this.text = text;
+            this.bag = new FormatBag();
+            this.fail = false;
+        }
+
+        private FormatBag parse(List<Token> compiledPattern)
         {
             for (int i = 0; i < compiledPattern.size(); i++) {
                 Token token = compiledPattern.get(i);
@@ -611,7 +618,7 @@ public class RubyDateParser
                                     pos++;
                                 }
                             } else if (pos >= text.length() || sc != text.charAt(pos)) {
-                                bag.fail();
+                                fail = true;
                             } else {
                                 pos++;
                             }
@@ -627,7 +634,7 @@ public class RubyDateParser
                             bag.wday = dayIndex % 7;
                             pos += dayNames[dayIndex].length();
                         } else {
-                            bag.fail();
+                            fail = true;
                         }
                         break;
                     }
@@ -639,7 +646,7 @@ public class RubyDateParser
                             bag.mon = monIndex % 12 + 1;
                             pos += monNames[monIndex].length();
                         } else {
-                            bag.fail();
+                            fail = true;
                         }
                         break;
                     }
@@ -666,7 +673,7 @@ public class RubyDateParser
                         }
 
                         if (!isInRange(d, 1, 31)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.mday = (int)d;
                         break;
@@ -686,7 +693,7 @@ public class RubyDateParser
                     {
                         long v = readDigits(2);
                         if (!isInRange(v, 0, 99)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.cwyear = (int)v;
                         if (!bag.has(bag._cent)) {
@@ -706,7 +713,7 @@ public class RubyDateParser
                         }
 
                         if (!isInRange(h, 0, 24)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.hour = (int)h;
                         break;
@@ -723,7 +730,7 @@ public class RubyDateParser
                         }
 
                         if (!isInRange(h, 1, 12)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.hour = (int)h;
                         break;
@@ -732,7 +739,7 @@ public class RubyDateParser
                     {
                         long d = readDigits(3);
                         if (!isInRange(d, 1, 365)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.yday = (int)d;
                         break;
@@ -767,7 +774,7 @@ public class RubyDateParser
                     {
                         long min = readDigits(2);
                         if (!isInRange(min, 0, 59)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.min = (int)min;
                         break;
@@ -776,7 +783,7 @@ public class RubyDateParser
                     {
                         long mon = readDigits(2);
                         if (!isInRange(mon, 1, 12)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.mon = (int)mon;
                         break;
@@ -789,7 +796,7 @@ public class RubyDateParser
                             bag._merid = meridIndex % 2 == 0 ? 0 : 12;
                             pos += meridNames[meridIndex].length();
                         } else {
-                            bag.fail();
+                            fail = true;
                         }
                         break;
                     }
@@ -812,7 +819,7 @@ public class RubyDateParser
                     {
                         long sec = readDigits(2);
                         if (!isInRange(sec, 0, 60)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.sec = (int)sec;
                         break;
@@ -835,7 +842,7 @@ public class RubyDateParser
                     {
                         long w = readDigits(2);
                         if (!isInRange(w, 0, 53)) {
-                            bag.fail();
+                            fail = true;
                         }
 
                         if (token.getFormat() == Format.FORMAT_WEEK_YEAR_S) {
@@ -849,7 +856,7 @@ public class RubyDateParser
                     {
                         long d = readDigits(1);
                         if (!isInRange(d, 1, 7)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.cwday = (int)d;
                         break;
@@ -858,7 +865,7 @@ public class RubyDateParser
                     {
                         long w = readDigits(2);
                         if (!isInRange(w, 1, 53)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.cweek = (int)w;
                         break;
@@ -867,7 +874,7 @@ public class RubyDateParser
                     {
                         long d = readDigits(1);
                         if (!isInRange(d, 0, 6)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.wday = (int)d;
                         break;
@@ -897,7 +904,7 @@ public class RubyDateParser
                     {
                         long y = readDigits(2);
                         if (!isInRange(y, 0, 99)) {
-                            bag.fail();
+                            fail = true;
                         }
                         bag.year = (int)y;
                         if (!bag.has(bag._cent)) {
@@ -920,7 +927,7 @@ public class RubyDateParser
                             bag.zone = zone;
                             pos += zone.length();
                         } else {
-                            bag.fail();
+                            fail = true;
                         }
                         break;
                     }
@@ -931,7 +938,7 @@ public class RubyDateParser
                 }
             }
 
-            if (bag.fail) {
+            if (fail) {
                 return null;
             }
 
@@ -975,7 +982,7 @@ public class RubyDateParser
                         if (pos - init_pos != 0) {
                             break;
                         } else {
-                            bag.fail();
+                            fail = true;
                         }
                     } else {
                         v = v * 10 + toInt(c);
