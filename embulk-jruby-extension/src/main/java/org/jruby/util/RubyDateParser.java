@@ -39,7 +39,7 @@ public class RubyDateParser
             Pattern.CASE_INSENSITIVE);
 
     // CDdeFGgHIjkLlMmNQRrSsTUuVvWwXxYy
-    private static EnumSet<Format> numPatterns =
+    private static EnumSet<Format> NUMBER_PATTERNS =
         EnumSet.copyOf(Arrays.asList(
                     Format.FORMAT_CENTURY, // 'C'
                     // D
@@ -90,6 +90,23 @@ public class RubyDateParser
         return patIndex;
     }
 
+    private static boolean isNextTokenNumberPattern(List<Token> compiledPattern, int index)
+    {
+        if (compiledPattern.size() <= index + 1) {
+            return false;
+        } else {
+            Token nextToken = compiledPattern.get(index + 1);
+
+            Format f = nextToken.getFormat();
+            if (f == Format.FORMAT_STRING && isDigit(((String)nextToken.getData()).charAt(0))) {
+                return true;
+            } else if (NUMBER_PATTERNS.contains(f)) {
+                return true;
+            }
+            return false;
+        }
+    }
+
     private static boolean isValidRange(long v, int lower, int upper)
     {
         return lower <= v && v <= upper;
@@ -116,23 +133,6 @@ public class RubyDateParser
     static int toInt(char c)
     {
         return c - '0';
-    }
-
-    private static boolean matchAtNumPatterns(Token token) // NUM_PATTERN_P
-    {
-        if (token == null) {
-            return false;
-        }
-
-        Format f = token.getFormat();
-        if (f == Format.FORMAT_STRING && isDigit(((String)token.getData()).charAt(0))) {
-            return true;
-
-        } else if (numPatterns.contains(f)) {
-            return true;
-
-        }
-        return false;
     }
 
     private final ThreadContext context;
@@ -165,20 +165,6 @@ public class RubyDateParser
         return dateFormat.compilePattern(format, dateLibrary);
     }
 
-    private static Token getToken(List<Token> compiledPattern, int index)
-    {
-        return compiledPattern.get(index);
-    }
-
-    private static Token nextToken(List<Token> compiledPattern, int index)
-    {
-        if (compiledPattern.size() <= index + 1) {
-            return null;
-        } else {
-            return compiledPattern.get(index + 1);
-        }
-    }
-
     // TODO RubyTime parse(RubyString format, RubyString text);
     // TODO RubyTime parse(List<Token> compiledPattern, RubyString text);
 
@@ -201,7 +187,7 @@ public class RubyDateParser
         this.values = new ParsedValues();
 
         for (int i = 0; i < compiledPattern.size(); i++) {
-            Token token = getToken(compiledPattern, i);
+            Token token = compiledPattern.get(i);
 
             switch (token.getFormat()) {
                 case FORMAT_ENCODING:
@@ -253,7 +239,7 @@ public class RubyDateParser
                 case FORMAT_CENTURY: // %C - year / 100 (round down.  20 in 2009)
                 {
                     long c;
-                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
+                    if (isNextTokenNumberPattern(compiledPattern, i)) {
                         c = readDigits(2);
                     } else {
                         c = readDigitsMax();
@@ -281,7 +267,7 @@ public class RubyDateParser
                 case FORMAT_WEEKYEAR: // %G - The week-based year
                 {
                     long y;
-                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
+                    if (isNextTokenNumberPattern(compiledPattern, i)) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
@@ -356,7 +342,7 @@ public class RubyDateParser
                     }
 
                     int init_pos = pos;
-                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
+                    if (isNextTokenNumberPattern(compiledPattern, i)) {
                         if (token.getFormat() == Format.FORMAT_MILLISEC) {
                             v = readDigits(3);
                         } else {
@@ -491,7 +477,7 @@ public class RubyDateParser
                     }
 
                     long y;
-                    if (matchAtNumPatterns(nextToken(compiledPattern, i))) {
+                    if (isNextTokenNumberPattern(compiledPattern, i)) {
                         y = readDigits(4);
                     } else {
                         y = readDigitsMax();
