@@ -2,7 +2,8 @@ package org.jruby.util;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.EnumSet;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +37,40 @@ public class RubyDateParser
                     "|(?-i:[[\\p{Alpha}]]+)(?:\\s+dst)?\\b" +
                     ")",
             Pattern.CASE_INSENSITIVE);
+
+    // CDdeFGgHIjkLlMmNQRrSsTUuVvWwXxYy
+    private static EnumSet<Format> numPatterns =
+        EnumSet.copyOf(Arrays.asList(
+                    Format.FORMAT_CENTURY, // 'C'
+                    // D
+                    Format.FORMAT_DAY, // 'd'
+                    Format.FORMAT_DAY_S, // 'e'
+                    // F
+                    Format.FORMAT_WEEKYEAR, // 'G'
+                    Format.FORMAT_WEEKYEAR_SHORT, // 'g'
+                    Format.FORMAT_HOUR, // 'H'
+                    Format.FORMAT_HOUR_M, // 'I'
+                    Format.FORMAT_DAY_YEAR, // 'j'
+                    Format.FORMAT_HOUR_BLANK, // 'k'
+                    Format.FORMAT_MILLISEC, // 'L'
+                    Format.FORMAT_HOUR_S, // 'l'
+                    Format.FORMAT_MINUTES, // 'M'
+                    Format.FORMAT_MONTH, // 'm'
+                    Format.FORMAT_NANOSEC, // 'N'
+                    // Q, R, r
+                    Format.FORMAT_SECONDS, // 'S'
+                    Format.FORMAT_EPOCH, // 's'
+                    // T
+                    Format.FORMAT_WEEK_YEAR_S, // 'U'
+                    Format.FORMAT_DAY_WEEK2, // 'u'
+                    Format.FORMAT_WEEK_WEEKYEAR, // 'V'
+                    // v
+                    Format.FORMAT_WEEK_YEAR_M, // 'W'
+                    Format.FORMAT_DAY_WEEK, // 'w'
+                    // X, x
+                    Format.FORMAT_YEAR_LONG, // 'Y'
+                    Format.FORMAT_YEAR_SHORT // 'y'
+        ));
 
     private int matchAtPatterns(String text, int pos, String[] patterns)
     {
@@ -81,40 +116,6 @@ public class RubyDateParser
     static int toInt(char c)
     {
         return c - '0';
-    }
-
-    private static Set<Format> numPatterns; // CDdeFGgHIjkLlMmNQRrSsTUuVvWwXxYy
-    static {
-        numPatterns = new HashSet<>();
-        numPatterns.add(Format.FORMAT_CENTURY); // 'C'
-        // D
-        numPatterns.add(Format.FORMAT_DAY); // 'd'
-        numPatterns.add(Format.FORMAT_DAY_S); // 'e'
-        // F
-        numPatterns.add(Format.FORMAT_WEEKYEAR); // 'G'
-        numPatterns.add(Format.FORMAT_WEEKYEAR_SHORT); // 'g'
-        numPatterns.add(Format.FORMAT_HOUR); // 'H'
-        numPatterns.add(Format.FORMAT_HOUR_M); // 'I'
-        numPatterns.add(Format.FORMAT_DAY_YEAR); // 'j'
-        numPatterns.add(Format.FORMAT_HOUR_BLANK); // 'k'
-        numPatterns.add(Format.FORMAT_MILLISEC); // 'L'
-        numPatterns.add(Format.FORMAT_HOUR_S); // 'l'
-        numPatterns.add(Format.FORMAT_MINUTES); // 'M'
-        numPatterns.add(Format.FORMAT_MONTH); // 'm'
-        numPatterns.add(Format.FORMAT_NANOSEC); // 'N'
-        // Q, R, r
-        numPatterns.add(Format.FORMAT_SECONDS); // 'S'
-        numPatterns.add(Format.FORMAT_EPOCH); // 's'
-        // T
-        numPatterns.add(Format.FORMAT_WEEK_YEAR_S); // 'U'
-        numPatterns.add(Format.FORMAT_DAY_WEEK2); // 'u'
-        numPatterns.add(Format.FORMAT_WEEK_WEEKYEAR); // 'V'
-        // v
-        numPatterns.add(Format.FORMAT_WEEK_YEAR_M); // 'W'
-        numPatterns.add(Format.FORMAT_DAY_WEEK); // 'w'
-        // X, x
-        numPatterns.add(Format.FORMAT_YEAR_LONG); // 'Y'
-        numPatterns.add(Format.FORMAT_YEAR_SHORT); // 'y'
     }
 
     private static boolean matchAtNumPatterns(Token token) // NUM_PATTERN_P
