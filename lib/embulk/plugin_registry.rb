@@ -6,6 +6,7 @@ module Embulk
     def initialize(category, search_prefix)
       @category = category
       @search_prefix = search_prefix
+      @loaded_gems = {}
       @map = {}
     end
 
@@ -34,7 +35,7 @@ module Embulk
     def search(type)
       name = "#{@search_prefix}#{type}"
       begin
-        require name
+        require_and_show name
         return true
       rescue LoadError => e
         # catch LoadError but don't catch ClassNotFoundException
@@ -50,7 +51,7 @@ module Embulk
 
       paths = load_path_files.compact.sort  # sort to prefer newer version
       paths.each do |path|
-        require path
+        require_and_show path
         return true
       end
 
@@ -64,13 +65,28 @@ module Embulk
         specs = specs.sort_by {|spec| spec.version }
         if spec = specs.last
           spec.require_paths.each do |lib|
-            require "#{spec.full_gem_path}/#{lib}/#{name}"
+            require_and_show "#{spec.full_gem_path}/#{lib}/#{name}"
           end
           return true
         end
       end
 
       return false
+    end
+
+    def require_and_show(name)
+      require name
+      show_loaded_gems
+    end
+
+    def show_loaded_gems
+      # TODO use logger
+      Gem.loaded_specs.each do |name,spec|
+        if !@loaded_gems[name] && name =~ /^embulk/
+          puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Loaded plugin #{name} (#{spec.version})"
+          @loaded_gems[name] = true
+        end
+      end
     end
   end
 end
