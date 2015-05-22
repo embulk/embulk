@@ -14,6 +14,10 @@ module Embulk
       Gem.clear_paths  # force rubygems to reload GEM_HOME
     end
 
+    # Gem.path is called when GemRunner installs a gem with native extension.
+    # Running extconf.rb fails without this hack.
+    fix_gem_ruby_path
+
     # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
     $LOAD_PATH << Embulk.home('lib')
 
@@ -344,7 +348,7 @@ examples:
 
   def self.home(dir)
     jar, resource = __FILE__.split("!")
-    if resource
+    if resource && jar =~ /^file:/
       home = resource.split("/")[0..-3].join("/")
       "#{jar}!#{home}/#{dir}"
     else
@@ -365,6 +369,23 @@ examples:
   end
 
   private
+
+  def self.fix_gem_ruby_path
+    ruby_path = File.join(RbConfig::CONFIG["bindir"], RbConfig::CONFIG["ruby_install_name"])
+    jar, resource = ruby_path.split("!")
+
+    if resource && jar =~ /^file:/
+      # java
+      manifest = File.read("#{jar}!/META-INF/MANIFEST.MF") rescue ""
+      m = /Main-Class: ([^\r\n]+)/.match(manifest)
+      if m && m[1] != "org.jruby.Main"
+        # Main-Class is not jruby
+        Gem.define_singleton_method(:ruby) do
+          "java -cp #{jar_path(jar)} org.jruby.Main"
+        end
+      end
+    end
+  end
 
   def self.setup_gem_paths(path)
     # install bundler gem here & use bundler installed here
