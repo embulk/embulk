@@ -192,6 +192,11 @@ examples:
       exec(*argv)
       exit 127
 
+    when :irb
+      require 'irb'
+      IRB.start
+      exit 0
+
     else
       usage "Unknown subcommand #{subcmd.dump}."
     end
