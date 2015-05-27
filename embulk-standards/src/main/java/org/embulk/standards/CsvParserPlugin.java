@@ -60,6 +60,10 @@ public class CsvParserPlugin
         @Config("escape")
         @ConfigDefault("\"\\\\\"")
         public char getEscapeChar();
+        
+        @Config("skip_pattern")
+        @ConfigDefault("\"#\"")
+        public String getSkipPattern();
 
         // Null value handling: if the CsvParser found 'non-quoted empty string's,
         // it replaces them to string that users specified like "\N", "NULL".
