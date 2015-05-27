@@ -196,12 +196,12 @@ module Embulk::Guess
 
           parts << :year
           part_options << nil
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :month
           part_options << part_heading_option(dm["month"])
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :day
           part_options << part_heading_option(dm["day"])
 
@@ -210,30 +210,28 @@ module Embulk::Guess
 
           parts << :month
           part_options << part_heading_option(dm["month"])
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :day
           part_options << part_heading_option(dm["day"])
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :year
           part_options << nil
-          delimiters << date_delim
 
         elsif dm = (/^#{DMY}(?<rest>.*?)$/.match(text) or /^#{DMY_NODELIM}(?<rest>.*?)$/.match(text))
           date_delim = dm["date_delim"] rescue ""
 
           parts << :day
           part_options << part_heading_option(dm["day"])
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :month
           part_options << part_heading_option(dm["month"])
-          delimiters << date_delim
 
+          delimiters << date_delim
           parts << :year
           part_options << nil
-          delimiters << date_delim
 
         else
           date_delim = ""
