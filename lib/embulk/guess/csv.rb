@@ -24,6 +24,11 @@ module Embulk
         "\\N",  # MySQL LOAD, Hive STORED AS TEXTFILE
       ]
 
+      COMMENT_LINE_MARKER_CANDIDATES = [
+        "#",
+        "//",
+      ]
+
       MAX_SKIP_LINES = 10
       NO_SKIP_DETECT_LINES = 10
 
@@ -56,8 +61,11 @@ module Embulk
         end
 
         sample_records = split_lines(parser_guessed, sample_lines, delim)
+
         skip_header_lines = guess_skip_header_lines(sample_records)
         sample_records = sample_records[skip_header_lines..-1]
+
+        comment_line_marker, sample_records = guess_comment_line_marker(sample_records)
 
         first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
         other_types = SchemaGuess.types_from_array_records(sample_records[1..-1])
@@ -74,6 +82,8 @@ module Embulk
         else
           parser_guessed["skip_header_lines"] = skip_header_lines
         end
+
+        parser_guessed["comment_line_marker"] = comment_line_marker  # always set comment_line_marker even if it's null
 
         parser_guessed["allow_extra_columns"] = false
         parser_guessed["allow_optional_columns"] = false
@@ -113,7 +123,10 @@ module Embulk
               columns = []
               while true
                 begin
-                  columns << tokenizer.nextColumn
+                  column = tokenizer.nextColumn
+                  quoted = tokenizer.wasQuotedColumn
+                  column.define_singleton_method(:quoted?) { quoted }
+                  columns << column
                 rescue org.embulk.standards.CsvTokenizer::TooFewColumnsException
                   rows << columns
                   break
@@ -200,19 +213,36 @@ module Embulk
           count = counts.inject(0) {|r,c| r + c }
           [str, count]
         end.select {|str,count| count > 0 }.sort_by {|str,count| -count }
-        found = guessed.first
-        return found ? found[0] : nil
+        found_str, found_count = guessed.first
+        return found_str ? found_str : nil
       end
 
       def guess_skip_header_lines(sample_records)
         counts = sample_records.map {|records| records.size }
         (1..[MAX_SKIP_LINES, counts.length - 1].min).each do |i|
           check_row_count = counts[i-1]
-          if counts[i, NO_SKIP_DETECT_LINES].all? {|c| c == check_row_count }
+          if counts[i, NO_SKIP_DETECT_LINES].all? {|c| c <= check_row_count }
             return i - 1
           end
         end
         return 0
+      end
+
+      def guess_comment_line_marker(sample_records)
+        guessed = COMMENT_LINE_MARKER_CANDIDATES.map do |str|
+          regexp = /^#{Regexp.quote(str)}/
+          records = sample_records.reject do |records|
+            !records[0].quoted? && !NULL_STRING_CANDIDATES.include?(records[0]) && records[0] =~ regexp
+          end
+          count = sample_records.size - records.size
+          [str, count, records]
+        end.select {|str,count,records| count > 0 }.sort_by {|str,count,records| -count }
+        found_str, found_count, found_records = guessed.first
+        if found_str
+          return found_str, found_records
+        else
+          return nil, sample_records
+        end
       end
 
       def array_sum(array)
