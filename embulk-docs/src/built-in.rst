@@ -143,6 +143,8 @@ Options
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | trim\_if\_not\_quoted      | boolean  | If true, remove spaces of a value if the value is not surrounded by the quote character                        | ``false`` by default   |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
+| comment\_line\_marker      | string   | Skip a line if the line begins with this string                                                                | null by default        |
++----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | allow\_optional\_columns   | boolean  | If true, set null to insufficient columns. Otherwise, skip the row in case of insufficient number of columns   | ``false`` by default   |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | allow\_extra\_columns      | boolean  | If true, ignore too many columns. Otherwise, skip the row in case of too many columns                          | ``false`` by default   |
@@ -204,6 +206,7 @@ Example
         escape: ''
         null_string: 'NULL'
         skip_header_lines: 1
+        comment_line_marker: '#'
         columns:
         - {name: id, type: long}
         - {name: account, type: long}
