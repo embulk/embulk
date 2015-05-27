@@ -79,10 +79,22 @@ public class LocalFileInputPlugin
 
         control.run(taskSource, taskCount);
 
-        List<String> files = new ArrayList<String>(task.getFiles());
-        Collections.sort(files);
-        return Exec.newConfigDiff().
-            set("last_path", files.get(files.size() - 1));
+        // build next config
+        ConfigDiff configDiff = Exec.newConfigDiff();
+
+        // last_path
+        if (task.getFiles().isEmpty()) {
+            // keep the last value
+            if (task.getLastPath().isPresent()) {
+                configDiff.set("last_path", task.getLastPath().get());
+            }
+        } else {
+            List<String> files = new ArrayList<String>(task.getFiles());
+            Collections.sort(files);
+            configDiff.set("last_path", files.get(files.size() - 1));
+        }
+
+        return configDiff;
     }
 
     @Override
