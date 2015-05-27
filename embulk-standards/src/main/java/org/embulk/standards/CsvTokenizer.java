@@ -28,6 +28,7 @@ public class CsvTokenizer
     private final boolean trimIfNotQuoted;
     private final long maxQuotedSizeLimit;
     private final LineDecoder input;
+    private final String skippattern;
 
     private RecordState recordState = RecordState.END;  // initial state is end of a record. nextRecord() must be called first
     private long lineNumber = 0;
@@ -46,6 +47,7 @@ public class CsvTokenizer
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
+        skippattern = task.getSkipPattern();
         this.input = input;
     }
 
@@ -102,6 +104,14 @@ public class CsvTokenizer
                 line = input.poll();
                 if (line == null) {
                     return false;
+                }
+
+                while (true) {
+                    if (line.startsWith(skippattern)) {
+                        line = input.poll();
+                    } else {
+                        break;
+                    }
                 }
             }
             linePos = 0;
