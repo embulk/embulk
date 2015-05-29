@@ -4,68 +4,32 @@
 
 setlocal
 
-set this=%0
+set this=%~f0
+echo %this%
 set java_args=
 set jruby_args=
 set default_optimize=
 set overwrite_optimize=
+set status=
+set error=
+set args=
 
 :loop
-    set temp=%~1
-    if "%temp%" == "-J+O" (
-        set overwrite_optimize=true
-        shift
-        goto end
-        
-    ) else if "%temp%" == "-J-O" (
-        set overwrite_optimize=false
-        shift
-        goto end
-        
-    ) else if "%temp:~0,2%" == "-J" (
-        if not "%temp:~2%" == "" (
-            set java_args=%java_args% %temp:~2%
-        ) else (
-            if not exist "%~2" (
-                echo "failed to load java argument file."
-                exit /b 1
-            )
-            goto read
-        )
-        shift
-        goto loop
-        
-    ) else if "%temp:~0,2%" == "-R" (
-        set jruby_args=%jruby_args% %temp:~2%
-        shift
-        goto loop
-        
-    ) else if "%temp%" == "run" (
-        set default_optimize=true
-        goto end
-        
-    ) else (
-        goto end
-    )
-    
-:read
+for %%a in ( %* ) do (
+    call :check_arg %%a
+)
 
-for /f "delims=" %%i in (%~2) do set java_args=%java_args% %%i
-shift
-shift
+if "%error%" == "true" exit /b 1
 
-goto loop
+rem :read
+rem 
+rem for /f "delims=" %%i in (%~2) do set java_args=%java_args% %%i
+rem shift
+rem shift
+rem 
+rem goto loop
 
 :end
-
-rem "%*" is not changed by 'shift'
-set args=
-:loop2
-    if "%~1" == "" goto end2
-    set args=%args% %~1
-    shift
-    goto loop2
-:end2
 
 set optimize=false
 if "%overwrite_optimize%" == "true" (
@@ -88,7 +52,55 @@ java %java_args% -jar %this% %jruby_args% %args%
 
 endlocal
 
-exit /B
+exit /b
+
+:check_arg
+set arg=%1
+if "%status%" == "rest" (
+    set args=%args% %arg%
+    
+) else if "%status%" == "read" (
+    call :read_file %arg%
+    
+) else if "%arg%" == "-J+O" (
+    set overwrite_optimize=true
+    set status=rest
+    
+) else if "%arg%" == "-J-O" (
+    set overwrite_optimize=false
+    set status=rest
+    
+) else if "%arg:~0,2%" == "-J" (
+    if not "%arg:~2%" == "" (
+        set java_args=%java_args% %arg:~2%
+    ) else (
+        set status=read
+    )
+    
+) else if "%arg:~0,2%" == "-R" (
+    set jruby_args=%jruby_args% %arg:~2%
+    
+) else if "%arg%" == "run" (
+    set default_optimize=true
+    set args=%args% %arg%
+    set status=rest
+    
+) else (
+    set args=%args% %arg%
+    set status=rest
+)
+exit /b
+
+:read_file
+if not exist "%~1" (
+    echo "failed to load java argument file."
+    set error=true
+) else (
+    for /f "delims=" %%i in (%~1) do set java_args=%java_args% %%i
+)
+set status=
+exit /b
+
 BAT
 
 java_args=""
