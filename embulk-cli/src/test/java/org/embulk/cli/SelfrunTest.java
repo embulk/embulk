@@ -1,23 +1,21 @@
 package org.embulk.cli;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 
-// 原因不明だが、jarに組み込むと動かない
-// 前のラベルに戻るgotoができない
-// バイナリ部分が何か影響している模様
 public class SelfrunTest {
 
     private static File testSelfrun;
@@ -55,7 +53,7 @@ public class SelfrunTest {
 
     @Test
     public void testArguments() throws Exception {
-        List<String> args = execute("a1", "a2");
+        List<String> args = execute("a1", "a2", "\"a3=v3\"");
         assertEquals(Arrays.asList(
                 "-XX:+AggressiveOpts",
                 "-XX:+TieredCompilation",
@@ -64,7 +62,8 @@ public class SelfrunTest {
                 "-jar",
                 testSelfrun.getAbsolutePath(),
                 "a1",
-                "a2"),
+                "a2",
+                "a3=v3"),
                 args);
     }
 
@@ -127,7 +126,7 @@ public class SelfrunTest {
 
     @Test
     public void testR2() throws Exception {
-        List<String> args = execute("-Rr1", "-Rr2", "a1", "a2");
+        List<String> args = execute("\"-Rr1=v1\"", "\"-Rr2=v2\"", "a1", "a2");
         assertEquals(Arrays.asList(
                 "-XX:+AggressiveOpts",
                 "-XX:+TieredCompilation",
@@ -135,8 +134,8 @@ public class SelfrunTest {
                 "-Xverify:none",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
-                "r1",
-                "r2",
+                "r1=v1",
+                "r2=v2",
                 "a1",
                 "a2"),
                 args);
@@ -158,13 +157,13 @@ public class SelfrunTest {
 
     @Test
     public void testJ1() throws Exception {
-        List<String> args = execute("-Jj1", "a1", "a2");
+        List<String> args = execute("-J-Dj1", "a1", "a2");
         assertEquals(Arrays.asList(
                 "-XX:+AggressiveOpts",
                 "-XX:+TieredCompilation",
                 "-XX:TieredStopAtLevel=1",
                 "-Xverify:none",
-                "j1",
+                "-Dj1",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
                 "a1",
@@ -174,14 +173,14 @@ public class SelfrunTest {
 
     @Test
     public void testJ2() throws Exception {
-        List<String> args = execute("-Jj1", "-Jj2", "a1", "a2");
+        List<String> args = execute("\"-J-Dj1=v1\"", "\"-J-Dj2=v2\"", "a1", "a2");
         assertEquals(Arrays.asList(
                 "-XX:+AggressiveOpts",
                 "-XX:+TieredCompilation",
                 "-XX:TieredStopAtLevel=1",
                 "-Xverify:none",
-                "j1",
-                "j2",
+                "-Dj1=v1",
+                "-Dj2=v2",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
                 "a1",
@@ -229,10 +228,17 @@ public class SelfrunTest {
     }
 
     private List<String> execute(String... arguments) throws Exception {
-        List<String> commands = new ArrayList<String>();
-        commands.add(testSelfrun.getAbsolutePath());
-        commands.addAll(Arrays.asList(arguments));
-        Process process = Runtime.getRuntime().exec(commands.toArray(new String[commands.size()]));
+        File temp = new File(testSelfrun.getParentFile(), "call-" + testSelfrun.getName());
+        try (FileWriter writer = new FileWriter(temp)) {
+            writer.write(testSelfrun.getAbsolutePath());
+            for (String argument : arguments) {
+                writer.write(" ");
+                writer.write(argument);
+            }
+        }
+        temp.setExecutable(true);
+
+        Process process = Runtime.getRuntime().exec(temp.getAbsolutePath());
         process.waitFor();
 
         FileSystem fs = FileSystems.getDefault();

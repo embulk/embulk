@@ -14,22 +14,13 @@ set status=
 set error=
 set args=
 
-:loop
+rem In jar file, cannot goto ahread for some reason.
+
 for %%a in ( %* ) do (
     call :check_arg %%a
 )
 
 if "%error%" == "true" exit /b 1
-
-rem :read
-rem 
-rem for /f "delims=" %%i in (%~2) do set java_args=%java_args% %%i
-rem shift
-rem shift
-rem 
-rem goto loop
-
-:end
 
 set optimize=false
 if "%overwrite_optimize%" == "true" (
@@ -55,7 +46,15 @@ endlocal
 exit /b
 
 :check_arg
-set arg=%1
+set arg=%*
+
+rem Remove double quotations
+set p1=%arg:~0,1%
+set p1=%p1:"=%
+set p2=%arg:~-1,1%
+set p2=%p2:"=%
+set arg=%p1%%arg:~1,-1%%p2%
+
 if "%status%" == "rest" (
     set args=%args% %arg%
     
