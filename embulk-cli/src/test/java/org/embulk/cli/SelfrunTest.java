@@ -2,8 +2,10 @@ package org.embulk.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -238,11 +240,21 @@ public class SelfrunTest {
         }
         temp.setExecutable(true);
 
+        File argsFile = new File(testSelfrun.getParentFile(), "args.txt");
+        argsFile.delete();
+
         Process process = Runtime.getRuntime().exec(temp.getAbsolutePath());
-        process.waitFor();
+        int exitCode = process.waitFor();
+        if (exitCode != 0 || !argsFile.exists()) {
+            StringBuilder builder = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                builder.append(reader.readLine());
+                builder.append(System.getProperty("line.separator"));
+            }
+            throw new Exception(builder.toString());
+        }
 
         FileSystem fs = FileSystems.getDefault();
-        File argsFile = new File(testSelfrun.getParentFile(), "args.txt");
         List<String> args = Files.readAllLines(fs.getPath(argsFile.getAbsolutePath()), Charset.defaultCharset());
         return args;
     }
