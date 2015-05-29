@@ -14,6 +14,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+
+// 原因不明だが、jarに組み込むと動かない
+// 前のラベルに戻るgotoができない
+// バイナリ部分が何か影響している模様
 public class SelfrunTest {
 
     private static File testSelfrun;
