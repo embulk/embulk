@@ -3,9 +3,12 @@ package org.embulk.cli;
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -30,13 +33,15 @@ public class SelfrunTest {
 
         File thisFolder = new File(SelfrunTest.class.getResource("/org/embulk/cli/SelfrunTest.class").toURI()).getParentFile();
         testSelfrun = new File(thisFolder, System.getProperty("file.separator").equals("\\") ? "selfrun.bat" : "selfrun.sh");
-        testSelfrun.setExecutable(true);
 
         File classpath = thisFolder.getParentFile().getParentFile().getParentFile();
         line = line.replaceAll("java ", "java -classpath " + classpath.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\") + " org.embulk.cli.DummyMain ");
 
         // Modify selfrun so that arguments are written in 'args.txt' .
         Files.write(fs.getPath(testSelfrun.getAbsolutePath()), line.getBytes(Charset.defaultCharset()), StandardOpenOption.CREATE);
+        if (!testSelfrun.setExecutable(true)) {
+        	throw new Exception("Cannot se executable.");
+        }
     }
 
 
@@ -211,7 +216,7 @@ public class SelfrunTest {
     public void testJFile() throws Exception {
         File javaArgsFile = new File(testSelfrun.getParentFile(), "java_args.txt");
         FileSystem fs = FileSystems.getDefault();
-        Files.write(fs.getPath(javaArgsFile.getAbsolutePath()), "j1 j2 j3".getBytes(), StandardOpenOption.CREATE);
+        Files.write(fs.getPath(javaArgsFile.getAbsolutePath()), "j1 j2 j3".getBytes(Charset.defaultCharset()), StandardOpenOption.CREATE);
 
         List<String> args = execute("-J", javaArgsFile.getAbsolutePath(), "a1", "a2");
         assertEquals(Arrays.asList(
@@ -231,23 +236,29 @@ public class SelfrunTest {
 
     private List<String> execute(String... arguments) throws Exception {
         File temp = new File(testSelfrun.getParentFile(), "call-" + testSelfrun.getName());
-        try (FileWriter writer = new FileWriter(temp)) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(temp), Charset.defaultCharset()))) {
             writer.write(testSelfrun.getAbsolutePath());
             for (String argument : arguments) {
                 writer.write(" ");
                 writer.write(argument);
             }
         }
-        temp.setExecutable(true);
+        if (!temp.setExecutable(true)) {
+        	throw new Exception("Cannot se executable.");
+        }
 
         File argsFile = new File(testSelfrun.getParentFile(), "args.txt");
-        argsFile.delete();
+        if (argsFile.exists()) {
+            if (!argsFile.delete()) {
+            	throw new IOException("Cannot delete " + argsFile);
+            }
+        }
 
         Process process = Runtime.getRuntime().exec(temp.getAbsolutePath());
         int exitCode = process.waitFor();
         if (exitCode != 0 || !argsFile.exists()) {
             StringBuilder builder = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream(), Charset.defaultCharset()))) {
                 builder.append(reader.readLine());
                 builder.append(System.getProperty("line.separator"));
             }
