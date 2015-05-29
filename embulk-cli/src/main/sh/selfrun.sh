@@ -5,7 +5,6 @@
 setlocal
 
 set this=%~f0
-echo %this%
 set java_args=
 set jruby_args=
 set default_optimize=
