@@ -6,9 +6,10 @@ import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
+import org.jruby.Ruby;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
-import org.jruby.util.Temporal;
+import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
 
@@ -46,15 +47,17 @@ public class TimestampParser
     private TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
         // TODO get default current time from ExecTask.getExecTimestamp
-        this.parser = new RubyDateParser(jruby.getProvider().getRuntime().getCurrentContext());
-        this.compiledPattern = this.parser.compilePattern(format);
+        Ruby runtime = jruby.getProvider().getRuntime();
+        this.parser = new RubyDateParser(runtime.getCurrentContext());
+        this.compiledPattern = this.parser.compilePattern(runtime.newString(format), true);
         this.defaultTimeZone = defaultTimeZone;
     }
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        Temporal tmp = parser.date_strptime(compiledPattern, text);
-        String zone = tmp.getZone();
+        LocalTime local = parser.parseInternal(compiledPattern, text).makeLocalTime();
+
+        String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
             // TODO cache parsed zone?
@@ -64,9 +67,8 @@ public class TimestampParser
             }
         }
 
-        long localSec = tmp.getSec();
-        long sec = timeZone.convertLocalToUTC(localSec*1000, false) / 1000;
+        long sec = timeZone.convertLocalToUTC(local.getSeconds()*1000, false) / 1000;
 
-        return Timestamp.ofEpochSecond(sec, tmp.getNsec()); // maybe millisec/usec convert
+        return Timestamp.ofEpochSecond(sec, local.getNsecFraction());
     }
 }
