@@ -38,7 +38,7 @@ if "%optimize%" == "true" (
     set java_args=-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none %java_args%
 )
 
-java %java_args% -jar %this% %jruby_args% %args% 
+java %java_args% -jar %this% %jruby_args% %args%
 
 endlocal
 
@@ -56,33 +56,33 @@ set arg=%p1%%arg:~1,-1%%p2%
 
 if "%status%" == "rest" (
     set args=%args% %arg%
-    
+
 ) else if "%status%" == "read" (
     call :read_file %arg%
-    
+
 ) else if "%arg%" == "-J+O" (
     set overwrite_optimize=true
     set status=rest
-    
+
 ) else if "%arg%" == "-J-O" (
     set overwrite_optimize=false
     set status=rest
-    
+
 ) else if "%arg:~0,2%" == "-J" (
     if not "%arg:~2%" == "" (
         set java_args=%java_args% %arg:~2%
     ) else (
         set status=read
     )
-    
+
 ) else if "%arg:~0,2%" == "-R" (
     set jruby_args=%jruby_args% %arg:~2%
-    
+
 ) else if "%arg%" == "run" (
     set default_optimize=true
     set args=%args% %arg%
     set status=rest
-    
+
 ) else (
     set args=%args% %arg%
     set status=rest
