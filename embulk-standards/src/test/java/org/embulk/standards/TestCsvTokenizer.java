@@ -227,6 +227,20 @@ public class TestCsvTokenizer
     }
 
     @Test
+    public void testCommentLineMarker() throws Exception
+    {
+        config.set("comment_line_marker", JsonNodeFactory.instance.textNode("#"));
+        reloadPluginTask();
+        assertEquals(expectedRecords(2,
+                        "aaa", "bbb",
+                        "eee", "fff"),
+            parse(task,
+                    "aaa,bbb",
+                    "#ccc,ddd",
+                    "eee,fff"));
+    }
+
+    @Test
     public void trimNonQuotedValues() throws Exception
     {
         assertEquals(expectedRecords(2,

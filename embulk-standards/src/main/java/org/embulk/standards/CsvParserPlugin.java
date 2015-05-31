@@ -75,6 +75,10 @@ public class CsvParserPlugin
         @ConfigDefault("131072") //128kB
         public long getMaxQuotedSizeLimit();
 
+        @Config("comment_line_marker")
+        @ConfigDefault("null")
+        public Optional<String> getCommentLineMarker();
+
         @Config("allow_optional_columns")
         @ConfigDefault("false")
         public boolean getAllowOptionalColumns();
