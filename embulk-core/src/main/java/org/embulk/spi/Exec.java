@@ -89,7 +89,7 @@ public class Exec
         return session().newTaskSource();
     }
 
-    public boolean isPreview()
+    public static boolean isPreview()
     {
         return session().isPreview();
     }
