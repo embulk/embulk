@@ -26,7 +26,7 @@ module Embulk
       email = `git config user.email`.strip
       email = "YOUR_NAME" if email.empty?
 
-      ruby_class_name = name.split('-').map {|a| a.capitalize }.join + category.to_s.split('_').map {|a| a.capitalize }.join + "Plugin"
+      ruby_class_name = name.split('-').map {|a| a.capitalize }.join
       java_iface = category.to_s.split('_').map {|a| a.capitalize }.join
       java_class_name = name.split('-').map {|a| a.capitalize }.join + java_iface + "Plugin"
       display_name = name.split('-').map {|a| a.capitalize }.join(' ')
