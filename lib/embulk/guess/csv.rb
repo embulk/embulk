@@ -68,7 +68,7 @@ module Embulk
         comment_line_marker, sample_records = guess_comment_line_marker(sample_records)
 
         first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
-        other_types = SchemaGuess.types_from_array_records(sample_records[1..-1])
+        other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
 
         if first_types.size <= 1 || other_types.size <= 1
           # guess failed
