@@ -26,7 +26,7 @@ module Embulk
       def strptimeUsec(text)
         hash = Date._strptime(text, @format_string)
         unless hash
-          raise Java::TimestampParseException.new
+          raise Java::TimestampParseException.new("Failed to parse '" + text + "'")
         end
 
         if seconds = hash[:seconds]
