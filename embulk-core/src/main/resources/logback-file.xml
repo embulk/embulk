@@ -1,0 +1,25 @@
+<configuration>
+  <property name="embulk.logFile" value="embulk.log" />
+
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${embulk.logFile}</file>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>5kB</maxFileSize>
+    </triggeringPolicy>
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>${embulk.logFile}.%i</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>5</maxIndex>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="io.netty.util" level="INFO"/>
+  <logger name="io.netty.buffer" level="INFO"/>
+
+  <root>
+    <appender-ref ref="file"/>
+  </root>
+</configuration>
