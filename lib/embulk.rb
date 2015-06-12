@@ -9,8 +9,9 @@ module Embulk
     end
   end
 
+  require 'embulk/logger'
   require 'embulk/error'
-  require 'embulk/plugin'
   require 'embulk/buffer'
   require 'embulk/data_source'
+  require 'embulk/plugin'
 end

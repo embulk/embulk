@@ -3,7 +3,11 @@ package org.embulk.exec;
 import java.util.Properties;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
-import org.apache.log4j.PropertyConfigurator;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.embulk.config.ConfigSource;
@@ -14,13 +18,9 @@ public class LoggerProvider
     @Inject
     public LoggerProvider(@ForSystemConfig ConfigSource systemConfig)
     {
-        // TODO system config
-        Properties prop = new Properties();
-
         final String level;
         String logLevel = systemConfig.get(String.class, "log_level", "info");  // here can't use loadConfig because ModelManager uses LoggerProvider
         switch (logLevel) {
-        case "fatal": level = "FATAL"; break;
         case "error": level = "ERROR"; break;
         case "warn":  level = "WARN";  break;
         case "info":  level = "INFO";  break;
@@ -28,16 +28,30 @@ public class LoggerProvider
         case "trace": level = "TRACE"; break;
         default:
             throw new IllegalArgumentException(String.format(
-                        "System property embulk.logLevel=%s is invalid. Available levels are fatal, error, warn, info, debug and trace.", logLevel));
+                        "System property embulk.logLevel=%s is invalid. Available levels are error, warn, info, debug and trace.", logLevel));
         }
 
-        prop.setProperty("log4j.rootLogger", level+",root");
-        prop.setProperty("log4j.appender.root", "org.apache.log4j.ConsoleAppender");
-        prop.setProperty("log4j.appender.root.layout", "org.apache.log4j.PatternLayout");
-        prop.setProperty("log4j.appender.root.layout.ConversionPattern", "%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%p] (%t): %m%n");
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(context);
+        context.reset();
 
-        // TODO
-        PropertyConfigurator.configure(prop);
+        String name;
+        if (System.console() != null) {
+            name = "/logback-color.xml";
+        } else {
+            name = "/logback-console.xml";
+        }
+        try {
+            configurator.doConfigure(getClass().getResource(name));
+        } catch (JoranException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        org.slf4j.Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        if (logger instanceof Logger) {
+            ((Logger) logger).setLevel(Level.toLevel(level.toUpperCase(), Level.DEBUG));
+        }
     }
 
     public ILoggerFactory get()

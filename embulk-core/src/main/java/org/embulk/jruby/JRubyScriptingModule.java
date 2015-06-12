@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.io.File;
+import org.slf4j.ILoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import com.google.inject.Binder;
@@ -97,6 +98,14 @@ public class JRubyScriptingModule
 
             // load embulk.rb
             jruby.runScriptlet("require 'embulk'");
+
+            // initialize logger
+            jruby.callMethod(
+                    jruby.runScriptlet("Embulk"),
+                    "logger=",
+                        jruby.callMethod(
+                            jruby.runScriptlet("Embulk::Logger"),
+                            "new", injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
 
             return jruby;
         }
