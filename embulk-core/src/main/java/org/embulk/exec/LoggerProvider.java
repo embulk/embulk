@@ -38,9 +38,9 @@ public class LoggerProvider
 
         String name;
         if (System.console() != null) {
-            name = "/logback-color.xml";
+            name = "/embulk/logback-color.xml";
         } else {
-            name = "/logback-console.xml";
+            name = "/embulk/logback-console.xml";
         }
         try {
             configurator.doConfigure(getClass().getResource(name));

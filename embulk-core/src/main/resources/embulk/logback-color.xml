@@ -63,7 +63,6 @@
   <logger name="io.netty.buffer" level="INFO"/>
 
   <root>
-    <appender-ref ref="console-fatal"/>
     <appender-ref ref="console-error"/>
     <appender-ref ref="console-warn"/>
     <appender-ref ref="console-info"/>
