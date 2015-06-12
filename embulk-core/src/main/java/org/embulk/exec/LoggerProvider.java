@@ -18,8 +18,6 @@ public class LoggerProvider
     @Inject
     public LoggerProvider(@ForSystemConfig ConfigSource systemConfig)
     {
-        Properties prop = new Properties();
-
         final String level;
         String logLevel = systemConfig.get(String.class, "log_level", "info");  // here can't use loadConfig because ModelManager uses LoggerProvider
         switch (logLevel) {
