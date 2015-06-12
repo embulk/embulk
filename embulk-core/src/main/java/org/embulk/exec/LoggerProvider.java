@@ -50,8 +50,7 @@ public class LoggerProvider
 
         org.slf4j.Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         if (logger instanceof Logger) {
-            Logger root = (Logger) logger;
-            root.setLevel(Level.toLevel(level.toUpperCase(), Level.DEBUG));
+            ((Logger) logger).setLevel(Level.toLevel(level.toUpperCase(), Level.DEBUG));
         }
     }
 
