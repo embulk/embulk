@@ -68,7 +68,7 @@ public class TimestampParser
             // TODO cache parsed zone?
             timeZone = parseDateTimeZone(zone);
             if (timeZone == null) {
-                throw new TimestampParseException("No timezone in '" + text + "'");
+                throw new TimestampParseException("Invalid time zone name '" + text + "'");
             }
         }
 
