@@ -53,7 +53,8 @@ public class CsvTokenizer
 
     public long getCurrentLineNumber()
     {
-        return lineNumber;
+        // returns actual line number. Internally, lineNumber starts at 0.
+        return lineNumber + 1;
     }
 
     // returns skipped line
