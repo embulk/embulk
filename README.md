@@ -126,7 +126,7 @@ If the transaction fails, embulk stores state some states to the yaml file. You 
 embulk run config.yml -r resume-state.yml
 ```
 
-If you giveup to resume the transaction, you can use `embulk cleanup` subcommand to delete intermediate data:
+If you give up on resuming the transaction, you can use `embulk cleanup` subcommand to delete intermediate data:
 
 ```
 embulk cleanup config.yml -r resume-state.yml
