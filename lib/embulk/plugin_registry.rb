@@ -1,6 +1,7 @@
 
 module Embulk
   require 'embulk/error'
+  require 'embulk/logger'
 
   class PluginRegistry
     def initialize(category, search_prefix)
@@ -80,7 +81,6 @@ module Embulk
     end
 
     def show_loaded_gems
-      # TODO use logger
       Gem.loaded_specs.each do |name,spec|
         if !@loaded_gems[name] && name =~ /^embulk/
           Embulk.logger.info "Loaded plugin #{name} (#{spec.version})"
