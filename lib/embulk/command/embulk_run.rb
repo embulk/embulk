@@ -68,7 +68,7 @@ module Embulk
 
     when :run
       op.banner = "Usage: run <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
@@ -90,7 +90,7 @@ module Embulk
 
     when :cleanup
       op.banner = "Usage: cleanup <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
@@ -109,7 +109,7 @@ module Embulk
 
     when :preview
       op.banner = "Usage: preview <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
@@ -128,7 +128,7 @@ module Embulk
 
     when :guess
       op.banner = "Usage: guess <partial-config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (fatal, error, warn, info, debug or trace)') do |level|
+      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:logLevel] = level
       end
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|

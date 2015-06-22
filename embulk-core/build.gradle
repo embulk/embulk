@@ -21,9 +21,8 @@ dependencies {
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.5.3'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.5.3'
     compile 'com.fasterxml.jackson.module:jackson-module-guice:2.5.3'
-    compile 'log4j:log4j:1.2.17'
+    compile 'ch.qos.logback:logback-classic:1.1.3'
     compile 'org.slf4j:slf4j-api:1.7.10'
-    compile 'org.slf4j:slf4j-log4j12:1.7.10'
     compile 'org.jruby:jruby-complete:' + project.jrubyVersion
     compile 'com.google.code.findbugs:annotations:3.0.0'
     compile 'org.yaml:snakeyaml:1.14'

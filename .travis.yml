@@ -8,7 +8,7 @@ sudo: false
 install:
   - pip install --user sphinx
 script:
-  - ./gradlew check rubyTest
+  - ./gradlew --info check rubyTest
 after_success:
   - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
 env:

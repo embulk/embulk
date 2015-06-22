@@ -1,0 +1,72 @@
+<configuration>
+  <appender name="console-error" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%magenta(%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n)</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="console-warn" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>WARN</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%yellow(%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n)</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="console-info" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>INFO</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%green(%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n)</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="console-debug" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>DEBUG</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%white(%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n)</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="console-trace" class="ch.qos.logback.core.ConsoleAppender">
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>TRACE</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%blue(%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%level] (%thread\): %m%n)</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="io.netty.util" level="INFO"/>
+  <logger name="io.netty.buffer" level="INFO"/>
+
+  <root>
+    <appender-ref ref="console-error"/>
+    <appender-ref ref="console-warn"/>
+    <appender-ref ref="console-info"/>
+    <appender-ref ref="console-debug"/>
+    <appender-ref ref="console-trace"/>
+  </root>
+</configuration>
