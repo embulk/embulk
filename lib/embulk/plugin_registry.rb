@@ -83,7 +83,7 @@ module Embulk
       # TODO use logger
       Gem.loaded_specs.each do |name,spec|
         if !@loaded_gems[name] && name =~ /^embulk/
-          puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Loaded plugin #{name} (#{spec.version})"
+          Embulk.logger.info "Loaded plugin #{name} (#{spec.version})"
           @loaded_gems[name] = true
         end
       end
