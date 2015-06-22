@@ -139,7 +139,7 @@ public class GuessExecutor
             ConfigSource originalConfig = config.deepCopy().merge(lastGuessed);
             ConfigSource guessInputConfig = originalConfig.deepCopy();
             guessInputConfig.getNestedOrSetEmpty("parser")
-                .set("type", "system_guess")  // override in.parser.type so that FileInputPlugin creates GuessParserPlugin
+                .set("type", "system_guess")  // override in.parser.type so that FileInputRunner.run uses GuessParserPlugin
                 .set("guess_plugins", guessPlugins)
                 .set("orig_config", originalConfig);
 
@@ -153,7 +153,6 @@ public class GuessExecutor
                         if (taskCount == 0) {
                             throw new NoSampleException("No input files to guess");
                         }
-                        // TODO repeat runwith taskIndex++ if NoSampleException happens
                         input.run(inputTaskSource, null, 0, new PageOutput() {
                             @Override
                             public void add(Page page)
@@ -170,6 +169,7 @@ public class GuessExecutor
                         throw new AssertionError("Guess executor must throw GuessedNoticeError");
                     }
                 });
+
                 throw new AssertionError("Guess executor must throw GuessedNoticeError");
 
             } catch (GuessedNoticeError error) {
@@ -319,6 +319,7 @@ public class GuessExecutor
 
         private static Buffer getFirstBuffer(FileInput input)
         {
+            // The first buffer is created by SamplingParserPlugin. See FileInputRunner.guess.
             RuntimeException decodeException = null;
             try {
                 while (input.nextFile()) {
