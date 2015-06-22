@@ -31,6 +31,7 @@ dependencies {
     compile 'io.airlift:slice:0.9'
     compile 'joda-time:joda-time:2.7'
     compile 'io.netty:netty-buffer:5.0.0.Alpha1'
+    compile 'org.fusesource.jansi:jansi:1.11'
 
     // for embulk/guess/charset.rb
     compile 'com.ibm.icu:icu4j:54.1.1'
