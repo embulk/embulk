@@ -61,7 +61,6 @@ public class SamplingParserPlugin
             });
             throw new AssertionError("SamplingParserPlugin must throw SampledNoticeError");
         } catch (SampledNoticeError error) {
-            System.out.println("using sample buffer - size: "+error.getSample().limit());
             return error.getSample();
         }
     }
@@ -108,7 +107,6 @@ public class SamplingParserPlugin
             FileInput input, PageOutput output)
     {
         Buffer buffer = readSample(input, sampleSize);
-        System.out.println("sample buffer size: "+buffer.limit());
         if (buffer.limit() < minSampleSize) {
             throw new NotEnoughSampleError();
         }
