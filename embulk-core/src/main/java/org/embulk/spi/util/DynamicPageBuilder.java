@@ -39,6 +39,11 @@ public class DynamicPageBuilder
         this.columnLookup = lookup.build();
     }
 
+    public List<Column> getColumns()
+    {
+        return schema.getColumns();
+    }
+
     public DynamicColumnSetter column(Column c)
     {
         return setters.get(c.getIndex());
@@ -56,5 +61,25 @@ public class DynamicPageBuilder
             throw new DynamicColumnNotFoundException("Column '"+columnName+"' does not exist");
         }
         return setter;
+    }
+
+    public void addRecord()
+    {
+        pageBuilder.addRecord();
+    }
+
+    public void flush()
+    {
+        pageBuilder.flush();
+    }
+
+    public void finish()
+    {
+        pageBuilder.finish();
+    }
+
+    public void close()
+    {
+        pageBuilder.close();
     }
 }

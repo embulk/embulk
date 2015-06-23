@@ -1,5 +1,11 @@
 package org.embulk.spi.util.dynamic;
 
+import org.jruby.RubyBoolean;
+import org.jruby.RubyInteger;
+import org.jruby.RubyFloat;
+import org.jruby.RubyString;
+import org.jruby.RubyTime;
+import org.jruby.exceptions.RaiseException;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.util.DynamicColumnSetter;
@@ -31,4 +37,45 @@ public abstract class AbstractDynamicColumnSetter
     public abstract void set(String value);
 
     public abstract void set(Timestamp value);
+
+    public void set(RubyBoolean rubyObject)
+    {
+        set(rubyObject.isTrue());
+    }
+
+    public void set(RubyInteger rubyObject)
+    {
+        try {
+            set(rubyObject.getLongValue());
+        } catch (RaiseException ex) {
+            // integer is too large
+            if ("RangeError".equals(ex.getException().getMetaClass().getBaseName())) {
+                // TODO setDefaultValue();
+                throw ex;
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    public void set(RubyFloat rubyObject)
+    {
+        set(rubyObject.getDoubleValue());
+    }
+
+    public void set(RubyString rubyObject)
+    {
+        set(rubyObject.asJavaString());
+    }
+
+    public void set(RubyTime rubyObject)
+    {
+        long msec = rubyObject.getDateTime().getMillis();
+        long nsec = rubyObject.getNSec();
+        long sec = msec / 1000 + nsec / 1000000000;
+        int nano = (int) ((msec % 1000) * 1000000 + nsec % 1000000000);
+        set(Timestamp.ofEpochSecond(sec, nano));
+    }
+
+    //public abstract void set(IRubyObject rubyObject);
 }
