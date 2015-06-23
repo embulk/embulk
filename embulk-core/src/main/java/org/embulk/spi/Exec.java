@@ -33,7 +33,6 @@ public class Exec
     {
         ExecSession session = Exec.session.get();
         if (session == null) {
-            new NullPointerException().printStackTrace();
             throw new NullPointerException("Exec is used outside of Exec.doWith");
         }
         return session;
