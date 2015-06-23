@@ -19,6 +19,9 @@ public interface CommitReport
     public CommitReport setAll(DataSource other);
 
     @Override
+    public CommitReport remove(String attrName);
+
+    @Override
     public CommitReport deepCopy();
 
     @Override

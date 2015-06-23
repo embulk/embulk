@@ -2,7 +2,8 @@ package org.embulk.spi;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.TimestampType;
 
@@ -10,43 +11,55 @@ public class ColumnConfig
 {
     private final String name;
     private final Type type;
-    private final String format;
+    private final ConfigSource options;
 
     @JsonCreator
-    public ColumnConfig(
-            @JsonProperty("name") String name,
-            @JsonProperty("type") Type type,
-            @JsonProperty("format") String format)
+    public ColumnConfig(ConfigSource config)
     {
-        this.name = name;
-        this.type = type;
-        this.format = format;
+        this.name = config.get(String.class, "name");
+        this.type = config.get(Type.class, "type");
+        this.options = config.deepCopy();
+        this.options.remove("name");
+        this.options.remove("type");
     }
 
-    @JsonProperty("name")
     public String getName()
     {
         return name;
     }
 
-    @JsonProperty("type")
     public Type getType()
     {
         return type;
     }
 
-    @JsonProperty("format")
+    public ConfigSource getOptions()
+    {
+        return options;
+    }
+
+    @Deprecated
     public String getFormat()
     {
-        return format;
+        return options.get(String.class, "format", null);
+    }
+
+    @JsonValue
+    public ConfigSource getConfigSource()
+    {
+        ConfigSource config = options.deepCopy();
+        config.set("name", name);
+        config.set("type", type);
+        return config;
     }
 
     public Column toColumn(int index)
     {
+        String format = getFormat();
         if (type instanceof TimestampType && format != null) {
-            return new Column(index, name, ((TimestampType) type).withFormat(format));
+            return new Column(index, name, ((TimestampType) type).withFormat(format), options);
         } else {
-            return new Column(index, name, type);
+            return new Column(index, name, type, options);
         }
     }
 
@@ -73,7 +86,7 @@ public class ColumnConfig
     @Override
     public String toString()
     {
-        return String.format("ColumnConfig[%s, %s]",
-                getName(), getType());
+        return String.format("ColumnConfig[%s, %s, %s]",
+                getName(), getType(), options.toString());
     }
 }

@@ -115,10 +115,17 @@ public class DataSourceImpl
     public DataSourceImpl set(String attrName, Object v)
     {
         if (v == null) {
-            data.remove(attrName);
+            remove(attrName);
         } else {
             data.put(attrName, model.writeObjectAsJsonNode(v));
         }
+        return this;
+    }
+
+    @Override
+    public DataSourceImpl remove(String attrName)
+    {
+        data.remove(attrName);
         return this;
     }
 

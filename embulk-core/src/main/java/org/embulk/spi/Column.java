@@ -2,7 +2,8 @@ package org.embulk.spi;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
+import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
@@ -15,34 +16,57 @@ public class Column
     private final int index;
     private final String name;
     private final Type type;
+    private final ConfigSource options;
 
     @JsonCreator
-    public Column(
-            @JsonProperty("index") int index,
-            @JsonProperty("name") String name,
-            @JsonProperty("type") Type type)
+    public Column(ConfigSource config)
+    {
+        this.index = config.get(int.class, "index");
+        this.name = config.get(String.class, "name");
+        this.type = config.get(Type.class, "type");
+        this.options = config.deepCopy();
+        this.options.remove("index");
+        this.options.remove("name");
+        this.options.remove("type");
+    }
+
+    public Column(int index, String name, Type type,
+            ConfigSource options)
     {
         this.index = index;
         this.name = name;
         this.type = type;
+        this.options = options;
     }
 
-    @JsonProperty("index")
     public int getIndex()
     {
         return index;
     }
 
-    @JsonProperty("name")
     public String getName()
     {
         return name;
     }
 
-    @JsonProperty("type")
     public Type getType()
     {
         return type;
+    }
+
+    public ConfigSource getOptions()
+    {
+        return options;
+    }
+
+    @JsonValue
+    public ConfigSource getConfigSource()
+    {
+        ConfigSource config = options.deepCopy();
+        config.set("index", index);
+        config.set("name", name);
+        config.set("type", type);
+        return config;
     }
 
     public void visit(ColumnVisitor visitor)
@@ -86,7 +110,7 @@ public class Column
     @Override
     public String toString()
     {
-        return String.format("Column{index:%d, name:%s, type:%s}",
-                getIndex(), getName(), getType().getName());
+        return String.format("Column{index:%d, name:%s, type:%s, options:%s}",
+                getIndex(), getName(), getType().getName(), options.toString());
     }
 }

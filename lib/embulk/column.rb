@@ -1,15 +1,20 @@
 module Embulk
 
-  class Column < Struct.new(:index, :name, :type, :format)
+  class Column < Struct.new(:index, :name, :type, :options)
     def initialize(*args)
       if args.length == 1 && args[0].is_a?(Hash)
         # initialize(hash)
-        hash = args.first
-        super(hash[:index], hash[:name], hash[:type], hash[:format])
+        options = args.first.dup
+        super(options.delete(:index), options.delete(:name), options.delete(:type), DataSource.new(options))
       else
-        # initialize(index, name, type, format)
-        super(*args)
+        # initialize(index, name, type, options)
+        super(args[0], args[1], args[2], DataSource.new(args[3] || {}))
       end
+    end
+
+    # obsoleted
+    def format
+      options[:format]
     end
 
     def to_json(*args)
@@ -23,21 +28,21 @@ module Embulk
     if Embulk.java?
       def self.from_java(java_column)
         type = Type.from_java(java_column.getType)
+        options = {}
         if type == :timestamp
-          format = java_column.getType.getFormat
-        else
-          format = nil
+          options[:format] = java_column.getType.getFormat
         end
 
-        Column.new(java_column.getIndex, java_column.getName, type, format)
+        Column.new(java_column.getIndex, java_column.getName, type, options)
       end
 
       def to_java
         if type == :timestamp && format
-          Java::Column.new(index, name, Type.new_java_type(type).withFormat(format))
+          t = Type.new_java_type(type)
         else
-          Java::Column.new(index, name, Type.new_java_type(type))
+          t = Type.new_java_type(type)
         end
+        Java::Column.new(index, name, t.to_java, options.to_java)
       end
     end
   end

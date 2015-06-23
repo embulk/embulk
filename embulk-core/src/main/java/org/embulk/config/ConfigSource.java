@@ -21,6 +21,9 @@ public interface ConfigSource
     public ConfigSource setAll(DataSource other);
 
     @Override
+    public ConfigSource remove(String attrName);
+
+    @Override
     public ConfigSource deepCopy();
 
     @Override

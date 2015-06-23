@@ -21,6 +21,9 @@ public interface TaskSource
     public TaskSource setAll(DataSource other);
 
     @Override
+    public TaskSource remove(String attrName);
+
+    @Override
     public TaskSource deepCopy();
 
     @Override
