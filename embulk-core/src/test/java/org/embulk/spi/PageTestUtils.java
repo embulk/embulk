@@ -2,7 +2,7 @@ package org.embulk.spi;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import com.google.common.collect.ImmutableList;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Column;
@@ -11,8 +11,7 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.type.Type;
-
-import com.google.common.collect.ImmutableList;
+import org.embulk.spi.Exec;
 
 public class PageTestUtils
 {
@@ -37,7 +36,7 @@ public class PageTestUtils
 
     public static ColumnConfig newColumn(String name, Type type)
     {
-        return new ColumnConfig(name, type, null);
+        return new ColumnConfig(name, type, Exec.newConfigSource());
     }
 
     public static List<Page> buildPage(BufferAllocator bufferAllocator,

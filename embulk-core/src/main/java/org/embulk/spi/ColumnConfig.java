@@ -23,6 +23,14 @@ public class ColumnConfig
         this.options.remove("type");
     }
 
+    public ColumnConfig(String name, Type type,
+            ConfigSource options)
+    {
+        this.name = name;
+        this.type = type;
+        this.options = options;
+    }
+
     public String getName()
     {
         return name;
