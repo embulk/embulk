@@ -9,7 +9,6 @@ import org.embulk.config.ConfigDefault;
 import org.jruby.Ruby;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
-import org.jruby.util.RubyDateParser.FormatBag;
 import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
@@ -56,12 +55,8 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        FormatBag bag = parser.parseInternal(compiledPattern, text);
-        if (bag == null) {
-            throw new TimestampParseException();
-        }
+        LocalTime local = parser.parseInternal(compiledPattern, text).makeLocalTime();
 
-        LocalTime local = bag.makeLocalTime();
         String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
