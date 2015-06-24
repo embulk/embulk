@@ -1,5 +1,7 @@
 package org.embulk.spi.util.dynamic;
 
+import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.RubyNil;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyInteger;
 import org.jruby.RubyFloat;
@@ -38,44 +40,41 @@ public abstract class AbstractDynamicColumnSetter
 
     public abstract void set(Timestamp value);
 
-    public void set(RubyBoolean rubyObject)
+    public IRubyObject setRubyObject(IRubyObject rubyObject)
     {
-        set(rubyObject.isTrue());
-    }
-
-    public void set(RubyInteger rubyObject)
-    {
-        try {
-            set(rubyObject.getLongValue());
-        } catch (RaiseException ex) {
-            // integer is too large
-            if ("RangeError".equals(ex.getException().getMetaClass().getBaseName())) {
-                // TODO setDefaultValue();
-                throw ex;
-            } else {
-                throw ex;
+        if (rubyObject instanceof RubyNil) {
+            setNull();
+        } else if (rubyObject instanceof RubyBoolean) {
+            RubyBoolean b = (RubyBoolean) rubyObject;
+            set(b.isTrue());
+        } else if (rubyObject instanceof RubyInteger) {
+            RubyInteger i = (RubyInteger) rubyObject;
+            try {
+                set(i.getLongValue());
+            } catch (RaiseException ex) {
+                if ("RangeError".equals(ex.getException().getMetaClass().getBaseName())) {
+                    // integer is too large
+                    throw ex;  //TODO setDefaultValue();
+                } else {
+                    throw ex;
+                }
             }
+        } else if (rubyObject instanceof RubyFloat) {
+            RubyFloat f = (RubyFloat) rubyObject;
+            set(f.getDoubleValue());
+        } else if (rubyObject instanceof RubyString) {
+            RubyString s = (RubyString) rubyObject;
+            set(s.asJavaString());
+        } else if (rubyObject instanceof RubyTime) {
+            RubyTime time = (RubyTime) rubyObject;
+            long msec = time.getDateTime().getMillis();
+            long nsec = time.getNSec();
+            long sec = msec / 1000 + nsec / 1000000000;
+            int nano = (int) ((msec % 1000) * 1000000 + nsec % 1000000000);
+            set(Timestamp.ofEpochSecond(sec, nano));
+        } else {
+            throw rubyObject.getRuntime().newTypeError("cannot convert instance of " + rubyObject.getMetaClass() + " to nil, true, false, Integer, Float, String, or Time");
         }
+        return rubyObject.getRuntime().getNil();
     }
-
-    public void set(RubyFloat rubyObject)
-    {
-        set(rubyObject.getDoubleValue());
-    }
-
-    public void set(RubyString rubyObject)
-    {
-        set(rubyObject.asJavaString());
-    }
-
-    public void set(RubyTime rubyObject)
-    {
-        long msec = rubyObject.getDateTime().getMillis();
-        long nsec = rubyObject.getNSec();
-        long sec = msec / 1000 + nsec / 1000000000;
-        int nano = (int) ((msec % 1000) * 1000000 + nsec % 1000000000);
-        set(Timestamp.ofEpochSecond(sec, nano));
-    }
-
-    //public abstract void set(IRubyObject rubyObject);
 }

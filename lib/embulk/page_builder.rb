@@ -1,13 +1,47 @@
 module Embulk
 
+  org.embulk.spi.util.dynamic.AbstractDynamicColumnSetter.module_eval do
+    alias_method(:set, :setRubyObject)
+  end
+
   class PageBuilder
     def initialize(schema, java_page_output)
-      @page_builder = Java::PageBuilder.new(Java::Injected::BufferAllocator, schema.to_java, java_page_output)
+      # TODO get task as an argument
+      task = Java::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
+      @page_builder = Java::DynamicPageBuilder.new(task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
       @schema = schema
     end
 
     def add(record)
-      @schema.write_record(@page_builder, record)
+      i = 0
+      m = record.size
+      while i < m
+        @page_builder.column(i).set(record[i])
+        i += 1
+      end
+      @page_builder.addRecord
+      nil
+    end
+
+    def column(index_or_column)
+      case index_or_column
+      when Integer
+        @page_builder.column(index_or_column)
+      when Column
+        @page_builder.column(index_or_column.to_java)
+      else
+        @page_builder.lookupColumn(index_or_column)
+      end
+    end
+
+    alias [] column
+
+    def add!
+      @page_builder.add_record
+    end
+
+    def flush
+      @page_builder.flush
     end
 
     def finish

@@ -2,8 +2,16 @@ package org.embulk.spi.util;
 
 import java.util.List;
 import java.util.Map;
+import com.google.common.base.Optional;
+import org.joda.time.DateTimeZone;
+import org.jruby.embed.ScriptingContainer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigInject;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Column;
 import org.embulk.spi.BufferAllocator;
@@ -11,6 +19,7 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampParser;
+import org.embulk.spi.time.TimestampFormat;
 
 public class DynamicPageBuilder
 {
@@ -19,13 +28,42 @@ public class DynamicPageBuilder
     private final List<DynamicColumnSetter> setters;
     private final Map<String, DynamicColumnSetter> columnLookup;
 
-    public DynamicPageBuilder(BufferAllocator allocator, Schema schema, PageOutput output)
+    public static interface BuilderTask
+            extends Task
+    {
+        @Config("default_timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getDefaultTimeZone();
+
+        @Config("column_options")
+        @ConfigDefault("{}")
+        public Map<String, ConfigSource> getColumnOptions();
+
+        // required by TimestampFormatter
+        @ConfigInject
+        public ScriptingContainer getJRuby();
+    }
+
+    public static interface ColumnOption
+            extends Task
+    {
+        @Config("timestamp_format")
+        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
+        public TimestampFormat getTimestampFormat();
+
+        @Config("timezone")
+        @ConfigDefault("null")
+        public Optional<DateTimeZone> getTimeZone();
+    }
+
+    public DynamicPageBuilder(BuilderTask task,
+            BufferAllocator allocator, Schema schema, PageOutput output)
     {
         this.pageBuilder = new PageBuilder(allocator, schema, output);
         this.schema = schema;
 
-        // TODO default value
-        DynamicColumnSetterFactory factory = new DynamicColumnSetterFactory(
+        // TODO configurable default value
+        DynamicColumnSetterFactory factory = new DynamicColumnSetterFactory(task,
                 DynamicColumnSetterFactory.nullDefaultValue());
 
         ImmutableList.Builder<DynamicColumnSetter> setters = ImmutableList.builder();
