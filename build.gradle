@@ -6,8 +6,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
 
-def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli")]
-def release_projects = [project(":embulk-core"), project(":embulk-standards")]
+def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli"), project(":embulk-jruby-extension")]
+def release_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-jruby-extension")]
 
 allprojects {
     group = 'org.embulk'

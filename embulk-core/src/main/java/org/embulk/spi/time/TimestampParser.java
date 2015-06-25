@@ -6,7 +6,14 @@ import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;
+import org.jruby.Ruby;
+import org.jruby.util.RubyDateFormatter;
+import org.jruby.util.RubyDateParser;
+import org.jruby.util.RubyDateParser.FormatBag;
+import org.jruby.util.RubyDateParser.LocalTime;
+
+import java.util.List;
+
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
@@ -22,8 +29,11 @@ public class TimestampParser
         public ScriptingContainer getJRuby();
     }
 
-    private final JRubyTimeParserHelper helper;
     private final DateTimeZone defaultTimeZone;
+
+    private final String format;
+    private final RubyDateParser parser;
+    private final List<RubyDateFormatter.Token> compiledPattern;
 
     public TimestampParser(String format, ParserTask task)
     {
@@ -38,17 +48,23 @@ public class TimestampParser
     // TODO this is still private because this might need current time
     private TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
-        JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("Embulk::Java::TimeParserHelper::Factory.new");
         // TODO get default current time from ExecTask.getExecTimestamp
-        this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, 1970, 1, 1, 0, 0, 0, 0);  // TODO default time zone
+        Ruby runtime = jruby.getProvider().getRuntime();
+        this.format = format;
+        this.parser = new RubyDateParser(runtime.getCurrentContext());
+        this.compiledPattern = this.parser.compilePattern(runtime.newString(format), true);
         this.defaultTimeZone = defaultTimeZone;
     }
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        long localUsec = helper.strptimeUsec(text);
-        String zone = helper.getZone();
+        FormatBag bag = parser.parseInternal(compiledPattern, text);
+        if (bag == null) {
+            throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
+        }
 
+        LocalTime local = bag.makeLocalTime();
+        String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
             // TODO cache parsed zone?
@@ -58,10 +74,8 @@ public class TimestampParser
             }
         }
 
-        long localSec = localUsec / 1000000;
-        long usec = localUsec % 1000000;
-        long sec = timeZone.convertLocalToUTC(localSec*1000, false) / 1000;
+        long sec = timeZone.convertLocalToUTC(local.getSeconds()*1000, false) / 1000;
 
-        return Timestamp.ofEpochSecond(sec, usec * 1000);
+        return Timestamp.ofEpochSecond(sec, local.getNsecFraction());
     }
 }
