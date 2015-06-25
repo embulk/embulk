@@ -132,6 +132,7 @@ module Embulk
       private
 
       def split_lines(parser_config, skip_empty_lines, sample_lines, delim, extra_config)
+        null_string = parser_config["null_string"]
         config = parser_config.merge(extra_config).merge({"charset" => "UTF-8", "columns" => []})
         parser_task = config.load_config(org.embulk.standards.CsvParserPlugin::PluginTask)
         data = sample_lines.map {|line| line.force_encoding('UTF-8') }.join(parser_task.getNewline.getString.encode('UTF-8'))
@@ -147,7 +148,9 @@ module Embulk
                 begin
                   column = tokenizer.nextColumn
                   quoted = tokenizer.wasQuotedColumn
-                  column.define_singleton_method(:quoted?) { quoted }
+                  if null_string && !quoted && column == null_string
+                    column = nil
+                  end
                   columns << column
                 rescue org.embulk.standards.CsvTokenizer::TooFewColumnsException
                   rows << columns
