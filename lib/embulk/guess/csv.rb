@@ -60,13 +60,24 @@ module Embulk
           # don't even set null_string to avoid confusion of null and 'null' in YAML format
         end
 
-        comment_line_marker, sample_lines =
-          guess_comment_line_marker(sample_lines, parser_guessed["quote"], parser_guessed["null_string"])
-
-        sample_records = split_lines(parser_guessed, sample_lines, delim, {})
-
+        # guessing skip_header_lines should be before guessing guess_comment_line_marker
+        # because lines supplied to CsvTokenizer already don't include skipped header lines.
+        # skipping empty lines is also disabled here because skipping header lines is done by
+        # CsvParser which doesn't skip empty lines automatically
+        sample_records = split_lines(parser_guessed, false, sample_lines, delim, {})
         skip_header_lines = guess_skip_header_lines(sample_records)
+        sample_lines = sample_lines[skip_header_lines..-1]
         sample_records = sample_records[skip_header_lines..-1]
+
+        unless parser_guessed.has_key?("comment_line_marker")
+          comment_line_marker, sample_lines =
+            guess_comment_line_marker(sample_lines, delim, parser_guessed["quote"], parser_guessed["null_string"])
+          if comment_line_marker
+            parser_guessed["comment_line_marker"] = comment_line_marker
+          end
+        end
+
+        sample_records = split_lines(parser_guessed, true, sample_lines, delim, {})
 
         first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
         other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
@@ -76,15 +87,15 @@ module Embulk
           return {}
         end
 
-        sample_records_trimmed = split_lines(parser_guessed, sample_lines, delim, {"trim_if_not_quoted" => true})
-        sample_records_trimmed = sample_records_trimmed[skip_header_lines..-1]
-
-        other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
-        if other_types != other_types_trimmed
-          parser_guessed["trim_if_not_quoted"] = true
-          other_types = other_types_trimmed
-        elsif !parser_guessed.has_key?("trim_if_not_quoted")
-          parser_guessed["trim_if_not_quoted"] = false
+        unless parser_guessed.has_key?("trim_if_not_quoted")
+          sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
+          other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
+          if other_types != other_types_trimmed
+            parser_guessed["trim_if_not_quoted"] = true
+            other_types = other_types_trimmed
+          else
+            parser_guessed["trim_if_not_quoted"] = false
+          end
         end
 
         header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) })
@@ -93,10 +104,6 @@ module Embulk
           parser_guessed["skip_header_lines"] = skip_header_lines + 1
         else
           parser_guessed["skip_header_lines"] = skip_header_lines
-        end
-
-        if comment_line_marker
-          parser_guessed["comment_line_marker"] = comment_line_marker
         end
 
         parser_guessed["allow_extra_columns"] = false unless parser_guessed.has_key?("allow_extra_columns")
@@ -124,7 +131,7 @@ module Embulk
 
       private
 
-      def split_lines(parser_config, sample_lines, delim, extra_config)
+      def split_lines(parser_config, skip_empty_lines, sample_lines, delim, extra_config)
         config = parser_config.merge(extra_config).merge({"charset" => "UTF-8", "columns" => []})
         parser_task = config.load_config(org.embulk.standards.CsvParserPlugin::PluginTask)
         data = sample_lines.map {|line| line.force_encoding('UTF-8') }.join(parser_task.getNewline.getString.encode('UTF-8'))
@@ -133,7 +140,7 @@ module Embulk
         tokenizer = org.embulk.standards.CsvTokenizer.new(decoder, parser_task)
         rows = []
         while tokenizer.nextFile
-          while tokenizer.nextRecord
+          while tokenizer.nextRecord(skip_empty_lines)
             begin
               columns = []
               while true
@@ -243,10 +250,10 @@ module Embulk
         return 0
       end
 
-      def guess_comment_line_marker(sample_lines, quote_char, null_string)
+      def guess_comment_line_marker(sample_lines, delim, quote, null_string)
         exclude = []
-        exclude << /^#{Regexp.escape(quote_char)}/ if quote_char
-        exclude << /^#{Regexp.escape(null_string)}/ if null_string
+        exclude << /^#{Regexp.escape(quote)}/ if quote && !quote.empty?
+        exclude << /^#{Regexp.escape(null_string)}(?:#{Regexp.escape(delim)}|$)/ if null_string
 
         guessed = COMMENT_LINE_MARKER_CANDIDATES.map do |str|
           regexp = /^#{Regexp.quote(str)}/
