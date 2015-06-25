@@ -80,14 +80,20 @@ public class CsvTokenizer
         return input.nextFile();
     }
 
+    // used by guess-csv
     public boolean nextRecord()
+    {
+        return nextRecord(true);
+    }
+
+    public boolean nextRecord(boolean skipEmptyLine)
     {
         // If at the end of record, read the next line and initialize the state
         if (recordState != RecordState.END) {
             throw new TooManyColumnsException("Too many columns");
         }
 
-        boolean hasNext = nextLine(true);
+        boolean hasNext = nextLine(skipEmptyLine);
         if (hasNext) {
             recordState = RecordState.NOT_END;
             return true;
