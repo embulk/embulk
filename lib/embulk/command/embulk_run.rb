@@ -261,7 +261,19 @@ examples:
 
       ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
       Dir.chdir(path) do
-        require 'bundler'
+        begin
+          require 'bundler'
+        rescue LoadError
+          require 'rubygems/gem_runner'
+          begin
+            puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: installing bundler..."
+            Gem::GemRunner.new.run %w[install bundler]
+          rescue Gem::SystemExitException => e
+            raise e if e.exit_code != 0
+          end
+          Gem.clear_paths
+          require 'bundler'
+        end
         require 'bundler/friendly_errors'
         require 'bundler/cli'
         Bundler.with_friendly_errors do
