@@ -18,7 +18,11 @@ if bundle_path
   Gem.clear_paths  # force rubygems to reload GEM_HOME
 
   ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(bundle_path, "Gemfile")
-  require 'bundler'
+  begin
+    require 'bundler'
+  rescue LoadError => e
+    raise "#{e}\nBundler is not installed. Did you run \`$ embulk bundle #{bundle_path}\` ?"
+  end
   Bundler.load.setup_environment
   require 'bundler/setup'
   # since here, `require` may load files of different (newer) embulk versions
