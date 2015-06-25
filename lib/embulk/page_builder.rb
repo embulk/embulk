@@ -34,7 +34,18 @@ module Embulk
       end
     end
 
-    alias [] column
+    #alias [] column
+
+    def column_or_skip(index_or_column)
+      case index_or_column
+      when Integer
+        @page_builder.column_or_skip(index_or_column)
+      when Column
+        @page_builder.column(index_or_column.to_java)
+      else
+        @page_builder.column_or_skip(index_or_column)
+      end
+    end
 
     def add!
       @page_builder.add_record

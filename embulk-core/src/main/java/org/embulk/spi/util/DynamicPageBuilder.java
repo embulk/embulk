@@ -20,8 +20,10 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampFormat;
+import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
 public class DynamicPageBuilder
+        implements AutoCloseable
 {
     private final PageBuilder pageBuilder;
     private final Schema schema;
@@ -89,6 +91,9 @@ public class DynamicPageBuilder
 
     public DynamicColumnSetter column(int index)
     {
+        if (index < 0 || setters.size() <= index) {
+            throw new DynamicColumnNotFoundException("Column index '"+index+"' is not exist");
+        }
         return setters.get(index);
     }
 
@@ -96,7 +101,24 @@ public class DynamicPageBuilder
     {
         DynamicColumnSetter setter = columnLookup.get(columnName);
         if (setter == null) {
-            throw new DynamicColumnNotFoundException("Column '"+columnName+"' does not exist");
+            throw new DynamicColumnNotFoundException("Column '"+columnName+"' is not exist");
+        }
+        return setter;
+    }
+
+    public DynamicColumnSetter columnOrSkip(int index)
+    {
+        if (index < 0 || setters.size() <= index) {
+            return SkipColumnSetter.get();
+        }
+        return setters.get(index);
+    }
+
+    public DynamicColumnSetter columnOrSkip(String columnName)
+    {
+        DynamicColumnSetter setter = columnLookup.get(columnName);
+        if (setter == null) {
+            return SkipColumnSetter.get();
         }
         return setter;
     }
@@ -116,6 +138,7 @@ public class DynamicPageBuilder
         pageBuilder.finish();
     }
 
+    @Override
     public void close()
     {
         pageBuilder.close();
