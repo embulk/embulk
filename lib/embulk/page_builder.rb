@@ -23,25 +23,34 @@ module Embulk
       nil
     end
 
+    def [](index_or_column)
+      case index_or_column
+      when Integer
+        @page_builder.column_or_null(index_or_column)
+      when Column
+        @page_builder.column_or_null(index_or_column.index)
+      else
+        @page_builder.column_or_null(index_or_column)
+      end
+    end
+
     def column(index_or_column)
       case index_or_column
       when Integer
         @page_builder.column(index_or_column)
       when Column
-        @page_builder.column(index_or_column.to_java)
+        @page_builder.column(index_or_column.index)
       else
         @page_builder.lookupColumn(index_or_column)
       end
     end
-
-    #alias [] column
 
     def column_or_skip(index_or_column)
       case index_or_column
       when Integer
         @page_builder.column_or_skip(index_or_column)
       when Column
-        @page_builder.column(index_or_column.to_java)
+        @page_builder.column_or_skip(index_or_column.index)
       else
         @page_builder.column_or_skip(index_or_column)
       end

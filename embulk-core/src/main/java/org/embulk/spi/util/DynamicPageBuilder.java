@@ -123,6 +123,21 @@ public class DynamicPageBuilder
         return setter;
     }
 
+    // for jruby
+    protected DynamicColumnSetter columnOrNull(int index)
+    {
+        if (index < 0 || setters.size() <= index) {
+            return null;
+        }
+        return setters.get(index);
+    }
+
+    // for jruby
+    protected DynamicColumnSetter columnOrNull(String columnName)
+    {
+        return columnLookup.get(columnName);
+    }
+
     public void addRecord()
     {
         pageBuilder.addRecord();
