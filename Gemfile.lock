@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    embulk (0.4.5)
+    embulk (0.6.12)
 
 GEM
   remote: https://rubygems.org/

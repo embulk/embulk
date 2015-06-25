@@ -35,8 +35,7 @@ public class TimestampParser
         return defaultTimeZone;
     }
 
-    // TODO this is still private because this might need current time
-    private TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
+    public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
         JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("Embulk::Java::TimeParserHelper::Factory.new");
         // TODO get default current time from ExecTask.getExecTimestamp

@@ -21,6 +21,7 @@ module Embulk::Java
   java_import 'org.embulk.spi.TransactionalPageOutput'
   java_import 'org.embulk.spi.PageReader'
   java_import 'org.embulk.spi.PageBuilder'
+  java_import 'org.embulk.spi.util.DynamicPageBuilder'
   java_import 'org.embulk.spi.util.LineDecoder'
   java_import 'org.embulk.spi.util.ListFileInput'
   java_import 'org.embulk.spi.Schema'
@@ -30,6 +31,7 @@ module Embulk::Java
   java_import 'org.embulk.spi.PluginClassLoader'
   java_import 'org.embulk.spi.FileInputRunner'
   java_import 'org.embulk.spi.FileOutputRunner'
+  java_import 'org.embulk.spi.Exec'
 
   # TODO
 end
