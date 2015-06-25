@@ -9,6 +9,7 @@ import org.embulk.config.ConfigDefault;
 import org.jruby.Ruby;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
+import org.jruby.util.RubyDateParser.FormatBag;
 import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class TimestampParser
 
     private final DateTimeZone defaultTimeZone;
 
+    private final String format;
     private final RubyDateParser parser;
     private final List<RubyDateFormatter.Token> compiledPattern;
 
@@ -48,6 +50,7 @@ public class TimestampParser
     {
         // TODO get default current time from ExecTask.getExecTimestamp
         Ruby runtime = jruby.getProvider().getRuntime();
+        this.format = format;
         this.parser = new RubyDateParser(runtime.getCurrentContext());
         this.compiledPattern = this.parser.compilePattern(runtime.newString(format), true);
         this.defaultTimeZone = defaultTimeZone;
@@ -55,8 +58,12 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        LocalTime local = parser.parseInternal(compiledPattern, text).makeLocalTime();
+        FormatBag bag = parser.parseInternal(compiledPattern, text);
+        if (bag == null) {
+            throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
+        }
 
+        LocalTime local = bag.makeLocalTime();
         String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
