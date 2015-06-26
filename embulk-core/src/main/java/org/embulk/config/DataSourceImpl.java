@@ -123,6 +123,13 @@ public class DataSourceImpl
     }
 
     @Override
+    public DataSourceImpl remove(String attrName)
+    {
+        data.remove(attrName);
+        return this;
+    }
+
+    @Override
     public DataSourceImpl setNested(String attrName, DataSource v)
     {
         data.put(attrName, v.getObjectNode());

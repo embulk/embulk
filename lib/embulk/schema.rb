@@ -9,7 +9,7 @@ module Embulk
           # TODO ignore this error?
           raise "Index of column '#{c.name}' is #{c.index} but it is at column #{index}."
         end
-        Column.new(index, c.name, c.type, c.format)
+        Column.new(index, c.name, c.type, {format: c.format})
       }
       super(columns)
 

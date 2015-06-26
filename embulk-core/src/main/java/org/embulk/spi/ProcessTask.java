@@ -151,11 +151,7 @@ public class ProcessTask
                     {
                         public ColumnConfig apply(Column c)
                         {
-                            if (c.getType() instanceof TimestampType) {
-                                return new ColumnConfig(c.getName(), c.getType(), ((TimestampType) c.getType()).getFormat());
-                            } else {
-                                return new ColumnConfig(c.getName(), c.getType(), null);
-                            }
+                            return new ColumnConfig(c.getConfigSource());
                         }
                     }
                 ));
