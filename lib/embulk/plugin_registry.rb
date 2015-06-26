@@ -66,7 +66,7 @@ module Embulk
         specs = specs.sort_by {|spec| spec.version }
         if spec = specs.last
           spec.require_paths.each do |lib|
-            require_and_show "#{spec.full_gem_path}/#{lib}/#{name}"
+            require_and_show "#{spec.full_gem_path}/#{lib}/#{name}", spec
           end
           return true
         end
@@ -75,17 +75,21 @@ module Embulk
       return false
     end
 
-    def require_and_show(name)
-      require name
-      show_loaded_gems
-    end
-
-    def show_loaded_gems
-      Gem.loaded_specs.each do |name,spec|
-        if !@loaded_gems[name] && name =~ /^embulk/
-          Embulk.logger.info "Loaded plugin #{name} (#{spec.version})"
-          @loaded_gems[name] = true
+    def require_and_show(path, spec=nil)
+      require path
+      unless spec
+        name, spec = Gem.loaded_specs.find {|name,spec|
+          #spec.files.include?(path)
+          spec.contains_requirable_file?(path)
+        }
+      end
+      if spec
+        unless @loaded_gems[spec.name]
+          Embulk.logger.info "Loaded plugin #{spec.name} (#{spec.version})"
+          @loaded_gems[spec.name]
         end
+      else
+        Embulk.logger.info "Loaded plugin #{path} from a load path"
       end
     end
   end
