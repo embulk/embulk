@@ -19,6 +19,9 @@ public interface ConfigDiff
     public ConfigDiff setAll(DataSource other);
 
     @Override
+    public ConfigDiff remove(String attrName);
+
+    @Override
     public ConfigDiff deepCopy();
 
     @Override

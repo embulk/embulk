@@ -27,6 +27,8 @@ public interface DataSource
 
     public DataSource setAll(DataSource other);
 
+    public DataSource remove(String attrName);
+
     public DataSource deepCopy();
 
     public DataSource merge(DataSource other);

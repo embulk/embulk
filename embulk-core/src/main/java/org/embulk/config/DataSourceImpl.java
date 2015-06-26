@@ -115,7 +115,7 @@ public class DataSourceImpl
     public DataSourceImpl set(String attrName, Object v)
     {
         if (v == null) {
-            data.remove(attrName);
+            remove(attrName);
         } else {
             data.put(attrName, model.writeObjectAsJsonNode(v));
         }
@@ -135,6 +135,13 @@ public class DataSourceImpl
         for (Map.Entry<String, JsonNode> field : other.getAttributes()) {
             data.put(field.getKey(), field.getValue());
         }
+        return this;
+    }
+
+    @Override
+    public DataSourceImpl remove(String attrName)
+    {
+        data.remove(attrName);
         return this;
     }
 
