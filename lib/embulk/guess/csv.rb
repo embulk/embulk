@@ -35,13 +35,17 @@ module Embulk
       def guess_lines(config, sample_lines)
         return {} unless config.fetch("parser", {}).fetch("type", "csv") == "csv"
 
-        delim = guess_delimiter(sample_lines)
-        unless delim
-          # not CSV file
-          return {}
+        parser_config = config["parser"] || {}
+        if parser_config["type"] == "csv" && parser_config["delimiter"]
+          delim = parser_config["delimiter"]
+        else
+          delim = guess_delimiter(sample_lines)
+          unless delim
+            # not CSV file
+            return {}
+          end
         end
 
-        parser_config = config["parser"] || {}
         parser_guessed = DataSource.new.merge(parser_config).merge({"type" => "csv", "delimiter" => delim})
 
         unless parser_guessed.has_key?("quote")
