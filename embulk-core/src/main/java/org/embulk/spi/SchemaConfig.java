@@ -2,9 +2,11 @@ package org.embulk.spi;
 
 import java.util.List;
 import java.util.Objects;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.embulk.spi.type.Type;
 
 public class SchemaConfig
 {
@@ -20,6 +22,46 @@ public class SchemaConfig
     public List<ColumnConfig> getColumns()
     {
         return columns;
+    }
+
+    public int size()
+    {
+        return columns.size();
+    }
+
+    public int getColumnCount()
+    {
+        return columns.size();
+    }
+
+    public ColumnConfig getColumn(int index)
+    {
+        return columns.get(index);
+    }
+
+    public String getColumnName(int index)
+    {
+        return getColumn(index).getName();
+    }
+
+    public Type getColumnType(int index)
+    {
+        return getColumn(index).getType();
+    }
+
+    public boolean isEmpty()
+    {
+        return columns.isEmpty();
+    }
+
+    public ColumnConfig lookupColumn(String name)
+    {
+        for (ColumnConfig c : columns) {
+            if (c.getName().equals(name)) {
+                return c;
+            }
+        }
+        throw new SchemaConfigException(String.format("Column '%s' is not found", name));
     }
 
     public Schema toSchema()

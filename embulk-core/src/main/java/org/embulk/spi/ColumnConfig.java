@@ -3,24 +3,37 @@ package org.embulk.spi;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.TimestampType;
+import org.embulk.spi.Exec;
 
 public class ColumnConfig
 {
     private final String name;
     private final Type type;
-    private final String format;
+    private final ConfigSource option;
+
+    @Deprecated
+    public ColumnConfig(String name, Type type, String format)
+    {
+        this.name = name;
+        this.type = type;
+        this.option = Exec.newConfigSource();  // only for backward compatibility
+        if (format != null) {
+            option.set("format", format);
+        }
+    }
 
     @JsonCreator
     public ColumnConfig(
             @JsonProperty("name") String name,
             @JsonProperty("type") Type type,
-            @JsonProperty("format") String format)
+            @JsonProperty("option") ConfigSource option)
     {
         this.name = name;
         this.type = type;
-        this.format = format;
+        this.option = option;
     }
 
     @JsonProperty("name")
@@ -35,15 +48,23 @@ public class ColumnConfig
         return type;
     }
 
-    @JsonProperty("format")
+    @JsonProperty("option")
+    public ConfigSource getOption()
+    {
+        return option;
+    }
+
+    @Deprecated
     public String getFormat()
     {
-        return format;
+        return option.get(String.class, "format", null);
     }
 
     public Column toColumn(int index)
     {
+        String format = option.get(String.class, "format", null);
         if (type instanceof TimestampType && format != null) {
+            // this behavior is only for backward compatibility. TimestampType#getFormat is @Deprecated
             return new Column(index, name, ((TimestampType) type).withFormat(format));
         } else {
             return new Column(index, name, type);
@@ -61,7 +82,8 @@ public class ColumnConfig
         }
         ColumnConfig other = (ColumnConfig) obj;
         return Objects.equals(this.name, other.name) &&
-            Objects.equals(type, other.type);
+            Objects.equals(type, other.type) &&
+            Objects.equals(option, other.option);
     }
 
     @Override

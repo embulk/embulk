@@ -22,12 +22,14 @@ public class TimestampType
         this.format = format;
     }
 
+    @Deprecated
     public TimestampType withFormat(String format)
     {
         // TODO is this correct design...?
         return new TimestampType(format);
     }
 
+    @Deprecated
     public String getFormat()
     {
         if (format == null) {

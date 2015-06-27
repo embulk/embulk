@@ -26,11 +26,13 @@ public class TimestampFormat
         return format;
     }
 
+    @Deprecated
     public TimestampFormatter newFormatter(TimestampFormatter.FormatterTask task)
     {
         return new TimestampFormatter(format, task);
     }
 
+    @Deprecated
     public TimestampParser newParser(TimestampParser.ParserTask task)
     {
         return new TimestampParser(format, task);

@@ -2,6 +2,7 @@ package org.embulk.standards;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.joda.time.DateTimeZone;
 import org.junit.Rule;
 import org.junit.Test;
 import java.lang.reflect.InvocationTargetException;
@@ -32,6 +33,8 @@ public class TestCsvFormatterPlugin
         assertEquals(CsvFormatterPlugin.QuotePolicy.MINIMAL, task.getQuotePolicy());
         assertEquals(false, task.getEscapeChar().isPresent());
         assertEquals("", task.getNullString());
+        assertEquals(DateTimeZone.UTC, task.getDefaultTimeZone());
+        assertEquals("%Y-%m-%d %H:%M:%S.%6N %z", task.getDefaultTimestampFormat());
         assertEquals(Newline.LF, task.getNewlineInField());
     }
 
