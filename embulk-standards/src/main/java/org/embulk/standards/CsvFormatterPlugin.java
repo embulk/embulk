@@ -112,6 +112,7 @@ public class CsvFormatterPlugin
                 Optional<TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
                 formatters[i] = new TimestampFormatter(formatterTask, option);
             }
+            i++;
         }
         return formatters;
     }
