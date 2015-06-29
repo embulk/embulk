@@ -88,6 +88,13 @@ public class CsvParserPlugin
         @Config("allow_extra_columns")
         @ConfigDefault("false")
         public boolean getAllowExtraColumns();
+
+        @Config("error")
+        @ConfigDefault("{\"type\": \"warning\"}")
+        public ConfigSource getErrorConfig();
+
+        public TaskSource getErorrTaskSource();
+        public void setErrorTaskSource(TaskSource errorTask);
     }
 
     public interface TimestampColumnOption
