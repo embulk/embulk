@@ -91,7 +91,7 @@ public class PreviewExecutor
 
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, int taskCount)
+                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount)
                 {
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
@@ -103,8 +103,16 @@ public class PreviewExecutor
 
                             PageOutput out = new SamplingPageOutput(task.getSampleRows(), outputSchema);
                             try {
-                                out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
-                                input.run(inputTask, inputSchema, 0, out);
+                                for (int taskIndex=0; taskIndex < taskCount; taskIndex++) {
+                                    try {
+                                        out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
+                                        input.run(inputTask, inputSchema, taskIndex, out);
+                                    } catch (NoSampleException ex) {
+                                        if (taskIndex == taskCount - 1) {
+                                            throw ex;
+                                        }
+                                    }
+                                }
                             } finally {
                                 out.close();
                             }
@@ -133,6 +141,11 @@ public class PreviewExecutor
             this.sampleRows = sampleRows;
             this.schema = schema;
             this.pages = new ArrayList<Page>();
+        }
+
+        public int getRecordCount()
+        {
+            return recordCount;
         }
 
         @Override
