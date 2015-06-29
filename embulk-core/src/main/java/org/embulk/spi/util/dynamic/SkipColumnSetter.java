@@ -47,8 +47,6 @@ public class SkipColumnSetter
     { }
 
     @Override
-    public IRubyObject setRubyObject(IRubyObject rubyObject)
-    {
-        return rubyObject.getRuntime().getNil();
-    }
+    public void setRubyObject(IRubyObject rubyObject)
+    { }
 }

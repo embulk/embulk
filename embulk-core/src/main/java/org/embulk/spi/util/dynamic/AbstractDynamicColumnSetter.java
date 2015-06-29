@@ -40,9 +40,9 @@ public abstract class AbstractDynamicColumnSetter
 
     public abstract void set(Timestamp value);
 
-    public IRubyObject setRubyObject(IRubyObject rubyObject)
+    public void setRubyObject(IRubyObject rubyObject)
     {
-        if (rubyObject instanceof RubyNil) {
+        if (rubyObject == null || rubyObject instanceof RubyNil) {
             setNull();
         } else if (rubyObject instanceof RubyBoolean) {
             RubyBoolean b = (RubyBoolean) rubyObject;
@@ -75,6 +75,5 @@ public abstract class AbstractDynamicColumnSetter
         } else {
             throw rubyObject.getRuntime().newTypeError("cannot convert instance of " + rubyObject.getMetaClass() + " to nil, true, false, Integer, Float, String, or Time");
         }
-        return rubyObject.getRuntime().getNil();
     }
 }
