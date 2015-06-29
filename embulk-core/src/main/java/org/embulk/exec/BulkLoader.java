@@ -320,7 +320,7 @@ public class BulkLoader
         public ResumeState buildResumeState(ExecSession exec)
         {
             return new ResumeState(
-                    exec.getSessionConfigSource(),
+                    exec.getSessionExecConfig(),
                     inputTaskSource, outputTaskSource,
                     first(schemas), executorSchema,
                     getInputCommitReports(), getOutputCommitReports());
@@ -351,7 +351,7 @@ public class BulkLoader
     public ExecutionResult resume(final ConfigSource config, final ResumeState resume)
     {
         try {
-            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
+            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
             return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
@@ -368,7 +368,7 @@ public class BulkLoader
     public void cleanup(final ConfigSource config, final ResumeState resume)
     {
         try {
-            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
+            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
             Exec.doWith(exec, new ExecAction<Void>() {
                 public Void run()
                 {

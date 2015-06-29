@@ -294,7 +294,8 @@ public class Runner
 
     private ExecSession newExecSession(ConfigSource config)
     {
-        return new ExecSession(injector, config.getNestedOrSetEmpty("exec"));
+        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
+        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 
     private static class MapType extends HashMap<String, Object> {

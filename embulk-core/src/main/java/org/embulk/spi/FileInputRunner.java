@@ -81,7 +81,7 @@ public class FileInputRunner
         }
 
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
-        return guessExecutor.guessParserConfig(sample, config, Exec.session().getExecConfig());
+        return guessExecutor.guessParserConfig(sample, config, Exec.session().getSessionExecConfig());
     }
 
     private class RunnerControl

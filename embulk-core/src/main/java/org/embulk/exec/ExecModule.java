@@ -16,6 +16,7 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.util.CharsetSerDe;
+import org.embulk.spi.unit.LocalFileSerDe;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class ExecModule
@@ -29,6 +30,7 @@ public class ExecModule
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class);
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
+        binder.bind(TempFileAllocator.class).in(Scopes.SINGLETON);
 
         // GuessExecutor
         registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
@@ -43,6 +45,7 @@ public class ExecModule
         DateTimeZoneSerDe.configure(mapper);
         TimestampSerDe.configure(mapper);
         CharsetSerDe.configure(mapper);
+        LocalFileSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda
         mapper.configure(binder);
