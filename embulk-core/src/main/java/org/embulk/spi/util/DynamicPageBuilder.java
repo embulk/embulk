@@ -27,7 +27,7 @@ public class DynamicPageBuilder
 {
     private final PageBuilder pageBuilder;
     private final Schema schema;
-    private final List<DynamicColumnSetter> setters;
+    private final DynamicColumnSetter[] setters;
     private final Map<String, DynamicColumnSetter> columnLookup;
 
     public static interface BuilderTask
@@ -75,7 +75,7 @@ public class DynamicPageBuilder
             setters.add(setter);
             lookup.put(c.getName(), setter);
         }
-        this.setters = setters.build();
+        this.setters = setters.build().toArray(new DynamicColumnSetter[0]);
         this.columnLookup = lookup.build();
     }
 
@@ -86,15 +86,15 @@ public class DynamicPageBuilder
 
     public DynamicColumnSetter column(Column c)
     {
-        return setters.get(c.getIndex());
+        return setters[c.getIndex()];
     }
 
     public DynamicColumnSetter column(int index)
     {
-        if (index < 0 || setters.size() <= index) {
+        if (index < 0 || setters.length <= index) {
             throw new DynamicColumnNotFoundException("Column index '"+index+"' is not exist");
         }
-        return setters.get(index);
+        return setters[index];
     }
 
     public DynamicColumnSetter lookupColumn(String columnName)
@@ -108,10 +108,10 @@ public class DynamicPageBuilder
 
     public DynamicColumnSetter columnOrSkip(int index)
     {
-        if (index < 0 || setters.size() <= index) {
+        if (index < 0 || setters.length <= index) {
             return SkipColumnSetter.get();
         }
-        return setters.get(index);
+        return setters[index];
     }
 
     public DynamicColumnSetter columnOrSkip(String columnName)
@@ -126,10 +126,10 @@ public class DynamicPageBuilder
     // for jruby
     protected DynamicColumnSetter columnOrNull(int index)
     {
-        if (index < 0 || setters.size() <= index) {
+        if (index < 0 || setters.length <= index) {
             return null;
         }
-        return setters.get(index);
+        return setters[index];
     }
 
     // for jruby

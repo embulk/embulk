@@ -39,6 +39,7 @@ public class PageBuilder
         this.schema = schema;
         this.columnOffsets = PageFormat.columnOffsets(schema);
         this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
+        Arrays.fill(nullBitSet, (byte) -1);
         this.fixedRecordSize = PageFormat.recordHeaderSize(schema) + PageFormat.totalColumnSize(schema);
         this.nextVariableLengthDataOffset = fixedRecordSize;
         newBuffer();
@@ -69,6 +70,11 @@ public class PageBuilder
         nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
     }
 
+    private void clearNull(int columnIndex)
+    {
+        nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
+    }
+
     public void setBoolean(Column column, boolean value)
     {
         // TODO check type?
@@ -78,6 +84,7 @@ public class PageBuilder
     public void setBoolean(int columnIndex, boolean value)
     {
         bufferSlice.setByte(getOffset(columnIndex), value ? (byte) 1 : (byte) 0);
+        clearNull(columnIndex);
     }
 
     public void setLong(Column column, long value)
@@ -89,6 +96,7 @@ public class PageBuilder
     public void setLong(int columnIndex, long value)
     {
         bufferSlice.setLong(getOffset(columnIndex), value);
+        clearNull(columnIndex);
     }
 
     public void setDouble(Column column, double value)
@@ -100,6 +108,7 @@ public class PageBuilder
     public void setDouble(int columnIndex, double value)
     {
         bufferSlice.setDouble(getOffset(columnIndex), value);
+        clearNull(columnIndex);
     }
 
     public void setString(Column column, String value)
@@ -119,6 +128,7 @@ public class PageBuilder
             bufferSlice.setInt(getOffset(columnIndex), index);
             stringReferenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
         }
+        clearNull(columnIndex);
     }
 
     public void setTimestamp(Column column, Timestamp value)
@@ -132,6 +142,7 @@ public class PageBuilder
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
         bufferSlice.setInt(offset + 8, value.getNano());
+        clearNull(columnIndex);
     }
 
     private int getOffset(int columnIndex)
@@ -175,7 +186,7 @@ public class PageBuilder
 
         this.position += nextVariableLengthDataOffset;
         this.nextVariableLengthDataOffset = fixedRecordSize;
-        Arrays.fill(nullBitSet, (byte) 0);
+        Arrays.fill(nullBitSet, (byte) -1);
 
         // flush if next record will not fit in this buffer
         if (buffer.capacity() < position + nextVariableLengthDataOffset + stringReferenceSize) {
