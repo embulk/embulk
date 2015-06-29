@@ -117,11 +117,11 @@ public class TestFileInputRunner
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
                 ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "boolean"),
-                        ImmutableMap.of("name", "col2", "type", "long"),
-                        ImmutableMap.of("name", "col3", "type", "double"),
-                        ImmutableMap.of("name", "col4", "type", "string"),
-                        ImmutableMap.of("name", "col5", "type", "timestamp"))));
+                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
         runner.transaction(config, new InputPlugin.Control()
@@ -167,11 +167,11 @@ public class TestFileInputRunner
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
                 ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "boolean"),
-                        ImmutableMap.of("name", "col2", "type", "long"),
-                        ImmutableMap.of("name", "col3", "type", "double"),
-                        ImmutableMap.of("name", "col4", "type", "string"),
-                        ImmutableMap.of("name", "col5", "type", "timestamp"))));
+                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
 

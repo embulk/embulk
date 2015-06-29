@@ -41,12 +41,10 @@ public class TestCsvTokenizer
         config = Exec.newConfigSource()
             .set("newline", "LF")
             .set("columns", ImmutableList.of(
-                        ImmutableMap.of(
-                            "name", "date_code",
-                            "type", "string"),
-                        ImmutableMap.of(
-                            "name", "foo",
-                            "type", "string"))
+                        ImmutableMap.<String,Object>of(
+                            "name", "date_code", "type", "string", "option", ImmutableMap.of()),
+                        ImmutableMap.<String,Object>of(
+                            "name", "foo", "type", "string", "option", ImmutableMap.of()))
                 );
         reloadPluginTask();
     }

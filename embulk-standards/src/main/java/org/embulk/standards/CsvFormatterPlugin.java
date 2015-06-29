@@ -8,6 +8,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
@@ -47,7 +48,7 @@ public class CsvFormatterPlugin
     }
 
     public interface PluginTask
-            extends LineEncoder.EncoderTask, TimestampFormatter.FormatterTask
+            extends Task, LineEncoder.EncoderTask, TimestampFormatter.Task
     {
         @Config("header_line")
         @ConfigDefault("true")
@@ -76,27 +77,43 @@ public class CsvFormatterPlugin
         @Config("newline_in_field")
         @ConfigDefault("\"LF\"")
         public Newline getNewlineInField();
+
+        @Config("column_options")
+        @ConfigDefault("{}")
+        public Map<String, TimestampColumnOption> getColumnOptions();
     }
+
+    public interface TimestampColumnOption
+            extends Task, TimestampFormatter.TimestampColumnOption
+    { }
 
     @Override
     public void transaction(ConfigSource config, Schema schema,
             FormatterPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
+
+        // validate column_options
+        for (String columnName : task.getColumnOptions().keySet()) {
+            schema.lookupColumn(columnName);  // throws SchemaConfigException
+        }
+
         control.run(task.dump());
     }
 
-    private Map<Integer, TimestampFormatter> newTimestampFormatters(
-            TimestampFormatter.FormatterTask task, Schema schema)
+    private TimestampFormatter[] newTimestampFormatters(
+            TimestampFormatter.Task formatterTask, Schema schema,
+            Map<String, TimestampColumnOption> columnOptions)
     {
-        ImmutableMap.Builder<Integer, TimestampFormatter> builder = new ImmutableBiMap.Builder<>();
+        TimestampFormatter[] formatters = new TimestampFormatter[schema.getColumnCount()];
+        int i = 0;
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
-                TimestampType tt = (TimestampType) column.getType();
-                builder.put(column.getIndex(), new TimestampFormatter(tt.getFormat(), task));
+                Optional<TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
+                formatters[i] = new TimestampFormatter(formatterTask, option);
             }
         }
-        return builder.build();
+        return formatters;
     }
 
     @Override
@@ -105,8 +122,7 @@ public class CsvFormatterPlugin
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final LineEncoder encoder = new LineEncoder(output, task);
-        final Map<Integer, TimestampFormatter> timestampFormatters =
-                newTimestampFormatters(task, schema);
+        final TimestampFormatter[] timestampFormatters = newTimestampFormatters(task, schema, task.getColumnOptions());
         final char delimiter = task.getDelimiterChar();
         final QuotePolicy quotePolicy = task.getQuotePolicy();
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
@@ -176,7 +192,7 @@ public class CsvFormatterPlugin
                             addDelimiter(column);
                             if (!pageReader.isNull(column)) {
                                 Timestamp value = pageReader.getTimestamp(column);
-                                addValue(timestampFormatters.get(column.getIndex()).format(value));
+                                addValue(timestampFormatters[column.getIndex()].format(value));
                             } else {
                                 addNullString();
                             }

@@ -9,9 +9,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.type.TimestampType;
+import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampParseException;
 import org.embulk.spi.Column;
+import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.ColumnVisitor;
@@ -35,7 +37,7 @@ public class CsvParserPlugin
                 "1");
 
     public interface PluginTask
-            extends Task, LineDecoder.DecoderTask, TimestampParser.ParserTask
+            extends Task, LineDecoder.DecoderTask, TimestampParser.Task
     {
         @Config("columns")
         public SchemaConfig getSchemaConfig();
@@ -88,6 +90,10 @@ public class CsvParserPlugin
         public boolean getAllowExtraColumns();
     }
 
+    public interface TimestampColumnOption
+            extends Task, TimestampParser.TimestampColumnOption
+    { }
+
     private final Logger log;
 
     public CsvParserPlugin()
@@ -116,14 +122,16 @@ public class CsvParserPlugin
     }
 
     private TimestampParser[] newTimestampParsers(
-            TimestampParser.ParserTask task, Schema schema)
+            TimestampParser.Task parserTask, SchemaConfig schema)
     {
         TimestampParser[] parsers = new TimestampParser[schema.getColumnCount()];
-        for (Column column : schema.getColumns()) {
+        int i = 0;
+        for (ColumnConfig column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
-                TimestampType tt = (TimestampType) column.getType();
-                parsers[column.getIndex()] = new TimestampParser(tt.getFormat(), task);
+                TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
+                parsers[i] = new TimestampParser(parserTask, option);
             }
+            i++;
         }
         return parsers;
     }
@@ -133,7 +141,7 @@ public class CsvParserPlugin
             FileInput input, PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        final TimestampParser[] timestampFormatters = newTimestampParsers(task, schema);
+        final TimestampParser[] timestampFormatters = newTimestampParsers(task, task.getSchemaConfig());
         LineDecoder lineDecoder = new LineDecoder(input, task);
         final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
         final String nullStringOrNull = task.getNullString().orNull();

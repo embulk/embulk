@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import static org.embulk.spi.PageTestUtils.newColumn;
-import static org.embulk.spi.PageTestUtils.newSchema;
 import static org.embulk.spi.type.Types.BOOLEAN;
 import static org.embulk.spi.type.Types.DOUBLE;
 import static org.embulk.spi.type.Types.LONG;
@@ -77,66 +75,81 @@ public class TestPageBuilderReader
     @Test
     public void testBoolean()
     {
-        check(newSchema(newColumn("col1", BOOLEAN)), false, true, true);
+        check(Schema.builder().add("col1", BOOLEAN).build(),
+                false, true, true);
     }
 
     @Test
     public void testLong()
     {
-        check(newSchema(newColumn("col1", LONG)), 1L, Long.MIN_VALUE,
-                Long.MAX_VALUE);
+        check(Schema.builder().add("col1", LONG).build(),
+                1L, Long.MIN_VALUE, Long.MAX_VALUE);
     }
 
     @Test
     public void testDouble()
     {
-        check(newSchema(newColumn("col1", DOUBLE)), 8.1, 3.141592, 4.3);
+        check(Schema.builder().add("col1", DOUBLE).build(),
+                8.1, 3.141592, 4.3);
     }
 
     @Test
     public void testUniqueStrings()
     {
-        check(newSchema(newColumn("col1", STRING)), "test1", "test2", "test0");
+        check(Schema.builder().add("col1", STRING).build(),
+                "test1", "test2", "test0");
     }
 
     @Test
     public void testDuplicateStrings()
     {
-        check(newSchema(newColumn("col1", STRING)), "test1", "test1", "test1");
+        check(Schema.builder().add("col1", STRING).build(),
+            "test1", "test1", "test1");
     }
 
     @Test
     public void testDuplicateStringsMultiColumns()
     {
-        check(newSchema(newColumn("col1", STRING), newColumn("col1", STRING)),
-                "test2", "test1", "test1", "test2", "test2", "test0", "test1",
-                "test1");
+        check(Schema.builder().add("col1", STRING).add("col1", STRING).build(),
+                "test2", "test1",
+                "test1", "test2",
+                "test2", "test0",
+                "test1", "test1");
     }
 
     @Test
     public void testTimestamp()
     {
-        check(newSchema(newColumn("col1", TIMESTAMP)),
+        check(Schema.builder().add("col1", TIMESTAMP).build(),
                 Timestamp.ofEpochMilli(0), Timestamp.ofEpochMilli(10));
     }
 
     @Test
     public void testNull()
     {
-        check(newSchema(newColumn("col3", DOUBLE), newColumn("col1", STRING),
-                newColumn("col3", LONG), newColumn("col3", BOOLEAN),
-                newColumn("col2", TIMESTAMP)), null, null, null, null, null,
+        check(Schema.builder()
+                    .add("col3", DOUBLE)
+                    .add("col1", STRING)
+                    .add("col3", LONG)
+                    .add("col3", BOOLEAN)
+                    .add("col2", TIMESTAMP)
+                    .build(),
+                null, null, null, null, null,
                 null, null, null, null, null);
     }
 
     @Test
     public void testMixedTypes()
     {
-        check(newSchema(newColumn("col3", DOUBLE), newColumn("col1", STRING),
-                newColumn("col3", LONG), newColumn("col3", BOOLEAN),
-                newColumn("col2", TIMESTAMP)), 8122.0, "val1", 3L, false,
-                Timestamp.ofEpochMilli(0), 140.15, "val2", Long.MAX_VALUE,
-                true, Timestamp.ofEpochMilli(10));
+        check(Schema.builder()
+                    .add("col3", DOUBLE)
+                    .add("col1", STRING)
+                    .add("col3", LONG)
+                    .add("col3", BOOLEAN)
+                    .add("col2", TIMESTAMP)
+                    .build(),
+                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0),
+                140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10));
     }
 
     private void check(Schema schema, Object... objects)
@@ -218,12 +231,12 @@ public class TestPageBuilderReader
     public void testEmptySchema()
     {
         MockPageOutput output = new MockPageOutput();
-        this.builder = new PageBuilder(bufferAllocator, newSchema(), output);
+        this.builder = new PageBuilder(bufferAllocator, Schema.builder().build(), output);
         builder.addRecord();
         builder.addRecord();
         builder.flush();
         builder.close();
-        this.reader = new PageReader(newSchema());
+        this.reader = new PageReader(Schema.builder().build());
         assertEquals(1, output.pages.size());
         reader.setPage(output.pages.get(0));
         assertTrue(reader.nextRecord());
@@ -250,8 +263,8 @@ public class TestPageBuilderReader
         };
         assertEquals(
                 9,
-                buildPages(newSchema(newColumn("col1", LONG)), 0L, 1L, 2L, 3L,
-                        4L, 5L, 6L, 7L, 8L).size());
+                buildPages(Schema.builder().add("col1", LONG).build(),
+                    0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L).size());
     }
 
     @Test
@@ -274,17 +287,22 @@ public class TestPageBuilderReader
         assertEquals(
                 3,
                 buildPages(
-                        newSchema(newColumn("col1", LONG),
-                                newColumn("col1", STRING)), 0L, "record0", 1L,
-                        "record1", 3L, "record3").size());
+                        Schema.builder()
+                            .add("col1", LONG)
+                            .add("col1", STRING)
+                            .build(),
+                        0L, "record0",
+                        1L, "record1",
+                        3L, "record3"
+                ).size());
     }
 
     @Test
     public void testRepeatableClose()
     {
         MockPageOutput output = new MockPageOutput();
-        this.builder = new PageBuilder(bufferAllocator, newSchema(newColumn(
-                "col1", STRING)), output);
+        this.builder = new PageBuilder(bufferAllocator,
+                Schema.builder().add("col1", STRING).build(), output);
         builder.close();
         builder.close();
     }
@@ -293,8 +311,8 @@ public class TestPageBuilderReader
     public void testRepeatableFlush()
     {
         MockPageOutput output = new MockPageOutput();
-        this.builder = new PageBuilder(bufferAllocator, newSchema(newColumn(
-                "col1", STRING)), output);
+        this.builder = new PageBuilder(bufferAllocator,
+                Schema.builder().add("col1", STRING).build(), output);
         builder.flush();
         builder.flush();
     }

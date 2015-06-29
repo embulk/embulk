@@ -2,12 +2,35 @@ package org.embulk.spi;
 
 import java.util.List;
 import java.util.Objects;
+import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.spi.type.Type;
 
 public class Schema
 {
+    public static class Builder
+    {
+        private final ImmutableList.Builder<Column> columns = ImmutableList.builder();
+        private int index = 0;  // next version of Guava will have ImmutableList.Builder.size()
+
+        public synchronized Builder add(String name, Type type)
+        {
+            columns.add(new Column(index++, name, type));
+            return this;
+        }
+
+        public Schema build()
+        {
+            return new Schema(columns.build());
+        }
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
     private final List<Column> columns;
 
     @JsonCreator
@@ -20,6 +43,11 @@ public class Schema
     public List<Column> getColumns()
     {
         return columns;
+    }
+
+    public int size()
+    {
+        return columns.size();
     }
 
     public int getColumnCount()
@@ -54,9 +82,14 @@ public class Schema
         return columns.isEmpty();
     }
 
-    public int size()
+    public Column lookupColumn(String name)
     {
-        return columns.size();
+        for (Column c : columns) {
+            if (c.getName().equals(name)) {
+                return c;
+            }
+        }
+        throw new SchemaConfigException(String.format("Column '%s' is not found", name));
     }
 
     public int getFixedStorageSize()

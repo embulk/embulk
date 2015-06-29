@@ -18,7 +18,7 @@ abstract class PageFormat
 
     static int nullBitSetSize(Schema schema)
     {
-        return (schema.size() + 7) / 8;
+        return (schema.getColumnCount() + 7) / 8;
     }
 
     static int recordHeaderSize(Schema schema)
@@ -33,11 +33,11 @@ abstract class PageFormat
 
     static int[] columnOffsets(Schema schema)
     {
-        int[] offsets = new int[schema.size()];
+        int[] offsets = new int[schema.getColumnCount()];
 
         if (!schema.isEmpty()) {
             offsets[0] = recordHeaderSize(schema);
-            for (int i=0; i < schema.size()-1; i++) {
+            for (int i=0; i < schema.getColumnCount()-1; i++) {
                 offsets[i+1] = offsets[i] + schema.getColumnType(i).getFixedStorageSize();
             }
         }
