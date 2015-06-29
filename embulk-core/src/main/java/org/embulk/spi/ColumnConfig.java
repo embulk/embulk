@@ -3,6 +3,7 @@ package org.embulk.spi;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.TimestampType;
@@ -25,33 +26,45 @@ public class ColumnConfig
         }
     }
 
-    @JsonCreator
-    public ColumnConfig(
-            @JsonProperty("name") String name,
-            @JsonProperty("type") Type type,
-            @JsonProperty("option") ConfigSource option)
+    public ColumnConfig(String name, Type type, ConfigSource option)
     {
         this.name = name;
         this.type = type;
         this.option = option;
     }
 
-    @JsonProperty("name")
+    @JsonCreator
+    public ColumnConfig(ConfigSource conf)
+    {
+        this.name = conf.get(String.class, "name");
+        this.type = conf.get(Type.class, "type");
+        this.option = conf.deepCopy();
+        option.remove("name");
+        option.remove("type");
+    }
+
     public String getName()
     {
         return name;
     }
 
-    @JsonProperty("type")
     public Type getType()
     {
         return type;
     }
 
-    @JsonProperty("option")
     public ConfigSource getOption()
     {
         return option;
+    }
+
+    @JsonValue
+    public ConfigSource getConfigSource()
+    {
+        ConfigSource conf = option.deepCopy();
+        conf.set("name", name);
+        conf.set("type", type);
+        return conf;
     }
 
     @Deprecated
