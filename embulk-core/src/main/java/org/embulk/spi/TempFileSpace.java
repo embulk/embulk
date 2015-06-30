@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.io.File;
 import java.io.IOException;
+import com.google.common.base.Preconditions;
 
 public class TempFileSpace
 {
@@ -13,6 +14,7 @@ public class TempFileSpace
 
     public TempFileSpace(File dir)
     {
+        Preconditions.checkArgument(dir != null, "dir is null");
         this.dir = dir;
     }
 
@@ -39,11 +41,16 @@ public class TempFileSpace
         }
     }
 
-    public void clean()
+    public void cleanup()
     {
-        for (File e : dir.listFiles()) {
-            e.delete();
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File e : files) {
+                e.delete();
+                // TODO delete directory recursively
+            }
         }
         dir.delete();
+        dirCreated = false;
     }
 }

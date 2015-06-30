@@ -352,7 +352,7 @@ public class BulkLoader
     {
         try {
             ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
-            return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+            ExecutionResult result = Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
                     try (SetCurrentThreadName dontCare = new SetCurrentThreadName("resume")) {
@@ -360,6 +360,8 @@ public class BulkLoader
                     }
                 }
             });
+            exec.cleanup();
+            return result;
         } catch (ExecutionException ex) {
             throw Throwables.propagate(ex.getCause());
         }
@@ -378,6 +380,7 @@ public class BulkLoader
                     }
                 }
             });
+            exec.cleanup();
         } catch (ExecutionException ex) {
             throw Throwables.propagate(ex.getCause());
         }

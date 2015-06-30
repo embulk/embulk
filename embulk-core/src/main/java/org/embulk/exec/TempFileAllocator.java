@@ -15,7 +15,13 @@ public class TempFileAllocator
     public TempFileAllocator(@ForSystemConfig ConfigSource systemConfig)
     {
         // TODO get `temp_dirs` from system config
-        this.dirs = new File[] { new File(System.getProperty("java.io.tmpdir")) };
+        String s = System.getProperty("java.io.tmpdir");
+        if (s == null || s.isEmpty()) {
+            s = "/tmp";
+        }
+        this.dirs = new File[] {
+            new File(s, "embulk")
+        };
     }
 
     public TempFileSpace newSpace(String subdir)

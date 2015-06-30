@@ -96,6 +96,8 @@ public class EmbulkTestRuntime
                     });
                 } catch (RuntimeException ex) {
                     throw ex.getCause();
+                } finally {
+                    exec.cleanup();
                 }
             }
         };

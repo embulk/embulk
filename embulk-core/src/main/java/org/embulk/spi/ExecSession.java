@@ -23,7 +23,6 @@ import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
 public class ExecSession
-        implements AutoCloseable
 {
     private final Injector injector;
     private final ILoggerFactory loggerFactory;
@@ -205,9 +204,8 @@ public class ExecSession
         return preview;
     }
 
-    @Override
-    public void close()
+    public void cleanup()
     {
-        tempFileSpace.clean();
+        tempFileSpace.cleanup();
     }
 }
