@@ -21,6 +21,7 @@ import org.embulk.spi.PageReader;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
 import org.embulk.spi.util.LineEncoder;
+import org.embulk.spi.util.Timestamps;
 
 import org.embulk.spi.util.Newline;
 import java.util.Map;
@@ -83,10 +84,6 @@ public class CsvFormatterPlugin
         public Map<String, TimestampColumnOption> getColumnOptions();
     }
 
-    public interface TimestampColumnOption
-            extends Task, TimestampFormatter.TimestampColumnOption
-    { }
-
     @Override
     public void transaction(ConfigSource config, Schema schema,
             FormatterPlugin.Control control)
@@ -101,29 +98,13 @@ public class CsvFormatterPlugin
         control.run(task.dump());
     }
 
-    private TimestampFormatter[] newTimestampFormatters(
-            TimestampFormatter.Task formatterTask, Schema schema,
-            Map<String, TimestampColumnOption> columnOptions)
-    {
-        TimestampFormatter[] formatters = new TimestampFormatter[schema.getColumnCount()];
-        int i = 0;
-        for (Column column : schema.getColumns()) {
-            if (column.getType() instanceof TimestampType) {
-                Optional<TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
-                formatters[i] = new TimestampFormatter(formatterTask, option);
-            }
-            i++;
-        }
-        return formatters;
-    }
-
     @Override
     public PageOutput open(TaskSource taskSource, final Schema schema,
             FileOutput output)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final LineEncoder encoder = new LineEncoder(output, task);
-        final TimestampFormatter[] timestampFormatters = newTimestampFormatters(task, schema, task.getColumnOptions());
+        final TimestampFormatter[] timestampFormatters = Timestamps.newTimestampColumnFormatters(task, schema, task.getColumnOptions());
         final char delimiter = task.getDelimiterChar();
         final QuotePolicy quotePolicy = task.getQuotePolicy();
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
