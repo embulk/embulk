@@ -6,7 +6,8 @@ module Embulk
     def self.classloader(dir)
       jars = Dir["#{dir}/**/*.jar"]
       urls = jars.map {|jar| java.io.File.new(File.expand_path(jar)).toURI.toURL }
-      classloader = Java::PluginClassLoader.new(JRuby.runtime, urls)
+      factory = Java.injector.getInstance(Java::PluginClassLoaderFactory.java_class)
+      factory.create(urls, JRuby.runtime.getJRubyClassLoader())
     end
 
     def self.register_input(name, class_fqdn, jar_dir)
