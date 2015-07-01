@@ -28,10 +28,10 @@ module Embulk::Java
   java_import 'org.embulk.spi.Column'
   java_import 'org.embulk.spi.type.Type'
   java_import 'org.embulk.spi.type.Types'
-  java_import 'org.embulk.spi.PluginClassLoader'
   java_import 'org.embulk.spi.FileInputRunner'
   java_import 'org.embulk.spi.FileOutputRunner'
   java_import 'org.embulk.spi.Exec'
+  java_import 'org.embulk.plugin.PluginClassLoaderFactory'
 
   # TODO
 end

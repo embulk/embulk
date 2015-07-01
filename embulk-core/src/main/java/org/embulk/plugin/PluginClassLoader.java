@@ -1,6 +1,7 @@
-package org.embulk.spi;
+package org.embulk.plugin;
 
 import java.util.List;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -9,33 +10,36 @@ import java.nio.file.Path;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import org.jruby.Ruby;
 
 public class PluginClassLoader
         extends URLClassLoader
 {
-    private static final String[] CHILD_FIRST_PACKAGES = new String[] {
-        "io.netty.",
-        "org.yaml.",
-        "com.ibm.icu.",
-    };
+    private final List<String> parentFirstPackagePrefixes;
+    private final List<String> parentFirstResourcePrefixes;
 
-    private static final String[] CHILD_FIRST_PATHS = new String[] {
-        "io/netty/",
-        "org/yaml/",
-        "com/ibm/icu/",
-    };
-
-    public PluginClassLoader(Ruby pluginJRubyRuntime, List<URL> urls)
-    {
-        this(urls, pluginJRubyRuntime.getJRubyClassLoader());
-    }
-
-    public PluginClassLoader(List<URL> urls, ClassLoader parent)
+    public PluginClassLoader(Collection<URL> urls, ClassLoader parent,
+            Collection<String> parentFirstPackages,
+            Collection<String> parentFirstResources)
     {
         super(urls.toArray(new URL[urls.size()]), parent);
+        this.parentFirstPackagePrefixes = ImmutableList.copyOf(
+                Iterables.transform(parentFirstPackages, new Function<String, String>() {
+                    public String apply(String pkg)
+                    {
+                        return pkg + ".";
+                    }
+                }));
+        this.parentFirstResourcePrefixes = ImmutableList.copyOf(
+                Iterables.transform(parentFirstResources, new Function<String, String>() {
+                    public String apply(String pkg)
+                    {
+                        return pkg + "/";
+                    }
+                }));
     }
 
     public void addPath(Path path)
@@ -62,8 +66,8 @@ public class PluginClassLoader
                 return resolveClass(loadedClass, resolve);
             }
 
-            boolean childFirst = isInChildFirstPackage(name);
-            if (childFirst) {
+            boolean parentFirst = isParentFirstPackage(name);
+            if (!parentFirst) {
                 try {
                     return resolveClass(findClass(name), resolve);
                 } catch (ClassNotFoundException ignored) {
@@ -75,7 +79,7 @@ public class PluginClassLoader
             } catch (ClassNotFoundException ignored) {
             }
 
-            if (!childFirst) {
+            if (parentFirst) {
                 return resolveClass(findClass(name), resolve);
             }
 
@@ -94,7 +98,7 @@ public class PluginClassLoader
     @Override
     public URL getResource(String name)
     {
-        boolean childFirst = isInChildFirstPath(name);
+        boolean childFirst = isParentFirstPath(name);
 
         if (childFirst) {
             URL childUrl = findResource(name);
@@ -124,9 +128,9 @@ public class PluginClassLoader
     {
         List<Iterator<URL>> resources = new ArrayList<>();
 
-        boolean childFirst = isInChildFirstPath(name);
+        boolean parentFirst = isParentFirstPath(name);
 
-        if (childFirst) {
+        if (!parentFirst) {
             Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
             resources.add(childResources);
         }
@@ -134,7 +138,7 @@ public class PluginClassLoader
         Iterator<URL> parentResources = Iterators.forEnumeration(getParent().getResources(name));
         resources.add(parentResources);
 
-        if (!childFirst) {
+        if (parentFirst) {
             Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
             resources.add(childResources);
         }
@@ -142,9 +146,9 @@ public class PluginClassLoader
         return Iterators.asEnumeration(Iterators.concat(resources.iterator()));
     }
 
-    private boolean isInChildFirstPackage(String name)
+    private boolean isParentFirstPackage(String name)
     {
-        for (String pkg : CHILD_FIRST_PACKAGES) {
+        for (String pkg : parentFirstPackagePrefixes) {
             if (name.startsWith(pkg)) {
                 return true;
             }
@@ -152,9 +156,9 @@ public class PluginClassLoader
         return false;
     }
 
-    private boolean isInChildFirstPath(String name)
+    private boolean isParentFirstPath(String name)
     {
-        for (String path : CHILD_FIRST_PATHS) {
+        for (String path : parentFirstResourcePrefixes) {
             if (name.startsWith(path)) {
                 return true;
             }
