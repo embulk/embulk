@@ -1,7 +1,12 @@
 package org.embulk.spi.util;
 
+import java.util.Map;
+import com.google.common.base.Optional;
 import org.embulk.config.Task;
+import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
+import org.embulk.spi.ColumnConfig;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.time.TimestampParser;
@@ -30,19 +35,15 @@ public class Timestamps
         return parsers;
     }
 
-    private interface TimestampColumnOption
-            extends Task, TimestampFormatter.TimestampColumnOption
-    { }
-
     public static TimestampFormatter[] newTimestampColumnFormatters(
             TimestampFormatter.Task formatterTask, Schema schema,
-            Map<String, TimestampColumnOption> columnOptions)
+            Map<String, ? extends TimestampFormatter.TimestampColumnOption> columnOptions)
     {
         TimestampFormatter[] formatters = new TimestampFormatter[schema.getColumnCount()];
         int i = 0;
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
-                Optional<TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
+                Optional<TimestampFormatter.TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
                 formatters[i] = new TimestampFormatter(formatterTask, option);
             }
             i++;

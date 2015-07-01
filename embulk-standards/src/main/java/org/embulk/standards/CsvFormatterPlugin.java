@@ -84,6 +84,10 @@ public class CsvFormatterPlugin
         public Map<String, TimestampColumnOption> getColumnOptions();
     }
 
+    public interface TimestampColumnOption
+            extends Task, TimestampFormatter.TimestampColumnOption
+    { }
+
     @Override
     public void transaction(ConfigSource config, Schema schema,
             FormatterPlugin.Control control)
