@@ -143,6 +143,7 @@ public class Runner
         ExecutionResult result;
         try {
             if (resume != null) {
+                // exec is not used here
                 result = loader.resume(config, resume);
             } else {
                 result = loader.run(exec, config);
@@ -153,6 +154,11 @@ public class Runner
                 exec.getLogger(Runner.class).info("Transaction partially failed. Cleaning up the intermediate data. Use -r option to make it resumable.");
                 try {
                     loader.cleanup(config, partial.getResumeState());
+                } catch (Throwable ex) {
+                    partial.addSuppressed(ex);
+                }
+                try {
+                    exec.cleanup();
                 } catch (Throwable ex) {
                     partial.addSuppressed(ex);
                 }
@@ -169,6 +175,7 @@ public class Runner
         if (options.getResumeStatePath() != null) {
             boolean dontCare = new File(options.getResumeStatePath()).delete();
         }
+        exec.cleanup();
 
         // write next config
         ConfigDiff configDiff = result.getConfigDiff();
@@ -187,7 +194,6 @@ public class Runner
         ConfigSource resumeConfig = loadYamlConfig(resumePath);
         ResumeState resume = resumeConfig.loadConfig(ResumeState.class);
 
-        //ExecSession exec = newExecSession(config);  // not necessary
         BulkLoader loader = injector.getInstance(BulkLoader.class);
         loader.cleanup(config, resume);
 
@@ -200,9 +206,16 @@ public class Runner
         ConfigSource config = loadYamlConfig(partialConfigPath);
         checkFileWritable(options.getNextConfigOutputPath());
 
-        ExecSession exec = newExecSession(config);
-        GuessExecutor guess = injector.getInstance(GuessExecutor.class);
-        ConfigDiff configDiff = guess.guess(exec, config);
+        ConfigDiff configDiff;
+        {
+            ExecSession exec = newExecSession(config);
+            try {
+                GuessExecutor guess = injector.getInstance(GuessExecutor.class);
+                configDiff = guess.guess(exec, config);
+            } finally {
+                exec.cleanup();
+            }
+        }
 
         String yml = writeNextConfig(options.getNextConfigOutputPath(), config, configDiff);
         System.err.println(yml);
@@ -244,10 +257,17 @@ public class Runner
 
     public void preview(String partialConfigPath)
     {
-        ConfigSource config = loadYamlConfig(partialConfigPath);
-        ExecSession exec = newExecSession(config);
-        PreviewExecutor preview = injector.getInstance(PreviewExecutor.class);
-        PreviewResult result = preview.preview(exec, config);
+        PreviewResult result;
+        {
+            ConfigSource config = loadYamlConfig(partialConfigPath);
+            ExecSession exec = newExecSession(config);
+            try {
+                PreviewExecutor preview = injector.getInstance(PreviewExecutor.class);
+                result = preview.preview(exec, config);
+            } finally {
+                exec.cleanup();
+            }
+        }
         ModelManager modelManager = injector.getInstance(ModelManager.class);
 
         PreviewPrinter printer;
@@ -294,7 +314,8 @@ public class Runner
 
     private ExecSession newExecSession(ConfigSource config)
     {
-        return new ExecSession(injector, config.getNestedOrSetEmpty("exec"));
+        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
+        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 
     private static class MapType extends HashMap<String, Object> {

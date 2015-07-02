@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.io.File;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -14,6 +15,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.DataSourceImpl;
+import org.embulk.exec.TempFileAllocator;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 import org.embulk.spi.time.Timestamp;
@@ -28,25 +30,67 @@ public class ExecSession
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
 
-    private final ConfigSource execConfig;
     private final Timestamp transactionTime;
-    private final DateTimeZone transactionTimeZone;
+    private final TempFileSpace tempFileSpace;
 
     private final boolean preview;
 
+    @Deprecated
     public interface SessionTask
             extends Task
     {
         @Config("transaction_time")
         @ConfigDefault("null")
         Optional<Timestamp> getTransactionTime();
-
-        @Config("transaction_time_zone")
-        @ConfigDefault("\"UTC\"")
-        DateTimeZone getTransactionTimeZone();
     }
 
-    public ExecSession(Injector injector, ConfigSource execConfig)
+    public static class Builder
+    {
+        private final Injector injector;
+        private Timestamp transactionTime;
+
+        public Builder(Injector injector)
+        {
+            this.injector = injector;
+        }
+
+        public Builder fromExecConfig(ConfigSource configSource)
+        {
+            this.transactionTime = configSource.get(Timestamp.class, "transaction_time", null);
+            return this;
+        }
+
+        public Builder setTransactionTime(Timestamp timestamp)
+        {
+            this.transactionTime = timestamp;
+            return this;
+        }
+
+        public ExecSession build()
+        {
+            if (transactionTime == null) {
+                transactionTime = Timestamp.ofEpochMilli(System.currentTimeMillis());  // TODO get nanoseconds for default
+            }
+            return new ExecSession(injector, transactionTime);
+        }
+    }
+
+    public static Builder builder(Injector injector)
+    {
+        return new Builder(injector);
+    }
+
+    @Deprecated
+    public ExecSession(Injector injector, ConfigSource configSource)
+    {
+        this(injector,
+                configSource.loadConfig(SessionTask.class).getTransactionTime().or(
+                    Timestamp.ofEpochMilli(System.currentTimeMillis())
+                )
+            );  // TODO get nanoseconds for default
+    }
+
+    private ExecSession(Injector injector, Timestamp transactionTime)
     {
         this.injector = injector;
         this.loggerFactory = injector.getInstance(ILoggerFactory.class);
@@ -54,10 +98,10 @@ public class ExecSession
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
-        this.execConfig = execConfig.deepCopy();
-        SessionTask task = execConfig.loadConfig(SessionTask.class);
-        this.transactionTime = task.getTransactionTime().or(Timestamp.ofEpochMilli(System.currentTimeMillis()));  // TODO get nanoseconds for default
-        this.transactionTimeZone = task.getTransactionTimeZone();
+        this.transactionTime = transactionTime;
+
+        TempFileAllocator tempFileAllocator = injector.getInstance(TempFileAllocator.class);
+        this.tempFileSpace = tempFileAllocator.newSpace(transactionTime.toString());
 
         this.preview = false;
     }
@@ -70,23 +114,21 @@ public class ExecSession
         this.pluginManager = copy.pluginManager;
         this.bufferAllocator = copy.bufferAllocator;
 
-        this.execConfig = copy.execConfig;
         this.transactionTime = copy.transactionTime;
-        this.transactionTimeZone = copy.transactionTimeZone;
+        this.tempFileSpace = copy.tempFileSpace;
 
         this.preview = preview;
     }
 
-    public ExecSession copyForPreview()
+    public ExecSession forPreview()
     {
         return new ExecSession(this, true);
     }
 
-    public ConfigSource getSessionConfigSource()
+    public ConfigSource getSessionExecConfig()
     {
         return newConfigSource()
-            .set("transaction_time", transactionTime)
-            .set("transaction_time_zone", transactionTimeZone);
+            .set("transaction_time", transactionTime);
     }
 
     public Injector getInjector()
@@ -97,11 +139,6 @@ public class ExecSession
     public Timestamp getTransactionTime()
     {
         return transactionTime;
-    }
-
-    public DateTimeZone getTransactionTimeZone()
-    {
-        return transactionTimeZone;
     }
 
     public Logger getLogger(String name)
@@ -122,11 +159,6 @@ public class ExecSession
     public ModelManager getModelManager()
     {
         return modelManager;
-    }
-
-    public ConfigSource getExecConfig()
-    {
-        return execConfig;
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type)
@@ -162,8 +194,18 @@ public class ExecSession
         return new TimestampFormatter(format, formatterTask);
     }
 
+    public TempFileSpace getTempFileSpace()
+    {
+        return tempFileSpace;
+    }
+
     public boolean isPreview()
     {
         return preview;
+    }
+
+    public void cleanup()
+    {
+        tempFileSpace.cleanup();
     }
 }

@@ -88,6 +88,12 @@ public class Exec
         return session().newTaskSource();
     }
 
+    // TODO this method is still beta
+    public static TempFileSpace getTempFileSpace()
+    {
+        return session().getTempFileSpace();
+    }
+
     public static boolean isPreview()
     {
         return session().isPreview();

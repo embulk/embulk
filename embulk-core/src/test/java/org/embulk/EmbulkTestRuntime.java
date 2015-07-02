@@ -52,7 +52,7 @@ public class EmbulkTestRuntime
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
-        this.exec = new ExecSession(injector, execConfig);
+        this.exec = ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 
     public ExecSession getExec()
@@ -96,6 +96,8 @@ public class EmbulkTestRuntime
                     });
                 } catch (RuntimeException ex) {
                     throw ex.getCause();
+                } finally {
+                    exec.cleanup();
                 }
             }
         };

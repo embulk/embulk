@@ -320,7 +320,7 @@ public class BulkLoader
         public ResumeState buildResumeState(ExecSession exec)
         {
             return new ResumeState(
-                    exec.getSessionConfigSource(),
+                    exec.getSessionExecConfig(),
                     inputTaskSource, outputTaskSource,
                     first(schemas), executorSchema,
                     getInputCommitReports(), getOutputCommitReports());
@@ -351,8 +351,8 @@ public class BulkLoader
     public ExecutionResult resume(final ConfigSource config, final ResumeState resume)
     {
         try {
-            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
-            return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
+            ExecutionResult result = Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                 public ExecutionResult run()
                 {
                     try (SetCurrentThreadName dontCare = new SetCurrentThreadName("resume")) {
@@ -360,6 +360,8 @@ public class BulkLoader
                     }
                 }
             });
+            exec.cleanup();
+            return result;
         } catch (ExecutionException ex) {
             throw Throwables.propagate(ex.getCause());
         }
@@ -368,7 +370,7 @@ public class BulkLoader
     public void cleanup(final ConfigSource config, final ResumeState resume)
     {
         try {
-            ExecSession exec = new ExecSession(injector, resume.getExecSessionConfigSource());
+            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
             Exec.doWith(exec, new ExecAction<Void>() {
                 public Void run()
                 {
@@ -378,6 +380,7 @@ public class BulkLoader
                     }
                 }
             });
+            exec.cleanup();
         } catch (ExecutionException ex) {
             throw Throwables.propagate(ex.getCause());
         }

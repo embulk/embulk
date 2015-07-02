@@ -62,13 +62,4 @@ public class Inputs
             }
         };
     }
-
-    public static String formatPath(String pathFormat)
-    {
-        Timestamp timestamp = Exec.session().getTransactionTime();
-        DateTimeZone timezone = Exec.session().getTransactionTimeZone();
-        // newTimestampFormatter (eventually calls org.jruby.util.RubyDateFormat.<init> doesn't throw exceptions
-        TimestampFormatter formatter = Exec.session().newTimestampFormatter(pathFormat, timezone);
-        return formatter.format(timestamp);  // TimestampFormatter.format doesn't throw exceptions
-    }
 }
