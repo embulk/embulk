@@ -30,11 +30,7 @@ public class TaskState
     public void setException(Throwable exception)
     {
         this.started = true;
-        if (exception == null) {
-            this.exception = Optional.absent();
-        } else {
-            this.exception = Optional.of(exception);
-        }
+        this.exception = Optional.fromNullable(exception);
     }
 
     public void resetException()
