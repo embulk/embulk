@@ -16,6 +16,8 @@ import com.github.jrubygradle.JRubyPrepare
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
+    compile project(':embulk-jruby-extension')
+
     compile 'org.embulk:guice-bootstrap:0.1.1'
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.inject:guice:4.0'

@@ -412,6 +412,32 @@ public class RubyDateParser
             return map;
         }
 
+	public boolean setYearIfNotSet(int v)
+	{
+	    return setIfNotSet(year, v);
+	}
+
+	public boolean setMonthIfNotSet(int v)
+	{
+	    return setIfNotSet(mon, v);
+	}
+
+	public boolean setMdayIfNotSet(int v)
+	{
+	    return setIfNotSet(mday, v);
+	}
+
+	private static boolean setIfNotSet(int prop, int v)
+	{
+	    if (has(prop)) {
+		return true;
+	    }
+	    else {
+		prop = v;
+		return false;
+	    }
+	}
+
         private boolean hasSeconds()
         {
             return seconds != Long.MIN_VALUE;
