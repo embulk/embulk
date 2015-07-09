@@ -79,5 +79,9 @@ module Embulk
     def close
       @java_file_input.close
     end
+
+    def to_java
+      @java_file_input
+    end
   end
 end

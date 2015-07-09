@@ -47,6 +47,10 @@ module Embulk
     def close
       @java_file_output.close
     end
+
+    def to_java
+      @java_file_output
+    end
   end
 
 end
