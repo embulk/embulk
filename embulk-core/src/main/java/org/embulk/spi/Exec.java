@@ -10,6 +10,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.time.Timestamp;
 
 public class Exec
 {
@@ -41,6 +42,11 @@ public class Exec
     public static Injector getInjector()
     {
         return session().getInjector();
+    }
+
+    public static Timestamp getTransactionTime()
+    {
+        return session().getTransactionTime();
     }
 
     public static Logger getLogger(String name)
