@@ -26,7 +26,7 @@ echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Next step: [Running example](#running-example)
+Next step: [Running example in 4 commands](#running-example)
 
 ### Windows
 
@@ -38,13 +38,13 @@ You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe:
 PowerShell -Command "& {Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
 ```
 
-Next step: [Running example](#running-example)
+Next step: [Running example in 4 commands](#running-example)
 
 ### Running example
 
 `embulk example` command generates a sample CSV file so that you can try embulk quickly:
 
-```sh
+```
 embulk example ./try1
 embulk guess   ./try1/example.yml -o config.yml
 embulk preview config.yml
@@ -68,7 +68,7 @@ embulk gem list
 
 Embulk bundles some built-in plugins such as `embulk-encoder-gzip` or `embulk-formatter-csv`. You can use those plugins with following configuration file:
 
-```
+```yaml
 in:
   type: file
   path_prefix: "./try1/csv/sample_"
