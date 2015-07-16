@@ -115,6 +115,12 @@ embulk guess  -b ./embulk_bundle ...
 embulk run    -b ./embulk_bundle ...
 ```
 
+## Use cases
+
+* [Scheduled bulk data loading to Elasticsearch + Kibana 4 from CSV files](http://www.embulk.org/docs/recipe/scheduled-csv-load-to-elasticsearch-kibana4.html)
+
+For further details, visit [Embulk documentation](http://www.embulk.org/docs/).
+
 ## Embulk Development
 
 ### Build
