@@ -10,14 +10,7 @@ You can release plugins to share your efforts of data cleaning, error handling, 
 
 # Document
 
-* [Quick Start](#quick-start)
-  * [Using plugins](#using-plugins)
-  * [Using plugin bundle](#using-plugin-bundle)
-  * [Releasing plugins to RubyGems](#releasing-plugins-to-rubygems)
-  * [Resuming a failed transaction](#resuming-a-failed-transaction)
-* [Embulk Development](#embulk-development)
-  * [Build](#build)
-  * [Release](#release)
+Embulk documents: http://www.embulk.org/docs/
 
 ## Quick Start
 
