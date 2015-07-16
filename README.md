@@ -1,12 +1,11 @@
 # What's Embulk?
 
-Embulk is a plugin-based parallel bulk data loader that helps **data transfer** between various **storages**, **databases**, **NoSQL** and **cloud services**.
+Embulk is a parallel bulk data loader that **helps data transfer between various storages, databases, NoSQL and cloud services**.
 
-You can release plugins to share your efforts of data cleaning, error handling, transaction control, and retrying. Packaging efforts into plugins **brings OSS-style development to the data scripts** which **was tend to be one-time adhoc scripts**.
-
-[Embulk, an open-source plugin-based parallel bulk data loader](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed) at Slideshare
+**Embulk supports plugins** to add functions. You can [share the plugins](http://www.embulk.org/plugins/) to keep your custom scripts readable, maintainable, and reusable.
 
 [![Embulk](https://gist.githubusercontent.com/frsyuki/f322a77ee2766a508ba9/raw/e8539b6b4fda1b3357e8c79d3966aa8148dbdbd3/embulk-overview.png)](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed/12)
+[Embulk, an open-source plugin-based parallel bulk data loader](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed) at Slideshare
 
 # Document
 
@@ -83,27 +82,6 @@ out:
     type: csv
 ```
 
-### Using plugin bundle
-
-`embulk bundle` subcommand creates (or updates if already exists) a private (isolated) bundle of a plugins.
-You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
-
-See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
-
-```
-embulk bundle ./embulk_bundle
-embulk guess  -b ./embulk_bundle ...
-embulk run    -b ./embulk_bundle ...
-```
-
-### Releasing plugins to RubyGems
-
-TODO: documents
-
-```
-embulk-plugin-xyz
-```
-
 ### Resuming a failed transaction
 
 Embulk supports resuming failed transactions.
@@ -125,6 +103,18 @@ If you give up on resuming the transaction, you can use `embulk cleanup` subcomm
 embulk cleanup config.yml -r resume-state.yml
 ```
 
+### Using plugin bundle
+
+`embulk bundle` subcommand creates (or updates if already exists) a private (isolated) bundle of a plugins.
+You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
+
+See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
+
+```
+embulk bundle ./embulk_bundle
+embulk guess  -b ./embulk_bundle ...
+embulk run    -b ./embulk_bundle ...
+```
 
 ## Embulk Development
 
