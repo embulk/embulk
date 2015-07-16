@@ -13,40 +13,38 @@ Embulk documents: http://www.embulk.org/docs/
 
 ## Quick Start
 
-The single-file package is the simplest way to try Embulk. You can download the latest embulk-VERSION.jar from [the releases page](https://bintray.com/embulk/maven/embulk/view#files) and run it with java.
-
 ### Linux & Mac & BSD
 
-Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+Embulk is a Java application. Please make sure that [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is installed.
 
 Following 4 commands install embulk to your home directory:
 
-```
+```sh
 curl --create-dirs -o ~/.embulk/bin/embulk -L "http://dl.embulk.org/embulk-latest.jar"
 chmod +x ~/.embulk/bin/embulk
 echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-Next step: [Trying the example](#trying-the-example)
+Next step: [Running example](#running-example)
 
 ### Windows
 
-Embulk is a Java application. Please make sure that you installed [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+Embulk is a Java application. Please make sure that [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is installed.
 
-You can assume the jar file is a .bat file.
+You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe:
 
 ```
 PowerShell -Command "& {Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
 ```
 
-Next step: [Trying the example](#trying-the-example)
+Next step: [Running example](#running-example)
 
-### Trying the example
+### Running example
 
-Let's load a CSV file, for example. `embulk example` subcommand generates a csv file and config file for you.
+`embulk example` command generates a sample CSV file so that you can try embulk quickly:
 
-```
+```sh
 embulk example ./try1
 embulk guess   ./try1/example.yml -o config.yml
 embulk preview config.yml
@@ -72,7 +70,8 @@ Embulk bundles some built-in plugins such as `embulk-encoder-gzip` or `embulk-fo
 
 ```
 in:
-  # ...
+  type: file
+  path_prefix: "./try1/csv/sample_"
 out:
   type: command
   command: "cat - > task.$INDEX.$SEQID.csv.gz"
