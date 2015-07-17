@@ -82,9 +82,8 @@ public class LocalFileOutputPlugin
         final String pathSuffix = task.getFileNameExtension();
         final String sequenceFormat = task.getSequenceFormat();
 
-        final List<String> fileNames = new ArrayList<>();
-
         return new TransactionalFileOutput() {
+            private final List<String> fileNames = new ArrayList<>();
             private int fileIndex = 0;
             private FileOutputStream output = null;
 
@@ -134,7 +133,8 @@ public class LocalFileOutputPlugin
                 closeFile();
             }
 
-            public void abort() { }
+            public void abort()
+            { }
 
             public CommitReport commit()
             {

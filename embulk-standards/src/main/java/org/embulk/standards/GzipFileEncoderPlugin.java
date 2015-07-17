@@ -55,7 +55,6 @@ public class GzipFileEncoderPlugin
                         this.def.setLevel(task.getLevel());
                     }
                 };
-
             }
 
             public void finish() throws IOException

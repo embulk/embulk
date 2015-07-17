@@ -31,10 +31,10 @@ public class GzipFileDecoderPlugin
     }
 
     @Override
-    public FileInput open(TaskSource taskSource, FileInput input)
+    public FileInput open(TaskSource taskSource, FileInput fileInput)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        final FileInputInputStream files = new FileInputInputStream(input);
+        final FileInputInputStream files = new FileInputInputStream(fileInput);
         return new InputStreamFileInput(
                 task.getBufferAllocator(),
                 new InputStreamFileInput.Provider() {

@@ -19,7 +19,13 @@ public class InputStreamFileInput
         public void close() throws IOException;
     }
 
-    public static class IteratorProvider implements Provider {
+    public interface Opener
+    {
+        public InputStream open() throws IOException;
+    }
+
+    public static class IteratorProvider implements Provider
+    {
         private Iterator<InputStream> iterator;
 
         public IteratorProvider(Iterable<InputStream> iterable)
@@ -32,6 +38,7 @@ public class InputStreamFileInput
             this.iterator = iterator;
         }
 
+        @Override
         public InputStream openNext() throws IOException
         {
             if (!iterator.hasNext()) {
@@ -49,6 +56,61 @@ public class InputStreamFileInput
         }
     }
 
+    private static class OpenerProvider implements Provider
+    {
+        private Opener opener;
+
+        public OpenerProvider(Opener opener)
+        {
+            this.opener = opener;
+        }
+
+        @Override
+        public InputStream openNext() throws IOException
+        {
+            if (opener == null) {
+                return null;
+            }
+            InputStream stream = opener.open();
+            opener = null;
+            return stream;
+        }
+
+        @Override
+        public void close() throws IOException
+        { }
+    }
+
+    private static class InputStreamProvider implements Provider
+    {
+        private InputStream input;
+
+        public InputStreamProvider(InputStream input)
+        {
+            this.input = input;
+        }
+
+        @Override
+        public InputStream openNext() throws IOException
+        {
+            if (input == null) {
+                return null;
+            }
+            InputStream ret = input;
+            input = null;
+            return ret;
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            if (input != null) {
+                input.close();
+                input = null;
+            }
+        }
+    }
+
     private final BufferAllocator allocator;
     private final Provider provider;
     private InputStream current;
@@ -58,6 +120,16 @@ public class InputStreamFileInput
         this.allocator = allocator;
         this.provider = provider;
         this.current = null;
+    }
+
+    public InputStreamFileInput(BufferAllocator allocator, Opener opener)
+    {
+        this(allocator, new OpenerProvider(opener));
+    }
+
+    public InputStreamFileInput(BufferAllocator allocator, InputStream openedStream)
+    {
+        this(allocator, new InputStreamProvider(openedStream));
     }
 
     public Buffer poll()

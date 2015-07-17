@@ -28,7 +28,7 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.TransactionalFileInput;
-import org.embulk.spi.util.InputStreamFileInput;
+import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
 
 public class LocalFileInputPlugin
@@ -177,52 +177,28 @@ public class LocalFileInputPlugin
     @Override
     public TransactionalFileInput open(TaskSource taskSource, int taskIndex)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
-        return new LocalFileInput(task, taskIndex);
-    }
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
 
-    public static class LocalFileInput
-            extends InputStreamFileInput
-            implements TransactionalFileInput
-    {
-        // TODO create single-file InputStreamFileInput utility
-        private static class SingleFileProvider
-                implements InputStreamFileInput.Provider
+        final File file = new File(task.getFiles().get(taskIndex));
+
+        return new InputStreamTransactionalFileInput(
+                task.getBufferAllocator(),
+                new InputStreamTransactionalFileInput.Opener() {
+                    public InputStream open() throws IOException
+                    {
+                        return new FileInputStream(file);
+                    }
+                })
         {
-            private final File file;
-            private boolean opened = false;
-
-            public SingleFileProvider(File file)
-            {
-                this.file = file;
-            }
+            @Override
+            public void abort()
+            { }
 
             @Override
-            public InputStream openNext() throws IOException
+            public CommitReport commit()
             {
-                if (opened) {
-                    return null;
-                }
-                opened = true;
-                return new FileInputStream(file);
+                return Exec.newCommitReport();
             }
-
-            @Override
-            public void close() { }
-        }
-
-        public LocalFileInput(PluginTask task, int taskIndex)
-        {
-            super(task.getBufferAllocator(), new SingleFileProvider(new File(task.getFiles().get(taskIndex))));
-        }
-
-        @Override
-        public void abort() { }
-
-        @Override
-        public CommitReport commit()
-        {
-            return Exec.newCommitReport();
-        }
+        };
     }
 }
