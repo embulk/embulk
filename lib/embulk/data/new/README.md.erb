@@ -35,8 +35,9 @@ TODO: Write short description here.
 
 ## Configuration
 
-- **property1**: description (string, required)
-- **property2**: description (integer, default: default-value)
+- **option1**: description (integer, required)
+- **option2**: description (string, default: `"myvalue"`)
+- **option3**: description (string, default: `null`)
 
 ## Example
 
@@ -45,46 +46,46 @@ TODO: Write short description here.
 %when :input, :file_input
 in:
   type: <%= name %>
-  property1: example1
-  property2: example2
+  option1: example1
+  option2: example2
 %when :output, :file_output
 out:
   type: <%= name %>
-  property1: example1
-  property2: example2
+  option1: example1
+  option2: example2
 %when :filter
 filters:
   - type: <%= name %>
-    property1: example1
-    property2: example2
+    option1: example1
+    option2: example2
 %when :parser
 in:
   type: any file input plugin type
   parser:
     type: <%= name %>
-    property1: example1
-    property2: example2
+    option1: example1
+    option2: example2
 %when :formatter
 out:
   type: any output input plugin type
   formatter:
     type: <%= name %>
-    property1: example1
-    property2: example2
+    option1: example1
+    option2: example2
 %when :decoder
 in:
   type: any output input plugin type
   decoders:
     - type: <%= name %>
-      property1: example1
-      property2: example2
+      option1: example1
+      option2: example2
 %when :encoder
 out:
   type: any output input plugin type
   encoders:
     - type: <%= name %>
-      property1: example1
-      property2: example2
+      option1: example1
+      option2: example2
 %end
 ```
 
@@ -93,7 +94,7 @@ out:
 (If guess supported) you don't have to write `<%= category %>:` section in the configuration file. After writing `in:` section, you can let embulk guess `<%= category %>:` section using this command:
 
 ```
-$ embulk gem install <%= project_name %>
+$ embulk gem install <%= full_project_name %>
 $ embulk guess -g <%= name %> config.yml -o guessed.yml
 ```
 %end

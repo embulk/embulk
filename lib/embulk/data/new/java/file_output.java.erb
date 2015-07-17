@@ -1,6 +1,7 @@
-package org.embulk.<%= embulk_category %>;
+package <%= java_package_name %>;
 
 import java.util.List;
+import com.google.common.base.Optional;
 import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -18,12 +19,35 @@ public class <%= java_class_name %>
     public interface PluginTask
             extends Task
     {
-        @Config("property1")
-        public String getProperty1();
+        // configuration option 1 (required integer)
+        @Config("option1")
+        public int getOption1();
 
-        @Config("property2")
-        @ConfigDefault("0")
-        public int getProperty2();
+        // configuration option 2 (optional string, null is not allowed)
+        @Config("optoin2")
+        @ConfigDefault("\"myvalue\"")
+        public String getOption2();
+
+        // configuration option 3 (optional string, null is allowed)
+        @Config("optoin3")
+        @ConfigDefault("null")
+        public Optional<String> getOption3();
+
+        // usually, run() method needs to write multiple files because size of a file
+        // can be very large. So, file name will be:
+        //
+        //    path_prefix + String.format(sequence_format, taskIndex, sequenceCounterInRunMethod) + file_ext
+        //
+
+        //@Config("path_prefix")
+        //public String getPathPrefix();
+
+        //@Config("file_ext")
+        //public String getFileNameExtension();
+
+        //@Config("sequence_format")
+        //@ConfigDefault("\"%03d.%02d.\"")
+        //public String getSequenceFormat();
     }
 
     @Override
@@ -60,7 +84,10 @@ public class <%= java_class_name %>
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        // TODO
-        throw new UnsupportedOperationException("The 'open' method needs to be implemented");
+        // Write your code here :)
+        throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet");
+
+        // See LocalFileOutputPlugin as an example implementation:
+        // https://github.com/embulk/embulk/blob/master/embulk-standards/src/main/java/org/embulk/standards/LocalFileOutputPlugin.java
     }
 }

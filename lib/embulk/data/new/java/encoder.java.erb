@@ -1,12 +1,19 @@
-package org.embulk.<%= embulk_category %>;
+package <%= java_package_name %>;
 
+import java.io.OutputStream;
+import java.io.IOException;
+import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.FileOutput;
+import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.util.FileOutputOutputStream;
+import org.embulk.spi.util.OutputStreamFileOutput;
 
 public class <%= java_class_name %>
         implements EncoderPlugin
@@ -14,12 +21,22 @@ public class <%= java_class_name %>
     public interface PluginTask
             extends Task
     {
-        @Config("property1")
-        public String getProperty1();
+        // configuration option 1 (required integer)
+        @Config("option1")
+        public int getOption1();
 
-        @Config("property2")
-        @ConfigDefault("0")
-        public int getProperty2();
+        // configuration option 2 (optional string, null is not allowed)
+        @Config("optoin2")
+        @ConfigDefault("\"myvalue\"")
+        public String getOption2();
+
+        // configuration option 3 (optional string, null is allowed)
+        @Config("optoin3")
+        @ConfigDefault("null")
+        public Optional<String> getOption3();
+
+        @ConfigInject
+        public BufferAllocator getBufferAllocator();
     }
 
     @Override
@@ -33,8 +50,37 @@ public class <%= java_class_name %>
     @Override
     public FileOutput open(TaskSource taskSource, FileOutput fileOutput)
     {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        // TODO
+        // Write your code here :)
+        throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet");
+
+        // If expect OutputStream, you can use this code:
+
+        //final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput,
+        //    task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
+        //
+        //return new OutputStreamFileOutput(new OutputStreamFileOutput.Provider() {
+        //    public OutputStream openNext() throws IOException
+        //    {
+        //        output.nextFile();
+        //        return newEncoderOutputStream(output);
+        //    }
+        //
+        //    public void finish() throws IOException
+        //    {
+        //        fileOutput.finish();
+        //    }
+        //
+        //    public void close() throws IOException
+        //    {
+        //        fileOutput.close();
+        //    }
+        //});
     }
+
+    //private static OutputStream newEncoderOutputStream(PluginTask task, OutputStream file) throws IOException
+    //{
+    //    return new MyOutputStream(file);
+    //}
 }

@@ -1,5 +1,6 @@
 package org.embulk.<%= embulk_category %>;
 
+import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -17,12 +18,19 @@ public class <%= java_class_name %>
     public interface PluginTask
             extends Task
     {
-        @Config("property1")
-        public String getProperty1();
+        // configuration option 1 (required integer)
+        @Config("option1")
+        public int getOption1();
 
-        @Config("property2")
-        @ConfigDefault("0")
-        public int getProperty2();
+        // configuration option 2 (optional string, null is not allowed)
+        @Config("optoin2")
+        @ConfigDefault("\"myvalue\"")
+        public String getOption2();
+
+        // configuration option 3 (optional string, null is allowed)
+        @Config("optoin3")
+        @ConfigDefault("null")
+        public Optional<String> getOption3();
     }
 
     @Override
@@ -42,6 +50,7 @@ public class <%= java_class_name %>
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        // TODO
+        // Write your code here :)
+        throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet");
     }
 }

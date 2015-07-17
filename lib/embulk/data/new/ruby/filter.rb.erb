@@ -7,8 +7,9 @@ module Embulk
       def self.transaction(config, in_schema, &control)
         # configuration code:
         task = {
-          "property1" => config.param("property1", :string),
-          "property2" => config.param("property2", :integer, default: 0),
+          "option1" => config.param("option1", :integer),                     # integer, required
+          "option2" => config.param("option2", :string, default: "myvalue"),  # string, optional
+          "option3" => config.param("option3", :string, default: nil),        # string, optional
         }
 
         yield(task, out_columns)
@@ -16,8 +17,9 @@ module Embulk
 
       def init
         # initialization code:
-        @property1 = task["property1"]
-        @property2 = task["property2"]
+        @option1 = task["option1"]
+        @option2 = task["option2"]
+        @option3 = task["option3"]
       end
 
       def close
