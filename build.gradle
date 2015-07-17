@@ -282,9 +282,9 @@ Manual operations:
 bintrayUpload.mustRunAfter('releaseCheck')
 rubyGemsUpload.mustRunAfter('releaseCheck')
 
-task set_version << {
+task setVersion << {
     if (!project.hasProperty("to")) {
-        throw new GradleException("Usage: ./gradlew -Pto=VERSION")
+        throw new GradleException("Usage: ./gradlew setVersion -Pto=VERSION")
     }
 
     File gradle_ver = file('build.gradle')
