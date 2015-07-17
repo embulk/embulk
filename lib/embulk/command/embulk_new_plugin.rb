@@ -8,28 +8,35 @@ module Embulk
     embulk_category = :input if category == :file_input
     embulk_category = :output if category == :file_output
 
-    project_name = "embulk-#{embulk_category}-#{name}"
+    name = name.gsub(/[^a-zA-Z0-9_]+/, '_')  # replace '-' to '_'
+
+    full_project_name = "embulk-#{embulk_category}-#{name}"
     plugin_dir = "lib/embulk"
     plugin_path = "#{plugin_dir}/#{embulk_category}/#{name}.rb"
 
-    if File.exist?(project_name)
-      raise "./#{project_name} already exists. Please delete it first."
+    if File.exist?(full_project_name)
+      raise "./#{full_project_name} already exists. Please delete it first."
     end
-    FileUtils.mkdir_p(project_name)
+    FileUtils.mkdir_p(full_project_name)
 
-    puts "Creating #{project_name}/"
+    puts "Creating #{full_project_name}/"
 
     success = false
     begin
+      #
+      # Generate gemspec
+      #
       author = `git config user.name`.strip
       author = "YOUR_NAME" if author.empty?
       email = `git config user.email`.strip
       email = "YOUR_NAME" if email.empty?
 
-      ruby_class_name = name.split('-').map {|a| a.capitalize }.join
-      java_iface = category.to_s.split('_').map {|a| a.capitalize }.join
-      java_class_name = name.split('-').map {|a| a.capitalize }.join + java_iface + "Plugin"
-      display_name = name.split('-').map {|a| a.capitalize }.join(' ')
+      # variables used in erb templates
+      ruby_class_name = name.split('_').map {|a| a.capitalize }.join
+      java_iface_name = category.to_s.split('_').map {|a| a.capitalize }.join
+      java_class_name = name.split('_').map {|a| a.capitalize }.join + java_iface_name + "Plugin"
+      java_package_name = "org.embulk.#{embulk_category}.#{name}"
+      display_name = name.split('_').map {|a| a.capitalize }.join(' ')
       display_category = category.to_s.gsub('_', ' ')
 
       extra_guess_erb = {}
@@ -57,7 +64,10 @@ module Embulk
         description = %[#{display_name}]
       end
 
-      pkg = Embulk::PackageData.new("new", project_name, binding())
+      #
+      # Generate project repository
+      #
+      pkg = Embulk::PackageData.new("new", full_project_name, binding())
 
       pkg.cp_erb("README.md.erb", "README.md")
       pkg.cp("LICENSE.txt", "LICENSE.txt")
@@ -67,7 +77,7 @@ module Embulk
       when :ruby
         pkg.cp("ruby/Rakefile", "Rakefile")
         pkg.cp("ruby/Gemfile", "Gemfile")
-        pkg.cp_erb("ruby/gemspec.erb", "#{project_name}.gemspec")
+        pkg.cp_erb("ruby/gemspec.erb", "#{full_project_name}.gemspec")
         pkg.cp_erb("ruby/#{category}.rb.erb", plugin_path)
 
       when :java
@@ -78,18 +88,34 @@ module Embulk
         pkg.set_executable("gradlew")
         pkg.cp_erb("java/build.gradle.erb", "build.gradle")
         pkg.cp_erb("java/plugin_loader.rb.erb", plugin_path)
-        pkg.cp_erb("java/#{category}.java.erb", "src/main/java/org/embulk/#{embulk_category}/#{java_class_name}.java")
-        pkg.cp_erb("java/test.java.erb", "src/test/java/org/embulk/#{embulk_category}/Test#{java_class_name}.java")
+        pkg.cp_erb("java/#{category}.java.erb", "src/main/java/#{java_package_name.gsub(/\./, '/')}/#{java_class_name}.java")
+        pkg.cp_erb("java/test.java.erb", "src/test/java/#{java_package_name.gsub(/\./, '/')}/Test#{java_class_name}.java")
       end
 
       extra_guess_erb.each_pair do |erb,dest|
         pkg.cp_erb(erb, dest)
       end
 
+      puts ""
+      puts "Plugin template is successfully generated."
+
+      case language
+      when :ruby
+        puts "Next steps:"
+        puts ""
+        puts "  $ cd #{full_project_name}"
+        puts "  $ rake"
+      when :java
+        puts "Next steps:"
+        puts ""
+        puts "  $ cd #{full_project_name}"
+        puts "  $ ./gradlew package"
+      end
+
       success = true
       puts ""
     ensure
-      FileUtils.rm_rf project_name unless success
+      FileUtils.rm_rf full_project_name unless success
     end
   end
 end
