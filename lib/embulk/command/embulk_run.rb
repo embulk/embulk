@@ -290,9 +290,9 @@ examples:
       puts ""
       puts "Run following subcommands to try embulk:"
       puts ""
-      puts "   1. guess #{File.join(path, 'example.yml')} -o config.yml"
-      puts "   2. preview config.yml"
-      puts "   3. run config.yml"
+      puts "   1. embulk guess #{File.join(path, 'example.yml')} -o config.yml"
+      puts "   2. embulk preview config.yml"
+      puts "   3. embulk run config.yml"
       puts ""
 
     when :new
