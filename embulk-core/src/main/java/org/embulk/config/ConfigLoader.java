@@ -2,12 +2,14 @@ package org.embulk.config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Properties;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -22,6 +24,41 @@ public class ConfigLoader
         this.model = model;
     }
 
+    public ConfigSource fromJsonFile(File file) throws IOException
+    {
+        try (FileInputStream is = new FileInputStream(file)) {
+            return fromJson(is);
+        }
+    }
+
+    public ConfigSource fromJson(InputStream stream) throws IOException
+    {
+        JsonNode node = new ObjectMapper().readTree(stream);
+        if (!node.isObject()) {
+            throw new RuntimeJsonMappingException("Expected object to load ConfigSource but got: "+node.getNodeType());
+        }
+        return new DataSourceImpl(model, (ObjectNode) node);
+    }
+
+    public ConfigSource fromYamlFile(File file) throws IOException
+    {
+        try (FileInputStream stream = new FileInputStream(file)) {
+            return fromYaml(stream);
+        }
+    }
+
+    public ConfigSource fromYaml(InputStream stream) throws IOException
+    {
+        Yaml yaml = new Yaml();
+        Object object = yaml.load(stream);
+        JsonNode node = objectToJson(object);
+        if (!node.isObject()) {
+            throw new RuntimeJsonMappingException("Expected object to load ConfigSource but got "+node);
+        }
+        return new DataSourceImpl(model, (ObjectNode) node);
+    }
+
+    @Deprecated
     public ConfigSource fromJson(JsonParser parser) throws IOException
     {
         // TODO check parsed.isObject()
@@ -29,55 +66,40 @@ public class ConfigLoader
         return new DataSourceImpl(model, source);
     }
 
-    public ConfigSource fromYamlFile(File path) throws IOException
-    {
-        Yaml yaml = new Yaml();
-        Object parsedYaml;
-        try (FileInputStream is = new FileInputStream(path)) {
-            parsedYaml = yaml.load(is);
-        }
-        ObjectNode source = objectToJsonObject(parsedYaml);
-        return new DataSourceImpl(model, source);
-    }
-
     public ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix)
     {
-        // TODO exception handling
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
+        DataSource ds = new DataSourceImpl(model, source);
         Yaml yaml = new Yaml();
-        for (String key : props.stringPropertyNames()) {
-            // TODO handle "." and "[...]" as map and array acccessor for example:
-            //      in.parser.type=csv => {"in": {"parser": {"type": "csv"}}}
-            if (!key.startsWith(keyPrefix)) {
+        for (String propName : props.stringPropertyNames()) {
+            if (!propName.startsWith(keyPrefix)) {
                 continue;
             }
-            String yamlValue = props.getProperty(key);
-            String keyName = key.substring(keyPrefix.length());
-            Object parsedValue = yaml.load(yamlValue);
-            JsonNode typedValue = objectToJson(parsedValue);
-            source.set(keyName, typedValue);
+            String keyName = propName.substring(keyPrefix.length());
+            String yamlValue = props.getProperty(propName);
+            Object parsedValue = yaml.load(yamlValue);  // TODO exception handling
+            JsonNode node = objectToJson(parsedValue);
+
+            // handle "." as a map acccessor. for example:
+            // in.parser.type=csv => {"in": {"parser": {"type": "csv"}}}
+            // TODO handle "[]" as array index
+            String[] fragments = keyName.split("\\.");
+            DataSource key = ds;
+            for (int i=0; i < fragments.length - 1; i++) {
+                key = key.getNestedOrSetEmpty(fragments[i]);  // TODO exception handling
+            }
+            key.set(fragments[fragments.length - 1], node);
         }
         return new DataSourceImpl(model, source);
     }
 
     private JsonNode objectToJson(Object object)
     {
-        // TODO exception
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.readTree(objectMapper.writeValueAsString(object));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private ObjectNode objectToJsonObject(Object object)
-    {
-        // TODO exception
-        JsonNode json = objectToJson(object);
-        if (!json.isObject()) {
-            throw new RuntimeException("Expected object to deserialize ConfigSource but got "+json);
-        }
-        return (ObjectNode) json;
     }
 }
