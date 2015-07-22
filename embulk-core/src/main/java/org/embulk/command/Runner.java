@@ -67,7 +67,7 @@ public class Runner
         this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
         mergeOptionsToSystemConfig(options, systemConfig);
         this.service = new EmbulkService(systemConfig);
-        this.injector = service.getInjector();
+        this.injector = service.initialize();
     }
 
     @SuppressWarnings("unchecked")
