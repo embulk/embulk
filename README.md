@@ -115,6 +115,14 @@ embulk guess  -b ./embulk_bundle ...
 embulk run    -b ./embulk_bundle ...
 ```
 
+### Update
+
+Following command updates embulk itself to the released latest version.
+
+```sh
+embulk selfupdate
+```
+
 ## Use cases
 
 * [Scheduled bulk data loading to Elasticsearch + Kibana 4 from CSV files](http://www.embulk.org/docs/recipe/scheduled-csv-load-to-elasticsearch-kibana4.html)
@@ -195,4 +203,3 @@ git tag v$VERSION
 See also:
 * [Bintray](https://bintray.com)
 * [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_editingyouruserprofile.html#anchorAPIKEY)
-
