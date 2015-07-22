@@ -54,10 +54,10 @@ public abstract class Filters
             List<Schema> filterSchemas, PageOutput output)
     {
         PageOutput out = output;
-        int pos = 0;
-        while (pos < plugins.size()) {
+        int pos = plugins.size() - 1;
+        while (pos >= 0) {
             out = plugins.get(pos).open(taskSources.get(pos), filterSchemas.get(pos), filterSchemas.get(pos + 1), out);
-            pos++;
+            pos--;
         }
         return out;
     }
