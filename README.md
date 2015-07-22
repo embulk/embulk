@@ -121,6 +121,14 @@ embulk run    -b ./embulk_bundle ...
 
 For further details, visit [Embulk documentation](http://www.embulk.org/docs/).
 
+## Upgrading to the latest version
+
+Following command updates embulk itself to the latest released version.
+
+```sh
+embulk selfupdate
+```
+
 ## Embulk Development
 
 ### Build
