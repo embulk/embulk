@@ -5,6 +5,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.ResourceLeakDetector;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
+import com.google.inject.Inject;
+import org.embulk.config.ConfigSource;
 
 public class PooledBufferAllocator
         implements BufferAllocator
@@ -13,11 +15,15 @@ public class PooledBufferAllocator
     private static final int MINIMUM_BUFFER_SIZE = 8*1024;
 
     private final PooledByteBufAllocator nettyBuffer;
+    private final int pageSize;
 
-    public PooledBufferAllocator()
+    @Inject
+    public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig)
     {
         // TODO configure parameters
         this.nettyBuffer = new PooledByteBufAllocator(false);
+        // This allows to change page buffer size with -J-Dembulk.pageSize=N option (kB)
+        this.pageSize = systemConfig.get(Integer.class, "pageSize", new Integer(MINIMUM_BUFFER_SIZE)).intValue() * 1024;
     }
 
     public Buffer allocate()
@@ -27,7 +33,7 @@ public class PooledBufferAllocator
 
     public Buffer allocate(int minimumCapacity)
     {
-        int size = MINIMUM_BUFFER_SIZE;
+        int size = this.pageSize;
         while (size < minimumCapacity) {
             size *= 2;
         }
