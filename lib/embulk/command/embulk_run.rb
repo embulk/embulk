@@ -49,6 +49,7 @@ module Embulk
       # use the global ruby runtime (the jruby Runtime running this embulk_run.rb script) for all
       # ScriptingContainer injected by the org.embulk.command.Runner.
       useGlobalRubyRuntime: true,
+      systemProperty: {},
     }
 
     op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
@@ -86,6 +87,11 @@ module Embulk
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
         options[:resumeStatePath] = path
       end
+      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
+        k, v = kv.split('=', 2)
+        v ||= "true"
+        options[:systemProperty][k] = v
+      end
       args = 1..1
 
     when :cleanup
@@ -105,6 +111,11 @@ module Embulk
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
         options[:resumeStatePath] = path
       end
+      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
+        k, v = kv.split('=', 2)
+        v ||= "true"
+        options[:systemProperty][k] = v
+      end
       args = 1..1
 
     when :preview
@@ -123,6 +134,11 @@ module Embulk
       end
       op.on('-G', '--vertical', "Use vertical output format", TrueClass) do |b|
         options[:previewOutputFormat] = "vertical"
+      end
+      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
+        k, v = kv.split('=', 2)
+        v ||= "true"
+        options[:systemProperty][k] = v
       end
       args = 1..1
 
@@ -145,6 +161,11 @@ module Embulk
       end
       op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
         (options[:guessPlugins] ||= []).concat names.split(",")
+      end
+      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
+        k, v = kv.split('=', 2)
+        v ||= "true"
+        options[:systemProperty][k] = v
       end
       args = 1..1
 

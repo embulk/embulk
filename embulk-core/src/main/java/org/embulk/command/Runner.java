@@ -53,6 +53,9 @@ public class Runner
 
         private boolean useGlobalRubyRuntime;
         public boolean getUseGlobalRubyRuntime() { return useGlobalRubyRuntime; }
+
+        private Map<String, String> systemProperty;
+        public Map<String, String> getSystemProperty() { return systemProperty; }
     }
 
     private final Options options;
@@ -64,15 +67,21 @@ public class Runner
     {
         ModelManager bootstrapModelManager = new ModelManager(null, new ObjectMapper());
         this.options = bootstrapModelManager.readObject(Options.class, optionJson);
-        this.systemConfig = new ConfigLoader(bootstrapModelManager).fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
-        mergeOptionsToSystemConfig(options, systemConfig);
+
+        ConfigLoader configLoader = new ConfigLoader(bootstrapModelManager);
+        ConfigSource systemConfig = configLoader.fromPropertiesYamlLiteral(System.getProperties(), "embulk.");
+        mergeOptionsToSystemConfig(options, configLoader, systemConfig);
+
+        this.systemConfig = systemConfig;
         this.service = new EmbulkService(systemConfig);
         this.injector = service.initialize();
     }
 
     @SuppressWarnings("unchecked")
-    private void mergeOptionsToSystemConfig(Options options, ConfigSource systemConfig)
+    private static void mergeOptionsToSystemConfig(Options options, ConfigLoader configLoader, ConfigSource systemConfig)
     {
+        systemConfig.merge(configLoader.fromPropertiesYamlLiteral(options.getSystemProperty(), ""));
+
         String logLevel = options.getLogLevel();
         if (logLevel != null) {
             // used by LoggerProvider

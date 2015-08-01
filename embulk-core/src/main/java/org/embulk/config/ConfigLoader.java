@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonParser;
@@ -68,16 +70,24 @@ public class ConfigLoader
 
     public ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix)
     {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        for (String propName : props.stringPropertyNames()) {
+            builder.put(propName, props.getProperty(propName));
+        }
+        return fromPropertiesYamlLiteral(builder.build(), keyPrefix);
+    }
+
+    public ConfigSource fromPropertiesYamlLiteral(Map<String, String> props, String keyPrefix)
+    {
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
         DataSource ds = new DataSourceImpl(model, source);
         Yaml yaml = new Yaml();
-        for (String propName : props.stringPropertyNames()) {
-            if (!propName.startsWith(keyPrefix)) {
+        for (Map.Entry<String, String> pair : props.entrySet()) {
+            if (!pair.getKey().startsWith(keyPrefix)) {
                 continue;
             }
-            String keyName = propName.substring(keyPrefix.length());
-            String yamlValue = props.getProperty(propName);
-            Object parsedValue = yaml.load(yamlValue);  // TODO exception handling
+            String keyName = pair.getKey().substring(keyPrefix.length());
+            Object parsedValue = yaml.load(pair.getValue());  // TODO exception handling
             JsonNode node = objectToJson(parsedValue);
 
             // handle "." as a map acccessor. for example:
