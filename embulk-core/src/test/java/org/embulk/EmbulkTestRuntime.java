@@ -22,13 +22,13 @@ import org.embulk.spi.ExecSession;
 public class EmbulkTestRuntime
         extends GuiceBinder
 {
-    protected ConfigSource getSystemConfig()
+    private static ConfigSource getSystemConfig()
     {
         // TODO set some default values
         return new DataSourceImpl(null);
     }
 
-    public class TestRuntimeModule
+    public static class TestRuntimeModule
             implements Module
     {
         @Override
