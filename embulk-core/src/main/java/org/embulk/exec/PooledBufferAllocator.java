@@ -7,12 +7,12 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import com.google.inject.Inject;
 import org.embulk.config.ConfigSource;
+import org.embulk.spi.unit.ByteSize;
 
 public class PooledBufferAllocator
         implements BufferAllocator
 {
-    private static final int DEFAULT_BUFFER_SIZE = 32*1024;
-    private static final int MINIMUM_BUFFER_SIZE = 8*1024;
+    private static final int DEFAULT_PAGE_SIZE = 32*1024;
 
     private final PooledByteBufAllocator nettyBuffer;
     private final int pageSize;
@@ -20,15 +20,13 @@ public class PooledBufferAllocator
     @Inject
     public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig)
     {
-        // TODO configure parameters
         this.nettyBuffer = new PooledByteBufAllocator(false);
-        // This allows to change page buffer size with -J-Dembulk.pageSize=N option (kB)
-        this.pageSize = systemConfig.get(Integer.class, "pageSize", new Integer(MINIMUM_BUFFER_SIZE)).intValue() * 1024;
+        this.pageSize = systemConfig.get(ByteSize.class, "pageSize", new ByteSize(DEFAULT_PAGE_SIZE)).getBytesInt();
     }
 
     public Buffer allocate()
     {
-        return allocate(DEFAULT_BUFFER_SIZE);
+        return allocate(pageSize);
     }
 
     public Buffer allocate(int minimumCapacity)

@@ -40,6 +40,14 @@ public class ByteSize
         return bytes;
     }
 
+    public int getBytesInt()
+    {
+        if (bytes > Integer.MAX_VALUE) {
+            throw new RuntimeException("Byte size is too large (must be smaller than 2GB)");
+        }
+        return (int) bytes;
+    }
+
     public long roundTo(Unit unit)
     {
         return (long) Math.floor(getValue(unit) + 0.5);
