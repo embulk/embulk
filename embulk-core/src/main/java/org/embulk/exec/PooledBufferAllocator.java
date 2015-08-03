@@ -21,7 +21,7 @@ public class PooledBufferAllocator
     public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig)
     {
         this.nettyBuffer = new PooledByteBufAllocator(false);
-        this.pageSize = systemConfig.get(ByteSize.class, "pageSize", new ByteSize(DEFAULT_PAGE_SIZE)).getBytesInt();
+        this.pageSize = systemConfig.get(ByteSize.class, "page_size", new ByteSize(DEFAULT_PAGE_SIZE)).getBytesInt();
     }
 
     public Buffer allocate()
