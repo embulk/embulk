@@ -344,7 +344,7 @@ Example
     out:
       ...
       formatter:
-      - type: csv
+        type: csv
         delimiter: '\t'
         newline: CRLF
         newline_in_field: LF
