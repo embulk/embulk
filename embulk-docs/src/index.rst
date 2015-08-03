@@ -59,6 +59,8 @@ Documents
 
   * `Filter plugins <http://www.embulk.org/plugins/#filter>`_
 
+  * `Executor plugins <http://www.embulk.org/plugins/#executor>`_
+
 .. toctree::
    :maxdepth: 2
 
