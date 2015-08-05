@@ -131,6 +131,16 @@ public class CsvParserPlugin
         {
             return new String(new char[] { character });
         }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (!(obj instanceof QuoteCharacter)) {
+                return false;
+            }
+            QuoteCharacter o = (QuoteCharacter) obj;
+            return character == o.character;
+        }
     }
 
     public static class EscapeCharacter
@@ -170,6 +180,16 @@ public class CsvParserPlugin
         public String getOptionalString()
         {
             return new String(new char[] { character });
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (!(obj instanceof EscapeCharacter)) {
+                return false;
+            }
+            EscapeCharacter o = (EscapeCharacter) obj;
+            return character == o.character;
         }
     }
 
