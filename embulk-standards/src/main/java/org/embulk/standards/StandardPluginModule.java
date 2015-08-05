@@ -5,6 +5,7 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.multibindings.Multibinder;
+import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
@@ -43,6 +44,9 @@ public class StandardPluginModule
 
         // file encoder plugins
         registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
+
+        // filter plugins
+        registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
