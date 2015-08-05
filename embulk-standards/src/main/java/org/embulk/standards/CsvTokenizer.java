@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import org.embulk.config.ConfigException;
 import org.embulk.spi.util.LineDecoder;
 
 public class CsvTokenizer
@@ -20,6 +21,8 @@ public class CsvTokenizer
     }
 
     private static final char END_OF_LINE = '\0';
+    private static final char NO_QUOTE = '\0';
+    private static final char NO_ESCAPE = '\0';
 
     private final char delimiter;
     private final char quote;
@@ -42,8 +45,16 @@ public class CsvTokenizer
     public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task)
     {
         delimiter = task.getDelimiterChar();
-        quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
-        escape = task.getEscapeChar();
+        if (task.getQuoteChar().isPresent()) {
+            quote = task.getQuoteChar().get();
+        } else {
+            quote = NO_QUOTE;
+        }
+        if (task.getEscapeChar().isPresent()) {
+            escape = task.getEscapeChar().get();
+        } else {
+            escape = NO_ESCAPE;
+        }
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
@@ -354,12 +365,12 @@ public class CsvTokenizer
 
     private boolean isQuote(char c)
     {
-        return c == quote;
+        return quote != NO_QUOTE && c == quote;
     }
 
     private boolean isEscape(char c)
     {
-        return c == escape;
+        return quote != NO_ESCAPE && c == escape;
     }
 
     public static class InvalidFormatException

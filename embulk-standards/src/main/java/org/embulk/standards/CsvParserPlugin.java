@@ -57,11 +57,11 @@ public class CsvParserPlugin
 
         @Config("quote")
         @ConfigDefault("\"\\\"\"")
-        public char getQuoteChar();
+        public Optional<Character> getQuoteChar();
 
         @Config("escape")
         @ConfigDefault("\"\\\\\"")
-        public char getEscapeChar();
+        public Optional<Character> getEscapeChar();
 
         // Null value handling: if the CsvParser found 'non-quoted empty string's,
         // it replaces them to string that users specified like "\N", "NULL".
