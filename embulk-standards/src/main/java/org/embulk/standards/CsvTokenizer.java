@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import org.embulk.config.ConfigException;
 import org.embulk.spi.util.LineDecoder;
+import org.embulk.spi.Exec;
 
 public class CsvTokenizer
 {
@@ -46,7 +47,12 @@ public class CsvTokenizer
     {
         delimiter = task.getDelimiterChar();
         if (task.getQuoteChar().isPresent()) {
-            quote = task.getQuoteChar().get();
+            if (task.getQuoteChar().get() == '\0') {
+                Exec.getLogger(getClass()).warn("Setting '' (empty string) to \"quote\" option is obsoleted. Currently it becomes '\"' automatically but this behavior will be removed. Please set '\"' explicitly.");
+                quote = '"';
+            } else {
+                quote = task.getQuoteChar().get();
+            }
         } else {
             quote = NO_QUOTE;
         }

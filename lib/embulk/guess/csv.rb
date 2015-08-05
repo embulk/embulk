@@ -60,6 +60,7 @@ module Embulk
           end
           parser_guessed["quote"] = quote
         end
+        parser_guessed["quote"] = '"' if parser_guessed["quote"] == ''  # setting '' is not allowed any more. this line converts obsoleted config syntax to explicit syntax.
 
         unless parser_guessed.has_key?("escape")
           if quote = parser_guessed["quote"]
