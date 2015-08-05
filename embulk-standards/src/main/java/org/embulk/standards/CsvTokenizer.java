@@ -22,8 +22,8 @@ public class CsvTokenizer
     }
 
     private static final char END_OF_LINE = '\0';
-    private static final char NO_QUOTE = '\0';
-    private static final char NO_ESCAPE = '\0';
+    static final char NO_QUOTE = '\0';
+    static final char NO_ESCAPE = '\0';
 
     private final char delimiter;
     private final char quote;
@@ -46,21 +46,8 @@ public class CsvTokenizer
     public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task)
     {
         delimiter = task.getDelimiterChar();
-        if (task.getQuoteChar().isPresent()) {
-            if (task.getQuoteChar().get() == '\0') {
-                Exec.getLogger(getClass()).warn("Setting '' (empty string) to \"quote\" option is obsoleted. Currently it becomes '\"' automatically but this behavior will be removed. Please set '\"' explicitly.");
-                quote = '"';
-            } else {
-                quote = task.getQuoteChar().get();
-            }
-        } else {
-            quote = NO_QUOTE;
-        }
-        if (task.getEscapeChar().isPresent()) {
-            escape = task.getEscapeChar().get();
-        } else {
-            escape = NO_ESCAPE;
-        }
+        quote = task.getQuoteChar().or(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
+        escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();

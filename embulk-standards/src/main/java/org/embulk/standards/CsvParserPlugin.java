@@ -2,6 +2,9 @@ package org.embulk.standards;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -57,11 +60,11 @@ public class CsvParserPlugin
 
         @Config("quote")
         @ConfigDefault("\"\\\"\"")
-        public Optional<Character> getQuoteChar();
+        public Optional<QuoteCharacter> getQuoteChar();
 
         @Config("escape")
         @ConfigDefault("\"\\\\\"")
-        public Optional<Character> getEscapeChar();
+        public Optional<EscapeCharacter> getEscapeChar();
 
         // Null value handling: if the CsvParser found 'non-quoted empty string's,
         // it replaces them to string that users specified like "\N", "NULL".
@@ -88,6 +91,86 @@ public class CsvParserPlugin
         @Config("allow_extra_columns")
         @ConfigDefault("false")
         public boolean getAllowExtraColumns();
+    }
+
+    public static class QuoteCharacter
+    {
+        private final char character;
+
+        public QuoteCharacter(char character)
+        {
+            this.character = character;
+        }
+
+        public static QuoteCharacter noQuote()
+        {
+            return new QuoteCharacter(CsvTokenizer.NO_QUOTE);
+        }
+
+        @JsonCreator
+        public static QuoteCharacter ofString(String str)
+        {
+            if (str.length() >= 2) {
+                throw new ConfigException("\"quote\" option accepts only 1 character.");
+            } else if (str.isEmpty()) {
+                Exec.getLogger(CsvParserPlugin.class).warn("Setting '' (empty string) to \"quote\" option is obsoleted. Currently it becomes '\"' automatically but this behavior will be removed. Please set '\"' explicitly.");
+                return new QuoteCharacter('"');
+            } else {
+                return new QuoteCharacter(str.charAt(0));
+            }
+        }
+
+        @JsonIgnore
+        public char getCharacter()
+        {
+            return character;
+        }
+
+        @JsonValue
+        public String getOptionalString()
+        {
+            return new String(new char[] { character });
+        }
+    }
+
+    public static class EscapeCharacter
+    {
+        private final char character;
+
+        public EscapeCharacter(char character)
+        {
+            this.character = character;
+        }
+
+        public static EscapeCharacter noEscape()
+        {
+            return new EscapeCharacter(CsvTokenizer.NO_ESCAPE);
+        }
+
+        @JsonCreator
+        public static EscapeCharacter ofString(String str)
+        {
+            if (str.length() >= 2) {
+                throw new ConfigException("\"escape\" option accepts only 1 character.");
+            } else if (str.isEmpty()) {
+                Exec.getLogger(CsvParserPlugin.class).warn("Setting '' (empty string) to \"escape\" option is obsoleted. Currently it becomes null automatically but this behavior will be removed. Please set \"escape: null\" explicitly.");
+                return noEscape();
+            } else {
+                return new EscapeCharacter(str.charAt(0));
+            }
+        }
+
+        @JsonIgnore
+        public char getCharacter()
+        {
+            return character;
+        }
+
+        @JsonValue
+        public String getOptionalString()
+        {
+            return new String(new char[] { character });
+        }
     }
 
     private final Logger log;
