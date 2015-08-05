@@ -66,6 +66,12 @@ public class DataSourceImpl
     }
 
     @Override
+    public boolean has(String attrName)
+    {
+        return data.has(attrName);
+    }
+
+    @Override
     public <E> E get(Class<E> type, String attrName)
     {
         JsonNode json = data.get(attrName);
