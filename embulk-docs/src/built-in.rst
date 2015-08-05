@@ -383,3 +383,29 @@ Example
       - type: gzip
         level: 1
 
+Rename filter plugin
+------------------
+
+The ``rename`` filter plugin changes column names. This plugin has no impact on performance.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++---------+----------+----------------------------------------------------------------------+--------------------+
+| name    | type     | description                                                          | required?          |
++=========+==========+======================================================================+====================+
+| columns | hash     | A map whose keys are existing column names. values are new names.    | ``{}`` by default  |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    filters:
+      ...
+      - type: rename
+	columns:
+	  my_existing_column1: new_column1
+	  my_existing_column2: new_column2
+
