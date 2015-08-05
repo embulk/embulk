@@ -13,6 +13,8 @@ public interface DataSource
 
     public boolean isEmpty();
 
+    public boolean has(String attrName);
+
     public <E> E get(Class<E> type, String attrName);
 
     public <E> E get(Class<E> type, String attrName, E defaultValue);
