@@ -370,7 +370,7 @@ public class CsvTokenizer
 
     private boolean isEscape(char c)
     {
-        return quote != NO_ESCAPE && c == escape;
+        return escape != NO_ESCAPE && c == escape;
     }
 
     public static class InvalidFormatException
