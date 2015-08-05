@@ -23,7 +23,7 @@ Embulk uses a YAML file to define a bulk data loading. Here is an example of the
         type: csv
         delimiter: ','
         quote: '"'
-        escape: ''
+        escape: '"'
         null_string: 'NULL'
         skip_header_lines: 1
         columns:
@@ -133,9 +133,9 @@ Options
 +============================+==========+================================================================================================================+========================+
 | delimiter                  | string   | Delimiter character such as ``,`` for CSV, ``"\t"`` for TSV, ``"|"`` or any single-byte character              | ``,`` by default       |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
-| quote                      | string   | The character surrounding a quoted value                                                                       | ``\"`` by default      |
+| quote                      | string   | The character surrounding a quoted value. Setting ``null`` disables quoting.                                   | ``\"`` by default      |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
-| escape                     | string   | Escape character to escape a special character                                                                 | ``\\`` by default      |
+| escape                     | string   | Escape character to escape a special character. Setting ``null`` disables escaping.                            | ``\\`` by default      |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | skip\_header\_lines        | integer  | Skip this number of lines first. Set 1 if the file has header line.                                            | ``0`` by default       |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
@@ -203,7 +203,7 @@ Example
         newline: CRLF
         delimiter: "\t"
         quote: '"'
-        escape: ''
+        escape: '"'
         null_string: 'NULL'
         skip_header_lines: 1
         comment_line_marker: '#'

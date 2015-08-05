@@ -14,7 +14,7 @@ module Embulk
       ]
 
       ESCAPE_CANDIDATES = [
-        "\\"
+        "\\", '"'
       ]
 
       NULL_STRING_CANDIDATES = [
@@ -50,12 +50,33 @@ module Embulk
 
         unless parser_guessed.has_key?("quote")
           quote = guess_quote(sample_lines, delim)
-          parser_guessed["quote"] = quote ? quote : ''
+          unless quote
+            if !guess_force_no_quote(sample_lines, delim, '"')
+              # assuming CSV follows RFC for quoting
+              quote = '"'
+            else
+              # disable quoting (set null)
+            end
+          end
+          parser_guessed["quote"] = quote
         end
+        parser_guessed["quote"] = '"' if parser_guessed["quote"] == ''  # setting '' is not allowed any more. this line converts obsoleted config syntax to explicit syntax.
 
         unless parser_guessed.has_key?("escape")
-          escape = guess_escape(sample_lines, delim, quote)
-          parser_guessed["escape"] = escape ? escape : ''
+          if quote = parser_guessed["quote"]
+            escape = guess_escape(sample_lines, delim, quote)
+            unless escape
+              if quote == '"'
+                # assuming this CSV follows RFC for escaping
+                escape = '"'
+              else
+                # disable escaping (set null)
+              end
+              parser_guessed["escape"] = escape
+            end
+          else
+            # escape does nothing if quote is disabled
+          end
         end
 
         unless parser_guessed.has_key?("null_string")
@@ -220,13 +241,18 @@ module Embulk
         end
       end
 
-      def guess_escape(sample_lines, delim, optional_quote)
+      def guess_force_no_quote(sample_lines, delim, quote_candidate)
+        delim_regexp = Regexp.escape(delim)
+        q_regexp = Regexp.escape(quote_candidate)
+        sample_lines.any? do |line|
+          # quoting character appear at the middle of a non-quoted value
+          line =~ /(?:\A|#{delim_regexp})\s*[^#{q_regexp}]+#{q_regexp}/
+        end
+      end
+
+      def guess_escape(sample_lines, delim, quote)
         guessed = ESCAPE_CANDIDATES.map do |str|
-          if optional_quote
-            regexp = /#{Regexp.quote(str)}(?:#{Regexp.quote(delim)}|#{Regexp.quote(optional_quote)})/
-          else
-            regexp = /#{Regexp.quote(str)}#{Regexp.quote(delim)}/
-          end
+          regexp = /#{Regexp.quote(str)}(?:#{Regexp.quote(delim)}|#{Regexp.quote(quote)})/
           counts = sample_lines.map {|line| line.scan(regexp).count }
           count = counts.inject(0) {|r,c| r + c }
           [str, count]
