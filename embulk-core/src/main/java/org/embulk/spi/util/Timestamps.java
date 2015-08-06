@@ -43,7 +43,7 @@ public class Timestamps
         int i = 0;
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
-                Optional<TimestampFormatter.TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
+                Optional<TimestampFormatter.TimestampColumnOption> option = Optional.<TimestampFormatter.TimestampColumnOption>fromNullable(columnOptions.get(column.getName()));
                 formatters[i] = new TimestampFormatter(formatterTask, option);
             }
             i++;
