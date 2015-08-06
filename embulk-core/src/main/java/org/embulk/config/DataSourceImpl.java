@@ -123,7 +123,7 @@ public class DataSourceImpl
         if (v == null) {
             remove(attrName);
         } else {
-            data.put(attrName, model.writeObjectAsJsonNode(v));
+            data.set(attrName, model.writeObjectAsJsonNode(v));
         }
         return this;
     }
@@ -131,7 +131,7 @@ public class DataSourceImpl
     @Override
     public DataSourceImpl setNested(String attrName, DataSource v)
     {
-        data.put(attrName, v.getObjectNode());
+        data.set(attrName, v.getObjectNode());
         return this;
     }
 
@@ -139,7 +139,7 @@ public class DataSourceImpl
     public DataSourceImpl setAll(DataSource other)
     {
         for (Map.Entry<String, JsonNode> field : other.getAttributes()) {
-            data.put(field.getKey(), field.getValue());
+            data.set(field.getKey(), field.getValue());
         }
         return this;
     }
