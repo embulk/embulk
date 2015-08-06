@@ -11,18 +11,10 @@ script:
   - ./gradlew --info check rubyTest
 after_success:
   - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
+  - embulk-docs/submit-coverity-scan.sh
 env:
   global:
     - GIT_USER_NAME=travis
     - GIT_USER_EMAIL=travis@embulk.org
     - secure: K5qT2PcCP/40dNW+1H4NZ6y1+GAZbyP/lMQ1tSMsAICGkMQ/A+Mp5wtnIGIsAf6JGcJ1PvpCoLE1V6wKFL5fEwxi4SRcTnZTh9PkeAk8dgezOMoX4EqeZiQAYv4MM2zKL+Gr6QivjmRA7I5jrZCo8JyaA5XfQ7ygjICKNJy8NaE=
     - secure: "SJeYfRfKi11kXp96XHAaTvzTvp1HQY6yB17H0K+n8YwUShbGs/yIMENrEftz4VH39qaMDJrgLfM7oX+bQeKWHEtjiQJagJsB9UR32LGG7NnOO3tMKiEzENDLh2wKmn5hJYdrcT7z1AYevlr+d7+UEDaC1OcOONwRIcSwJE7omvU="
-addons:
-  coverity_scan:
-    project:
-      name: "embulk/embulk"
-      description: "Embulk is a open-source bulk data loader that helps data transfer between various databases, storages, file formats, and cloud services."
-    notification_email: "frsyuki@gmail.com"
-    build_command_prepend: "./gradlew clean"
-    build_command: "./gradlew compile"
-    branch_pattern: master
