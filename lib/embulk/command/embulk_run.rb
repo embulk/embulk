@@ -390,6 +390,14 @@ examples:
     end
   end
 
+  def self.require_jar
+    classpath_dir = Embulk.home("classpath")
+    jars = Dir.entries(classpath_dir).select{|f| f =~ /\.jar$/ }.sort
+    jars.each do |jar|
+      require File.join(classpath_dir, jar)
+    end
+  end
+
   def self.default_gem_home
     if RUBY_PLATFORM =~ /java/i
       user_home = java.lang.System.properties["user.home"]
