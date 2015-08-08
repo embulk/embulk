@@ -357,11 +357,7 @@ examples:
         java.lang.Class.forName('org.embulk.command.Runner')
       rescue java.lang.ClassNotFoundException
         # load classpath
-        classpath_dir = Embulk.home('classpath')
-        jars = Dir.entries(classpath_dir).select {|f| f =~ /\.jar$/ }.sort
-        jars.each do |jar|
-          require File.join(classpath_dir, jar)
-        end
+        Embulk.require_classpath
       end
 
       setup_plugin_paths(plugin_paths)
@@ -390,7 +386,7 @@ examples:
     end
   end
 
-  def self.require_jar
+  def self.require_classpath
     classpath_dir = Embulk.home("classpath")
     jars = Dir.entries(classpath_dir).select{|f| f =~ /\.jar$/ }.sort
     jars.each do |jar|
