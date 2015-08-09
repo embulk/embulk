@@ -1,5 +1,6 @@
 package org.embulk;
 
+import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -35,18 +36,23 @@ public class EmbulkService
         return modules;
     }
 
+    static List<Module> standardModuleList(ConfigSource systemConfig)
+    {
+        return ImmutableList.of(
+                new SystemConfigModule(systemConfig),
+                new ExecModule(),
+                new ExtensionServiceLoaderModule(systemConfig),
+                new PluginClassLoaderModule(systemConfig),
+                new BuiltinPluginSourceModule(),
+                new JRubyScriptingModule(systemConfig));
+    }
+
     public Injector initialize()
     {
         checkState(!initialized, "Already initialized");
 
         ImmutableList.Builder<Module> builder = ImmutableList.builder();
-        builder.add(new SystemConfigModule(systemConfig));
-        builder.add(new ExecModule());
-        builder.add(new ExtensionServiceLoaderModule(systemConfig));
-        builder.add(new PluginClassLoaderModule(systemConfig));
-        builder.add(new BuiltinPluginSourceModule());
-        builder.add(new JRubyScriptingModule(systemConfig));
-
+        builder.addAll(standardModuleList(systemConfig));
         builder.addAll(getAdditionalModules(systemConfig));
 
         Iterable<? extends Module> modules = builder.build();
