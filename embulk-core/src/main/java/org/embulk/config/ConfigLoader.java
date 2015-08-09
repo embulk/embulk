@@ -26,6 +26,11 @@ public class ConfigLoader
         this.model = model;
     }
 
+    public ConfigSource newConfigSource()
+    {
+        return new DataSourceImpl(model);
+    }
+
     public ConfigSource fromJsonFile(File file) throws IOException
     {
         try (FileInputStream is = new FileInputStream(file)) {
