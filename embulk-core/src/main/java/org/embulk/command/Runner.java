@@ -10,10 +10,15 @@ import java.io.FileOutputStream;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import org.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.inject.Injector;
+import org.jruby.embed.ScriptingContainer;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.config.ConfigLoader;
@@ -125,7 +130,7 @@ public class Runner
 
     public void run(String configPath)
     {
-        ConfigSource config = loadYamlConfig(configPath);
+        ConfigSource config = loadConfig(configPath);
         checkFileWritable(options.getNextConfigOutputPath());
         checkFileWritable(options.getResumeStatePath());
 
@@ -199,7 +204,7 @@ public class Runner
         if (resumePath == null) {
             throw new IllegalArgumentException("Resume path is required for cleanup");
         }
-        ConfigSource config = loadYamlConfig(configPath);
+        ConfigSource config = loadConfig(configPath);
         ConfigSource resumeConfig = loadYamlConfig(resumePath);
         ResumeState resume = resumeConfig.loadConfig(ResumeState.class);
 
@@ -212,7 +217,7 @@ public class Runner
 
     public void guess(String partialConfigPath)
     {
-        ConfigSource config = loadYamlConfig(partialConfigPath);
+        ConfigSource config = loadConfig(partialConfigPath);
         checkFileWritable(options.getNextConfigOutputPath());
 
         ConfigDiff configDiff;
@@ -268,7 +273,7 @@ public class Runner
     {
         PreviewResult result;
         {
-            ConfigSource config = loadYamlConfig(partialConfigPath);
+            ConfigSource config = loadConfig(partialConfigPath);
             ExecSession exec = newExecSession(config);
             try {
                 PreviewExecutor preview = injector.getInstance(PreviewExecutor.class);
@@ -304,12 +309,40 @@ public class Runner
         }
     }
 
-    private ConfigSource loadYamlConfig(String yamlPath)
+    private ConfigSource loadConfig(String path)
+    {
+        if (path.endsWith(".yml") || path.endsWith(".yaml")) {
+            return loadYamlConfig(path);
+        }
+        else if (path.endsWith(".yml.liquid") || path.endsWith(".yaml.liquid")) {
+            return loadLiquidYamlConfig(path);
+        }
+        else {
+            throw new ConfigException("Unknown file extension. Supported file extentions are .yml and .yml.liquid: "+path);
+        }
+    }
+
+    private ConfigSource loadYamlConfig(String path)
     {
         try {
-            return injector.getInstance(ConfigLoader.class).fromYamlFile(new File(yamlPath));
+            return injector.getInstance(ConfigLoader.class).fromYamlFile(new File(path));
+        }
+        catch (IOException ex) {
+            throw new ConfigException(ex);
+        }
+    }
 
-        } catch (IOException ex) {
+    private ConfigSource loadLiquidYamlConfig(String path)
+    {
+        LiquidTemplate helper = (LiquidTemplate) injector.getInstance(ScriptingContainer.class).runScriptlet("Embulk::Java::LiquidTemplateHelper.new");
+        try {
+            String source = Files.toString(new File(path), StandardCharsets.UTF_8);
+            String data = helper.render(source, ImmutableMap.<String,String>of());
+            try (ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8))) {
+                return injector.getInstance(ConfigLoader.class).fromYaml(in);
+            }
+        }
+        catch (IOException ex) {
             throw new ConfigException(ex);
         }
     }

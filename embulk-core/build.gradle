@@ -1,6 +1,8 @@
+apply plugin: "com.github.jruby-gradle.jar"
+
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from "${rootProject.projectDir}/lib"
+processResources.from("${rootProject.projectDir}/lib", "${buildDir}/jruby")
 
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
@@ -8,6 +10,9 @@ configurations {
     compile.exclude group: 'asm', module: 'asm'
     compile.exclude group: 'org.sonatype.sisu.inject', module: 'cglib'
 }
+
+import com.github.jrubygradle.JRubyExec
+import com.github.jrubygradle.JRubyPrepare
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
@@ -35,4 +40,15 @@ dependencies {
 
     // for embulk/guess/charset.rb
     compile 'com.ibm.icu:icu4j:54.1.1'
+
+    gems 'rubygems:liquid:3.0.6'
 }
+
+task unpackGems(type: JRubyPrepare) {
+    outputDir file("${buildDir}/jruby/embulk/gems")
+    dependencies configurations.gems
+    doLast {
+        fileTree(dir: "${buildDir}/jruby/embulk/gems/cache", include: "*.gem").each { f -> f.delete() }
+    }
+}
+processResources.dependsOn("unpackGems")
