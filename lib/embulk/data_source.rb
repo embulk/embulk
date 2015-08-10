@@ -170,6 +170,10 @@ module Embulk
       end
 
       return value
+
+    rescue => e
+      raise e unless Embulk.java?
+      raise org.embulk.config.ConfigException.new(e)
     end
 
     if Embulk.java?
