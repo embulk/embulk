@@ -142,31 +142,51 @@ module Embulk
         value =
           case type
           when :integer
-            Integer(v)
+            begin
+              Integer(v)
+            rescue => e
+              raise ConfigError, e
+            end
           when :float
-            Float(v)
+            begin
+              Float(v)
+            rescue => e
+              raise ConfigError, e
+            end
           when :string
-            String(v).dup
+            begin
+              String(v).dup
+            rescue => e
+              raise ConfigError, e
+            end
           when :bool
-            !!v  # TODO validation
+            begin
+              !!v  # TODO validation
+            rescue => e
+              raise ConfigError, e
+            end
           when :hash
-            raise ArgumentError, "Invalid value for :hash" unless v.is_a?(Hash)
+            raise ConfigError, "Invalid value for :hash" unless v.is_a?(Hash)
             DataSource.new.merge!(v)
           when :array
-            raise ArgumentError, "Invalid value for :array" unless v.is_a?(Array)
+            raise ConfigError, "Invalid value for :array" unless v.is_a?(Array)
             v.dup
           else
             unless type.respond_to?(:load)
               raise ArgumentError, "Unknown type #{type.to_s.dump}"
             end
-            type.load(v)
+            begin
+              type.load(v)
+            rescue => e
+              raise ConfigError, e
+            end
           end
 
       elsif options.has_key?(:default)
         value = options[:default]
 
       else
-        raise "Required field #{key.to_s.dump} is not set"
+        raise ConfigError, "Required field #{key.to_s.dump} is not set"
       end
 
       return value
