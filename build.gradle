@@ -1,10 +1,15 @@
-
+buildscript {
+    repositories { jcenter() }
+    dependencies {
+        classpath "com.github.jruby-gradle:jruby-gradle-jar-plugin:1.0.1"
+    }
+}
 plugins {
     id 'com.jfrog.bintray' version '1.1'
     id 'com.github.ben-manes.versions' version '0.7'
-    id 'com.github.jruby-gradle.base' version '0.1.5'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
+apply plugin: "com.github.jruby-gradle.jar"
 
 def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli")]
 def release_projects = [project(":embulk-core"), project(":embulk-standards")]

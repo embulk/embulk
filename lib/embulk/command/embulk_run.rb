@@ -206,6 +206,8 @@ examples:
       args = 0..0
 
     when :gem
+      require 'embulk/gems'
+      Embulk.add_embedded_gem_path
       require 'rubygems/gem_runner'
       Gem::GemRunner.new.run argv
       exit 0
