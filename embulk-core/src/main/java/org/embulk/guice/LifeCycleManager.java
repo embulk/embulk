@@ -74,8 +74,6 @@ public final class LifeCycleManager
 
     /**
      * Start the life cycle - all instances will have their {@link javax.annotation.PostConstruct} method(s) called
-     *
-     * @throws Exception errors
      */
     public void start()
     {
@@ -146,7 +144,9 @@ public final class LifeCycleManager
     }
 
     /**
-     * Return true if state is {@link destroy} is called
+     * Return true if {@link destroy} is called
+     *
+     * @return true if already destroyed
      */
     public boolean isDestroyed()
     {
