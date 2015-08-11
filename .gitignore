@@ -12,3 +12,4 @@ vendor/
 .yardoc
 /embulk-*.jar
 /.gradle
+/coverage
