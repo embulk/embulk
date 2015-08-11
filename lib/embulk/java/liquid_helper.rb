@@ -1,11 +1,10 @@
 module Embulk
   module Java
-    require 'liquid'
-
     class LiquidTemplateHelper
       include org.embulk.command.LiquidTemplate
 
       def render(source, params)
+        require 'liquid'
         template = Liquid::Template.parse(source)
         data = {
           "env" => ENV.to_h,
