@@ -3,6 +3,8 @@ package org.embulk.exec;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ResourceLeakDetector;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import com.google.inject.Inject;
@@ -18,7 +20,7 @@ public class PooledBufferAllocator
     private final int pageSize;
 
     @Inject
-    public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig)
+    public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig, org.slf4j.ILoggerFactory factory)
     {
         this.nettyBuffer = new PooledByteBufAllocator(false);
         this.pageSize = systemConfig.get(ByteSize.class, "page_size", new ByteSize(DEFAULT_PAGE_SIZE)).getBytesInt();

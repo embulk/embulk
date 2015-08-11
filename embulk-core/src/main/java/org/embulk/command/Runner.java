@@ -30,7 +30,7 @@ import org.embulk.exec.ResumeState;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.ExecSession;
-import org.embulk.EmbulkService;
+import org.embulk.EmbulkEmbed;
 
 public class Runner
 {
@@ -60,8 +60,9 @@ public class Runner
 
     private final Options options;
     private final ConfigSource systemConfig;
-    private final EmbulkService service;
-    private final Injector injector;
+
+    private EmbulkEmbed embed;
+    private Injector injector;
 
     public Runner(String optionJson)
     {
@@ -73,8 +74,6 @@ public class Runner
         mergeOptionsToSystemConfig(options, configLoader, systemConfig);
 
         this.systemConfig = systemConfig;
-        this.service = new EmbulkService(systemConfig);
-        this.injector = service.initialize();
     }
 
     @SuppressWarnings("unchecked")
@@ -105,21 +104,25 @@ public class Runner
 
     public void main(String command, String[] args)
     {
-        switch (command) {
-        case "run":
-            run(args[0]);
-            break;
-        case "cleanup":
-            cleanup(args[0]);
-            break;
-        case "guess":
-            guess(args[0]);
-            break;
-        case "preview":
-            preview(args[0]);
-            break;
-        default:
-            throw new RuntimeException("Unsupported command: "+command);
+        try (EmbulkEmbed embed = new EmbulkEmbed(systemConfig)) {
+            this.injector = embed.getInjector();
+
+            switch (command) {
+            case "run":
+                run(args[0]);
+                break;
+            case "cleanup":
+                cleanup(args[0]);
+                break;
+            case "guess":
+                guess(args[0]);
+                break;
+            case "preview":
+                preview(args[0]);
+                break;
+            default:
+                throw new RuntimeException("Unsupported command: "+command);
+            }
         }
     }
 
