@@ -59,6 +59,35 @@ A configuration file consists of following sections:
 In many cases, what you need to write is **in:**, **out**: and **formatter** sections only because ``guess`` command guesses **parser** and **decoder** options for you. See also the `Quick Start <https://github.com/embulk/embulk#quick-start>`_.
 
 
+Using variables
+~~~~~~~~~~~~~~~~~~
+
+You can embed environment variables in configuration file using `Liquid template engine <http://liquidmarkup.org/>`_ (This is experimental feature. Behavior might change or be removed in future releases).
+
+To use template engine, configuration file name must end with ``.yml.liquid``.
+
+Environment variables are set to ``env`` variable.
+
+.. code-block:: yaml
+
+    in:
+      type: file
+      path_prefix: {{ env.path_prefix }}
+      decoders:
+      - {type: gzip}
+      parser:
+        ...
+    out:
+      type: postgresql
+      host: {{ env.pg_host }}
+      port: {{ env.pg_port }}
+      user: {{ env.pg_user }}
+      password: "{{ env.pg_password }}"
+      database: embulk_load
+      mode: insert
+      table: {{ env.pg_table }}
+
+
 Local file input plugin
 ------------------
 

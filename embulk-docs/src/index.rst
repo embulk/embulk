@@ -62,7 +62,7 @@ Documents
   * `Executor plugins <http://www.embulk.org/plugins/#executor>`_
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    built-in
 
