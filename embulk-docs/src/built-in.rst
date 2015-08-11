@@ -277,7 +277,7 @@ Options
 +====================+==========+===================================================+============================+
 | path\_prefix       | string   | Path prefix of the output files                   | required                   |
 +--------------------+----------+---------------------------------------------------+----------------------------+
-| sequence\_format   | string   | Format of the sequence number of the output files | ``%03d.%02d.`` by default |
+| sequence\_format   | string   | Format of the sequence number of the output files | ``%03d.%02d.`` by default  |
 +--------------------+----------+---------------------------------------------------+----------------------------+
 | file\_ext          | string   | Path suffix of the output files (e.g. ``"csv"``)  | required                   |
 +--------------------+----------+---------------------------------------------------+----------------------------+

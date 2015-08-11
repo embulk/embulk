@@ -23,8 +23,9 @@ task javadoc_html(type: Copy, dependsOn: [':embulk-core:javadoc']) {
 
 task rdoc_html(type: JRubyExec) {
     workingDir '..'
-    jrubyArgs '-ryard', '-eYARD::CLI::Yardoc.run(*ARGV)', '--', '-o', 'embulk-docs/build/html/rdoc'
-    script 'lib'
+    jrubyArgs '-ryard', '-eYARD::CLI::Yardoc.run(*ARGV)'
+    script './lib/embulk/version.rb'  // dummy
+    scriptArgs 'lib', '-o', 'embulk-docs/build/html/rdoc'
 }
 
 task site(type: Copy, dependsOn: ['sphinx_html', 'rdoc_html', 'javadoc_html']) {

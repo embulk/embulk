@@ -236,8 +236,8 @@ project(':embulk-cli') {
 }
 
 task rubyTest(type: JRubyExec) {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '-eTest::Unit::AutoRunner.run(true, *ARGV)'
-    script 'test'
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', '-eARGV.replace([]); Test::Unit::AutoRunner.run(true, "test")'
+    script './lib/embulk/version.rb'  // dummy
 }
 rubyTest.dependsOn('classpath')
 
@@ -245,8 +245,9 @@ rubyTest.dependsOn('classpath')
 // gem task
 //
 task gem(type: JRubyExec) {
-    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(["build", __FILE__])'
-    script 'embulk.gemspec'
+    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
+    script './lib/embulk/version.rb'  // dummy
+    scriptArgs 'build', 'embulk.gemspec'
     doLast { file("${project.name}-${project.version}.gem").renameTo("pkg/${project.name}-${project.version}.gem") }
 }
 gem.dependsOn('classpath')
@@ -255,8 +256,9 @@ gem.dependsOn('classpath')
 // rubyGemsUpload task
 //
 task rubyGemsUpload(type: JRubyExec, dependsOn: ["gem"]) {
-    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(["push", __FILE__])'
-    script "pkg/embulk-${project.version}.gem"
+    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
+    script './lib/embulk/version.rb'  // dummy
+    scriptArgs 'push', "pkg/embulk-${project.version}.gem"
 }
 
 //
