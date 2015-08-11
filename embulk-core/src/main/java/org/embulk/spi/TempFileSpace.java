@@ -46,33 +46,45 @@ public class TempFileSpace
         }
     }
 
-    public void cleanup() {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File e : files) {
-                try {
-                    deleteFileRecursively(e);
-                } catch (IOException ex) {
-                    // ignore IOException
-                }
-            }
+    public void cleanup()
+    {
+        try {
+            deleteFilesIfExistsRecursively(dir);
         }
-        dir.delete();
+        catch (IOException ex) {
+            // ignore IOException
+        }
         dirCreated = false;
     }
 
-    private void deleteFileRecursively(File file) throws IOException {
+    private void deleteFilesIfExistsRecursively(File file)
+            throws IOException
+    {
         Path directory = file.toPath();
         Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException
+            {
+                try {
+                    Files.deleteIfExists(file);
+                }
+                catch (IOException ex) {
+                    // ignore IOException
+                }
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException
+            {
+                try {
+                    Files.deleteIfExists(dir);
+                }
+                catch (IOException ex) {
+                    // ignore IOException
+                }
                 return FileVisitResult.CONTINUE;
             }
         });
