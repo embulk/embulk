@@ -57,14 +57,13 @@ public class TempFileSpace
         dirCreated = false;
     }
 
-    private void deleteFilesIfExistsRecursively(File file)
+    private void deleteFilesIfExistsRecursively(File dir)
             throws IOException
     {
-        Path directory = file.toPath();
-        Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>()
+        {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException
             {
                 try {
                     Files.deleteIfExists(file);
@@ -77,7 +76,6 @@ public class TempFileSpace
 
             @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException
             {
                 try {
                     Files.deleteIfExists(dir);
