@@ -3,29 +3,29 @@ package org.embulk.config;
 public interface TaskSource
         extends DataSource
 {
-    public <T> T loadTask(Class<T> taskType);
+    <T> T loadTask(Class<T> taskType);
 
     @Override
-    public TaskSource getNested(String attrName);
+    TaskSource getNested(String attrName);
 
     @Override
-    public TaskSource getNestedOrSetEmpty(String attrName);
+    TaskSource getNestedOrSetEmpty(String attrName);
 
     @Override
-    public TaskSource set(String attrName, Object v);
+    TaskSource set(String attrName, Object v);
 
     @Override
-    public TaskSource setNested(String attrName, DataSource v);
+    TaskSource setNested(String attrName, DataSource v);
 
     @Override
-    public TaskSource setAll(DataSource other);
+    TaskSource setAll(DataSource other);
 
     @Override
-    public TaskSource remove(String attrName);
+    TaskSource remove(String attrName);
 
     @Override
-    public TaskSource deepCopy();
+    TaskSource deepCopy();
 
     @Override
-    public TaskSource merge(DataSource other);
+    TaskSource merge(DataSource other);
 }

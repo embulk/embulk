@@ -6,13 +6,13 @@ import org.embulk.spi.time.Timestamp;
 
 public interface DefaultValueSetter
 {
-    public void setBoolean(PageBuilder pageBuilder, Column c);
+    void setBoolean(PageBuilder pageBuilder, Column c);
 
-    public void setLong(PageBuilder pageBuilder, Column c);
+    void setLong(PageBuilder pageBuilder, Column c);
 
-    public void setDouble(PageBuilder pageBuilder, Column c);
+    void setDouble(PageBuilder pageBuilder, Column c);
 
-    public void setString(PageBuilder pageBuilder, Column c);
+    void setString(PageBuilder pageBuilder, Column c);
 
-    public void setTimestamp(PageBuilder pageBuilder, Column c);
+    void setTimestamp(PageBuilder pageBuilder, Column c);
 }

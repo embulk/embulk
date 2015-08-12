@@ -40,5 +40,5 @@ import org.embulk.config.ConfigSource;
  */
 public interface Extension
 {
-    public List<Module> getModules(ConfigSource systemConfig);
+    List<Module> getModules(ConfigSource systemConfig);
 }

@@ -8,23 +8,23 @@ import org.embulk.config.CommitReport;
 
 public interface FileInputPlugin
 {
-    public interface Control
+    interface Control
     {
-        public List<CommitReport> run(TaskSource taskSource,
+        List<CommitReport> run(TaskSource taskSource,
                 int taskCount);
     }
 
-    public ConfigDiff transaction(ConfigSource config,
+    ConfigDiff transaction(ConfigSource config,
             FileInputPlugin.Control control);
 
-    public ConfigDiff resume(TaskSource taskSource,
+    ConfigDiff resume(TaskSource taskSource,
             int taskCount,
             FileInputPlugin.Control control);
 
-    public void cleanup(TaskSource taskSource,
+    void cleanup(TaskSource taskSource,
             int taskCount,
             List<CommitReport> successCommitReports);
 
-    public TransactionalFileInput open(TaskSource taskSource,
+    TransactionalFileInput open(TaskSource taskSource,
             int taskIndex);
 }

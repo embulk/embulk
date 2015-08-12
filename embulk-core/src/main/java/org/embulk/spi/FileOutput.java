@@ -3,11 +3,11 @@ package org.embulk.spi;
 public interface FileOutput
         extends AutoCloseable
 {
-    public void nextFile();
+    void nextFile();
 
-    public void add(Buffer buffer);
+    void add(Buffer buffer);
 
-    public void finish();
+    void finish();
 
-    public void close();
+    void close();
 }

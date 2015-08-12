@@ -8,21 +8,21 @@ import org.embulk.config.CommitReport;
 
 public interface FileOutputPlugin
 {
-    public interface Control
+    interface Control
     {
-        public List<CommitReport> run(TaskSource taskSource);
+        List<CommitReport> run(TaskSource taskSource);
     }
 
-    public ConfigDiff transaction(ConfigSource config, int taskCount,
+    ConfigDiff transaction(ConfigSource config, int taskCount,
             FileOutputPlugin.Control control);
 
-    public ConfigDiff resume(TaskSource taskSource,
+    ConfigDiff resume(TaskSource taskSource,
             int taskCount,
             FileOutputPlugin.Control control);
 
-    public void cleanup(TaskSource taskSource,
+    void cleanup(TaskSource taskSource,
             int taskCount,
             List<CommitReport> successCommitReports);
 
-    public TransactionalFileOutput open(TaskSource taskSource, int taskIndex);
+    TransactionalFileOutput open(TaskSource taskSource, int taskIndex);
 }

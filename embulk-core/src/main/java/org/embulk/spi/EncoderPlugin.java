@@ -5,12 +5,12 @@ import org.embulk.config.ConfigSource;
 
 public interface EncoderPlugin
 {
-    public interface Control
+    interface Control
     {
-        public void run(TaskSource taskSource);
+        void run(TaskSource taskSource);
     }
 
-    public void transaction(ConfigSource config, EncoderPlugin.Control control);
+    void transaction(ConfigSource config, EncoderPlugin.Control control);
 
-    public FileOutput open(TaskSource taskSource, FileOutput fileOutput);
+    FileOutput open(TaskSource taskSource, FileOutput fileOutput);
 }

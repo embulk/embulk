@@ -5,13 +5,13 @@ import org.embulk.config.CommitReport;
 public interface TransactionalPageOutput
         extends Transactional, PageOutput
 {
-    public void add(Page page);
+    void add(Page page);
 
-    public void finish();
+    void finish();
 
-    public void close();
+    void close();
 
-    public void abort();
+    void abort();
 
-    public CommitReport commit();
+    CommitReport commit();
 }

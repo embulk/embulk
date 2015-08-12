@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public interface Type
 {
     @JsonValue
-    public String getName();
+    String getName();
 
-    public Class<?> getJavaType();
+    Class<?> getJavaType();
 
-    public byte getFixedStorageSize();
+    byte getFixedStorageSize();
 }

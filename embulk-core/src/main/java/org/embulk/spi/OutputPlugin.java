@@ -8,22 +8,22 @@ import org.embulk.config.CommitReport;
 
 public interface OutputPlugin
 {
-    public interface Control
+    interface Control
     {
-        public List<CommitReport> run(TaskSource taskSource);
+        List<CommitReport> run(TaskSource taskSource);
     }
 
-    public ConfigDiff transaction(ConfigSource config,
+    ConfigDiff transaction(ConfigSource config,
             Schema schema, int taskCount,
             OutputPlugin.Control control);
 
-    public ConfigDiff resume(TaskSource taskSource,
+    ConfigDiff resume(TaskSource taskSource,
             Schema schema, int taskCount,
             OutputPlugin.Control control);
 
-    public void cleanup(TaskSource taskSource,
+    void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
             List<CommitReport> successCommitReports);
 
-    public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);
+    TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);
 }
