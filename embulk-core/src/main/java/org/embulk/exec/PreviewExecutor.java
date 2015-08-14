@@ -11,7 +11,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
@@ -91,7 +91,7 @@ public class PreviewExecutor
 
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount)
+                public List<TaskReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount)
                 {
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)

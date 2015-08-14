@@ -4,13 +4,13 @@ import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface OutputPlugin
 {
     interface Control
     {
-        List<CommitReport> run(TaskSource taskSource);
+        List<TaskReport> run(TaskSource taskSource);
     }
 
     ConfigDiff transaction(ConfigSource config,
@@ -23,7 +23,7 @@ public interface OutputPlugin
 
     void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports);
+            List<TaskReport> successTaskReports);
 
     TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);
 }

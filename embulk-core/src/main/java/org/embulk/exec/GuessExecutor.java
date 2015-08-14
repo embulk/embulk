@@ -18,7 +18,7 @@ import org.embulk.config.DataSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Column;
 import org.embulk.spi.Page;
@@ -148,7 +148,7 @@ public class GuessExecutor
             ConfigDiff guessed;
             try {
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
-                    public List<CommitReport> run(TaskSource inputTaskSource, Schema schema, int taskCount)
+                    public List<TaskReport> run(TaskSource inputTaskSource, Schema schema, int taskCount)
                     {
                         if (taskCount == 0) {
                             throw new NoSampleException("No input files to guess");
@@ -212,7 +212,7 @@ public class GuessExecutor
 
         public void cleanup(TaskSource taskSource,
                 int taskCount,
-                List<CommitReport> successCommitReports)
+                List<TaskReport> successTaskReports)
         {
             if (buffer != null) {
                 buffer.release();
@@ -257,7 +257,7 @@ public class GuessExecutor
         public void abort() { }
 
         @Override
-        public CommitReport commit()
+        public TaskReport commit()
         {
             return null;
         }

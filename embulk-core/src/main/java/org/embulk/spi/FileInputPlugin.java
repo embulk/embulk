@@ -4,13 +4,13 @@ import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface FileInputPlugin
 {
     interface Control
     {
-        List<CommitReport> run(TaskSource taskSource,
+        List<TaskReport> run(TaskSource taskSource,
                 int taskCount);
     }
 
@@ -23,7 +23,7 @@ public interface FileInputPlugin
 
     void cleanup(TaskSource taskSource,
             int taskCount,
-            List<CommitReport> successCommitReports);
+            List<TaskReport> successTaskReports);
 
     TransactionalFileInput open(TaskSource taskSource,
             int taskIndex);

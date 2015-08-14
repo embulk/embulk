@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigInject;
@@ -107,7 +107,7 @@ public class <%= java_class_name %>
     @Override
     public void cleanup(TaskSource taskSource,
             int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     {
     }
 
@@ -129,9 +129,9 @@ public class <%= java_class_name %>
         //    { }
         //
         //    @Override
-        //    public CommitReport commit()
+        //    public TaskReport commit()
         //    {
-        //        return Exec.newCommitReport();
+        //        return Exec.newTaskReport();
         //    }
         //}
     }

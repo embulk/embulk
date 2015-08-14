@@ -6,7 +6,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
@@ -91,9 +91,9 @@ public class FileOutputRunner
         }
 
         @Override
-        public List<CommitReport> run(final TaskSource fileOutputTaskSource)
+        public List<TaskReport> run(final TaskSource fileOutputTaskSource)
         {
-            final List<CommitReport> commitReports = new ArrayList<CommitReport>();
+            final List<TaskReport> taskReports = new ArrayList<TaskReport>();
             Encoders.transaction(encoderPlugins, task.getEncoderConfigs(), new Encoders.Control() {
                 public void run(final List<TaskSource> encoderTaskSources)
                 {
@@ -103,20 +103,20 @@ public class FileOutputRunner
                             task.setFileOutputTaskSource(fileOutputTaskSource);
                             task.setEncoderTaskSources(encoderTaskSources);
                             task.setFormatterTaskSource(formatterTaskSource);
-                            commitReports.addAll(nextControl.run(task.dump()));
+                            taskReports.addAll(nextControl.run(task.dump()));
                         }
                     });
                 }
             });
-            return commitReports;
+            return taskReports;
         }
     }
 
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successtaskReports)
     {
-        fileOutputPlugin.cleanup(taskSource, taskCount, successCommitReports);
+        fileOutputPlugin.cleanup(taskSource, taskCount, successtaskReports);
     }
 
     @Override
@@ -191,7 +191,7 @@ public class FileOutputRunner
         }
 
         @Override
-        public CommitReport commit()
+        public TaskReport commit()
         {
             // TODO check finished
             return tran.commit();

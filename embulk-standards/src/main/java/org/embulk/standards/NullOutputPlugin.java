@@ -4,7 +4,7 @@ import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
 import org.embulk.spi.Exec;
@@ -32,7 +32,7 @@ public class NullOutputPlugin
 
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     { }
 
     @Override
@@ -50,9 +50,9 @@ public class NullOutputPlugin
 
             public void abort() { }
 
-            public CommitReport commit()
+            public TaskReport commit()
             {
-                return Exec.newCommitReport();
+                return Exec.newTaskReport();
             }
         };
     }

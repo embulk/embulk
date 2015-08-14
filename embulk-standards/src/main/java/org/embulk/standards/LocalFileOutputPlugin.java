@@ -14,7 +14,7 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Buffer;
@@ -70,7 +70,7 @@ public class LocalFileOutputPlugin
     @Override
     public void cleanup(TaskSource taskSource,
             int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     { }
 
     @Override
@@ -136,9 +136,9 @@ public class LocalFileOutputPlugin
             public void abort()
             { }
 
-            public CommitReport commit()
+            public TaskReport commit()
             {
-                CommitReport report = Exec.newCommitReport();
+                TaskReport report = Exec.newTaskReport();
                 // TODO better setting for Report
                 // report.set("file_names", fileNames);
                 // report.set("file_sizes", fileSizes);

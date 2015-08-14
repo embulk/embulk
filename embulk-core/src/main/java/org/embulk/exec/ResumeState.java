@@ -4,8 +4,10 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.Schema;
 import org.embulk.spi.ExecSession;
@@ -17,8 +19,8 @@ public class ResumeState
     private final TaskSource outputTaskSource;
     private final Schema inputSchema;
     private final Schema outputSchema;
-    private final List<Optional<CommitReport>> inputCommitReports;
-    private final List<Optional<CommitReport>> outputCommitReports;
+    private final List<Optional<TaskReport>> inputTaskReports;
+    private final List<Optional<TaskReport>> outputTaskReports;
 
     @JsonCreator
     public ResumeState(
@@ -27,16 +29,16 @@ public class ResumeState
             @JsonProperty("out_task") TaskSource outputTaskSource,
             @JsonProperty("in_schema") Schema inputSchema,
             @JsonProperty("out_schema") Schema outputSchema,
-            @JsonProperty("in_reports") List<Optional<CommitReport>> inputCommitReports,
-            @JsonProperty("out_reports") List<Optional<CommitReport>> outputCommitReports)
+            @JsonProperty("in_reports") List<Optional<TaskReport>> inputTaskReports,
+            @JsonProperty("out_reports") List<Optional<TaskReport>> outputTaskReports)
     {
         this.execSessionConfigSource = execSessionConfigSource;
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
         this.inputSchema = inputSchema;
         this.outputSchema = outputSchema;
-        this.inputCommitReports = inputCommitReports;
-        this.outputCommitReports = outputCommitReports;
+        this.inputTaskReports = inputTaskReports;
+        this.outputTaskReports = outputTaskReports;
     }
 
     @JsonProperty("exec_task")
@@ -70,14 +72,30 @@ public class ResumeState
     }
 
     @JsonProperty("in_reports")
+    public List<Optional<TaskReport>> getInputTaskReports()
+    {
+        return inputTaskReports;
+    }
+
+    @Deprecated
+    @JsonIgnore
+    @SuppressWarnings("unchecked")
     public List<Optional<CommitReport>> getInputCommitReports()
     {
-        return inputCommitReports;
+        return (List) inputTaskReports;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport
     }
 
     @JsonProperty("out_reports")
+    public List<Optional<TaskReport>> getOutputTaskReports()
+    {
+        return outputTaskReports;
+    }
+
+    @Deprecated
+    @JsonIgnore
+    @SuppressWarnings("unchecked")
     public List<Optional<CommitReport>> getOutputCommitReports()
     {
-        return outputCommitReports;
+        return (List) outputTaskReports;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
     }
 }

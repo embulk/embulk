@@ -2,7 +2,7 @@ package <%= java_package_name %>;
 
 import java.util.List;
 import com.google.common.base.Optional;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -64,12 +64,12 @@ public class <%= java_class_name %>
     @Override
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     {
     }
 
     @Override
-    public CommitReport run(TaskSource taskSource,
+    public TaskReport run(TaskSource taskSource,
             Schema schema, int taskIndex,
             PageOutput output)
     {

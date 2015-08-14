@@ -5,7 +5,8 @@ import org.slf4j.Logger;
 import com.google.inject.Injector;
 import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
-import org.embulk.config.CommitReport;
+import org.embulk.config.CommitReport;  // Deprecated
+import org.embulk.config.TaskReport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
@@ -74,6 +75,12 @@ public class Exec
         return session().newPlugin(iface, type);
     }
 
+    public static TaskReport newTaskReport()
+    {
+        return session().newTaskReport();
+    }
+
+    @Deprecated
     public static CommitReport newCommitReport()
     {
         return session().newCommitReport();

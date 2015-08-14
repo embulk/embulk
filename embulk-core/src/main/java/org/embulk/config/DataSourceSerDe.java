@@ -20,6 +20,7 @@ public class DataSourceSerDe
     public static class SerDeModule
             extends SimpleModule
     {
+        @SuppressWarnings("deprecation")
         public SerDeModule(final ModelManager model)
         {
             // DataSourceImpl
@@ -34,7 +35,11 @@ public class DataSourceSerDe
             addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
             addDeserializer(TaskSource.class, new DataSourceDeserializer<TaskSource>(model));
 
-            // CommitReport
+            // TaskReport
+            addSerializer(TaskReport.class, new DataSourceSerializer<TaskReport>());
+            addDeserializer(TaskReport.class, new DataSourceDeserializer<TaskReport>(model));
+
+            // CommitReport (Deprecated)
             addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
             addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
 

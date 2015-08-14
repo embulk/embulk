@@ -11,6 +11,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
@@ -166,6 +167,12 @@ public class ExecSession
         return pluginManager.newPlugin(iface, type);
     }
 
+    public TaskReport newTaskReport()
+    {
+        return new DataSourceImpl(modelManager);
+    }
+
+    @Deprecated
     public CommitReport newCommitReport()
     {
         return new DataSourceImpl(modelManager);

@@ -2,7 +2,7 @@ package org.embulk.spi.util;
 
 import java.util.List;
 import org.embulk.config.TaskSource;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.Schema;
@@ -21,9 +21,9 @@ public abstract class Executors
     {
         public void started();
 
-        public void inputCommitted(CommitReport report);
+        public void inputCommitted(TaskReport report);
 
-        public void outputCommitted(CommitReport report);
+        public void outputCommitted(TaskReport report);
     }
 
     public static void process(ExecSession exec,
@@ -56,18 +56,18 @@ public abstract class Executors
         try {
             PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
 
-            CommitReport inputCommitReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
-            if (inputCommitReport == null) {
-                inputCommitReport = exec.newCommitReport();
+            TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
+            if (inputTaskReport == null) {
+                inputTaskReport = exec.newTaskReport();
             }
-            callback.inputCommitted(inputCommitReport);
+            callback.inputCommitted(inputTaskReport);
 
-            CommitReport outputCommitReport = tran.commit();
+            TaskReport outputTaskReport = tran.commit();
             tran = null;
-            if (outputCommitReport == null) {
-                outputCommitReport = exec.newCommitReport();
+            if (outputTaskReport == null) {
+                outputTaskReport = exec.newTaskReport();
             }
-            callback.outputCommitted(outputCommitReport);  // TODO check output.finish() is called. wrap or abstract
+            callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
 
         } finally {
             try {

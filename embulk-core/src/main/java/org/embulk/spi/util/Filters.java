@@ -4,7 +4,6 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.ExecSession;

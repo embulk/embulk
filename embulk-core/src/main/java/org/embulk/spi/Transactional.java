@@ -1,10 +1,10 @@
 package org.embulk.spi;
 
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface Transactional
 {
     void abort();
 
-    CommitReport commit();
+    TaskReport commit();
 }

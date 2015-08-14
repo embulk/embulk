@@ -1,7 +1,11 @@
 package org.embulk.config;
 
+/**
+ * Simply replaced by TaskReport.
+ */
+@Deprecated
 public interface CommitReport
-        extends DataSource
+        extends TaskReport
 {
     @Override
     CommitReport getNested(String attrName);

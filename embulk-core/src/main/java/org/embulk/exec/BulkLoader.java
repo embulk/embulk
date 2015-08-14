@@ -17,7 +17,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -132,7 +132,7 @@ public class BulkLoader
         public void initialize(int inputTaskCount, int outputTaskCount)
         {
             if (inputTaskStates != null || outputTaskStates != null) {
-                // initialize is called twice if resume (by restoreResumedCommitReports and ExecutorPlugin.execute)
+                // initialize is called twice if resume (by restoreResumedTaskReports and ExecutorPlugin.execute)
                 if (inputTaskStates.size() != inputTaskCount || outputTaskStates.size() != outputTaskCount) {
                     throw new ConfigException(String.format(
                                 "input task count and output task (%d and %d) must be same with the first execution (%d and %d) whenre resumed",
@@ -213,38 +213,38 @@ public class BulkLoader
             this.inputConfigDiff = inputConfigDiff;
         }
 
-        private List<Optional<CommitReport>> getInputCommitReports()
+        private List<Optional<TaskReport>> getInputTaskReports()
         {
-            ImmutableList.Builder<Optional<CommitReport>> builder = ImmutableList.builder();
+            ImmutableList.Builder<Optional<TaskReport>> builder = ImmutableList.builder();
             for (TaskState inputTaskState : inputTaskStates) {
-                builder.add(inputTaskState.getCommitReport());
+                builder.add(inputTaskState.getTaskReport());
             }
             return builder.build();
         }
 
-        private List<Optional<CommitReport>> getOutputCommitReports()
+        private List<Optional<TaskReport>> getOutputTaskReports()
         {
-            ImmutableList.Builder<Optional<CommitReport>> builder = ImmutableList.builder();
+            ImmutableList.Builder<Optional<TaskReport>> builder = ImmutableList.builder();
             for (TaskState outputTaskState : outputTaskStates) {
-                builder.add(outputTaskState.getCommitReport());
+                builder.add(outputTaskState.getTaskReport());
             }
             return builder.build();
         }
 
-        public List<CommitReport> getAllInputCommitReports()
+        public List<TaskReport> getAllInputTaskReports()
         {
-            ImmutableList.Builder<CommitReport> builder = ImmutableList.builder();
+            ImmutableList.Builder<TaskReport> builder = ImmutableList.builder();
             for (TaskState inputTaskState : inputTaskStates) {
-                builder.add(inputTaskState.getCommitReport().get());
+                builder.add(inputTaskState.getTaskReport().get());
             }
             return builder.build();
         }
 
-        public List<CommitReport> getAllOutputCommitReports()
+        public List<TaskReport> getAllOutputTaskReports()
         {
-            ImmutableList.Builder<CommitReport> builder = ImmutableList.builder();
+            ImmutableList.Builder<TaskReport> builder = ImmutableList.builder();
             for (TaskState outputTaskState : outputTaskStates) {
-                builder.add(outputTaskState.getCommitReport().get());
+                builder.add(outputTaskState.getTaskReport().get());
             }
             return builder.build();
         }
@@ -323,7 +323,7 @@ public class BulkLoader
                     exec.getSessionExecConfig(),
                     inputTaskSource, outputTaskSource,
                     first(schemas), executorSchema,
-                    getInputCommitReports(), getOutputCommitReports());
+                    getInputTaskReports(), getOutputTaskReports());
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec)
@@ -442,24 +442,24 @@ public class BulkLoader
         BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
         ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
 
-        ImmutableList.Builder<CommitReport> successfulInputCommitReports = ImmutableList.builder();
-        ImmutableList.Builder<CommitReport> successfulOutputCommitReports = ImmutableList.builder();
-        for (Optional<CommitReport> inputCommitReport : resume.getInputCommitReports()) {
-            if (inputCommitReport.isPresent()) {
-                successfulInputCommitReports.add(inputCommitReport.get());
+        ImmutableList.Builder<TaskReport> successfulInputTaskReports = ImmutableList.builder();
+        ImmutableList.Builder<TaskReport> successfulOutputTaskReports = ImmutableList.builder();
+        for (Optional<TaskReport> inputTaskReport : resume.getInputTaskReports()) {
+            if (inputTaskReport.isPresent()) {
+                successfulInputTaskReports.add(inputTaskReport.get());
             }
         }
-        for (Optional<CommitReport> outputCommitReport : resume.getOutputCommitReports()) {
-            if (outputCommitReport.isPresent()) {
-                successfulOutputCommitReports.add(outputCommitReport.get());
+        for (Optional<TaskReport> outputTaskReport : resume.getOutputTaskReports()) {
+            if (outputTaskReport.isPresent()) {
+                successfulOutputTaskReports.add(outputTaskReport.get());
             }
         }
 
         plugins.getInputPlugin().cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
-                resume.getInputCommitReports().size(), successfulInputCommitReports.build());
+                resume.getInputTaskReports().size(), successfulInputTaskReports.build());
 
         plugins.getOutputPlugin().cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
-                resume.getOutputCommitReports().size(), successfulOutputCommitReports.build());
+                resume.getOutputTaskReports().size(), successfulOutputTaskReports.build());
     }
 
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
@@ -478,7 +478,7 @@ public class BulkLoader
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
             ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
                     state.setInputTaskSource(inputTask);
                     Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
@@ -491,7 +491,7 @@ public class BulkLoader
                                 {
                                     state.setExecutorSchema(executorSchema);
                                     ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<CommitReport> run(final TaskSource outputTask)
+                                        public List<TaskReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
 
@@ -501,7 +501,7 @@ public class BulkLoader
                                                 execute(task, executor, state);
                                             }
 
-                                            return state.getAllOutputCommitReports();
+                                            return state.getAllOutputTaskReports();
                                         }
                                     });
                                     state.setOutputConfigDiff(outputConfigDiff);
@@ -509,7 +509,7 @@ public class BulkLoader
                             });
                         }
                     });
-                    return state.getAllInputCommitReports();
+                    return state.getAllInputTaskReports();
                 }
             });
             state.setInputConfigDiff(inputConfigDiff);
@@ -539,8 +539,8 @@ public class BulkLoader
 
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputCommitReports().size(), new InputPlugin.Control() {
-                public List<CommitReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+            ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
+                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                 {
                     // TODO validate inputTask?
                     // TODO validate inputSchema
@@ -556,17 +556,17 @@ public class BulkLoader
                                     // TODO validate executorSchema
                                     state.setExecutorSchema(executorSchema);
                                     ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<CommitReport> run(final TaskSource outputTask)
+                                        public List<TaskReport> run(final TaskSource outputTask)
                                         {
                                             // TODO validate outputTask?
                                             state.setOutputTaskSource(outputTask);
 
-                                            restoreResumedCommitReports(resume, state);
+                                            restoreResumedTaskReports(resume, state);
                                             if (!state.isAllTasksCommitted()) {
                                                 execute(task, executor, state);
                                             }
 
-                                            return state.getAllOutputCommitReports();
+                                            return state.getAllOutputTaskReports();
                                         }
                                     });
                                     state.setOutputConfigDiff(outputConfigDiff);
@@ -574,7 +574,7 @@ public class BulkLoader
                             });
                         }
                     });
-                    return state.getAllInputCommitReports();
+                    return state.getAllInputTaskReports();
                 }
             });
             state.setInputConfigDiff(inputConfigDiff);
@@ -595,29 +595,29 @@ public class BulkLoader
         }
     }
 
-    private static void restoreResumedCommitReports(ResumeState resume, LoaderState state)
+    private static void restoreResumedTaskReports(ResumeState resume, LoaderState state)
     {
-        int inputTaskCount = resume.getInputCommitReports().size();
-        int outputTaskCount = resume.getOutputCommitReports().size();
+        int inputTaskCount = resume.getInputTaskReports().size();
+        int outputTaskCount = resume.getOutputTaskReports().size();
 
         state.initialize(inputTaskCount, outputTaskCount);
 
         for (int i=0; i < inputTaskCount; i++) {
-            Optional<CommitReport> report = resume.getInputCommitReports().get(i);
+            Optional<TaskReport> report = resume.getInputTaskReports().get(i);
             if (report.isPresent()) {
                 TaskState task = state.getInputTaskState(i);
                 task.start();
-                task.setCommitReport(report.get());
+                task.setTaskReport(report.get());
                 task.finish();
             }
         }
 
         for (int i=0; i < outputTaskCount; i++) {
-            Optional<CommitReport> report = resume.getOutputCommitReports().get(i);
+            Optional<TaskReport> report = resume.getOutputTaskReports().get(i);
             if (report.isPresent()) {
                 TaskState task = state.getOutputTaskState(i);
                 task.start();
-                task.setCommitReport(report.get());
+                task.setTaskReport(report.get());
                 task.finish();
             }
         }

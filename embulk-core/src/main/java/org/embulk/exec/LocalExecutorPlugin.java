@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import com.google.inject.Inject;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
@@ -109,14 +109,14 @@ public class LocalExecutorPlugin
                             state.getOutputTaskState(taskIndex).start();
                         }
 
-                        public void inputCommitted(CommitReport report)
+                        public void inputCommitted(TaskReport report)
                         {
-                            state.getInputTaskState(taskIndex).setCommitReport(report);
+                            state.getInputTaskState(taskIndex).setTaskReport(report);
                         }
 
-                        public void outputCommitted(CommitReport report)
+                        public void outputCommitted(TaskReport report)
                         {
-                            state.getOutputTaskState(taskIndex).setCommitReport(report);
+                            state.getOutputTaskState(taskIndex).setTaskReport(report);
                         }
                     });
                     return null;

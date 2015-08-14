@@ -4,13 +4,13 @@ import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface InputPlugin
 {
     interface Control
     {
-        List<CommitReport> run(TaskSource taskSource,
+        List<TaskReport> run(TaskSource taskSource,
                 Schema schema, int taskCount);
     }
 
@@ -23,9 +23,9 @@ public interface InputPlugin
 
     void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports);
+            List<TaskReport> successTaskReports);
 
-    CommitReport run(TaskSource taskSource,
+    TaskReport run(TaskSource taskSource,
             Schema schema, int taskIndex,
             PageOutput output);
 

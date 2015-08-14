@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.Task;
@@ -52,7 +52,7 @@ public class TestFileOutputRunner
         @Override
         public void cleanup(TaskSource taskSource,
                 int taskCount,
-                List<CommitReport> successCommitReports)
+                List<TaskReport> successTaskReports)
         {
         }
 
@@ -90,10 +90,10 @@ public class TestFileOutputRunner
                 }
 
                 @Override
-                public CommitReport commit()
+                public TaskReport commit()
                 {
                     transactionCompleted = true;
-                    return Exec.newCommitReport();
+                    return Exec.newTaskReport();
                 }
             };
         }
@@ -122,7 +122,7 @@ public class TestFileOutputRunner
 
         runner.transaction(config, schema, 1, new OutputPlugin.Control()
         {
-            public List<CommitReport> run(final TaskSource outputTask)
+            public List<TaskReport> run(final TaskSource outputTask)
             {
                 TransactionalPageOutput tran = runner.open(outputTask, schema,
                         1);
@@ -142,7 +142,7 @@ public class TestFileOutputRunner
                     }
                     tran.close();
                 }
-                return new ArrayList<CommitReport>();
+                return new ArrayList<TaskReport>();
             }
         });
 
@@ -181,7 +181,7 @@ public class TestFileOutputRunner
         try {
             runner.transaction(config, schema, 1, new OutputPlugin.Control()
             {
-                public List<CommitReport> run(final TaskSource outputTask)
+                public List<TaskReport> run(final TaskSource outputTask)
                 {
                     TransactionalPageOutput tran = runner.open(outputTask,
                             schema, 1);
@@ -196,7 +196,7 @@ public class TestFileOutputRunner
                         }
                         tran.close();
                     }
-                    return new ArrayList<CommitReport>();
+                    return new ArrayList<TaskReport>();
                 }
             });
         } catch (NullPointerException npe) {

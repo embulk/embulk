@@ -6,7 +6,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
@@ -102,9 +102,9 @@ public class FileInputRunner
         }
 
         @Override
-        public List<CommitReport> run(final TaskSource fileInputTaskSource, final int taskCount)
+        public List<TaskReport> run(final TaskSource fileInputTaskSource, final int taskCount)
         {
-            final List<CommitReport> commitReports = new ArrayList<CommitReport>();
+            final List<TaskReport> taskReports = new ArrayList<TaskReport>();
             Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
                 public void run(final List<TaskSource> decoderTaskSources)
                 {
@@ -114,24 +114,24 @@ public class FileInputRunner
                             task.setFileInputTaskSource(fileInputTaskSource);
                             task.setDecoderTaskSources(decoderTaskSources);
                             task.setParserTaskSource(parserTaskSource);
-                            commitReports.addAll(nextControl.run(task.dump(), schema, taskCount));
+                            taskReports.addAll(nextControl.run(task.dump(), schema, taskCount));
                         }
                     });
                 }
             });
-            return commitReports;
+            return taskReports;
         }
     }
 
     public void cleanup(TaskSource taskSource,
             Schema schema, int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     {
-        fileInputPlugin.cleanup(taskSource, taskCount, successCommitReports);
+        fileInputPlugin.cleanup(taskSource, taskCount, successTaskReports);
     }
 
     @Override
-    public CommitReport run(TaskSource taskSource, Schema schema, int taskIndex,
+    public TaskReport run(TaskSource taskSource, Schema schema, int taskIndex,
             PageOutput output)
     {
         final RunnerTask task = taskSource.loadTask(RunnerTask.class);
@@ -144,7 +144,7 @@ public class FileInputRunner
             fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
             parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
 
-            CommitReport report = tran.commit();  // TODO check output.finish() is called. wrap
+            TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
             tran = null;
             return report;
         } finally {

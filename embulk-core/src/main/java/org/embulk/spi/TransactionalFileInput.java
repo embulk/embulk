@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface TransactionalFileInput
         extends Transactional, FileInput
@@ -13,5 +13,5 @@ public interface TransactionalFileInput
 
     void abort();
 
-    CommitReport commit();
+    TaskReport commit();
 }

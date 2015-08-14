@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskSource;
@@ -62,7 +62,7 @@ public class TestFileInputRunner
         @Override
         public void cleanup(TaskSource taskSource,
                 int taskCount,
-                List<CommitReport> successCommitReports)
+                List<TaskReport> successTaskReports)
         {
         }
 
@@ -95,7 +95,7 @@ public class TestFileInputRunner
                 }
 
                 @Override
-                public CommitReport commit()
+                public TaskReport commit()
                 {
                     transactionCompleted = true;
                     return null;
@@ -126,10 +126,10 @@ public class TestFileInputRunner
         final MockPageOutput output = new MockPageOutput();
         runner.transaction(config, new InputPlugin.Control()
         {
-            public List<CommitReport> run(TaskSource inputTaskSource,
+            public List<TaskReport> run(TaskSource inputTaskSource,
                     Schema schema, int taskCount)
             {
-                List<CommitReport> reports = new ArrayList<>();
+                List<TaskReport> reports = new ArrayList<>();
                 reports.add(runner.run(inputTaskSource, schema, 0, output));
                 return reports;
             }
@@ -180,10 +180,10 @@ public class TestFileInputRunner
         try {
             runner.transaction(config, new InputPlugin.Control()
             {
-                public List<CommitReport> run(TaskSource inputTaskSource,
+                public List<TaskReport> run(TaskSource inputTaskSource,
                         Schema schema, int taskCount)
                 {
-                    List<CommitReport> reports = new ArrayList<>();
+                    List<TaskReport> reports = new ArrayList<>();
                     reports.add(runner.run(inputTaskSource, schema, 0, output));
                     return reports;
                 }

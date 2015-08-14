@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.common.base.Preconditions;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -34,7 +34,7 @@ public class SamplingParserPlugin
 
         try {
             runner.transaction(samplingInputConfig, new InputPlugin.Control() {
-                public List<CommitReport> run(TaskSource taskSource, Schema schema, int taskCount)
+                public List<TaskReport> run(TaskSource taskSource, Schema schema, int taskCount)
                 {
                     if (taskCount == 0) {
                         throw new NoSampleException("No input files to read sample data");

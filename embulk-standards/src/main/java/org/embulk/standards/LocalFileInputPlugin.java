@@ -23,7 +23,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
@@ -100,7 +100,7 @@ public class LocalFileInputPlugin
     @Override
     public void cleanup(TaskSource taskSource,
             int taskCount,
-            List<CommitReport> successCommitReports)
+            List<TaskReport> successTaskReports)
     { }
 
     public List<String> listFiles(PluginTask task)
@@ -195,9 +195,9 @@ public class LocalFileInputPlugin
             { }
 
             @Override
-            public CommitReport commit()
+            public TaskReport commit()
             {
-                return Exec.newCommitReport();
+                return Exec.newTaskReport();
             }
         };
     }

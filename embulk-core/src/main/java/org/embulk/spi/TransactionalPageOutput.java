@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-import org.embulk.config.CommitReport;
+import org.embulk.config.TaskReport;
 
 public interface TransactionalPageOutput
         extends Transactional, PageOutput
@@ -13,5 +13,5 @@ public interface TransactionalPageOutput
 
     void abort();
 
-    CommitReport commit();
+    TaskReport commit();
 }
