@@ -4,26 +4,26 @@ public interface CommitReport
         extends DataSource
 {
     @Override
-    public CommitReport getNested(String attrName);
+    CommitReport getNested(String attrName);
 
     @Override
-    public CommitReport getNestedOrSetEmpty(String attrName);
+    CommitReport getNestedOrSetEmpty(String attrName);
 
     @Override
-    public CommitReport set(String attrName, Object v);
+    CommitReport set(String attrName, Object v);
 
     @Override
-    public CommitReport setNested(String attrName, DataSource v);
+    CommitReport setNested(String attrName, DataSource v);
 
     @Override
-    public CommitReport setAll(DataSource other);
+    CommitReport setAll(DataSource other);
 
     @Override
-    public CommitReport remove(String attrName);
+    CommitReport remove(String attrName);
 
     @Override
-    public CommitReport deepCopy();
+    CommitReport deepCopy();
 
     @Override
-    public CommitReport merge(DataSource other);
+    CommitReport merge(DataSource other);
 }

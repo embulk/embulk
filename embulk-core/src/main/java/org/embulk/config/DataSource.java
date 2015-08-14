@@ -7,33 +7,33 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface DataSource
 {
-    public List<String> getAttributeNames();
+    List<String> getAttributeNames();
 
-    public Iterable<Map.Entry<String, JsonNode>> getAttributes();
+    Iterable<Map.Entry<String, JsonNode>> getAttributes();
 
-    public boolean isEmpty();
+    boolean isEmpty();
 
-    public boolean has(String attrName);
+    boolean has(String attrName);
 
-    public <E> E get(Class<E> type, String attrName);
+    <E> E get(Class<E> type, String attrName);
 
-    public <E> E get(Class<E> type, String attrName, E defaultValue);
+    <E> E get(Class<E> type, String attrName, E defaultValue);
 
-    public DataSource getNested(String attrName);
+    DataSource getNested(String attrName);
 
-    public DataSource getNestedOrSetEmpty(String attrName);
+    DataSource getNestedOrSetEmpty(String attrName);
 
-    public DataSource set(String attrName, Object v);
+    DataSource set(String attrName, Object v);
 
-    public DataSource setNested(String attrName, DataSource v);
+    DataSource setNested(String attrName, DataSource v);
 
-    public DataSource setAll(DataSource other);
+    DataSource setAll(DataSource other);
 
-    public DataSource remove(String attrName);
+    DataSource remove(String attrName);
 
-    public DataSource deepCopy();
+    DataSource deepCopy();
 
-    public DataSource merge(DataSource other);
+    DataSource merge(DataSource other);
 
-    public ObjectNode getObjectNode();
+    ObjectNode getObjectNode();
 }

@@ -4,26 +4,26 @@ public interface ConfigDiff
         extends DataSource
 {
     @Override
-    public ConfigDiff getNested(String attrName);
+    ConfigDiff getNested(String attrName);
 
     @Override
-    public ConfigDiff getNestedOrSetEmpty(String attrName);
+    ConfigDiff getNestedOrSetEmpty(String attrName);
 
     @Override
-    public ConfigDiff set(String attrName, Object v);
+    ConfigDiff set(String attrName, Object v);
 
     @Override
-    public ConfigDiff setNested(String attrName, DataSource v);
+    ConfigDiff setNested(String attrName, DataSource v);
 
     @Override
-    public ConfigDiff setAll(DataSource other);
+    ConfigDiff setAll(DataSource other);
 
     @Override
-    public ConfigDiff remove(String attrName);
+    ConfigDiff remove(String attrName);
 
     @Override
-    public ConfigDiff deepCopy();
+    ConfigDiff deepCopy();
 
     @Override
-    public ConfigDiff merge(DataSource other);
+    ConfigDiff merge(DataSource other);
 }

@@ -4,7 +4,7 @@ import org.embulk.config.CommitReport;
 
 public interface Transactional
 {
-    public void abort();
+    void abort();
 
-    public CommitReport commit();
+    CommitReport commit();
 }

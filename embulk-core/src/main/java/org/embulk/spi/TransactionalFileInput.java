@@ -5,13 +5,13 @@ import org.embulk.config.CommitReport;
 public interface TransactionalFileInput
         extends Transactional, FileInput
 {
-    public Buffer poll();
+    Buffer poll();
 
-    public boolean nextFile();
+    boolean nextFile();
 
-    public void close();
+    void close();
 
-    public void abort();
+    void abort();
 
-    public CommitReport commit();
+    CommitReport commit();
 }

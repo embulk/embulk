@@ -2,7 +2,7 @@ package org.embulk.spi;
 
 public interface BufferAllocator
 {
-    public Buffer allocate();
+    Buffer allocate();
 
-    public Buffer allocate(int minimumCapacity);
+    Buffer allocate(int minimumCapacity);
 }

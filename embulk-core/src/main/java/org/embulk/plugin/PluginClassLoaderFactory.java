@@ -5,5 +5,5 @@ import java.net.URL;
 
 public interface PluginClassLoaderFactory
 {
-    public PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader);
+    PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader);
 }
