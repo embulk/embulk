@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
-import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
 import org.embulk.config.Config;

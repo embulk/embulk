@@ -1,9 +1,6 @@
 package org.embulk.spi.time;
 
 import java.util.Set;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.ParsePosition;
 import com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
