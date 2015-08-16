@@ -20,7 +20,7 @@ public class GzipFileDecoderPlugin
             extends Task
     {
         @ConfigInject
-        public BufferAllocator getBufferAllocator();
+        BufferAllocator getBufferAllocator();
     }
 
     @Override

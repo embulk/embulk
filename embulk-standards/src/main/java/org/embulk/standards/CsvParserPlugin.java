@@ -43,54 +43,54 @@ public class CsvParserPlugin
             extends Task, LineDecoder.DecoderTask, TimestampParser.Task
     {
         @Config("columns")
-        public SchemaConfig getSchemaConfig();
+        SchemaConfig getSchemaConfig();
 
         @Config("header_line")
         @ConfigDefault("null")
-        public Optional<Boolean> getHeaderLine();
+        Optional<Boolean> getHeaderLine();
 
         @Config("skip_header_lines")
         @ConfigDefault("0")
-        public int getSkipHeaderLines();
-        public void setSkipHeaderLines(int n);
+        int getSkipHeaderLines();
+        void setSkipHeaderLines(int n);
 
         @Config("delimiter")
         @ConfigDefault("\",\"")
-        public char getDelimiterChar();
+        char getDelimiterChar();
 
         @Config("quote")
         @ConfigDefault("\"\\\"\"")
-        public Optional<QuoteCharacter> getQuoteChar();
+        Optional<QuoteCharacter> getQuoteChar();
 
         @Config("escape")
         @ConfigDefault("\"\\\\\"")
-        public Optional<EscapeCharacter> getEscapeChar();
+        Optional<EscapeCharacter> getEscapeChar();
 
         // Null value handling: if the CsvParser found 'non-quoted empty string's,
         // it replaces them to string that users specified like "\N", "NULL".
         @Config("null_string")
         @ConfigDefault("null")
-        public Optional<String> getNullString();
+        Optional<String> getNullString();
 
         @Config("trim_if_not_quoted")
         @ConfigDefault("false")
-        public boolean getTrimIfNotQuoted();
+        boolean getTrimIfNotQuoted();
 
         @Config("max_quoted_size_limit")
         @ConfigDefault("131072") //128kB
-        public long getMaxQuotedSizeLimit();
+        long getMaxQuotedSizeLimit();
 
         @Config("comment_line_marker")
         @ConfigDefault("null")
-        public Optional<String> getCommentLineMarker();
+        Optional<String> getCommentLineMarker();
 
         @Config("allow_optional_columns")
         @ConfigDefault("false")
-        public boolean getAllowOptionalColumns();
+        boolean getAllowOptionalColumns();
 
         @Config("allow_extra_columns")
         @ConfigDefault("false")
-        public boolean getAllowExtraColumns();
+        boolean getAllowExtraColumns();
     }
 
     public static class QuoteCharacter
