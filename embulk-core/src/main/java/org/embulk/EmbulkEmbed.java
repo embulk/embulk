@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.annotations.Beta;
 import com.google.inject.Injector;
