@@ -247,21 +247,35 @@ rubyTest.dependsOn('classpath')
 //
 // gem task
 //
-task gem(type: JRubyExec) {
+task gemJRuby(type: JRubyExec, dependsOn: ["classpath"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
     script './lib/embulk/version.rb'  // dummy
     scriptArgs 'build', 'embulk.gemspec'
+    doLast { file("${project.name}-${project.version}-java.gem").renameTo("pkg/${project.name}-${project.version}-java.gem") }
+}
+
+task gem(type: Exec, dependsOn: ["classpath", "gemJRuby"]) {
+    executable "gem"
+    args "build", "embulk.gemspec"
+    doFirst {
+        def rubyVersion = file(".ruby-version").getText().trim()
+        if (!"ruby --version".execute().text.contains(rubyVersion)) {
+            throw new GradleException("Version of 'ruby' command in PATH must be ${rubyVersion}. Use rbenv and install ${rubyVersion}")
+        }
+    }
     doLast { file("${project.name}-${project.version}.gem").renameTo("pkg/${project.name}-${project.version}.gem") }
 }
-gem.dependsOn('classpath')
 
 //
 // rubyGemsUpload task
 //
-task rubyGemsUpload(type: JRubyExec, dependsOn: ["gem"]) {
-    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
-    script './lib/embulk/version.rb'  // dummy
-    scriptArgs 'push', "pkg/embulk-${project.version}.gem"
+task rubyGemsUploadJRuby(type: Exec, dependsOn: ["gem"]) {
+    executable "gem"
+    args "push", "pkg/embulk-${project.version}-java.gem"
+}
+task rubyGemsUpload(type: Exec, dependsOn: ["gem", "rubyGemsUploadJRuby"]) {
+    executable "gem"
+    args "push", "pkg/embulk-${project.version}.gem"
 }
 
 //
@@ -296,6 +310,7 @@ Manual operations:
 }
 bintrayUpload.mustRunAfter('releaseCheck')
 rubyGemsUpload.mustRunAfter('releaseCheck')
+rubyGemsUploadJRuby.mustRunAfter('releaseCheck')
 
 task setVersion << {
     if (!project.hasProperty("to")) {

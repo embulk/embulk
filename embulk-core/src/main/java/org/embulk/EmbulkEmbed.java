@@ -1,5 +1,6 @@
 package org.embulk;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.google.common.base.Function;
@@ -22,65 +23,111 @@ import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.ResumeState;
 import org.embulk.spi.ExecSession;
 import org.embulk.guice.Bootstrap;
-import org.embulk.guice.CloseableInjector;
+import org.embulk.guice.LifeCycleInjector;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Beta
 public class EmbulkEmbed
-        implements AutoCloseable
 {
     public static ConfigLoader newSystemConfigLoader()
     {
         return new ConfigLoader(new ModelManager(null, new ObjectMapper()));
     }
 
-    private final CloseableInjector injector;
+    public static class Bootstrap
+    {
+        private final ConfigLoader systemConfigLoader;
+
+        private ConfigSource systemConfig;
+
+        private final List<Function<? super List<Module>, ? extends Iterable<? extends Module>>> moduleOverrides;
+
+        public Bootstrap()
+        {
+            this.systemConfigLoader = newSystemConfigLoader();
+            this.systemConfig = systemConfigLoader.newConfigSource();
+            this.moduleOverrides = new ArrayList<>();
+        }
+
+        public ConfigLoader getSystemConfigLoader()
+        {
+            return systemConfigLoader;
+        }
+
+        public Bootstrap setSystemConfig(ConfigSource systemConfig)
+        {
+            this.systemConfig = systemConfig.deepCopy();
+            return this;
+        }
+
+        public Bootstrap addModules(Module... additionalModules)
+        {
+            return addModules(Arrays.asList(additionalModules));
+        }
+
+        public Bootstrap addModules(Iterable<? extends Module> additionalModules)
+        {
+            final List<Module> copy = ImmutableList.copyOf(additionalModules);
+            return overrideModules(
+                    new Function<List<Module>, Iterable<Module>>()
+                    {
+                        public Iterable<Module> apply(List<Module> modules)
+                        {
+                            return Iterables.concat(modules, copy);
+                        }
+                    });
+        }
+
+        public Bootstrap overrideModules(Function<? super List<Module>, ? extends Iterable<? extends Module>> function)
+        {
+            moduleOverrides.add(function);
+            return this;
+        }
+
+        public EmbulkEmbed initialize()
+        {
+            return build(true);
+        }
+
+        public EmbulkEmbed initializeCloseable()
+        {
+            return build(false);
+        }
+
+        private EmbulkEmbed build(boolean destroyOnShutdownHook)
+        {
+            org.embulk.guice.Bootstrap bootstrap = new org.embulk.guice.Bootstrap()
+                .requireExplicitBindings(false)
+                .addModules(EmbulkService.standardModuleList(systemConfig));
+
+            for (Function<? super List<Module>, ? extends Iterable<? extends Module>> override : moduleOverrides) {
+                bootstrap = bootstrap.overrideModules(override);
+            }
+
+            LifeCycleInjector injector;
+            if (destroyOnShutdownHook) {
+                injector = bootstrap.initialize();
+            } else {
+                injector = bootstrap.initializeCloseable();
+            }
+
+            return new EmbulkEmbed(systemConfig, injector);
+        }
+    }
+
+    private final LifeCycleInjector injector;
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
     private final PreviewExecutor previewExecutor;
 
-    public EmbulkEmbed(ConfigSource systemConfig, Module... additionalModules)
+    EmbulkEmbed(ConfigSource systemConfig, LifeCycleInjector injector)
     {
-        this(systemConfig, Arrays.asList(additionalModules));
-    }
-
-    public EmbulkEmbed(ConfigSource systemConfig,
-            final Iterable<? extends Module> additionalModules)
-    {
-        this(systemConfig,
-                new Function<List<Module>, Iterable<Module>>()
-                {
-                    public Iterable<Module> apply(List<Module> source)
-                    {
-                        return Iterables.concat(source, additionalModules);
-                    }
-                });
-    }
-
-    public EmbulkEmbed(ConfigSource systemConfig,
-            Function<? super List<Module>, ? extends Iterable<? extends Module>> overrideModules)
-    {
-        this.injector = new Bootstrap()
-            .requireExplicitBindings(false)
-            .addModules(EmbulkService.standardModuleList(systemConfig))
-            .overrideModules(overrideModules)
-            .initializeCloseable();
+        this.injector = injector;
         injector.getInstance(org.slf4j.ILoggerFactory.class);
         this.bulkLoader = new BulkLoader(injector, systemConfig);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = injector.getInstance(PreviewExecutor.class);
-    }
-
-    @Override
-    public void close()
-    {
-        try {
-            injector.close();
-        }
-        catch (Exception ex) {
-            throw Throwables.propagate(ex);
-        }
     }
 
     public Injector getInjector()
@@ -98,26 +145,35 @@ public class EmbulkEmbed
         return injector.getInstance(ConfigLoader.class);
     }
 
-    public ExecSession.Builder sessionBuilder(ConfigSource execConfig)
+    public ConfigDiff guess(ConfigSource config)
     {
-        return ExecSession.builder(injector).fromExecConfig(execConfig);
+        ExecSession exec = newExecSession(config);
+        try {
+            return guessExecutor.guess(exec, config);
+        }
+        finally {
+            exec.cleanup();
+        }
     }
 
-    public ConfigDiff guess(ExecSession exec, ConfigSource config)
+    public PreviewResult preview(ConfigSource config)
     {
-        return guessExecutor.guess(exec, config);
+        ExecSession exec = newExecSession(config);
+        try {
+            return previewExecutor.preview(exec, config);
+        }
+        finally {
+            exec.cleanup();
+        }
     }
 
-    public PreviewResult preview(ExecSession exec, ConfigSource config)
+    public ExecutionResult run(ConfigSource config)
     {
-        return previewExecutor.preview(exec, config);
-    }
-
-    public ExecutionResult run(ExecSession exec, ConfigSource config)
-    {
+        ExecSession exec = newExecSession(config);
         try {
             return bulkLoader.run(exec, config);
-        } catch (PartialExecutionException partial) {
+        }
+        catch (PartialExecutionException partial) {
             try {
                 bulkLoader.cleanup(config, partial.getResumeState());
             } catch (Throwable ex) {
@@ -125,22 +181,52 @@ public class EmbulkEmbed
             }
             throw partial;
         }
-    }
-
-    public ResumableResult runResumable(ExecSession exec, ConfigSource config)
-    {
-        ExecutionResult result;
-        try {
-            result = bulkLoader.run(exec, config);
-        } catch (PartialExecutionException partial) {
-            return new ResumableResult(partial);
+        finally {
+            try {
+                exec.cleanup();
+            }
+            catch (Exception ex) {
+                // TODO add this exception to ExecutionResult.getIgnoredExceptions
+                // or partial.addSuppressed
+                ex.printStackTrace(System.err);
+            }
         }
-        return new ResumableResult(result);
     }
 
-    public ResumeAction resumeAction(ConfigSource config, ResumeState resumeState)
+    public ResumableResult runResumable(ConfigSource config)
     {
-        return new ResumeAction(config, resumeState);
+        ExecSession exec = newExecSession(config);
+        try {
+            ExecutionResult result;
+            try {
+                result = bulkLoader.run(exec, config);
+            } catch (PartialExecutionException partial) {
+                return new ResumableResult(partial);
+            }
+            return new ResumableResult(result);
+        }
+        finally {
+            try {
+                exec.cleanup();
+            }
+            catch (Exception ex) {
+                // TODO add this exception to ExecutionResult.getIgnoredExceptions
+                // or partial.addSuppressed
+                ex.printStackTrace(System.err);
+            }
+        }
+    }
+
+    private ExecSession newExecSession(ConfigSource config)
+    {
+        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
+        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
+    }
+
+    public ResumeStateAction resumeState(ConfigSource config, ConfigSource resumeStateConfig)
+    {
+        ResumeState resumeState = resumeStateConfig.loadConfig(ResumeState.class);
+        return new ResumeStateAction(config, resumeState);
     }
 
     public static class ResumableResult
@@ -184,12 +270,12 @@ public class EmbulkEmbed
         }
     }
 
-    public class ResumeAction
+    public class ResumeStateAction
     {
         private final ConfigSource config;
         private final ResumeState resumeState;
 
-        public ResumeAction(ConfigSource config, ResumeState resumeState)
+        public ResumeStateAction(ConfigSource config, ResumeState resumeState)
         {
             this.config = config;
             this.resumeState = resumeState;
@@ -209,6 +295,16 @@ public class EmbulkEmbed
         public void cleanup()
         {
             bulkLoader.cleanup(config, resumeState);
+        }
+    }
+
+    public void destroy()
+    {
+        try {
+            injector.destroy();
+        }
+        catch (Exception ex) {
+            throw Throwables.propagate(ex);
         }
     }
 }

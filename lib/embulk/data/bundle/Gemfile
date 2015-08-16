@@ -1,8 +1,11 @@
 source 'https://rubygems.org/'
+gem 'embulk', '~> 0.7.0'
+
 #
 # Note: After updating this file, run this command to update Gemfile.lock:
 #
-#       embulk bundle <this_dir>
+#       cd this_directory
+#       embulk bundle
 #
 
 #

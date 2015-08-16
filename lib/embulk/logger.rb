@@ -1,5 +1,7 @@
 
 module Embulk
+  # this file is required before loading embulk-core.jar
+
   require 'logger'
 
   class Logger

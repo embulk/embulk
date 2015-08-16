@@ -17,6 +17,10 @@ package org.embulk.guice;
 
 import com.google.inject.Injector;
 
-public interface CloseableInjector
-        extends LifeCycleInjector, AutoCloseable
-{ }
+public interface LifeCycleInjector
+        extends Injector
+{
+    boolean isDestroyed();
+
+    void destroy() throws Exception;
+}

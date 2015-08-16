@@ -1,11 +1,7 @@
 module Embulk
   module Java
-    #require 'embulk/gems'
-    #Embulk.add_embedded_gem_path
-
     require 'embulk/java/imports'
     require 'embulk/java/time_helper'
-    require 'embulk/java/liquid_helper'
 
     module Injected
       # Following constats are set by org.embulk.jruby.JRubyScriptingModule:
@@ -17,5 +13,12 @@ module Embulk
     def self.injector
       Injected::Injector
     end
+
+    require 'embulk'
+    require 'embulk/error'
+    require 'embulk/buffer'
+    require 'embulk/data_source'
+    require 'embulk/plugin'
+    require 'embulk/runner'
   end
 end

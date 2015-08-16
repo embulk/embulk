@@ -1,5 +1,18 @@
 #!/usr/bin/env ruby
 
+if RUBY_PLATFORM =~ /java/i
+  # Enable embulk_bundle if run by CRuby.
+  # Disable embulk_bundle if run by JRuby.
+  if ENV['EMBULK_BIN_ENABLE_BUNDLE'] == File.expand_path(__FILE__)
+    ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
+    require_relative '../lib/embulk/command/embulk_bundle'
+  else
+    $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
+    require 'embulk/command/embulk_main'
+  end
+  return
+end
+
 java_args = []
 jruby_args = []
 default_optimize = false
@@ -55,30 +68,37 @@ unless java_cmd
   end
 end
 
-embulk_home = File.dirname(File.dirname(__FILE__))
-classpath_dir = File.join(embulk_home, 'classpath')
-lib_dir = File.join(embulk_home, 'lib')
-
-jruby_complete = Dir.entries(classpath_dir).find {|jar| jar =~ /jruby-complete-[\d\.]+\.jar/ } rescue nil
-unless jruby_complete
-  STDERR.puts "Could not find jruby-complete at #{embulk_home}/classpath directory."
-  if embulk_home == '.'
-    STDERR.puts "Did you run ./gradlew classpath? You need to build java code and create ./classpath directory first."
-  end
-  raise SystemExit.new(1)
-end
-
 if overwrite_optimize == true || (default_optimize == true && overwrite_optimize != false)
   java_args = %w[-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC] + java_args
 else
   java_args = %w[-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none] + java_args
 end
 
-# java ... -jar ruby-complete.jar $EMBULK_HOME/lib/embulk/command/embulk.rb "$@"
+# Disable bundler options of CRuby before starting JRuby
+ENV.delete('GEM_HOME')
+ENV.delete('GEM_PATH')
+ENV.delete('BUNDLE_GEMFILE')
+ENV.delete('BUNDLE_BIN_PATH')
+ENV.delete('RUBYLIB')
+ENV.delete('RUBYOPT')
+
+env = {
+  'EMBULK_BIN_ENABLE_BUNDLE' => File.expand_path(__FILE__)
+}
+
+begin
+  require 'jruby-jars'
+rescue LoadError => e
+  STDERR.puts  "Could not load jruby-jar.gem. Did you run with \"bundle exec\"?"
+  raise e
+end
+jruby_cp = "#{File.dirname(JRubyJars.core_jar_path)}/*"
+
+# java ... -jar ruby-complete.jar bin/embulk "$@"
 cmdline = [java_cmd]
 cmdline.concat java_args
-cmdline << '-jar' << File.join(classpath_dir, jruby_complete)
+cmdline << '-cp' << jruby_cp << 'org.jruby.Main'
 cmdline.concat jruby_args
-cmdline << File.join(lib_dir, 'embulk/command/embulk.rb')
+cmdline << __FILE__
 cmdline.concat ARGV
-exec *cmdline
+exec env, *cmdline

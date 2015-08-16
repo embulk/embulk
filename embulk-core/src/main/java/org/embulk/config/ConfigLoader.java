@@ -31,6 +31,19 @@ public class ConfigLoader
         return new DataSourceImpl(model);
     }
 
+    public ConfigSource fromJsonString(String string)
+    {
+        JsonNode node;
+        try {
+            node = new ObjectMapper().readTree(string);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        validateJsonNode(node);
+        return new DataSourceImpl(model, (ObjectNode) node);
+    }
+
     public ConfigSource fromJsonFile(File file) throws IOException
     {
         try (FileInputStream is = new FileInputStream(file)) {
@@ -41,9 +54,14 @@ public class ConfigLoader
     public ConfigSource fromJson(InputStream stream) throws IOException
     {
         JsonNode node = new ObjectMapper().readTree(stream);
-        if (!node.isObject()) {
-            throw new RuntimeJsonMappingException("Expected object to load ConfigSource but got: "+node.getNodeType());
-        }
+        validateJsonNode(node);
+        return new DataSourceImpl(model, (ObjectNode) node);
+    }
+
+    public ConfigSource fromYamlString(String string)
+    {
+        JsonNode node = objectToJson(new Yaml().load(string));
+        validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
     }
 
@@ -56,13 +74,16 @@ public class ConfigLoader
 
     public ConfigSource fromYaml(InputStream stream) throws IOException
     {
-        Yaml yaml = new Yaml();
-        Object object = yaml.load(stream);
-        JsonNode node = objectToJson(object);
+        JsonNode node = objectToJson(new Yaml().load(stream));
+        validateJsonNode(node);
+        return new DataSourceImpl(model, (ObjectNode) node);
+    }
+
+    private static void validateJsonNode(JsonNode node)
+    {
         if (!node.isObject()) {
             throw new RuntimeJsonMappingException("Expected object to load ConfigSource but got "+node);
         }
-        return new DataSourceImpl(model, (ObjectNode) node);
     }
 
     @Deprecated

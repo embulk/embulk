@@ -17,14 +17,14 @@ package org.embulk.guice;
 
 import com.google.inject.Injector;
 
-class CloseableInjectorProxy
+class LifeCycleInjectorProxy
         extends InjectorProxy
-        implements CloseableInjector
+        implements LifeCycleInjector, CloseableInjector
 {
     private final Injector injector;
     private final LifeCycleManager lifeCycleManager;
 
-    public CloseableInjectorProxy(Injector injector, LifeCycleManager lifeCycleManager)
+    public LifeCycleInjectorProxy(Injector injector, LifeCycleManager lifeCycleManager)
     {
         this.injector = injector;
         this.lifeCycleManager = lifeCycleManager;
@@ -33,15 +33,29 @@ class CloseableInjectorProxy
     @Override
     protected synchronized Injector injector()
     {
-        if (lifeCycleManager.isDestroyed()) {
-            throw new IllegalStateException("Injector already closed");
+        if (isDestroyed()) {
+            throw new IllegalStateException("Injector already destroyed");
         }
         return injector;
     }
 
     @Override
-    public synchronized void close() throws Exception
+    public synchronized boolean isDestroyed()
+    {
+        return lifeCycleManager.isDestroyed();
+    }
+
+    @Override
+    public synchronized void destroy()
+            throws Exception
     {
         lifeCycleManager.destroy();  // reentrant
+    }
+
+    @Override
+    public void close()
+            throws Exception
+    {
+        destroy();
     }
 }
