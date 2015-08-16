@@ -3,7 +3,6 @@ package org.embulk.spi;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import com.google.inject.Injector;
-import org.embulk.config.Task;
 import org.embulk.config.ModelManager;
 import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigDiff;

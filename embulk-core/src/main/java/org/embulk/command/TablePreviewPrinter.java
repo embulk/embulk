@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.io.PrintStream;
 import java.io.IOException;
-import com.google.common.base.Function;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.Schema;
 

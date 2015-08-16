@@ -6,7 +6,6 @@ import org.jruby.embed.ScriptingContainer;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
