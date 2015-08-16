@@ -100,17 +100,24 @@ public class Bootstrap
         return this;
     }
 
-    public Injector initialize()
+    public LifeCycleInjector initialize()
     {
-        Injector injector = start();
-        injector.getInstance(LifeCycleManager.class).destroyOnShutdownHook();
-        return injector;
+        return build(true);
     }
 
     public CloseableInjector initializeCloseable()
     {
+        return build(false);
+    }
+
+    private LifeCycleInjectorProxy build(boolean destroyOnShutdownHook)
+    {
         Injector injector = start();
-        return new CloseableInjectorProxy(injector, injector.getInstance(LifeCycleManager.class));
+        LifeCycleManager lifeCycleManager = injector.getInstance(LifeCycleManager.class);
+        if (destroyOnShutdownHook) {
+            lifeCycleManager.destroyOnShutdownHook();
+        }
+        return new LifeCycleInjectorProxy(injector, lifeCycleManager);
     }
 
     private Injector start()

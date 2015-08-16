@@ -1,16 +1,6 @@
 module Embulk
 
   class PackageData
-    if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
-      # data is in embulk-core jar
-      resource_class = org.embulk.command.Runner.java_class
-      JAVA_RESOURCE = true
-      RESOURCE_URL = resource_class.resource("/embulk/data")
-    else
-      JAVA_RESOURCE = false
-      FILE_BASE_PATH = File.join(Embulk.home('lib'), 'embulk', 'data')
-    end
-
     def initialize(base_name, dest_dir, erb_binding=nil)
       require 'fileutils'
       @base_name = base_name
@@ -19,11 +9,7 @@ module Embulk
     end
 
     def path(src)
-      if JAVA_RESOURCE
-        "#{RESOURCE_URL}/#{@base_name}/#{src}"
-      else
-        File.join(FILE_BASE_PATH, @base_name, src)
-      end
+      Embulk.lib_path("embulk/data/#{@base_name}/#{src}")
     end
 
     def content(src)

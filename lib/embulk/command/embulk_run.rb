@@ -1,25 +1,14 @@
+require 'embulk'
+
 module Embulk
   def self.run(argv)
-    # default_bundle_path
-    default_bundle_path = nil
-    gemfile_path = ENV['BUNDLE_GEMFILE'].to_s
-    gemfile_path = nil if gemfile_path.empty?
-    default_bundle_path = File.dirname(gemfile_path) if gemfile_path
-
-    # default GEM_HOME is ~/.embulk/jruby/1.9/. If -b option is set,
-    # GEM_HOME is already set by embulk/command/embulk.rb
-    gem_home = ENV['GEM_HOME'].to_s
-    if gem_home.empty?
-      ENV['GEM_HOME'] = default_gem_home
-      Gem.clear_paths  # force rubygems to reload GEM_HOME
-    end
+    # reset context class loader set by org.jruby.Main.main to nil. embulk manages
+    # multiple classloaders. default classloader should be Plugin.class.getClassloader().
+    java.lang.Thread.current_thread.set_context_class_loader(nil)
 
     # Gem.path is called when GemRunner installs a gem with native extension.
     # Running extconf.rb fails without this hack.
     fix_gem_ruby_path
-
-    # to make sure org.embulk.jruby.JRubyScriptingModule can require 'embulk/java/bootstrap'
-    $LOAD_PATH << Embulk.home('lib')
 
     require 'embulk/version'
 
@@ -27,11 +16,11 @@ module Embulk
     unless i
       if argv.include?('--version')
         puts "embulk #{Embulk::VERSION}"
-        exit 0
+        system_exit_success
       end
       usage nil
     end
-    subcmd = argv.slice!(i)
+    subcmd = argv.slice!(i).to_sym
 
     require 'java'
     require 'optparse'
@@ -46,32 +35,25 @@ module Embulk
     classpath_separator = java.io.File.pathSeparator
 
     options = {
-      # use the global ruby runtime (the jruby Runtime running this embulk_run.rb script) for all
-      # ScriptingContainer injected by the org.embulk.command.Runner.
-      useGlobalRubyRuntime: true,
-      systemProperty: {},
+      system_config: {}
     }
 
-    op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory') do |path|
-      # only for help message. implemented at lib/embulk/command/embulk.rb
+    java_embed_ops = lambda do
+      op.separator ""
+      op.separator "  Other options:"
+      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
+        options[:system_config][:log_level] = level
+      end
+      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
+        k, v = kv.split('=', 2)
+        v ||= "true"
+        options[:system_config][k] = v
+      end
     end
 
-    case subcmd.to_sym
-    when :bundle
-      op.remove  # remove --bundle
-      if default_bundle_path
-        op.banner = "Usage: bundle [directory=#{default_bundle_path}]"
-        args = 0..1
-      else
-        op.banner = "Usage: bundle <directory>"
-        args = 1..1
-      end
-
-    when :run
-      op.banner = "Usage: run <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
-        options[:logLevel] = level
-      end
+    plugin_load_ops = lambda do
+      op.separator ""
+      op.separator "  Plugin load options:"
       op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
         plugin_paths << plugin_path
       end
@@ -81,96 +63,83 @@ module Embulk
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
       end
-      op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
-        options[:nextConfigOutputPath] = path
+      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory (create one using "embulk bundle new" command)') do |path|
+        # only for help message. implemented at lib/embulk/command/embulk_bundle.rb
       end
+    end
+
+    case subcmd
+    when :run
+      op.banner = "Usage: run <config.yml>"
+      op.separator "  Options:"
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
-        options[:resumeStatePath] = path
+        options[:resume_state_path] = path
       end
-      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
-        k, v = kv.split('=', 2)
-        v ||= "true"
-        options[:systemProperty][k] = v
+      op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
+        options[:next_config_output_path] = path
       end
+      plugin_load_ops.call
+      java_embed_ops.call
       args = 1..1
 
     when :cleanup
       op.banner = "Usage: cleanup <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
-        options[:logLevel] = level
-      end
-      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
-        plugin_paths << plugin_path
-      end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
-        load_paths << load_path
-      end
-      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
-        classpaths.concat classpath.split(classpath_separator)
-      end
+      op.separator "  Options:"
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
-        options[:resumeStatePath] = path
+        options[:resume_state_path] = path
       end
-      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
-        k, v = kv.split('=', 2)
-        v ||= "true"
-        options[:systemProperty][k] = v
-      end
+      plugin_load_ops.call
+      java_embed_ops.call
       args = 1..1
 
     when :preview
       op.banner = "Usage: preview <config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
-        options[:logLevel] = level
-      end
-      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
-        plugin_paths << plugin_path
-      end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
-        load_paths << load_path
-      end
-      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
-        classpaths.concat classpath.split(classpath_separator)
-      end
+      op.separator "  Options:"
       op.on('-G', '--vertical', "Use vertical output format", TrueClass) do |b|
-        options[:previewOutputFormat] = "vertical"
+        options[:format] = "vertical"
       end
-      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
-        k, v = kv.split('=', 2)
-        v ||= "true"
-        options[:systemProperty][k] = v
-      end
+      plugin_load_ops.call
+      java_embed_ops.call
       args = 1..1
 
     when :guess
       op.banner = "Usage: guess <partial-config.yml>"
-      op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
-        options[:logLevel] = level
-      end
+      op.separator "  Options:"
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
-        options[:nextConfigOutputPath] = path
-      end
-      op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
-        plugin_paths << plugin_path
-      end
-      op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
-        load_paths << load_path
-      end
-      op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
-        classpaths.concat classpath.split(classpath_separator)
+        options[:next_config_output_path] = path
       end
       op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
-        (options[:guessPlugins] ||= []).concat names.split(",")
+        (options[:system_config][:guess_plugins] ||= []).concat names.split(",")  # TODO
       end
-      op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
-        k, v = kv.split('=', 2)
-        v ||= "true"
-        options[:systemProperty][k] = v
-      end
+      plugin_load_ops.call
+      java_embed_ops.call
       args = 1..1
 
+    when :bundle
+      if argv[0] == 'new'
+        usage nil if argv.length != 2
+        new_bundle(argv[1])
+      else
+        gemfile_path = ENV['BUNDLE_GEMFILE'].to_s
+
+        if !gemfile_path.empty?
+          bundle_path = File.dirname(gemfile_path)
+        elsif File.exists?('Gemfile')
+          bundle_path = '.'
+        else
+          system_exit "'#{path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{path}\" and \"embulk bundle\" instead"
+        end
+
+        run_bundler(argv)
+      end
+      system_exit_success
+
+    when :gem
+      require 'rubygems/gem_runner'
+      Gem::GemRunner.new.run argv
+      system_exit_success
+
     when :new
-      op.remove  # remove --bundle
       op.banner = "Usage: new <category> <name>" + %[
 categories:
     ruby-input                 Ruby record input plugin    (like "mysql")
@@ -199,18 +168,10 @@ examples:
       args = 2..2
 
     when :selfupdate
-      op.remove  # remove --bundle
       op.on('-f', "Skip corruption check", TrueClass) do |b|
-        options[:force] = true
+        system[:force] = true
       end
       args = 0..0
-
-    when :gem
-      require 'embulk/gems'
-      Embulk.add_embedded_gem_path
-      require 'rubygems/gem_runner'
-      Gem::GemRunner.new.run argv
-      exit 0
 
     when :example
       args = 0..1
@@ -222,10 +183,10 @@ examples:
     when :irb
       require 'irb'
       IRB.start
-      exit 0
+      system_exit_success
 
     else
-      usage "Unknown subcommand #{subcmd.dump}."
+      usage "Unknown subcommand #{subcmd.to_s.dump}."
     end
 
     begin
@@ -237,74 +198,7 @@ examples:
       usage_op op, e.to_s
     end
 
-    case subcmd.to_sym
-    when :bundle
-      path = argv[0] || default_bundle_path
-
-      require 'fileutils'
-      require 'rubygems/gem_runner'
-      setup_plugin_paths(plugin_paths)
-      setup_load_paths(load_paths)
-      setup_classpaths(classpaths)
-
-      unless File.exists?(path)
-        puts "Initializing #{path}..."
-        FileUtils.mkdir_p File.dirname(path)
-        begin
-          success = false
-
-          # copy embulk/data/bundle/ directory
-          require 'embulk/data/package_data'
-          pkg = PackageData.new("bundle", path)
-          %w[.bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb Gemfile].each do |file|
-            pkg.cp(file, file)
-          end
-
-          ## TODO this is disabled for now. enable this if you want to use
-          ## create bin/embulk
-          #bin_embulk_path = File.join(path, 'bin', 'embulk')
-          #FileUtils.mkdir_p File.dirname(bin_embulk_path)
-          #require 'embulk/command/embulk_generate_bin'  # defines Embulk.generate_bin
-          #File.open(bin_embulk_path, 'wb', 0755) {|f| f.write Embulk.generate_bin(bundle_path: :here) }
-
-          # install bundler
-          setup_gem_paths(path)
-          Gem::GemRunner.new.run %w[install bundler]
-
-          success = true
-        rescue Gem::SystemExitException => e
-          raise e if e.exit_code != 0
-          success = true
-        ensure
-          FileUtils.rm_rf path unless success
-        end
-      else
-        setup_gem_paths(path)
-      end
-
-      ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(path, "Gemfile")
-      Dir.chdir(path) do
-        begin
-          require 'bundler'
-        rescue LoadError
-          require 'rubygems/gem_runner'
-          begin
-            puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: installing bundler..."
-            Gem::GemRunner.new.run %w[install bundler]
-          rescue Gem::SystemExitException => e
-            raise e if e.exit_code != 0
-          end
-          Gem.clear_paths
-          require 'bundler'
-        end
-        require 'bundler/friendly_errors'
-        require 'bundler/cli'
-        Bundler.with_friendly_errors do
-          # run > bundle install
-          Bundler::CLI.start(%w[install], debug: true)
-        end
-      end
-
+    case subcmd
     when :example
       require_relative 'embulk_example'
       path = ARGV[0] || "embulk-example"
@@ -350,49 +244,32 @@ examples:
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
-      Embulk.selfupdate(options)
+      Embulk.selfupdate(system)
 
     else
       require 'json'
 
-      begin
-        java.lang.Class.forName('org.embulk.command.Runner')
-      rescue java.lang.ClassNotFoundException
-        # load classpath
-        Embulk.require_classpath
-      end
+      Embulk.setup(options.delete(:system_config))
 
       setup_plugin_paths(plugin_paths)
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
       begin
-        org.embulk.command.Runner.new(options.to_json).main(subcmd, argv.to_java(:string))
+        case subcmd
+        when :guess
+          Embulk::Runner.guess(argv[0], options)
+        when :preview
+          Embulk::Runner.preview(argv[0], options)
+        when :run
+          Embulk::Runner.run(argv[0], options)
+        end
       rescue => ex
         print_exception(ex)
         puts ""
         puts "Error: #{ex}"
         raise SystemExit.new(1, ex.to_s)
       end
-    end
-  end
-
-  def self.home(dir)
-    jar, resource = __FILE__.split("!")
-    if resource && jar =~ /^file:/
-      home = resource.split("/")[0..-3].join("/")
-      "#{jar}!#{home}/#{dir}"
-    else
-      home = File.expand_path('../../..', File.dirname(__FILE__))
-      File.join(home, dir)
-    end
-  end
-
-  def self.require_classpath
-    classpath_dir = Embulk.home("classpath")
-    jars = Dir.entries(classpath_dir).select{|f| f =~ /\.jar$/ }.sort
-    jars.each do |jar|
-      require File.join(classpath_dir, jar)
     end
   end
 
@@ -424,13 +301,6 @@ examples:
         end
       end
     end
-  end
-
-  def self.setup_gem_paths(path)
-    # install bundler gem here & use bundler installed here
-    ENV['GEM_HOME'] = File.expand_path File.join(path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
-    ENV['GEM_PATH'] = ''
-    Gem.clear_paths  # force rubygems to reload GEM_HOME
   end
 
   def self.setup_plugin_paths(plugin_paths)
@@ -465,6 +335,79 @@ examples:
     end
   end
 
+  def self.new_bundle(path)
+    require 'fileutils'
+    require 'rubygems/gem_runner'
+
+    if File.exists?(path)
+      error = "'#{path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{path}\" and \"embulk bundle\" instead"
+      STDERR.puts error
+      raise SystemExit.new(1, error)
+    end
+
+    puts "Initializing #{path}..."
+    FileUtils.mkdir_p path
+    begin
+      success = false
+
+      # copy embulk/data/bundle/ contents
+      require 'embulk/data/package_data'
+      pkg = PackageData.new("bundle", path)
+      %w[Gemfile .ruby-version .bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb].each do |file|
+        pkg.cp(file, file)
+      end
+
+      # run the first bundle-install
+      Dir.chdir(path) do
+        run_bundler(['install', '--path', '.'])
+      end
+
+      success = true
+    rescue Gem::SystemExitException => e
+      raise e if e.exit_code != 0
+      success = true
+    ensure
+      FileUtils.rm_rf path unless success
+    end
+  end
+
+  def self.run_bundler(argv)
+    # try to load bundler from LOAD_PATH and ./jruby
+    begin
+      require 'bundler'
+      bundler_provided = true
+    rescue LoadError
+      ENV['GEM_HOME'] = File.expand_path File.join(".", Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
+      ENV['GEM_PATH'] = ''
+      ENV.delete('BUNDLE_GEMFILE')
+      Gem.clear_paths  # force rubygems to reload GEM_HOME
+      begin
+        require 'bundler'
+        bundler_provided = true
+      rescue LoadError
+      end
+    end
+
+    unless bundler_provided
+      # install bundler to the path (bundler is not included in embulk-core.jar)
+      require 'rubygems/gem_runner'
+      begin
+        puts "Installing bundler..."
+        Gem::GemRunner.new.run %w[install bundler]
+      rescue Gem::SystemExitException => e
+        raise e if e.exit_code != 0
+      end
+      Gem.clear_paths
+      require 'bundler'
+    end
+
+    require 'bundler/friendly_errors'
+    require 'bundler/cli'
+    Bundler.with_friendly_errors do
+      Bundler::CLI.start(argv, debug: true)
+    end
+  end
+
   def self.usage(message)
     STDERR.puts "Embulk v#{Embulk::VERSION}"
     STDERR.puts "usage: <command> [--options]"
@@ -480,20 +423,16 @@ examples:
     STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
     STDERR.puts ""
     if message
-      STDERR.puts "error: #{message}"
+      system_exit "error: #{message}"
     else
-      STDERR.puts "Use \`<command> --help\` to see description of the commands."
+      system_exit "Use \`<command> --help\` to see description of the commands."
     end
-    exit 1
   end
 
   def self.usage_op(op, message)
     STDERR.puts op.help
     STDERR.puts
-    if message
-      STDERR.puts message
-    end
-    exit 1
+    system_exit message
   end
 
   def self.print_exception(ex)
@@ -505,5 +444,14 @@ examples:
         puts "    #{bt}"
       end
     end
+  end
+
+  def self.system_exit(message=nil)
+    STDERR.puts message if message
+    raise SystemExit.new(1, message)
+  end
+
+  def self.system_exit_success
+    raise SystemExit.new(0, message)
   end
 end
