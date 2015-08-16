@@ -1,11 +1,8 @@
 package org.embulk.standards;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.config.Task;
@@ -18,7 +15,6 @@ import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
 import org.embulk.spi.util.LineEncoder;
 import org.embulk.spi.util.Timestamps;

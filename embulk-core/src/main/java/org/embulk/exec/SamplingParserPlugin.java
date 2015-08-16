@@ -6,7 +6,6 @@ import com.google.common.base.Preconditions;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.CommitReport;
-import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.Page;
@@ -16,7 +15,6 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.PageOutput;
-import org.embulk.exec.ForSystemConfig;
 import static org.embulk.spi.util.Inputs.each;
 
 /*

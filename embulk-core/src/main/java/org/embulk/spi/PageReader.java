@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import java.util.Iterator;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import org.embulk.spi.time.Timestamp;
