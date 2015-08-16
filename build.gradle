@@ -27,7 +27,7 @@ allprojects {
     apply plugin: 'com.jfrog.bintray'
 
     test {
-        maxHeapSize = "1024m"
+        maxHeapSize = "1536m"
     }
 
     //
