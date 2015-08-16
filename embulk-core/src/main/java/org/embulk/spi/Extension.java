@@ -8,10 +8,10 @@ import org.embulk.config.ConfigSource;
  * Extension is a module to extend the execution framework using Guice.
  * Unlike plugins, extensions can overwrite or add core components such as
  * BufferManager, PluginSource, etc.
- * Extension is not designed for users but for framework developpers to make
+ * Extension is not designed for users but for framework developers to make
  * core components loosely coupled.
  *
- * An example extention to add a custom PluginSource will be as following:
+ * An example extension to add a custom PluginSource will be as following:
  *
  * <code>
  * class MyPluginSourceExtension
