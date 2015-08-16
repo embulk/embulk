@@ -1,15 +1,12 @@
 package org.embulk.spi.type;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.io.IOException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import org.embulk.config.ModelManager;
 
 public class TypeDeserializer
         extends FromStringDeserializer<Type>

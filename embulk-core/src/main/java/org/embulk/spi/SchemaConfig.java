@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import java.util.List;
 import java.util.Objects;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

@@ -5,7 +5,6 @@ import java.util.Properties;
 import java.net.URL;
 import java.io.InputStream;
 import java.io.IOException;
-import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
