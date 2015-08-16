@@ -27,6 +27,7 @@ public class TempFileAllocator
     public TempFileSpace newSpace(String subdir)
     {
         // TODO support multiple files
-        return new TempFileSpace(new File(dirs[0], subdir));
+    	// Windows cannot include ':' as file name.
+        return new TempFileSpace(new File(dirs[0], subdir.replace(':', '-')));
     }
 }

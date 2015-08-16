@@ -26,6 +26,10 @@ allprojects {
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
 
+    test {
+        maxHeapSize = "1024m"
+    }
+
     //
     // bintrayUpload task
     //

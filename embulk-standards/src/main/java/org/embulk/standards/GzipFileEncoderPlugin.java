@@ -27,10 +27,10 @@ public class GzipFileEncoderPlugin
         @ConfigDefault("6")
         @Min(0)
         @Max(9)
-        public int getLevel();
+        int getLevel();
 
         @ConfigInject
-        public BufferAllocator getBufferAllocator();
+        BufferAllocator getBufferAllocator();
     }
 
     public void transaction(ConfigSource config, EncoderPlugin.Control control)
