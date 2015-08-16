@@ -240,8 +240,7 @@ project(':embulk-cli') {
 }
 
 task rubyTest(type: JRubyExec) {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', '-eARGV.replace([]); Test::Unit::AutoRunner.run(true, "test")'
-    script './lib/embulk/version.rb'  // dummy
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/run-test.rb'
 }
 rubyTest.dependsOn('classpath')
 
