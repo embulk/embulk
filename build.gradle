@@ -248,7 +248,7 @@ task gem(type: JRubyExec) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
     script './lib/embulk/version.rb'  // dummy
     scriptArgs 'build', 'embulk.gemspec'
-    doLast { file("${project.name}-${project.version}.gem").renameTo("pkg/${project.name}-${project.version}.gem") }
+    doLast { file("${project.name}-${project.version}-java.gem").renameTo("pkg/${project.name}-${project.version}-java.gem") }
 }
 gem.dependsOn('classpath')
 

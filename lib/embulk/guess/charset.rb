@@ -16,7 +16,16 @@ module Embulk
 
       def guess(config, sample_buffer)
         # ICU4J
-        detector = com.ibm.icu.text.CharsetDetector.new
+        begin
+          detector_class = com.ibm.icu.text.CharsetDetector
+        rescue NameError
+          # icu4j is removed from embulk.gem package explicitly at embulk.gemspec
+          # if gem is packaged for JRuby to reduce binary size. Instead, if it's
+          # packaged for JRuby, embulk.gemspec adds rjack-icu to its dependency.
+          require 'rjack-icu'
+          detector_class = com.ibm.icu.text.CharsetDetector
+        end
+        detector = detector_class.new
         detector.setText(sample_buffer.to_java_bytes)
         best_match = detector.detect
         if best_match.getConfidence < 50

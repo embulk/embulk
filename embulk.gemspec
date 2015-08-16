@@ -12,11 +12,24 @@ Gem::Specification.new do |gem|
   gem.license       = "Apache 2.0"
   gem.homepage      = "https://github.com/embulk/embulk"
 
-  gem.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
+  provided_classpath = Dir["classpath/jruby-complete-*.jar"] + Dir["classpath/icu4j-*.jar"]
+  gem.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"] - provided_classpath
   gem.test_files    = gem.files.grep(%r"^(test|spec)/")
   gem.executables   = gem.files.grep(%r"^bin/").map{ |f| File.basename(f) }
   gem.require_paths = ["lib"]
   gem.has_rdoc      = false
+
+  if RUBY_PLATFORM =~ /java/i
+    gem.add_dependency "liquid", '~> 3.0.6'
+
+    # For embulk/guess/charset.rb. See also embulk-core/build.gradle
+    gem.add_dependency "rjack-icu", '~> 4.54.1.1'
+
+    gem.platform = 'java'
+
+  else
+    gem.add_dependency "jruby-jars", '= 1.7.21' if RUBY_PLATFORM !~ /java/i
+  end
 
   gem.add_development_dependency "bundler", [">= 1.0"]
   gem.add_development_dependency "rake", [">= 0.10.0"]

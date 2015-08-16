@@ -1,14 +1,18 @@
 PATH
   remote: .
   specs:
-    embulk (0.6.12)
+    embulk (0.6.23-java)
+      liquid (~> 3.0.6)
+      rjack-icu (~> 4.54.1.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
     kramdown (1.5.0)
+    liquid (3.0.6)
     power_assert (0.2.2)
     rake (10.4.2)
+    rjack-icu (4.54.1.1-java)
     test-unit (3.0.9)
       power_assert
     yard (0.8.7.6)
@@ -24,3 +28,6 @@ DEPENDENCIES
   rake (>= 0.10.0)
   test-unit (~> 3.0.9)
   yard (~> 0.8.7)
+
+BUNDLED WITH
+   1.10.6

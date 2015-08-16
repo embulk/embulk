@@ -7,7 +7,7 @@ module Embulk
   class PageBuilder
     def initialize(schema, java_page_output)
       # TODO get task as an argument
-      task = Java::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
+      task = Java::SPI::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
       @page_builder = Java::DynamicPageBuilder.new(task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
       @schema = schema
     end

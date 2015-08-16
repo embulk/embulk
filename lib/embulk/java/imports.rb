@@ -5,8 +5,41 @@ require 'java'
 #
 
 module Embulk::Java
-  java_import 'org.embulk.spi.Buffer'
+  module Config
+    include_package 'org.embulk.config'
+  end
 
+  module Exec
+    include_package 'org.embulk.exec'
+  end
+
+  module Plugin
+    include_package 'org.embulk.plugin'
+  end
+
+  module SPI
+    module Time
+      include_package 'org.embulk.time'
+    end
+
+    module Type
+      include_package 'org.embulk.type'
+    end
+
+    module Unit
+      include_package 'org.embulk.unit'
+    end
+
+    module Util
+      include_package 'org.embulk.util'
+    end
+
+    include_package 'org.embulk.spi'
+  end
+
+  include_package 'org.embulk'
+
+  java_import 'org.embulk.spi.Buffer'
   java_import 'org.embulk.config.DataSourceImpl'
   java_import 'org.embulk.spi.time.Timestamp'
   java_import 'org.embulk.spi.time.TimestampParseException'
@@ -30,7 +63,6 @@ module Embulk::Java
   java_import 'org.embulk.spi.type.Types'
   java_import 'org.embulk.spi.FileInputRunner'
   java_import 'org.embulk.spi.FileOutputRunner'
-  java_import 'org.embulk.spi.Exec'
   java_import 'org.embulk.plugin.PluginClassLoaderFactory'
 
   # TODO
