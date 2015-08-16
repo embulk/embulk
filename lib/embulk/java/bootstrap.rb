@@ -1,7 +1,7 @@
 module Embulk
   module Java
-    require 'embulk/gems'
-    Embulk.add_embedded_gem_path
+    #require 'embulk/gems'
+    #Embulk.add_embedded_gem_path
 
     require 'embulk/java/imports'
     require 'embulk/java/time_helper'
