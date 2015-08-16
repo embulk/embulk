@@ -3,7 +3,6 @@ package org.embulk.exec;
 import org.slf4j.ILoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;

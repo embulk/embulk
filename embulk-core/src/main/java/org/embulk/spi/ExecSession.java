@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import java.io.File;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;

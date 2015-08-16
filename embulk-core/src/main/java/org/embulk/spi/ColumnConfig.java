@@ -2,12 +2,10 @@ package org.embulk.spi;
 
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.TimestampType;
-import org.embulk.spi.Exec;
 
 public class ColumnConfig
 {
