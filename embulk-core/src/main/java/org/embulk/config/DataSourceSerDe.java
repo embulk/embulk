@@ -1,7 +1,6 @@
 package org.embulk.config;
 
 import java.io.IOException;
-import com.google.inject.Inject;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -13,7 +12,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 
 public class DataSourceSerDe
 {

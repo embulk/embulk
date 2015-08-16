@@ -9,7 +9,6 @@ import org.jruby.util.RubyDateFormat;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;
 import org.embulk.spi.util.LineEncoder;
 
 public class TimestampFormatter

@@ -14,7 +14,6 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
-import org.embulk.spi.TaskState;
 import org.embulk.spi.Schema;
 import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;

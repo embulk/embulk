@@ -1,17 +1,12 @@
 package org.embulk.spi;
 
 import java.util.List;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.embulk.plugin.PluginType;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.Schema;
 import org.embulk.spi.util.Executors;
-import org.embulk.spi.type.TimestampType;
 
 public class ProcessTask
 {

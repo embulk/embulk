@@ -10,7 +10,6 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.Schema;
-import org.embulk.spi.ExecSession;
 
 public class ResumeState
 {

@@ -16,10 +16,10 @@ def release_projects = [project(":embulk-core"), project(":embulk-standards")]
 
 allprojects {
     group = 'org.embulk'
-    version = '0.6.23'
+    version = '0.6.25'
 
     ext {
-        jrubyVersion = '1.7.21'
+        jrubyVersion = '9.0.0.0'
     }
 
     apply plugin: 'java'
@@ -27,7 +27,7 @@ allprojects {
     apply plugin: 'com.jfrog.bintray'
 
     test {
-        maxHeapSize = "1024m"
+        maxHeapSize = "1536m"
     }
 
     //
@@ -240,29 +240,42 @@ project(':embulk-cli') {
 }
 
 task rubyTest(type: JRubyExec) {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', '-eARGV.replace([]); Test::Unit::AutoRunner.run(true, "test")'
-    script './lib/embulk/version.rb'  // dummy
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/run-test.rb'
 }
 rubyTest.dependsOn('classpath')
 
 //
 // gem task
 //
-task gem(type: JRubyExec) {
+task gemJRuby(type: JRubyExec, dependsOn: ["classpath"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
     script './lib/embulk/version.rb'  // dummy
     scriptArgs 'build', 'embulk.gemspec'
     doLast { file("${project.name}-${project.version}-java.gem").renameTo("pkg/${project.name}-${project.version}-java.gem") }
 }
-gem.dependsOn('classpath')
+
+task gem(type: Exec, dependsOn: ["classpath", "gemJRuby"]) {
+    executable "gem"
+    args "build", "embulk.gemspec"
+    doFirst {
+        def rubyVersion = file(".ruby-version").getText().trim()
+        if (!"ruby --version".execute().text.contains(rubyVersion)) {
+            throw new GradleException("Version of 'ruby' command in PATH must be ${rubyVersion}. Use rbenv and install ${rubyVersion}")
+        }
+    }
+    doLast { file("${project.name}-${project.version}.gem").renameTo("pkg/${project.name}-${project.version}.gem") }
+}
 
 //
 // rubyGemsUpload task
 //
-task rubyGemsUpload(type: JRubyExec, dependsOn: ["gem"]) {
-    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
-    script './lib/embulk/version.rb'  // dummy
-    scriptArgs 'push', "pkg/embulk-${project.version}.gem"
+task rubyGemsUploadJRuby(type: Exec, dependsOn: ["gem"]) {
+    executable "gem"
+    args "push", "pkg/embulk-${project.version}-java.gem"
+}
+task rubyGemsUpload(type: Exec, dependsOn: ["gem", "rubyGemsUploadJRuby"]) {
+    executable "gem"
+    args "push", "pkg/embulk-${project.version}.gem"
 }
 
 //
@@ -297,6 +310,7 @@ Manual operations:
 }
 bintrayUpload.mustRunAfter('releaseCheck')
 rubyGemsUpload.mustRunAfter('releaseCheck')
+rubyGemsUploadJRuby.mustRunAfter('releaseCheck')
 
 task setVersion << {
     if (!project.hasProperty("to")) {

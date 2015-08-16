@@ -3,7 +3,6 @@ package org.embulk.spi.time;
 import java.io.IOException;
 import org.joda.time.DateTimeZone;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -11,7 +10,6 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
-import org.embulk.config.ModelManager;
 
 public class DateTimeZoneSerDe
 {

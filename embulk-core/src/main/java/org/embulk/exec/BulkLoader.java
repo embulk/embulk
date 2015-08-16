@@ -1,15 +1,12 @@
 package org.embulk.exec;
 
 import java.util.List;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;

@@ -2,9 +2,6 @@ package org.embulk.exec;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ResourceLeakDetector;
-import io.netty.util.internal.logging.InternalLoggerFactory;
-import io.netty.util.internal.logging.JdkLoggerFactory;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import com.google.inject.Inject;

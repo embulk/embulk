@@ -1,9 +1,7 @@
 package org.embulk.spi;
 
-import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ConfigDiff;
 
 public interface FilterPlugin
 {
