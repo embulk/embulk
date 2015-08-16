@@ -53,35 +53,35 @@ public class CsvFormatterPlugin
     {
         @Config("header_line")
         @ConfigDefault("true")
-        public boolean getHeaderLine();
+        boolean getHeaderLine();
 
         @Config("delimiter")
         @ConfigDefault("\",\"")
-        public char getDelimiterChar();
+        char getDelimiterChar();
 
         @Config("quote")
         @ConfigDefault("\"\\\"\"")
-        public char getQuoteChar();
+        char getQuoteChar();
 
         @Config("quote_policy")
         @ConfigDefault("\"MINIMAL\"")
-        public QuotePolicy getQuotePolicy();
+        QuotePolicy getQuotePolicy();
 
         @Config("escape")
         @ConfigDefault("null")
-        public Optional<Character> getEscapeChar();
+        Optional<Character> getEscapeChar();
 
         @Config("null_string")
         @ConfigDefault("\"\"")
-        public String getNullString();
+        String getNullString();
 
         @Config("newline_in_field")
         @ConfigDefault("\"LF\"")
-        public Newline getNewlineInField();
+        Newline getNewlineInField();
 
         @Config("column_options")
         @ConfigDefault("{}")
-        public Map<String, TimestampColumnOption> getColumnOptions();
+        Map<String, TimestampColumnOption> getColumnOptions();
     }
 
     public interface TimestampColumnOption

@@ -30,14 +30,14 @@ public class LocalFileOutputPlugin
             extends Task
     {
         @Config("path_prefix")
-        public String getPathPrefix();
+        String getPathPrefix();
 
         @Config("file_ext")
-        public String getFileNameExtension();
+        String getFileNameExtension();
 
         @Config("sequence_format")
         @ConfigDefault("\"%03d.%02d.\"")
-        public String getSequenceFormat();
+        String getSequenceFormat();
     }
 
     private final Logger log = Exec.getLogger(getClass());

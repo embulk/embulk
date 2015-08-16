@@ -38,17 +38,17 @@ public class LocalFileInputPlugin
             extends Task
     {
         @Config("path_prefix")
-        public String getPathPrefix();
+        String getPathPrefix();
 
         @Config("last_path")
         @ConfigDefault("null")
-        public Optional<String> getLastPath();
+        Optional<String> getLastPath();
 
-        public List<String> getFiles();
-        public void setFiles(List<String> files);
+        List<String> getFiles();
+        void setFiles(List<String> files);
 
         @ConfigInject
-        public BufferAllocator getBufferAllocator();
+        BufferAllocator getBufferAllocator();
     }
 
     private final Logger log = Exec.getLogger(getClass());
