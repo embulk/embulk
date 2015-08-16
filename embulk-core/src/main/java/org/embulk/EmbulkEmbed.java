@@ -147,50 +147,35 @@ public class EmbulkEmbed
         return injector.getInstance(ConfigLoader.class);
     }
 
-    public ExecSession.Builder sessionBuilder()
-    {
-        return ExecSession.builder(injector);
-    }
-
-    public ExecSession newSession(ConfigSource config)
-    {
-        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
-        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
-    }
-
     public ConfigDiff guess(ConfigSource config)
     {
-        // TODO ExecSession.cleanup
-        return guess(newSession(config), config);
-    }
-
-    public ConfigDiff guess(ExecSession exec, ConfigSource config)
-    {
-        return guessExecutor.guess(exec, config);
+        ExecSession exec = newExecSession(config);
+        try {
+            return guessExecutor.guess(exec, config);
+        }
+        finally {
+            exec.cleanup();
+        }
     }
 
     public PreviewResult preview(ConfigSource config)
     {
-        // TODO ExecSession.cleanup
-        return preview(newSession(config), config);
-    }
-
-    public PreviewResult preview(ExecSession exec, ConfigSource config)
-    {
-        return previewExecutor.preview(exec, config);
+        ExecSession exec = newExecSession(config);
+        try {
+            return previewExecutor.preview(exec, config);
+        }
+        finally {
+            exec.cleanup();
+        }
     }
 
     public ExecutionResult run(ConfigSource config)
     {
-        // TODO ExecSession.cleanup
-        return run(newSession(config), config);
-    }
-
-    public ExecutionResult run(ExecSession exec, ConfigSource config)
-    {
+        ExecSession exec = newExecSession(config);
         try {
             return bulkLoader.run(exec, config);
-        } catch (PartialExecutionException partial) {
+        }
+        catch (PartialExecutionException partial) {
             try {
                 bulkLoader.cleanup(config, partial.getResumeState());
             } catch (Throwable ex) {
@@ -198,22 +183,46 @@ public class EmbulkEmbed
             }
             throw partial;
         }
+        finally {
+            try {
+                exec.cleanup();
+            }
+            catch (Exception ex) {
+                // TODO add this exception to ExecutionResult.getIgnoredExceptions
+                // or partial.addSuppressed
+                ex.printStackTrace(System.err);
+            }
+        }
     }
 
     public ResumableResult runResumable(ConfigSource config)
     {
-        return runResumable(newSession(config), config);
+        ExecSession exec = newExecSession(config);
+        try {
+            ExecutionResult result;
+            try {
+                result = bulkLoader.run(exec, config);
+            } catch (PartialExecutionException partial) {
+                return new ResumableResult(partial);
+            }
+            return new ResumableResult(result);
+        }
+        finally {
+            try {
+                exec.cleanup();
+            }
+            catch (Exception ex) {
+                // TODO add this exception to ExecutionResult.getIgnoredExceptions
+                // or partial.addSuppressed
+                ex.printStackTrace(System.err);
+            }
+        }
     }
 
-    public ResumableResult runResumable(ExecSession exec, ConfigSource config)
+    private ExecSession newExecSession(ConfigSource config)
     {
-        ExecutionResult result;
-        try {
-            result = bulkLoader.run(exec, config);
-        } catch (PartialExecutionException partial) {
-            return new ResumableResult(partial);
-        }
-        return new ResumableResult(result);
+        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
+        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 
     public ResumeStateAction resumeState(ConfigSource config, ConfigSource resumeStateConfig)
