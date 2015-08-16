@@ -78,6 +78,9 @@ public class JRubyScriptingModule
 //            }
 //            jruby.setLoadPaths(loadPaths);
 
+            // load embulk.rb
+            jruby.runScriptlet("require 'embulk'");
+
             // jruby searches embulk/java/bootstrap.rb from the beginning of $LOAD_PATH.
             jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
@@ -95,9 +98,6 @@ public class JRubyScriptingModule
             jruby.callMethod(
                     jruby.runScriptlet("Embulk::Java::Injected"),
                     "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
-
-            // load embulk.rb
-            jruby.runScriptlet("require 'embulk'");
 
             // initialize logger
             jruby.callMethod(

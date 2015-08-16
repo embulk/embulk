@@ -61,11 +61,7 @@ module Embulk
     bootstrap.setSystemConfig(systemConfig)
     embed = bootstrap.java_method(:initialize).call  # see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
 
-    require 'embulk/error'
-    require 'embulk/buffer'
-    require 'embulk/data_source'
-    require 'embulk/plugin'
-    require 'embulk/runner'
+    # see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
 
     Embulk.const_set :Runner, EmbulkRunner.new(embed)
   end

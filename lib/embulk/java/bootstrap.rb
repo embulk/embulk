@@ -13,5 +13,12 @@ module Embulk
     def self.injector
       Injected::Injector
     end
+
+    require 'embulk'
+    require 'embulk/error'
+    require 'embulk/buffer'
+    require 'embulk/data_source'
+    require 'embulk/plugin'
+    require 'embulk/runner'
   end
 end
