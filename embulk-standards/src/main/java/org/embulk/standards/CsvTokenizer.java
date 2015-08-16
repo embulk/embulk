@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
-import org.embulk.config.ConfigException;
 import org.embulk.spi.util.LineDecoder;
-import org.embulk.spi.Exec;
 
 public class CsvTokenizer
 {
