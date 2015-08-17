@@ -204,7 +204,7 @@ examples:
 
     case subcmd
     when :example
-      require_relative 'embulk_example'
+      require 'embulk/command/embulk_example'
       path = ARGV[0] || "embulk-example"
       puts "Creating #{path} directory..."
       Embulk.create_example(path)

@@ -1,2 +1,2 @@
-require_relative 'embulk_run'
+require 'embulk/command/embulk_run'
 Embulk.run(ARGV)
