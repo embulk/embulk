@@ -15,19 +15,19 @@ public class TransactionalFileOutputWrapper
 {
     private final Logger logger = LoggerFactory.getLogger(PluginWrappers.class);
 
-    public static TransactionalFileOutput wrapIfNecessary(TransactionalFileOutput input)
+    public static TransactionalFileOutput wrapIfNecessary(TransactionalFileOutput object)
     {
-        Method runMethod = wrapCommitMethod(input);
+        Method runMethod = wrapCommitMethod(object);
         if (runMethod != null) {
-            return new TransactionalFileOutputWrapper(input, runMethod);
+            return new TransactionalFileOutputWrapper(object, runMethod);
         }
-        return input;
+        return object;
     }
 
-    private static Method wrapCommitMethod(TransactionalFileOutput input)
+    private static Method wrapCommitMethod(TransactionalFileOutput object)
     {
         try {
-            Method m = input.getClass().getMethod("commit");
+            Method m = object.getClass().getMethod("commit");
             if (m.getReturnType().equals(CommitReport.class)) {
                 return m;
             } else {

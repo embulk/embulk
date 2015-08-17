@@ -15,19 +15,19 @@ public class TransactionalPageOutputWrapper
 {
     private final Logger logger = LoggerFactory.getLogger(PluginWrappers.class);
 
-    public static TransactionalPageOutput wrapIfNecessary(TransactionalPageOutput input)
+    public static TransactionalPageOutput wrapIfNecessary(TransactionalPageOutput object)
     {
-        Method runMethod = wrapCommitMethod(input);
+        Method runMethod = wrapCommitMethod(object);
         if (runMethod != null) {
-            return new TransactionalPageOutputWrapper(input, runMethod);
+            return new TransactionalPageOutputWrapper(object, runMethod);
         }
-        return input;
+        return object;
     }
 
-    private static Method wrapCommitMethod(TransactionalPageOutput input)
+    private static Method wrapCommitMethod(TransactionalPageOutput object)
     {
         try {
-            Method m = input.getClass().getMethod("commit");
+            Method m = object.getClass().getMethod("commit");
             if (m.getReturnType().equals(CommitReport.class)) {
                 return m;
             } else {
@@ -47,7 +47,7 @@ public class TransactionalPageOutputWrapper
     {
         this.object = object;
         this.commitMethod = commitMethod;
-        logger.warn("An input plugin is compiled with old Embulk plugin API. Please update the plugin version using \"embulk gem install\" command, or contact a developer of the plugin to upgrade the plugin code using \"embulk migrate\" command: {}", object.getClass());
+        logger.warn("An output plugin is compiled with old Embulk plugin API. Please update the plugin version using \"embulk gem install\" command, or contact a developer of the plugin to upgrade the plugin code using \"embulk migrate\" command: {}", object.getClass());
     }
 
     @Override

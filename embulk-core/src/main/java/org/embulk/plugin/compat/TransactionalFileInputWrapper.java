@@ -15,19 +15,19 @@ public class TransactionalFileInputWrapper
 {
     private final Logger logger = LoggerFactory.getLogger(PluginWrappers.class);
 
-    public static TransactionalFileInput wrapIfNecessary(TransactionalFileInput input)
+    public static TransactionalFileInput wrapIfNecessary(TransactionalFileInput object)
     {
-        Method runMethod = wrapCommitMethod(input);
+        Method runMethod = wrapCommitMethod(object);
         if (runMethod != null) {
-            return new TransactionalFileInputWrapper(input, runMethod);
+            return new TransactionalFileInputWrapper(object, runMethod);
         }
-        return input;
+        return object;
     }
 
-    private static Method wrapCommitMethod(TransactionalFileInput input)
+    private static Method wrapCommitMethod(TransactionalFileInput object)
     {
         try {
-            Method m = input.getClass().getMethod("commit");
+            Method m = object.getClass().getMethod("commit");
             if (m.getReturnType().equals(CommitReport.class)) {
                 return m;
             } else {
@@ -47,7 +47,7 @@ public class TransactionalFileInputWrapper
     {
         this.object = object;
         this.commitMethod = commitMethod;
-        logger.warn("An input plugin is compiled with old Embulk plugin API. Please update the plugin version using \"embulk gem install\" command, or contact a developer of the plugin to upgrade the plugin code using \"embulk migrate\" command: {}", object.getClass());
+        logger.warn("A file input plugin is compiled with old Embulk plugin API. Please update the plugin version using \"embulk gem install\" command, or contact a developer of the plugin to upgrade the plugin code using \"embulk migrate\" command: {}", object.getClass());
     }
 
     @Override
