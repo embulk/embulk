@@ -167,6 +167,10 @@ examples:
 ]
       args = 2..2
 
+    when :migrate
+      op.banner = "Usage: migrate <directory>"
+      args = 1..1
+
     when :selfupdate
       op.on('-f', "Skip corruption check", TrueClass) do |b|
         system[:force] = true
@@ -241,6 +245,11 @@ examples:
 
       require 'embulk/command/embulk_new_plugin'
       Embulk.new_plugin(name, language, category)
+
+    when :migrate
+      path = ARGV[0]
+      require 'embulk/command/embulk_migrate_plugin'
+      Embulk.migrate_plugin(path)
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
@@ -419,6 +428,7 @@ examples:
     STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
     STDERR.puts "   new       <category> <name>                        # generates new plugin template"
+    STDERR.puts "   migrate   <path>                                   # modify plugin code to use the latest Embulk plugin API"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
     STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
     STDERR.puts ""
