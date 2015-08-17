@@ -1,18 +1,16 @@
 PATH
   remote: .
   specs:
-    embulk (0.6.23-java)
-      liquid (~> 3.0.6)
-      rjack-icu (~> 4.54.1.1)
+    embulk (0.6.25)
+      jruby-jars (= 1.7.21)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    jruby-jars (1.7.21)
     kramdown (1.5.0)
-    liquid (3.0.6)
     power_assert (0.2.2)
     rake (10.4.2)
-    rjack-icu (4.54.1.1-java)
     test-unit (3.0.9)
       power_assert
     yard (0.8.7.6)
