@@ -7,7 +7,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.annotations.Beta;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +27,6 @@ import org.embulk.guice.LifeCycleInjector;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@Beta
 public class EmbulkEmbed
 {
     public static ConfigLoader newSystemConfigLoader()

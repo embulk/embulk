@@ -14,6 +14,7 @@ import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.jruby.JRubyScriptingModule;
 import static com.google.common.base.Preconditions.checkState;
 
+@Deprecated
 public class EmbulkService
 {
     private final ConfigSource systemConfig;
