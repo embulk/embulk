@@ -462,6 +462,6 @@ examples:
   end
 
   def self.system_exit_success
-    raise SystemExit.new(0, message)
+    raise SystemExit.new(0)
   end
 end
