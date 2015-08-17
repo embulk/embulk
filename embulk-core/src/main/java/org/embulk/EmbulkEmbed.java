@@ -21,6 +21,7 @@ import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.ResumeState;
+import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecSession;
 import org.embulk.guice.Bootstrap;
 import org.embulk.guice.LifeCycleInjector;
@@ -137,6 +138,11 @@ public class EmbulkEmbed
     public ModelManager getModelManager()
     {
         return injector.getInstance(ModelManager.class);
+    }
+
+    public BufferAllocator getBufferAllocator()
+    {
+        return injector.getInstance(BufferAllocator.class);
     }
 
     public ConfigLoader newConfigLoader()
