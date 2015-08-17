@@ -10,6 +10,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
+import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.util.Encoders;
 
 public class FileOutputRunner
@@ -130,7 +131,8 @@ public class FileOutputRunner
         FileOutput fileOutput = null;
         PageOutput output = null;
         try {
-            fileOutput = tran = fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex);
+            fileOutput = tran = PluginWrappers.transactionalFileOutput(
+                    fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex));
 
             fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), fileOutput);
             output = formatterPlugin.open(task.getFormatterTaskSource(), schema, fileOutput);

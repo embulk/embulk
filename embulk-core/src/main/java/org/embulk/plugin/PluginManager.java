@@ -7,6 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import org.embulk.config.ConfigException;
+import org.embulk.spi.InputPlugin;
+import org.embulk.plugin.compat.PluginWrappers;
 
 public class PluginManager
 {
@@ -22,7 +24,17 @@ public class PluginManager
         this.injector = injector;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T newPlugin(Class<T> iface, PluginType type)
+    {
+        T t = newPluginWithoutWrapper(iface, type);
+        if (t instanceof InputPlugin) {
+            return (T) PluginWrappers.inputPlugin((InputPlugin) t);
+        }
+        return t;
+    }
+
+    private <T> T newPluginWithoutWrapper(Class<T> iface, PluginType type)
     {
         if (sources.isEmpty()) {
             throw new ConfigException("No PluginSource is installed");
@@ -36,7 +48,8 @@ public class PluginManager
         for (PluginSource source : sources) {
             try {
                 return source.newPlugin(iface, type);
-            } catch (PluginSourceNotMatchException e) {
+            }
+            catch (PluginSourceNotMatchException e) {
                 exceptions.add(e);
             }
         }

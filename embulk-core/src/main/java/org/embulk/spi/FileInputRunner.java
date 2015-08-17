@@ -10,6 +10,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.plugin.PluginType;
+import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.util.Decoders;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.SamplingParserPlugin;
@@ -138,7 +139,8 @@ public class FileInputRunner
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
+        TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
+                fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
         FileInput fileInput = tran;
         try {
             fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);

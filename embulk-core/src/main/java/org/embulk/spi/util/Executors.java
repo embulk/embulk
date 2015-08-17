@@ -12,6 +12,7 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ProcessTask;
+import org.embulk.plugin.compat.PluginWrappers;
 
 public abstract class Executors
 {
@@ -49,7 +50,8 @@ public abstract class Executors
             OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
             ProcessStateCallback callback)
     {
-        TransactionalPageOutput tran = outputPlugin.open(outputTaskSource, outputSchema, taskIndex);
+        TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
+            outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
 
         PageOutput closeThis = tran;
         callback.started();
@@ -57,6 +59,7 @@ public abstract class Executors
             PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
 
             TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
+
             if (inputTaskReport == null) {
                 inputTaskReport = exec.newTaskReport();
             }
