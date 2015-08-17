@@ -48,6 +48,10 @@ module Embulk
   end
 
   def self.setup(system_config={})
+    unless RUBY_PLATFORM =~ /java/i
+      raise "Embulk.setup works only with JRuby."
+    end
+
     require_classpath
 
     systemConfigJson = system_config.merge({
