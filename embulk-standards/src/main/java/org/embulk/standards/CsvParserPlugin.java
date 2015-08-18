@@ -22,6 +22,7 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.PageOutput;
+import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
 import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
@@ -369,7 +370,7 @@ public class CsvParserPlugin
     }
 
     static class CsvRecordValidateException
-            extends RuntimeException
+            extends DataException
     {
         CsvRecordValidateException(Throwable cause)
         {
