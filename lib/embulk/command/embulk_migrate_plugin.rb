@@ -42,10 +42,30 @@ module Embulk
       migrator.replace("**/*.java", /(commitReport)/, "taskReport")
     end
 
+    if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.[12345]\W+/)
+      # gradle < 2.6
+      require 'embulk/data/package_data'
+      data = PackageData.new("new", migrator.path)
+      migrator.write "gradle/wrapper/gradle-wrapper.jar", data.content("java/gradle/wrapper/gradle-wrapper.jar")
+      migrator.write "gradle/wrapper/gradle-wrapper.properties", data.content("java/gradle/wrapper/gradle-wrapper.properties")
+    end
+
+    #
+    # add rules...
+    ##
+
+    # update version at the end
     migrator.replace("**/build.gradle", /org\.embulk:embulk-(?:core|standards):([\d\.]+)?/, Embulk::VERSION)
   end
 
   def self.migrate_ruby_plugin(migrator, from_ver)
+    #
+    # add rules...
+    ##
+
+    migrator.write(".ruby-version", "jruby-9.0.0.0")
+
+    # update version at the end
     if from_ver <= version("0.1.0")
       # add add_development_dependency
       migrator.insert_line("**/*.gemspec", /([ \t]*\w+)\.add_development_dependency/) {|m|
@@ -54,8 +74,6 @@ module Embulk
     else
       migrator.replace("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s+([\d\.]+)\W+/, Embulk::VERSION)
     end
-
-    migrator.write(".ruby-version", "jruby-9.0.0.0")
   end
 
   private
@@ -69,6 +87,8 @@ module Embulk
       @path = path
       @modified_files = {}
     end
+
+    attr_reader :path
 
     def modified_files
       @modified_files.keys
