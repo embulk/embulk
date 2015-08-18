@@ -323,9 +323,12 @@ examples:
       end
       specs.each do |spec|
         gem_path = File.dirname(spec)
-        stub = Gem::StubSpecification.new(spec)
-        stub.define_singleton_method(:full_gem_path) { gem_path }
-        Gem::Specification.add_spec(stub)
+        Dir.chdir(path) do
+          # cd to path because spec could include `git ...`
+          stub = Gem::StubSpecification.new(spec)
+          stub.define_singleton_method(:full_gem_path) { gem_path }
+          Gem::Specification.add_spec(stub)
+        end
       end
     end
   end
