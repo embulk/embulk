@@ -2,7 +2,7 @@ apply plugin: "com.github.jruby-gradle.jar"
 
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${rootProject.projectDir}/lib", "${buildDir}/jruby")
+processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gemlib")
 
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
@@ -45,10 +45,15 @@ dependencies {
 }
 
 task unpackGems(type: JRubyPrepare) {
-    outputDir file("${buildDir}/jruby/embulk/gems")
+    outputDir file("${buildDir}/gem")
     dependencies configurations.gems
     doLast {
-        fileTree(dir: "${buildDir}/jruby/embulk/gems/cache", include: "*.gem").each { f -> f.delete() }
+        // move to build/gem/*/lib/* to build/gemlib/
+        file("${buildDir}/gemlib").mkdirs()
+        file("${buildDir}/gem/gems").eachDir { gemDir ->
+            file("${gemDir}/lib").renameTo("${buildDir}/gemlib/")
+        }
+        fileTree(dir: "${buildDir}/gemlib", include: "**/.jrubydir").each { f -> f.delete() }
     }
 }
 processResources.dependsOn("unpackGems")

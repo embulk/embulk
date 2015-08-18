@@ -46,14 +46,7 @@ else
     raise "HOME environment variable is not set."
   end
   ENV['GEM_HOME'] = File.expand_path File.join(user_home, '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
-
-  jar, resource = __FILE__.split("!", 2)
-  if resource
-    embulk_lib = resource.split("/")[0..-3].join("/")
-    ENV['GEM_PATH'] = "#{jar}!#{embulk_lib}/gems"
-  else
-    ENV.delete('GEM_PATH')
-  end
+  ENV['GEM_PATH'] = ''
 
   ENV.delete('BUNDLE_GEMFILE')
   Gem.clear_paths  # force rubygems to reload GEM_HOME
