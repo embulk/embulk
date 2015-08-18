@@ -141,10 +141,10 @@ embulk selfupdate
 You can see JaCoCo's test coverage report at `${project}/build/reports/tests/index.html`
 You can see Findbug's report at `${project}/build/reports/findbug/main.html`  # FIXME coverage information is not included somehow
 
-You can use `classpath` task to use `./bin/embulk` for development:
+You can use `classpath` task to use `bundle exec ./bin/embulk` for development:
 
 ```
-./gradlew classpath  # -x test: skip test
+./gradlew -t classpath  # -x test: skip test
 ./bin/embulk
 ```
 
