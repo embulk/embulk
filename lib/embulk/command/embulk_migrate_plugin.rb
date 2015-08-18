@@ -54,6 +54,8 @@ module Embulk
     else
       migrator.replace("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s+([\d\.]+)\W+/, Embulk::VERSION)
     end
+
+    migrator.write(".ruby-version", "jruby-9.0.0.0")
   end
 
   private
@@ -123,12 +125,23 @@ module Embulk
       File.read(File.join(@path, file))
     end
 
-    def modify(file, data)
-      if File.read(file) != data
-        File.write(file, data)
-        unless @modified_files.has_key?(file)
-          puts "  Modified #{file.sub(/^#{Regexp.escape(@path)}/, '')}"
-          @modified_files[file] = true
+    def write(file, data)
+      modify(File.join(@path, file), data)
+    end
+
+    private
+
+    def modify(path, data)
+      orig = File.read(path) rescue nil
+      if orig != data
+        File.write(path, data)
+        unless @modified_files.has_key?(path)
+          if orig
+            puts "  Modified #{path.sub(/^#{Regexp.escape(@path)}/, '')}"
+          else
+            puts "  Created #{path.sub(/^#{Regexp.escape(@path)}/, '')}"
+          end
+          @modified_files[path] = true
         end
       end
       nil
