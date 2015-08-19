@@ -31,7 +31,11 @@ module Embulk
     if __FILE__.include?("!")
       # single jar
       jar, resource = __FILE__.split("!", 2)
-      require jar
+      begin
+        require File.expand_path(jar)
+      rescue LoadError
+        # TODO fails if jar doesn't end with ".rb" or ".jar" but ignorable
+      end
 
     elsif __FILE__ =~ /^classpath:/
       # already in classpath
