@@ -2,6 +2,7 @@ package org.embulk.config;
 
 public class ConfigException
         extends RuntimeException
+        implements UserDataException
 {
     public ConfigException(String message)
     {

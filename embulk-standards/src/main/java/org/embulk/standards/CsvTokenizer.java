@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
 
 public class CsvTokenizer
@@ -365,7 +366,7 @@ public class CsvTokenizer
     }
 
     public static class InvalidFormatException
-            extends RuntimeException
+            extends DataException
     {
         public InvalidFormatException(String message)
         {
@@ -374,7 +375,7 @@ public class CsvTokenizer
     }
 
     public static class InvalidValueException
-            extends RuntimeException
+            extends DataException
     {
         public InvalidValueException(String message)
         {
