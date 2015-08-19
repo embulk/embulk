@@ -105,7 +105,9 @@ module Embulk
         puts "Next steps:"
         puts ""
         puts "  $ cd #{full_project_name}"
-        puts "  $ rake"
+        puts "  $ bundle install                      # install one using rbenv & rbenv-build"
+        puts "  $ bundle exec rake                    # build gem to be released"
+        puts "  $ bundle exec embulk run config.yml   # you can run plugin using this command"
       when :java
         puts "Next steps:"
         puts ""
