@@ -28,7 +28,7 @@ Gem::Specification.new do |gem|
     gem.platform = 'java'
 
   else
-    gem.add_dependency "jruby-jars", '= 1.7.21' if RUBY_PLATFORM !~ /java/i
+    gem.add_dependency "jruby-jars", '= 9.0.0.0'
   end
 
   gem.add_development_dependency "bundler", [">= 1.0"]
