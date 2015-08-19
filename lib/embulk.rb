@@ -56,6 +56,8 @@ module Embulk
       raise "Embulk.setup works only with JRuby."
     end
 
+    require 'json'
+
     require_classpath
 
     systemConfigJson = system_config.merge({
