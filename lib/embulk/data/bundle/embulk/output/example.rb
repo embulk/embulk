@@ -15,8 +15,8 @@ module Embulk
 
       def self.resume(task, schema, count, &control)
         puts "Example output started."
-        commit_reports = yield(task)
-        puts "Example output finished. Commit reports = #{commit_reports.to_json}"
+        task_reports = yield(task)
+        puts "Example output finished. Commit reports = #{task_reports.to_json}"
 
         next_config_diff = {}
         return next_config_diff
@@ -47,10 +47,10 @@ module Embulk
       end
 
       def commit
-        commit_report = {
+        task_report = {
           "records" => @records
         }
-        return commit_report
+        return task_report
       end
     end
 

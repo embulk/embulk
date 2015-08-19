@@ -22,7 +22,7 @@ module Embulk
       end
 
       def self.resume(task, columns, count, &control)
-        commit_reports = yield(task, columns, count)
+        task_reports = yield(task, columns, count)
 
         next_config_diff = {}
         return next_config_diff
@@ -50,8 +50,8 @@ module Embulk
         page_builder.add(["example-value", 2, 0.2])
         page_builder.finish
 
-        commit_report = {}
-        return commit_report
+        task_report = {}
+        return task_report
       end
     end
 

@@ -24,8 +24,8 @@ module Embulk
 
       def self.resume(task, columns, count, &control)
         puts "Example input started."
-        commit_reports = yield(task, columns, count)
-        puts "Example input finished. Commit reports = #{commit_reports.to_json}"
+        task_reports = yield(task, columns, count)
+        puts "Example input finished. Commit reports = #{task_reports.to_json}"
 
         next_config_diff = {}
         return next_config_diff
@@ -45,8 +45,8 @@ module Embulk
         end
         @page_builder.finish  # don't forget to call finish :-)
 
-        commit_report = {}
-        return commit_report
+        task_report = {}
+        return task_report
       end
     end
 

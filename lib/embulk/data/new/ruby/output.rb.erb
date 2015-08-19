@@ -16,13 +16,13 @@ module Embulk
         # resume(task, schema, count, &control)
 
         # non-resumable output:
-        commit_reports = yield(task)
+        task_reports = yield(task)
         next_config_diff = {}
         return next_config_diff
       end
 
       #def self.resume(task, schema, count, &control)
-      #  commit_reports = yield(task)
+      #  task_reports = yield(task)
       #
       #  next_config_diff = {}
       #  return next_config_diff
@@ -52,8 +52,8 @@ module Embulk
       end
 
       def commit
-        commit_report = {}
-        return commit_report
+        task_report = {}
+        return task_report
       end
     end
 

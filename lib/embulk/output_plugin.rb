@@ -14,7 +14,7 @@ module Embulk
       raise NotImplementedError, "#{self}.resume(task, schema, count, &control) is not implemented. This plugin is not resumable"
     end
 
-    def self.cleanup(task, schema, count, commit_reports)
+    def self.cleanup(task, schema, count, task_reports)
       # do nothing by default
     end
 
@@ -64,9 +64,9 @@ module Embulk
           schema = Schema.from_java(java_schema)
           config_diff_hash = @ruby_class.transaction(config, schema, task_count) do |task_source_hash|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
-            java_commit_reports = java_control.run(java_task_source)
-            java_commit_reports.map {|java_commit_report|
-              DataSource.from_java(java_commit_report)
+            java_task_reports = java_control.run(java_task_source)
+            java_task_reports.map {|java_task_report|
+              DataSource.from_java(java_task_report)
             }
           end
           # TODO check return type of #transaction
@@ -78,20 +78,20 @@ module Embulk
           schema = Schema.from_java(java_schema)
           config_diff_hash = @ruby_class.resume(task_source, schema, task_count) do |task_source_hash,columns,task_count|
             java_task_source = DataSource.from_ruby_hash(task_source_hash).to_java
-            java_commit_reports = java_control.run(java_task_source)
-            java_commit_reports.map {|java_commit_report|
-              DataSource.from_java(java_commit_report)
+            java_task_reports = java_control.run(java_task_source)
+            java_task_reports.map {|java_task_report|
+              DataSource.from_java(java_task_report)
             }
           end
           # TODO check return type of #resume
           return DataSource.from_ruby_hash(config_diff_hash).to_java
         end
 
-        def cleanup(java_task_source, java_schema, task_count, java_commit_reports)
+        def cleanup(java_task_source, java_schema, task_count, java_task_reports)
           task_source = DataSource.from_java(java_task_source)
           schema = Schema.from_java(java_schema)
-          commit_reports = java_commit_reports.map {|c| DataSource.from_java(c) }
-          @ruby_class.cleanup(task_source, schema, task_count, commit_reports)
+          task_reports = java_task_reports.map {|c| DataSource.from_java(c) }
+          @ruby_class.cleanup(task_source, schema, task_count, task_reports)
           return nil
         end
 
@@ -128,8 +128,8 @@ module Embulk
           end
 
           def commit
-            commit_report_hash = @ruby_object.commit
-            return DataSource.from_ruby_hash(commit_report_hash).to_java
+            task_report_hash = @ruby_object.commit
+            return DataSource.from_ruby_hash(task_report_hash).to_java
           end
         end
       end
