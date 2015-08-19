@@ -10,7 +10,7 @@ if RUBY_PLATFORM =~ /java/i
     $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
     require 'embulk/command/embulk_main'
   end
-  return
+  exit 0
 end
 
 java_args = []
@@ -102,3 +102,5 @@ cmdline.concat jruby_args
 cmdline << __FILE__
 cmdline.concat ARGV
 exec env, *cmdline
+exit 127
+
