@@ -77,6 +77,7 @@ module Embulk
       when :ruby
         pkg.cp("ruby/Rakefile", "Rakefile")
         pkg.cp("ruby/Gemfile", "Gemfile")
+        pkg.cp("ruby/.ruby-version", ".ruby-version")
         pkg.cp_erb("ruby/gemspec.erb", "#{full_project_name}.gemspec")
         pkg.cp_erb("ruby/#{category}.rb.erb", plugin_path)
 
