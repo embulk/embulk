@@ -4,6 +4,11 @@ public class ConfigException
         extends RuntimeException
         implements UserDataException
 {
+    protected ConfigException()
+    {
+        super();
+    }
+
     public ConfigException(String message)
     {
         super(message);

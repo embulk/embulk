@@ -1,10 +1,9 @@
 package org.embulk.spi.time;
 
-import org.embulk.config.UserDataException;
+import org.embulk.spi.DataException;
 
 public class TimestampParseException
-        extends Exception
-        implements UserDataException
+        extends DataException
 {
     public TimestampParseException(String message)
     {
