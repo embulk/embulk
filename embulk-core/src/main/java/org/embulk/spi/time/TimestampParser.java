@@ -1,22 +1,22 @@
 package org.embulk.spi.time;
 
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Calendar;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import org.joda.time.DateTimeZone;
+import com.google.common.base.Strings;
 import com.google.common.base.Optional;
-import org.jruby.embed.ScriptingContainer;
+import org.joda.time.DateTimeZone;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.jruby.Ruby;
+import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
-import org.jruby.util.RubyDateParser.FormatBag;
 import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
@@ -129,7 +129,14 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-	FormatBag bag = parser.parseInternal(compiledPattern, text);
+        if (Strings.isNullOrEmpty(text)) {
+            throw new RuntimeException("text is null or empty string."); // TODO should be changed to TimestampParseException after v0.6.26 released
+        }
+
+	RubyDateParser.FormatBag bag = parser.parseInternal(compiledPattern, text);
+        if (bag == null) {
+            throw new RuntimeException("Cannot parse text: " + text); // TODO should be changed to TimestampParseException after v0.6.26 released
+        }
 	bag.setYearIfNotSet(cal.get(Calendar.YEAR));
 	bag.setMonthIfNotSet(cal.get(Calendar.MONTH) + 1);
 	bag.setMdayIfNotSet(cal.get(Calendar.DAY_OF_MONTH));
