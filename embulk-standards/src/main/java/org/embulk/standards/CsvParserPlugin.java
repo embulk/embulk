@@ -90,6 +90,10 @@ public class CsvParserPlugin
         @Config("allow_extra_columns")
         @ConfigDefault("false")
         boolean getAllowExtraColumns();
+
+        @Config("stop_on_invalid_record")
+        @ConfigDefault("false")
+        boolean getStopOnInvalidRecord();
     }
 
     public static class QuoteCharacter
@@ -230,6 +234,7 @@ public class CsvParserPlugin
         final String nullStringOrNull = task.getNullString().orNull();
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         final boolean allowExtraColumns = task.getAllowExtraColumns();
+        final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
         int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
@@ -353,6 +358,9 @@ public class CsvParserPlugin
                     } catch (CsvTokenizer.InvalidFormatException | CsvTokenizer.InvalidValueException | CsvRecordValidateException e) {
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
+                        if (stopOnInvalidRecord) {
+                            throw new ConfigException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
+                        }
                         log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
 
