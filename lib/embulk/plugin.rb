@@ -15,6 +15,7 @@ module Embulk
   require 'embulk/guess_plugin'
   require 'embulk/executor_plugin'
   require 'embulk/java_plugin' if Embulk.java?
+  require 'embulk/exec' if Embulk.java?
 
   class PluginManager
     def initialize
