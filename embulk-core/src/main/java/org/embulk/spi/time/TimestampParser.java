@@ -133,12 +133,12 @@ public class TimestampParser
     public Timestamp parse(String text) throws TimestampParseException
     {
         if (Strings.isNullOrEmpty(text)) {
-            throw new RuntimeException("text is null or empty string."); // TODO should be changed to TimestampParseException after v0.6.26 released
+            throw new TimestampParseException("text is null or empty string.");
         }
 
 	RubyDateParser.FormatBag bag = parser.parseInternal(compiledPattern, text);
         if (bag == null) {
-            throw new RuntimeException("Cannot parse '" + text + "' by '" + format + "'"); // TODO should be changed to TimestampParseException after v0.6.26 released
+            throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
         }
 	bag.setYearIfNotSet(cal.get(Calendar.YEAR));
 	bag.setMonthIfNotSet(cal.get(Calendar.MONTH) + 1);
