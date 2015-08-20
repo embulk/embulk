@@ -502,6 +502,10 @@ public class RubyDateParser
     public RubyTime parse(List<Token> compiledPattern, String text)
     {
         FormatBag bag = parseInternal(compiledPattern, text);
+        if (bag == null) {
+            return null;
+        }
+
         LocalTime local = bag.makeLocalTime();
         long sec = local.getSeconds() + dateZoneToDiff(local.getZone());
         long msec = sec + local.getNsecFraction() / 1000000;
@@ -638,18 +642,18 @@ public class RubyDateParser
                     case FORMAT_STRING:
                     {
                         String s = token.getData().toString();
-                        for (int si = 0; si < s.length(); ) {
+                        for (int si = 0; si < s.length(); si++) {
                             char sc = s.charAt(si);
                             if (isSpace(sc)) {
-                                while (pos < text.length() && isSpace(text.charAt(pos))) {
+                                while (!isEndOfText(text, pos) && isSpace(text.charAt(pos))) {
                                     pos++;
                                 }
-                            } else if (pos >= text.length() || sc != text.charAt(pos)) {
-                                fail = true;
                             } else {
+                                if (isEndOfText(text, pos) || sc != text.charAt(pos)) {
+                                    fail = true;
+                                }
                                 pos++;
                             }
-                            si++;
                         }
                         break;
                     }
@@ -692,8 +696,8 @@ public class RubyDateParser
                     case FORMAT_DAY_S: // %e, %Oe - Day of the month, blank-padded ( 1..31)
                     {
                         long d;
-                        if (text.charAt(pos) == ' ') { // brank or not
-                            pos += 1; // brank
+                        if (isBlank(text, pos)) {
+                            pos += 1; // blank
                             d = readDigits(1);
                         } else {
                             d = readDigits(2);
@@ -732,8 +736,8 @@ public class RubyDateParser
                     case FORMAT_HOUR_BLANK: // %k - Hour of the day, 24-hour clock, blank-padded ( 0..23)
                     {
                         long h;
-                        if (text.charAt(pos) == ' ') { // brank or not
-                            pos += 1; // brank
+                        if (isBlank(text, pos)) {
+                            pos += 1; // blank
                             h = readDigits(1);
                         } else {
                             h = readDigits(2);
@@ -749,8 +753,8 @@ public class RubyDateParser
                     case FORMAT_HOUR_S: // %l - Hour of the day, 12-hour clock, blank-padded ( 1..12)
                     {
                         long h;
-                        if (text.charAt(pos) == ' ') { // brank or not
-                            pos += 1; // brank
+                        if (isBlank(text, pos)) {
+                            pos += 1; // blank
                             h = readDigits(1);
                         } else {
                             h = readDigits(2);
@@ -777,7 +781,7 @@ public class RubyDateParser
                         long v;
                         boolean negative = false;
 
-                        if (isSign(text.charAt(pos))) {
+                        if (isSign(text, pos)) {
                             negative = text.charAt(pos) == '-';
                             pos++;
                         }
@@ -832,7 +836,7 @@ public class RubyDateParser
                         long sec;
                         boolean negative = false;
 
-                        if (text.charAt(pos) == '-') {
+                        if (isMinus(text, pos)) {
                             negative = true;
                             pos++;
                         }
@@ -856,7 +860,7 @@ public class RubyDateParser
                         long sec;
                         boolean negative = false;
 
-                        if (text.charAt(pos) == '-') {
+                        if (isMinus(text, pos)) {
                             negative = true;
                             pos++;
                         }
@@ -912,7 +916,7 @@ public class RubyDateParser
                     {
                         boolean negative = false;
 
-                        if (isSign(text.charAt(pos))) {
+                        if (isSign(text, pos)) {
                             negative = text.charAt(pos) == '-';
                             pos++;
                         }
@@ -947,6 +951,11 @@ public class RubyDateParser
                         //      %:::z - hour, minute and second offset from UTC
                         //          (e.g. +09, +09:30, +09:30:30)
                     {
+                        if (isEndOfText(text, pos)) {
+                            fail = true;
+                            break;
+                        }
+
                         Matcher m = ZONE_PARSE_REGEX.matcher(text.substring(pos));
                         if (m.find()) {
                             // zone
@@ -1000,25 +1009,28 @@ public class RubyDateParser
 
         private long readDigits(int len)
         {
+            char c;
             long v = 0;
             int init_pos = pos;
-            try {
-                for (int i = 0; i < len; i++) {
-                    char c = text.charAt(pos); // IndexOutOfBounds
-                    if (!isDigit(c)) {
-                        if (pos - init_pos != 0) {
-                            break;
-                        } else {
-                            fail = true;
-                        }
-                    } else {
-                        v = v * 10 + toInt(c);
-                    }
-                    pos += 1;
+
+            for (int i = 0; i < len; i++) {
+                if (isEndOfText(text, pos)) {
+                    break;
                 }
-            } catch (IndexOutOfBoundsException e) {
-                // ignorable error
+
+                c = text.charAt(pos);
+                if (!isDigit(c)) {
+                    break;
+                } else {
+                    v = v * 10 + toInt(c);
+                }
+                pos += 1;
             }
+
+            if (pos == init_pos) {
+                fail = true;
+            }
+
             return v;
         }
 
@@ -1030,16 +1042,17 @@ public class RubyDateParser
         private static int matchPatternsAt(String text, int pos, String[] patterns)
         {
             int patIndex = -1;
+
+            if (isEndOfText(text, pos)) {
+                return patIndex;
+            }
+
             for (int i = 0; i < patterns.length; i++) {
                 String pattern = patterns[i];
                 int len = pattern.length();
-                try {
-                    if (pattern.equalsIgnoreCase(text.substring(pos, pos + len))) { // IndexOutOfBounds
-                        patIndex = i;
-                        break;
-                    }
-                } catch (IndexOutOfBoundsException e) {
-                    // ignorable error
+                if (!isEndOfText(text, pos + len - 1) && pattern.equalsIgnoreCase(text.substring(pos, pos + len))) {
+                    patIndex = i;
+                    break;
                 }
             }
             return patIndex;
@@ -1080,9 +1093,24 @@ public class RubyDateParser
             return '0' <= c && c <= '9';
         }
 
-        static boolean isSign(char c)
+        private static boolean isEndOfText(String text, int pos)
         {
-            return c == '+' || c == '-';
+            return pos >= text.length();
+        }
+
+        private static boolean isSign(String text, int pos)
+        {
+            return !isEndOfText(text, pos) && (text.charAt(pos) == '+' || text.charAt(pos) == '-');
+        }
+
+        private static boolean isMinus(String text, int pos)
+        {
+            return !isEndOfText(text, pos) && text.charAt(pos) == '-';
+        }
+
+        private static boolean isBlank(String text, int pos)
+        {
+            return !isEndOfText(text, pos) && text.charAt(pos) == ' ';
         }
 
         static int toInt(char c)
