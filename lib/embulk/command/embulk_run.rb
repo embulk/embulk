@@ -175,7 +175,7 @@ examples:
       op.on('-f', "Skip corruption check", TrueClass) do |b|
         options[:force] = true
       end
-      args = 0..0
+      args = 0..1
 
     when :example
       args = 0..1
@@ -253,7 +253,8 @@ examples:
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
-      Embulk.selfupdate(options)
+      version = ARGV[0]
+      Embulk.selfupdate(options, version)
 
     else
       require 'json'
