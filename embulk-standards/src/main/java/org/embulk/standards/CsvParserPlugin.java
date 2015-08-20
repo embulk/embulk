@@ -359,7 +359,7 @@ public class CsvParserPlugin
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
                         if (stopOnInvalidRecord) {
-                            throw new ConfigException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
+                            throw new DataException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
                         }
                         log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
