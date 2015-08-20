@@ -253,7 +253,7 @@ examples:
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
-      Embulk.selfupdate(system)
+      Embulk.selfupdate(options)
 
     else
       require 'json'
