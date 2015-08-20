@@ -10,6 +10,7 @@ import org.embulk.config.ConfigDefault;
 import org.jruby.Ruby;
 import org.jruby.util.RubyDateFormatter;
 import org.jruby.util.RubyDateParser;
+import org.jruby.util.RubyDateParser.FormatBag;
 import org.jruby.util.RubyDateParser.LocalTime;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class TimestampParser
 
     private final DateTimeZone defaultTimeZone;
 
+    private final String format;
     private final RubyDateParser parser;
     private final List<RubyDateFormatter.Token> compiledPattern;
 
@@ -82,6 +84,7 @@ public class TimestampParser
     {
         // TODO get default current time from ExecTask.getExecTimestamp
         Ruby runtime = jruby.getProvider().getRuntime();
+        this.format = format;
         this.parser = new RubyDateParser(runtime.getCurrentContext());
         this.compiledPattern = this.parser.compilePattern(runtime.newString(format), true);
         this.defaultTimeZone = defaultTimeZone;
@@ -98,13 +101,12 @@ public class TimestampParser
             throw new RuntimeException("text is null or empty string."); // TODO should be changed to TimestampParseException after v0.6.26 released
         }
 
-        RubyDateParser.FormatBag bag = parser.parseInternal(compiledPattern, text);
+        FormatBag bag = parser.parseInternal(compiledPattern, text);
         if (bag == null) {
-            throw new RuntimeException("Cannot parse text: " + text); // TODO should be changed to TimestampParseException after v0.6.26 released
+            throw new RuntimeException("Cannot parse '" + text + "' by '" + format + "'"); // TODO should be changed to TimestampParseException after v0.6.26 released
         }
 
         LocalTime local = bag.makeLocalTime();
-
         String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
         if (zone != null) {
