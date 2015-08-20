@@ -181,6 +181,8 @@ Options
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | max\_quoted\_size\_limit   | integer  | Maximum number of bytes of a quoted value. If a value exceeds the limit, the row will be skipped               | ``131072`` by default  |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
+| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid timestamp)                       | ``false`` by default   |
++----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | default\_timezone          | string   | Time zone of timestamp columns if the value itself doesn't include time zone description (eg. Asia/Tokyo)      | ``UTC`` by default     |
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | newline                    | enum     | Newline character (CRLF, LF or CR)                                                                             | ``CRLF`` by default    |
