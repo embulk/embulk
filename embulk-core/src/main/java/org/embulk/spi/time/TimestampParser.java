@@ -1,5 +1,6 @@
 package org.embulk.spi.time;
 
+import com.google.common.base.Strings;
 import org.joda.time.DateTimeZone;
 import com.google.common.base.Optional;
 import org.jruby.embed.ScriptingContainer;
@@ -93,7 +94,16 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        LocalTime local = parser.parseInternal(compiledPattern, text).makeLocalTime();
+        if (Strings.isNullOrEmpty(text)) {
+            throw new RuntimeException("text is null or empty string."); // TODO should be changed to TimestampParseException after v0.6.26 released
+        }
+
+        RubyDateParser.FormatBag bag = parser.parseInternal(compiledPattern, text);
+        if (bag == null) {
+            throw new RuntimeException("Cannot parse text: " + text); // TODO should be changed to TimestampParseException after v0.6.26 released
+        }
+
+        LocalTime local = bag.makeLocalTime();
 
         String zone = local.getZone();
         DateTimeZone timeZone = defaultTimeZone;
