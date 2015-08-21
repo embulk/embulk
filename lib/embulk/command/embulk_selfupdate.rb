@@ -84,7 +84,7 @@ module Embulk
     bintray.start do
       if version
         response = bintray.get("/embulk/maven/embulk/#{version}")
-        raise "Expected response code 200 Found but got #{response.code}" if response.code != "200"
+        raise "Specified version does not exist." if response.code == "404"
         return version
       else
         response = bintray.get('/embulk/maven/embulk/_latestVersion')
