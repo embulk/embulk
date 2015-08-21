@@ -434,7 +434,7 @@ examples:
     STDERR.puts "   new       <category> <name>                        # generates new plugin template"
     STDERR.puts "   migrate   <path>                                   # modify plugin code to use the latest Embulk plugin API"
     STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
-    STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
+    STDERR.puts "   selfupdate [version]                               # upgrades embulk to the latest released version."
     STDERR.puts ""
     if message
       system_exit "error: #{message}"
