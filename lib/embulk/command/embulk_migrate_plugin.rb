@@ -96,7 +96,7 @@ module Embulk
 
     def match(glob, pattern)
       ms = Dir[File.join(@path, glob)].map do |file|
-        File.read(file).match(pattern)
+        read(file).match(pattern)
       end.compact
       return nil if ms.empty?
       ms
@@ -104,7 +104,7 @@ module Embulk
 
     def replace(glob, pattern, text=nil)
       ms = Dir[File.join(@path, glob)].map do |file|
-        data = File.read(file)
+        data = read(file)
         first = nil
         pos = 0
         while pos < data.length
@@ -126,7 +126,7 @@ module Embulk
 
     def insert_line(glob, pattern, text=nil)
       ms = Dir[File.join(@path, glob)].map do |file|
-        data = File.read(file)
+        data = read(file)
         if m = data.match(pattern)
           ln = m.pre_match.split("\n").count
           replace = text || yield(m)
@@ -142,7 +142,7 @@ module Embulk
     end
 
     def data(file)
-      File.read(File.join(@path, file))
+      read(File.join(@path, file))
     end
 
     def write(file, data)
@@ -152,7 +152,7 @@ module Embulk
     private
 
     def modify(path, data)
-      orig = File.read(path) rescue nil
+      orig = read(path) rescue nil
       if orig != data
         File.write(path, data)
         unless @modified_files.has_key?(path)
@@ -165,6 +165,11 @@ module Embulk
         end
       end
       nil
+    end
+
+    def read(path)
+      # assumes source code is written in UTF-8
+      File.read(path, external_encoding: 'UTF-8')
     end
   end
 end
