@@ -1,5 +1,5 @@
 module Embulk
-  def self.selfupdate(options={}, version)
+  def self.selfupdate(options={})
     require 'uri'
 
     jar, resource = __FILE__.split("!", 2)
@@ -15,6 +15,7 @@ module Embulk
     end
 
     target_version = ""
+    version = options[:version] || nil
     unless version
       puts "Checking the latest version..."
       target_version = check_target_version

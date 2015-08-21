@@ -253,8 +253,8 @@ examples:
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
-      version = ARGV[0]
-      Embulk.selfupdate(options, version)
+      options[:version] = ARGV[0]
+      Embulk.selfupdate(options)
 
     else
       require 'json'
