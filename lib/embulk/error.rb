@@ -23,4 +23,7 @@ module Embulk
       end
     end
   end
+
+  class PluginLoadError < ConfigError
+  end
 end
