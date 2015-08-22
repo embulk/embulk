@@ -145,31 +145,31 @@ module Embulk
             begin
               Integer(v)
             rescue => e
-              raise ConfigError, e
+              raise ConfigError.new e
             end
           when :float
             begin
               Float(v)
             rescue => e
-              raise ConfigError, e
+              raise ConfigError.new e
             end
           when :string
             begin
               String(v).dup
             rescue => e
-              raise ConfigError, e
+              raise ConfigError.new e
             end
           when :bool
             begin
               !!v  # TODO validation
             rescue => e
-              raise ConfigError, e
+              raise ConfigError.new e
             end
           when :hash
-            raise ConfigError, "Invalid value for :hash" unless v.is_a?(Hash)
+            raise ConfigError.new "Invalid value for :hash" unless v.is_a?(Hash)
             DataSource.new.merge!(v)
           when :array
-            raise ConfigError, "Invalid value for :array" unless v.is_a?(Array)
+            raise ConfigError.new "Invalid value for :array" unless v.is_a?(Array)
             v.dup
           else
             unless type.respond_to?(:load)
@@ -178,7 +178,7 @@ module Embulk
             begin
               type.load(v)
             rescue => e
-              raise ConfigError, e
+              raise ConfigError.new e
             end
           end
 
@@ -186,7 +186,7 @@ module Embulk
         value = options[:default]
 
       else
-        raise ConfigError, "Required field #{key.to_s.dump} is not set"
+        raise ConfigError.new "Required field #{key.to_s.dump} is not set"
       end
 
       return value
