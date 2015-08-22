@@ -2,7 +2,7 @@
 module Embulk
   module Exec
     def self.preview?
-      Java::Exec.isPreview
+      Java::SPI::Exec.isPreview
     end
   end
 end
