@@ -168,8 +168,9 @@ module Embulk
     end
 
     def read(path)
-      # assumes source code is written in UTF-8
-      File.read(path, external_encoding: 'UTF-8')
+      # external_encoding: assumes source code is written in UTF-8.
+      # internal_encoding: process files using UTF-8 so that modified data (data written to the file) becomes UTF-8.
+      File.read(path, external_encoding: 'UTF-8', internal_encoding: 'UTF-8')
     end
   end
 end
