@@ -88,15 +88,13 @@ module Embulk
       @record_writer.call(page_builder, record)
     end
 
-    if Embulk.java?
-      def self.from_java(java_schema)
-        new java_schema.getColumns.map {|column| Column.from_java(column) }
-      end
+    def self.from_java(java_schema)
+      new java_schema.getColumns.map {|column| Column.from_java(column) }
+    end
 
-      def to_java
-        columns = self.map {|column| column.to_java }
-        Java::Schema.new(columns)
-      end
+    def to_java
+      columns = self.map {|column| column.to_java }
+      Java::Schema.new(columns)
     end
   end
 

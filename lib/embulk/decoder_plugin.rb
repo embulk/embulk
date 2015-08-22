@@ -9,18 +9,16 @@ module Embulk
 
     # TODO
 
-    if Embulk.java?
-      # TODO new_java
+    # TODO new_java
 
-      def self.from_java(java_class)
-        JavaPlugin.ruby_adapter_class(java_class, DecoderPlugin, RubyAdapter)
-      end
+    def self.from_java(java_class)
+      JavaPlugin.ruby_adapter_class(java_class, DecoderPlugin, RubyAdapter)
+    end
 
-      module RubyAdapter
-        module ClassMethods
-        end
-        # TODO
+    module RubyAdapter
+      module ClassMethods
       end
+      # TODO
     end
   end
 

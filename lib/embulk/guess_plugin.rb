@@ -7,40 +7,38 @@ module Embulk
       raise NotImplementedError, "GuessPlugin#guess(config, sample_buffer) must be implemented"
     end
 
-    if Embulk.java?
-      def self.new_java
-        JavaAdapter.new(new)
+    def self.new_java
+      JavaAdapter.new(new)
+    end
+
+    class JavaAdapter
+      include Java::GuessPlugin
+
+      def initialize(ruby_guess)
+        @ruby_guess = ruby_guess
       end
 
-      class JavaAdapter
-        include Java::GuessPlugin
+      def guess(java_config, java_sample)
+        config = DataSource.from_java(java_config)
+        sample = Buffer.from_java(java_sample)
+        config_diff_hash = @ruby_guess.guess(config, sample)
+        return DataSource.from_ruby_hash(config_diff_hash).to_java
+      end
+    end
 
-        def initialize(ruby_guess)
-          @ruby_guess = ruby_guess
-        end
+    def self.from_java(java_class)
+      JavaPlugin.ruby_adapter(java_class, GuessPlugin, RubyAdapter)
+    end
 
-        def guess(java_config, java_sample)
-          config = DataSource.from_java(java_config)
-          sample = Buffer.from_java(java_sample)
-          config_diff_hash = @ruby_guess.guess(config, sample)
-          return DataSource.from_ruby_hash(config_diff_hash).to_java
-        end
+    module RubyAdapter
+      module ClassMethods
       end
 
-      def self.from_java(java_class)
-        JavaPlugin.ruby_adapter(java_class, GuessPlugin, RubyAdapter)
-      end
-
-      module RubyAdapter
-        module ClassMethods
-        end
-
-        def guess(config, sample)
-          java_config = config.to_java
-          java_sample = sample.to_java
-          java_config_diff = java_object.guess(java_config, java_sample)
-          return DataSource.from_java(java_config_diff)
-        end
+      def guess(config, sample)
+        java_config = config.to_java
+        java_sample = sample.to_java
+        java_config_diff = java_object.guess(java_config, java_sample)
+        return DataSource.from_java(java_config_diff)
       end
     end
   end

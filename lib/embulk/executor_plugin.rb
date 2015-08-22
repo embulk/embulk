@@ -5,18 +5,16 @@ module Embulk
   class ExecutorPlugin
     # TODO
 
-    if Embulk.java?
-      # TODO new_java
+    # TODO new_java
 
-      def self.from_java(java_class)
-        JavaPlugin.ruby_adapter_class(java_class, ExecutorPlugin, RubyAdapter)
-      end
+    def self.from_java(java_class)
+      JavaPlugin.ruby_adapter_class(java_class, ExecutorPlugin, RubyAdapter)
+    end
 
-      module RubyAdapter
-        module ClassMethods
-        end
-        # TODO
+    module RubyAdapter
+      module ClassMethods
       end
+      # TODO
     end
   end
 
