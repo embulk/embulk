@@ -175,7 +175,7 @@ examples:
       op.on('-f', "Skip corruption check", TrueClass) do |b|
         options[:force] = true
       end
-      args = 0..0
+      args = 0..1
 
     when :example
       args = 0..1
@@ -253,6 +253,7 @@ examples:
 
     when :selfupdate
       require 'embulk/command/embulk_selfupdate'
+      options[:version] = ARGV[0]
       Embulk.selfupdate(options)
 
     else
@@ -424,16 +425,16 @@ examples:
     STDERR.puts "Embulk v#{Embulk::VERSION}"
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
-    STDERR.puts "   bundle    [directory]                              # create or update plugin environment."
-    STDERR.puts "   run       <config.yml>                             # run a bulk load transaction."
-    STDERR.puts "   preview   <config.yml>                             # dry-run the bulk load without output and show preview."
-    STDERR.puts "   guess     <partial-config.yml> -o <output.yml>     # guess missing parameters to create a complete configuration file."
-    STDERR.puts "   gem       <install | list | help>                  # install a plugin or show installed plugins."
+    STDERR.puts "   bundle     [directory]                             # create or update plugin environment."
+    STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
+    STDERR.puts "   preview    <config.yml>                            # dry-run the bulk load without output and show preview."
+    STDERR.puts "   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file."
+    STDERR.puts "   gem        <install | list | help>                 # install a plugin or show installed plugins."
     STDERR.puts "                                                      # plugin path is #{ENV['GEM_HOME']}"
-    STDERR.puts "   new       <category> <name>                        # generates new plugin template"
-    STDERR.puts "   migrate   <path>                                   # modify plugin code to use the latest Embulk plugin API"
-    STDERR.puts "   example   [path]                                   # creates an example config file and csv file to try embulk."
-    STDERR.puts "   selfupdate                                         # upgrades embulk to the latest released version."
+    STDERR.puts "   new        <category> <name>                       # generates new plugin template"
+    STDERR.puts "   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API"
+    STDERR.puts "   example    [path]                                  # creates an example config file and csv file to try embulk."
+    STDERR.puts "   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version."
     STDERR.puts ""
     if message
       system_exit "error: #{message}"
