@@ -3,8 +3,8 @@ module Embulk
     require 'uri'
 
     jar, resource = __FILE__.split("!", 2)
-    jar_path = URI.parse(jar).path rescue jar
-    unless resource && File.file?(jar_path)
+    jar_uri = URI.parse(jar).path rescue jar
+    unless resource && File.file?(jar_uri)
       STDERR.puts ""
       STDERR.puts "Embulk is not installed by a single jar. Selfupdate is not supported."
       STDERR.puts "If you used gem to install embulk, please run: "
@@ -13,6 +13,7 @@ module Embulk
       STDERR.puts ""
       raise SystemExit.new(1)
     end
+    jar_path = jar_uri
 
     if version = options[:version]
       puts "Checking version #{version}..."

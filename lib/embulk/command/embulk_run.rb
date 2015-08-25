@@ -297,18 +297,20 @@ examples:
   private
 
   def self.fix_gem_ruby_path
-    ruby_path = File.join(RbConfig::CONFIG["bindir"], RbConfig::CONFIG["ruby_install_name"])
-    jar, resource = ruby_path.split("!")
+    # Oveerride Gem.ruby method so that rubygems can execute ruby command (as another process).
+    # By default, Gem.ruby uses "java -jar jar_path" command. However, it doesn't work because
+    # Main-Class is overwritten to org.embulk.cli.Main. Here fixes it to use
+    # "java -cp jar_path org.jruby.main" instead.
 
-    if resource && jar =~ /^file:/
-      # java
-      manifest = File.read("#{jar}!/META-INF/MANIFEST.MF") rescue ""
-      m = /Main-Class: ([^\r\n]+)/.match(manifest)
-      if m && m[1] != "org.jruby.Main"
-        # Main-Class is not jruby
-        Gem.define_singleton_method(:ruby) do
-          "java -cp #{jar_path(jar)} org.jruby.Main"
-        end
+    jar, resource = __FILE__.split("!", 2)
+    jar_uri = URI.parse(jar).path rescue jar
+
+    manifest = File.read("#{jar_uri}!/META-INF/MANIFEST.MF") rescue ""
+    m = /Main-Class: ([^\r\n]+)/.match(manifest)
+    if m && m[1] != "org.jruby.Main"
+      # Main-Class is not jruby
+      Gem.define_singleton_method(:ruby) do
+        "java -cp #{jar_path(jar_uri)} org.jruby.Main"
       end
     end
   end
