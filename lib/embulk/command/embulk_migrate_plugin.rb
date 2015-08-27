@@ -46,7 +46,7 @@ module Embulk
       # gradle < 2.6
       require 'embulk/data/package_data'
       data = PackageData.new("new", migrator.path)
-      migrator.write "gradle/wrapper/gradle-wrapper.jar", data.content("java/gradle/wrapper/gradle-wrapper.jar")
+      migrator.write "gradle/wrapper/gradle-wrapper.jar", data.bincontent("java/gradle/wrapper/gradle-wrapper.jar")
       migrator.write "gradle/wrapper/gradle-wrapper.properties", data.content("java/gradle/wrapper/gradle-wrapper.properties")
     end
 

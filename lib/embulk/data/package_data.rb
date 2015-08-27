@@ -16,6 +16,10 @@ module Embulk
       File.read(path(src))
     end
 
+    def bincontent(src)
+      File.binread(path(src))
+    end
+
     def erb(src)
       require 'erb'
       ERB.new(content(src), nil, '%').result(@erb_binding)
