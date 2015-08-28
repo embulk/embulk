@@ -18,7 +18,7 @@ module Embulk
           Column.new(nil, "value", :double),
         ]
 
-       out_columns = in_schema + columns
+        out_columns = in_schema + columns
 
         yield(task, out_columns)
       end
