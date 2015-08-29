@@ -41,6 +41,9 @@ module Embulk
     java_embed_ops = lambda do
       op.separator ""
       op.separator "  Other options:"
+      op.on('-l', '--log PATH', 'Output log messages to a file (default: -)') do |path|
+        options[:system_config][:log_path] = path
+      end
       op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:system_config][:log_level] = level
       end

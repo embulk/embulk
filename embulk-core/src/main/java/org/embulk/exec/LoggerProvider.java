@@ -35,11 +35,19 @@ public class LoggerProvider
         configurator.setContext(context);
         context.reset();
 
+        String logPath = systemConfig.get(String.class, "log_path", "-");
+
         String name;
-        if (System.console() != null) {
-            name = "/embulk/logback-color.xml";
+        if (logPath.equals("-")) {
+            if (System.console() != null) {
+                name = "/embulk/logback-color.xml";
+            } else {
+                name = "/embulk/logback-console.xml";
+            }
         } else {
-            name = "/embulk/logback-console.xml";
+            // logback uses system property to embed variables in XML file
+            System.setProperty("embulk.logPath", logPath);
+            name = "/embulk/logback-file.xml";
         }
         try {
             configurator.doConfigure(getClass().getResource(name));
