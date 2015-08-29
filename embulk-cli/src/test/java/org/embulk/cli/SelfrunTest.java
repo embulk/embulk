@@ -125,7 +125,7 @@ public class SelfrunTest {
                 "-Xverify:none",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
-                "r1",
+                "-Rr1",
                 "a1",
                 "a2"),
                 args);
@@ -141,8 +141,8 @@ public class SelfrunTest {
                 "-Xverify:none",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
-                "r1=v1",
-                "r2=v2",
+                "-Rr1=v1",
+                "-Rr2=v2",
                 "a1",
                 "a2"),
                 args);
@@ -156,7 +156,7 @@ public class SelfrunTest {
                 "-XX:+UseConcMarkSweepGC",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
-                "r1",
+                "-Rr1",
                 "run",
                 "a1"),
                 args);
@@ -206,7 +206,7 @@ public class SelfrunTest {
                 "j1",
                 "-jar",
                 testSelfrun.getAbsolutePath(),
-                "r1",
+                "-Rr1",
                 "a1",
                 "a2"),
                 args);

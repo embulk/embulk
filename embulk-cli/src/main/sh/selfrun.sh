@@ -75,6 +75,9 @@ if "%status%" == "rest" (
         set status=read
     )
 
+) else if "%arg:~0,2%" == "-R" (
+    set jruby_args=%jruby_args% %arg%
+
 ) else if "%arg%" == "run" (
     set default_optimize=true
     set args=%args% %arg%
@@ -128,6 +131,10 @@ while true; do
                 fi
                 java_args="$java_args $file_args"
             fi
+            shift
+            ;;
+        -R*)
+            jruby_args="$jruby_args $1"
             shift
             ;;
         run)
