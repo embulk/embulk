@@ -72,8 +72,8 @@ public class PluginManager
 
         for (Field targetField : plugin.getClass().getDeclaredFields()) {
             if (targetField.getAnnotation(PluginMixin.class) != null) {
-                Class<?> mixinClass = targetField.getClass();
-                if (Mixin.class.isAssignableFrom(mixinClass)) {
+                Class<?> mixinClass = targetField.getType();
+                if (!Mixin.class.isAssignableFrom(mixinClass)) {
                     throw new NullPointerException(String.format(
                                 "Field %s.%s with @PluginMixin must be subclass of Mixin<%s>",
                                 plugin.getClass().getName(), targetField.getName(), iface.getSimpleName()));
@@ -110,7 +110,7 @@ public class PluginManager
                                 plugin.getClass().getName(), setterMethod.getName()));
                 }
                 Class<?> mixinClass = args[0];
-                if (Mixin.class.isAssignableFrom(mixinClass)) {
+                if (!Mixin.class.isAssignableFrom(mixinClass)) {
                     throw new NullPointerException(String.format(
                                 "Argument of method %s.%s with @PluginMixin must be subclass of Mixin<%s>",
                                 plugin.getClass().getName(), setterMethod.getName(), iface.getSimpleName()));

@@ -118,6 +118,7 @@ public class LocalExecutorPlugin
                         public void outputCommitted(TaskReport report, Map<MixinId, TaskReport> mixinReports)
                         {
                             state.getOutputTaskState(taskIndex).setTaskReport(report);
+                            state.getOutputTaskState(taskIndex).setMixinReports(mixinReports);
                         }
                     });
                     return null;
