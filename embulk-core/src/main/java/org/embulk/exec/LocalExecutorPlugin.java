@@ -2,6 +2,7 @@ package org.embulk.exec;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +16,7 @@ import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.Schema;
+import org.embulk.spi.MixinId;
 import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;
 
@@ -113,7 +115,7 @@ public class LocalExecutorPlugin
                             state.getInputTaskState(taskIndex).setTaskReport(report);
                         }
 
-                        public void outputCommitted(TaskReport report)
+                        public void outputCommitted(TaskReport report, Map<MixinId, TaskReport> mixinReports)
                         {
                             state.getOutputTaskState(taskIndex).setTaskReport(report);
                         }

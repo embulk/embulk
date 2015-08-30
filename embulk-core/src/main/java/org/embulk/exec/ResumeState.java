@@ -1,6 +1,7 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Map;
 import com.google.common.base.Optional;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,6 +11,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.CommitReport;
 import org.embulk.spi.Schema;
+import org.embulk.spi.MixinId;
 
 public class ResumeState
 {
@@ -20,6 +22,8 @@ public class ResumeState
     private final Schema outputSchema;
     private final List<Optional<TaskReport>> inputTaskReports;
     private final List<Optional<TaskReport>> outputTaskReports;
+    private final List<Map<MixinId, TaskReport>> inputMixinReports;
+    private final List<Map<MixinId, TaskReport>> outputMixinReports;
 
     @JsonCreator
     public ResumeState(
@@ -29,7 +33,9 @@ public class ResumeState
             @JsonProperty("in_schema") Schema inputSchema,
             @JsonProperty("out_schema") Schema outputSchema,
             @JsonProperty("in_reports") List<Optional<TaskReport>> inputTaskReports,
-            @JsonProperty("out_reports") List<Optional<TaskReport>> outputTaskReports)
+            @JsonProperty("out_reports") List<Optional<TaskReport>> outputTaskReports,
+            @JsonProperty("in_mixin_reports") List<Map<MixinId, TaskReport>> inputMixinReports,
+            @JsonProperty("out_mixin_reports") List<Map<MixinId, TaskReport>> outputMixinReports)
     {
         this.execSessionConfigSource = execSessionConfigSource;
         this.inputTaskSource = inputTaskSource;
@@ -38,6 +44,8 @@ public class ResumeState
         this.outputSchema = outputSchema;
         this.inputTaskReports = inputTaskReports;
         this.outputTaskReports = outputTaskReports;
+        this.inputMixinReports = inputMixinReports;
+        this.outputMixinReports = outputMixinReports;
     }
 
     @JsonProperty("exec_task")
@@ -96,5 +104,17 @@ public class ResumeState
     public List<Optional<CommitReport>> getOutputCommitReports()
     {
         return (List) outputTaskReports;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
+    }
+
+    @JsonProperty("in_mixin_reports")
+    public List<Map<MixinId, TaskReport>> getInputMixinReports()
+    {
+        return inputMixinReports;
+    }
+
+    @JsonProperty("out_mixin_reports")
+    public List<Map<MixinId, TaskReport>> getOutputMixinReports()
+    {
+        return outputMixinReports;
     }
 }

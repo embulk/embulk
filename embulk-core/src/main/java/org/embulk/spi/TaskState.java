@@ -1,6 +1,9 @@
 package org.embulk.spi;
 
+import java.util.Map;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import org.embulk.spi.MixinId;
 import org.embulk.config.TaskReport;
 import org.embulk.config.CommitReport;
 
@@ -9,6 +12,7 @@ public class TaskState
     private volatile boolean started = false;
     private volatile boolean finished = false;
     private volatile Optional<TaskReport> taskReport = Optional.absent();
+    private volatile Map<MixinId, TaskReport> mixinReports = ImmutableMap.of();
     private volatile Optional<Throwable> exception = Optional.absent();
 
     public void start()
@@ -33,6 +37,11 @@ public class TaskState
     {
         this.started = true;
         this.taskReport = Optional.<TaskReport>of(commitReport);
+    }
+
+    public void setMixinReports(Map<MixinId, TaskReport> mixinReports)
+    {
+        this.mixinReports = mixinReports;
     }
 
     public void setException(Throwable exception)
@@ -72,6 +81,11 @@ public class TaskState
     public Optional<CommitReport> getCommitReport()
     {
         return (Optional) taskReport;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
+    }
+
+    public Map<MixinId, TaskReport> getMixinReports()
+    {
+        return mixinReports;
     }
 
     public Optional<Throwable> getException()

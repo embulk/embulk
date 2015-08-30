@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
 import java.util.List;
+import java.util.Map;
 import org.embulk.config.TaskSource;
 import org.embulk.config.TaskReport;
 import org.embulk.spi.ExecSession;
@@ -12,6 +13,8 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ProcessTask;
+import org.embulk.spi.MixinId;
+import org.embulk.exec.MixinContexts;
 import org.embulk.plugin.compat.PluginWrappers;
 
 public abstract class Executors
@@ -24,7 +27,7 @@ public abstract class Executors
 
         public void inputCommitted(TaskReport report);
 
-        public void outputCommitted(TaskReport report);
+        public void outputCommitted(TaskReport report, Map<MixinId, TaskReport> mixinReports);
     }
 
     public static void process(ExecSession exec,
@@ -44,11 +47,11 @@ public abstract class Executors
                 callback);
     }
 
-    public static void process(ExecSession exec, int taskIndex,
-            InputPlugin inputPlugin, Schema inputSchema, TaskSource inputTaskSource,
+    public static void process(final ExecSession exec, final int taskIndex,
+            final InputPlugin inputPlugin, final Schema inputSchema, final TaskSource inputTaskSource,
             List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources,
             OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
-            ProcessStateCallback callback)
+            final ProcessStateCallback callback)
     {
         TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
             outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
@@ -56,21 +59,30 @@ public abstract class Executors
         PageOutput closeThis = tran;
         callback.started();
         try {
-            PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
+            final PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
 
-            TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
+            final TransactionalPageOutput out = tran;
+            MixinContexts.ResultWithReports<TaskReport> r =
+                MixinContexts.runTask(new MixinContexts.Action<TaskReport>() {
+                    public TaskReport run()
+                    {
+                        TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
 
-            if (inputTaskReport == null) {
-                inputTaskReport = exec.newTaskReport();
-            }
-            callback.inputCommitted(inputTaskReport);
+                        if (inputTaskReport == null) {
+                            inputTaskReport = exec.newTaskReport();
+                        }
+                        callback.inputCommitted(inputTaskReport);
 
-            TaskReport outputTaskReport = tran.commit();
+                        return out.commit();
+                    }
+                });
+            TaskReport outputTaskReport = r.getResult();
             tran = null;
             if (outputTaskReport == null) {
                 outputTaskReport = exec.newTaskReport();
             }
-            callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
+            // TODO check output.finish() is called. wrap or abstract
+            callback.outputCommitted(outputTaskReport, r.getReports());
 
         } finally {
             try {
