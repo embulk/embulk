@@ -1,14 +1,4 @@
 module Embulk
-  if RUBY_PLATFORM =~ /java/i
-    def self.java?
-      true
-    end
-  else
-    def self.java?
-      false
-    end
-  end
-
   # logger should be setup first
   require 'embulk/logger'
 

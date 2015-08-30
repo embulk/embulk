@@ -12,7 +12,7 @@ module Embulk
           @logger = a
         elsif a.is_a?(::Logger)
           @logger = StandardLoggerAdapter.new(a)
-        elsif Embulk.java? && (org.slf4j.Logger rescue nil) && a.is_a?(org.slf4j.Logger)
+        elsif RUBY_PLATFORM =~ /java/i && (org.slf4j.Logger rescue nil) && a.is_a?(org.slf4j.Logger)
           @logger = Slf4jAdapter.new(a)
         else
           @logger = StandardLoggerAdapter.new(*args)
@@ -43,7 +43,7 @@ module Embulk
 
     def initialize(*args)
       super
-      if Embulk.java?
+      if RUBY_PLATFORM =~ /java/i
         self.formatter = lambda do |severity,datetime,progname,message|
           "#{datetime.strftime("%Y-%m-%d %H:%M:%S.%3N %z")} [#{severity}] (#{java.lang.Thread.currentThread.name}): #{message}\n"
         end
