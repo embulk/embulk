@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.msgpack.value.Value;
+import org.msgpack.value.ValueFactory;
 import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -23,6 +25,8 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.DataException;
+import org.embulk.spi.PluginMixin;
+import org.embulk.spi.util.ParserErrorMixin;
 import org.embulk.spi.util.LineDecoder;
 import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
@@ -198,6 +202,14 @@ public class CsvParserPlugin
 
     private final Logger log;
 
+    private ParserErrorMixin error = ParserErrorMixin.empty();
+
+    @PluginMixin
+    public void setError(ParserErrorMixin error)
+    {
+        this.error = error;
+    }
+
     public CsvParserPlugin()
     {
         log = Exec.getLogger(CsvParserPlugin.class);
@@ -361,7 +373,11 @@ public class CsvParserPlugin
                         if (stopOnInvalidRecord) {
                             throw new DataException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
                         }
-                        log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
+                        error.add(ValueFactory.newMap(new Value[] {
+                                    ValueFactory.newString("line"),
+                                    ValueFactory.newString(skippedLine)
+                        }));
+                        log.warn(String.format("line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
 
                         hasNextRecord = tokenizer.nextRecord();

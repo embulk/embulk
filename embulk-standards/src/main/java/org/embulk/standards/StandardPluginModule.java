@@ -3,6 +3,7 @@ package org.embulk.standards;
 import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import org.embulk.spi.ErrorPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
@@ -44,6 +45,9 @@ public class StandardPluginModule
 
         // filter plugins
         registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
+
+        // error plugins
+        registerPluginTo(binder, ErrorPlugin.class, "warn", WarnErrorPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
