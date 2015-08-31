@@ -19,19 +19,15 @@ module Embulk
 
   def self.require_classpath
     if __FILE__.include?("!")
-      # single jar
-      jar, resource = __FILE__.split("!", 2)
-      begin
-        require File.expand_path(jar)
-      rescue LoadError
-        # TODO fails if jar doesn't end with ".rb" or ".jar" but ignorable
-      end
+      # single jar. __FILE__ should point path/to/embulk.jar!/embulk.rb
+      # which means that embulk.jar is already loaded in this JVM.
 
     elsif __FILE__ =~ /^classpath:/
       # already in classpath
 
     else
-      # gem package
+      # gem package. __FILE__ should point path/to/embulk/lib/embulk.rb
+      # that requires here to load ../classpath/*.jar to start EmbulkEmbed.
       gem_root = File.expand_path('..', File.dirname(__FILE__))
       classpath_dir = File.join(gem_root, "classpath")
       jars = Dir.entries(classpath_dir).select{|f| f =~ /\.jar$/ }.sort

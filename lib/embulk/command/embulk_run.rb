@@ -262,11 +262,13 @@ examples:
     else
       require 'json'
 
-      Embulk.setup(options.delete(:system_config))
-
       setup_plugin_paths(plugin_paths)
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
+
+      # call setup after setup_classpaths to allow users to overwrite
+      # embulk classes
+      Embulk.setup(options.delete(:system_config))
 
       begin
         case subcmd
