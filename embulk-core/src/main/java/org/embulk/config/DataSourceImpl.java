@@ -115,6 +115,18 @@ public class DataSourceImpl
     }
 
     @Override
+    public DataSourceImpl getNestedOrGetEmpty(String attrName)
+    {
+        JsonNode json = data.get(attrName);
+        if (json == null) {
+            json = data.objectNode();
+        } else if (!json.isObject()) {
+            throw new ConfigException("Attribute "+attrName+" must be an object");
+        }
+        return newInstance(model, (ObjectNode) json);
+    }
+
+    @Override
     public DataSourceImpl set(String attrName, Object v)
     {
         if (v == null) {

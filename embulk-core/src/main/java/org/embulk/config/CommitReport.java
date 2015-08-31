@@ -14,6 +14,9 @@ public interface CommitReport
     CommitReport getNestedOrSetEmpty(String attrName);
 
     @Override
+    CommitReport getNestedOrGetEmpty(String attrName);
+
+    @Override
     CommitReport set(String attrName, Object v);
 
     @Override

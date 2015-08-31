@@ -10,6 +10,9 @@ public interface TaskReport
     TaskReport getNestedOrSetEmpty(String attrName);
 
     @Override
+    TaskReport getNestedOrGetEmpty(String attrName);
+
+    @Override
     TaskReport set(String attrName, Object v);
 
     @Override
