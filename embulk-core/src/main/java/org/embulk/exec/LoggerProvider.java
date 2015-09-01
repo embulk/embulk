@@ -55,6 +55,18 @@ public class LoggerProvider
             throw new RuntimeException(ex);
         }
 
+        String logbackConfig = systemConfig.get(String.class, "logback_config", "-");
+
+        if (!logbackConfig.equals("-")) {
+            System.setProperty("embulk.logbackConfig", logbackConfig);
+
+            try {
+                configurator.doConfigure(logbackConfig);
+            } catch (JoranException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
         org.slf4j.Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         if (logger instanceof Logger) {
             ((Logger) logger).setLevel(Level.toLevel(level.toUpperCase(), Level.DEBUG));
