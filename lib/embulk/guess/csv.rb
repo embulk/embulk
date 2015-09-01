@@ -123,7 +123,7 @@ module Embulk
           end
         end
 
-        header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) })
+        header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
 
         if header_line
           parser_guessed["skip_header_lines"] = skip_header_lines + 1
@@ -303,6 +303,22 @@ module Embulk
         else
           return nil, sample_lines
         end
+      end
+
+      def guess_string_header_line(sample_records)
+        first = sample_records.first
+        first.count.times do |column_index|
+          lengths = sample_records.map {|row| row[column_index] }.compact.map {|v| v.to_s.size }
+          if lengths.size > 2
+            if array_variance(lengths[1..-1]) <= 0.2
+              avg = array_avg(lengths[1..-1])
+              if avg == 0.0 ? lengths[0] > 1 : (avg - lengths[0]).abs / avg > 0.7
+                return true
+              end
+            end
+          end
+        end
+        return false
       end
 
       def array_sum(array)
