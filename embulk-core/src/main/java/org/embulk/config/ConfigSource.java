@@ -12,6 +12,9 @@ public interface ConfigSource
     ConfigSource getNestedOrSetEmpty(String attrName);
 
     @Override
+    ConfigSource getNestedOrGetEmpty(String attrName);
+
+    @Override
     ConfigSource set(String attrName, Object v);
 
     @Override

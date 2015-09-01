@@ -10,6 +10,9 @@ public interface ConfigDiff
     ConfigDiff getNestedOrSetEmpty(String attrName);
 
     @Override
+    ConfigDiff getNestedOrGetEmpty(String attrName);
+
+    @Override
     ConfigDiff set(String attrName, Object v);
 
     @Override
