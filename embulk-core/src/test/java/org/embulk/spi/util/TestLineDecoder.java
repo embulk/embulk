@@ -128,5 +128,39 @@ public class TestLineDecoder
         assertEquals(ImmutableList.of("t1", "t2", "t3"), decoded);
     }
 
-    // TODO test multibytes
+    @Test
+    public void testDecodeBasicMultiByte() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("utf-8"), Newline.LF,
+                bufferList("utf-8", "てすと1\nテスト2\nてすと3\n"));
+        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+    }
+
+    @Test
+    public void testDecodeBasicMultiByteTail() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("utf-8"), Newline.LF,
+                bufferList("utf-8", "てすと1"));
+        assertEquals(ImmutableList.of("てすと1"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksMultiByteLF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("utf-8"), Newline.LF,
+                bufferList("utf-8", "て", "1", "\n", "す", "2"));
+        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksMultiByteCRLF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("utf-8"), Newline.CRLF,
+                bufferList("utf-8", "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
+        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+    }
 }
