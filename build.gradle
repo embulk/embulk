@@ -95,6 +95,7 @@ subprojects {
         [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
         dependencies {
             testCompile 'junit:junit:4.12'
+            testCompile 'pl.pragmatists:JUnitParams:1.0.4'
         }
 
         tasks.withType(JavaCompile) {
