@@ -88,10 +88,11 @@ subprojects {
             jcenter()
         }
 
-        compileJava.options.encoding = 'UTF-8' // source encoding
         sourceCompatibility = 1.7
         targetCompatibility = 1.7
 
+        def defaultEncoding = 'UTF-8'
+        [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
         dependencies {
             testCompile 'junit:junit:4.12'
         }
