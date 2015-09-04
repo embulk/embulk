@@ -42,18 +42,18 @@ public class TestLineDecoder
         assertEquals(Newline.CRLF, task.getNewline());
     }
 
-    private static LineDecoder.DecoderTask getExampleConfig()
+    private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline)
     {
         ConfigSource config = Exec.newConfigSource()
-            .set("charset", "utf-8")
-            .set("newline", "LF");
+            .set("charset", charset)
+            .set("newline", newline);
         return config.loadConfig(LineDecoder.DecoderTask.class);
     }
 
     private static LineDecoder newDecoder(Charset charset, Newline newline, List<Buffer> buffers)
     {
         ListFileInput input = new ListFileInput(ImmutableList.of(buffers));
-        return new LineDecoder(input, getExampleConfig());
+        return new LineDecoder(input, getExampleConfig(charset, newline));
     }
 
     private static List<String> doDecode(Charset charset, Newline newline, List<Buffer> buffers)
