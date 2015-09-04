@@ -117,108 +117,99 @@ public class TestLineDecoder
         assertDoDecode(charset, Newline.LF, source, expected);
     }
 
-    @Test
-    public void testDecodeBasicAsciiCRLF() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.CRLF,
-                bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\r\ntest3\r\n"), ImmutableList.of("test1", "test2", "test3"));
+    public Object[] parametersForTestDecodeBasicCRLF() {
+        return $(
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\r\ntest3\r\n"),
+                        ImmutableList.of("test1", "test2", "test3")),
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "てすと1\r\nテスト2\r\nてすと3\r\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3")),
+                $(StandardCharsets.UTF_16LE,
+                        bufferList(StandardCharsets.UTF_16LE, "てすと1\r\nテスト2\r\nてすと3\r\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3")),
+                $(Charset.forName("ms932"),
+                        bufferList(Charset.forName("ms932"), "てすと1\r\nテスト2\r\nてすと3\r\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3"))
+        );
     }
 
     @Test
-    public void testDecodeBasicAsciiTail() throws Exception
+    @Parameters(method = "parametersForTestDecodeBasicCRLF")
+    public void testDecodeBasicCRLF(Charset charset, List<Buffer> source, ImmutableList expected) throws Exception
     {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "test1"), ImmutableList.of("test1"));
+        assertDoDecode(charset, Newline.CRLF, source, expected);
+    }
+
+    public Object[] parametersForTestDecodeBasicTail() {
+        return $(
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "test1"),
+                        ImmutableList.of("test1")),
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "てすと1"),
+                        ImmutableList.of("てすと1")),
+                $(StandardCharsets.UTF_16LE,
+                        bufferList(StandardCharsets.UTF_16LE, "てすと1"),
+                        ImmutableList.of("てすと1")),
+                $(Charset.forName("ms932"),
+                        bufferList(Charset.forName("ms932"), "てすと1"),
+                        ImmutableList.of("てすと1"))
+        );
     }
 
     @Test
-    public void testDecodeChunksLF() throws Exception
+    @Parameters(method = "parametersForTestDecodeBasicTail")
+    public void testDecodeBasicTail(Charset charset, List<Buffer> source, ImmutableList expected) throws Exception
     {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "t", "1", "\n", "t", "2"), ImmutableList.of("t1", "t2"));
+        assertDoDecode(charset, Newline.LF, source, expected);
+    }
+
+    public Object[] parametersForTestDecodeChunksLF() {
+        return $(
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "t", "1", "\n", "t", "2"),
+                        ImmutableList.of("t1", "t2")),
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "て", "1", "\n", "す", "2"),
+                        ImmutableList.of("て1", "す2")),
+                $(StandardCharsets.UTF_16LE,
+                        bufferList(StandardCharsets.UTF_16LE, "て", "1", "\n", "す", "2"),
+                        ImmutableList.of("て1", "す2")),
+                $(Charset.forName("ms932"),
+                        bufferList(Charset.forName("ms932"), "て", "1", "\n", "す", "2"),
+                        ImmutableList.of("て1", "す2"))
+        );
     }
 
     @Test
-    public void testDecodeChunksCRLF() throws Exception
+    @Parameters(method = "parametersForTestDecodeChunksLF")
+    public void testDecodeBasicChunksLF(Charset charset, List<Buffer> source, ImmutableList expected) throws Exception
     {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.CRLF,
-                bufferList(StandardCharsets.UTF_8, "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"), ImmutableList.of("t1", "t2", "t3"));
+        assertDoDecode(charset, Newline.LF, source, expected);
+    }
+
+    public Object[] parametersForTestDecodeChunksCRLF() {
+        return $(
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"),
+                        ImmutableList.of("t1", "t2", "t3")),
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"),
+                        ImmutableList.of("て1", "す2", "と3")),
+                $(StandardCharsets.UTF_16LE,
+                        bufferList(StandardCharsets.UTF_16LE, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"),
+                        ImmutableList.of("て1", "す2", "と3")),
+                $(Charset.forName("ms932"),
+                        bufferList(Charset.forName("ms932"), "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"),
+                        ImmutableList.of("て1", "す2", "と3"))
+        );
     }
 
     @Test
-    public void testDecodeBasicUTF8CRLF() throws Exception
+    @Parameters(method = "parametersForTestDecodeChunksCRLF")
+    public void testDecodeBasicChunksCRLF(Charset charset, List<Buffer> source, ImmutableList expected) throws Exception
     {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.CRLF,
-                bufferList(StandardCharsets.UTF_8, "てすと1\r\nテスト2\r\nてすと3\r\n"), ImmutableList.of("てすと1", "テスト2", "てすと3"));
-    }
-
-    @Test
-    public void testDecodeBasicUTF8Tail() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "てすと1"), ImmutableList.of("てすと1"));
-    }
-
-    @Test
-    public void testDecodeChunksUTF8LF() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "て", "1", "\n", "す", "2"), ImmutableList.of("て1", "す2"));
-    }
-
-    @Test
-    public void testDecodeChunksUTF8CRLF() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.CRLF,
-                bufferList(StandardCharsets.UTF_8, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"), ImmutableList.of("て1", "す2", "と3"));
-    }
-
-    @Test
-    public void testDecodeBasicUTF16LETail() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_16LE, Newline.LF,
-                bufferList(StandardCharsets.UTF_16LE, "てすと1"), ImmutableList.of("てすと1"));
-    }
-
-    @Test
-    public void testDecodeChunksUTF16LELF() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_16LE, Newline.LF,
-                bufferList(StandardCharsets.UTF_16LE, "て", "1", "\n", "す", "2"), ImmutableList.of("て1", "す2"));
-    }
-
-    @Test
-    public void testDecodeChunksUTF16LECRLF() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_16LE, Newline.CRLF,
-                bufferList(StandardCharsets.UTF_16LE, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"), ImmutableList.of("て1", "す2", "と3"));
-    }
-
-    @Test
-    public void testDecodeBasicMS932CRLF() throws Exception
-    {
-        assertDoDecode(Charset.forName("ms932"), Newline.CRLF,
-                bufferList(Charset.forName("ms932"), "てすと1\r\nテスト2\r\nてすと3\r\n"), ImmutableList.of("てすと1", "テスト2", "てすと3"));
-    }
-
-    @Test
-    public void testDecodeBasicMS932Tail() throws Exception
-    {
-        assertDoDecode(Charset.forName("ms932"), Newline.CRLF,
-                bufferList(Charset.forName("ms932"), "てすと1"), ImmutableList.of("てすと1"));
-    }
-
-    @Test
-    public void testDecodeChunksMS932LF() throws Exception
-    {
-        assertDoDecode(Charset.forName("ms932"), Newline.LF,
-                bufferList(Charset.forName("ms932"), "て", "1", "\n", "す", "2"), ImmutableList.of("て1", "す2"));
-    }
-
-    @Test
-    public void testDecodeChunksMS932CRLF() throws Exception
-    {
-        assertDoDecode(Charset.forName("ms932"), Newline.LF,
-                bufferList(Charset.forName("ms932"), "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"), ImmutableList.of("て1", "す2", "と3"));
+        assertDoDecode(charset, Newline.CRLF, source, expected);
     }
 }
