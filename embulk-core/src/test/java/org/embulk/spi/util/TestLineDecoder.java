@@ -10,13 +10,18 @@ import com.google.common.collect.ImmutableList;
 import org.junit.Rule;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
+import static junitparams.JUnitParamsRunner.$;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.util.ListFileInput;
 import org.embulk.EmbulkTestRuntime;
 
+@RunWith(JUnitParamsRunner.class)
 public class TestLineDecoder
 {
     @Rule
@@ -88,11 +93,28 @@ public class TestLineDecoder
         assertEquals(expected, decoded);
     }
 
+    public Object[] parametersForTestDecodeBasic() {
+        return $(
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "test1\ntest2\ntest3\n"),
+                        ImmutableList.of("test1", "test2", "test3")),
+                $(StandardCharsets.UTF_8,
+                        bufferList(StandardCharsets.UTF_8, "てすと1\nテスト2\nてすと3\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3")),
+                $(StandardCharsets.UTF_16LE,
+                        bufferList(StandardCharsets.UTF_16LE, "てすと1\nテスト2\nてすと3\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3")),
+                $(Charset.forName("ms932"),
+                        bufferList(Charset.forName("ms932"), "てすと1\r\nテスト2\r\nてすと3\r\n"),
+                        ImmutableList.of("てすと1", "テスト2", "てすと3"))
+        );
+    }
+
     @Test
-    public void testDecodeBasicAscii() throws Exception
+    @Parameters(method = "parametersForTestDecodeBasic")
+    public void testDecodeBasic(Charset charset, List<Buffer> source, ImmutableList expected) throws Exception
     {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "test1\ntest2\ntest3\n"), ImmutableList.of("test1", "test2", "test3"));
+        assertDoDecode(charset, Newline.LF, source, expected);
     }
 
     @Test
@@ -124,13 +146,6 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeBasicUTF8() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_8, Newline.LF,
-                bufferList(StandardCharsets.UTF_8, "てすと1\nテスト2\nてすと3\n"), ImmutableList.of("てすと1", "テスト2", "てすと3"));
-    }
-
-    @Test
     public void testDecodeBasicUTF8CRLF() throws Exception
     {
         assertDoDecode(StandardCharsets.UTF_8, Newline.CRLF,
@@ -159,13 +174,6 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeBasicUTF16LE() throws Exception
-    {
-        assertDoDecode(StandardCharsets.UTF_16LE, Newline.LF,
-                bufferList(StandardCharsets.UTF_16LE, "てすと1\nテスト2\nてすと3\n"), ImmutableList.of("てすと1", "テスト2", "てすと3"));
-    }
-
-    @Test
     public void testDecodeBasicUTF16LETail() throws Exception
     {
         assertDoDecode(StandardCharsets.UTF_16LE, Newline.LF,
@@ -184,13 +192,6 @@ public class TestLineDecoder
     {
         assertDoDecode(StandardCharsets.UTF_16LE, Newline.CRLF,
                 bufferList(StandardCharsets.UTF_16LE, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"), ImmutableList.of("て1", "す2", "と3"));
-    }
-
-    @Test
-    public void testDecodeBasicMS932() throws Exception
-    {
-        assertDoDecode(Charset.forName("ms932"), Newline.LF,
-                bufferList(Charset.forName("ms932"), "てすと1\nテスト2\nてすと3\n"), ImmutableList.of("てすと1", "テスト2", "てすと3"));
     }
 
     @Test
