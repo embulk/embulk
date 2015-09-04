@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import com.google.common.collect.ImmutableList;
 import org.junit.Rule;
@@ -26,7 +27,7 @@ public class TestLineDecoder
     {
         ConfigSource config = Exec.newConfigSource();
         LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
-        assertEquals(Charset.forName("utf-8"), task.getCharset());
+        assertEquals(StandardCharsets.UTF_8, task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
     }
 
@@ -37,7 +38,7 @@ public class TestLineDecoder
             .set("charset", "utf-16")
             .set("newline", "CRLF");
         LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
-        assertEquals(Charset.forName("utf-16"), task.getCharset());
+        assertEquals(StandardCharsets.UTF_16, task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
     }
 
@@ -70,10 +71,8 @@ public class TestLineDecoder
         return builder.build();
     }
 
-    private static List<Buffer> bufferList(String charsetName, String... sources) throws UnsupportedCharsetException
+    private static List<Buffer> bufferList(Charset charset, String... sources) throws UnsupportedCharsetException
     {
-        Charset charset = Charset.forName(charsetName);
-
         List<Buffer> buffers = new ArrayList<Buffer>();
         for (String source : sources) {
             ByteBuffer buffer = charset.encode(source);
@@ -87,8 +86,8 @@ public class TestLineDecoder
     public void testDecodeBasicAscii() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "test1\ntest2\ntest3\n"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "test1\ntest2\ntest3\n"));
         assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
     }
 
@@ -96,8 +95,8 @@ public class TestLineDecoder
     public void testDecodeBasicAsciiCRLF() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.CRLF,
-                bufferList("utf-8", "test1\r\ntest2\r\ntest3\r\n"));
+                StandardCharsets.UTF_8, Newline.CRLF,
+                bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\r\ntest3\r\n"));
         assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
     }
 
@@ -105,8 +104,8 @@ public class TestLineDecoder
     public void testDecodeBasicAsciiTail() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "test1"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "test1"));
         assertEquals(ImmutableList.of("test1"), decoded);
     }
 
@@ -114,8 +113,8 @@ public class TestLineDecoder
     public void testDecodeChunksLF() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "t", "1", "\n", "t", "2"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "t", "1", "\n", "t", "2"));
         assertEquals(ImmutableList.of("t1", "t2"), decoded);
     }
 
@@ -123,8 +122,8 @@ public class TestLineDecoder
     public void testDecodeChunksCRLF() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.CRLF,
-                bufferList("utf-8", "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
+                StandardCharsets.UTF_8, Newline.CRLF,
+                bufferList(StandardCharsets.UTF_8, "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
         assertEquals(ImmutableList.of("t1", "t2", "t3"), decoded);
     }
 
@@ -132,8 +131,8 @@ public class TestLineDecoder
     public void testDecodeBasicMultiByte() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "てすと1\nテスト2\nてすと3\n"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "てすと1\nテスト2\nてすと3\n"));
         assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
     }
 
@@ -141,8 +140,8 @@ public class TestLineDecoder
     public void testDecodeBasicMultiByteTail() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "てすと1"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "てすと1"));
         assertEquals(ImmutableList.of("てすと1"), decoded);
     }
 
@@ -150,8 +149,8 @@ public class TestLineDecoder
     public void testDecodeChunksMultiByteLF() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.LF,
-                bufferList("utf-8", "て", "1", "\n", "す", "2"));
+                StandardCharsets.UTF_8, Newline.LF,
+                bufferList(StandardCharsets.UTF_8, "て", "1", "\n", "す", "2"));
         assertEquals(ImmutableList.of("て1", "す2"), decoded);
     }
 
@@ -159,8 +158,8 @@ public class TestLineDecoder
     public void testDecodeChunksMultiByteCRLF() throws Exception
     {
         List<String> decoded = doDecode(
-                Charset.forName("utf-8"), Newline.CRLF,
-                bufferList("utf-8", "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
+                StandardCharsets.UTF_8, Newline.CRLF,
+                bufferList(StandardCharsets.UTF_8, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
         assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
     }
 }
