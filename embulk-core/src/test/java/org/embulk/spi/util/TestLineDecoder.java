@@ -82,6 +82,12 @@ public class TestLineDecoder
         return buffers;
     }
 
+    private static void assertDoDecode(Charset charset, Newline newline, List<Buffer> source, ImmutableList expected)
+    {
+        List<String> decoded = doDecode(charset, newline, source);
+        assertEquals(expected, decoded);
+    }
+
     @Test
     public void testDecodeBasicAscii() throws Exception
     {
