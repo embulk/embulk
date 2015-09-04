@@ -164,6 +164,42 @@ public class TestLineDecoder
     }
 
     @Test
+    public void testDecodeBasicUTF16LE() throws Exception
+    {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_16LE, Newline.LF,
+                bufferList(StandardCharsets.UTF_16LE, "てすと1\nテスト2\nてすと3\n"));
+        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+    }
+
+    @Test
+    public void testDecodeBasicUTF16LETail() throws Exception
+    {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_16LE, Newline.LF,
+                bufferList(StandardCharsets.UTF_16LE, "てすと1"));
+        assertEquals(ImmutableList.of("てすと1"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksUTF16LELF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_16LE, Newline.LF,
+                bufferList(StandardCharsets.UTF_16LE, "て", "1", "\n", "す", "2"));
+        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksUTF16LECRLF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_16LE, Newline.CRLF,
+                bufferList(StandardCharsets.UTF_16LE, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
+        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+    }
+
+    @Test
     public void testDecodeBasicMS932() throws Exception
     {
         List<String> decoded = doDecode(
