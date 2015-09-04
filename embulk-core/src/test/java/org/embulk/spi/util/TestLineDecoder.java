@@ -162,4 +162,40 @@ public class TestLineDecoder
                 bufferList(StandardCharsets.UTF_8, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
         assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
     }
+
+    @Test
+    public void testDecodeBasicMS932() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("ms932"), Newline.LF,
+                bufferList(Charset.forName("ms932"), "てすと1\nテスト2\nてすと3\n"));
+        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+    }
+
+    @Test
+    public void testDecodeBasicMS932Tail() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("ms932"), Newline.LF,
+                bufferList(Charset.forName("ms932"), "てすと1"));
+        assertEquals(ImmutableList.of("てすと1"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksMS932LF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("ms932"), Newline.LF,
+                bufferList(Charset.forName("ms932"), "て", "1", "\n", "す", "2"));
+        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+    }
+
+    @Test
+    public void testDecodeChunksMS932CRLF() throws Exception
+    {
+        List<String> decoded = doDecode(
+                Charset.forName("ms932"), Newline.CRLF,
+                bufferList(Charset.forName("ms932"), "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
+        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+    }
 }
