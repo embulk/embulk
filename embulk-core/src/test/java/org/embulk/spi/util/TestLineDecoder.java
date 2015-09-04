@@ -128,7 +128,7 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeBasicMultiByte() throws Exception
+    public void testDecodeBasicUTF8() throws Exception
     {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
@@ -137,7 +137,7 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeBasicMultiByteTail() throws Exception
+    public void testDecodeBasicUTF8Tail() throws Exception
     {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
@@ -146,7 +146,7 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeChunksMultiByteLF() throws Exception
+    public void testDecodeChunksUTF8LF() throws Exception
     {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
@@ -155,7 +155,7 @@ public class TestLineDecoder
     }
 
     @Test
-    public void testDecodeChunksMultiByteCRLF() throws Exception
+    public void testDecodeChunksUTF8CRLF() throws Exception
     {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
