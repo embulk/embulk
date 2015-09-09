@@ -62,7 +62,6 @@ public class JRubyScriptingModule
         {
             LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
             ScriptingContainer jruby = new ScriptingContainer(scope);
-            jruby.setCompatVersion(CompatVersion.RUBY1_9);
 
             // Search embulk/java/bootstrap.rb from a $LOAD_PATH.
             // $LOAD_PATH is set by lib/embulk/command/embulk_run.rb if Embulk starts
