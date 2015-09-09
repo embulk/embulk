@@ -57,7 +57,16 @@ public class CsvTokenizer
     public long getCurrentLineNumber()
     {
         // returns actual line number. Internally, lineNumber starts at 0.
-        return lineNumber + 1;
+        return lineNumber;
+    }
+
+    public boolean skipHeaderLine()
+    {
+        boolean skipped = input.poll() != null;
+        if (skipped) {
+            lineNumber++;
+        }
+        return skipped;
     }
 
     // returns skipped line
