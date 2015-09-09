@@ -126,7 +126,7 @@ The generated config-complete.yml file should include complete information as fo
       nodes:
       - {host: localhost}
 
-Note: If you want to use timestamp as local timezone, set default_timezone parameter on parser config.(default: UTC)
+Note: If the CSV file contains timestamp in local time zone, set default_timezone parameter to parser config as following (since time zone is assumed as UTC by default).
 
 .. code-block:: yaml
 
