@@ -244,6 +244,7 @@ public class CsvParserPlugin
                     if (lineDecoder.poll() == null) {
                         break;
                     }
+                    tokenizer.skipHeaderLine();
                 }
 
                 if (!tokenizer.nextRecord()) {
