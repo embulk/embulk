@@ -126,6 +126,13 @@ The generated config-complete.yml file should include complete information as fo
       nodes:
       - {host: localhost}
 
+Note: If you want to use timestamp as local timezone, set default_timezone parameter on parser config.(default: UTC)
+
+.. code-block:: yaml
+
+      parser:
+        default_timezone: 'Asia/Tokyo'
+
 Now, you can run the bulk loading:
 
 .. code-block:: console
