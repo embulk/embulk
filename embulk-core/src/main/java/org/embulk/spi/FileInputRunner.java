@@ -14,10 +14,11 @@ import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.util.Decoders;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.SamplingParserPlugin;
+import org.embulk.exec.ConfigurableGuessInputPlugin;
 import org.embulk.exec.NoSampleException;
 
 public class FileInputRunner
-        implements InputPlugin
+        implements InputPlugin, ConfigurableGuessInputPlugin
 {
     private final FileInputPlugin fileInputPlugin;
 
@@ -76,13 +77,18 @@ public class FileInputRunner
     @Override
     public ConfigDiff guess(ConfigSource config)
     {
+        return guess(Exec.newConfigSource(), config);
+    }
+
+    public ConfigDiff guess(ConfigSource execConfig, ConfigSource config)
+    {
         Buffer sample = SamplingParserPlugin.runFileInputSampling(this, config);
         if (sample.limit() == 0) {
             throw new NoSampleException("Can't get sample data because the first input file is empty");
         }
 
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
-        return guessExecutor.guessParserConfig(sample, config, Exec.session().getSessionExecConfig());
+        return guessExecutor.guessParserConfig(sample, config, execConfig);
     }
 
     private class RunnerControl

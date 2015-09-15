@@ -12,6 +12,9 @@ public interface TaskSource
     TaskSource getNestedOrSetEmpty(String attrName);
 
     @Override
+    TaskSource getNestedOrGetEmpty(String attrName);
+
+    @Override
     TaskSource set(String attrName, Object v);
 
     @Override

@@ -241,8 +241,7 @@ public class CsvParserPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final TimestampParser[] timestampParsers = Timestamps.newTimestampColumnParsers(task, task.getSchemaConfig());
-        LineDecoder lineDecoder = new LineDecoder(input, task);
-        final CsvTokenizer tokenizer = new CsvTokenizer(lineDecoder, task);
+        final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
         final String nullStringOrNull = task.getNullString().orNull();
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         final boolean allowExtraColumns = task.getAllowExtraColumns();
@@ -253,7 +252,7 @@ public class CsvParserPlugin
             while (tokenizer.nextFile()) {
                 // skip the header lines for each file
                 for (; skipHeaderLines > 0; skipHeaderLines--) {
-                    if (lineDecoder.poll() == null) {
+                    if (!tokenizer.skipHeaderLine()) {
                         break;
                     }
                 }

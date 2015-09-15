@@ -224,7 +224,7 @@ public class EmbulkEmbed
 
     private ExecSession newExecSession(ConfigSource config)
     {
-        ConfigSource execConfig = config.deepCopy().getNestedOrSetEmpty("exec");
+        ConfigSource execConfig = config.deepCopy().getNestedOrGetEmpty("exec");
         return ExecSession.builder(injector).fromExecConfig(execConfig).build();
     }
 

@@ -23,6 +23,8 @@ public interface DataSource
 
     DataSource getNestedOrSetEmpty(String attrName);
 
+    DataSource getNestedOrGetEmpty(String attrName);
+
     DataSource set(String attrName, Object v);
 
     DataSource setNested(String attrName, DataSource v);

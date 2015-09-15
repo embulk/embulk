@@ -126,6 +126,13 @@ The generated config-complete.yml file should include complete information as fo
       nodes:
       - {host: localhost}
 
+Note: If the CSV file contains timestamp in local time zone, set default_timezone parameter to parser config as following (since time zone is assumed as UTC by default).
+
+.. code-block:: yaml
+
+      parser:
+        default_timezone: 'Asia/Tokyo'
+
 Now, you can run the bulk loading:
 
 .. code-block:: console

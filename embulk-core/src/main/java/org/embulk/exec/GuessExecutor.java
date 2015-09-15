@@ -98,15 +98,21 @@ public class GuessExecutor
     private ConfigDiff doGuess(ConfigSource config)
     {
         ConfigSource inputConfig = config.getNested("in");
+        ConfigSource execConfig = config.getNestedOrGetEmpty("exec");
 
         InputPlugin input = newInputPlugin(inputConfig);
 
         ConfigDiff inputGuessed;
-        try {
-            inputGuessed = input.guess(inputConfig);
-        } catch (AbstractMethodError ex) {
-            // for backward compatibility with embulk v0.4 interface
-            throw new UnsupportedOperationException(input.getClass().getSimpleName()+".guess(ConfigSource) is not implemented. This input plugin does not support guessing.");
+        if (input instanceof ConfigurableGuessInputPlugin) {
+            inputGuessed = ((ConfigurableGuessInputPlugin) input).guess(execConfig, inputConfig);
+        }
+        else {
+            try {
+                inputGuessed = input.guess(inputConfig);
+            } catch (AbstractMethodError ex) {
+                // for backward compatibility with embulk v0.4 interface
+                throw new UnsupportedOperationException(input.getClass().getSimpleName()+".guess(ConfigSource) is not implemented. This input plugin does not support guessing.");
+            }
         }
 
         ConfigDiff wrapped = Exec.newConfigDiff();
