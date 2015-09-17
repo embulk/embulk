@@ -46,6 +46,7 @@ Type                  description                      example
 **ruby-input**        Ruby record input plugin         ``mysql``
 **ruby-output**       Ruby record output plugin        ``mysql``
 **ruby-filter**       Ruby record filter plugin        ``add-hostname``
+**ruby-file-output**  Ruby file output plugin          ``ftp``
 **ruby-parser**       Ruby file parser plugin          ``csv``
 **ruby-formatter**    Ruby file formatter plugin       ``csv```
 ====================  ===============================  =================
