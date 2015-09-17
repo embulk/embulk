@@ -130,7 +130,7 @@ module Embulk
         elsif File.exists?('Gemfile')
           bundle_path = '.'
         else
-          system_exit "'#{path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{path}\" and \"embulk bundle\" instead"
+          system_exit "'#{gemfile_path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{gemfile_path}\" and \"embulk bundle\" instead"
         end
 
         run_bundler(argv)
