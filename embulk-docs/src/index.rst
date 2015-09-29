@@ -55,9 +55,13 @@ Documents
 
   * `File parser plugins <http://www.embulk.org/plugins/#file-parser>`_
 
+  * `File decoder plugins <http://www.embulk.org/plugins/#file-decoder>`_
+
   * `File formatter plugins <http://www.embulk.org/plugins/#file-formatter>`_
 
   * `Filter plugins <http://www.embulk.org/plugins/#filter>`_
+
+  * `File encoder plugins <http://www.embulk.org/plugins/#file-encoder>`_
 
   * `Executor plugins <http://www.embulk.org/plugins/#executor>`_
 
