@@ -23,12 +23,12 @@ public class <%= java_class_name %>
         public int getOption1();
 
         // configuration option 2 (optional string, null is not allowed)
-        @Config("optoin2")
+        @Config("option2")
         @ConfigDefault("\"myvalue\"")
         public String getOption2();
 
         // configuration option 3 (optional string, null is allowed)
-        @Config("optoin3")
+        @Config("option3")
         @ConfigDefault("null")
         public Optional<String> getOption3();
     }
