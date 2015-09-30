@@ -117,7 +117,7 @@ module Embulk
         when /\.yml$/
           @embed.newConfigLoader.fromYamlString File.read(config)
         else
-          raise ConfigError, "Unsupported file extension. Supported file extensions are .yml and .yml.liquid: #{config}"
+          raise ConfigError.new("Unsupported file extension. Supported file extensions are .yml and .yml.liquid: #{config}")
         end
 
       when Hash, DataSource
