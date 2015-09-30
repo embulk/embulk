@@ -11,10 +11,10 @@ import org.jruby.RubyTime;
 public class Timestamp
         implements Comparable<Timestamp>
 {
-    private final static DateTimeFormatter TO_STRING_FORMATTER_SECONDS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss z").withZoneUTC();
-    private final static DateTimeFormatter TO_STRING_FORMATTER_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS z").withZoneUTC();
+    private final static DateTimeFormatter TO_STRING_FORMATTER_SECONDS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss ").withZoneUTC();
+    private final static DateTimeFormatter TO_STRING_FORMATTER_MILLIS = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS ").withZoneUTC();
     private final static DateTimeFormatter TO_STRING_FORMATTER_CUSTOM = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").withZoneUTC();
-    private static final Pattern FROM_STRING_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))? UTC");
+    private static final Pattern FROM_STRING_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))? (?:UTC|\\+?00\\:?00)");
 
     private final long seconds;
     private final int nano;
@@ -107,10 +107,10 @@ public class Timestamp
     public String toString()
     {
         if (nano == 0) {
-            return TO_STRING_FORMATTER_SECONDS.print(getEpochSecond() * 1000);
+            return TO_STRING_FORMATTER_SECONDS.print(getEpochSecond() * 1000) + "UTC";
 
         } else if (nano % 1000000 == 0) {
-            return TO_STRING_FORMATTER_MILLIS.print(toEpochMilli());
+            return TO_STRING_FORMATTER_MILLIS.print(toEpochMilli()) + "UTC";
 
         } else {
             StringBuffer sb = new StringBuffer();
