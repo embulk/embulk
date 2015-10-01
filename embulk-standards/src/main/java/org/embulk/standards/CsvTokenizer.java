@@ -71,7 +71,9 @@ public class CsvTokenizer
             // recover lines of quoted value
             skippedLine = quotedValueLines.remove(0);  // TODO optimize performance
             unreadLines.addAll(quotedValueLines);
-            unreadLines.add(line);
+            if (line != null) {
+                unreadLines.add(line);
+            }
             lineNumber -= quotedValueLines.size();
             quotedValueLines.clear();
         }
