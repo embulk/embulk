@@ -9,6 +9,7 @@ Release Notes
     release/release-0.7.2
     release/release-0.7.1
     release/release-0.7.0
+    release/release-0.6.27
     release/release-0.6.26
     release/release-0.6.25
     release/release-0.6.24
