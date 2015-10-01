@@ -29,8 +29,9 @@ module Embulk
       puts "Checking the latest version..."
       target_version = check_latest_version
 
-      if Gem::Version.new(target_version) <= Gem::Version.new(Embulk::VERSION)
-        puts "Already up-to-date. #{target_version} is the latest version."
+      current_version = Gem::Version.new(Embulk::VERSION)
+      if Gem::Version.new(target_version) <= current_version
+        puts "Already up-to-date. #{current_version} is the latest version."
         return
       end
 
