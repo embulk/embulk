@@ -129,6 +129,13 @@ Following command updates embulk itself to the latest released version.
 embulk selfupdate
 ```
 
+Following command updates embulk itself to the specific released version.
+
+```sh
+embulk selfupdate x.y.z
+```
+
+
 ## Embulk Development
 
 ### Build
