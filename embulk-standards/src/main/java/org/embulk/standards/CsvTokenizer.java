@@ -56,7 +56,7 @@ public class CsvTokenizer
 
     public long getCurrentLineNumber()
     {
-        return lineNumber - quotedValueLines.size();
+        return lineNumber;
     }
 
     public boolean skipHeaderLine()
@@ -76,11 +76,12 @@ public class CsvTokenizer
             skippedLine = line;
         } else {
             // recover lines of quoted value
-            lineNumber -= quotedValueLines.size();
             skippedLine = quotedValueLines.remove(0);  // TODO optimize performance
             unreadLines.addAll(quotedValueLines);
+            lineNumber -= quotedValueLines.size();
             if (line != null) {
                 unreadLines.add(line);
+                lineNumber -= 1;
             }
             quotedValueLines.clear();
         }

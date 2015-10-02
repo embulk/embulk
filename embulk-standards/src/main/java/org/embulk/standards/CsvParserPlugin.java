@@ -355,8 +355,8 @@ public class CsvParserPlugin
                         pageBuilder.addRecord();
 
                     } catch (CsvTokenizer.InvalidFormatException | CsvTokenizer.InvalidValueException | CsvRecordValidateException e) {
-                        long lineNumber = tokenizer.getCurrentLineNumber();
                         String skippedLine = tokenizer.skipCurrentLine();
+                        long lineNumber = tokenizer.getCurrentLineNumber();
                         if (stopOnInvalidRecord) {
                             throw new DataException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
                         }
