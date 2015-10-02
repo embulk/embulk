@@ -26,13 +26,17 @@ module Embulk
     end
 
     def cp(src, dest_name)
-      path = dest_path_message(dest_name)
-      FileUtils.cp path(src), path
+      dest = dest_path_message(dest_name)
+      File.open(dest, "wb") do |dst_io|
+        File.open(path(src), "rb") do |src_io|
+          FileUtils.copy_stream src_io, dst_io
+        end
+      end
     end
 
     def cp_erb(src, dest_name)
-      path = dest_path_message(dest_name)
-      File.open(path, "w") {|f| f.write erb(src) }
+      dest = dest_path_message(dest_name)
+      File.open(dest, "wb") {|f| f.write erb(src) }
     end
 
     def dest_path(dest_name)
@@ -47,7 +51,8 @@ module Embulk
     end
 
     def set_executable(dest_name)
-      File.chmod(0755, dest_path(dest_name))
+      dest = dest_path(dest_name)
+      File.chmod(File.stat(dest).mode | 0111, dest)
     end
   end
 
