@@ -26,9 +26,9 @@ module Embulk
       #
       # Generate gemspec
       #
-      author = `git config user.name`.strip
+      author = `git config user.name`.strip rescue ""
       author = "YOUR_NAME" if author.empty?
-      email = `git config user.email`.strip
+      email = `git config user.email`.strip rescue ""
       email = "YOUR_NAME" if email.empty?
 
       # variables used in erb templates
