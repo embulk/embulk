@@ -56,8 +56,7 @@ public class CsvTokenizer
 
     public long getCurrentLineNumber()
     {
-        // returns actual line number. Internally, lineNumber starts at 0.
-        return lineNumber;
+        return lineNumber - quotedValueLines.size();
     }
 
     public boolean skipHeaderLine()
@@ -77,12 +76,12 @@ public class CsvTokenizer
             skippedLine = line;
         } else {
             // recover lines of quoted value
+            lineNumber -= quotedValueLines.size();
             skippedLine = quotedValueLines.remove(0);  // TODO optimize performance
             unreadLines.addAll(quotedValueLines);
             if (line != null) {
                 unreadLines.add(line);
             }
-            lineNumber -= quotedValueLines.size();
             quotedValueLines.clear();
         }
         recordState = RecordState.END;
@@ -314,7 +313,7 @@ public class CsvTokenizer
                         // column has trailing spaces and quoted. TODO should this be rejected?
 
                     } else {
-                        throw new InvalidValueException(String.format("Unexpected extra character (%c) after quoted value in %s", c, line));
+                        throw new InvalidValueException(String.format("Unexpected extra character '%c' after quoted value in '%s'", c, line));
                     }
                     break;
 
