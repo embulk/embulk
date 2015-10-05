@@ -119,7 +119,9 @@ module Embulk
       args = 1..1
 
     when :bundle
-      if argv[0] == 'new'
+      if argv.size == 0
+        system_exit "Usage: bundle new <directory>"
+      elsif argv[0] == 'new'
         usage nil if argv.length != 2
         new_bundle(argv[1])
       else
