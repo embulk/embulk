@@ -1,0 +1,118 @@
+package <%= java_package_name %>
+
+import java.util.{List => JList, ArrayList => JArrayList, Collections => JCollections}
+import scala.collection.convert.WrapAsScala._
+import com.google.common.base.Optional
+import com.google.common.collect.ImmutableList
+import org.embulk.config.{TaskReport, Config, ConfigDefault, ConfigInject, ConfigDiff, ConfigSource, Task, TaskSource}
+import org.embulk.spi.{Exec, FileInputPlugin, BufferAllocator, TransactionalFileInput}
+import org.embulk.spi.util.InputStreamTransactionalFileInput
+
+class <%= java_class_name %> extends FileInputPlugin
+{
+  trait PluginTask extends Task
+  {
+    // configuration option 1 (required integer)
+    @Config("option1")
+    def getOption1: Int
+
+    // configuration option 2 (optional string, null is not allowed)
+    @Config("option2")
+    @ConfigDefault("\"myvalue\"")
+    def getOption2: String
+
+    // configuration option 3 (optional string, null is allowed)
+    @Config("option3")
+    @ConfigDefault("null")
+    def getOption3: Optional[String]
+
+    //@Config("path_prefix")
+    //def getPathPrefix: String
+
+    //@Config("last_path")
+    //@ConfigDefault("null")
+    //def getLastPath: Optional[String]
+
+    // usually, you store list of files in task to pass them from transaction() to run().
+    //def getFiles: JList[String]
+    //def setFiles(files: JList[String]): Unit
+
+    @ConfigInject
+    def getBufferAllocator: BufferAllocator
+  }
+
+  override def transaction(config: ConfigSource, control: FileInputPlugin.Control): ConfigDiff = {
+    val task: PluginTask = config.loadConfig(classOf[PluginTask])
+
+    // run() method is called for this number of times in parallel.
+    val taskCount: Int = 1
+
+    // usually, taskCount is number of input files.
+    //task.setFiles(listFiles(task))
+    //val taskCount: Int = task.getFiles.size
+
+    resume(task.dump(), taskCount, control)
+  }
+
+  // usually, you have an method to create list of files
+  //private def listFiles(task: PluginTask): JList[String] = {
+  //  val builder:ImmutableList.Builder[String] = ImmutableList.builder()
+  //  listFilesWithPrefix(task.getPathPrefix).foreach { path =>
+  //    if (task.getLastPath.isPresent && path.compareTo(task.getLastPath.get) == 0) {
+  //    } else {
+  //      builder.add(path)
+  //    }
+  //  }
+  //  builder.build()
+  //}
+
+  override def resume(taskSource: TaskSource, taskCount: Int, control: FileInputPlugin.Control): ConfigDiff = {
+    val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
+
+    control.run(taskSource, taskCount)
+
+    val configDiff: ConfigDiff = Exec.newConfigDiff()
+
+    // usually, you set last_path
+    //if (task.getFiles.isEmpty) {
+    //  if (task.getLastPath.isPresent) {
+    //    configDiff.set("last_path", task.getLastPath.get)
+    //  }
+    //} else {
+    //  val files: JList[String] = new JArrayList[String](task.getFiles)
+    //  JCollections.sort(files)
+    //  configDiff.set("last_path", files.get(files.size - 1))
+    //}
+    configDiff
+  }
+
+  override def cleanup(taskSource: TaskSource, taskCount: Int, successTaskReports: JList[TaskReport]): Unit = {
+  }
+
+  override def open(taskSource: TaskSource, taskIndex: Int): TransactionalFileInput = {
+    val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
+
+    // Write your code here :)
+    throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet")
+
+    // if you expect InputStream, you can use this code:
+
+    //val input: InputStream = openInputStream(task, task.getFiles.get(taskIndex))
+    //
+    //new InputStreamTransactionalFileInput(task.getBufferAllocator, input) {
+    //  override def abort: Unit = {
+    //  }
+    //
+    //  override def commit: TaskReport = {
+    //    Exec.newTaskReport()
+    //  }
+    //}
+  }
+
+  //object openInputStream {
+  //  @throws (classOf[IOException])
+  //  def apply(task: PluginTask, path: String): InputStream = {
+  //    new MyInputStream(path)
+  //  }
+  //}
+}

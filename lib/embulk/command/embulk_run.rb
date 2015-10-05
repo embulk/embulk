@@ -154,6 +154,7 @@ categories:
     ruby-formatter             Ruby file formatter plugin  (like "csv")
     #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
     #ruby-encoder              Ruby file encoder plugin    (like "gzip")         # not implemented yet [#32]
+
     java-input                 Java record input plugin    (like "mysql")
     java-output                Java record output plugin   (like "mysql")
     java-filter                Java record filter plugin   (like "add-hostname")
@@ -163,6 +164,16 @@ categories:
     java-formatter             Java file formatter plugin  (like "csv")
     java-decoder               Java file decoder plugin    (like "gzip")
     java-encoder               Java file encoder plugin    (like "gzip")
+
+    scala-input                Scala record input plugin   (like "mysql")
+    scala-output               Scala record output plugin  (like "mysql")
+    scala-filter               Scala record filter plugin  (like "add-hostname")
+    scala-file-input           Scala file input plugin     (like "ftp")
+    scala-file-output          Scala file output plugin    (like "ftp")
+    scala-parser               Scala file parser plugin    (like "csv")
+    scala-formatter            Scala file formatter plugin (like "csv")
+    scala-decoder              Scala file decoder plugin   (like "gzip")
+    scala-encoder              Scala file encoder plugin   (like "gzip")
 
 examples:
     new ruby-output hbase
@@ -224,24 +235,33 @@ examples:
       name = ARGV[1]
 
       language, category = case lang_cate
-        when "java-input"       then [:java, :input]
-        when "java-output"      then [:java, :output]
-        when "java-filter"      then [:java, :filter]
-        when "java-file-input"  then [:java, :file_input]
-        when "java-file-output" then [:java, :file_output]
-        when "java-parser"      then [:java, :parser]
-        when "java-formatter"   then [:java, :formatter]
-        when "java-decoder"     then [:java, :decoder]
-        when "java-encoder"     then [:java, :encoder]
-        when "ruby-input"       then [:ruby, :input]
-        when "ruby-output"      then [:ruby, :output]
-        when "ruby-filter"      then [:ruby, :filter]
-        when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
-        when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
-        when "ruby-parser"      then [:ruby, :parser]
-        when "ruby-formatter"   then [:ruby, :formatter]
-        when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
-        when "ruby-encoder"     then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
+        when "java-input"        then [:java, :input]
+        when "java-output"       then [:java, :output]
+        when "java-filter"       then [:java, :filter]
+        when "java-file-input"   then [:java, :file_input]
+        when "java-file-output"  then [:java, :file_output]
+        when "java-parser"       then [:java, :parser]
+        when "java-formatter"    then [:java, :formatter]
+        when "java-decoder"      then [:java, :decoder]
+        when "java-encoder"      then [:java, :encoder]
+        when "scala-input"       then [:scala, :input]
+        when "scala-output"      then [:scala, :output]
+        when "scala-filter"      then [:scala, :filter]
+        when "scala-file-input"  then [:scala, :file_input]
+        when "scala-file-output" then [:scala, :file_output]
+        when "scala-parser"      then [:scala, :parser]
+        when "scala-formatter"   then [:scala, :formatter]
+        when "scala-decoder"     then [:scala, :decoder]
+        when "scala-encoder"     then [:scala, :encoder]
+        when "ruby-input"        then [:ruby, :input]
+        when "ruby-output"       then [:ruby, :output]
+        when "ruby-filter"       then [:ruby, :filter]
+        when "ruby-file-input"   then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
+        when "ruby-file-output"  then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
+        when "ruby-parser"       then [:ruby, :parser]
+        when "ruby-formatter"    then [:ruby, :formatter]
+        when "ruby-decoder"      then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
+        when "ruby-encoder"      then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
         else
           usage_op op, "Unknown category '#{lang_cate}'"
         end
