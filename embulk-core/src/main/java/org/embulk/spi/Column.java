@@ -47,18 +47,24 @@ public class Column
 
     public void visit(ColumnVisitor visitor)
     {
-        if (type instanceof BooleanType) {
+        switch(type.getTypeEnum()) {
+        case BOOLEAN:
             visitor.booleanColumn(this);
-        } else if (type instanceof LongType) {
+            break;
+        case LONG:
             visitor.longColumn(this);
-        } else if (type instanceof DoubleType) {
+            break;
+        case DOUBLE:
             visitor.doubleColumn(this);
-        } else if (type instanceof StringType) {
+            break;
+        case STRING:
             visitor.stringColumn(this);
-        } else if (type instanceof TimestampType) {
+            break;
+        case TIMESTAMP:
             visitor.timestampColumn(this);
-        } else {
-            assert(false);
+            break;
+        default:
+            assert false : type;
         }
     }
 

@@ -7,6 +7,6 @@ public class BooleanType
 
     private BooleanType()
     {
-        super("boolean", boolean.class, 1);
+        super("boolean", boolean.class, 1, TypeEnum.BOOLEAN);
     }
 }

@@ -7,6 +7,6 @@ public class LongType
 
     private LongType()
     {
-        super("long", long.class, 8);
+        super("long", long.class, 8, TypeEnum.LONG);
     }
 }

@@ -7,6 +7,6 @@ public class DoubleType
 
     private DoubleType()
     {
-        super("double", double.class, 8);
+        super("double", double.class, 8, TypeEnum.DOUBLE);
     }
 }
