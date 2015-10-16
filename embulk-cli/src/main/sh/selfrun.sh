@@ -42,7 +42,7 @@ java %java_args% -jar %this% %jruby_args% %args%
 
 endlocal
 
-exit /b
+exit /b %ERRORLEVEL%
 
 :check_arg
 set arg=%*
