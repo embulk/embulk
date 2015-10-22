@@ -150,25 +150,25 @@ module Embulk
             begin
               Integer(v)
             rescue => e
-              raise ConfigError.new "Plugin(#{plugin_name}) " + e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Integer"
             end
           when :float
             begin
               Float(v)
             rescue => e
-              raise ConfigError.new "Plugin(#{plugin_name}) " + e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Float"
             end
           when :string
             begin
               String(v).dup
             rescue => e
-              raise ConfigError.new "Plugin(#{plugin_name}) " + e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for String"
             end
           when :bool
             begin
               !!v  # TODO validation
             rescue => e
-              raise ConfigError.new "Plugin(#{plugin_name}) " + e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Boolean"
             end
           when :hash
             raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for :hash" unless v.is_a?(Hash)
@@ -183,7 +183,7 @@ module Embulk
             begin
               type.load(v)
             rescue => e
-              raise ConfigError.new "Plugin(#{plugin_name}) " + e
+              raise ConfigError.new "Plugin(#{plugin_name}) " + e.to_s
             end
           end
 
