@@ -137,6 +137,11 @@ module Embulk
     end
 
     def param(key, type, options={})
+      if self.has_key?('type')
+        type = self['type'].to_s.dump
+      else
+        type = "Unkown"
+      end
       if self.has_key?(key)
         v = self[key]
         value =
@@ -186,7 +191,7 @@ module Embulk
         value = options[:default]
 
       else
-        raise ConfigError.new "Required field #{key.to_s.dump} is not set"
+        raise ConfigError.new "Plugin: #{type} required field #{key.to_s.dump} is not set"
       end
 
       return value
