@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.util.List;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -15,6 +16,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.DataSourceImpl;
+import org.embulk.exec.MixinContexts;
 import org.embulk.exec.TempFileAllocator;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
@@ -208,6 +210,21 @@ public class ExecSession
     public boolean isPreview()
     {
         return preview;
+    }
+
+    public MixinId newMixinId()
+    {
+        return MixinContexts.newMixinId();
+    }
+
+    public void reportMixinTask(MixinId instanceId, TaskReport taskReport)
+    {
+        MixinContexts.reportTask(instanceId, taskReport);
+    }
+
+    public List<TaskReport> getMixinReports(MixinId instanceId)
+    {
+        return MixinContexts.getTransactionReport(instanceId);
     }
 
     public void cleanup()

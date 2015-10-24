@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import com.google.inject.Injector;
@@ -10,6 +11,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.MixinId;
 import org.embulk.spi.time.Timestamp;
 
 public class Exec
@@ -20,13 +22,14 @@ public class Exec
 
     public static <T> T doWith(ExecSession session, ExecAction<T> action) throws ExecutionException
     {
+        ExecSession before = Exec.session.get();
         Exec.session.set(session);
         try {
             return action.run();
         } catch (Exception ex) {
             throw new ExecutionException(ex);
         } finally {
-            Exec.session.set(null);
+            Exec.session.set(before);
         }
     }
 
@@ -109,5 +112,20 @@ public class Exec
     public static boolean isPreview()
     {
         return session().isPreview();
+    }
+
+    public static MixinId newMixinId()
+    {
+        return session().newMixinId();
+    }
+
+    public static void reportMixinTask(MixinId instanceId, TaskReport taskReport)
+    {
+        session().reportMixinTask(instanceId, taskReport);
+    }
+
+    public static List<TaskReport> getMixinReports(MixinId instanceId)
+    {
+        return session().getMixinReports(instanceId);
     }
 }

@@ -1,9 +1,11 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
@@ -21,6 +23,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.MixinId;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.TaskState;
@@ -63,7 +66,7 @@ public class BulkLoader
     }
 
     private static class LoaderState
-            implements ProcessState
+            implements ProcessState, MixinContexts.ReportCollector
     {
         private final Logger logger;
 
@@ -228,6 +231,32 @@ public class BulkLoader
             return builder.build();
         }
 
+        @Override
+        public List<Map<MixinId, TaskReport>> getMixinReports()
+        {
+            return ImmutableList.copyOf(Iterables.concat(
+                    getInputMixinReports(),
+                    getOutputMixinReports()));
+        }
+
+        private List<Map<MixinId, TaskReport>> getInputMixinReports()
+        {
+            ImmutableList.Builder<Map<MixinId, TaskReport>> builder = ImmutableList.builder();
+            for (TaskState inputTaskState : inputTaskStates) {
+                builder.add(inputTaskState.getMixinReports());
+            }
+            return builder.build();
+        }
+
+        private List<Map<MixinId, TaskReport>> getOutputMixinReports()
+        {
+            ImmutableList.Builder<Map<MixinId, TaskReport>> builder = ImmutableList.builder();
+            for (TaskState outputTaskState : outputTaskStates) {
+                builder.add(outputTaskState.getMixinReports());
+            }
+            return builder.build();
+        }
+
         public List<TaskReport> getAllInputTaskReports()
         {
             ImmutableList.Builder<TaskReport> builder = ImmutableList.builder();
@@ -320,7 +349,8 @@ public class BulkLoader
                     exec.getSessionExecConfig(),
                     inputTaskSource, outputTaskSource,
                     first(schemas), executorSchema,
-                    getInputTaskReports(), getOutputTaskReports());
+                    getInputTaskReports(), getOutputTaskReports(),
+                    getInputMixinReports(), getOutputMixinReports());
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec)
@@ -434,10 +464,10 @@ public class BulkLoader
         }
     }
 
-    public void doCleanup(ConfigSource config, ResumeState resume)
+    public void doCleanup(ConfigSource config, final ResumeState resume)
     {
         BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
-        ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
+        final ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
 
         ImmutableList.Builder<TaskReport> successfulInputTaskReports = ImmutableList.builder();
         ImmutableList.Builder<TaskReport> successfulOutputTaskReports = ImmutableList.builder();
@@ -465,7 +495,7 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", new PluginType("local")));
     }
 
-    private ExecutionResult doRun(ConfigSource config)
+    private ExecutionResult doRun(final ConfigSource config)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
@@ -474,44 +504,51 @@ public class BulkLoader
 
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+            MixinContexts.transaction(state, new MixinContexts.Action<Void>() {
+                public Void run()
                 {
-                    state.setInputTaskSource(inputTask);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
+                    ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
+                        public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                         {
-                            state.setSchemas(schemas);
-                            state.setFilterTaskSources(filterTasks);
-                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
-                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
+                            state.setInputTaskSource(inputTask);
+                            Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                                public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                                 {
-                                    state.setExecutorSchema(executorSchema);
-                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<TaskReport> run(final TaskSource outputTask)
+                                    state.setSchemas(schemas);
+                                    state.setFilterTaskSources(filterTasks);
+                                    exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                        public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
                                         {
-                                            state.setOutputTaskSource(outputTask);
+                                            state.setExecutorSchema(executorSchema);
+                                            ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                                public List<TaskReport> run(final TaskSource outputTask)
+                                                {
+                                                    state.setOutputTaskSource(outputTask);
 
-                                            state.initialize(inputTaskCount, outputTaskCount);
+                                                    state.initialize(inputTaskCount, outputTaskCount);
 
-                                            if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
-                                                execute(task, executor, state);
-                                            }
+                                                    if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
+                                                        execute(task, executor, state);
+                                                    }
 
-                                            return state.getAllOutputTaskReports();
+                                                    return state.getAllOutputTaskReports();
+                                                }
+                                            });
+                                            state.setOutputConfigDiff(outputConfigDiff);
                                         }
                                     });
-                                    state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
+                            return state.getAllInputTaskReports();
                         }
                     });
-                    return state.getAllInputTaskReports();
+                    state.setInputConfigDiff(inputConfigDiff);
+
+                    cleanupCommittedTransaction(config, state);
+
+                    return null;
                 }
             });
-            state.setInputConfigDiff(inputConfigDiff);
-
-            cleanupCommittedTransaction(config, state);
 
             return state.buildExecuteResult();
 
@@ -527,7 +564,7 @@ public class BulkLoader
         }
     }
 
-    private ExecutionResult doResume(ConfigSource config, final ResumeState resume)
+    private ExecutionResult doResume(final ConfigSource config, final ResumeState resume)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
@@ -536,47 +573,54 @@ public class BulkLoader
 
         final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
-                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
+            MixinContexts.transaction(state, new MixinContexts.Action<Void>() {
+                public Void run()
                 {
-                    // TODO validate inputTask?
-                    // TODO validate inputSchema
-                    state.setInputTaskSource(inputTask);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
+                    ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
+                        public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                         {
-                            state.setSchemas(schemas);
-                            state.setFilterTaskSources(filterTasks);
-                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
-                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
+                            // TODO validate inputTask?
+                            // TODO validate inputSchema
+                            state.setInputTaskSource(inputTask);
+                            Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                                public void run(final List<TaskSource> filterTasks, final List<Schema> schemas)
                                 {
-                                    // TODO validate executorSchema
-                                    state.setExecutorSchema(executorSchema);
-                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<TaskReport> run(final TaskSource outputTask)
+                                    state.setSchemas(schemas);
+                                    state.setFilterTaskSources(filterTasks);
+                                    exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                        public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor)
                                         {
-                                            // TODO validate outputTask?
-                                            state.setOutputTaskSource(outputTask);
+                                            // TODO validate executorSchema
+                                            state.setExecutorSchema(executorSchema);
+                                            ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                                public List<TaskReport> run(final TaskSource outputTask)
+                                                {
+                                                    // TODO validate outputTask?
+                                                    state.setOutputTaskSource(outputTask);
 
-                                            restoreResumedTaskReports(resume, state);
-                                            if (!state.isAllTasksCommitted()) {
-                                                execute(task, executor, state);
-                                            }
+                                                    restoreResumedTaskReports(resume, state);
+                                                    if (!state.isAllTasksCommitted()) {
+                                                        execute(task, executor, state);
+                                                    }
 
-                                            return state.getAllOutputTaskReports();
+                                                    return state.getAllOutputTaskReports();
+                                                }
+                                            });
+                                            state.setOutputConfigDiff(outputConfigDiff);
                                         }
                                     });
-                                    state.setOutputConfigDiff(outputConfigDiff);
                                 }
                             });
+                            return state.getAllInputTaskReports();
                         }
                     });
-                    return state.getAllInputTaskReports();
+                    state.setInputConfigDiff(inputConfigDiff);
+
+                    cleanupCommittedTransaction(config, state);
+
+                    return null;
                 }
             });
-            state.setInputConfigDiff(inputConfigDiff);
-
-            cleanupCommittedTransaction(config, state);
 
             return state.buildExecuteResult();
 
