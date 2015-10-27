@@ -10,13 +10,14 @@ import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
 import org.embulk.spi.Exec;
-import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.TransactionalPageOutput;
-import org.embulk.spi.PageReader;
-import org.embulk.spi.util.PagePrinter;
+import org.embulk.spi.Buffer;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.TransactionalFileOutput;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 
 public class StdoutOutputPlugin
-        implements OutputPlugin
+        implements FileOutputPlugin
 {
     public interface PluginTask
             extends Task, TimestampFormatter.FormatterTask
@@ -25,42 +26,43 @@ public class StdoutOutputPlugin
 
     @Override
     public ConfigDiff transaction(ConfigSource config,
-            Schema schema, int taskCount,
-            OutputPlugin.Control control)
+            int taskCount,
+            FileOutputPlugin.Control control)
     {
         final PluginTask task = config.loadConfig(PluginTask.class);
-        return resume(task.dump(), schema, taskCount, control);
+        return resume(task.dump(), taskCount, control);
     }
 
     @Override
     public ConfigDiff resume(TaskSource taskSource,
-            Schema schema, int taskCount,
-            OutputPlugin.Control control)
+            int taskCount,
+            FileOutputPlugin.Control control)
     {
         control.run(taskSource);
         return Exec.newConfigDiff();
     }
 
     public void cleanup(TaskSource taskSource,
-            Schema schema, int taskCount,
+            int taskCount,
             List<TaskReport> successTaskReports)
     { }
 
     @Override
-    public TransactionalPageOutput open(TaskSource taskSource, final Schema schema,
-            int taskIndex)
+    public TransactionalFileOutput open(TaskSource taskSource, int taskIndex)
     {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 
-        return new TransactionalPageOutput() {
-            private final PageReader reader = new PageReader(schema);
-            private final PagePrinter printer = new PagePrinter(schema, task);
+        return new TransactionalFileOutput() {
+            public void nextFile() {}
 
-            public void add(Page page)
+            public void closeFile() {}
+
+            public void add(Buffer buffer)
             {
-                reader.setPage(page);
-                while (reader.nextRecord()) {
-                    System.out.println(printer.printRecord(reader, ","));
+                try {
+                    System.out.write(buffer.array(), buffer.offset(), buffer.limit());
+                } finally {
+                    buffer.release();
                 }
             }
 
@@ -69,10 +71,7 @@ public class StdoutOutputPlugin
                 System.out.flush();
             }
 
-            public void close()
-            {
-                reader.close();
-            }
+            public void close() { }
 
             public void abort() { }
 
