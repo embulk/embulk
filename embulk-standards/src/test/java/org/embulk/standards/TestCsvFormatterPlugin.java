@@ -194,7 +194,7 @@ public class TestCsvFormatterPlugin
 
         char delimiter = ',';
         char quote = '"';
-        char escape = '"';
+        char escape = '\\';
         CsvFormatterPlugin.QuotePolicy policy = CsvFormatterPlugin.QuotePolicy.NONE;
         String newline = Newline.LF.getString();
         String nullString = "";
@@ -211,10 +211,10 @@ public class TestCsvFormatterPlugin
                 ImmutableMap.of("expected", "0x4d2", "actual", "0x4d2"),
                 ImmutableMap.of("expected", "123L", "actual", "123L"),
                 ImmutableMap.of("expected", "3.141592", "actual", "3.141592"),
-                ImmutableMap.of("expected", "1\",000", "actual", "1,000"),
+                ImmutableMap.of("expected", "1\\,000", "actual", "1,000"),
                 ImmutableMap.of("expected", "ABC", "actual", "ABC"),
-                ImmutableMap.of("expected", "ABC\"\"DEF", "actual", "ABC\"DEF"),
-                ImmutableMap.of("expected", "ABC\"\nDEF", "actual", "ABC\nDEF"),
+                ImmutableMap.of("expected", "ABC\"DEF", "actual", "ABC\"DEF"),
+                ImmutableMap.of("expected", "ABC\\\nDEF", "actual", "ABC\nDEF"),
                 ImmutableMap.of("expected", "", "actual", ""),
                 ImmutableMap.of("expected", "NULL", "actual", "NULL"),
                 ImmutableMap.of("expected", "2015-01-01 12:01:01", "actual", "2015-01-01 12:01:01"),
