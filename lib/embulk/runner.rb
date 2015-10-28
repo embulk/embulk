@@ -113,7 +113,8 @@ module Embulk
         when /\.yml\.liquid$/
           require 'liquid'
           template_params = options[:template_params] || {}
-          @embed.newConfigLoader.fromYamlString run_liquid(File.read(config), template_params)
+          template_include_path = File.expand_path(options[:template_include_path] || File.dirname(config)) unless options[:template_include_path] == false
+          @embed.newConfigLoader.fromYamlString run_liquid(File.read(config), template_params, template_include_path)
         when /\.yml$/
           @embed.newConfigLoader.fromYamlString File.read(config)
         else
@@ -129,9 +130,10 @@ module Embulk
       @embed.newConfigLoader.fromYamlString File.read(config)
     end
 
-    def run_liquid(source, params)
+    def run_liquid(source, params, template_include_path)
       require 'liquid'
       template = Liquid::Template.parse(source)
+      template.registers[:file_system] = Liquid::LocalFileSystem.new(template_include_path, "_%s.yml.liquid") if template_include_path
 
       data = {
         "env" => ENV.to_h,
