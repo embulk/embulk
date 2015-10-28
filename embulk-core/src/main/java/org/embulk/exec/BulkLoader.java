@@ -163,9 +163,19 @@ public class BulkLoader
 
         public boolean isAllTasksCommitted()
         {
-            if (outputTaskStates == null) {
+            // here can't assume that input tasks are committed when output tasks are
+            // committed because that's controlled by executor plugins. some executor
+            // plugins (especially mapreduce executor) may commit output tasks even
+            // when some input tasks failed. This is asemantically allowed behavior for
+            // executor plugins (as long as output plugin is atomic and idempotent).
+            if (inputTaskStates == null || outputTaskStates == null) {
                 // not initialized
                 return false;
+            }
+            for (TaskState inputTaskState : inputTaskStates) {
+                if (!inputTaskState.isCommitted()) {
+                    return false;
+                }
             }
             for (TaskState outputTaskState : outputTaskStates) {
                 if (!outputTaskState.isCommitted()) {
