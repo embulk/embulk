@@ -175,6 +175,36 @@ public class BulkLoader
             return true;
         }
 
+        public int countUncommittedInputTasks()
+        {
+            if (inputTaskStates == null) {
+                // not initialized
+                return 0;
+            }
+            int count = 0;
+            for (TaskState inputTaskState : inputTaskStates) {
+                if (!inputTaskState.isCommitted()) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public int countUncommittedOutputTasks()
+        {
+            if (outputTaskStates == null) {
+                // not initialized
+                return 0;
+            }
+            int count = 0;
+            for (TaskState outputTaskState : outputTaskStates) {
+                if (!outputTaskState.isCommitted()) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         public boolean isAllTransactionsCommitted()
         {
             return inputConfigDiff != null && outputConfigDiff != null;
@@ -498,6 +528,11 @@ public class BulkLoader
                                                 execute(task, executor, state);
                                             }
 
+                                            if (!state.isAllTasksCommitted()) {
+                                                throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
+                                                            state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
+                                            }
+
                                             return state.getAllOutputTaskReports();
                                         }
                                     });
@@ -561,6 +596,11 @@ public class BulkLoader
                                             restoreResumedTaskReports(resume, state);
                                             if (!state.isAllTasksCommitted()) {
                                                 execute(task, executor, state);
+                                            }
+
+                                            if (!state.isAllTasksCommitted()) {
+                                                throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
+                                                            state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
                                             }
 
                                             return state.getAllOutputTaskReports();
