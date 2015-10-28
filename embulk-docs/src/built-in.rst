@@ -88,6 +88,38 @@ Environment variables are set to ``env`` variable.
       table: {{ env.pg_table }}
 
 
+Including files
+~~~~~~~~~~~~~~~~~~
+
+Configuration file can include another configuration file. To use it, configuration file name must end with ``.yml.liquid``.
+
+File will be searched from the relative path of the input configuration file. And file name will be ``_<name>.yml.liquid``. For example, if you add ``{% include 'subdir/inc' %}`` tag to ``myconfig/config.yml.liquid`` file, it includes ``myconfig/subdir/_inc.yml.liquid`` file.
+
+.. code-block:: yaml
+
+    # config.yml.liquid
+    {% include 'in_mysql' %}
+    out:
+      type: stdout
+
+.. code-block:: yaml
+
+    # _in_mysql.yml.liquid
+    in:
+      type: mysql
+
+With above 2 files, actual configuration file will be:
+
+.. code-block:: yaml
+
+    # $ embulk run config.yml.liquid
+    in:
+      type: mysql
+    out:
+      type: stdout
+
+
+
 Local file input plugin
 ------------------
 
