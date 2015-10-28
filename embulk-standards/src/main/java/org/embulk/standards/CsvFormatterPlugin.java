@@ -108,7 +108,7 @@ public class CsvFormatterPlugin
         final char delimiter = task.getDelimiterChar();
         final QuotePolicy quotePolicy = task.getQuotePolicy();
         final char quote = task.getQuoteChar() != '\0' ? task.getQuoteChar() : '"';
-        final char escape = task.getEscapeChar().or(quotePolicy == QuotePolicy.NONE ? '\\' : '\"');
+        final char escape = task.getEscapeChar().or(quotePolicy == QuotePolicy.NONE ? '\\' : quote);
         final String newlineInField = task.getNewlineInField().getString();
         final String nullString = task.getNullString();
 
@@ -235,7 +235,7 @@ public class CsvFormatterPlugin
         for (int i = 0; i < v.length(); i++) {
             char c = v.charAt(i);
 
-            if (c == quote) {
+            if (policy != QuotePolicy.NONE && c == quote) {
                 escapedValue.append(escape);
                 escapedValue.append(c);
                 isRequireQuote = true;
