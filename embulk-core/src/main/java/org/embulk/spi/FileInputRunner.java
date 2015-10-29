@@ -147,21 +147,15 @@ public class FileInputRunner
 
         TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
                 fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
-        FileInput fileInput = tran;
-        try {
-            fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), fileInput);
-            parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
+        try (CloseResource closer = new CloseResource(tran)) {
+            try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
+                FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);
+                closer.closeThis(fileInput);
+                parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
 
-            TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
-            tran = null;
-            return report;
-        } finally {
-            try {
-                if (tran != null) {
-                    tran.abort();
-                }
-            } finally {
-                fileInput.close();
+                TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
+                aborter.dontAbort();
+                return report;
             }
         }
     }

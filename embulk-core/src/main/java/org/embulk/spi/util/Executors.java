@@ -12,6 +12,8 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ProcessTask;
+import org.embulk.spi.AbortTransactionResource;
+import org.embulk.spi.CloseResource;
 import org.embulk.plugin.compat.PluginWrappers;
 
 public abstract class Executors
@@ -53,32 +55,28 @@ public abstract class Executors
         TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
             outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
 
-        PageOutput closeThis = tran;
         callback.started();
-        try {
-            PageOutput filtered = closeThis = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
+        // here needs to use try-with-resource to add exception happend at close() or abort()
+        // to suppressed exception. otherwise exception happend at close() or abort() overwrites
+        // essential exception.
+        try (CloseResource closer = new CloseResource(tran)) {
+            try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
+                PageOutput filtered = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
+                closer.closeThis(filtered);
 
-            TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
+                TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
 
-            if (inputTaskReport == null) {
-                inputTaskReport = exec.newTaskReport();
-            }
-            callback.inputCommitted(inputTaskReport);
-
-            TaskReport outputTaskReport = tran.commit();
-            tran = null;
-            if (outputTaskReport == null) {
-                outputTaskReport = exec.newTaskReport();
-            }
-            callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
-
-        } finally {
-            try {
-                if (tran != null) {
-                    tran.abort();
+                if (inputTaskReport == null) {
+                    inputTaskReport = exec.newTaskReport();
                 }
-            } finally {
-                closeThis.close();
+                callback.inputCommitted(inputTaskReport);
+
+                TaskReport outputTaskReport = tran.commit();
+                aborter.dontAbort();
+                if (outputTaskReport == null) {
+                    outputTaskReport = exec.newTaskReport();
+                }
+                callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
             }
         }
     }
