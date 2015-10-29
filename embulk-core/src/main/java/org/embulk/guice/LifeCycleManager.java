@@ -38,6 +38,7 @@ public final class LifeCycleManager
     private final AtomicReference<State> state = new AtomicReference<State>(State.LATENT);
     private final Queue<Object> managedInstances = new ConcurrentLinkedQueue<Object>();
     private final LifeCycleMethodsMap methodsMap;
+    private final LifeCycleListener listener;
 
     private enum State
     {
@@ -51,12 +52,14 @@ public final class LifeCycleManager
     /**
      * @param managedInstances list of objects that have life cycle annotations
      * @param methodsMap existing or new methods map
+     * @param listener listner called when state changes
      * @throws Exception exceptions starting instances (depending on mode)
      */
-    public LifeCycleManager(List<Object> managedInstances, LifeCycleMethodsMap methodsMap)
+    public LifeCycleManager(List<Object> managedInstances, LifeCycleMethodsMap methodsMap, LifeCycleListener listener)
             throws Exception
     {
         this.methodsMap = (methodsMap != null) ? methodsMap : new LifeCycleMethodsMap();
+        this.listener = listener;
         for (Object instance : managedInstances) {
             addInstance(instance);
         }
@@ -80,7 +83,9 @@ public final class LifeCycleManager
         if (!state.compareAndSet(State.LATENT, State.STARTING)) {
             throw new IllegalStateException("System already starting");
         }
-        //log.info("Life cycle starting...");
+        if (listener != null) {
+            listener.startingLifeCycle();
+        }
 
         for (Object obj : managedInstances) {
             LifeCycleMethods methods = methodsMap.get(obj.getClass());
@@ -90,7 +95,9 @@ public final class LifeCycleManager
         }
 
         state.set(State.STARTED);
-        //log.info("Life cycle startup complete. System ready.");
+        if (listener != null) {
+            listener.startedLifeCycle();
+        }
     }
 
     /**
@@ -107,7 +114,8 @@ public final class LifeCycleManager
                     LifeCycleManager.this.destroy();
                 }
                 catch (Exception e) {
-                    //log.error(e, "Trying to shut down");
+                    System.err.print("Exception in life cycle shutdown handler ");
+                    e.printStackTrace(System.err);
                 }
             }
         });
@@ -124,23 +132,30 @@ public final class LifeCycleManager
         if (!state.compareAndSet(State.STARTED, State.STOPPING)) {
             return;
         }
-
-        //log.info("Life cycle stopping...");
+        if (listener != null) {
+            listener.stoppingLifeCycle();
+        }
 
         List<Object> reversedInstances = Lists.newArrayList(managedInstances);
         Collections.reverse(reversedInstances);
 
         for (Object obj : reversedInstances) {
-            //log.debug("Stopping %s", obj.getClass().getName());
+            if (listener != null) {
+                listener.stoppingInstance(obj);
+            }
             LifeCycleMethods methods = methodsMap.get(obj.getClass());
             for (Method preDestroy : methods.methodsFor(PreDestroy.class)) {
-                //log.debug("\t%s()", preDestroy.getName());
+                if (listener != null) {
+                    listener.preDestroyingInstance(obj, preDestroy);
+                }
                 preDestroy.invoke(obj);
             }
         }
 
         state.set(State.STOPPED);
-        //log.info("Life cycle stopped.");
+        if (listener != null) {
+            listener.stoppedLifeCycle();
+        }
     }
 
     /**
@@ -177,10 +192,14 @@ public final class LifeCycleManager
     private void startInstance(Object obj)
             throws IllegalAccessException, InvocationTargetException
     {
-        //log.debug("Starting %s", obj.getClass().getName());
+        if (listener != null) {
+            listener.startingInstance(obj);
+        }
         LifeCycleMethods methods = methodsMap.get(obj.getClass());
         for (Method postConstruct : methods.methodsFor(PostConstruct.class)) {
-            //log.debug("\t%s()", postConstruct.getName());
+            if (listener != null) {
+                listener.postConstructingInstance(obj, postConstruct);
+            }
             postConstruct.invoke(obj);
         }
     }

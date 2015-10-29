@@ -43,6 +43,17 @@ public class LifeCycleModule implements Module
     private final List<Object> injectedInstances = Lists.newArrayList();
     private final LifeCycleMethodsMap lifeCycleMethodsMap = new LifeCycleMethodsMap();
     private final AtomicReference<LifeCycleManager> lifeCycleManagerRef = new AtomicReference<LifeCycleManager>(null);
+    private final LifeCycleListener listener;
+
+    public LifeCycleModule()
+    {
+        this(null);
+    }
+
+    public LifeCycleModule(LifeCycleListener listener)
+    {
+        this.listener = listener;
+    }
 
     @Override
     public void configure(Binder binder)
@@ -84,7 +95,7 @@ public class LifeCycleModule implements Module
     public LifeCycleManager getServerManager()
             throws Exception
     {
-        LifeCycleManager lifeCycleManager = new LifeCycleManager(injectedInstances, lifeCycleMethodsMap);
+        LifeCycleManager lifeCycleManager = new LifeCycleManager(injectedInstances, lifeCycleMethodsMap, listener);
         lifeCycleManagerRef.set(lifeCycleManager);
         return lifeCycleManager;
     }
