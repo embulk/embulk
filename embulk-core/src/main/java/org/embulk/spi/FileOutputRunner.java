@@ -127,31 +127,23 @@ public class FileOutputRunner
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         FormatterPlugin formatterPlugin = newFormatterPlugin(task);
 
-        TransactionalFileOutput tran = null;
-        FileOutput fileOutput = null;
-        PageOutput output = null;
-        try {
-            fileOutput = tran = PluginWrappers.transactionalFileOutput(
-                    fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex));
+        try (AbortTransactionResource aborter = new AbortTransactionResource()) {
+            try (CloseResource closer = new CloseResource()) {
+                TransactionalFileOutput finalOutput = PluginWrappers.transactionalFileOutput(
+                        fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex));
+                aborter.abortThis(finalOutput);
+                closer.closeThis(finalOutput);
 
-            fileOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), fileOutput);
-            output = formatterPlugin.open(task.getFormatterTaskSource(), schema, fileOutput);
-            fileOutput = null;
+                FileOutput encodedOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), finalOutput);
+                closer.closeThis(encodedOutput);
 
-            TransactionalPageOutput ret = new DelegateTransactionalPageOutput(tran, output);
-            tran = null;
-            output = null;
-            return ret;
+                PageOutput output = formatterPlugin.open(task.getFormatterTaskSource(), schema, encodedOutput);
+                closer.closeThis(output);
 
-        } finally {
-            if (output != null) {
-                output.close();
-            }
-            if (fileOutput != null) {
-                fileOutput.close();
-            }
-            if (tran != null) {
-                tran.abort();
+                TransactionalPageOutput ret = new DelegateTransactionalPageOutput(finalOutput, output);
+                aborter.dontAbort();
+                closer.dontClose();  // ownership of output is transferred to caller (input plugin). the owner will close output.
+                return ret;
             }
         }
     }
