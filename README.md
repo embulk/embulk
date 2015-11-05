@@ -104,15 +104,15 @@ embulk cleanup config.yml -r resume-state.yml
 
 ### Using plugin bundle
 
-`embulk bundle new` subcommand creates (or updates if already exists) a private (isolated) bundle of a plugins.
-You can use the bundle using `-b <bundle_dir>` option. `embulk bundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
+`embulk mkbundle` subcommand creates a isolated bundle of plugins. You can install plugins (gems) to the bundle directory instead of ~/.embulk directory. This makes it easy to manage versions of plugins.
+To use the bundle, add `-b <bundle_dir>` option to `guess`, `preview`, or `run` subcommand. `embulk mkbundle` also generates some example plugins to \<bundle_dir>/embulk/\*.rb directory.
 
 See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
-embulk bundle new ./embulk_bundle
-embulk guess  -b ./embulk_bundle ...
-embulk run    -b ./embulk_bundle ...
+embulk mkbundle ./embulk_bundle
+embulk guess -b ./embulk_bundle ...
+embulk run   -b ./embulk_bundle ...
 ```
 
 ## Use cases
