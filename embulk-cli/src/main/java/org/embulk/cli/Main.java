@@ -30,7 +30,7 @@ public class Main
             resourcePath = Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().toString() + "!/";
         }
         catch (URISyntaxException ex) {
-            resourcePath = "classpath:";
+            resourcePath = "uri:classloader:/";
         }
         return resourcePath + "embulk/command/embulk_bundle.rb";
     }

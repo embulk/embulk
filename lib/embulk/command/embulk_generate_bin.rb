@@ -1,7 +1,7 @@
 module Embulk
   def self.generate_bin(options={})
     jruby_jar_path = org.jruby.Main.java_class.protection_domain.code_source.location.to_s
-    if __FILE__ =~ /^classpath:/ || __FILE__.include?('!/')
+    if __FILE__ =~ /^(?:classpath|uri:classloader):/ || __FILE__.include?('!/')
       resource_class = org.embulk.command.Runner.java_class
       ruby_script_path = resource_class.resource("/embulk/command/embulk.rb").to_s
     else
