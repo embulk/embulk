@@ -9,19 +9,15 @@ if bundle_path_index
 end
 
 if bundle_path
-  # use bundler installed at bundle_path
   ENV['EMBULK_BUNDLE_PATH'] = bundle_path
-  ENV['GEM_HOME'] = File.expand_path File.join(bundle_path, Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
-  ENV['GEM_PATH'] = ''
-  Gem.clear_paths  # force rubygems to reload GEM_HOME
-
   ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(bundle_path, "Gemfile")
 
-  begin
-    require 'bundler'
-  rescue LoadError => e
-    raise "#{e}\nBundler is not installed. Did you run \`$ embulk bundle #{bundle_path}\` ?"
-  end
+  # bundler is included in embulk-core.jar
+  ENV.delete('GEM_HOME')
+  ENV.delete('GEM_PATH')
+  Gem.clear_paths
+  require 'bundler'
+
   Bundler.load.setup_environment
   require 'bundler/setup'
   # since here, `require` may load files of different (newer) embulk versions

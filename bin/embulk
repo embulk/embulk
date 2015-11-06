@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
 
 if RUBY_PLATFORM =~ /java/i
-  # Enable embulk_bundle if run by CRuby.
-  # Disable embulk_bundle if run by JRuby.
   if ENV['EMBULK_BIN_ENABLE_BUNDLE'] == File.expand_path(__FILE__)
+    # bin/embulk is run by CRuby (embulk gem for CRuby is installed). enable embulk_bundle.
     ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
+    # include -cp CLASSPATH to LOAD_PATH so that embulk_bundle.rb can load bundler included in embulk-core.jar
+    $LOAD_PATH << "uri:classloader:/"
     require_relative '../lib/embulk/command/embulk_bundle'
   else
+    # bin/embulk is run by JRuby (embulk gem for JRuby is installed). disable embulk_bundle not to bother the JRuby's bundler
     $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
     require 'embulk/command/embulk_main'
   end
@@ -93,11 +95,13 @@ rescue LoadError => e
   raise e
 end
 jruby_cp = "#{File.dirname(JRubyJars.core_jar_path)}/*"
+embulk_cp = "#{File.expand_path('../../classpath', __FILE__)}/*"  # bundler is included in embulk-core.jar
 
 # java ... -jar ruby-complete.jar bin/embulk "$@"
 cmdline = [java_cmd]
 cmdline.concat java_args
-cmdline << '-cp' << jruby_cp << 'org.jruby.Main'
+cmdline << '-cp' << [jruby_cp, embulk_cp].join(File::PATH_SEPARATOR)
+cmdline << 'org.jruby.Main'
 cmdline.concat jruby_args
 cmdline << __FILE__
 cmdline.concat ARGV

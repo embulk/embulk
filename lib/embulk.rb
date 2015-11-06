@@ -8,7 +8,7 @@ module Embulk
     if resource
       lib = resource.split("/")[0..-2].join("/")
       "#{jar}!#{lib}/#{path}"
-    elsif __FILE__ =~ /^classpath:/
+    elsif __FILE__ =~ /^(?:classpath|uri:classloader):/
       lib = __FILE__.split("/")[0..-2].join("/")
       "#{lib}/#{path}"
     else
@@ -22,7 +22,7 @@ module Embulk
       # single jar. __FILE__ should point path/to/embulk.jar!/embulk.rb
       # which means that embulk.jar is already loaded in this JVM.
 
-    elsif __FILE__ =~ /^classpath:/
+    elsif __FILE__ =~ /^(?:classpath|uri:classloader):/
       # already in classpath
 
     else

@@ -66,7 +66,7 @@ module Embulk
       op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
         classpaths.concat classpath.split(classpath_separator)
       end
-      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory (create one using "embulk bundle new" command)') do |path|
+      op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory (create one using "embulk mkbundle" command)') do |path|
         # only for help message. implemented at lib/embulk/command/embulk_bundle.rb
       end
     end
@@ -118,21 +118,34 @@ module Embulk
       java_embed_ops.call
       args = 1..1
 
+    when :mkbundle
+      op.banner = "Usage: mkbundle <directory> [--path PATH]"
+      op.separator "  Options:"
+      op.on('--path PATH', 'Relative path from <directory> for the location to install gems to (e.g. --path shared/bundle).') do |path|
+        options[:bundle_path] = path
+      end
+      op.separator <<-EOF
+
+  "mkbundle" creates a new a plugin bundle directory. You can install
+  plugins (gems) to the directory instead of ~/.embulk.
+
+  See generated <directory>/Gemfile to install plugins to the directory.
+  Use -b, --bundle BUNDLE_DIR option to use it:
+
+    $ embulk mkbundle ./dir                # create bundle directory
+    $ (cd dir && vi Gemfile && embulk bundle)   # update plugin list
+    $ embulk guess -b ./dir ...            # guess using bundled plugins
+    $ embulk run   -b ./dir ...            # run using bundled plugins
+
+      EOF
+      args = 1..1
+
     when :bundle
       if argv[0] == 'new'
         usage nil if argv.length != 2
-        new_bundle(argv[1])
+        new_bundle(argv[1], nil)
+        STDERR.puts "'embulk bundle new' is deprecated. This will be removed in future release. Please use 'embulk mkbundle' instead."
       else
-        gemfile_path = ENV['BUNDLE_GEMFILE'].to_s
-
-        if !gemfile_path.empty?
-          bundle_path = File.dirname(gemfile_path)
-        elsif File.exists?('Gemfile')
-          bundle_path = '.'
-        else
-          system_exit "'#{gemfile_path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{gemfile_path}\" and \"embulk bundle\" instead"
-        end
-
         run_bundler(argv)
       end
       system_exit_success
@@ -259,6 +272,9 @@ examples:
       options[:version] = ARGV[0]
       Embulk.selfupdate(options)
 
+    when :mkbundle
+      new_bundle(argv[0], options[:bundle_path])
+
     else
       require 'json'
 
@@ -355,12 +371,12 @@ examples:
     end
   end
 
-  def self.new_bundle(path)
+  def self.new_bundle(path, bundle_path)
     require 'fileutils'
     require 'rubygems/gem_runner'
 
     if File.exists?(path)
-      error = "'#{path}' already exists. You already ran 'embulk bundle new'. Please remove it, or run \"cd #{path}\" and \"embulk bundle\" instead"
+      error = "'#{path}' already exists."
       STDERR.puts error
       raise SystemExit.new(1, error)
     end
@@ -379,7 +395,7 @@ examples:
 
       # run the first bundle-install
       Dir.chdir(path) do
-        run_bundler(['install', '--path', '.'])
+        run_bundler(['install', '--path', bundle_path || "."])
       end
 
       success = true
@@ -392,34 +408,7 @@ examples:
   end
 
   def self.run_bundler(argv)
-    # try to load bundler from LOAD_PATH and ./jruby
-    begin
-      require 'bundler'
-      bundler_provided = true
-    rescue LoadError
-      ENV['GEM_HOME'] = File.expand_path File.join(".", Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
-      ENV['GEM_PATH'] = ''
-      ENV.delete('BUNDLE_GEMFILE')
-      Gem.clear_paths  # force rubygems to reload GEM_HOME
-      begin
-        require 'bundler'
-        bundler_provided = true
-      rescue LoadError
-      end
-    end
-
-    unless bundler_provided
-      # install bundler to the path (bundler is not included in embulk-core.jar)
-      require 'rubygems/gem_runner'
-      begin
-        puts "Installing bundler..."
-        Gem::GemRunner.new.run %w[install bundler]
-      rescue Gem::SystemExitException => e
-        raise e if e.exit_code != 0
-      end
-      Gem.clear_paths
-      require 'bundler'
-    end
+    require 'bundler'  # bundler is included in embulk-core.jar
 
     require 'bundler/friendly_errors'
     require 'bundler/cli'
@@ -432,7 +421,8 @@ examples:
     STDERR.puts "Embulk v#{Embulk::VERSION}"
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
-    STDERR.puts "   bundle     [directory]                             # create or update plugin environment."
+    STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
+    STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment."
     STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
     STDERR.puts "   preview    <config.yml>                            # dry-run the bulk load without output and show preview."
     STDERR.puts "   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file."
