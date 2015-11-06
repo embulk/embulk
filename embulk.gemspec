@@ -20,6 +20,7 @@ Gem::Specification.new do |gem|
   gem.has_rdoc      = false
 
   if RUBY_PLATFORM =~ /java/i
+    gem.add_dependency "bundler", '~> 1.10.6'
     gem.add_dependency "liquid", '~> 3.0.6'
 
     # For embulk/guess/charset.rb. See also embulk-core/build.gradle
@@ -31,7 +32,6 @@ Gem::Specification.new do |gem|
     gem.add_dependency "jruby-jars", '= 9.0.0.0'
   end
 
-  gem.add_development_dependency "bundler", [">= 1.0"]
   gem.add_development_dependency "rake", [">= 0.10.0"]
   gem.add_development_dependency "test-unit", ["~> 3.0.9"]
   gem.add_development_dependency "yard", ["~> 0.8.7"]

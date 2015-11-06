@@ -41,6 +41,7 @@ dependencies {
     // For embulk/guess/charset.rb. See also embulk.gemspec
     compile 'com.ibm.icu:icu4j:54.1.1'
 
+    gems 'rubygems:bundler:1.10.6'
     gems 'rubygems:liquid:3.0.6'
 }
 
