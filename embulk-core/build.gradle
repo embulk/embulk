@@ -50,9 +50,12 @@ task unpackGems(type: JRubyPrepare) {
     dependencies configurations.gems
     doLast {
         // move to build/gem/*/lib/* to build/gemlib/
-        file("${buildDir}/gemlib").mkdirs()
         file("${buildDir}/gem/gems").eachDir { gemDir ->
-            file("${gemDir}/lib").renameTo("${buildDir}/gemlib/")
+            copy {
+                from "${gemDir}/lib"
+                into "${buildDir}/gemlib/"
+                include "**"
+            }
         }
         fileTree(dir: "${buildDir}/gemlib", include: "**/.jrubydir").each { f -> f.delete() }
     }
