@@ -132,7 +132,7 @@ module Embulk
 
     def run_liquid(source, params, template_include_path)
       require 'liquid'
-      template = Liquid::Template.parse(source)
+      template = Liquid::Template.parse(source, :error_mode => :strict)
       template.registers[:file_system] = Liquid::LocalFileSystem.new(template_include_path, "_%s.yml.liquid") if template_include_path
 
       data = {
