@@ -410,6 +410,16 @@ examples:
   def self.run_bundler(argv)
     require 'bundler'  # bundler is included in embulk-core.jar
 
+    # this hack is necessary to make --help working
+    Bundler.define_singleton_method(:which_orig, Bundler.method(:which))
+    Bundler.define_singleton_method(:which) do |executable|
+      if executable == "man"
+        false
+      else
+        which_orig(executable)
+      end
+    end
+
     require 'bundler/friendly_errors'
     require 'bundler/cli'
     Bundler.with_friendly_errors do
@@ -422,7 +432,7 @@ examples:
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
-    STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment. (usage: http://bundler.io)"
+    STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment."
     STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
     STDERR.puts "   preview    <config.yml>                            # dry-run the bulk load without output and show preview."
     STDERR.puts "   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file."
