@@ -422,7 +422,7 @@ examples:
     STDERR.puts "usage: <command> [--options]"
     STDERR.puts "commands:"
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
-    STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment."
+    STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment. (usage: http://bundler.io)"
     STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
     STDERR.puts "   preview    <config.yml>                            # dry-run the bulk load without output and show preview."
     STDERR.puts "   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file."
