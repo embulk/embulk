@@ -43,7 +43,7 @@ public class GzipFileDecoderPlugin
                         if (!files.nextFile()) {
                             return null;
                         }
-                        return new GZIPInputStream(files);
+                        return new GZIPInputStream(files, 8*1024);
                     }
 
                     public void close() throws IOException
