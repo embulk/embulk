@@ -31,6 +31,7 @@ import org.embulk.spi.FileInput;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.FileInputRunner;
+import static org.embulk.spi.util.Inputs.each;
 
 public class GuessExecutor
 {
@@ -294,7 +295,7 @@ public class GuessExecutor
             final ConfigSource originalConfig = task.getOriginalConfig();
 
             // get sample buffer
-            Buffer sample = getFirstBuffer(input);
+            Buffer sample = readSample(input, 32*1024);  // TODO get sample size from system config. See also SamplingParserPlugin().
 
             // load guess plugins
             ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
@@ -320,24 +321,18 @@ public class GuessExecutor
             throw new GuessedNoticeError(mergedGuessed);
         }
 
-        private static Buffer getFirstBuffer(FileInput input)
+        private static Buffer readSample(FileInput fileInput, int sampleSize)
         {
-            // The first buffer is created by SamplingParserPlugin. See FileInputRunner.guess.
-            RuntimeException decodeException = null;
+            Buffer sample = Buffer.allocate(sampleSize);
             try {
-                while (input.nextFile()) {
-                    Buffer sample = input.poll();
-                    if (sample != null) {
-                        return sample;
-                    }
-                }
+                SamplingParserPlugin.readSample(fileInput, sample, 0, sampleSize);
             } catch (RuntimeException ex) {
                 // ignores exceptions because FileDecoderPlugin can throw exceptions
-                // such as "Unexpected end of ZLIB input stream"
-                decodeException = ex;
+                // such as "Unexpected end of ZLIB input stream" if decoder plugin
+                // is wrongly guessed.
             }
-            if (decodeException != null) {
-                throw decodeException;
+            if (sample.limit() > 0) {
+                return sample;
             }
             throw new NoSampleException("No input buffer to guess");
         }

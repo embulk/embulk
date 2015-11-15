@@ -90,7 +90,7 @@ public class SamplingParserPlugin
     public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
         this.minSampleSize = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
-        this.sampleSize = 32*1024;  // TODO get sample size from system config
+        this.sampleSize = 32*1024;  // TODO get sample size from system config. See also GuessExecutor.run.
         Preconditions.checkArgument(minSampleSize < sampleSize, "minSampleSize must be smaller than sampleSize");
     }
 
@@ -111,26 +111,32 @@ public class SamplingParserPlugin
         throw new SampledNoticeError(buffer);
     }
 
-    private static Buffer readSample(FileInput fileInput, int sampleSize)
+    public static Buffer readSample(FileInput fileInput, int sampleSize)
+    {
+        return readSample(fileInput, Buffer.allocate(sampleSize), 0, sampleSize);
+    }
+
+    public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleSize)
     {
         if (!fileInput.nextFile()) {
             // no input files
-            return Buffer.EMPTY;
+            return sample;
         }
 
-        Buffer sample = Buffer.allocate(sampleSize);
-        int offset = 0;
-
-        for (Buffer buffer : each(fileInput)) {
-            int size = Math.min(buffer.limit(), sample.capacity() - offset);
-            sample.setBytes(offset, buffer, 0, size);
-            offset += size;
-            buffer.release();
-            if (offset >= sampleSize) {
-                break;
+        try {
+            for (Buffer buffer : each(fileInput)) {
+                int size = Math.min(buffer.limit(), sample.capacity() - offset);
+                sample.setBytes(offset, buffer, 0, size);
+                offset += size;
+                buffer.release();
+                if (offset >= sampleSize) {
+                    break;
+                }
             }
         }
-        sample.limit(offset);
+        finally {
+            sample.limit(offset);
+        }
         return sample;
     }
 }
