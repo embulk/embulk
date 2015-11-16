@@ -135,6 +135,8 @@ Following command updates embulk itself to the specific released version.
 embulk selfupdate x.y.z
 ```
 
+Older versions are available at [dl.embulk.org](http://dl.embulk.org).
+
 
 ## Embulk Development
 
