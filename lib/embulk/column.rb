@@ -5,7 +5,7 @@ module Embulk
       if args.length == 1 && args[0].is_a?(Hash)
         # initialize(hash)
         hash = args.first
-        super(hash[:index], hash[:name], hash[:type], hash[:format])
+        super(hash[:index], hash[:name], hash[:type].to_sym, hash[:format])
       else
         # initialize(index, name, type, format)
         super(*args)
