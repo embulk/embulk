@@ -21,6 +21,7 @@ import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.ResumeState;
+import org.embulk.exec.TransactionStage;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecSession;
 import org.embulk.guice.Bootstrap;
@@ -272,6 +273,11 @@ public class EmbulkEmbed
         {
             checkState(partialExecutionException != null);
             return partialExecutionException.getResumeState();
+        }
+
+        public TransactionStage getTransactionStage()
+        {
+            return partialExecutionException.getTransactionStage();
         }
     }
 

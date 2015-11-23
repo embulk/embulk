@@ -79,18 +79,22 @@ module Embulk
 
       unless executionResult
         unless resumableResult.isSuccessful
-          Embulk.logger.info "Writing resume state to '#{resume_state_path}'"
-          write_config(resume_state_path, resumableResult.getResumeState)
-          Embulk.logger.info "Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data."
+          if resumableResult.getTransactionStage.isBefore(org.embulk.exec.TransactionStage::RUN)
+            # retry without resume state file if no tasks started yet
+            # delete resume file
+            File.delete(resume_state_path) rescue nil if resume_state_path
+          else
+            Embulk.logger.info "Writing resume state to '#{resume_state_path}'"
+            write_config(resume_state_path, resumableResult.getResumeState)
+            Embulk.logger.info "Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data."
+          end
           raise resumableResult.getCause
         end
         executionResult = resumableResult.getSuccessfulResult
       end
 
       # delete resume file
-      if resume_state_path
-        File.delete(resume_state_path) rescue nil
-      end
+      File.delete(resume_state_path) rescue nil if resume_state_path
 
       configDiff = executionResult.getConfigDiff
       Embulk.logger.info("Committed.")

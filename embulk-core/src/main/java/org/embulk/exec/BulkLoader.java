@@ -226,20 +226,6 @@ public class BulkLoader
             return inputConfigDiff != null && outputConfigDiff != null;
         }
 
-        public boolean isAnyStarted()
-        {
-            if (inputTaskStates == null) {
-                // not initialized
-                return false;
-            }
-            for (TaskState inputTaskState : inputTaskStates) {
-                if (inputTaskState.isStarted()) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public void setOutputConfigDiff(ConfigDiff outputConfigDiff)
         {
             if (outputConfigDiff == null) {
@@ -362,11 +348,14 @@ public class BulkLoader
 
         public ResumeState buildResumeState(ExecSession exec)
         {
+            Schema inputSchema = (schemas == null) ? null : schemas.get(0);
+            List<Optional<TaskReport>> inputTaskReports = (inputTaskStates == null) ? null : getInputTaskReports();
+            List<Optional<TaskReport>> outputTaskReports = (outputTaskStates == null) ? null : getOutputTaskReports();
             return new ResumeState(
                     exec.getSessionExecConfig(),
                     inputTaskSource, outputTaskSource,
-                    first(schemas), executorSchema,
-                    getInputTaskReports(), getOutputTaskReports());
+                    inputSchema, executorSchema,
+                    inputTaskReports, outputTaskReports);
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec)
@@ -541,9 +530,8 @@ public class BulkLoader
                                         public List<TaskReport> run(final TaskSource outputTask)
                                         {
                                             state.setOutputTaskSource(outputTask);
-                                            state.setTransactionStage(TransactionStage.RUN);
-
                                             state.initialize(inputTaskCount, outputTaskCount);
+                                            state.setTransactionStage(TransactionStage.RUN);
 
                                             if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
                                                 execute(task, executor, state);
@@ -580,9 +568,6 @@ public class BulkLoader
             if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
-            }
-            if (!state.isAnyStarted()) {
-                throw ex;
             }
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
@@ -622,9 +607,9 @@ public class BulkLoader
                                         {
                                             // TODO validate outputTask?
                                             state.setOutputTaskSource(outputTask);
+                                            restoreResumedTaskReports(resume, state);
                                             state.setTransactionStage(TransactionStage.RUN);
 
-                                            restoreResumedTaskReports(resume, state);
                                             if (!state.isAllTasksCommitted()) {
                                                 execute(task, executor, state);
                                             }
@@ -660,9 +645,6 @@ public class BulkLoader
             if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
-            }
-            if (!state.isAnyStarted()) {
-                throw ex;
             }
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
