@@ -47,6 +47,7 @@ public class ExecSession
     public static class Builder
     {
         private final Injector injector;
+        private ILoggerFactory loggerFactory;
         private Timestamp transactionTime;
 
         public Builder(Injector injector)
@@ -57,6 +58,12 @@ public class ExecSession
         public Builder fromExecConfig(ConfigSource configSource)
         {
             this.transactionTime = configSource.get(Timestamp.class, "transaction_time", null);
+            return this;
+        }
+
+        public Builder setLoggerFactory(ILoggerFactory loggerFactory)
+        {
+            this.loggerFactory = loggerFactory;
             return this;
         }
 
@@ -71,7 +78,7 @@ public class ExecSession
             if (transactionTime == null) {
                 transactionTime = Timestamp.ofEpochMilli(System.currentTimeMillis());  // TODO get nanoseconds for default
             }
-            return new ExecSession(injector, transactionTime);
+            return new ExecSession(injector, transactionTime, Optional.fromNullable(loggerFactory));
         }
     }
 
@@ -86,14 +93,14 @@ public class ExecSession
         this(injector,
                 configSource.loadConfig(SessionTask.class).getTransactionTime().or(
                     Timestamp.ofEpochMilli(System.currentTimeMillis())
-                )
-            );  // TODO get nanoseconds for default
+                    ), // TODO get nanoseconds for default
+                null);
     }
 
-    private ExecSession(Injector injector, Timestamp transactionTime)
+    private ExecSession(Injector injector, Timestamp transactionTime, Optional<ILoggerFactory> loggerFactory)
     {
         this.injector = injector;
-        this.loggerFactory = injector.getInstance(ILoggerFactory.class);
+        this.loggerFactory = loggerFactory.or(injector.getInstance(ILoggerFactory.class));
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
