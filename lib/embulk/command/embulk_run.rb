@@ -88,7 +88,7 @@ module Embulk
     when :cleanup
       op.banner = "Usage: cleanup <config.yml>"
       op.separator "  Options:"
-      op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
+      op.on('-r', '--resume-state PATH', 'Path to a file to cleanup resume state') do |path|
         options[:resume_state_path] = path
       end
       plugin_load_ops.call
@@ -434,6 +434,7 @@ examples:
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
     STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment."
     STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
+    STDERR.puts "   cleanup    <config.yml>                            # cleanup resume state."
     STDERR.puts "   preview    <config.yml>                            # dry-run the bulk load without output and show preview."
     STDERR.puts "   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file."
     STDERR.puts "   gem        <install | list | help>                 # install a plugin or show installed plugins."
