@@ -27,7 +27,7 @@ module Embulk
     end
 
     def self.from_java(java_class)
-      JavaPlugin.ruby_adapter(java_class, GuessPlugin, RubyAdapter)
+      JavaPlugin.ruby_adapter_class(java_class, GuessPlugin, RubyAdapter)
     end
 
     module RubyAdapter
