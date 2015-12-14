@@ -73,7 +73,7 @@ module Embulk
 
     case subcmd
     when :run
-      op.banner = "Usage: run <config.yml>"
+      op.banner = "Usage: embulk run <config.yml>"
       op.separator "  Options:"
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
         options[:resume_state_path] = path
@@ -86,7 +86,7 @@ module Embulk
       args = 1..1
 
     when :cleanup
-      op.banner = "Usage: cleanup <config.yml>"
+      op.banner = "Usage: embulk cleanup <config.yml>"
       op.separator "  Options:"
       op.on('-r', '--resume-state PATH', 'Path to a file to cleanup resume state') do |path|
         options[:resume_state_path] = path
@@ -96,7 +96,7 @@ module Embulk
       args = 1..1
 
     when :preview
-      op.banner = "Usage: preview <config.yml>"
+      op.banner = "Usage: embulk preview <config.yml>"
       op.separator "  Options:"
       op.on('-G', '--vertical', "Use vertical output format", TrueClass) do |b|
         options[:format] = "vertical"
@@ -106,7 +106,7 @@ module Embulk
       args = 1..1
 
     when :guess
-      op.banner = "Usage: guess <partial-config.yml>"
+      op.banner = "Usage: embulk guess <partial-config.yml>"
       op.separator "  Options:"
       op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
         options[:next_config_output_path] = path
@@ -119,7 +119,7 @@ module Embulk
       args = 1..1
 
     when :mkbundle
-      op.banner = "Usage: mkbundle <directory> [--path PATH]"
+      op.banner = "Usage: embulk mkbundle <directory> [--path PATH]"
       op.separator "  Options:"
       op.on('--path PATH', 'Relative path from <directory> for the location to install gems to (e.g. --path shared/bundle).') do |path|
         options[:bundle_path] = path
@@ -156,7 +156,7 @@ module Embulk
       system_exit_success
 
     when :new
-      op.banner = "Usage: new <category> <name>" + %[
+      op.banner = "Usage: embulk new <category> <name>" + %[
 categories:
     ruby-input                 Ruby record input plugin    (like "mysql")
     ruby-output                Ruby record output plugin   (like "mysql")
@@ -184,7 +184,7 @@ examples:
       args = 2..2
 
     when :migrate
-      op.banner = "Usage: migrate <directory>"
+      op.banner = "Usage: embulk migrate <directory>"
       args = 1..1
 
     when :selfupdate
@@ -429,8 +429,8 @@ examples:
 
   def self.usage(message)
     STDERR.puts "Embulk v#{Embulk::VERSION}"
-    STDERR.puts "usage: <command> [--options]"
-    STDERR.puts "commands:"
+    STDERR.puts "Usage: embulk [-vm-options] <command> [--options]"
+    STDERR.puts "Commands:"
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
     STDERR.puts "   bundle     [directory]                             # update a plugin bundle environment."
     STDERR.puts "   run        <config.yml>                            # run a bulk load transaction."
@@ -443,6 +443,12 @@ examples:
     STDERR.puts "   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API"
     STDERR.puts "   example    [path]                                  # creates an example config file and csv file to try embulk."
     STDERR.puts "   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version."
+    STDERR.puts ""
+    STDERR.puts "VM options:"
+    STDERR.puts "   -J-O                             Disable JVM optimizations to speed up startup time (enabled by default if command is 'run')"
+    STDERR.puts "   -J+O                             Enable JVM optimizations to speed up throughput"
+    STDERR.puts "   -J...                            Set JVM options (use -J-help to see available options)"
+    STDERR.puts "   -R...                            Set JRuby options (use -R--help to see available options)"
     STDERR.puts ""
     if message
       system_exit "error: #{message}"
