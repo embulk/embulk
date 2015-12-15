@@ -27,9 +27,9 @@ module Embulk
         if value = @map[type]
           return value
         end
-        raise PluginLoadError, "Unknown #{@category} plugin '#{type}'. #{@search_prefix}#{type}.rb is installed but it does not correctly register plugin."
+        raise PluginLoadError.new "Unknown #{@category} plugin '#{type}'. #{@search_prefix}#{type}.rb is installed but it does not correctly register plugin."
       else
-        raise PluginLoadError, "Unknown #{@category} plugin '#{type}'. #{@search_prefix}#{type}.rb is not installed. Run 'embulk gem search -rd embulk-#{@category}' command to find plugins."
+        raise PluginLoadError.new "Unknown #{@category} plugin '#{type}'. #{@search_prefix}#{type}.rb is not installed. Run 'embulk gem search -rd embulk-#{@category}' command to find plugins."
       end
     end
 
