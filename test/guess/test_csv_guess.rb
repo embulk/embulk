@@ -6,7 +6,7 @@ class CsvGuessTest < ::Test::Unit::TestCase
   class TestDelimiter < self
     data(
       "\t" => "\t",
-      "," => "\t",
+      "," => ",",
       "|" => "|",
     )
     def test_delimiter_detection(delim)
