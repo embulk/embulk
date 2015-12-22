@@ -208,6 +208,7 @@ public class CsvFormatterPlugin
 
             public void close()
             {
+                pageReader.close();
                 encoder.close();
             }
         };
