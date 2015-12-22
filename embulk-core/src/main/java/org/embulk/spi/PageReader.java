@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import org.msgpack.value.Value;
 import org.embulk.spi.time.Timestamp;
 
 public class PageReader
@@ -122,6 +123,18 @@ public class PageReader
         long sec = pageSlice.getLong(offset);
         int nsec = pageSlice.getInt(offset + 8);
         return Timestamp.ofEpochSecond(sec, nsec);
+    }
+
+    public Value getJson(Column column)
+    {
+        // TODO check type?
+        return getJson(column.getIndex());
+    }
+
+    public Value getJson(int columnIndex)
+    {
+        int index = pageSlice.getInt(getOffset(columnIndex));
+        return page.getValueReference(index);
     }
 
     private int getOffset(int columnIndex)

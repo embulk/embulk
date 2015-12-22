@@ -50,6 +50,8 @@ module Embulk
       migrator.write "gradle/wrapper/gradle-wrapper.properties", data.content("java/gradle/wrapper/gradle-wrapper.properties")
     end
 
+    # TODO add migration for jsonColumn method if timestampColumn method exists but jsonColumn method doesn't exist
+
     #
     # add rules...
     ##

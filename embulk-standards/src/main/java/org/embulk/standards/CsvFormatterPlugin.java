@@ -18,8 +18,8 @@ import org.embulk.spi.PageReader;
 import org.embulk.spi.FileOutput;
 import org.embulk.spi.util.LineEncoder;
 import org.embulk.spi.util.Timestamps;
-
 import org.embulk.spi.util.Newline;
+import org.msgpack.value.Value;
 import java.util.Map;
 
 public class CsvFormatterPlugin
@@ -175,6 +175,17 @@ public class CsvFormatterPlugin
                             if (!pageReader.isNull(column)) {
                                 Timestamp value = pageReader.getTimestamp(column);
                                 addValue(timestampFormatters[column.getIndex()].format(value));
+                            } else {
+                                addNullString();
+                            }
+                        }
+
+                        public void jsonColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                Value value = pageReader.getJson(column);
+                                addValue(value.toJson());
                             } else {
                                 addNullString();
                             }

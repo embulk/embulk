@@ -9,6 +9,7 @@ import org.embulk.spi.type.DoubleType;
 import org.embulk.spi.type.LongType;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.type.StringType;
+import org.embulk.spi.type.JsonType;
 
 public class Column
 {
@@ -57,6 +58,8 @@ public class Column
             visitor.stringColumn(this);
         } else if (type instanceof TimestampType) {
             visitor.timestampColumn(this);
+        } else if (type instanceof JsonType) {
+            visitor.jsonColumn(this);
         } else {
             assert(false);
         }

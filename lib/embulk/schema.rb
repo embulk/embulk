@@ -19,6 +19,7 @@ module Embulk
       each do |column|
         idx = column.index
         column_script =
+          "value_api = ::Embulk::Java::SPI::Json::RubyValueApi\n" <<
           "if reader.isNull(#{idx})\n" <<
           "record << nil\n" <<
           "else\n" <<
@@ -33,6 +34,8 @@ module Embulk
             "record << reader.getString(#{idx})"
           when :timestamp
             "record << reader.getTimestamp(#{idx}).getRubyTime(JRuby.runtime)"
+          when :json
+            "record << MessagePack.unpack(value_api.toMessagePack(JRuby.runtime, reader.getJson(#{idx})))"
           else
             raise "Unknown type #{column.type.inspect}"
           end <<
@@ -45,6 +48,7 @@ module Embulk
 
       record_writer_script = "lambda do |builder,record|\n"
       record_writer_script << "java_timestamp_class = ::Embulk::Java::Timestamp\n"
+      record_writer_script << "value_api = ::Embulk::Java::SPI::Json::RubyValueApi\n"
       each do |column|
         idx = column.index
         column_script =
@@ -62,6 +66,8 @@ module Embulk
             "builder.setString(#{idx}, record[#{idx}])"
           when :timestamp
             "builder.setTimestamp(#{idx}, java_timestamp_class.fromRubyTime(record[#{idx}]))"
+          when :json
+            "builder.setJson(#{idx}, value_api.fromMessagePack(MessagePack.pack(record[#{idx}])))"
           else
             raise "Unknown type #{column.type.inspect}"
           end <<

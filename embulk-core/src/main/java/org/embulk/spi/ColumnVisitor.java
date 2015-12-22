@@ -11,4 +11,6 @@ public interface ColumnVisitor
     void stringColumn(Column column);
 
     void timestampColumn(Column column);
+
+    void jsonColumn(Column column);
 }

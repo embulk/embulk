@@ -13,6 +13,8 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampParseException;
+import org.embulk.spi.json.JsonParser;
+import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.Column;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
@@ -229,6 +231,7 @@ public class CsvParserPlugin
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final TimestampParser[] timestampParsers = Timestamps.newTimestampColumnParsers(task, task.getSchemaConfig());
+        final JsonParser jsonParser = new JsonParser();
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
         final String nullStringOrNull = task.getNullString().orNull();
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
@@ -314,6 +317,21 @@ public class CsvParserPlugin
                                     try {
                                         pageBuilder.setTimestamp(column, timestampParsers[column.getIndex()].parse(v));
                                     } catch (TimestampParseException e) {
+                                        // TODO support default value
+                                        throw new CsvRecordValidateException(e);
+                                    }
+                                }
+                            }
+
+                            public void jsonColumn(Column column)
+                            {
+                                String v = nextColumn();
+                                if (v == null) {
+                                    pageBuilder.setNull(column);
+                                } else {
+                                    try {
+                                        pageBuilder.setJson(column, jsonParser.parse(v));
+                                    } catch (JsonParseException e) {
                                         // TODO support default value
                                         throw new CsvRecordValidateException(e);
                                     }

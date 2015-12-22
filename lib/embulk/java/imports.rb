@@ -22,6 +22,10 @@ module Embulk::Java
       include_package 'org.embulk.time'
     end
 
+    module Json
+      include_package 'org.embulk.json'
+    end
+
     module Type
       include_package 'org.embulk.type'
     end

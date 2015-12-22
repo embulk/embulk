@@ -11,4 +11,6 @@ public class Types
     public static final StringType STRING = StringType.STRING;
 
     public static final TimestampType TIMESTAMP = TimestampType.TIMESTAMP;
+
+    public static final JsonType JSON = JsonType.JSON;
 }
