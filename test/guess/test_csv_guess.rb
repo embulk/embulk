@@ -140,6 +140,24 @@ class CsvGuessTest < ::Test::Unit::TestCase
       ]
       assert_equal expected, actual["parser"]["columns"]
     end
+
+    def test_complex_line
+      actual = guess([
+        %Q(this is useless header),
+        %Q(and more),
+        %Q(num,str,quoted_num,time),
+        %Q(1, "value with space "" and quote in it", "123",21150312000000Z),
+        %Q(2),
+        %Q(# 3, "this is commented out" ,"1",21150312000000Z),
+      ])
+      expected = [
+        {"name" => "num", "type" => "long"},
+        {"name" => "str", "type" => "string"},
+        {"name" => "quoted_num", "type" => "long"},
+        {"name" => "time", "type" => "timestamp", "format"=>"%Y%m%d%H%M%S%z"},
+      ]
+      assert_equal expected, actual["parser"]["columns"]
+    end
   end
 
   def guess(texts)
