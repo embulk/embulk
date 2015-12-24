@@ -71,7 +71,7 @@ module Embulk::Guess
         begin
           JSON.parse(str)
           return "json"
-        resce
+        rescue
         end
 
         return "string"
