@@ -31,7 +31,7 @@ public class PageBuilder
     private int position;
     private final byte[] nullBitSet;
     private final BiMap<String, Integer> stringReferences = HashBiMap.create();
-    private final List<ImmutableValue> valueReferences = new ArrayList<>();
+    private List<ImmutableValue> valueReferences = new ArrayList<>();
     private int referenceSize;
     private int nextVariableLengthDataOffset;
 
@@ -55,6 +55,7 @@ public class PageBuilder
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences.clear();
+        this.valueReferences = new ArrayList<>();
         this.referenceSize = 0;
     }
 
@@ -220,7 +221,9 @@ public class PageBuilder
             buffer.limit(position);
 
             // flush page
-            Page page = Page.wrap(buffer).setStringReferences(getSortedStringReferences());
+            Page page = Page.wrap(buffer)
+                .setStringReferences(getSortedStringReferences())
+                .setValueReferences(valueReferences);
             buffer = null;
             bufferSlice = null;
             output.add(page);
