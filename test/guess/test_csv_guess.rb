@@ -39,7 +39,6 @@ class CsvGuessTest < ::Test::Unit::TestCase
       '"' => '"',
     )
     def test_escape(char)
-      pend "Looks like guess_escape returned value is ignored. https://github.com/embulk/embulk/blob/v0.7.10/lib/embulk/guess/csv.rb#L68-L76"
       actual = guess([
         %Q('1'\t'F#{char}'OO'),
         %Q('2'\t'FOOOOOOOO#{char}'OO'),
