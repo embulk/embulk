@@ -470,9 +470,9 @@ Example
     filters:
       ...
       - type: rename
-    columns:
-      my_existing_column1: new_column1
-      my_existing_column2: new_column2
+        columns:
+          my_existing_column1: new_column1
+          my_existing_column2: new_column2
 
 Local executor plugin
 ------------------
