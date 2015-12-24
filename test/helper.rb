@@ -19,3 +19,5 @@ SimpleCov.start 'embulk'
 
 require 'embulk/java/bootstrap'
 require 'embulk'
+
+Embulk.setup
