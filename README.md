@@ -110,7 +110,7 @@ To use the bundle, add `-b <bundle_dir>` option to `guess`, `preview`, or `run` 
 See the generated \<bundle_dir>/Gemfile file how to plugin bundles work.
 
 ```
-embulk mkbundle ./embulk_bundle
+embulk mkbundle ./embulk_bundle  # please edit ./embulk_bundle/Gemfile to add plugins. Detailed usage is written in the Gemfile
 embulk guess -b ./embulk_bundle ...
 embulk run   -b ./embulk_bundle ...
 ```
