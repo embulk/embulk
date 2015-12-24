@@ -36,7 +36,6 @@ public class ExecModule
         registerPluginTo(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
 
         // LocalExecutorPlugin
-        binder.bind(LocalThreadExecutor.class).in(Scopes.SINGLETON);
         registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
         // serde
