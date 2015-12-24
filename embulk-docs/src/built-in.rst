@@ -493,7 +493,7 @@ Options
 
 The ``max_threads`` option controls maximum concurrency. Setting smaller number here is useful if the destination storage becomes overloaded. Setting larger number here is useful if CPU utilization is too low due to high latency.
 
-The ``min_output_tasks`` option enables "page scattering". It is enabled if number of input tasks is less than ``min_output_tasks``. It uses multiple output threads for each input task so that one input task can use multiple threads. Setting larger number here is useful if embulk doesn't use multi-threading with enough concurrency due to too few number of input tasks. Setting 1 here completely disables page scattering.
+The ``min_output_tasks`` option enables "page scattering". It is enabled if number of input tasks is less than ``min_output_tasks``. It uses multiple filter & output threads for each input task so that one input task can use multiple threads. Setting larger number here is useful if embulk doesn't use multi-threading with enough concurrency due to too few number of input tasks. Setting 1 here completely disables page scattering.
 
 .. code-block:: yaml
 
