@@ -72,8 +72,8 @@ module Embulk
               else
                 # disable escaping (set null)
               end
-              parser_guessed["escape"] = escape
             end
+            parser_guessed["escape"] = escape
           else
             # escape does nothing if quote is disabled
           end
