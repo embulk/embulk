@@ -470,7 +470,41 @@ Example
     filters:
       ...
       - type: rename
-	columns:
-	  my_existing_column1: new_column1
-	  my_existing_column2: new_column2
+    columns:
+      my_existing_column1: new_column1
+      my_existing_column2: new_column2
+
+Local executor plugin
+------------------
+
+The ``local`` executor plugin runs tasks using local threads. This is the only built-in executor plugin.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name             | type     | description                                                          | required?                            |
++==================+==========+======================================================================+======================================+
+| max_threads      | integer  | Maximum number of threads to run concurrently.                       | 2x of available CPU cores by default |
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| min_output_tasks | integer  | Mimimum number of output tasks to enable page scattering.            | 1x of available CPU cores by default |
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+
+
+The ``max_threads`` option controls maximum concurrency. Setting smaller number here is useful if the destination storage becomes overloaded. Setting larger number here is useful if CPU utilization is too low due to high latency.
+
+The ``min_output_tasks`` option enables "page scattering". It is enabled if number of input tasks is less than ``min_output_tasks``. It uses multiple output threads for each input task so that one input task can use multiple threads. Setting larger number here is useful if embulk doesn't use multi-threading with enough concurrency due to too few number of input tasks. Setting 1 here completely disables page scattering.
+
+.. code-block:: yaml
+
+    exec:
+      max_threads: 8         # run at most 8 tasks concurrently
+      min_output_tasks: 1    # disable page scattering
+    in:
+      type: ...
+      ...
+    out:
+      type: ...
+      ...
+
 

@@ -43,7 +43,7 @@ public class LocalExecutorPlugin
     {
         int cores = Runtime.getRuntime().availableProcessors();
         this.defaultMaxThreads = systemConfig.get(Integer.class, "max_threads", cores * 2);
-        this.defaultMinThreads = systemConfig.get(Integer.class, "min_threads", cores);
+        this.defaultMinThreads = systemConfig.get(Integer.class, "min_output_tasks", cores);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class LocalExecutorPlugin
     {
         Logger log = Exec.getLogger(LocalExecutorPlugin.class);
         int maxThreads = config.get(Integer.class, "max_threads", defaultMaxThreads);
-        int minThreads = config.get(Integer.class, "min_threads", defaultMinThreads);
+        int minThreads = config.get(Integer.class, "min_output_tasks", defaultMinThreads);
         if (inputTaskCount < minThreads) {
             int scatterCount = (minThreads + inputTaskCount - 1) / inputTaskCount;
             log.info("Using local thread executor with max_threads={} / output tasks {} = input tasks {} * {}",
