@@ -1,9 +1,9 @@
 package org.embulk.jruby;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
+
 import org.slf4j.ILoggerFactory;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 import com.google.inject.Binder;
@@ -14,7 +14,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
-import org.jruby.CompatVersion;
+
 import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.plugin.PluginSource;
@@ -44,6 +44,7 @@ public class JRubyScriptingModule
     {
         private final Injector injector;
         private final boolean useGlobalRubyRuntime;
+        private final String gemHome;
 
         @Inject
         public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
@@ -54,7 +55,9 @@ public class JRubyScriptingModule
             // instantiated in this JVM.
             this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
 
-            // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
+        	this.gemHome = systemConfig.get(String.class, "gem_home", null);
+
+        	// TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
             // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
         }
 
@@ -74,6 +77,15 @@ public class JRubyScriptingModule
 //                loadPaths.add(coreJarPath);
 //            }
 //            jruby.setLoadPaths(loadPaths);
+
+
+            if (gemHome != null)
+            {
+                // set GEM_HOME
+                jruby.callMethod(
+                        jruby.runScriptlet("ENV"),
+                        "store", "GEM_HOME", gemHome);
+            }
 
             // load embulk.rb
             jruby.runScriptlet("require 'embulk'");
