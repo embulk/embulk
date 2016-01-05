@@ -252,7 +252,7 @@ public class CsvTokenizer
 
                     } else {
                         // this spaces are not trailing spaces. go back to VALUE state
-                        columnState = ColumnState.BEGIN;
+                        columnState = ColumnState.VALUE;
                     }
                     break;
 
