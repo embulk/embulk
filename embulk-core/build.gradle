@@ -37,7 +37,7 @@ dependencies {
     compile 'joda-time:joda-time:2.8.1'
     compile 'io.netty:netty-buffer:5.0.0.Alpha1'
     compile 'org.fusesource.jansi:jansi:1.11'
-    compile 'org.msgpack:msgpack-core:0.7.1'
+    compile 'org.msgpack:msgpack-core:0.8.0'
 
     // For embulk/guess/charset.rb. See also embulk.gemspec
     compile 'com.ibm.icu:icu4j:54.1.1'

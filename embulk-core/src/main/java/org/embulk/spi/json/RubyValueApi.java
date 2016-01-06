@@ -4,7 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import com.google.common.base.Throwables;
 import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessagePacker;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.buffer.MessageBuffer;
 import org.msgpack.value.Value;
 import org.jruby.Ruby;
 import org.jruby.RubyString;
@@ -13,13 +14,11 @@ import org.jcodings.specific.ASCIIEncoding;
 
 public class RubyValueApi
 {
-    private static final MessagePack msgpack = new MessagePack();
-
     public static Value fromMessagePack(RubyString content)
     {
         ByteList list = content.getByteList();
         try {
-            return msgpack.newDefaultUnpacker(list.unsafeBytes(), list.begin(), list.length()).unpackValue();
+            return MessagePack.newDefaultUnpacker(list.unsafeBytes(), list.begin(), list.length()).unpackValue();
         }
         catch (IOException ex) {
             throw Throwables.propagate(ex);
@@ -43,11 +42,11 @@ public class RubyValueApi
     public static RubyString toMessagePack(Ruby runtime, Value value)
     {
         try {
-            OpenByteArrayOutputStream out = new OpenByteArrayOutputStream();  // TODO optimize msgpack-core to reduce number of copy
-            MessagePacker packer = msgpack.newDefaultPacker(out);
-            value.writeTo(packer);
-            packer.flush();
-            ByteList list = new ByteList(out.getBuffer(), 0, out.getCount(), ASCIIEncoding.INSTANCE, false);
+            MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
+            packer.packValue(value);
+            packer.flush();  // this will be unnecessary once #329 is merged: https://github.com/msgpack/msgpack-java/pull/329
+            MessageBuffer mb = packer.toMessageBuffer();
+            ByteList list = new ByteList(mb.array(), mb.arrayOffset(), mb.size(), ASCIIEncoding.INSTANCE, false);
             return RubyString.newString(runtime, list);
         }
         catch (IOException ex) {
