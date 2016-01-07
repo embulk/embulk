@@ -18,7 +18,7 @@ public class TimestampType
 
     private TimestampType(String format)
     {
-        super("timestamp", Timestamp.class, 12);  // long msec + int nsec
+        super("timestamp", Timestamp.class, 12, TypeEnum.TIMESTAMP);  // long msec + int nsec
         this.format = format;
     }
 

@@ -12,4 +12,6 @@ public interface Type
     Class<?> getJavaType();
 
     byte getFixedStorageSize();
+
+    TypeEnum getTypeEnum();
 }

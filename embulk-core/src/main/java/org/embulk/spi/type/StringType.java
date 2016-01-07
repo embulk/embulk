@@ -7,6 +7,6 @@ public class StringType
 
     private StringType()
     {
-        super("string", String.class, 4);
+        super("string", String.class, 4, TypeEnum.STRING);
     }
 }

@@ -8,12 +8,14 @@ public abstract class AbstractType
     private final String name;
     private final Class<?> javaType;
     private byte fixedStorageSize;
+    private final TypeEnum typeEnum;
 
-    protected AbstractType(String name, Class<?> javaType, int fixedStorageSize)
+    protected AbstractType(String name, Class<?> javaType, int fixedStorageSize, TypeEnum typeEnum)
     {
         this.name = name;
         this.javaType = javaType;
         this.fixedStorageSize = (byte) fixedStorageSize;
+        this.typeEnum = typeEnum;
     }
 
     @Override
@@ -32,6 +34,12 @@ public abstract class AbstractType
     public byte getFixedStorageSize()
     {
         return fixedStorageSize;
+    }
+
+    @Override
+    public final TypeEnum getTypeEnum()
+    {
+        return typeEnum;
     }
 
     @SuppressFBWarnings(value = "EQ_UNUSUAL")
