@@ -44,7 +44,6 @@ public class RubyValueApi
         try {
             MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
             packer.packValue(value);
-            packer.flush();  // this will be unnecessary once #329 is merged: https://github.com/msgpack/msgpack-java/pull/329
             MessageBuffer mb = packer.toMessageBuffer();
             ByteList list = new ByteList(mb.array(), mb.arrayOffset(), mb.size(), ASCIIEncoding.INSTANCE, false);
             return RubyString.newString(runtime, list);
