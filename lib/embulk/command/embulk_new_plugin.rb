@@ -87,6 +87,7 @@ module Embulk
         pkg.cp("java/gradlew.bat", "gradlew.bat")
         pkg.cp("java/gradlew", "gradlew")
         pkg.set_executable("gradlew")
+        pkg.cp("java/config/checkstyle/checkstyle.xml","config/checkstyle/checkstyle.xml")
         pkg.cp_erb("java/build.gradle.erb", "build.gradle")
         pkg.cp_erb("java/plugin_loader.rb.erb", plugin_path)
         pkg.cp_erb("java/#{category}.java.erb", "src/main/java/#{java_package_name.gsub(/\./, '/')}/#{java_class_name}.java")
