@@ -2,6 +2,7 @@ plugins {
     id "com.jfrog.bintray" version "1.1"
     id "com.github.jruby-gradle.base" version "0.1.5"
     id "java"
+    id "checkstyle"
 }
 import com.github.jrubygradle.JRubyExec
 repositories {
@@ -71,3 +72,10 @@ end
     }
 }
 clean { delete "${project.name}.gemspec" }
+
+checkstyle {
+  // source config
+  // https://github.com/facebook/presto/blob/master/src/checkstyle/checks.xml
+  configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+  toolVersion = '6.7'
+}
