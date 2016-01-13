@@ -43,11 +43,11 @@ module Embulk
     end
 
     if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.\d-/)
-      # gradle < 2.6
+      # gradle < 2.10 (\d matches one digit)
       require 'embulk/data/package_data'
       data = PackageData.new("new", migrator.path)
-      migrator.write "gradle/wrapper/gradle-wrapper.jar", data.bincontent("java/gradle/wrapper/gradle-wrapper.jar")
       migrator.write "gradle/wrapper/gradle-wrapper.properties", data.content("java/gradle/wrapper/gradle-wrapper.properties")
+      migrator.write "gradle/wrapper/gradle-wrapper.jar", data.bincontent("java/gradle/wrapper/gradle-wrapper.jar")
     end
 
     if !migrator.match("**/*.java", /void\s+jsonColumn/) && ms = migrator.match("**/*.java", /^(\W+).*?void\s+timestampColumn/)
