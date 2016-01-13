@@ -81,16 +81,16 @@ module Embulk
         pkg.cp_erb("ruby/gemspec.erb", "#{full_project_name}.gemspec")
         pkg.cp_erb("ruby/#{category}.rb.erb", plugin_path)
 
-      when :java
-        pkg.cp("java/gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.jar")
-        pkg.cp("java/gradle/wrapper/gradle-wrapper.properties", "gradle/wrapper/gradle-wrapper.properties")
-        pkg.cp("java/gradlew.bat", "gradlew.bat")
-        pkg.cp("java/gradlew", "gradlew")
+      when :java, :scala
+        pkg.cp("#{language}/gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.jar")
+        pkg.cp("#{language}/gradle/wrapper/gradle-wrapper.properties", "gradle/wrapper/gradle-wrapper.properties")
+        pkg.cp("#{language}/gradlew.bat", "gradlew.bat")
+        pkg.cp("#{language}/gradlew", "gradlew")
         pkg.set_executable("gradlew")
-        pkg.cp_erb("java/build.gradle.erb", "build.gradle")
-        pkg.cp_erb("java/plugin_loader.rb.erb", plugin_path)
-        pkg.cp_erb("java/#{category}.java.erb", "src/main/java/#{java_package_name.gsub(/\./, '/')}/#{java_class_name}.java")
-        pkg.cp_erb("java/test.java.erb", "src/test/java/#{java_package_name.gsub(/\./, '/')}/Test#{java_class_name}.java")
+        pkg.cp_erb("#{language}/build.gradle.erb", "build.gradle")
+        pkg.cp_erb("#{language}/plugin_loader.rb.erb", plugin_path)
+        pkg.cp_erb("#{language}/#{category}.#{language}.erb", "src/main/#{language}/#{java_package_name.gsub(/\./, '/')}/#{java_class_name}.#{language}")
+        pkg.cp_erb("#{language}/test.#{language}.erb", "src/test/#{language}/#{java_package_name.gsub(/\./, '/')}/Test#{java_class_name}.#{language}")
       end
 
       extra_guess_erb.each_pair do |erb,dest|

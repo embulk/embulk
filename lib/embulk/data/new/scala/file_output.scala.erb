@@ -1,0 +1,70 @@
+package <%= java_package_name %>
+
+import java.util.{List => JList}
+import com.google.common.base.Optional
+import org.embulk.config.{TaskReport, Config, ConfigDefault, ConfigDiff, ConfigSource, Task, TaskSource}
+import org.embulk.spi.{Exec, FileOutputPlugin, TransactionalFileOutput}
+
+class <%= java_class_name %> extends FileOutputPlugin
+{
+trait PluginTask extends Task
+  {
+    // configuration option 1 (required integer)
+    @Config("option1")
+    def getOption1: Int
+
+    // configuration option 2 (optional string, null is not allowed)
+    @Config("option2")
+    @ConfigDefault("\"myvalue\"")
+    def getOption2: String
+
+    // configuration option 3 (optional string, null is allowed)
+    @Config("option3")
+    @ConfigDefault("null")
+    def getOption3: Optional[String]
+
+    // usually, run() method needs to write multiple files because size of a file
+    // can be very large. So, file name will be:
+    //
+    //    path_prefix + sequence_format.format(taskIndex, sequenceCounterInRunMethod) + file_ext
+    //
+
+    //@Config("path_prefix")
+    //def getPathPrefix: String
+
+    //@Config("file_ext")
+    //def getFileNameExtension: String
+
+    //@Config("sequence_format")
+    //@ConfigDefault("\"%03d.%02d.\"")
+    //def getSequenceFormat: String
+  }
+
+  override def transaction(config: ConfigSource, taskCount: Int, control: FileOutputPlugin.Control): ConfigDiff = {
+    val task: PluginTask = config.loadConfig(classOf[PluginTask])
+
+    // retryable (idempotent) output:
+    // resume(task.dump(), taskCount, control)
+
+    // non-retryable (non-idempotent) output:
+    control.run(task.dump())
+    Exec.newConfigDiff()
+  }
+
+  override def resume(taskSource: TaskSource, taskCount: Int, control: FileOutputPlugin.Control): ConfigDiff = {
+    throw new UnsupportedOperationException("<%= name %> output plugin does not support resuming")
+  }
+
+  override def cleanup(taskSource: TaskSource, taskCount: Int, successTaskReports: JList[TaskReport]): Unit = {
+  }
+
+  override def open(taskSource: TaskSource, taskIndex: Int): TransactionalFileOutput = {
+    val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
+
+    // Write your code here :)
+    throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet")
+
+    // See LocalFileOutputPlugin as an example implementation:
+    // https://github.com/embulk/embulk/blob/master/embulk-standards/src/main/java/org/embulk/standards/LocalFileOutputPlugin.java
+  }
+}

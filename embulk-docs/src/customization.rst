@@ -43,6 +43,15 @@ Type                  description                      example
 **java-formatter**    Java file formatter plugin       ``csv``
 **java-decoder**      Java file decoder plugin         ``gzip``
 **java-encoder**      Java file encoder plugin         ``gzip``
+**scala-input**       Scala record input plugin        ``mysql``
+**scala-output**      Scala record output plugin       ``mysql``
+**scala-filter**      Scala record filter plugin       ``add-hostname``
+**scala-file-input**  Scala file input plugin          ``ftp``
+**scala-file-output** Scala file output plugin         ``ftp``
+**scala-parser**      Scala file parser plugin         ``csv``
+**scala-formatter**   Scala file formatter plugin      ``csv``
+**scala-decoder**     Scala file decoder plugin        ``gzip``
+**scala-encoder**     Scala file encoder plugin        ``gzip``
 **ruby-input**        Ruby record input plugin         ``mysql``
 **ruby-output**       Ruby record output plugin        ``mysql``
 **ruby-filter**       Ruby record filter plugin        ``add-hostname``
@@ -88,7 +97,7 @@ The final step is to modify code as you want!
 
 The code is located at
 
-* Java-based plugins
+* Java-based plugins, Scala-based plugins
 
   * src/org/embulk/*
 
@@ -108,7 +117,7 @@ Checking plugin description
 
 To prepare the plugin ready to release, you need to include some additional information. The plugin information is written in this file:
 
-* Java-based plugins
+* Java-based plugins, Scala-based plugins
 
   * ``build.gradle`` file
 
@@ -147,7 +156,7 @@ Releasing the plugin to RubyGems.org
 
 Now, you're ready to release the plugin. To release, type following command:
 
-* Java-based plugins
+* Java-based plugins, Scala-based plugins
 
   * ``$ ./gradlew gemPush``
 

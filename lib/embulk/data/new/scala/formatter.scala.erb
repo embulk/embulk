@@ -1,0 +1,38 @@
+package <%= java_package_name %>
+
+import com.google.common.base.Optional
+import org.embulk.config.{Config, ConfigDefault, ConfigDiff, ConfigSource, Task, TaskSource}
+import org.embulk.spi.{FormatterPlugin, PageOutput, FileOutput, Schema}
+
+class <%= java_class_name %> extends FormatterPlugin
+{
+  trait PluginTask extends Task
+  {
+    // configuration option 1 (required integer)
+    @Config("option1")
+    def getOption1: Int
+
+    // configuration option 2 (optional string, null is not allowed)
+    @Config("option2")
+    @ConfigDefault("\"myvalue\"")
+    def getOption2: String
+
+    // configuration option 3 (optional string, null is allowed)
+    @Config("option3")
+    @ConfigDefault("null")
+    def getOption3: Optional[String]
+  }
+
+  override def transaction(config: ConfigSource, schema: Schema, control: FormatterPlugin.Control): Unit = {
+    val task: PluginTask = config.loadConfig(classOf[PluginTask])
+
+    control.run(task.dump())
+  }
+
+  override def open(taskSource: TaskSource, schema: Schema, output: FileOutput): PageOutput = {
+    val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
+
+    // Write your code here :)
+    throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet")
+  }
+}

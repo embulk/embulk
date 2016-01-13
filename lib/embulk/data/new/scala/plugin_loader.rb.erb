@@ -1,0 +1,3 @@
+Embulk::JavaPlugin.register_<%= embulk_category %>(
+  <%= name.dump %>, <%= "#{java_package_name}.#{java_class_name}".dump %>,
+  File.expand_path('../../../../classpath', __FILE__))
