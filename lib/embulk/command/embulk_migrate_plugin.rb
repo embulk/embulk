@@ -2,9 +2,9 @@ module Embulk
   def self.migrate_plugin(path)
     migrator = Migrator.new(path)
 
-    if ms = migrator.match("**/build.gradle", /org\.embulk:embulk-core:([\d\.]+)?/)
+    if ms = migrator.match("**/build.gradle", /org\.embulk:embulk-core:([\d\.\+]+)?/)
       lang = :java
-      from_ver = version(ms[0][1])
+      from_ver = version(ms[0][1].gsub(/\++/, '0'))   # replaces "0.8.+" to "0.8.0"
       puts "Detected Java plugin for Embulk #{from_ver}..."
 
     elsif ms = migrator.match("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s+([\d\.]+)\W+/)
@@ -67,7 +67,7 @@ EOF
     ##
 
     # update version at the end
-    migrator.replace("**/build.gradle", /org\.embulk:embulk-(?:core|standards):([\d\.]+)?/, Embulk::VERSION)
+    migrator.replace("**/build.gradle", /org\.embulk:embulk-(?:core|standards):([\d\.\+]+)?/, Embulk::VERSION)
   end
 
   def self.migrate_ruby_plugin(migrator, from_ver)
