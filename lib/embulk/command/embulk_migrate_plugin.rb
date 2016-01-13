@@ -42,7 +42,7 @@ module Embulk
       migrator.replace("**/*.java", /(commitReport)/, "taskReport")
     end
 
-    if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.[12345]\W+/)
+    if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.\d-/)
       # gradle < 2.6
       require 'embulk/data/package_data'
       data = PackageData.new("new", migrator.path)
