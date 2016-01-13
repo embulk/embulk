@@ -15,4 +15,6 @@ public interface DefaultValueSetter
     void setString(PageBuilder pageBuilder, Column c);
 
     void setTimestamp(PageBuilder pageBuilder, Column c);
+
+    void setJson(PageBuilder pageBuilder, Column c);
 }

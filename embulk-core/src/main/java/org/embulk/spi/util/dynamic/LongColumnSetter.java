@@ -5,6 +5,7 @@ import com.google.common.math.DoubleMath;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public class LongColumnSetter
         extends AbstractDynamicColumnSetter
@@ -40,7 +41,8 @@ public class LongColumnSetter
         try {
             // TODO configurable rounding mode
             lv = DoubleMath.roundToLong(v, RoundingMode.HALF_UP);
-        } catch (ArithmeticException ex) {
+        }
+        catch (ArithmeticException ex) {
             // NaN / Infinite / -Infinite
             defaultValue.setLong(pageBuilder, column);
             return;
@@ -54,7 +56,8 @@ public class LongColumnSetter
         long lv;
         try {
             lv = Long.parseLong(v);
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e) {
             defaultValue.setLong(pageBuilder, column);
             return;
         }
@@ -65,5 +68,11 @@ public class LongColumnSetter
     public void set(Timestamp v)
     {
         pageBuilder.setDouble(column, v.getEpochSecond());
+    }
+
+    @Override
+    public void set(Value v)
+    {
+        pageBuilder.setJson(column, v);
     }
 }

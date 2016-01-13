@@ -98,5 +98,10 @@ public class PagePrinter
         {
             string = timestampFormatters[column.getIndex()].format(reader.getTimestamp(column));
         }
+
+        public void jsonColumn(Column column)
+        {
+            string = reader.getJson(column).toString();
+        }
     }
 }

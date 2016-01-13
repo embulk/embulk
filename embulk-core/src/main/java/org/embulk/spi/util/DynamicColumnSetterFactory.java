@@ -8,11 +8,13 @@ import org.embulk.spi.type.LongType;
 import org.embulk.spi.type.DoubleType;
 import org.embulk.spi.type.StringType;
 import org.embulk.spi.type.TimestampType;
+import org.embulk.spi.type.JsonType;
 import org.embulk.spi.util.dynamic.BooleanColumnSetter;
 import org.embulk.spi.util.dynamic.LongColumnSetter;
 import org.embulk.spi.util.dynamic.DoubleColumnSetter;
 import org.embulk.spi.util.dynamic.StringColumnSetter;
 import org.embulk.spi.util.dynamic.TimestampColumnSetter;
+import org.embulk.spi.util.dynamic.JsonColumnSetter;
 import org.embulk.spi.util.dynamic.DefaultValueSetter;
 import org.embulk.spi.util.dynamic.NullDefaultValueSetter;
 import org.embulk.spi.time.TimestampFormatter;
@@ -58,6 +60,10 @@ public class DynamicColumnSetterFactory
             TimestampParser parser = new TimestampParser(task.getJRuby(),
                     getTimestampFormat(column).getFormat(), getTimeZone(column));
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
+        } else if (type instanceof JsonType) {
+            TimestampFormatter formatter = new TimestampFormatter(task.getJRuby(),
+                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+            return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
         throw new ConfigException("Unknown column type: "+type);
     }

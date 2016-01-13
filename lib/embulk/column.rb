@@ -57,6 +57,8 @@ module Embulk
         Java::Types::STRING
       when :timestamp
         Java::Types::TIMESTAMP
+      when :json
+        Java::Types::JSON
       else
         raise ArgumentError, "Unknown type #{ruby_type.inspect}: supported types are :boolean, :long, :double, :string and :timestamp"
       end

@@ -4,6 +4,7 @@ import java.math.RoundingMode;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public class DoubleColumnSetter
         extends AbstractDynamicColumnSetter
@@ -57,5 +58,11 @@ public class DoubleColumnSetter
         double sec = (double) v.getEpochSecond();
         double frac = v.getNano() / 1000000000.0;
         pageBuilder.setDouble(column, sec + frac);
+    }
+
+    @Override
+    public void set(Value v)
+    {
+        pageBuilder.setJson(column, v);
     }
 }

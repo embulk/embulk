@@ -92,6 +92,13 @@ public class MockFormatterPlugin implements FormatterPlugin
                             record.add(pageReader.getTimestamp(column));
                         }
                     }
+
+                    public void jsonColumn(Column column)
+                    {
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getJson(column));
+                        }
+                    }
                 });
                 records.add(record);
             }

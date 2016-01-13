@@ -107,6 +107,16 @@ public class Pages
                 visit(column, record.getTimestamp(column));
             }
         }
+
+        @Override
+        public void jsonColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getJson(column));
+            }
+        }
     }
 
     public static Object getObject(PageReader record, Column column)

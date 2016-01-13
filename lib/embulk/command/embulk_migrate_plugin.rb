@@ -50,6 +50,18 @@ module Embulk
       migrator.write "gradle/wrapper/gradle-wrapper.properties", data.content("java/gradle/wrapper/gradle-wrapper.properties")
     end
 
+    if !migrator.match("**/*.java", /void\s+jsonColumn/) && ms = migrator.match("**/*.java", /^(\W+).*?void\s+timestampColumn/)
+      indent = ms.first[1]
+      replace =  <<EOF
+
+#{indent}public void jsonColumn(Column column) {
+#{indent}    throw new UnsupportedOperationException("This plugin doesn't support json type");
+#{indent}}
+
+#{indent}@Override
+EOF
+      migrator.replace("**/*.java", /(\r?\n)(\W+).*?void\s+timestampColumn/, replace)
+    end
     #
     # add rules...
     ##

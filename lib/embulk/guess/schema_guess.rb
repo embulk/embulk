@@ -68,6 +68,12 @@ module Embulk::Guess
           return nil
         end
 
+        begin
+          JSON.parse(str)
+          return "json"
+        rescue
+        end
+
         return "string"
       end
 

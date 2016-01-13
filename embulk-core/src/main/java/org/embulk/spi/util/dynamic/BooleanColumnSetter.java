@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public class BooleanColumnSetter
         extends AbstractDynamicColumnSetter
@@ -60,5 +61,11 @@ public class BooleanColumnSetter
     public void set(Timestamp v)
     {
         defaultValue.setBoolean(pageBuilder, column);
+    }
+
+    @Override
+    public void set(Value v)
+    {
+        pageBuilder.setJson(column, v);
     }
 }

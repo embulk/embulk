@@ -20,6 +20,7 @@ public class TypeDeserializer
         builder.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
         builder.put(StringType.STRING.getName(), StringType.STRING);
         builder.put(TimestampType.TIMESTAMP.getName(), TimestampType.TIMESTAMP);
+        builder.put(JsonType.JSON.getName(), JsonType.JSON);
         stringToTypeMap = builder.build();
     }
 

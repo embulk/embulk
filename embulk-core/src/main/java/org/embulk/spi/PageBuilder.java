@@ -11,6 +11,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import org.msgpack.value.Value;
+import org.msgpack.value.ImmutableValue;
 import org.embulk.spi.time.Timestamp;
 
 public class PageBuilder
@@ -29,7 +31,8 @@ public class PageBuilder
     private int position;
     private final byte[] nullBitSet;
     private final BiMap<String, Integer> stringReferences = HashBiMap.create();
-    private int stringReferenceSize;
+    private List<ImmutableValue> valueReferences = new ArrayList<>();
+    private int referenceSize;
     private int nextVariableLengthDataOffset;
 
     public PageBuilder(BufferAllocator allocator, Schema schema, PageOutput output)
@@ -52,7 +55,8 @@ public class PageBuilder
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences.clear();
-        this.stringReferenceSize = 0;
+        this.valueReferences = new ArrayList<>();
+        this.referenceSize = 0;
     }
 
     public Schema getSchema()
@@ -126,8 +130,23 @@ public class PageBuilder
             int index = stringReferences.size();
             stringReferences.put(value, index);
             bufferSlice.setInt(getOffset(columnIndex), index);
-            stringReferenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
+            referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
         }
+        clearNull(columnIndex);
+    }
+
+    public void setJson(Column column, Value value)
+    {
+        // TODO check type?
+        setJson(column.getIndex(), value);
+    }
+
+    public void setJson(int columnIndex, Value value)
+    {
+        int index = valueReferences.size();
+        valueReferences.add(value.immutableValue());
+        bufferSlice.setInt(getOffset(columnIndex), index);
+        referenceSize += 256;  // TODO how to estimate size of the value?
         clearNull(columnIndex);
     }
 
@@ -189,7 +208,7 @@ public class PageBuilder
         Arrays.fill(nullBitSet, (byte) -1);
 
         // flush if next record will not fit in this buffer
-        if (buffer.capacity() < position + nextVariableLengthDataOffset + stringReferenceSize) {
+        if (buffer.capacity() < position + nextVariableLengthDataOffset + referenceSize) {
             flush();
         }
     }
@@ -202,7 +221,9 @@ public class PageBuilder
             buffer.limit(position);
 
             // flush page
-            Page page = Page.wrap(buffer).setStringReferences(getSortedStringReferences());
+            Page page = Page.wrap(buffer)
+                .setStringReferences(getSortedStringReferences())
+                .setValueReferences(valueReferences);
             buffer = null;
             bufferSlice = null;
             output.add(page);

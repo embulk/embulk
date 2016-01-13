@@ -12,6 +12,7 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.util.DynamicColumnSetter;
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public abstract class AbstractDynamicColumnSetter
         implements DynamicColumnSetter
@@ -39,6 +40,8 @@ public abstract class AbstractDynamicColumnSetter
     public abstract void set(String value);
 
     public abstract void set(Timestamp value);
+
+    public abstract void set(Value value);
 
     public void setRubyObject(IRubyObject rubyObject)
     {

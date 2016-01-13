@@ -4,6 +4,7 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
+import org.msgpack.value.Value;
 
 public class StringColumnSetter
         extends AbstractDynamicColumnSetter
@@ -52,5 +53,11 @@ public class StringColumnSetter
     public void set(Timestamp v)
     {
         pageBuilder.setString(column, timestampFormatter.format(v));
+    }
+
+    @Override
+    public void set(Value v)
+    {
+        pageBuilder.setJson(column, v);
     }
 }

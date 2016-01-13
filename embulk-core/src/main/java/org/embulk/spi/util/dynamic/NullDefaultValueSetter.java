@@ -31,4 +31,9 @@ public class NullDefaultValueSetter
     {
         pageBuilder.setNull(c);
     }
+
+    public void setJson(PageBuilder pageBuilder, Column c)
+    {
+        pageBuilder.setNull(c);
+    }
 }
