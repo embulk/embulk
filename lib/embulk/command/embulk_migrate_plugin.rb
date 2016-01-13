@@ -66,6 +66,38 @@ EOF
     # add rules...
     ##
 
+    # add checkstyle
+    unless migrator.match("build.gradle", /id\s+(?<quote>["'])checkstyle\k<quote>/)
+      migrator.insert_line("build.gradle", /^([ \t]*)id( +)(["'])java["']/) {|m|
+        "#{m[1]}id#{m[2]}#{m[3]}checkstyle#{m[3]}"
+      }
+      migrator.write "config/checkstyle/checkstyle.xml", migrator.new_data.content("java/config/checkstyle/checkstyle.xml")
+    end
+
+    unless migrator.match("build.gradle", /checkstyle\s+{/)
+      migrator.write "config/checkstyle/default.xml", migrator.new_data.content("java/config/checkstyle/default.xml")
+      migrator.insert_line("build.gradle", /^([ \t]*)task\s+gem\W.*{/) {|m|
+        <<-EOF
+#{m[1]}checkstyle {
+#{m[1]}    configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+#{m[1]}    toolVersion = '6.14.1'
+#{m[1]}}
+#{m[1]}checkstyleMain {
+#{m[1]}    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+#{m[1]}    ignoreFailures = true
+#{m[1]}}
+#{m[1]}checkstyleTest {
+#{m[1]}    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+#{m[1]}    ignoreFailures = true
+#{m[1]}}
+#{m[1]}task checkstyle(type: Checkstyle) {
+#{m[1]}    classpath = sourceSets.main.output + sourceSets.test.output
+#{m[1]}    source = sourceSets.main.allJava + sourceSets.test.allJava
+#{m[1]}}
+EOF
+      }
+    end
+
     # update version at the end
     migrator.replace("**/build.gradle", /org\.embulk:embulk-(?:core|standards):([\d\.\+]+)?/, Embulk::VERSION)
   end
@@ -98,9 +130,14 @@ EOF
     def initialize(path)
       @path = path
       @modified_files = {}
+
+      require 'fileutils'
+      require 'embulk/data/package_data'
+      @new_data = PackageData.new("new", path)
     end
 
     attr_reader :path
+    attr_reader :new_data
 
     def modified_files
       @modified_files.keys
@@ -136,13 +173,13 @@ EOF
       ms
     end
 
-    def insert_line(glob, pattern, text=nil)
+    def insert_line(glob, pattern, text: nil)
       ms = Dir[File.join(@path, glob)].map do |file|
         data = read(file)
         if m = data.match(pattern)
           ln = m.pre_match.split("\n").count
           replace = text || yield(m)
-          lines = data.split("\n")
+          lines = data.split("\n", -1)  # preserve the last empty line
           lines.insert(ln + 1, replace)
           data = lines.join("\n")
           modify(file, data)
@@ -158,7 +195,9 @@ EOF
     end
 
     def write(file, data)
-      modify(File.join(@path, file), data)
+      dst = File.join(@path, file)
+      FileUtils.mkdir_p File.dirname(dst)
+      modify(dst, data)
     end
 
     private
