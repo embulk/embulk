@@ -43,7 +43,7 @@ public class PageTestUtils
                     } else if (value instanceof Timestamp) {
                         builder.setTimestamp(column, (Timestamp) value);
                     } else if (value instanceof Value) {
-                        builder.setValue(column, (Value) value);
+                        builder.setJson(column, (Value) value);
                     } else {
                         throw new IllegalStateException(
                                 "Unsupported type in test utils: "
