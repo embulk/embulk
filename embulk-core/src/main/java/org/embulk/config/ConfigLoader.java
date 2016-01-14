@@ -15,6 +15,9 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.representer.Representer;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 public class ConfigLoader
 {
@@ -60,7 +63,7 @@ public class ConfigLoader
 
     public ConfigSource fromYamlString(String string)
     {
-        JsonNode node = objectToJson(new Yaml().load(string));
+        JsonNode node = objectToJson(newYaml().load(string));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
     }
@@ -74,7 +77,7 @@ public class ConfigLoader
 
     public ConfigSource fromYaml(InputStream stream) throws IOException
     {
-        JsonNode node = objectToJson(new Yaml().load(stream));
+        JsonNode node = objectToJson(newYaml().load(stream));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
     }
@@ -107,7 +110,7 @@ public class ConfigLoader
     {
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
         DataSource ds = new DataSourceImpl(model, source);
-        Yaml yaml = new Yaml();
+        Yaml yaml = newYaml();
         for (Map.Entry<String, String> pair : props.entrySet()) {
             if (!pair.getKey().startsWith(keyPrefix)) {
                 continue;
@@ -137,5 +140,10 @@ public class ConfigLoader
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private Yaml newYaml()
+    {
+        return new Yaml(new SafeConstructor(), new Representer(), new DumperOptions(), new YamlTagResolver());
     }
 }
