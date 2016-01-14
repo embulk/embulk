@@ -67,12 +67,12 @@ public class LongColumnSetter
     @Override
     public void set(Timestamp v)
     {
-        pageBuilder.setDouble(column, v.getEpochSecond());
+        pageBuilder.setLong(column, v.getEpochSecond());
     }
 
     @Override
     public void set(Value v)
     {
-        pageBuilder.setJson(column, v);
+        defaultValue.setLong(pageBuilder, column);
     }
 }
