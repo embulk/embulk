@@ -58,6 +58,6 @@ public class StringColumnSetter
     @Override
     public void set(Value v)
     {
-        pageBuilder.setJson(column, v);
+        pageBuilder.setString(column, v.toJson());
     }
 }

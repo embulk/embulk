@@ -12,6 +12,7 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.util.DynamicColumnSetter;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.json.RubyValueApi;
 import org.msgpack.value.Value;
 
 public abstract class AbstractDynamicColumnSetter
@@ -76,7 +77,7 @@ public abstract class AbstractDynamicColumnSetter
             int nano = (int) ((msec % 1000) * 1000000 + nsec % 1000000000);
             set(Timestamp.ofEpochSecond(sec, nano));
         } else {
-            throw rubyObject.getRuntime().newTypeError("cannot convert instance of " + rubyObject.getMetaClass() + " to nil, true, false, Integer, Float, String, or Time");
+            set(RubyValueApi.toValue(rubyObject.getRuntime(), rubyObject));
         }
     }
 }

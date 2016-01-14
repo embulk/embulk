@@ -67,6 +67,6 @@ public class TimestampColumnSetter
     @Override
     public void set(Value v)
     {
-        pageBuilder.setJson(column, v);
+        defaultValue.setTimestamp(pageBuilder, column);
     }
 }

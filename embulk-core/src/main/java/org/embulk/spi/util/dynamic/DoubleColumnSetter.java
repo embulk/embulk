@@ -63,6 +63,6 @@ public class DoubleColumnSetter
     @Override
     public void set(Value v)
     {
-        pageBuilder.setJson(column, v);
+        defaultValue.setDouble(pageBuilder, column);
     }
 }

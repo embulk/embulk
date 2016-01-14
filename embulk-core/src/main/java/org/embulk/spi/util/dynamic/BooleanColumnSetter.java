@@ -53,7 +53,7 @@ public class BooleanColumnSetter
         if (TRUE_STRINGS.contains(v)) {
             pageBuilder.setBoolean(column, true);
         } else {
-            defaultValue.setDouble(pageBuilder, column);
+            defaultValue.setBoolean(pageBuilder, column);
         }
     }
 
@@ -66,6 +66,6 @@ public class BooleanColumnSetter
     @Override
     public void set(Value v)
     {
-        pageBuilder.setJson(column, v);
+        defaultValue.setBoolean(pageBuilder, column);
     }
 }
