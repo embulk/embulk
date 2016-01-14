@@ -11,7 +11,7 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.type.Type;
-
+import org.msgpack.value.Value;
 import com.google.common.collect.ImmutableList;
 
 public class PageTestUtils
@@ -42,6 +42,8 @@ public class PageTestUtils
                         builder.setString(column, (String) value);
                     } else if (value instanceof Timestamp) {
                         builder.setTimestamp(column, (Timestamp) value);
+                    } else if (value instanceof Value) {
+                        builder.setValue(column, (Value) value);
                     } else {
                         throw new IllegalStateException(
                                 "Unsupported type in test utils: "
