@@ -11,6 +11,7 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Page;
 import org.embulk.spi.util.Pages;
+import org.msgpack.value.Value;
 
 public abstract class PreviewPrinter
         implements Closeable
@@ -67,6 +68,8 @@ public abstract class PreviewPrinter
             }
             return obj.toString();
         } else if (obj instanceof Timestamp) {
+            return obj.toString();
+        } else if (obj instanceof Value) {
             return obj.toString();
         } else {
             return modelManager.writeObject(obj);
