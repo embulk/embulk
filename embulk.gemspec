@@ -20,7 +20,7 @@ Gem::Specification.new do |gem|
   gem.has_rdoc      = false
 
   if RUBY_PLATFORM =~ /java/i
-    gem.add_dependency "bundler", '~> 1.10.6'
+    gem.add_dependency "bundler", '>= 1.10.6'
     gem.add_dependency "liquid", '~> 3.0.6'
 
     # For embulk/guess/charset.rb. See also embulk-core/build.gradle
