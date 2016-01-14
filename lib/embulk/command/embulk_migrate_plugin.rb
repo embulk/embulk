@@ -128,10 +128,12 @@ EOF
     if from_ver <= version("0.1.0")
       # add add_development_dependency
       migrator.insert_line("**/*.gemspec", /([ \t]*\w+)\.add_development_dependency/) {|m|
-        "#{m[1]}.add_development_dependency 'embulk', ['~> #{Embulk::VERSION}']"
+        "#{m[1]}.add_development_dependency 'embulk', ['>= #{Embulk::VERSION}']"
       }
     else
-      migrator.replace("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s+([\d\.]+)\W+/, Embulk::VERSION)
+      unless migrator.replace("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s*(\~\>\s*[\d\.]+)\W+/, ">= #{Embulk::VERSION}")
+        migrator.replace("**/*.gemspec", /add_(?:development_)?dependency\s+\W+embulk\W+\s*([\d\.]+)\W+/, Embulk::VERSION)
+      end
     end
   end
 
