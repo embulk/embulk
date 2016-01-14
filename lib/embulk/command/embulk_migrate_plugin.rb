@@ -42,6 +42,7 @@ module Embulk
       migrator.replace("**/*.java", /(commitReport)/, "taskReport")
     end
 
+    # upgrade gradle version
     if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.\d-/)
       # gradle < 2.10 (\d matches one digit)
       require 'embulk/data/package_data'
@@ -50,6 +51,7 @@ module Embulk
       migrator.write "gradle/wrapper/gradle-wrapper.jar", data.bincontent("java/gradle/wrapper/gradle-wrapper.jar")
     end
 
+    # add jsonColumn method
     if !migrator.match("**/*.java", /void\s+jsonColumn/) && ms = migrator.match("**/*.java", /^(\W+).*?void\s+timestampColumn/)
       indent = ms.first[1]
       replace =  <<EOF
@@ -62,9 +64,18 @@ module Embulk
 EOF
       migrator.replace("**/*.java", /(\r?\n)(\W+).*?void\s+timestampColumn/, replace)
     end
-    #
-    # add rules...
-    ##
+
+    # add sourceCompatibility and targetCompatibility
+    unless migrator.match("build.gradle", /targetCompatibility/)
+      migrator.insert_line("build.gradle", /^([ \t]*)dependencies\s*{/) {|m|
+        "#{m[1]}targetCompatibility = 1.7\n"
+      }
+    end
+    unless migrator.match("build.gradle", /sourceCompatibility/)
+      migrator.insert_line("build.gradle", /^([ \t]*)targetCompatibility/) {|m|
+        "#{m[1]}sourceCompatibility = 1.7"
+      }
+    end
 
     # add checkstyle
     unless migrator.match("build.gradle", /id\s+(?<quote>["'])checkstyle\k<quote>/)
@@ -97,6 +108,10 @@ EOF
 EOF
       }
     end
+
+    #
+    # add rules...
+    ##
 
     # update version at the end
     migrator.replace("**/build.gradle", /org\.embulk:embulk-(?:core|standards):([\d\.\+]+)?/, Embulk::VERSION)
