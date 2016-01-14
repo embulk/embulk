@@ -33,6 +33,8 @@ public class Bootstrap
 {
     private List<Module> modules;
 
+    private LifeCycleListener lifeCycleListener = null;
+
     private boolean requireExplicitBindings = true;
 
     private boolean started;
@@ -45,6 +47,12 @@ public class Bootstrap
     public Bootstrap(Iterable<? extends Module> modules)
     {
         this.modules = ImmutableList.copyOf(modules);
+    }
+
+    public Bootstrap useLifeCycleListener(LifeCycleListener listener)
+    {
+        this.lifeCycleListener = listener;
+        return this;
     }
 
     public Bootstrap requireExplicitBindings(boolean requireExplicitBindings)
@@ -63,18 +71,6 @@ public class Bootstrap
         modules = ImmutableList.copyOf(Iterables.concat(modules, additionalModules));
         return this;
     }
-
-    //public Bootstrap onPreDestroy()
-    //{
-    //}
-
-    //public Bootstrap onPreDestroyException()
-    //{
-    //}
-
-    //public Bootstrap onStop()
-    //{
-    //}
 
     //public Bootstrap forEachModule(Consumer<? super Module> function)
     //{
@@ -143,7 +139,7 @@ public class Bootstrap
             }
         });
 
-        moduleList.add(new LifeCycleModule());
+        moduleList.add(new LifeCycleModule(lifeCycleListener));
 
         Injector injector = Guice.createInjector(Stage.PRODUCTION, moduleList.build());
 
