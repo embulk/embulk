@@ -19,23 +19,23 @@ module Embulk::Java
 
   module SPI
     module Time
-      include_package 'org.embulk.time'
+      include_package 'org.embulk.spi.time'
     end
 
     module Json
-      include_package 'org.embulk.json'
+      include_package 'org.embulk.spi.json'
     end
 
     module Type
-      include_package 'org.embulk.type'
+      include_package 'org.embulk.spi.type'
     end
 
     module Unit
-      include_package 'org.embulk.unit'
+      include_package 'org.embulk.spi.unit'
     end
 
     module Util
-      include_package 'org.embulk.util'
+      include_package 'org.embulk.spi.util'
     end
 
     include_package 'org.embulk.spi'

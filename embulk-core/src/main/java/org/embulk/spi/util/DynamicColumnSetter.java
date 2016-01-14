@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
 public interface DynamicColumnSetter
 {
@@ -15,4 +16,6 @@ public interface DynamicColumnSetter
     void set(String value);
 
     void set(Timestamp value);
+
+    void set(Value value);
 }
