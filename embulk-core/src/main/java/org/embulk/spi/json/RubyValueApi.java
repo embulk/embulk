@@ -9,6 +9,7 @@ import org.msgpack.core.buffer.MessageBuffer;
 import org.msgpack.value.Value;
 import org.jruby.Ruby;
 import org.jruby.RubyString;
+import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.util.ByteList;
 import org.jcodings.specific.ASCIIEncoding;
 
@@ -51,5 +52,11 @@ public class RubyValueApi
         catch (IOException ex) {
             throw Throwables.propagate(ex);
         }
+    }
+
+    public static Value toValue(Ruby runtime, IRubyObject object)
+    {
+        RubyString string = (RubyString) object.callMethod(runtime.getCurrentContext(), "to_msgpack");
+        return fromMessagePack(string);
     }
 }
