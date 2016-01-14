@@ -60,7 +60,7 @@ public class LocalExecutorPlugin
         Logger log = Exec.getLogger(LocalExecutorPlugin.class);
         int maxThreads = config.get(Integer.class, "max_threads", defaultMaxThreads);
         int minThreads = config.get(Integer.class, "min_output_tasks", defaultMinThreads);
-        if (inputTaskCount < minThreads) {
+        if (inputTaskCount > 0 && inputTaskCount < minThreads) {
             int scatterCount = (minThreads + inputTaskCount - 1) / inputTaskCount;
             log.info("Using local thread executor with max_threads={} / output tasks {} = input tasks {} * {}",
                     maxThreads, inputTaskCount * scatterCount, inputTaskCount, scatterCount);
