@@ -4,8 +4,6 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
-import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.json.JsonParseException;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
@@ -13,7 +11,6 @@ public class JsonColumnSetter
         extends AbstractDynamicColumnSetter
 {
     private final TimestampFormatter timestampFormatter;
-    private final JsonParser jsonParser;
 
     public JsonColumnSetter(PageBuilder pageBuilder, Column column,
                             DefaultValueSetter defaultValue,
@@ -21,7 +18,6 @@ public class JsonColumnSetter
     {
         super(pageBuilder, column, defaultValue);
         this.timestampFormatter = timestampFormatter;
-        this.jsonParser = new JsonParser();
     }
 
     @Override
@@ -51,12 +47,7 @@ public class JsonColumnSetter
     @Override
     public void set(String v)
     {
-        try {
-            pageBuilder.setJson(column, jsonParser.parse(v));
-        }
-        catch (JsonParseException ex) {
-            defaultValue.setTimestamp(pageBuilder, column);
-        }
+        pageBuilder.setJson(column, ValueFactory.newString(v));
     }
 
     @Override
