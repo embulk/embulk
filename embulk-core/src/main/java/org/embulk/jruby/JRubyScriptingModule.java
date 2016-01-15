@@ -14,7 +14,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
-import org.jruby.CompatVersion;
 import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.plugin.PluginSource;
@@ -44,6 +43,7 @@ public class JRubyScriptingModule
     {
         private final Injector injector;
         private final boolean useGlobalRubyRuntime;
+        private final String gemHome;
 
         @Inject
         public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
@@ -53,6 +53,8 @@ public class JRubyScriptingModule
             // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
             // instantiated in this JVM.
             this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
+
+            this.gemHome = systemConfig.get(String.class, "gem_home", null);
 
             // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
             // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
@@ -74,6 +76,18 @@ public class JRubyScriptingModule
 //                loadPaths.add(coreJarPath);
 //            }
 //            jruby.setLoadPaths(loadPaths);
+
+            if (gemHome != null) {
+                // Overwrites GEM_HOME and GEM_PATH. GEM_PATH becomes same with GEM_HOME. Therefore
+                // with this code, there're no ways to set extra GEM_PATHs in addition to GEM_HOME.
+                // Here doesn't modify ENV['GEM_HOME'] so that a JVM process can create multiple
+                // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
+                // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
+                // is used.
+                jruby.callMethod(
+                        jruby.runScriptlet("Gem"),
+                        "use_paths", gemHome, gemHome);
+            }
 
             // load embulk.rb
             jruby.runScriptlet("require 'embulk'");
