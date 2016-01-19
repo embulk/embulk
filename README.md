@@ -46,7 +46,7 @@ Next step: [Running example in 4 commands](#running-example)
 
 ```
 embulk example ./try1
-embulk guess   ./try1/example.yml -o config.yml
+embulk guess   ./try1/seed.yml -o config.yml
 embulk preview config.yml
 embulk run     config.yml
 ```

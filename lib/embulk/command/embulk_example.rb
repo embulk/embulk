@@ -18,8 +18,8 @@ id,account,time,purchase,comment
 EOF
     end
 
-    puts "  Creating #{path}/example.yml"
-    File.open(File.join(path, 'example.yml'), 'w') do |f|
+    puts "  Creating #{path}/seed.yml"
+    File.open(File.join(path, 'seed.yml'), 'w') do |f|
       f.write <<EOF
 in:
   type: file
