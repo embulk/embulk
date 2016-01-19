@@ -78,8 +78,18 @@ module Embulk
       op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
         options[:resume_state_path] = path
       end
-      op.on('-o', '--output PATH', 'Path to a file to write the next configuration') do |path|
+      op.on('-o', '--output PATH', '(deprecated)') do |path|
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Run with -o option is deprecated. Please use -c option instead. For example,"
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}:   $ embulk run config.yml -c diff.yml"
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: This -c option stores only diff of the next configuration."
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: The diff will be merged to the original config.yml file."
+        STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
         options[:next_config_output_path] = path
+      end
+      op.on('-c', '--config-diff PATH', 'Path to a file to read & write the next configuration diff') do |path|
+        options[:next_config_diff_path] = path
       end
       plugin_load_ops.call
       java_embed_ops.call
