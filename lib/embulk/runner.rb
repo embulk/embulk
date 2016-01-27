@@ -61,6 +61,11 @@ module Embulk
       check_file_writable(config_diff_path)
       check_file_writable(resume_state_path)
 
+      if config_diff_path
+        lastConfigDiff = read_config(config_diff_path, options)
+        configSource = configSource.merge(lastConfigDiff)
+      end
+
       if resume_state_path
         begin
           resumeConfig = read_yaml_config_file(resume_state_path)
