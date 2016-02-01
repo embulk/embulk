@@ -53,11 +53,18 @@ module Embulk
 
     def run(config, options={})
       configSource = read_config(config, options)
-      output_path = options[:next_config_output_path]
+      config_diff_path = options[:next_config_diff_path]
+      output_path = options[:next_config_output_path]  # deprecated
       resume_state_path = options[:resume_state_path]
 
-      check_file_writable(output_path)
+      check_file_writable(output_path)  # deprecated
+      check_file_writable(config_diff_path)
       check_file_writable(resume_state_path)
+
+      if config_diff_path
+        lastConfigDiff = read_config(config_diff_path, options)
+        configSource = configSource.merge(lastConfigDiff)
+      end
 
       if resume_state_path
         begin
@@ -100,7 +107,8 @@ module Embulk
       Embulk.logger.info("Committed.")
       Embulk.logger.info("Next config diff: #{configDiff.toString}")
 
-      write_config(output_path, configSource.merge(configDiff))
+      write_config(config_diff_path, configDiff)
+      write_config(output_path, configSource.merge(configDiff))  # deprecated
     end
 
     #def resume_state(config, options={})
