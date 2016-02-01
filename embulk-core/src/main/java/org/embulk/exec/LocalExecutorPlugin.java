@@ -320,30 +320,52 @@ public class LocalExecutorPlugin
         {
             private final PageOutput output;
             private final Future<Throwable> future;
-            private boolean done;
-            private Page queued;
+            private volatile int addWaiting;
+            private volatile Page queued;
 
             public OutputWorker(PageOutput output, ExecutorService executor)
             {
                 this.output = output;
-                this.done = done;
+                this.addWaiting = 0;
                 this.future = executor.submit(this);
+            }
+
+            public synchronized void done()
+                    throws InterruptedException
+            {
+                while (true) {
+                    if (queued == null && addWaiting == 0) {
+                        queued = DONE_PAGE;
+                        notifyAll();
+                        return;
+                    }
+                    else if (queued == DONE_PAGE) {
+                        return;
+                    }
+                    wait();
+                }
             }
 
             public synchronized void add(Page page)
                     throws InterruptedException
             {
-                while (true) {
-                    if (queued == null) {
-                        queued = page;
-                        notifyAll();
-                        return;
+                addWaiting++;
+                try {
+                    while (true) {
+                        if (queued == null) {
+                            queued = page;
+                            notifyAll();
+                            return;
+                        }
+                        else if (queued == DONE_PAGE) {
+                            page.release();
+                            return;
+                        }
+                        wait();
                     }
-                    else if (queued == DONE_PAGE) {
-                        page.release();
-                        return;
-                    }
-                    wait();
+                }
+                finally {
+                    addWaiting--;
                 }
             }
 
@@ -470,8 +492,8 @@ public class LocalExecutorPlugin
         {
             completeWorkers();
             for (int i = 0; i < scatterCount; i++) {
-                if (trans[i] != null) {
-                    trans[i].finish();
+                if (filtereds[i] != null) {
+                    filtereds[i].finish();
                 }
             }
         }
@@ -517,7 +539,7 @@ public class LocalExecutorPlugin
                 OutputWorker worker = outputWorkers[i];
                 if (worker != null) {
                     try {
-                        worker.add(DONE_PAGE);
+                        worker.done();
                     }
                     catch (InterruptedException ex) {
                         throw Throwables.propagate(ex);
