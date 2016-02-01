@@ -410,14 +410,14 @@ Example
       ...
       formatter:
         type: csv
-        delimiter: '\t'
+        delimiter: "\t"
         newline: CRLF
         newline_in_field: LF
         charset: UTF-8
         quote_policy: MINIMAL
         quote: '"'
-        escape: '\\'
-        null_string: '\\N'
+        escape: "\\"
+        null_string: "\\N"
         default_timezone: 'UTC'
         column_options:
           mycol1: {format: '%Y-%m-%d %H:%M:%S'}
