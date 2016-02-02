@@ -37,7 +37,7 @@ module Embulk::Guess
       def types_from_array_records(samples)
         columnar_types = []
         samples.each do |record|
-          record.each_with_index {|value,i| (columnar_types[i] ||= []) << guess_type(value.to_s) }
+          record.each_with_index {|value,i| (columnar_types[i] ||= []) << guess_type(value) }
         end
         columnar_types.map {|types| merge_types(types) }
       end
@@ -45,6 +45,11 @@ module Embulk::Guess
       private
 
       def guess_type(str)
+        if str.is_a?(Hash) || str.is_a?(Array)
+          return "json"
+        end
+        str = str.to_s
+
         if TRUE_STRINGS[str] || FALSE_STRINGS[str]
           return "boolean"
         end
