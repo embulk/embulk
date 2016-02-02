@@ -61,7 +61,7 @@ module Embulk
       check_file_writable(config_diff_path)
       check_file_writable(resume_state_path)
 
-      if config_diff_path
+      if config_diff_path && File.size(config_diff_path) > 0
         lastConfigDiff = read_config(config_diff_path, options)
         configSource = configSource.merge(lastConfigDiff)
       end
