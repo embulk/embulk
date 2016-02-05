@@ -122,12 +122,12 @@ module Embulk
       case config
       when String
         case config
-        when /\.yml\.liquid$/
+        when /\.ya?ml\.liquid$/
           require 'liquid'
           template_params = options[:template_params] || {}
           template_include_path = File.expand_path(options[:template_include_path] || File.dirname(config)) unless options[:template_include_path] == false
           @embed.newConfigLoader.fromYamlString run_liquid(File.read(config), template_params, template_include_path)
-        when /\.yml$/
+        when /\.ya?ml$/
           @embed.newConfigLoader.fromYamlString File.read(config)
         else
           raise ConfigError.new("Unsupported file extension. Supported file extensions are .yml and .yml.liquid: #{config}")
