@@ -47,14 +47,17 @@ public class GzipFileEncoderPlugin
         final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
 
         return new OutputStreamFileOutput(new OutputStreamFileOutput.Provider() {
+            private GZIPOutputStream gzos;
+
             public OutputStream openNext() throws IOException
             {
                 output.nextFile();
-                return new GZIPOutputStream(output) {
+                gzos = new GZIPOutputStream(output) {
                     {
                         this.def.setLevel(task.getLevel());
                     }
                 };
+                return gzos;
             }
 
             public void finish() throws IOException
@@ -65,6 +68,7 @@ public class GzipFileEncoderPlugin
             public void close() throws IOException
             {
                 fileOutput.close();
+                gzos.close();
             }
         });
     }
