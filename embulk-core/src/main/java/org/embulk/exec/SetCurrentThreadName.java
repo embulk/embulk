@@ -1,5 +1,7 @@
 package org.embulk.exec;
 
+import static java.util.Locale.ENGLISH;
+
 public class SetCurrentThreadName
         implements AutoCloseable
 {
@@ -8,7 +10,8 @@ public class SetCurrentThreadName
     public SetCurrentThreadName(String name)
     {
         this.original = Thread.currentThread().getName();
-        Thread.currentThread().setName(name);
+        Thread thread = Thread.currentThread();
+        thread.setName(String.format(ENGLISH, "%04d:", thread.getId()) + name);
     }
 
     @Override
