@@ -7,6 +7,7 @@ Release Notes
     release/release-0.8.2
     release/release-0.8.1
     release/release-0.8.0
+    release/release-0.7.11
     release/release-0.7.10
     release/release-0.7.9
     release/release-0.7.8
