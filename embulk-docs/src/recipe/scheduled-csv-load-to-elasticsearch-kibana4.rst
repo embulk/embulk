@@ -93,7 +93,7 @@ In fact, this configuration lacks some important information. However, embulk gu
 
 .. code-block:: console
 
-    $ embulk guess config.yml -o config-complete.yml
+    $ embulk guess ./mydata/seed.yml -o config.yml
 
 The generated config-complete.yml file should include complete information as following:
 
@@ -137,24 +137,25 @@ Now, you can run the bulk loading:
 
 .. code-block:: console
 
-    $ embulk run config-complete.yml -o next-config.yml
+    $ embulk run config.yml -c diff.yml
 
 Scheduling loading by cron
 ------------------
 
-At the last step, you ran embulk command with ``-o next-config.yml`` file. The ``next-config.yml`` file should include a parameter named ``last_path``:
+At the last step, you ran embulk command with ``-c diff.yml`` file. The ``diff.yml`` file should include a parameter named ``last_path``:
 
 .. code-block:: yaml
 
-    last_path: mydata/csv/sample_01.csv.gz
+    in: {last_path: mydata/csv/sample_01.csv.gz}
+    out: {}
 
 With this configuration, embulk loads the files newer than this file in alphabetical order.
 
-For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only next time. And the next next-config.yml file has ``last_path: mydata/csv/sample_02.csv.gz`` for the next next execution.
+For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only next time. And the next ``diff.yml`` file has ``last_path: mydata/csv/sample_02.csv.gz`` for the next next execution.
 
 So, if you want to loads newly created files every day, you can setup this cron schedule:
 
 .. code-block:: cron
 
-    0 * * * * embulk run /path/to/next-config.yml -o /path/to/next-config.yml
+    0 * * * * embulk run /path/to/config.yml -c /path/to/diff.yml
 
