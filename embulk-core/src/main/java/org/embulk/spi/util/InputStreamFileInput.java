@@ -134,7 +134,6 @@ public class InputStreamFileInput
 
     public Buffer poll()
     {
-        // TODO check current != null and throw Illegal State - file is not opened
         if (current == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");
         }
