@@ -58,8 +58,10 @@ module Embulk
 
       # search gems
       if defined?(::Gem::Specification) && ::Gem::Specification.respond_to?(:find_all)
-        specs = Gem::Specification.find_all do |spec|
-          spec.contains_requirable_file? name
+        specs = Kernel::RUBYGEMS_ACTIVATION_MONITOR.synchronize do  # this lock is added as a workaround of https://github.com/jruby/jruby/issues/3652
+          Gem::Specification.find_all do |spec|
+            spec.contains_requirable_file? name
+          end
         end
 
         # prefer newer version
@@ -78,10 +80,12 @@ module Embulk
     def require_and_show(path, spec=nil)
       require path
       unless spec
-        name, spec = Gem.loaded_specs.find {|name,spec|
-          #spec.files.include?(path)
-          spec.contains_requirable_file?(path)
-        }
+        name, spec = Kernel::RUBYGEMS_ACTIVATION_MONITOR.synchronize do  # this lock is added as a workaround of https://github.com/jruby/jruby/issues/3652
+          Gem.loaded_specs.find {|name,spec|
+            #spec.files.include?(path)
+            spec.contains_requirable_file?(path)
+          }
+        end
       end
       if spec
         unless @loaded_gems[spec.name]
