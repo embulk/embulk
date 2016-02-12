@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.InputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
@@ -13,6 +15,14 @@ import com.fasterxml.jackson.core.JsonToken;
 
 public class JsonParser
 {
+    public interface Stream
+            extends Closeable
+    {
+        Value next() throws IOException;
+
+        void close() throws IOException;
+    }
+
     private final JsonFactory factory;
 
     public JsonParser()
@@ -21,38 +31,129 @@ public class JsonParser
         factory.enable(Feature.ALLOW_UNQUOTED_CONTROL_CHARS);
     }
 
-    public Value parse(String json)
+    public Stream open(InputStream in) throws IOException
     {
-        return new ParseContext(json).parse();
+        return new StreamParseContext(factory, in);
     }
 
-    private class ParseContext
+    public Value parse(String json)
     {
-        private final String json;
-        private final com.fasterxml.jackson.core.JsonParser parser;
+        return new SingleParseContext(factory, json).parse();
+    }
 
-        public ParseContext(String json)
+    private static String sampleJsonString(String json)
+    {
+        if (json.length() < 100) {
+            return json;
+        }
+        else {
+            return json.substring(0, 97) + "...";
+        }
+    }
+
+    private static class StreamParseContext
+        extends AbstractParseContext
+        implements Stream
+    {
+        public StreamParseContext(JsonFactory factory, InputStream in)
+            throws IOException, JsonParseException
         {
-            this.json = json;
+            super(createParser(factory, in));
+        }
+
+        private static com.fasterxml.jackson.core.JsonParser createParser(JsonFactory factory, InputStream in)
+            throws IOException
+        {
             try {
-                this.parser = factory.createParser(json);
+                return factory.createParser(in);
+            }
+            catch (IOException ex) {
+                throw ex;
             }
             catch (Exception ex) {
-                throw new JsonParseException("Failed to parse a JSON string: "+sampleJsonString(json), ex);
+                throw new JsonParseException("Failed to parse JSON", ex);
+            }
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            parser.close();
+        }
+
+        @Override
+        protected String sampleJsonString()
+        {
+            return "in";
+        }
+    }
+
+    private static class SingleParseContext
+        extends AbstractParseContext
+    {
+        private final String json;
+
+        public SingleParseContext(JsonFactory factory, String json)
+        {
+            super(createParser(factory, json));
+            this.json = json;
+        }
+
+        private static com.fasterxml.jackson.core.JsonParser createParser(JsonFactory factory, String json)
+        {
+            try {
+                return factory.createParser(json);
+            }
+            catch (Exception ex) {
+                throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(json), ex);
             }
         }
 
         public Value parse()
         {
             try {
+                return next();
+            }
+            catch (IOException ex) {
+                throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(), ex);
+            }
+        }
+
+        @Override
+        protected String sampleJsonString()
+        {
+            return sampleJsonString(json);
+        }
+    }
+
+    private static abstract class AbstractParseContext
+    {
+        protected final com.fasterxml.jackson.core.JsonParser parser;
+
+        public AbstractParseContext(com.fasterxml.jackson.core.JsonParser parser)
+        {
+            this.parser = parser;
+        }
+
+        protected abstract String sampleJsonString();
+
+        public Value next() throws IOException
+        {
+            try {
                 JsonToken token = parser.nextToken();
                 return jsonTokenToValue(token);
+            }
+            catch (com.fasterxml.jackson.core.JsonParseException ex) {
+                throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(), ex);
+            }
+            catch (IOException ex) {
+                throw ex;
             }
             catch (JsonParseException ex) {
                 throw ex;
             }
-            catch (Exception ex) {
-                throw new JsonParseException("Failed to parse a JSON string: "+sampleJsonString(json), ex);
+            catch (RuntimeException ex) {
+                throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(), ex);
             }
         }
 
@@ -96,7 +197,7 @@ public class JsonParser
                     }
                     String key = parser.getCurrentName();
                     if (key == null) {
-                        throw new JsonParseException("Unexpected token "+token+" at "+parser.getTokenLocation());
+                        throw new JsonParseException("Unexpected token "+token+" at "+parser.getTokenLocation() + ": " + sampleJsonString());
                     }
                     token = parser.nextToken();
                     Value value = jsonTokenToValue(token);
@@ -108,18 +209,8 @@ public class JsonParser
             case END_OBJECT:
             case NOT_AVAILABLE:
             default:
-                throw new JsonParseException("Unexpected token "+token+" at "+parser.getTokenLocation());
+                throw new JsonParseException("Unexpected token "+token+" at "+parser.getTokenLocation() + ": " + sampleJsonString());
             }
-        }
-    }
-
-    private static String sampleJsonString(String json)
-    {
-        if (json.length() < 100) {
-            return json;
-        }
-        else {
-            return json.substring(0, 97) + "...";
         }
     }
 }
