@@ -112,7 +112,11 @@ public class JsonParser
         public Value parse()
         {
             try {
-                return next();
+                Value v = next();
+                if (v == null) {
+                    throw new JsonParseException("Unable to parse empty string");
+                }
+                return v;
             }
             catch (IOException ex) {
                 throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(), ex);
@@ -141,6 +145,9 @@ public class JsonParser
         {
             try {
                 JsonToken token = parser.nextToken();
+                if (token == null) {
+                    return null;
+                }
                 return jsonTokenToValue(token);
             }
             catch (com.fasterxml.jackson.core.JsonParseException ex) {
@@ -182,8 +189,11 @@ public class JsonParser
                 List<Value> list = new ArrayList<>();
                 while (true) {
                     token = parser.nextToken();
-                    if(token == JsonToken.END_ARRAY) {
+                    if (token == JsonToken.END_ARRAY) {
                         return ValueFactory.newArray(list);
+                    }
+                    else if (token == null) {
+                        throw new JsonParseException("Unexpected end of JSON at "+parser.getTokenLocation() + " while expecting an element of an array: " + sampleJsonString());
                     }
                     list.add(jsonTokenToValue(token));
                 }
@@ -195,11 +205,17 @@ public class JsonParser
                     if (token == JsonToken.END_OBJECT) {
                         return ValueFactory.newMap(map);
                     }
+                    else if (token == null) {
+                        throw new JsonParseException("Unexpected end of JSON at "+parser.getTokenLocation() + " while expecting a key of object: " + sampleJsonString());
+                    }
                     String key = parser.getCurrentName();
                     if (key == null) {
                         throw new JsonParseException("Unexpected token "+token+" at "+parser.getTokenLocation() + ": " + sampleJsonString());
                     }
                     token = parser.nextToken();
+                    if (token == null) {
+                        throw new JsonParseException("Unexpected end of JSON at "+parser.getTokenLocation() + " while expecting a value of object: " + sampleJsonString());
+                    }
                     Value value = jsonTokenToValue(token);
                     map.put(ValueFactory.newString(key), value);
                 }
