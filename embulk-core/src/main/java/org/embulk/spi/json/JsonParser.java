@@ -105,7 +105,7 @@ public class JsonParser
                 return factory.createParser(json);
             }
             catch (Exception ex) {
-                throw new JsonParseException("Failed to parse JSON: "+sampleJsonString(json), ex);
+                throw new JsonParseException("Failed to parse JSON: "+JsonParser.sampleJsonString(json), ex);
             }
         }
 
@@ -126,7 +126,7 @@ public class JsonParser
         @Override
         protected String sampleJsonString()
         {
-            return sampleJsonString(json);
+            return JsonParser.sampleJsonString(json);
         }
     }
 
