@@ -44,13 +44,13 @@ A configuration file consists of following sections:
 
   * **parser:** If the input is file-based, parser plugin parses a file format (built-in csv, `json <https://github.com/takumakanari/embulk-parser-json>`_, etc).
 
-  * **decoder:** If the input is file-based, decoder plugin decodes compression or encryption (built-in gzip, `zip <https://github.com/hata/embulk-decoder-commons-compress>`_, `tar.gz <https://github.com/hata/embulk-decoder-commons-compress>`_, etc).
+  * **decoder:** If the input is file-based, decoder plugin decodes compression or encryption (built-in gzip, bzip2, `zip <https://github.com/hata/embulk-decoder-commons-compress>`_, `tar.gz <https://github.com/hata/embulk-decoder-commons-compress>`_, etc).
 
 * **out:** Output plugin options. An output plugin is either record-based (`Oracle <https://github.com/embulk/embulk-output-jdbc>`_, `Elasticsearch <https://github.com/muga/embulk-output-elasticsearch>`_, etc) or file-based (`Google Cloud Storage <https://github.com/hakobera/embulk-output-gcs>`_, `Command <https://github.com/embulk/embulk-output-command>`_, etc)
 
   * **formatter:** If the output is file-based, formatter plugin formats a file format (such as built-in csv, `JSON <https://github.com/takei-yuya/embulk-formatter-jsonl>`_)
 
-  * **encoder:** If the output is file-based, encoder plugin encodes compression or encryption (such as built-in gzip)
+  * **encoder:** If the output is file-based, encoder plugin encodes compression or encryption (such as built-in gzip or bzip2)
 
 * **filters:** Filter plugins options (optional).
 
@@ -298,6 +298,27 @@ Example
       - {type: gzip}
 
 
+BZip2 decoder plugin
+------------------
+
+The ``bzip2`` decoder plugin decompresses bzip2 files before input plugins read them.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
+This plugin doesn't have any options.
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    in:
+      ...
+      decoders:
+      - {type: bzip2}
+
+
 File output plugin
 ------------------
 
@@ -447,6 +468,58 @@ Example
       encoders:
       - type: gzip
         level: 1
+
+
+Gzip encoder plugin
+------------------
+
+The ``gzip`` encoder plugin compresses output files using gzip.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++---------+----------+----------------------------------------------------------------------+--------------------+
+| name    | type     | description                                                          | required?          |
++=========+==========+======================================================================+====================+
+| level   | integer  | Compression level. From 0 (no compression) to 9 (best compression).  | ``6`` by default   |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    out:
+      ...
+      encoders:
+      - type: gzip
+        level: 1
+
+BZip2 encoder plugin
+------------------
+
+The ``bzip2`` encoder plugin compresses output files using bzip2.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++---------+----------+----------------------------------------------------------------------+--------------------+
+| name    | type     | description                                                          | required?          |
++=========+==========+======================================================================+====================+
+| level   | integer  | Compression level. From 1 to 9 (best compression).                   | ``9`` by default   |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    out:
+      ...
+      encoders:
+      - type: bzip2
+        level: 6
+
 
 Rename filter plugin
 ------------------

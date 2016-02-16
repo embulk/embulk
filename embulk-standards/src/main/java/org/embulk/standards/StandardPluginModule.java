@@ -30,6 +30,7 @@ public class StandardPluginModule
 
         // file decoder plugins
         registerPluginTo(binder, DecoderPlugin.class, "gzip", GzipFileDecoderPlugin.class);
+        registerPluginTo(binder, DecoderPlugin.class, "bzip2", Bzip2FileDecoderPlugin.class);
 
         // output plugins
         registerPluginTo(binder, OutputPlugin.class, "file", LocalFileOutputPlugin.class);
@@ -41,12 +42,14 @@ public class StandardPluginModule
 
         // file encoder plugins
         registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
+        registerPluginTo(binder, EncoderPlugin.class, "bzip2", Bzip2FileEncoderPlugin.class);
 
         // filter plugins
         registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
+        registerDefaultGuessPluginTo(binder, new PluginType("bzip2"));
         registerDefaultGuessPluginTo(binder, new PluginType("csv"));
         // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
