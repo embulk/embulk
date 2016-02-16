@@ -252,6 +252,7 @@ public class PageBuilder
             buffer = null;
             bufferSlice = null;
         }
+        output.close();
     }
 
     /* TODO for variable-length types
