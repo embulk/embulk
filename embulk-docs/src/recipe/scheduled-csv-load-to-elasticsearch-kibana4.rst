@@ -24,9 +24,9 @@ For the smallest setup, you can unzip the package and run `./bin/elasticsearch` 
 
 .. code-block:: console
 
-    $ wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.4.4.zip
-    $ unzip elasticsearch-1.4.4.zip
-    $ cd elasticsearch-1.4.4
+    $ wget https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/2.2.0/elasticsearch-2.2.0.zip
+    $ unzip elasticsearch-2.2.0.zip
+    $ cd elasticsearch-2.2.0
     $ ./bin/elasticsearch
 
 Step 2. Download and unzip Kibana:
@@ -36,12 +36,12 @@ You can find releases from the `Kibana website <http://www.elasticsearch.org/ove
 
 .. code-block:: console
 
-    $ wget https://download.elasticsearch.org/kibana/kibana/kibana-4.0.0-linux-x64.tar.gz
-    $ tar zxvf kibana-4.0.0-linux-x64.tar.gz
-    $ cd kibana-4.0.0-linux-x64
+    $ wget https://download.elastic.co/kibana/kibana/kibana-4.4.0-linux-x64.tar.gz
+    $ tar zxvf kibana-4.4.0-linux-x64.tar.gz
+    $ cd kibana-4.4.0-linux-x64
     $ ./bin/kibana
 
-Note: If you're using Mac OS X, https://download.elasticsearch.org/kibana/kibana/kibana-4.0.0-darwin-x64.tar.gz is the URL to download.
+Note: If you're using Mac OS X, https://download.elastic.co/kibana/kibana/kibana-4.4.0-darwin-x64.tar.gz is the URL to download.
 
 Now Elasticsearch and Kibana started. Open http://localhost:5601/ using your browser to see the Kibana's graphical interface.
 
@@ -75,7 +75,7 @@ Loading a CSV file
 
 Assuming you have a CSV files at ``./mydata/csv/`` directory. If you don't have CSV files, you can create ones using ``embulk example ./mydata`` command.
 
-Create this configuration file and save as ``config.yml``:
+Create this configuration file and save as ``seed.yml``:
 
 .. code-block:: yaml
 
@@ -93,9 +93,9 @@ In fact, this configuration lacks some important information. However, embulk gu
 
 .. code-block:: console
 
-    $ embulk guess config.yml -o config-complete.yml
+    $ embulk guess ./mydata/seed.yml -o config.yml
 
-The generated config-complete.yml file should include complete information as following:
+The generated config.yml file should include complete information as following:
 
 .. code-block:: yaml
 
@@ -137,24 +137,25 @@ Now, you can run the bulk loading:
 
 .. code-block:: console
 
-    $ embulk run config-complete.yml -o next-config.yml
+    $ embulk run config.yml -c diff.yml
 
 Scheduling loading by cron
 ------------------
 
-At the last step, you ran embulk command with ``-o next-config.yml`` file. The ``next-config.yml`` file should include a parameter named ``last_path``:
+At the last step, you ran embulk command with ``-c diff.yml`` file. The ``diff.yml`` file should include a parameter named ``last_path``:
 
 .. code-block:: yaml
 
-    last_path: mydata/csv/sample_01.csv.gz
+    in: {last_path: mydata/csv/sample_01.csv.gz}
+    out: {}
 
 With this configuration, embulk loads the files newer than this file in alphabetical order.
 
-For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only next time. And the next next-config.yml file has ``last_path: mydata/csv/sample_02.csv.gz`` for the next next execution.
+For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips ``sample_01.csv.gz`` file and loads ``sample_02.csv.gz`` only next time. And the next ``diff.yml`` file has ``last_path: mydata/csv/sample_02.csv.gz`` for the next next execution.
 
 So, if you want to loads newly created files every day, you can setup this cron schedule:
 
 .. code-block:: cron
 
-    0 * * * * embulk run /path/to/next-config.yml -o /path/to/next-config.yml
+    0 * * * * embulk run /path/to/config.yml -c /path/to/diff.yml
 
