@@ -298,6 +298,27 @@ Example
       - {type: gzip}
 
 
+BZip2 decoder plugin
+------------------
+
+The ``bzip2`` decoder plugin decompresses bzip2 files before input plugins read them.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
+This plugin doesn't have any options.
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    in:
+      ...
+      decoders:
+      - {type: bzip2}
+
+
 File output plugin
 ------------------
 
@@ -447,6 +468,58 @@ Example
       encoders:
       - type: gzip
         level: 1
+
+
+Gzip encoder plugin
+------------------
+
+The ``gzip`` encoder plugin compresses output files using gzip.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++---------+----------+----------------------------------------------------------------------+--------------------+
+| name    | type     | description                                                          | required?          |
++=========+==========+======================================================================+====================+
+| level   | integer  | Compression level. From 0 (no compression) to 9 (best compression).  | ``6`` by default   |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    out:
+      ...
+      encoders:
+      - type: gzip
+        level: 1
+
+BZip2 encoder plugin
+------------------
+
+The ``bzip2`` encoder plugin compresses output files using bzip2.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++---------+----------+----------------------------------------------------------------------+--------------------+
+| name    | type     | description                                                          | required?          |
++=========+==========+======================================================================+====================+
+| level   | integer  | Compression level. From 1 to 9 (best compression).                   | ``9`` by default   |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    out:
+      ...
+      encoders:
+      - type: bzip2
+        level: 6
+
 
 Rename filter plugin
 ------------------
