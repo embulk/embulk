@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
@@ -47,7 +48,8 @@ public class JsonParserPlugin
         control.run(task.dump(), newSchema());
     }
 
-    private Schema newSchema()
+    @VisibleForTesting
+    Schema newSchema()
     {
         return Schema.builder().add("record", Types.JSON).build(); // generate a schema
     }
