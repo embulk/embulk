@@ -1,15 +1,15 @@
-java_import 'com.google.common.collect.Lists'
-java_import 'java.io.ByteArrayInputStream'
-java_import 'org.embulk.spi.Exec'
-java_import 'org.embulk.spi.json.JsonParser'
-java_import 'org.embulk.spi.json.JsonParseException'
-java_import 'org.embulk.spi.util.FileInputInputStream'
-java_import 'org.embulk.spi.util.InputStreamFileInput'
-
 module Embulk
   module Guess
     class JsonGuessPlugin < GuessPlugin
       Plugin.register_guess('json', self)
+
+      java_import 'com.google.common.collect.Lists'
+      java_import 'java.io.ByteArrayInputStream'
+      java_import 'org.embulk.spi.Exec'
+      java_import 'org.embulk.spi.json.JsonParser'
+      java_import 'org.embulk.spi.json.JsonParseException'
+      java_import 'org.embulk.spi.util.FileInputInputStream'
+      java_import 'org.embulk.spi.util.InputStreamFileInput'
 
       def guess(config, sample_buffer)
         return {} unless config.fetch("parser", {}).fetch("type", "json") == "json"
@@ -25,6 +25,8 @@ module Embulk
 
         return {"parser" => {"type" => "json"}}
       end
+
+      private
 
       def new_json_parser(buffer)
         input_streams = Lists::newArrayList(ByteArrayInputStream.new(buffer.to_java_bytes))
