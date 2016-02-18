@@ -277,6 +277,40 @@ Example
         - {name: purchase, type: timestamp, format: '%Y%m%d'}
         - {name: comment, type: string}
 
+
+JSON parser plugin
+------------------
+
+The ``json`` parser plugin parses a JSON file that contains a sequence of JSON objects. Example:
+
+.. code-block:: json
+
+    {"time":1455829282,"ip":"93.184.216.34","name":frsyuki}
+    {"time":1455829282,"ip":"172.36.8.109":sadayuki}
+    {"time":1455829284,"ip":"example.com","name":Treasure Data}
+    {"time":1455829282,"ip":"10.98.43.1","name":MessagePack}
+
+``json`` parser plugin outputs a single record named "record" (type is json).
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
+| name                       | type     | description                                                                                                    |              required? |
++============================+==========+================================================================================================================+========================+
+| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid json)                            | ``false`` by default   |
++----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
+
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    in:
+      parser:
+        type: json
+
 Gzip decoder plugin
 ------------------
 
