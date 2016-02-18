@@ -27,6 +27,7 @@ public class StandardPluginModule
 
         // parser plugins
         registerPluginTo(binder, ParserPlugin.class, "csv", CsvParserPlugin.class);
+        registerPluginTo(binder, ParserPlugin.class, "json", JsonParserPlugin.class);
 
         // file decoder plugins
         registerPluginTo(binder, DecoderPlugin.class, "gzip", GzipFileDecoderPlugin.class);
@@ -50,6 +51,7 @@ public class StandardPluginModule
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
         registerDefaultGuessPluginTo(binder, new PluginType("bzip2"));
+        registerDefaultGuessPluginTo(binder, new PluginType("json")); // should be registered before CsvGuessPlugin
         registerDefaultGuessPluginTo(binder, new PluginType("csv"));
         // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
