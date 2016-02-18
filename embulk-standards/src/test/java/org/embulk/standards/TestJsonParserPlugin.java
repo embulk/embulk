@@ -43,7 +43,7 @@ public class TestJsonParserPlugin
     @Before
     public void createResource()
     {
-        config = config().set("type", "jsonl");
+        config = config();
         plugin = new JsonParserPlugin();
         output = new MockPageOutput();
     }
