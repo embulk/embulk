@@ -4,6 +4,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.Column;
@@ -55,6 +56,12 @@ public class MockParserPlugin implements ParserPlugin
                         case "timestamp":
                             pageBuilder.setTimestamp(column,
                                     Timestamp.ofEpochMilli(678L));
+                            break;
+                        case "json":
+                            pageBuilder.setJson(
+                                column,
+                                new JsonParser().parse("{\"_c1\":true,\"_c2\":10,\"_c3\":\"embulk\",\"_c4\":{\"k\":\"v\"}}")
+                            );
                             break;
                         default:
                             throw new IllegalStateException("Unknown type: "

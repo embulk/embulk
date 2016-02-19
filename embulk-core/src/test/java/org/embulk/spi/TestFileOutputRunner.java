@@ -18,6 +18,11 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.msgpack.value.ImmutableMapValue;
+import static org.msgpack.value.ValueFactory.newBoolean;
+import static org.msgpack.value.ValueFactory.newInteger;
+import static org.msgpack.value.ValueFactory.newMap;
+import static org.msgpack.value.ValueFactory.newString;
 
 public class TestFileOutputRunner
 {
@@ -110,7 +115,8 @@ public class TestFileOutputRunner
                 ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
                 ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
                 ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()));
+                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")
@@ -128,10 +134,16 @@ public class TestFileOutputRunner
                         1);
                 boolean committed = false;
                 try {
+                    ImmutableMapValue jsonValue = newMap(
+                            newString("_c1"), newBoolean(true),
+                            newString("_c2"), newInteger(10),
+                            newString("_c3"), newString("embulk"),
+                            newString("_c4"), newMap(newString("k"), newString("v"))
+                    );
                     for (Page page : PageTestUtils.buildPage(
                             runtime.getBufferAllocator(), schema, true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L), true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L))) {
+                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue, true, 2L,
+                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue)) {
                         tran.add(page);
                     }
                     tran.commit();
@@ -154,6 +166,7 @@ public class TestFileOutputRunner
             assertEquals(3.0D, (Double) record.get(2), 0.1D);
             assertEquals("45", record.get(3));
             assertEquals(678L, ((Timestamp) record.get(4)).toEpochMilli());
+            assertEquals("{\"_c1\":true,\"_c2\":10,\"_c3\":\"embulk\",\"_c4\":{\"k\":\"v\"}}", record.get(5).toString());
         }
     }
 
@@ -168,7 +181,8 @@ public class TestFileOutputRunner
                 ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
                 ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
                 ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()));
+                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")

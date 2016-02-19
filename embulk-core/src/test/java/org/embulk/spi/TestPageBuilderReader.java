@@ -2,17 +2,25 @@ package org.embulk.spi;
 
 import static org.embulk.spi.type.Types.BOOLEAN;
 import static org.embulk.spi.type.Types.DOUBLE;
+import static org.embulk.spi.type.Types.JSON;
 import static org.embulk.spi.type.Types.LONG;
 import static org.embulk.spi.type.Types.STRING;
 import static org.embulk.spi.type.Types.TIMESTAMP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.msgpack.value.ImmutableMapValue;
+import static org.msgpack.value.ValueFactory.newBoolean;
+import static org.msgpack.value.ValueFactory.newInteger;
+import static org.msgpack.value.ValueFactory.newMap;
+import static org.msgpack.value.ValueFactory.newString;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.Schema;
 import org.embulk.EmbulkTestRuntime;
+import org.msgpack.value.ImmutableMapValue;
+import org.msgpack.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -125,6 +133,12 @@ public class TestPageBuilderReader
     }
 
     @Test
+    public void testJson()
+    {
+        check(Schema.builder().add("col1", JSON).build(), getJsonSampleData());
+    }
+
+    @Test
     public void testNull()
     {
         check(Schema.builder()
@@ -133,9 +147,10 @@ public class TestPageBuilderReader
                     .add("col3", LONG)
                     .add("col3", BOOLEAN)
                     .add("col2", TIMESTAMP)
+                    .add("col4", JSON)
                     .build(),
-                null, null, null, null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, null,
+                null, null, null, null, null, null);
     }
 
     @Test
@@ -147,9 +162,10 @@ public class TestPageBuilderReader
                     .add("col3", LONG)
                     .add("col3", BOOLEAN)
                     .add("col2", TIMESTAMP)
+                    .add("col4", JSON)
                     .build(),
-                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0),
-                140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10));
+                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0), getJsonSampleData(),
+                140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10), getJsonSampleData());
     }
 
     private void check(Schema schema, Object... objects)
@@ -185,6 +201,8 @@ public class TestPageBuilderReader
                     builder.setString(column, (String) value);
                 } else if (value instanceof Timestamp) {
                     builder.setTimestamp(column, (Timestamp) value);
+                } else if (value instanceof Value) {
+                    builder.setJson(column, (Value) value);
                 } else {
                     throw new IllegalStateException(
                             "Unsupported type in test utils: "
@@ -218,6 +236,8 @@ public class TestPageBuilderReader
                     assertEquals(value, reader.getString(column));
                 } else if (value instanceof Timestamp) {
                     assertEquals(value, reader.getTimestamp(column));
+                } else if (value instanceof Value) {
+                    assertEquals(value, reader.getJson(column));
                 } else {
                     throw new IllegalStateException(
                             "Unsupported type in test utils: "
@@ -225,6 +245,16 @@ public class TestPageBuilderReader
                 }
             }
         }
+    }
+
+    private ImmutableMapValue getJsonSampleData()
+    {
+        return newMap(
+                newString("_c1"), newBoolean(true),
+                newString("_c2"), newInteger(10),
+                newString("_c3"), newString("embulk"),
+                newString("_c4"), newMap(newString("k"), newString("v"))
+        );
     }
 
     @Test
