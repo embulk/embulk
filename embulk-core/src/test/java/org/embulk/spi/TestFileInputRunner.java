@@ -121,7 +121,8 @@ public class TestFileInputRunner
                         ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
                         ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
                         ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()))));
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
         runner.transaction(config, new InputPlugin.Control()
@@ -145,12 +146,13 @@ public class TestFileInputRunner
         List<Object[]> records = Pages.toObjects(schema, output.pages);
         assertEquals(2, records.size());
         for (Object[] record : records) {
-            assertEquals(5, record.length);
+            assertEquals(6, record.length);
             assertEquals(true, record[0]);
             assertEquals(2L, record[1]);
             assertEquals(3.0D, (Double) record[2], 0.01D);
             assertEquals("45", record[3]);
             assertEquals(678L, ((Timestamp) record[4]).toEpochMilli());
+            assertEquals("{\"_c2\":10,\"_c1\":true,\"_c4\":{\"k\":\"v\"},\"_c3\":\"embulk\"}", record[5].toString());
         }
     }
 
@@ -171,7 +173,8 @@ public class TestFileInputRunner
                         ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
                         ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
                         ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()))));
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
 
