@@ -156,7 +156,7 @@ public class TestJsonParserPlugin
             sb.append(line).append("\n");
         }
 
-        ByteArrayInputStream in = new ByteArrayInputStream(sb.toString().getBytes());
+        ByteArrayInputStream in = new ByteArrayInputStream(sb.toString().getBytes("UTF-8"));
         return new InputStreamFileInput(runtime.getBufferAllocator(), provider(in));
     }
 
