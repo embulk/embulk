@@ -300,7 +300,7 @@ task releaseCheck << {
     println "Ready. Run 'release' task."
 }
 
-task release(dependsOn: ["releaseCheck", "bintrayUpload", "rubyGemsUpload"]) << {
+task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload", "rubyGemsUpload"]) << {
     println """
 Manual operations:
 
