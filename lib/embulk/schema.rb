@@ -1,6 +1,7 @@
 module Embulk
 
   require 'embulk/column'
+  require 'msgpack'
 
   class Schema < Array
     def initialize(columns)
