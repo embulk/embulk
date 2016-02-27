@@ -142,14 +142,18 @@ class TaskSerDe
             Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
             HashMap<String, FieldEntry> unusedMappings = new HashMap<>(mappings);
 
-            JsonToken current;
-            current = jp.getCurrentToken();
+            String key;
+            JsonToken current = jp.getCurrentToken();
             if (current == JsonToken.START_OBJECT) {
                 current = jp.nextToken();
+                key = jp.getCurrentName();
             }
-            for (; current != JsonToken.END_OBJECT; current = jp.nextToken()) {
-                String key = jp.getCurrentName();
-                current = jp.nextToken();
+            else {
+                key = jp.nextFieldName();
+            }
+
+            for (; key != null; key = jp.nextFieldName()) {
+                JsonToken t = jp.nextToken(); // to get to value
                 FieldEntry field = mappings.get(key);
                 if (field == null) {
                     jp.skipChildren();
