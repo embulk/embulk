@@ -1,6 +1,7 @@
 package org.embulk.standards;
 
 import java.io.InputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import org.embulk.config.Task;
@@ -43,7 +44,7 @@ public class GzipFileDecoderPlugin
                         if (!files.nextFile()) {
                             return null;
                         }
-                        return new GZIPInputStream(files, 8*1024);
+                        return new MultiStreamGZIPInputStream(files, 8*1024);
                     }
 
                     public void close() throws IOException
@@ -51,5 +52,58 @@ public class GzipFileDecoderPlugin
                         files.close();
                     }
                 });
+    }
+
+    // This is necessary to support a gzip file that contains multiple deflate streams.
+    // GZIPInputStream returns -1 if it reaches end of a deflate stream. But next read() call
+    // returns 1 or larger if the file contains multiple deflate streams.
+    private static class MultiStreamGZIPInputStream
+            extends FilterInputStream
+    {
+        public MultiStreamGZIPInputStream(InputStream in, int size)
+            throws IOException
+        {
+            super(new GZIPInputStream(in, size));
+        }
+
+        @Override
+        public int read()
+            throws IOException
+        {
+            int r = in.read();
+            if (r < 0) {
+                return in.read();
+            }
+            return r;
+        }
+
+        @Override
+        public int read(byte[] b)
+            throws IOException
+        {
+            return read(b, 0, b.length);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len)
+            throws IOException
+        {
+            int r = in.read(b, off, len);
+            if (r < 0) {
+                return in.read(b, off, len);
+            }
+            return r;
+        }
+
+        @Override
+        public long skip(long n)
+            throws IOException
+        {
+            long r = in.skip(n);
+            if (r < 0L) {
+                return in.skip(n);
+            }
+            return r;
+        }
     }
 }
