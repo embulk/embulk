@@ -13,6 +13,7 @@ import org.embulk.config.Task;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.FileInput;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class LineDecoder
         implements AutoCloseable, Iterable<String>
@@ -33,10 +34,12 @@ public class LineDecoder
 
     private final FileInputInputStream inputStream;
     private final BufferedReader reader;
+    private final Charset charset;
 
     public LineDecoder(FileInput in, DecoderTask task)
     {
-        CharsetDecoder decoder = task.getCharset()
+        this.charset = task.getCharset();
+        CharsetDecoder decoder = charset
             .newDecoder()
             .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
             .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
@@ -46,7 +49,43 @@ public class LineDecoder
 
     public boolean nextFile()
     {
-        return inputStream.nextFile();
+        boolean has = inputStream.nextFile();
+        if (has && charset.equals(UTF_8)) {
+            skipBom();
+        }
+        return has;
+    }
+
+    private void skipBom()
+    {
+        boolean skip = false;
+        try {
+            if (charset.equals(UTF_8)) {
+                reader.mark(3);
+                int firstChar = reader.read();
+                if (firstChar == 0xFEFF) {
+                    // skip BOM bytes
+                    skip = true;
+                }
+            }
+        }
+        catch (IOException ex) {
+        }
+        finally {
+            if (skip) {
+                // firstChar is skipped
+            }
+            else {
+                // rollback to the marked position
+                try {
+                    reader.reset();
+                }
+                catch (IOException ex) {
+                    // unexpected
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
     }
 
     public String poll()
