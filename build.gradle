@@ -232,10 +232,10 @@ project(':embulk-cli') {
         append("${rootProject.projectDir}/COPYING")
     }
 
-    task classpath(type: Copy) {
+    task classpath(type: Copy, dependsOn: ['jar']) {
         File dest = file("${rootProject.projectDir}/classpath")
         doFirst { dest.deleteDir() }
-        from configurations.runtime
+        from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
         into dest
     }
 }
