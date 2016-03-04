@@ -107,11 +107,15 @@ module Embulk::Guess
               format << '%N'
             end
 
-          when :zone_off
-            format << '%z'
-
-          when :zone_abb
-            format << '%Z'
+          when :zone
+            case option
+            when :extended
+              format << '%:z'
+            else
+              # :simple, :abb
+              # don't use %Z even with :abb: https://github.com/jruby/jruby/issues/3702
+              format << '%z'
+            end
 
           else
             raise "Unknown part: #{@parts[i]}"
@@ -275,12 +279,16 @@ module Embulk::Guess
 
         if zm = /^#{ZONE}$/.match(rest)
           delimiters << (zm["zone_space"] || '')
+          parts << :zone
           if zm["zone_off"]
-            parts << :zone_off
+            if zm["zone_off"].include?(':')
+              part_options << :extended
+            else
+              part_options << :simple
+            end
           else
-            parts << :zone_abb
+            part_options << :abb
           end
-          part_options << nil
 
           return GuessMatch.new(delimiters, parts, part_options)
 
@@ -334,8 +342,16 @@ module Embulk::Guess
           format << "%d %b %Y"
           format << " %H:%M" if m['time']
           format << ":%S" if m['second']
-          format << " %z" if m['zone_off']
-          format << " %Z" if m['zone_abb']
+          if m['zone_off']
+            if m['zone_off'].include?(':')
+              format << " %:z"
+            else
+              format << " %z"
+            end
+          elsif m['zone_abb']
+            # don't use %Z: https://github.com/jruby/jruby/issues/3702
+            format << " %z" if m['zone_abb']
+          end
           SimpleMatch.new(format)
         else
           nil
