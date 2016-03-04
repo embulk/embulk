@@ -66,25 +66,25 @@ class TimeFormatGuessTest < ::Test::Unit::TestCase
     assert_guess "%Y-%m-%dT%H:%M:%S", "2007-04-06T13:47:30"
     assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30Z"
     assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30+00"
-    assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30+00:00"
+    assert_guess "%Y-%m-%dT%H:%M:%S%:z", "2007-04-06T13:47:30+00:00"
     assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30+0000"
     assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30-01"
-    assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30-01:30"
+    assert_guess "%Y-%m-%dT%H:%M:%S%:z", "2007-04-06T13:47:30-01:30"
     assert_guess "%Y-%m-%dT%H:%M:%S%z", "2007-04-06T13:47:30-0130"
   end
 
   def test_format_rfc_822_2822
     # This test is disabled because of https://github.com/jruby/jruby/issues/3702
     #assert_guess '%a, %d %b %Y %H:%M:%S %Z', "Fri, 20 Feb 2015 14:02:34 PST"
-    assert_guess '%a, %d %b %Y %H:%M:%S %Z', "Fri, 20 Feb 2015 22:02:34 UT"
-    assert_guess '%a, %d %b %Y %H:%M:%S %Z', "Fri, 20 Feb 2015 22:02:34 GMT"
-    assert_guess     '%d %b %Y %H:%M:%S %Z',      "20 Feb 2015 22:02:34 GMT"
-    assert_guess     '%d %b %Y %H:%M %Z',         "20 Feb 2015 22:02 GMT"
-    assert_guess '%a, %d %b %Y %H:%M %Z',    "Fri, 20 Feb 2015 22:02 GMT"
+    assert_guess '%a, %d %b %Y %H:%M:%S %z', "Fri, 20 Feb 2015 22:02:34 UT"
+    assert_guess '%a, %d %b %Y %H:%M:%S %z', "Fri, 20 Feb 2015 22:02:34 GMT"
+    assert_guess     '%d %b %Y %H:%M:%S %z',      "20 Feb 2015 22:02:34 GMT"
+    assert_guess     '%d %b %Y %H:%M %z',         "20 Feb 2015 22:02 GMT"
+    assert_guess '%a, %d %b %Y %H:%M %z',    "Fri, 20 Feb 2015 22:02 GMT"
     assert_guess     '%d %b %Y',                  "20 Feb 2015"
     assert_guess '%a, %d %b %Y',             "Fri, 20 Feb 2015"
     assert_guess '%a, %d %b %Y %H:%M %z',    "Fri, 20 Feb 2015 22:02 +0000"
-    assert_guess '%a, %d %b %Y %H:%M %z',    "Fri, 20 Feb 2015 22:02 +00:00"
+    assert_guess '%a, %d %b %Y %H:%M %:z',   "Fri, 20 Feb 2015 22:02 +00:00"
     assert_guess '%a, %d %b %Y %H:%M %z',    "Fri, 20 Feb 2015 22:02 +00"
   end
 
@@ -98,6 +98,7 @@ class TimeFormatGuessTest < ::Test::Unit::TestCase
 
   def test_format_merge_frequency
     assert_guess_partial 2, "%Y-%m-%d %H:%M:%S", ["2014-01-01", "2014-01-01 00:00:00", "2014-01-01 00:00:00"]
+    assert_guess_partial 3, "%Y-%m-%d %H:%M:%S %z", ["2014-01-01 00:00:00 +0000", "2014-01-01 00:00:00 +0000", "2014-01-01 00:00:00 +00:00"]
   end
 
   def test_format_merge_dmy
