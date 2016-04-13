@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    embulk (0.8.0)
+    embulk (0.8.7)
       jruby-jars (= 9.0.4.0)
 
 GEM
@@ -11,8 +11,12 @@ GEM
     kramdown (1.5.0)
     power_assert (0.2.2)
     rake (10.4.2)
+    rr (1.1.2)
     test-unit (3.0.9)
       power_assert
+    test-unit-rr (1.0.5)
+      rr (>= 1.1.1)
+      test-unit (>= 2.5.2)
     yard (0.8.7.6)
 
 PLATFORMS
@@ -24,7 +28,8 @@ DEPENDENCIES
   kramdown (~> 1.5.0)
   rake (>= 0.10.0)
   test-unit (~> 3.0.9)
+  test-unit-rr (~> 1.0.5)
   yard (~> 0.8.7)
 
 BUNDLED WITH
-   1.10.6
+   1.11.2

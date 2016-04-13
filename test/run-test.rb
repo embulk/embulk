@@ -6,6 +6,7 @@ $LOAD_PATH.unshift(lib_dir)
 $LOAD_PATH.unshift(test_dir)
 
 require "test/unit"
+require "test/unit/rr"
 
 Dir.glob("#{base_dir}/test/**/test{_,-}*.rb") do |file|
   require file.sub(/\.rb$/,"")
