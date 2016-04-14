@@ -5,6 +5,16 @@ test_dir = File.join(base_dir, "test")
 $LOAD_PATH.unshift(lib_dir)
 $LOAD_PATH.unshift(test_dir)
 
+require 'simplecov'
+SimpleCov.start 'test_frameworks' do
+  add_filter "build/"
+end
+
+if ENV['CIRCLE_ARTIFACTS'] # https://circleci.com/docs/code-coverage
+  dir = File.join(ENV['CIRCLE_ARTIFACTS'], "coverage")
+  SimpleCov.coverage_dir(dir)
+end
+
 require "test/unit"
 require "test/unit/rr"
 
