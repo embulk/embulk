@@ -62,7 +62,7 @@ In many cases, what you need to write is **in:**, **out**: and **formatter** sec
 Using variables
 ~~~~~~~~~~~~~~~~~~
 
-You can embed environment variables in configuration file using `Liquid template engine <http://liquidmarkup.org/>`_ (This is experimental feature. Behavior might change or be removed in future releases).
+You can embed environment variables in configuration file using `Liquid template engine <http://liquidmarkup.org/>`_ (Behavior might change in future releases).
 
 To use template engine, configuration file name must end with ``.yml.liquid``.
 
