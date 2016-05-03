@@ -15,6 +15,7 @@ id,account,time,purchase,comment
 2,14824,2015-01-27 19:01:23,20150127,embulk jruby
 3,27559,2015-01-28 02:20:02,20150128,"Embulk ""csv"" parser plugin"
 4,11270,2015-01-29 11:54:36,20150129,NULL
+
 EOF
     end
 
