@@ -1,11 +1,18 @@
 package org.embulk.spi.time;
 
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import org.joda.time.DateTimeZone;
 import com.google.common.base.Optional;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigException;
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
@@ -32,6 +39,10 @@ public class TimestampParser
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N %z\"")
         public String getDefaultTimestampFormat();
 
+        @Config("default_date")
+        @ConfigDefault("\"1970-01-01\"")
+        public String getDefaultDate();
+
         @ConfigInject
         public ScriptingContainer getJRuby();
     }
@@ -45,6 +56,10 @@ public class TimestampParser
         @Config("format")
         @ConfigDefault("null")
         public Optional<String> getFormat();
+
+        @Config("date")
+        @ConfigDefault("null")
+        public Optional<String> getDate();
     }
 
     private final JRubyTimeParserHelper helper;
@@ -58,21 +73,44 @@ public class TimestampParser
 
     TimestampParser(Task task)
     {
-        this(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone());
+        this(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
     }
 
     public TimestampParser(Task task, TimestampColumnOption columnOption)
     {
         this(task.getJRuby(),
                 columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-                columnOption.getTimeZone().or(task.getDefaultTimeZone()));
+                columnOption.getTimeZone().or(task.getDefaultTimeZone()),
+                columnOption.getDate().or(task.getDefaultDate()));
     }
 
     public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
+        this(jruby, format, defaultTimeZone, "1970-01-01");
+    }
+
+    public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone, String defaultDate)
+    {
         JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("Embulk::Java::TimeParserHelper::Factory.new");
+
+        // calculate default date
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date utc;
+        try {
+            utc = df.parse(defaultDate);
+        }
+        catch (ParseException ex) {
+            throw new ConfigException("Invalid date format. Expected yyyy-MM-dd: " + defaultDate);
+        }
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        cal.setTime(utc);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+
         // TODO get default current time from ExecTask.getExecTimestamp
-        this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, 1970, 1, 1, 0, 0, 0, 0);  // TODO default time zone
+        this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, year, month, day, 0, 0, 0, 0);  // TODO default time zone
         this.defaultTimeZone = defaultTimeZone;
     }
 
