@@ -60,4 +60,16 @@ public class TestTimestampFormatterParser
         TimestampParser parser = new TimestampParser(ptask);
         assertEquals(Timestamp.ofEpochSecond(1416365189), parser.parse("1416365189"));
     }
+
+    @Test
+    public void testDefaultDate() throws Exception
+    {
+        ConfigSource config = Exec.newConfigSource()
+            .set("default_timestamp_format", "%H:%M:%S %Z")
+            .set("default_date", "2016-02-03");
+
+        ParserTestTask ptask = config.loadConfig(ParserTestTask.class);
+        TimestampParser parser = new TimestampParser(ptask);
+        assertEquals(Timestamp.ofEpochSecond(1454467589, 0), parser.parse("02:46:29 +0000"));
+    }
 }
