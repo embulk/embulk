@@ -57,7 +57,7 @@ public class CsvParserPlugin
 
         @Config("delimiter")
         @ConfigDefault("\",\"")
-        char getDelimiterChar();
+        String getDelimiter();
 
         @Config("quote")
         @ConfigDefault("\"\\\"\"")

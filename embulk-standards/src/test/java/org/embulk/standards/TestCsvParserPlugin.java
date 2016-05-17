@@ -33,7 +33,7 @@ public class TestCsvParserPlugin
         assertEquals(Charset.forName("utf-8"), task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
         assertEquals(false, task.getHeaderLine().or(false));
-        assertEquals(',', task.getDelimiterChar());
+        assertEquals(",", task.getDelimiter());
         assertEquals(Optional.of(new CsvParserPlugin.QuoteCharacter('\"')), task.getQuoteChar());
         assertEquals(false, task.getAllowOptionalColumns());
         assertEquals(DateTimeZone.UTC, task.getDefaultTimeZone());
@@ -68,7 +68,7 @@ public class TestCsvParserPlugin
         assertEquals(Charset.forName("utf-16"), task.getCharset());
         assertEquals(Newline.LF, task.getNewline());
         assertEquals(true, task.getHeaderLine().or(false));
-        assertEquals('\t', task.getDelimiterChar());
+        assertEquals("\t", task.getDelimiter());
         assertEquals(Optional.of(new CsvParserPlugin.QuoteCharacter('\\')), task.getQuoteChar());
         assertEquals(true, task.getAllowOptionalColumns());
     }
