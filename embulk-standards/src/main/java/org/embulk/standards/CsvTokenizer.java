@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
+import org.embulk.config.ConfigException;
 
 public class CsvTokenizer
 {
@@ -24,7 +25,8 @@ public class CsvTokenizer
     static final char NO_QUOTE = '\0';
     static final char NO_ESCAPE = '\0';
 
-    private final char delimiter;
+    private final char delimiterChar;
+    private final String delimiterFollowingString;
     private final char quote;
     private final char escape;
     private final String newline;
@@ -44,7 +46,17 @@ public class CsvTokenizer
 
     public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task)
     {
-        delimiter = task.getDelimiterChar();
+        String delimiter = task.getDelimiter();
+        if (delimiter.length() == 0) {
+            throw new ConfigException("Empty delimiter is not allowed");
+        } else {
+            this.delimiterChar = delimiter.charAt(0);
+            if (delimiter.length() > 1) {
+                delimiterFollowingString = delimiter.substring(1);
+            } else {
+                delimiterFollowingString = null;
+            }
+        }
         quote = task.getQuoteChar().or(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
         escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
         newline = task.getNewline().getString();
@@ -169,9 +181,15 @@ public class CsvTokenizer
                     //      this block can be out of the looop.
                     if (isDelimiter(c)) {
                         // empty value
-                        return "";
-
-                    } else if (isEndOfLine(c)) {
+                        if (delimiterFollowingString == null) {
+                            return "";
+                        } else if (isDelimiterFollowingFrom(linePos)) {
+                            linePos += delimiterFollowingString.length();
+                            return "";
+                        }
+                        // not a delimiter
+                    }
+                    if (isEndOfLine(c)) {
                         // empty value
                         recordState = RecordState.END;
                         return "";
@@ -193,9 +211,15 @@ public class CsvTokenizer
                 case FIRST_TRIM:
                     if (isDelimiter(c)) {
                         // empty value
-                        return "";
-
-                    } else if (isEndOfLine(c)) {
+                        if (delimiterFollowingString == null) {
+                            return "";
+                        } else if (isDelimiterFollowingFrom(linePos)) {
+                            linePos += delimiterFollowingString.length();
+                            return "";
+                        }
+                        // not a delimiter
+                    }
+                    if (isEndOfLine(c)) {
                         // empty value
                         recordState = RecordState.END;
                         return "";
@@ -218,9 +242,16 @@ public class CsvTokenizer
 
                 case VALUE:
                     if (isDelimiter(c)) {
-                        return line.substring(valueStartPos, linePos - 1);
-
-                    } else if (isEndOfLine(c)) {
+                        if (delimiterFollowingString == null) {
+                            return line.substring(valueStartPos, linePos - 1);
+                        } else if (isDelimiterFollowingFrom(linePos)) {
+                            String value = line.substring(valueStartPos, linePos - 1);
+                            linePos += delimiterFollowingString.length();
+                            return value;
+                        }
+                        // not a delimiter
+                    }
+                    if (isEndOfLine(c)) {
                         recordState = RecordState.END;
                         return line.substring(valueStartPos, linePos);
 
@@ -241,9 +272,16 @@ public class CsvTokenizer
 
                 case LAST_TRIM_OR_VALUE:
                     if (isDelimiter(c)) {
-                        return line.substring(valueStartPos, valueEndPos);
-
-                    } else if (isEndOfLine(c)) {
+                        if (delimiterFollowingString == null) {
+                            return line.substring(valueStartPos, valueEndPos);
+                        } else if (isDelimiterFollowingFrom(linePos)) {
+                            linePos += delimiterFollowingString.length();
+                            return line.substring(valueStartPos, valueEndPos);
+                        } else {
+                            // not a delimiter
+                        }
+                    }
+                    if (isEndOfLine(c)) {
                         recordState = RecordState.END;
                         return line.substring(valueStartPos, valueEndPos);
 
@@ -304,9 +342,15 @@ public class CsvTokenizer
 
                 case AFTER_QUOTED_VALUE:
                     if (isDelimiter(c)) {
-                        return quotedValue.toString();
-
-                    } else if (isEndOfLine(c)) {
+                        if (delimiterFollowingString == null) {
+                            return quotedValue.toString();
+                        } else if (isDelimiterFollowingFrom(linePos)) {
+                            linePos += delimiterFollowingString.length();
+                            return quotedValue.toString();
+                        }
+                        // not a delimiter
+                    }
+                    if (isEndOfLine(c)) {
                         recordState = RecordState.END;
                         return quotedValue.toString();
 
@@ -356,9 +400,22 @@ public class CsvTokenizer
         return c == ' ';
     }
 
+    private boolean isDelimiterFollowingFrom(int pos)
+    {
+        if (line.length() < pos + delimiterFollowingString.length()) {
+            return false;
+        }
+        for (int i = 0; i < delimiterFollowingString.length(); i++) {
+            if (delimiterFollowingString.charAt(i) != line.charAt(pos + i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean isDelimiter(char c)
     {
-        return c == delimiter;
+        return c == delimiterChar;
     }
 
     private boolean isEndOfLine(char c)
