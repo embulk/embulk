@@ -19,7 +19,7 @@ allprojects {
     version = '0.8.9'
 
     ext {
-        jrubyVersion = '9.0.5.0'
+        jrubyVersion = '9.1.1.0'
     }
 
     apply plugin: 'java'
