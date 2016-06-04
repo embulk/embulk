@@ -162,6 +162,7 @@ jruby {
 dependencies {
     jrubyExec 'rubygems:simplecov:0.10.+'
     jrubyExec 'rubygems:test-unit:3.0.+'
+    jrubyExec 'rubygems:test-unit-rr:1.0.+'
 }
 
 import java.util.zip.ZipFile

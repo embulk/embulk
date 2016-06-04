@@ -35,6 +35,7 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency "rake", [">= 0.10.0"]
   gem.add_development_dependency "test-unit", ["~> 3.0.9"]
+  gem.add_development_dependency "test-unit-rr", ["~> 1.0.5"]
   gem.add_development_dependency "yard", ["~> 0.8.7"]
   gem.add_development_dependency "kramdown", ["~> 1.5.0"]
 end
