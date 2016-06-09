@@ -88,12 +88,8 @@ public class TestCsvTokenizer
         while (tokenizer.nextRecord()) {
             List<String> record = new ArrayList<>();
             for (Column c : schema.getColumns()) {
-                String v = tokenizer.nextColumn();
-                if (!v.isEmpty()) {
-                    record.add(v);
-                } else {
-                    record.add(tokenizer.wasQuotedColumn() ? "" : null);
-                }
+                String v = tokenizer.nextColumnOrNull();
+                record.add(v);
             }
             records.add(record);
         }
@@ -200,6 +196,31 @@ public class TestCsvTokenizer
             parse(task,
                     "aaa\tbbb",
                     "ccc\tddd"));
+    }
+
+    @Test
+    public void testDefaultNullString() throws Exception
+    {
+        reloadPluginTask();
+        assertEquals(expectedRecords(2,
+                        null, "",
+                        "NULL", "NULL"),
+                parse(task,
+                        ",\"\"",
+                        "NULL,\"NULL\""));
+    }
+
+    @Test
+    public void testChangeNullString() throws Exception
+    {
+        config.set("null_string", "NULL");
+        reloadPluginTask();
+        assertEquals(expectedRecords(2,
+                        "", "",
+                        null, null),
+                parse(task,
+                        ",\"\"",
+                        "NULL,\"NULL\""));
     }
 
     @Test
