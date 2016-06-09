@@ -88,12 +88,8 @@ public class TestCsvTokenizer
         while (tokenizer.nextRecord()) {
             List<String> record = new ArrayList<>();
             for (Column c : schema.getColumns()) {
-                String v = tokenizer.nextColumn();
-                if (!v.isEmpty()) {
-                    record.add(v);
-                } else {
-                    record.add(tokenizer.wasQuotedColumn() ? "" : null);
-                }
+                String v = tokenizer.nextColumnOrNull();
+                record.add(v);
             }
             records.add(record);
         }
@@ -140,7 +136,7 @@ public class TestCsvTokenizer
     public void parseEmptyColumnsToNull() throws Exception
     {
         assertEquals(expectedRecords(2,
-                    null, null,
+                    "", "",
                     "", "",
                     "  ", "  "), // not trimmed
                 parse(task,
@@ -156,9 +152,9 @@ public class TestCsvTokenizer
         reloadPluginTask();
         assertEquals(
                 expectedRecords(2,
-                    null, null,
                     "", "",
-                    null, null),  // trimmed
+                    "", "",
+                    "", ""),  // trimmed
                 parse(task,
                     ",",
                     "\"\",\"\"",
@@ -203,12 +199,25 @@ public class TestCsvTokenizer
     }
 
     @Test
+    public void testChangeNullString() throws Exception
+    {
+        config.set("null_string", "NULL");
+        reloadPluginTask();
+        assertEquals(expectedRecords(2,
+                        null, null,
+                        "", ""),
+                parse(task,
+                        "NULL,\"NULL\"",
+                        ",\"\""));
+    }
+
+    @Test
     public void testQuotedValues() throws Exception
     {
         assertEquals(expectedRecords(2,
                         "a\na\na", "b,bb",
                         "cc\"c", "\"ddd",
-                        null, ""),
+                        "", ""),
             parse(task, newFileInputFromText(task,
                 "\n\"a\na\na\",\"b,bb\"\n\n\"cc\"\"c\",\"\"\"ddd\"\n,\"\"\n")));
     }
@@ -219,7 +228,7 @@ public class TestCsvTokenizer
         assertEquals(expectedRecords(2,
                         "a\"aa", "b,bb\"",
                         "cc\"c", "\"ddd",
-                        null, ""),
+                        "", ""),
                 parse(task, newFileInputFromText(task,
                     "\n\"a\\\"aa\",\"b,bb\\\"\"\n\n\"cc\"\"c\",\"\"\"ddd\"\n,\"\"\n")));
     }
