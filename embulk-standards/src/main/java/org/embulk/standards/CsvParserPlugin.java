@@ -345,7 +345,7 @@ public class CsvParserPlugin
                                     return null;
                                 }
                                 String v = tokenizer.nextColumn();
-                                if (!v.isEmpty()) {
+                                if (v != null) {
                                     if (v.equals(nullStringOrNull)) {
                                         return null;
                                     }
