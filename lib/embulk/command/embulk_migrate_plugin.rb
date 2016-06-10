@@ -122,7 +122,7 @@ EOF
     # add rules...
     ##
 
-    migrator.write(".ruby-version", "jruby-9.1.1.0")
+    migrator.write(".ruby-version", "jruby-9.1.2.0")
 
     # update version at the end
     if from_ver <= version("0.1.0")
