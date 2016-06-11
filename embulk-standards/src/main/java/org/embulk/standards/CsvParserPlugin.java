@@ -260,7 +260,7 @@ public class CsvParserPlugin
                             public void booleanColumn(Column column)
                             {
                                 String v = nextColumn();
-                                if (v == null || v.isEmpty()) {
+                                if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
                                     pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
@@ -270,7 +270,7 @@ public class CsvParserPlugin
                             public void longColumn(Column column)
                             {
                                 String v = nextColumn();
-                                if (v == null || v.isEmpty()) {
+                                if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
                                     try {
@@ -285,7 +285,7 @@ public class CsvParserPlugin
                             public void doubleColumn(Column column)
                             {
                                 String v = nextColumn();
-                                if (v == null || v.isEmpty()) {
+                                if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
                                     try {
@@ -310,7 +310,7 @@ public class CsvParserPlugin
                             public void timestampColumn(Column column)
                             {
                                 String v = nextColumn();
-                                if (v == null || v.isEmpty()) {
+                                if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
                                     try {
@@ -325,7 +325,7 @@ public class CsvParserPlugin
                             public void jsonColumn(Column column)
                             {
                                 String v = nextColumn();
-                                if (v == null || v.isEmpty()) {
+                                if (v == null) {
                                     pageBuilder.setNull(column);
                                 } else {
                                     try {
