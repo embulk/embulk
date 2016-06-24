@@ -34,6 +34,7 @@ public class CsvTokenizer
     private final long maxQuotedSizeLimit;
     private final String commentLineMarker;
     private final LineDecoder input;
+    private final String nullStringOrNull;
 
     private RecordState recordState = RecordState.END;  // initial state is end of a record. nextRecord() must be called first
     private long lineNumber = 0;
@@ -63,6 +64,7 @@ public class CsvTokenizer
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
         commentLineMarker = task.getCommentLineMarker().orNull();
+        nullStringOrNull = task.getNullString().orNull();
         this.input = input;
     }
 
@@ -368,9 +370,30 @@ public class CsvTokenizer
         }
     }
 
-    public boolean wasQuotedColumn()
+    public String nextColumnOrNull()
     {
-        return wasQuotedColumn;
+        String v = nextColumn();
+        if (nullStringOrNull == null) {
+            if (v.isEmpty()) {
+                if (wasQuotedColumn) {
+                    return "";
+                }
+                else {
+                    return null;
+                }
+            }
+            else {
+                return v;
+            }
+        }
+        else {
+            if (v.equals(nullStringOrNull)) {
+                return null;
+            }
+            else {
+                return v;
+            }
+        }
     }
 
     private char nextChar()

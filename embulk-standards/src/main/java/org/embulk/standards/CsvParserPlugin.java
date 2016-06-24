@@ -233,7 +233,6 @@ public class CsvParserPlugin
         final TimestampParser[] timestampParsers = Timestamps.newTimestampColumnParsers(task, task.getSchemaConfig());
         final JsonParser jsonParser = new JsonParser();
         final CsvTokenizer tokenizer = new CsvTokenizer(new LineDecoder(input, task), task);
-        final String nullStringOrNull = task.getNullString().orNull();
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         final boolean allowExtraColumns = task.getAllowExtraColumns();
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
@@ -344,17 +343,7 @@ public class CsvParserPlugin
                                     //TODO warning
                                     return null;
                                 }
-                                String v = tokenizer.nextColumn();
-                                if (!v.isEmpty()) {
-                                    if (v.equals(nullStringOrNull)) {
-                                        return null;
-                                    }
-                                    return v;
-                                } else if (tokenizer.wasQuotedColumn()) {
-                                    return "";
-                                } else {
-                                    return null;
-                                }
+                                return tokenizer.nextColumnOrNull();
                             }
                         });
 
