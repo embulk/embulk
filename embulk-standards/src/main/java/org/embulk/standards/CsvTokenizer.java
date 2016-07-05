@@ -105,7 +105,11 @@ public class CsvTokenizer
 
     public boolean nextFile()
     {
-        return input.nextFile();
+        boolean next = input.nextFile();
+        if (next) {
+            lineNumber = 0;
+        }
+        return next;
     }
 
     // used by guess-csv
