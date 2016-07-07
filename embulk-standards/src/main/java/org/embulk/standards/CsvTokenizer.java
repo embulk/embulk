@@ -400,6 +400,11 @@ public class CsvTokenizer
         }
     }
 
+    public boolean wasQuotedColumn()
+    {
+        return wasQuotedColumn;
+    }
+
     private char nextChar()
     {
         Preconditions.checkState(line != null, "nextColumn is called after end of file");
