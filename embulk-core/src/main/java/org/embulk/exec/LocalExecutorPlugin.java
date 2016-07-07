@@ -424,6 +424,8 @@ public class LocalExecutorPlugin
 
         private long pageCount;
 
+        private RuntimeException reportedException;
+
         public ScatterTransactionalPageOutput(ProcessState state, int taskIndex, int scatterCount)
         {
             this.state = state;
@@ -490,7 +492,12 @@ public class LocalExecutorPlugin
 
         public void finish()
         {
-            completeWorkers();
+            try {
+                completeWorkers();
+            } catch (RuntimeException e) {
+                reportedException = e;
+                throw e;
+            }
             for (int i = 0; i < scatterCount; i++) {
                 if (filtereds[i] != null) {
                     filtereds[i].finish();
@@ -500,25 +507,42 @@ public class LocalExecutorPlugin
 
         public void close()
         {
-            completeWorkers();
-            for (int i = 0; i < scatterCount; i++) {
-                closeThese[i].close();
+            try {
+                completeWorkers();
+                for (int i = 0; i < scatterCount; i++) {
+                    closeThese[i].close();
+                }
+            } catch (RuntimeException e) {
+                if (reportedException != e) {
+                    throw e;
+                }
             }
         }
 
         public void abort()
         {
-            completeWorkers();
-            for (int i = 0; i < scatterCount; i++) {
-                if (trans[i] != null) {
-                    trans[i].abort();
+            try {
+                completeWorkers();
+                for (int i = 0; i < scatterCount; i++) {
+                    if (trans[i] != null) {
+                        trans[i].abort();
+                    }
+                }
+            } catch (RuntimeException e) {
+                if (reportedException != e) {
+                    throw e;
                 }
             }
         }
 
         public TaskReport commit()
         {
-            completeWorkers();
+            try {
+                completeWorkers();
+            } catch (RuntimeException e) {
+                reportedException = e;
+                throw e;
+            }
             for (int i = 0; i < scatterCount; i++) {
                 if (trans[i] != null) {
                     int outputTaskIndex = taskIndex * scatterCount + i;
