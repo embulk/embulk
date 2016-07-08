@@ -301,6 +301,7 @@ public class LocalExecutorPlugin
 
                     // outputCommitted
                     tran.commit();
+                    aborter.dontAbort();
                 }
             }
             finally {
