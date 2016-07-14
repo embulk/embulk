@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
@@ -127,9 +126,14 @@ public class JsonParserPlugin
                     // read json text before records
                     parser.skipFirst();
 
-                    Value value;
-                    while ((value = parser.readJson()) != null) {
+                    Value value = null;
+                    while (true) {
                         try {
+                            value = parser.readJson();
+                            if (value == null) {
+                                break;
+                            }
+
                             // make sure that it's map value
                             if (!value.isMapValue()) {
                                 throw new JsonRecordValidateException(
@@ -141,9 +145,9 @@ public class JsonParserPlugin
                         }
                         catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
-                                throw new DataException(String.format("Invalid record: %s", value.toJson()), e);
+                                throw new DataException(String.format("Invalid record: %s", prettyPrint(value)), e);
                             }
-                            log.warn(String.format("Skipped record (%s): %s", e.getMessage(), value.toJson()));
+                            log.warn(String.format("Skipped record (%s): %s", e.getMessage(), prettyPrint(value)));
                         }
                     }
 
@@ -156,6 +160,11 @@ public class JsonParserPlugin
             }
             pageBuilder.finish();
         }
+    }
+
+    private String prettyPrint(Value v)
+    {
+        return v != null ? v.toJson() : "null";
     }
 
     static PageBuilder newPageBuilder(Schema schema, PageOutput output)
@@ -255,10 +264,42 @@ public class JsonParserPlugin
             extends LineDecoder
             implements JsonFileInput
     {
+        private String line = null;
+        private int lineNumber = 0;
 
         public JsonLineDecoder(FileInput in, DecoderTask task)
         {
             super(in, task);
+        }
+
+        @Override
+        public boolean nextFile()
+        {
+            boolean next = super.nextFile();
+            if (next) {
+                lineNumber = 0;
+            }
+            return next;
+        }
+
+        public boolean nextLine()
+        {
+            line = super.poll();
+            boolean next = line != null;
+            if (next) {
+                lineNumber++;
+            }
+            return next;
+        }
+
+        public String getCurrentLine()
+        {
+            return line;
+        }
+
+        public int getCurrentLineNumber()
+        {
+            return lineNumber;
         }
     }
 
@@ -286,7 +327,12 @@ public class JsonParserPlugin
         public Value readJson()
                 throws IOException
         {
-            return readJsonObject(this.parser);
+            try {
+                return readJsonObject(this.parser); // throw JsonParseException
+            }
+            catch (com.fasterxml.jackson.core.JsonParseException e) {
+                throw new JsonParseException("Failed to parse JSON", e);
+            }
         }
 
         protected void throwJsonFileValidateException(String message)
@@ -437,7 +483,7 @@ public class JsonParserPlugin
             implements JsonFileParser
     {
         private final JsonFactory factory;
-        private final LineDecoder input;
+        private final JsonLineDecoder input;
 
         LinesParser(JsonFactory factory, JsonLineDecoder input)
         {
@@ -449,14 +495,15 @@ public class JsonParserPlugin
         public Value readJson()
                 throws IOException
         {
-            // TODO error handling
-
-            String line = input.poll();
-            if (!Strings.isNullOrEmpty(line)) {
-                return readJsonObject(factory.createParser(line));
-            }
-            else {
+            if (!input.nextLine()) {
                 return null;
+            }
+
+            try {
+                return readJsonObject(factory.createParser(input.getCurrentLine()));
+            }
+            catch (com.fasterxml.jackson.core.JsonParseException | JsonParseException e) {
+                throw new JsonRecordValidateException(String.format("Failed to parse JSON record at line %d: %s", input.getCurrentLineNumber(), input.getCurrentLine()));
             }
         }
 
