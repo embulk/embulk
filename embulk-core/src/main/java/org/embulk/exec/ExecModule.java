@@ -31,7 +31,7 @@ public class ExecModule
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
         binder.bind(TempFileAllocator.class).in(Scopes.SINGLETON);
 
-        // GuessExecutor
+        // GuessExecutor, PreviewExecutor
         registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
         registerPluginTo(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
 
