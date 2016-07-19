@@ -13,6 +13,9 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.Buffer;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
@@ -85,10 +88,22 @@ public class PreviewExecutor
 
     private PreviewResult doPreview(ConfigSource config)
     {
-        final PreviewTask task = config.loadConfig(PreviewTask.class);
-        final InputPlugin input = newInputPlugin(task);
-        final List<FilterPlugin> filterPlugins = newFilterPlugins(task);
+        PreviewTask task = config.loadConfig(PreviewTask.class);
+        InputPlugin inputPlugin = newInputPlugin(task);
+        List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
+        if (inputPlugin instanceof FileInputRunner) { // file input runner
+            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"));
+            FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample));
+            return doPreview(task, previewRunner, filterPlugins);
+        }
+        else {
+            return doPreview(task, inputPlugin, filterPlugins);
+        }
+    }
+
+    private PreviewResult doPreview(final PreviewTask task, final InputPlugin input, final List<FilterPlugin> filterPlugins)
+    {
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
                 public List<TaskReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount)
@@ -96,8 +111,6 @@ public class PreviewExecutor
                     Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas)
                         {
-                            InputPlugin input = newInputPlugin(task);
-                            List<FilterPlugin> filterPlugins = newFilterPlugins(task);
                             Schema inputSchema = filterSchemas.get(0);
                             Schema outputSchema = filterSchemas.get(filterSchemas.size() - 1);
 
