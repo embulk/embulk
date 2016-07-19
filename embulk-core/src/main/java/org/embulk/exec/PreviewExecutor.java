@@ -93,13 +93,7 @@ public class PreviewExecutor
         List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
         if (inputPlugin instanceof FileInputRunner) { // file input runner
-            ConfigSource originalConfig = config.deepCopy();
-
-            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, originalConfig.getNested("in"));
-            if (sample.limit() == 0) {
-                throw new NoSampleException("first input file is empty");
-            }
-
+            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"));
             FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample));
             return doPreview(task, previewRunner, filterPlugins);
         }
