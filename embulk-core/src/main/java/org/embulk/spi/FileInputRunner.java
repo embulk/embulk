@@ -83,9 +83,8 @@ public class FileInputRunner
     public ConfigDiff guess(ConfigSource execConfig, ConfigSource config)
     {
         Buffer sample = SamplingParserPlugin.runFileInputSampling(this, config);
-        if (sample.limit() == 0) {
-            throw new NoSampleException("Can't get sample data because the first input file is empty");
-        }
+        // SamplingParserPlugin.runFileInputSampling throws NoSampleException if there're
+        // no files or all files are smaller than minSampleSize (40 bytes).
 
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
         return guessExecutor.guessParserConfig(sample, config, execConfig);
