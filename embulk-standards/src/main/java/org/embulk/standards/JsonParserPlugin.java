@@ -95,8 +95,14 @@ public class JsonParserPlugin
     {
         PluginTask task = configSource.loadConfig(PluginTask.class);
 
-        if (task.getFileType().equals(FileType.OBJECT) && !task.getObjectField().isPresent()) {
-            throw new ConfigException("Must specify 'object_field' option if 'object' is used as file_type");
+        switch (task.getFileType()) {
+        case OBJECT:
+            if (!task.getObjectField().isPresent()) {
+                throw new ConfigException("Must specify 'object_field' option if 'object' is used as file_type option");
+            }
+            break;
+        default:
+            break;
         }
 
         control.run(task.dump(), newSchema());
