@@ -552,6 +552,7 @@ public class LocalExecutorPlugin
                     catch (InterruptedException ex) {
                         error = ex;
                     }
+                    outputWorkers[i] = null;
                     if (error != null) {
                         throw Throwables.propagate(error);
                     }
