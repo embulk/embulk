@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import org.embulk.config.Config;
@@ -22,7 +23,6 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Schema;
-import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.json.JsonUtil;
 import org.embulk.spi.type.Types;
 import org.embulk.spi.util.FileInputInputStream;
@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+
+import static java.util.Locale.ENGLISH;
 
 public class JsonParserPlugin
         implements ParserPlugin
@@ -79,7 +81,8 @@ public class JsonParserPlugin
                     return type;
                 }
             }
-            throw new ConfigException(String.format("Unknown FileType '%s'. Available options are [sequence, object, array, lines]", name));
+            throw new ConfigException(String.format(ENGLISH,
+                        "Unknown FileType '%s'. Available options are [sequence, object, array, lines]", name));
         }
     }
 
@@ -124,54 +127,64 @@ public class JsonParserPlugin
         final FileType fileType = task.getFileType();
         switch (fileType) {
         case LINES:
-            doRunWithLineDecoder(task, schema, input, output);
+            // parseLines can recover from parsing error by skipping a line
+            parseLines(task, schema, input, output);
             break;
         default:
-            doRun(task, schema, input, output);
+            // parseFile can't recover from parsing error
+            parseFile(task, schema, input, output);
             break;
         }
     }
 
-    void doRunWithLineDecoder(PluginTask task, Schema schema, FileInput input, PageOutput output)
+    private void parseLines(PluginTask task, Schema schema, FileInput input, PageOutput output)
     {
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
         final Column column = schema.getColumn(0); // record column
 
         try (PageBuilder pageBuilder = newPageBuilder(schema, output)) {
             while (input.nextFile()) {
+                int lineNumber = 0;
                 try (LineDecoder lines = new LineDecoder(input, task)) {
-                    int lineNumber = 0;
-                    String line;
-                    Value value;
                     while (true) {
-                        if ((line = lines.poll()) == null) { // RuntimeException
+                        String line;
+                        try {
+                            line = lines.poll();
+                        }
+                        catch (RuntimeException ex) {
+                            // exception thrown by lines.poll is not retryable
+                            throw new DataException(ex);
+                        }
+                        if (line == null) {
                             break;
                         }
                         lineNumber++;
 
-                        try (JsonParser jp = newJsonParser(line)) {
-                            value = validateValueType(JsonUtil.readJson(jp)); // IOException, JsonRecordValidateException
-                            pageBuilder.setJson(column, value);
-                            pageBuilder.addRecord();
+                        Value value;
+                        try (JsonParser jp = factory.createParser(line)) {
+                            value = JsonUtil.readJson(jp);
+                            validateValueType(value);
                         }
-                        catch (IOException | JsonParseException e) {
+                        catch (IOException | JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
-                                throw new DataException(String.format("Invalid record at line %d: %s", lineNumber, line), e);
+                                throw new DataException(String.format(ENGLISH,
+                                            "Invalid record at line %d: %s", lineNumber, line), e);
                             }
-                            log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), line));
+                            log.warn(String.format(ENGLISH,
+                                        "Skipped line %d (%s): %s", lineNumber, e.getMessage(), line));
+                            continue;
                         }
+
+                        pageBuilder.setJson(column, value);
+                        pageBuilder.addRecord();
                     }
-                }
-                catch (RuntimeException e) {
-                    // exception thrown by lines.poll is not retryable
-                    throw new DataException(e);
                 }
             }
             pageBuilder.finish();
         }
     }
 
-    void doRun(PluginTask task, Schema schema, FileInput input, PageOutput output)
+    private void parseFile(PluginTask task, Schema schema, FileInput input, PageOutput output)
     {
         final FileType fileType = task.getFileType();
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
@@ -180,30 +193,33 @@ public class JsonParserPlugin
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
-                try (JsonFileParser fileParser = newJsonFileParser(task, fileType, newJsonParser(in))) {
+                try (JacksonFileParser fileParser = newFileParser(task, fileType, factory.createParser(in))) {
                     fileParser.skipHeader(); // process file header
 
-                    Value value;
                     while (true) {
+                        Value value;
                         if ((value = fileParser.nextValue()) == null) {
                             break;
                         }
 
                         try {
-                            pageBuilder.setJson(column, validateValueType(value)); // JsonRecordValidateException
+                            validateValueType(value);
+                            pageBuilder.setJson(column, value);
                             pageBuilder.addRecord();
                         }
                         catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
-                                throw new DataException(String.format("Invalid record at %s", fileParser.getTokenLocation()), e);
+                                throw new DataException(String.format(ENGLISH,
+                                            "Invalid record at %s", fileParser.getTokenLocation()), e);
                             }
-                            log.warn(String.format("Skipped record at %s: %s", fileParser.getTokenLocation(), e.getMessage()));
+                            log.warn(String.format(ENGLISH,
+                                        "Skipped record at %s: %s", fileParser.getTokenLocation(), e.getMessage()));
                         }
                     }
 
                     fileParser.validateFooter(); // process file footer
                 }
-                catch (IOException | JsonParseException e) {
+                catch (IOException | JsonFileException e) {
                     throw new DataException(e);
                 }
             }
@@ -216,19 +232,7 @@ public class JsonParserPlugin
         return new PageBuilder(Exec.getBufferAllocator(), schema, output);
     }
 
-    JsonParser newJsonParser(String line)
-            throws IOException
-    {
-        return factory.createParser(line);
-    }
-
-    JsonParser newJsonParser(InputStream in)
-            throws IOException
-    {
-        return factory.createParser(in);
-    }
-
-    JsonFileParser newJsonFileParser(PluginTask task, FileType fileType, JsonParser jsonParser)
+    private JacksonFileParser newFileParser(PluginTask task, FileType fileType, JsonParser jsonParser)
             throws IOException
     {
         switch (fileType) {
@@ -243,16 +247,20 @@ public class JsonParserPlugin
         }
     }
 
-    Value validateValueType(Value value)
+    private void validateValueType(Value value)
+        throws JsonRecordValidateException
     {
-        if (!value.isArrayValue() && !value.isMapValue()) {
-            throw new JsonRecordValidateException(String.format("Must be the type of Array or Map: %s", value.toJson()));
+        if (value.isArrayValue() || value.isMapValue()) {
+            return;
         }
-        return value;
+        else {
+            throw new JsonRecordValidateException(String.format(ENGLISH,
+                        "Must be the type of Array or Map: %s", value.toJson()));
+        }
     }
 
     static class JsonRecordValidateException
-            extends JsonParseException
+            extends Exception
     {
         JsonRecordValidateException(String message)
         {
@@ -260,35 +268,41 @@ public class JsonParserPlugin
         }
     }
 
-    interface JsonFileParser
-            extends Closeable
+    static class JsonFileException
+            extends Exception
     {
-        Value nextValue() throws IOException;
-
-        void skipHeader() throws IOException;
-        void validateFooter() throws IOException;
-
-        String getTokenLocation();
+        JsonFileException(String message)
+        {
+            super(message);
+        }
     }
 
-    static abstract class AbstractJsonFileParser
-            implements JsonFileParser
+    static abstract class JacksonFileParser
+            implements Closeable
     {
         protected final FileType fileType;
         protected final JsonParser parser;
 
-        protected AbstractJsonFileParser(FileType fileType, JsonParser parser)
+        protected JacksonFileParser(FileType fileType, JsonParser parser)
                 throws IOException
         {
             this.fileType = fileType;
             this.parser = parser;
         }
 
-        @Override
+        public abstract void skipHeader() throws IOException, JsonFileException;
+
+        public abstract void validateFooter() throws IOException, JsonFileException;
+
         public Value nextValue()
                 throws IOException
         {
             return JsonUtil.readJson(parser);
+        }
+
+        public String getTokenLocation()
+        {
+            return parser.getTokenLocation().toString();
         }
 
         @Override
@@ -299,16 +313,10 @@ public class JsonParserPlugin
                 parser.close();
             }
         }
-
-        @Override
-        public String getTokenLocation()
-        {
-            return parser.getTokenLocation().toString();
-        }
     }
 
     static class SequenceParser
-            extends AbstractJsonFileParser
+            extends JacksonFileParser
     {
         // {"col":"val1"}{"col":"val2"}
         public SequenceParser(JsonParser parser)
@@ -319,17 +327,17 @@ public class JsonParserPlugin
 
         @Override
         public void skipHeader()
-                throws IOException
+                throws IOException, JsonFileException
         { }
 
         @Override
         public void validateFooter()
-                throws IOException
+                throws IOException, JsonFileException
         { }
     }
 
     static class ObjectParser
-            extends AbstractJsonFileParser
+            extends JacksonFileParser
     {
         private final String fieldName;
 
@@ -343,46 +351,50 @@ public class JsonParserPlugin
 
         @Override
         public void skipHeader()
-                throws IOException
+                throws IOException, JsonFileException
         {
             JsonToken token;
 
             if ((token = parser.nextToken()) == null || !token.equals(JsonToken.START_OBJECT)) {
-                throw new JsonParseException(String.format("Unexpected header %s at %s", token, getTokenLocation()));
+                throw new JsonFileException(String.format(ENGLISH,
+                            "Unexpected header %s at %s", token, getTokenLocation()));
             }
 
             while (true) {
                 token = parser.nextToken();
                 if (token == null) {
-                    throw new JsonParseException("Unexpected header");
+                    throw new JsonFileException("Unexpected header");
                 }
                 String key = parser.getCurrentName();
                 if (key == null) {
-                    throw new JsonParseException(String.format("Unexpected token %s at %s", token, getTokenLocation()));
+                    throw new JsonFileException(String.format(ENGLISH,
+                                "Unexpected token %s at %s", token, getTokenLocation()));
                 }
                 else if (key.equals(fieldName)) {
                     break;
                 }
                 token = parser.nextToken();
                 if (token == null) {
-                    throw new JsonParseException("Unexpected header");
+                    throw new JsonFileException("Unexpected header");
                 }
             }
 
             if ((token = parser.nextToken()) == null || !token.equals(JsonToken.START_ARRAY)) {
-                throw new JsonParseException(String.format("Unexpected header %s at %s", token, getTokenLocation()));
+                throw new JsonFileException(String.format(ENGLISH,
+                            "Unexpected header %s at %s", token, getTokenLocation()));
             }
         }
 
         @Override
         public void validateFooter()
-                throws IOException
+                throws IOException, JsonFileException
         {
             JsonToken token;
 
             // it should not use nextToken method first. Because the token is already read before.
             if ((token = parser.getCurrentToken()) == null || !token.equals(JsonToken.END_ARRAY)) {
-                throw new JsonParseException(String.format("Unexpected footer %s at %s", token, getTokenLocation()));
+                throw new JsonFileException(String.format(ENGLISH,
+                            "Unexpected footer %s at %s", token, getTokenLocation()));
             }
 
             while (true) {
@@ -391,22 +403,23 @@ public class JsonParserPlugin
                     return;
                 }
                 else if (token == null) {
-                    throw new JsonParseException("Unexpected footer");
+                    throw new JsonFileException("Unexpected footer");
                 }
                 String key = parser.getCurrentName();
                 if (key == null) {
-                    throw new JsonParseException(String.format("Unexpected token %s at %s", token, getTokenLocation()));
+                    throw new JsonFileException(String.format(ENGLISH,
+                                "Unexpected token %s at %s", token, getTokenLocation()));
                 }
                 token = parser.nextToken();
                 if (token == null) {
-                    throw new JsonParseException("Unexpected footer");
+                    throw new JsonFileException("Unexpected footer");
                 }
             }
         }
     }
 
     static class ArrayParser
-            extends AbstractJsonFileParser
+            extends JacksonFileParser
     {
         // [{"col":"val1"},{"col":"val2"},...]
         public ArrayParser(JsonParser parser)
@@ -417,22 +430,24 @@ public class JsonParserPlugin
 
         @Override
         public void skipHeader()
-                throws IOException
+                throws IOException, JsonFileException
         {
             JsonToken token = parser.nextToken();
             if (token == null || !token.equals(JsonToken.START_ARRAY)) {
-                throw new JsonParseException(String.format("Unexpected header %s at %s", token, getTokenLocation()));
+                throw new JsonFileException(String.format(ENGLISH,
+                            "Unexpected header %s at %s", token, getTokenLocation()));
             }
         }
 
         @Override
         public void validateFooter()
-                throws IOException
+                throws IOException, JsonFileException
         {
             // it should not use nextToken method first. Because the token is already read before.
             JsonToken token = parser.getCurrentToken();
             if (token == null || !token.equals(JsonToken.END_ARRAY)) {
-                throw new JsonParseException(String.format("Unexpected footer %s at %s", token, getTokenLocation()));
+                throw new JsonFileException(String.format(ENGLISH,
+                            "Unexpected footer %s at %s", token, getTokenLocation()));
             }
         }
     }

@@ -138,7 +138,12 @@ public class JsonParser
 
         public Value next() throws IOException
         {
-            return JsonUtil.readJson(parser);
+            try {
+                return JsonUtil.readJson(parser);
+            }
+            catch (com.fasterxml.jackson.core.JsonParseException ex) {
+                throw new JsonParseException(ex.getMessage() + " at " + ex.getLocation());
+            }
         }
     }
 }

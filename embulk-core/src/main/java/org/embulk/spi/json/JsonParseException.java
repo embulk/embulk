@@ -2,6 +2,7 @@ package org.embulk.spi.json;
 
 import org.embulk.spi.DataException;
 
+@Deprecated
 public class JsonParseException
         extends DataException
 {

@@ -1,6 +1,7 @@
 package org.embulk.spi.json;
 
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.JsonParseException;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
@@ -17,28 +18,14 @@ public class JsonUtil
     public static Value readJson(com.fasterxml.jackson.core.JsonParser parser)
             throws IOException
     {
-        try {
-            JsonToken token = parser.nextToken();
-            if (token == null) {
-                return null;
-            }
-            return jsonTokenToValue(parser, token);
+        JsonToken token = parser.nextToken();
+        if (token == null) {
+            return null;
         }
-        catch (com.fasterxml.jackson.core.JsonParseException e) {
-            throw new JsonParseException("Failed to parse JSON", e);
-        }
-        catch (IOException e) {
-            throw e;
-        }
-        catch (JsonParseException e) {
-            throw e;
-        }
-        catch (RuntimeException e) {
-            throw new JsonParseException("Failed to parse JSON", e);
-        }
+        return jsonTokenToValue(parser, token);
     }
 
-    public static Value jsonTokenToValue(com.fasterxml.jackson.core.JsonParser parser, JsonToken token)
+    private static Value jsonTokenToValue(com.fasterxml.jackson.core.JsonParser parser, JsonToken token)
             throws IOException
     {
         switch(token) {
@@ -67,7 +54,7 @@ public class JsonUtil
                     return ValueFactory.newArray(list);
                 }
                 else if (token == null) {
-                    throw new JsonParseException("Unexpected end of JSON at " + parser.getTokenLocation());
+                    throw new JsonParseException("Unexpected end of JSON", parser.getTokenLocation());
                 }
                 list.add(jsonTokenToValue(parser, token));
             }
@@ -79,15 +66,15 @@ public class JsonUtil
                     return ValueFactory.newMap(map);
                 }
                 else if (token == null) {
-                    throw new JsonParseException("Unexpected end of JSON at " + parser.getTokenLocation());
+                    throw new JsonParseException("Unexpected end of JSON object", parser.getTokenLocation());
                 }
                 String key = parser.getCurrentName();
                 if (key == null) {
-                    throw new JsonParseException("Unexpected token " + token + " at " + parser.getTokenLocation());
+                    throw new JsonParseException("Unexpected token " + token, parser.getTokenLocation());
                 }
                 token = parser.nextToken();
                 if (token == null) {
-                    throw new JsonParseException("Unexpected end of JSON at " + parser.getTokenLocation());
+                    throw new JsonParseException("Unexpected end of JSON object", parser.getTokenLocation());
                 }
                 Value value = jsonTokenToValue(parser, token);
                 map.put(ValueFactory.newString(key), value);
@@ -98,7 +85,7 @@ public class JsonUtil
         case END_OBJECT:
         case NOT_AVAILABLE:
         default:
-            throw new JsonParseException("Unexpected token " + token + " at " + parser.getTokenLocation());
+            throw new JsonParseException("Unexpected token " + token + " at ", parser.getTokenLocation());
         }
     }
 }
