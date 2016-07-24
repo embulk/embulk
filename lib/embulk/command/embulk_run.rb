@@ -341,7 +341,9 @@ examples:
     if m && m[1] != "org.jruby.Main"
       # Main-Class is not jruby
       Gem.define_singleton_method(:ruby) do
-        "java -cp #{jar_path(jar_uri)} org.jruby.Main"
+        path = jar_uri.sub(/^file:/, "").sub(/!.*/, "")
+        path = path.sub(/^\//, "") if win_platform? && path =~ /^\/[A-Za-z]:/
+        "java -cp #{path} org.jruby.Main"
       end
     end
   end
