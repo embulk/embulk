@@ -2,11 +2,12 @@ apply plugin: 'com.github.jruby-gradle.base'
 
 import com.github.jrubygradle.JRubyExec
 jruby {
-    execVersion = project.jrubyVersion
+    execVersion = '9.0.4.0'  // TODO jruby-9.1.2.0 causes "Unhandled Java exception: IRReturnJump..." exception
+    //execVersion = project.jrubyVersion
 }
 
 dependencies {
-    jrubyExec 'rubygems:yard:0.8.7.6'
+    jrubyExec 'rubygems:yard:0.9.5'
 }
 
 task sphinxHtml(type: Exec) {
