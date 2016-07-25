@@ -6,10 +6,6 @@ module Embulk
     # multiple classloaders. default classloader should be Plugin.class.getClassloader().
     java.lang.Thread.current_thread.set_context_class_loader(nil)
 
-    # Gem.path is called when GemRunner installs a gem with native extension.
-    # Running extconf.rb fails without this hack.
-    fix_gem_ruby_path
-
     require 'embulk/version'
 
     i = argv.find_index {|arg| arg !~ /^\-/ }
@@ -326,25 +322,6 @@ examples:
   end
 
   private
-
-  def self.fix_gem_ruby_path
-    # Oveerride Gem.ruby method so that rubygems can execute ruby command (as another process).
-    # By default, Gem.ruby uses "java -jar jar_path" command. However, it doesn't work because
-    # Main-Class is overwritten to org.embulk.cli.Main. Here fixes it to use
-    # "java -cp jar_path org.jruby.main" instead.
-
-    jar, resource = __FILE__.split("!", 2)
-    jar_uri = URI.parse(jar).path rescue jar
-
-    manifest = File.read("#{jar_uri}!/META-INF/MANIFEST.MF") rescue ""
-    m = /Main-Class: ([^\r\n]+)/.match(manifest)
-    if m && m[1] != "org.jruby.Main"
-      # Main-Class is not jruby
-      Gem.define_singleton_method(:ruby) do
-        "java -cp #{jar_path(jar_uri)} org.jruby.Main"
-      end
-    end
-  end
 
   def self.setup_plugin_paths(plugin_paths)
     plugin_paths.each do |path|
