@@ -111,6 +111,7 @@ module Embulk::Guess
       TYPE_COALESCE = Hash[{
         long: :double,
         boolean: :long,
+        timestamp: :long,  # TimeFormatGuess matches with digits without delimiters
       }.map {|k,v|
         [[k.to_s, v.to_s].sort, v.to_s]
       }]
