@@ -47,7 +47,7 @@ Type                  description                      example
 **ruby-output**       Ruby record output plugin        ``mysql``
 **ruby-filter**       Ruby record filter plugin        ``add-hostname``
 **ruby-parser**       Ruby file parser plugin          ``csv``
-**ruby-formatter**    Ruby file formatter plugin       ``csv```
+**ruby-formatter**    Ruby file formatter plugin       ``csv``
 ====================  ===============================  =================
 
 For example, if you want to parse a new file format using Java, type this command:
