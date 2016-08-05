@@ -414,27 +414,34 @@ public class RubyDateParser
 
 	public boolean setYearIfNotSet(int v)
 	{
-	    return setIfNotSet(year, v);
+	    if (has(year)) {
+		return false;
+	    }
+	    else {
+		year = v;
+		return true;
+	    }
 	}
 
 	public boolean setMonthIfNotSet(int v)
 	{
-	    return setIfNotSet(mon, v);
+	    if (has(mon)) {
+		return false;
+	    }
+	    else {
+		mon = v;
+		return true;
+	    }
 	}
 
 	public boolean setMdayIfNotSet(int v)
 	{
-	    return setIfNotSet(mday, v);
-	}
-
-	private static boolean setIfNotSet(int prop, int v)
-	{
-	    if (has(prop)) {
-		return true;
+	    if (has(mday)) {
+		return false;
 	    }
 	    else {
-		prop = v;
-		return false;
+		mday = v;
+		return true;
 	    }
 	}
 
