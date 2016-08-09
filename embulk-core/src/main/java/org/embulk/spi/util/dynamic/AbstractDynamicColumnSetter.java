@@ -32,6 +32,8 @@ public abstract class AbstractDynamicColumnSetter
 
     public abstract void setNull();
 
+    public abstract void set(byte[] v);
+
     public abstract void set(boolean value);
 
     public abstract void set(long value);

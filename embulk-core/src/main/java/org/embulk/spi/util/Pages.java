@@ -59,6 +59,16 @@ public class Pages
         public abstract void visit(Column column, Object obj);
 
         @Override
+        public void binaryColumn(Column column)
+        {
+            if (record.isNull(column)) {
+                visit(column, null);
+            } else {
+                visit(column, record.getBinary(column));
+            }
+        }
+
+        @Override
         public void booleanColumn(Column column)
         {
             if (record.isNull(column)) {

@@ -27,6 +27,12 @@ public class JsonColumnSetter
     }
 
     @Override
+    public void set(byte[] v)
+    {
+        pageBuilder.setJson(column, ValueFactory.newBinary(v));
+    }
+
+    @Override
     public void set(boolean v)
     {
         pageBuilder.setJson(column, ValueFactory.newBoolean(v));

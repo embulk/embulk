@@ -29,6 +29,8 @@ import org.embulk.spi.util.LineDecoder;
 import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
 
+import java.nio.charset.Charset;
+
 public class CsvParserPlugin
         implements ParserPlugin
 {
@@ -257,6 +259,17 @@ public class CsvParserPlugin
 
                     try {
                         schema.visitColumns(new ColumnVisitor() {
+                            @Override
+                            public void binaryColumn(Column column)
+                            {
+                                String v = nextColumn();
+                                if (v == null) {
+                                    pageBuilder.setNull(column);
+                                } else {
+                                    pageBuilder.setBinary(column, v.getBytes(Charset.defaultCharset()));
+                                }
+                            }
+
                             public void booleanColumn(Column column)
                             {
                                 String v = nextColumn();

@@ -30,6 +30,7 @@ public class PageBuilder
     private int count;
     private int position;
     private final byte[] nullBitSet;
+    private final BiMap<byte[], Integer> binaryReferences = HashBiMap.create();
     private final BiMap<String, Integer> stringReferences = HashBiMap.create();
     private List<ImmutableValue> valueReferences = new ArrayList<>();
     private int referenceSize;
@@ -54,6 +55,7 @@ public class PageBuilder
         this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
+        this.binaryReferences.clear();
         this.stringReferences.clear();
         this.valueReferences = new ArrayList<>();
         this.referenceSize = 0;
@@ -77,6 +79,25 @@ public class PageBuilder
     private void clearNull(int columnIndex)
     {
         nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
+    }
+
+    public void setBinary(Column column, byte[] value)
+    {
+        setBinary(column.getIndex(), value);
+    }
+
+    public void setBinary(int columnIndex, byte[] value)
+    {
+        Integer reuseIndex = binaryReferences.get(value);
+        if (reuseIndex != null) {
+            bufferSlice.setInt(getOffset(columnIndex), reuseIndex);
+        } else {
+            int index = binaryReferences.size();
+            binaryReferences.put(value, index);
+            bufferSlice.setInt(getOffset(columnIndex), index);
+            referenceSize += value.length * 2 + 4;  // assuming size of char = size of byte * 2 + length
+        }
+        clearNull(columnIndex);
     }
 
     public void setBoolean(Column column, boolean value)
@@ -169,6 +190,33 @@ public class PageBuilder
         return position + columnOffsets[columnIndex];
     }
 
+    private static class BinaryReferenceSortComparator
+            implements Comparator<Map.Entry<byte[], Integer>>, Serializable
+    {
+        @Override
+        public int compare(Map.Entry<byte[], Integer> e1, Map.Entry<byte[], Integer> e2)
+        {
+            return e1.getValue().compareTo(e2.getValue());
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return obj instanceof BinaryReferenceSortComparator;
+        }
+    }
+
+    private List<byte[]> getSortedBinaryReferences()
+    {
+        ArrayList<Map.Entry<byte[], Integer>> s = new ArrayList<>(binaryReferences.entrySet());
+        Collections.sort(s, new BinaryReferenceSortComparator());
+        byte[][] array = new byte[s.size()][];
+        for (int i=0; i < array.length; i++) {
+            array[i] = s.get(i).getKey();
+        }
+        return Arrays.asList(array);
+    }
+
     private static class StringReferenceSortComparator
             implements Comparator<Map.Entry<String, Integer>>, Serializable
     {
@@ -222,6 +270,7 @@ public class PageBuilder
 
             // flush page
             Page page = Page.wrap(buffer)
+                .setBinaryReferences(getSortedBinaryReferences())
                 .setStringReferences(getSortedStringReferences())
                 .setValueReferences(valueReferences);
             buffer = null;

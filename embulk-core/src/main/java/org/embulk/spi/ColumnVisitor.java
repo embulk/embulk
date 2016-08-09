@@ -2,6 +2,8 @@ package org.embulk.spi;
 
 public interface ColumnVisitor
 {
+    void binaryColumn(Column column);
+
     void booleanColumn(Column column);
 
     void longColumn(Column column);

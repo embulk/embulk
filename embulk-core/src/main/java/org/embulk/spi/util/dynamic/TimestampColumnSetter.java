@@ -7,6 +7,8 @@ import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampParseException;
 import org.msgpack.value.Value;
 
+import java.nio.charset.Charset;
+
 public class TimestampColumnSetter
         extends AbstractDynamicColumnSetter
 {
@@ -24,6 +26,12 @@ public class TimestampColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
+    }
+
+    @Override
+    public void set(byte[] v)
+    {
+        set(new String(v, Charset.defaultCharset()));
     }
 
     @Override

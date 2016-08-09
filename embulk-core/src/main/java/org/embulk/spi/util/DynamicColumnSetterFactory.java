@@ -3,12 +3,14 @@ package org.embulk.spi.util;
 import org.joda.time.DateTimeZone;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
+import org.embulk.spi.type.BinaryType;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.LongType;
 import org.embulk.spi.type.DoubleType;
 import org.embulk.spi.type.StringType;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.type.JsonType;
+import org.embulk.spi.util.dynamic.BinaryColumnSetter;
 import org.embulk.spi.util.dynamic.BooleanColumnSetter;
 import org.embulk.spi.util.dynamic.LongColumnSetter;
 import org.embulk.spi.util.dynamic.DoubleColumnSetter;
@@ -45,7 +47,11 @@ public class DynamicColumnSetterFactory
     public DynamicColumnSetter newColumnSetter(PageBuilder pageBuilder, Column column)
     {
         Type type = column.getType();
-        if (type instanceof BooleanType) {
+        if (type instanceof BinaryType) {
+            TimestampFormatter formatter = new TimestampFormatter(task.getJRuby(),
+                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+            return new BinaryColumnSetter(pageBuilder, column, defaultValue, formatter);
+        } else if (type instanceof BooleanType) {
             return new BooleanColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof LongType) {
             return new LongColumnSetter(pageBuilder, column, defaultValue);

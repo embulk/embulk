@@ -79,7 +79,11 @@ module Embulk::Guess
         rescue
         end
 
-        return "string"
+        if str.encoding == Encoding.find('UTF-8')
+          return "string"
+        end
+
+        return "binary"
       end
 
       def merge_types(types)

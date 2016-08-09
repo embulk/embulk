@@ -20,6 +20,8 @@ import org.embulk.spi.util.LineEncoder;
 import org.embulk.spi.util.Timestamps;
 import org.embulk.spi.util.Newline;
 import org.msgpack.value.Value;
+
+import java.nio.charset.Charset;
 import java.util.Map;
 
 public class CsvFormatterPlugin
@@ -129,6 +131,17 @@ public class CsvFormatterPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     schema.visitColumns(new ColumnVisitor() {
+                        @Override
+                        public void binaryColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                addValue(new String(pageReader.getBinary(column), Charset.defaultCharset()));
+                            } else {
+                                addNullString();
+                            }
+                        }
+
                         public void booleanColumn(Column column)
                         {
                             addDelimiter(column);
