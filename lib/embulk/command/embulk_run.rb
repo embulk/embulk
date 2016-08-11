@@ -284,7 +284,12 @@ examples:
     else
       require 'json'
 
-      setup_plugin_paths(plugin_paths)
+      # Gem::StubSpecification is an internal API that seems chainging often.
+      # Gem::Specification.add_spec is deprecated also. Therefore, here makes
+      # -L <path> option alias of -I <path>/lib by assuming that *.gemspec file
+      # always has require_paths = ["lib"].
+      load_paths = load_paths + plugin_paths.map {|path| File.join(path, "lib") }
+
       setup_load_paths(load_paths)
       setup_classpaths(classpaths)
 
@@ -322,27 +327,6 @@ examples:
   end
 
   private
-
-  def self.setup_plugin_paths(plugin_paths)
-    plugin_paths.each do |path|
-      unless File.directory?(path)
-        raise "Path '#{path}' is not a directory"
-      end
-      specs = Dir[File.join(File.expand_path(path), "*.gemspec")]
-      if specs.empty?
-        raise "Path '#{path}' does not include *.gemspec file. Hint: Did you run './gradlew package' command?"
-      end
-      specs.each do |spec|
-        gem_path = File.dirname(spec)
-        Dir.chdir(path) do
-          # cd to path because spec could include `git ...`
-          stub = Gem::StubSpecification.new(spec)
-          stub.define_singleton_method(:full_gem_path) { gem_path }
-          Gem::Specification.add_spec(stub)
-        end
-      end
-    end
-  end
 
   def self.setup_load_paths(load_paths)
     # first $LOAD_PATH has highet priority. later load_paths should have highest priority.
