@@ -21,7 +21,6 @@ import org.embulk.plugin.PluginManager;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampFormatter.FormatterTask;
-import org.embulk.spi.unit.TimestampParam;
 
 public class ExecSession
 {
@@ -42,7 +41,7 @@ public class ExecSession
     {
         @Config("transaction_time")
         @ConfigDefault("null")
-        Optional<TimestampParam> getTransactionTime();
+        Optional<Timestamp> getTransactionTime();
     }
 
     public static class Builder
@@ -93,8 +92,8 @@ public class ExecSession
     {
         this(injector,
                 configSource.loadConfig(SessionTask.class).getTransactionTime().or(
-                    TimestampParam.of(Timestamp.ofEpochMilli(System.currentTimeMillis()))
-                    ).getTimestamp(), // TODO get nanoseconds for default
+                    Timestamp.ofEpochMilli(System.currentTimeMillis())
+                    ), // TODO get nanoseconds for default
                 null);
     }
 
