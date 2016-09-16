@@ -32,7 +32,10 @@ public class ResumableInputStream
     private void reopen(Exception closedCause) throws IOException
     {
         if (in != null) {
-            in.close();
+            try {
+                in.close();
+            } catch (IOException ignored) {
+            }
             in = null;
         }
         in = reopener.reopen(offset, closedCause);
