@@ -57,20 +57,20 @@ module Embulk
 
     def self.ruby_adapter_class(java_class, ruby_base_class, ruby_module)
       Class.new(ruby_base_class) do
-        const_set(:JAVA_CLASS, java_class)
+        const_set(:PLUGIN_JAVA_CLASS, java_class)
 
         include ruby_module
         extend ruby_module::ClassMethods
 
-        unless method_defined?(:java_object)
-          def java_object
-            @java_object ||= self.class.new_java
+        unless method_defined?(:plugin_java_object)
+          def plugin_java_object
+            @plugin_java_object ||= self.class.new_java
           end
         end
 
-        unless (class<<self;self;end).method_defined?(:java_class)
-          def self.java_class
-            self::JAVA_CLASS
+        unless (class<<self;self;end).method_defined?(:plugin_java_class)
+          def self.plugin_java_class
+            self::PLUGIN_JAVA_CLASS
           end
         end
 
@@ -81,7 +81,7 @@ module Embulk
         #      ruby_module::ClassMethods includes other modules.
         unless ruby_module::ClassMethods.method_defined?(:new_java)
           def self.new_java
-            Java.injector.getInstance(java_class)
+            Java.injector.getInstance(plugin_java_class)
           end
         end
       end
