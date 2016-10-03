@@ -1,13 +1,13 @@
 PATH
   remote: .
   specs:
-    embulk (0.8.9)
-      jruby-jars (= 9.1.2.0)
+    embulk (0.8.13)
+      jruby-jars (= 9.1.5.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    jruby-jars (9.1.2.0)
+    jruby-jars (9.1.5.0)
     kramdown (1.5.0)
     power_assert (0.2.2)
     rake (10.4.2)
@@ -27,4 +27,4 @@ DEPENDENCIES
   yard (~> 0.8.7)
 
 BUNDLED WITH
-   1.12.4
+   1.13.2
