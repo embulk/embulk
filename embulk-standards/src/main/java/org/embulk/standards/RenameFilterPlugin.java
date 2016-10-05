@@ -30,7 +30,7 @@ public class RenameFilterPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
         Map<String, String> renameMap = task.getRenameMap();
 
-        // check column_options is valid or not
+        // Check if the given column in "columns" exists or not.
         for (String columnName : renameMap.keySet()) {
             inputSchema.lookupColumn(columnName); // throws SchemaConfigException
         }
