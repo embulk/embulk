@@ -1,7 +1,9 @@
 package org.embulk.standards;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
@@ -28,6 +30,7 @@ public class TestRenameFilterPlugin
     private final Schema SCHEMA = Schema.builder()
             .add("_c0", STRING)
             .add("_c1", TIMESTAMP)
+            .add("_C2", STRING)
             .build();
 
     private RenameFilterPlugin filter;
@@ -82,6 +85,100 @@ public class TestRenameFilterPlugin
                 Column new1 = newSchema.getColumn(1);
                 assertEquals("_c1", new1.getName());
                 assertEquals(old1.getType(), new1.getType());
+            }
+        });
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownRenamingOperatorString()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of("some_unknown_renaming_operator"));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownTypeOfRenamingOperator()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of(ImmutableList.of("listed_operator1", "listed_operator2")));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkRuleLowerCaseToUpper()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of("lower_case_to_upper"));
+
+        filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+            @Override
+            public void run(TaskSource task, Schema newSchema)
+            {
+                // _c0 -> _C0
+                Column old0 = SCHEMA.getColumn(0);
+                Column new0 = newSchema.getColumn(0);
+                assertEquals("_C0", new0.getName());
+                assertEquals(old0.getType(), new0.getType());
+
+                // _c1 -> _C1
+                Column old1 = SCHEMA.getColumn(1);
+                Column new1 = newSchema.getColumn(1);
+                assertEquals("_C1", new1.getName());
+                assertEquals(old1.getType(), new1.getType());
+
+                // _C2 is not changed
+                Column old2 = SCHEMA.getColumn(2);
+                Column new2 = newSchema.getColumn(2);
+                assertEquals(old2.getName(), new2.getName());
+                assertEquals(old2.getType(), new2.getType());
+            }
+        });
+    }
+
+    @Test
+    public void checkRuleUpperCaseToLower()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of("upper_case_to_lower"));
+
+        filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+            @Override
+            public void run(TaskSource task, Schema newSchema)
+            {
+                // _c0 is not changed
+                Column old0 = SCHEMA.getColumn(0);
+                Column new0 = newSchema.getColumn(0);
+                assertEquals(old0.getName(), new0.getName());
+                assertEquals(old0.getType(), new0.getType());
+
+                // _c1 is not changed
+                Column old1 = SCHEMA.getColumn(1);
+                Column new1 = newSchema.getColumn(1);
+                assertEquals(old1.getName(), new1.getName());
+                assertEquals(old1.getType(), new1.getType());
+
+                // _C2 -> _c2
+                Column old2 = SCHEMA.getColumn(2);
+                Column new2 = newSchema.getColumn(2);
+                assertEquals("_c2", new2.getName());
+                assertEquals(old2.getType(), new2.getType());
             }
         });
     }
