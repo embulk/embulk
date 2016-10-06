@@ -11,6 +11,8 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.List;
 import java.util.Map;
 
@@ -71,25 +73,39 @@ public class RenameFilterPlugin
         return output;
     }
 
-    private Schema applyRule(Object rule, Schema inputSchema) throws ConfigException
+    private Schema applyRule(Object ruleObject, Schema inputSchema) throws ConfigException
     {
-        if (rule instanceof String) {
-            @SuppressWarnings("unchecked")
-            String ruleString = (String)rule;
-            switch (ruleString) {
-            case "lower_case_to_upper":
-                return applyLowerCaseToUpper(inputSchema);
-            case "upper_case_to_lower":
-                return applyUpperCaseToLower(inputSchema);
-            default:
-                throw new ConfigException("Renaming operator \"" +ruleString+ "\" is unknown");
+        String rule;
+        Map<String, Object> parameters;
+
+        if (ruleObject instanceof String) {
+            @SuppressWarnings("unchecked") String ruleString = (String)ruleObject;
+            rule = ruleString;
+            parameters = ImmutableMap.<String, Object>of();
+        } else if (ruleObject instanceof Map) {
+            @SuppressWarnings("unchecked") Map<String, Object> ruleMap = (Map)ruleObject;
+            if ((!ruleMap.containsKey("rule")) ||
+                (!(ruleMap.get("rule") instanceof String))) {
+                throw new ConfigException("Renaming operator in map is not a string.");
             }
+            @SuppressWarnings("unchecked") String ruleString = (String)(ruleMap.get("rule"));
+            rule = ruleString;
+            parameters = ImmutableMap.<String, Object>copyOf(ruleMap);
         } else {
-            throw new ConfigException("Non-string renaming operator is not supported");
+            throw new ConfigException("Renaming operator is not a string.");
+        }
+
+        switch (rule) {
+        case "convert_lower_case_to_upper":
+            return applyConvertLowerCaseToUpper(inputSchema, parameters);
+        case "convert_upper_case_to_lower":
+            return applyConvertUpperCaseToLower(inputSchema, parameters);
+        default:
+            throw new ConfigException("Renaming operator \"" +rule+ "\" is unknown");
         }
     }
 
-    private Schema applyUpperCaseToLower(Schema inputSchema) {
+    private Schema applyConvertUpperCaseToLower(Schema inputSchema, Map<String, Object> parameters) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toLowerCase(), column.getType());
@@ -97,7 +113,7 @@ public class RenameFilterPlugin
         return builder.build();
     }
 
-    private Schema applyLowerCaseToUpper(Schema inputSchema) {
+    private Schema applyConvertLowerCaseToUpper(Schema inputSchema, Map<String, Object> parameters) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toUpperCase(), column.getType());
