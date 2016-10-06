@@ -17,6 +17,29 @@ module Embulk
       configDiff = @embed.guess(configSource)
 
       guessedConfigSource = configSource.merge(configDiff)
+      if options[:guess_as_string]
+        guessed = JSON.parse(guessedConfigSource.toString)
+        parser_columns = guessed.dig("in", "parser", "columns")
+        if parser_columns && !parser_columns.empty?
+          guessed["in"]["parser"]["columns"] = parser_columns.map do |col|
+            # NOTE: timestamp column has "format" property
+            {
+              "type" => "string",
+              "name" => col["name"],
+            }
+          end
+          modified_columns = Embulk::DataSource.new(guessed).to_java
+          empty_columns = Embulk::DataSource.new({
+            in: {
+              parser: {
+                columns: nil
+              }
+            }
+          }).to_java
+          guessedConfigSource = guessedConfigSource.merge(empty_columns).merge(modified_columns)
+        end
+      end
+
       yaml = write_config(output_path, guessedConfigSource)
       STDERR.puts yaml
       if output_path

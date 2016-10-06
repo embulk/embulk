@@ -1,3 +1,6 @@
+require "tmpdir"
+require "yaml"
+require "fileutils"
 require 'helper'
 require 'time'
 require 'embulk/guess/csv'
@@ -140,6 +143,40 @@ class CsvGuessTest < ::Test::Unit::TestCase
       assert_equal expected, actual["parser"]["columns"]
     end
 
+    data do
+      [
+        [
+          "guess_as_string: true",
+          [true, [
+            {"name" => "num", "type" => "string"},
+            {"name" => "str", "type" => "string"},
+            {"name" => "time", "type" => "string"},
+          ]]
+        ],
+        [
+          "guess_as_string: false",
+          [false, [
+            {"name" => "num", "type" => "long"},
+            {"name" => "str", "type" => "string"},
+            {"name" => "time", "type" => "timestamp", "format"=>"%Y-%m-%dT%H:%M:%S%z"},
+          ]]
+        ],
+      ]
+    end
+    def test_columns_guessed_as_string(data)
+      guess_as_string, expected = data
+      records = [
+        "num\tstr\ttime",
+        "1\tfoo\t2000-01-01T00:00:00+0900",
+        "2\tbar\t2000-01-01T00:00:00+0900",
+      ]
+
+      result = embulk_guess(records, {
+        guess_as_string: guess_as_string,
+      })
+      assert_equal expected, result["in"]["parser"]["columns"]
+    end
+
     def test_complex_line
       actual = guess([
         %Q(this is useless header),
@@ -166,5 +203,36 @@ class CsvGuessTest < ::Test::Unit::TestCase
       }
     })
     Embulk::Guess::CsvGuessPlugin.new.guess_lines(conf, Array(texts))
+  end
+
+  def embulk_guess(lines, options = {})
+    Embulk.setup unless Embulk.const_defined?("Runner")
+
+    dir = File.join(Dir.tmpdir, "embulk-test")
+    FileUtils.mkdir_p(dir)
+    output_path = File.join(dir, "output.txt")
+    file_path = File.join(dir, "test.csv")
+    File.open(file_path, "w") do |f|
+      f.write lines.join("\n")
+    end
+
+    conf = Embulk::DataSource.new({
+      in: {
+        type: "file",
+        path_prefix: "#{dir}/test"
+      },
+      parser: {
+        type: "csv"
+      },
+    })
+    Embulk::Runner.guess(
+      conf,
+      options.merge({
+        next_config_output_path: output_path
+      })
+    )
+    YAML.load_file(output_path)
+  ensure
+    FileUtils.rm_rf(dir)
   end
 end

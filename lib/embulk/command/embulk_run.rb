@@ -120,6 +120,9 @@ module Embulk
       op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
         (options[:system_config][:guess_plugins] ||= []).concat names.split(",")  # TODO
       end
+      op.on('--all-strings', "Guessed all columns by parser plugin types as string") do |flag|
+        options[:guess_as_string] = true
+      end
       plugin_load_ops.call
       java_embed_ops.call
       args = 1..1
