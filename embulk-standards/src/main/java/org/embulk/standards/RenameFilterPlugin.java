@@ -29,7 +29,7 @@ public class RenameFilterPlugin
 
         @Config("rules")
         @ConfigDefault("[]")
-        List<Object> getRulesList();
+        List<ConfigSource> getRulesList();
     }
 
     @Override
@@ -38,7 +38,7 @@ public class RenameFilterPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
         Map<String, String> renameMap = task.getRenameMap();
-        List<Object> rulesList = task.getRulesList();
+        List<ConfigSource> rulesList = task.getRulesList();
 
         // check column_options is valid or not
         for (String columnName : renameMap.keySet()) {
@@ -58,7 +58,7 @@ public class RenameFilterPlugin
 
         // Rename by "rules".
         Schema outputSchema = intermediateSchema;
-        for (Object rule : rulesList) {
+        for (ConfigSource rule : rulesList) {
             outputSchema = applyRule(rule, intermediateSchema);
             intermediateSchema = outputSchema;
         }
@@ -73,39 +73,35 @@ public class RenameFilterPlugin
         return output;
     }
 
-    private Schema applyRule(Object ruleObject, Schema inputSchema) throws ConfigException
+
+    // Extending Task is required to be deserialized with ConfigSource.loadConfig()
+    // although this Rule is not really a Task.
+    // TODO(dmikurube): Revisit this to consider how not to extend Task for this.
+    private interface Rule
+            extends Task
     {
-        String rule;
-        Map<String, Object> parameters;
+        @Config("rule")
+        @ConfigDefault("")
+        String getRule();
+    }
 
-        if (ruleObject instanceof String) {
-            @SuppressWarnings("unchecked") String ruleString = (String)ruleObject;
-            rule = ruleString;
-            parameters = ImmutableMap.<String, Object>of();
-        } else if (ruleObject instanceof Map) {
-            @SuppressWarnings("unchecked") Map<String, Object> ruleMap = (Map)ruleObject;
-            if ((!ruleMap.containsKey("rule")) ||
-                (!(ruleMap.get("rule") instanceof String))) {
-                throw new ConfigException("Renaming operator in map is not a string.");
-            }
-            @SuppressWarnings("unchecked") String ruleString = (String)(ruleMap.get("rule"));
-            rule = ruleString;
-            parameters = ImmutableMap.<String, Object>copyOf(ruleMap);
-        } else {
-            throw new ConfigException("Renaming operator is not a string.");
-        }
+    private interface ConvertLowerCaseToUpperRule extends Rule {}
+    private interface ConvertUpperCaseToLowerRule extends Rule {}
 
-        switch (rule) {
+    private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
+    {
+        Rule rule = ruleConfig.loadConfig(Rule.class);
+        switch (rule.getRule()) {
         case "convert_lower_case_to_upper":
-            return applyConvertLowerCaseToUpper(inputSchema, parameters);
+            return applyConvertLowerCaseToUpper(inputSchema, ruleConfig.loadConfig(ConvertUpperCaseToLowerRule.class));
         case "convert_upper_case_to_lower":
-            return applyConvertUpperCaseToLower(inputSchema, parameters);
+            return applyConvertUpperCaseToLower(inputSchema, ruleConfig.loadConfig(ConvertLowerCaseToUpperRule.class));
         default:
             throw new ConfigException("Renaming operator \"" +rule+ "\" is unknown");
         }
     }
 
-    private Schema applyConvertUpperCaseToLower(Schema inputSchema, Map<String, Object> parameters) {
+    private Schema applyConvertUpperCaseToLower(Schema inputSchema, ConvertLowerCaseToUpperRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toLowerCase(), column.getType());
@@ -113,7 +109,7 @@ public class RenameFilterPlugin
         return builder.build();
     }
 
-    private Schema applyConvertLowerCaseToUpper(Schema inputSchema, Map<String, Object> parameters) {
+    private Schema applyConvertLowerCaseToUpper(Schema inputSchema, ConvertUpperCaseToLowerRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toUpperCase(), column.getType());

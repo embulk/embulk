@@ -124,8 +124,8 @@ public class TestRenameFilterPlugin
     @Test
     public void checkRuleLowerCaseToUpper()
     {
-        ConfigSource pluginConfig = Exec.newConfigSource()
-                .set("rules", ImmutableList.of("convert_lower_case_to_upper"));
+        ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "convert_lower_case_to_upper")));
 
         filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
             @Override
@@ -155,8 +155,8 @@ public class TestRenameFilterPlugin
     @Test
     public void checkRuleUpperCaseToLower()
     {
-        ConfigSource pluginConfig = Exec.newConfigSource()
-                .set("rules", ImmutableList.of("convert_upper_case_to_lower"));
+        ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "convert_upper_case_to_lower")));
 
         filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
             @Override
