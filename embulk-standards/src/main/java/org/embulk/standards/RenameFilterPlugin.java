@@ -14,6 +14,7 @@ import org.embulk.spi.Schema;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -81,12 +82,18 @@ public class RenameFilterPlugin
             extends Task
     {
         @Config("rule")
-        @ConfigDefault("")
         String getRule();
     }
 
-    private interface ConvertLowerCaseToUpperRule extends Rule {}
-    private interface ConvertUpperCaseToLowerRule extends Rule {}
+    private interface ConvertLowerCaseToUpperRule
+            extends Rule
+    {
+    }
+
+    private interface ConvertUpperCaseToLowerRule
+            extends Rule
+    {
+    }
 
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
@@ -97,14 +104,14 @@ public class RenameFilterPlugin
         case "convert_upper_case_to_lower":
             return applyConvertUpperCaseToLower(inputSchema, ruleConfig.loadConfig(ConvertLowerCaseToUpperRule.class));
         default:
-            throw new ConfigException("Renaming operator \"" +rule+ "\" is unknown");
+            throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
     }
 
     private Schema applyConvertUpperCaseToLower(Schema inputSchema, ConvertLowerCaseToUpperRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
-            builder.add(column.getName().toLowerCase(), column.getType());
+            builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
         }
         return builder.build();
     }
@@ -112,7 +119,7 @@ public class RenameFilterPlugin
     private Schema applyConvertLowerCaseToUpper(Schema inputSchema, ConvertUpperCaseToLowerRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
-            builder.add(column.getName().toUpperCase(), column.getType());
+            builder.add(column.getName().toUpperCase(Locale.ENGLISH), column.getType());
         }
         return builder.build();
     }
