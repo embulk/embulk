@@ -31,14 +31,19 @@ public class Schema
         return new Builder();
     }
 
-    private final List<Column> columns;
+    private final ImmutableList<Column> columns;
 
     @JsonCreator
     public Schema(List<Column> columns)
     {
-        this.columns = columns;
+        this.columns = ImmutableList.copyOf(columns);
     }
 
+    /**
+     * Returns the list of Column objects.
+     *
+     * It always returns an immutable list.
+     */
     @JsonValue
     public List<Column> getColumns()
     {
