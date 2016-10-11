@@ -36,13 +36,7 @@ public class Schema
     @JsonCreator
     public Schema(List<Column> columns)
     {
-        if (columns instanceof ImmutableList) {
-            @SuppressWarnings("unchecked")
-            ImmutableList<Column> columnsCasted = (ImmutableList)columns;
-            this.columns = columnsCasted;
-        } else {
-            this.columns = ImmutableList.copyOf(columns);
-        }
+        this.columns = ImmutableList.copyOf(columns);
     }
 
     /**
