@@ -11,10 +11,7 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
-import com.google.common.collect.ImmutableMap;
-
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 
@@ -85,42 +82,12 @@ public class RenameFilterPlugin
         String getRule();
     }
 
-    private interface ConvertLowerCaseToUpperRule
-            extends Rule
-    {
-    }
-
-    private interface ConvertUpperCaseToLowerRule
-            extends Rule
-    {
-    }
-
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
         switch (rule.getRule()) {
-        case "convert_lower_case_to_upper":
-            return applyConvertLowerCaseToUpper(inputSchema, ruleConfig.loadConfig(ConvertUpperCaseToLowerRule.class));
-        case "convert_upper_case_to_lower":
-            return applyConvertUpperCaseToLower(inputSchema, ruleConfig.loadConfig(ConvertLowerCaseToUpperRule.class));
         default:
             throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
-    }
-
-    private Schema applyConvertUpperCaseToLower(Schema inputSchema, ConvertLowerCaseToUpperRule rule) {
-        Schema.Builder builder = Schema.builder();
-        for (Column column : inputSchema.getColumns()) {
-            builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
-        }
-        return builder.build();
-    }
-
-    private Schema applyConvertLowerCaseToUpper(Schema inputSchema, ConvertUpperCaseToLowerRule rule) {
-        Schema.Builder builder = Schema.builder();
-        for (Column column : inputSchema.getColumns()) {
-            builder.add(column.getName().toUpperCase(Locale.ENGLISH), column.getType());
-        }
-        return builder.build();
     }
 }
