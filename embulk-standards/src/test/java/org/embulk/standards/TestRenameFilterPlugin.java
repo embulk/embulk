@@ -89,10 +89,11 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    public void checkConfigExceptionIfUnknownRenamingOperatorString()
+    public void checkConfigExceptionIfUnknownStringTypeOfRenamingOperator()
     {
+        // A simple string shouldn't come as a renaming rule.
         ConfigSource pluginConfig = Exec.newConfigSource()
-                .set("rules", ImmutableList.of("some_unknown_renaming_operator"));
+                .set("rules", ImmutableList.of("string_rule"));
 
         try {
             filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
@@ -105,10 +106,27 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    public void checkConfigExceptionIfUnknownTypeOfRenamingOperator()
+    public void checkConfigExceptionIfUnknownListTypeOfRenamingOperator()
     {
+        // A list [] shouldn't come as a renaming rule.
         ConfigSource pluginConfig = Exec.newConfigSource()
                 .set("rules", ImmutableList.of(ImmutableList.of("listed_operator1", "listed_operator2")));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownRenamingOperatorName()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of(ImmutableMap.of("rule", "some_unknown_renaming_operator")));
 
         try {
             filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
