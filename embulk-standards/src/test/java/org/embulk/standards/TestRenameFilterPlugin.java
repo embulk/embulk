@@ -1,7 +1,9 @@
 package org.embulk.standards;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
@@ -84,5 +86,55 @@ public class TestRenameFilterPlugin
                 assertEquals(old1.getType(), new1.getType());
             }
         });
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownStringTypeOfRenamingOperator()
+    {
+        // A simple string shouldn't come as a renaming rule.
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of("string_rule"));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownListTypeOfRenamingOperator()
+    {
+        // A list [] shouldn't come as a renaming rule.
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of(ImmutableList.of("listed_operator1", "listed_operator2")));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkConfigExceptionIfUnknownRenamingOperatorName()
+    {
+        ConfigSource pluginConfig = Exec.newConfigSource()
+                .set("rules", ImmutableList.of(ImmutableMap.of("rule", "some_unknown_renaming_operator")));
+
+        try {
+            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
+                public void run(TaskSource task, Schema schema) { }
+            });
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
     }
 }
