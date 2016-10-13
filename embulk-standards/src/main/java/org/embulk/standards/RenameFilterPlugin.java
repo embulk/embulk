@@ -11,7 +11,10 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -82,12 +85,43 @@ public class RenameFilterPlugin
         String getRule();
     }
 
+    private interface CaseRule
+            extends Rule {
+        @Config("to")
+        String getTo();
+    }
+
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
         switch (rule.getRule()) {
+        case "case":
+            return applyCaseRule(inputSchema, ruleConfig.loadConfig(CaseRule.class));
         default:
             throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
     }
+
+    private Schema applyCaseRule(Schema inputSchema, CaseRule rule) {
+        final String to = rule.getTo();
+
+        if (!toInCase.contains(to)) {
+            throw new ConfigException("\"" +to+ "\" is unknown as \"to\" in rule \"case\"");
+        }
+
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            switch (to) {
+            case "lower":
+                builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
+                break;
+            case "upper":
+                builder.add(column.getName().toUpperCase(Locale.ENGLISH), column.getType());
+                break;
+            }
+        }
+        return builder.build();
+    }
+
+    final ImmutableSet<String> toInCase = ImmutableSet.<String>of("lower", "upper");
 }
