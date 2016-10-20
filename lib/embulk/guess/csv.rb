@@ -142,16 +142,20 @@ module Embulk
         schema = []
         column_names.zip(other_types).each do |name,type|
           if name && type
-            if type.is_a?(SchemaGuess::TimestampTypeMatch)
-              schema << {"name" => name, "type" => type, "format" => type.format}
-            else
-              schema << {"name" => name, "type" => type}
-            end
+            schema << new_column(name, type)
           end
         end
         parser_guessed["columns"] = schema
 
         return {"parser" => parser_guessed}
+      end
+
+      def new_column(name, type)
+        if type.is_a?(SchemaGuess::TimestampTypeMatch)
+          {"name" => name, "type" => type, "format" => type.format}
+        else
+          {"name" => name, "type" => type}
+        end
       end
 
       private
