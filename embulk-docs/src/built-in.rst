@@ -606,13 +606,17 @@ The ``local`` executor plugin runs tasks using local threads. This is the only b
 Options
 ~~~~~~~~~~~~~~~~~~
 
-+------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| name             | type     | description                                                          | required?                            |
-+==================+==========+======================================================================+======================================+
-| max_threads      | integer  | Maximum number of threads to run concurrently.                       | 2x of available CPU cores by default |
-+------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| min_output_tasks | integer  | Mimimum number of output tasks to enable page scattering.            | 1x of available CPU cores by default |
-+------------------+----------+----------------------------------------------------------------------+--------------------------------------+
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                  | type     | description                                                          | required?                            |
++=======================+==========+======================================================================+======================================+
+| max_threads           | integer  | Maximum number of threads to run concurrently.                       | 2x of available CPU cores by default |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| min_output_tasks      | integer  | Mimimum number of output tasks to enable page scattering.            | 1x of available CPU cores by default |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| guess_plugins         | array    | ``guess`` uses specified plugins                                     | ``[]`` by default                    |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| exclude_guess_plugins | array    | ``guess`` don't use specific plugins                                 | ``[]`` by default                    |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
 
 
 The ``max_threads`` option controls maximum concurrency. Setting smaller number here is useful if too many threads make the destination or source storage overloaded. Setting larger number here is useful if CPU utilization is too low due to high latency.
