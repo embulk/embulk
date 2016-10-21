@@ -606,17 +606,13 @@ The ``local`` executor plugin runs tasks using local threads. This is the only b
 Options
 ~~~~~~~~~~~~~~~~~~
 
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| name                  | type     | description                                                          | required?                            |
-+=======================+==========+======================================================================+======================================+
-| max_threads           | integer  | Maximum number of threads to run concurrently.                       | 2x of available CPU cores by default |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| min_output_tasks      | integer  | Mimimum number of output tasks to enable page scattering.            | 1x of available CPU cores by default |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| guess_plugins         | array    | ``guess`` uses specified plugins                                     | ``[]`` by default                    |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| exclude_guess_plugins | array    | ``guess`` don't use specific plugins                                 | ``[]`` by default                    |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name             | type     | description                                                          | required?                            |
++==================+==========+======================================================================+======================================+
+| max_threads      | integer  | Maximum number of threads to run concurrently.                       | 2x of available CPU cores by default |
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| min_output_tasks | integer  | Mimimum number of output tasks to enable page scattering.            | 1x of available CPU cores by default |
++------------------+----------+----------------------------------------------------------------------+--------------------------------------+
 
 
 The ``max_threads`` option controls maximum concurrency. Setting smaller number here is useful if too many threads make the destination or source storage overloaded. Setting larger number here is useful if CPU utilization is too low due to high latency.
@@ -631,6 +627,43 @@ Example
     exec:
       max_threads: 8         # run at most 8 tasks concurrently
       min_output_tasks: 1    # disable page scattering
+    in:
+      type: ...
+      ...
+    out:
+      type: ...
+      ...
+
+Guess executor
+------------------
+
+The guess executor is called by ``guess`` command. It executes default guess plugins in a sequential order and suggests Embulk config by appropriate guess plugin. The default guess plugins and the order are ``gzip``, ``'bzip2``, ``json`` and ``csv``.
+
+Options
+~~~~~~~~~~~~~~~~~~
+
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                  | type     | description                                                          | required?                            |
++=======================+==========+======================================================================+======================================+
+| guess_plugins         | array    | ``guess`` command uses specified guess plugins.                      | ``[]`` by default                    |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| exclude_guess_plugins | array    | ``guess`` command doesn't use specified plugins.                     | ``[]`` by default                    |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+
+The ``guess_plugins`` option includes specified guess plugin in the bottom of the list of default guess plugins.
+
+The ``exclude_guess_plugins`` option exclude specified guess plugins from the list of default guess plugins that the guess executor uses.
+
+This example shows how to use ``csv_all_strings`` guess plugin, which suggests column types within CSV files as string types. It needs to be explicitly specified by users when it's used instead of ``csv`` guess plugin because the plugin is not included in default guess plugins. We also can exclude default ``csv`` guess plugin.
+
+Example
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    exec:
+      guess_plugins: ['csv_all_strings']
+      exclude_guess_plugins: ['csv']
     in:
       type: ...
       ...
