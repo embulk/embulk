@@ -11,6 +11,9 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -82,6 +85,21 @@ public class RenameFilterPlugin
         String getRule();
     }
 
+    private interface CharacterTypesRule
+            extends Rule {
+        @Config("pass_types")
+        @ConfigDefault("[]")
+        List<String> getPassTypes();
+
+        @Config("pass_characters")
+        @ConfigDefault("\"\"")
+        String getPassCharacters();
+
+        @Config("replace")
+        @ConfigDefault("\"_\"")
+        String getReplace();
+    }
+
     private interface TruncateRule
             extends Rule {
         @Config("max_length")
@@ -93,6 +111,8 @@ public class RenameFilterPlugin
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
         switch (rule.getRule()) {
+        case "character_types":
+            return applyCharacterTypesRule(inputSchema, ruleConfig.loadConfig(CharacterTypesRule.class));
         case "lower_to_upper":
             return applyLowerToUpperRule(inputSchema);
         case "truncate":
@@ -102,6 +122,41 @@ public class RenameFilterPlugin
         default:
             throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
+    }
+
+    private Schema applyCharacterTypesRule(Schema inputSchema, CharacterTypesRule rule) {
+        final List<String> passTypes = rule.getPassTypes();
+        final String passCharacters = rule.getPassCharacters();
+        final String replace = rule.getReplace();
+
+        Preconditions.checkNotNull(replace, "\"replace\" in \"character_types\" must not be explicitly empty");
+        Preconditions.checkArgument(replace.length() == 1,
+                                    "\"replace\" in \"character_types\" must contain just 1 character");
+        // TODO(dmikurube): Revisit this for better escaping.
+        Preconditions.checkArgument(!passCharacters.contains("\\E"),
+                                    "\"pass_characters\" in \"character_types\" must not contain \"\\E\"");
+
+        StringBuilder regexBuilder = new StringBuilder();
+        regexBuilder.append("[^");
+        for (String target : passTypes) {
+            if (CHARACTER_TYPE_KEYWORDS.containsKey(target)) {
+                regexBuilder.append(CHARACTER_TYPE_KEYWORDS.get(target));
+            } else {
+                throw new ConfigException("\"" +target+ "\" is an unknown character type keyword");
+            }
+        }
+        if (!passCharacters.isEmpty()) {
+            regexBuilder.append("\\Q");
+            regexBuilder.append(passCharacters);
+            regexBuilder.append("\\E");
+        }
+        regexBuilder.append("]");
+
+        Schema.Builder schemaBuilder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            schemaBuilder.add(column.getName().replaceAll(regexBuilder.toString(), replace), column.getType());
+        }
+        return schemaBuilder.build();
     }
 
     private Schema applyLowerToUpperRule(Schema inputSchema) {
@@ -127,4 +182,10 @@ public class RenameFilterPlugin
         }
         return builder.build();
     }
+
+    private final ImmutableMap<String, String> CHARACTER_TYPE_KEYWORDS = new ImmutableMap.Builder<String, String>()
+        .put("a-z", "a-z")
+        .put("A-Z", "A-Z")
+        .put("0-9", "0-9")
+        .build();
 }

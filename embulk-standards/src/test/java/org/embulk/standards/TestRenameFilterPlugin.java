@@ -18,6 +18,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.HashMap;
+
 import static org.embulk.spi.type.Types.STRING;
 import static org.embulk.spi.type.Types.TIMESTAMP;
 import static org.junit.Assert.assertEquals;
@@ -37,6 +39,8 @@ public class TestRenameFilterPlugin
             .add("_c0", STRING)
             .add("_c1", TIMESTAMP)
             .build();
+
+    private final String DEFAULT = "__use_default__";
 
     private RenameFilterPlugin filter;
 
@@ -183,6 +187,155 @@ public class TestRenameFilterPlugin
         final String expected[] = { "_c0", "_c1", "_c2" };
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.of("rule", "upper_to_lower")));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    public void checkCharacterTypesRulePassAlphabet()
+    {
+        final String original[] = { "Internal$Foo0123--Bar" };
+        final String expected[] = { "Internal_Foo______Bar" };
+        final String pass_types[] = { "a-z", "A-Z" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassAlphanumeric()
+    {
+        final String original[] = { "Internal$Foo0123--Bar" };
+        final String expected[] = { "Internal_Foo0123__Bar" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassLowercase()
+    {
+        final String original[] = { "Internal$Foo0123--Bar" };
+        final String expected[] = { "_nternal__oo_______ar" };
+        final String pass_types[] = { "a-z" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassLowerwording()
+    {
+        final String original[] = { "Internal$Foo_0123--Bar" };
+        final String expected[] = { "-nternal--oo_0123---ar" };
+        final String pass_types[] = { "a-z", "0-9" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "_", "-");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassNumeric()
+    {
+        final String original[] = { "Internal$Foo_0123--Bar" };
+        final String expected[] = { "_____________0123_____" };
+        final String pass_types[] = { "0-9" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassUppercase()
+    {
+        final String original[] = { "Internal$Foo_0123--Bar" };
+        final String expected[] = { "I________F_________B__" };
+        final String pass_types[] = { "A-Z" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassUpperwording()
+    {
+        final String original[] = { "Internal$Foo_0123--Bar" };
+        final String expected[] = { "I--------F--_0123--B--" };
+        final String pass_types[] = { "A-Z", "0-9" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "_", "-");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassWording()
+    {
+        final String original[] = { "Internal$Foo_0123--Bar" };
+        final String expected[] = { "Internal-Foo_0123--Bar" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "_", "-");
+    }
+
+    @Test
+    public void checkCharacterTypesRulePassCombination()
+    {
+        final String original[] = { "@Foobar0123_$" };
+        final String expected[] = { "__oobar0123__" };
+        final String pass_types[] = { "0-9", "a-z" };
+        checkCharacterTypesRuleInternal(original, expected, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRuleLongReplace()
+    {
+        final String original[] = { "fooBAR" };
+        final String pass_types[] = { "a-z" };
+        exception.expect(IllegalArgumentException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkCharacterTypesRuleInternal(original, original, pass_types, "", "___");
+    }
+
+    @Test
+    public void checkCharacterTypesRuleEmptyReplace()
+    {
+        final String original[] = { "fooBAR" };
+        final String pass_types[] = { "a-z" };
+        exception.expect(IllegalArgumentException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkCharacterTypesRuleInternal(original, original, pass_types, "", "");
+    }
+
+    // TODO(dmikurube): Test a nil/null replace.
+    // - rule: character_types
+    //   delimiter:
+
+    @Test
+    public void checkCharacterTypesRuleUnknownType()
+    {
+        final String original[] = { "fooBAR" };
+        final String pass_types[] = { "some_unknown_keyword" };
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkCharacterTypesRuleInternal(original, original, pass_types, "");
+    }
+
+    private void checkCharacterTypesRuleInternal(
+            final String original[],
+            final String expected[],
+            final String pass_types[],
+            final String pass_characters)
+    {
+        checkCharacterTypesRuleInternal(original, expected, pass_types, pass_characters, DEFAULT);
+    }
+
+    private void checkCharacterTypesRuleInternal(
+            final String original[],
+            final String expected[],
+            final String pass_types[],
+            final String pass_characters,
+            final String replace)
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "character_types");
+        if (pass_types != null) {
+            parameters.put("pass_types", ImmutableList.copyOf(pass_types));
+        }
+        if (!pass_characters.equals(DEFAULT)) {
+            parameters.put("pass_characters", pass_characters);
+        }
+        if (!replace.equals(DEFAULT)) {
+            parameters.put("replace", replace);
+        }
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
         renameAndCheckSchema(config, original, expected);
     }
 
