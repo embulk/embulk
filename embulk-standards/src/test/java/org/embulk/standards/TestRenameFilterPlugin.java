@@ -339,6 +339,36 @@ public class TestRenameFilterPlugin
         renameAndCheckSchema(config, original, expected);
     }
 
+    public void checkRegexReplaceRule1()
+    {
+        final String original[] = { "foobarbaz" };
+        final String expected[] = { "hogebarbaz" };
+        checkRegexReplaceRuleInternal(original, expected, "foo", "hoge");
+    }
+
+    @Test
+    public void checkRegexReplaceRule2()
+    {
+        final String original[] = { "200_dollars" };
+        final String expected[] = { "USD200" };
+        checkRegexReplaceRuleInternal(original, expected, "([0-9]+)_dollars", "USD$1");
+    }
+
+    private void checkRegexReplaceRuleInternal(
+            final String original[],
+            final String expected[],
+            final String match,
+            final String replace)
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "regex_replace");
+        parameters.put("match", match);
+        parameters.put("replace", replace);
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+        renameAndCheckSchema(config, original, expected);
+    }
+
     private Schema makeSchema(final String columnNames[])
     {
         Schema.Builder builder = new Schema.Builder();

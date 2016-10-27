@@ -13,6 +13,7 @@ import org.embulk.spi.Schema;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
 import java.util.Locale;
@@ -107,6 +108,15 @@ public class RenameFilterPlugin
         int getMaxLength();
     }
 
+    private interface RegexReplaceRule
+            extends Rule {
+        @Config("match")
+        String getMatch();
+
+        @Config("replace")
+        String getReplace();
+    }
+
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
@@ -115,6 +125,8 @@ public class RenameFilterPlugin
             return applyCharacterTypesRule(inputSchema, ruleConfig.loadConfig(CharacterTypesRule.class));
         case "lower_to_upper":
             return applyLowerToUpperRule(inputSchema);
+        case "regex_replace":
+            return applyRegexReplaceRule(inputSchema, ruleConfig.loadConfig(RegexReplaceRule.class));
         case "truncate":
             return applyTruncateRule(inputSchema, ruleConfig.loadConfig(TruncateRule.class));
         case "upper_to_lower":
@@ -179,6 +191,18 @@ public class RenameFilterPlugin
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
+        }
+        return builder.build();
+    }
+
+    private Schema applyRegexReplaceRule(Schema inputSchema, RegexReplaceRule rule) {
+        final String match = rule.getMatch();
+        final String replace = rule.getReplace();
+
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            // TODO(dmikurube): Check if we need a kind of sanitization?
+            builder.add(column.getName().replaceAll(match, replace), column.getType());
         }
         return builder.build();
     }
