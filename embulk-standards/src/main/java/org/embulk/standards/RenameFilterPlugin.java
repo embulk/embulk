@@ -82,12 +82,21 @@ public class RenameFilterPlugin
         String getRule();
     }
 
+    private interface TruncateRule
+            extends Rule {
+        @Config("max_length")
+        @ConfigDefault("128")
+        int getMaxLength();
+    }
+
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
         switch (rule.getRule()) {
         case "lower_to_upper":
             return applyLowerToUpperRule(inputSchema);
+        case "truncate":
+            return applyTruncateRule(inputSchema, ruleConfig.loadConfig(TruncateRule.class));
         case "upper_to_lower":
             return applyUpperToLowerRule(inputSchema);
         default:
@@ -99,6 +108,14 @@ public class RenameFilterPlugin
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toUpperCase(Locale.ENGLISH), column.getType());
+        }
+        return builder.build();
+    }
+
+    private Schema applyTruncateRule(Schema inputSchema, TruncateRule rule) {
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            builder.add(column.getName().substring(0, rule.getMaxLength()), column.getType());
         }
         return builder.build();
     }

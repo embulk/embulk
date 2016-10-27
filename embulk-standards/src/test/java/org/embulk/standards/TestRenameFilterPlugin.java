@@ -155,6 +155,28 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    public void checkTruncateRule()
+    {
+        final String original[] = { "foo", "bar", "foobar", "foobarbaz" };
+        final String expected[] = { "foo", "bar", "foo",    "foo"       };
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "truncate", "max_length", "3")));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    @Test
+    public void checkTruncateRuleDefault()
+    {
+        final String original[] = {
+            "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890" };
+        final String expected[] = {
+            "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678" };
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "truncate")));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    @Test
     public void checkRuleUpperToLowerRule()
     {
         final String original[] = { "_C0", "_C1", "_c2" };
