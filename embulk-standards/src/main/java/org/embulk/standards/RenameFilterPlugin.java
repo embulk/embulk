@@ -12,6 +12,7 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -71,7 +72,6 @@ public class RenameFilterPlugin
         return output;
     }
 
-
     // Extending Task is required to be deserialized with ConfigSource.loadConfig()
     // although this Rule is not really a Task.
     // TODO(dmikurube): Revisit this to consider how not to extend Task for this.
@@ -86,8 +86,28 @@ public class RenameFilterPlugin
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
         switch (rule.getRule()) {
+        case "lower_to_upper":
+            return applyLowerToUpperRule(inputSchema);
+        case "upper_to_lower":
+            return applyUpperToLowerRule(inputSchema);
         default:
             throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
+    }
+
+    private Schema applyLowerToUpperRule(Schema inputSchema) {
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            builder.add(column.getName().toUpperCase(Locale.ENGLISH), column.getType());
+        }
+        return builder.build();
+    }
+
+    private Schema applyUpperToLowerRule(Schema inputSchema) {
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
+        }
+        return builder.build();
     }
 }
