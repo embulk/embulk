@@ -12,7 +12,6 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -192,12 +191,16 @@ public class RenameFilterPlugin
         final String passCharacters = rule.getPassCharacters();
         final String replace = rule.getReplace();
 
-        Preconditions.checkNotNull(replace, "\"replace\" in \"character_types\" must not be explicitly empty");
-        Preconditions.checkArgument(replace.length() == 1,
-                                    "\"replace\" in \"character_types\" must contain just 1 character");
+        if (replace.isEmpty()) {
+            throw new ConfigException("\"replace\" in \"character_types\" must not be explicitly empty");
+        }
+        if (replace.length() != 1) {
+            throw new ConfigException("\"replace\" in \"character_types\" must contain just 1 character");
+        }
         // TODO(dmikurube): Revisit this for better escaping.
-        Preconditions.checkArgument(!passCharacters.contains("\\E"),
-                                    "\"pass_characters\" in \"character_types\" must not contain \"\\E\"");
+        if (passCharacters.contains("\\E")) {
+            throw new ConfigException("\"pass_characters\" in \"character_types\" must not contain \"\\E\"");
+        }
 
         StringBuilder regexBuilder = new StringBuilder();
         regexBuilder.append("[^");

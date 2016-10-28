@@ -29,7 +29,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 public class TestRenameFilterPlugin
 {
     @Rule
@@ -193,6 +192,7 @@ public class TestRenameFilterPlugin
         renameAndCheckSchema(config, original, expected);
     }
 
+    @Test
     public void checkCharacterTypesRulePassAlphabet()
     {
         final String original[] = { "Internal$Foo0123--Bar" };
@@ -278,7 +278,7 @@ public class TestRenameFilterPlugin
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "___");
@@ -289,7 +289,7 @@ public class TestRenameFilterPlugin
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(IllegalArgumentException.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "");
@@ -308,6 +308,17 @@ public class TestRenameFilterPlugin
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "");
+    }
+
+    @Test
+    public void checkCharacterTypesRuleForbiddenCharSequence()
+    {
+        final String original[] = { "fooBAR" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkCharacterTypesRuleInternal(original, original, pass_types, "\\E");
     }
 
     private void checkCharacterTypesRuleInternal(
@@ -342,6 +353,7 @@ public class TestRenameFilterPlugin
         renameAndCheckSchema(config, original, expected);
     }
 
+    @Test
     public void checkRegexReplaceRule1()
     {
         final String original[] = { "foobarbaz" };
@@ -474,6 +486,17 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    public void checkFirstCharacterTypesRuleReplaceForbiddenCharSequence()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRuleReplaceInternal(original, original, "_", pass_types, "\\E");
+    }
+
+    @Test
     public void checkFirstCharacterTypesRulePrefixSingleHyphen()
     {
         final String original[] = { "foo",  "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
@@ -564,6 +587,50 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    public void checkFirstCharacterTypesRuleEmptyPrefix()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRulePrefixInternal(original, original, "", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleLongPrefix()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRulePrefixInternal(original, original, "__", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleEmptyReplace()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRuleReplaceInternal(original, original, "", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleLongReplace()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRuleReplaceInternal(original, original, "__", pass_types);
+    }
+
+    @Test
     public void checkFirstCharacterTypesRulePrefixUnknownFirst()
     {
         final String original[] = { "foo" };
@@ -572,6 +639,45 @@ public class TestRenameFilterPlugin
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkFirstCharacterTypesRulePrefixInternal(original, original, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixForbiddenCharSequence()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = {};
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRulePrefixInternal(original, original, "\\E", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleBothReplacePrefix()
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "first_character_types");
+        parameters.put("replace", "_");
+        parameters.put("prefix", "_");
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        renameAndCheckSchema(config, new String[0], new String[0]);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleNeitherReplacePrefix()
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "first_character_types");
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        renameAndCheckSchema(config, new String[0], new String[0]);
     }
 
     private void checkFirstCharacterTypesRuleReplaceInternal(
