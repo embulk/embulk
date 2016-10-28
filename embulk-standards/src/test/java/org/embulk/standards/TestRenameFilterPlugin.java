@@ -479,6 +479,14 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    public void checkUniqueNumberSuffixRule6MaxLength1WithoutEsteemOriginalNames()
+    {
+        final String originalColumnNames[] = { "column", "column",   "column_1", "column_2", "column_2" };
+        final String expectedColumnNames[] = { "column", "column_2", "column_1", "column_3", "column_4" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8, false);
+    }
+
+    @Test
     public void checkUniqueNumberSuffixRule7()
     {
         final String originalColumnNames[] = { "column", "column",   "column_2", "column_3" };
@@ -487,21 +495,29 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    public void checkUniqueNumberSuffixRule7MaxLength2()
+    public void checkUniqueNumberSuffixRule7WithoutEsteemOriginalNames()
+    {
+        final String originalColumnNames[] = { "column", "column",   "column_2", "column_3" };
+        final String expectedColumnNames[] = { "column", "column_2", "column_3", "column_4" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8, false);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule8MaxLength2()
     {
         final String originalColumnNames[] = {
-            "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",
-            "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",
+            "column",   "colum",    "column",   "colum",    "column",   "colum",    "column",   "colum",    "column",
+            "colum",    "column",   "colum",    "column",   "colum",    "column",   "colum",    "column",   "colum",
             "column",   "colum",    "column",   "colum"    };
         final String expectedColumnNames[] = {
-            "column",   "colum",   "column_2", "colum_2", "column_3", "colum_3", "column_4", "colum_4", "column_5", "colum_5",
-            "column_6", "colum_6", "column_7", "colum_7", "column_8", "colum_8", "column_9", "colum_9",
+            "column",   "colum",    "column_2", "colum_2",  "column_3", "colum_3",  "column_4", "colum_4",  "column_5",
+            "colum_5",  "column_6", "colum_6",  "column_7", "colum_7",  "column_8", "colum_8",  "column_9", "colum_9",
             "colum_10", "colum_11", "colum_12", "colum_13" };
         checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
     }
 
     @Test
-    public void checkUniqueNumberSuffixRule8MaxLength3()
+    public void checkUniqueNumberSuffixRule9MaxLength3()
     {
         final String originalColumnNames[] = {
             "column", "column",   "column",   "column",   "column",   "column",   "column",   "column",   "column",
@@ -521,7 +537,8 @@ public class TestRenameFilterPlugin
                                             expectedColumnNames,
                                             DEFAULT,
                                             -1,
-                                            -1);
+                                            -1,
+                                            null);
     }
 
     private void checkUniqueNumberSuffixRuleInternal(
@@ -532,7 +549,8 @@ public class TestRenameFilterPlugin
                                             expectedColumnNames,
                                             delimiter,
                                             -1,
-                                            -1);
+                                            -1,
+                                            null);
     }
 
     private void checkUniqueNumberSuffixRuleInternal(
@@ -540,7 +558,22 @@ public class TestRenameFilterPlugin
             final String expectedColumnNames[],
             String delimiter,
             int digits,
-            int max_length)
+            int max_length) {
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames,
+                                            expectedColumnNames,
+                                            delimiter,
+                                            digits,
+                                            max_length,
+                                            null);
+    }
+
+    private void checkUniqueNumberSuffixRuleInternal(
+            final String originalColumnNames[],
+            final String expectedColumnNames[],
+            String delimiter,
+            int digits,
+            int max_length,
+            Boolean esteem_original_names)
     {
         Schema.Builder originalSchemaBuilder = Schema.builder();
         for (String originalColumnName : originalColumnNames) {
@@ -558,6 +591,9 @@ public class TestRenameFilterPlugin
         }
         if (max_length >= 0) {
             parameters.put("max_length", max_length);
+        }
+        if (esteem_original_names != null) {
+            parameters.put("esteem_original_names", esteem_original_names);
         }
         ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.copyOf(parameters)));

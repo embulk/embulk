@@ -325,6 +325,11 @@ public class RenameFilterPlugin
             }
 
             int index = columnNameCountups.get(column.getName());
+            if (index <= offset) {
+                // It may happen if |esteem_original_names| is false.
+                // See |TestRenameFilterPlugin#checkUniqueNumberSuffixRule7WithoutEsteemOriginalNames|.
+                index = offset + 1;
+            }
             String concatenatedName;
             do {
                 // String#format is not used to avoid locale-related problems.
