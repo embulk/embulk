@@ -304,7 +304,9 @@ public class RenameFilterPlugin
                 truncatedName = column.getName().substring(0, max_length.get());
             }
 
-            if (!(fixedColumnNames.contains(truncatedName) && originalColumnNames.contains(truncatedName))) {
+            // Fix with the new name candidate if the new name does not conflict with the fixed names on the left.
+            // Conflicts with original names do not matter here.
+            if (!fixedColumnNames.contains(truncatedName)) {
                 // The original name is counted up.
                 columnNameCountups.put(column.getName(), columnNameCountups.get(column.getName()) + 1);
                 // The truncated name is fixed.
@@ -331,6 +333,7 @@ public class RenameFilterPlugin
                         + differentiatorString;
                 }
                 ++index;
+            // Conflicts with original names matter when creating new names with suffixes.
             } while (fixedColumnNames.contains(concatenatedName) || originalColumnNames.contains(concatenatedName));
             // The original name is counted up.
             columnNameCountups.put(column.getName(), index);
