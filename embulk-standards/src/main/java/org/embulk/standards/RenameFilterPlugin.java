@@ -438,13 +438,13 @@ public class RenameFilterPlugin
         return outputBuilder.build();
     }
 
-    private final ImmutableMap<String, String> CHARACTER_TYPE_KEYWORDS = new ImmutableMap.Builder<String, String>()
-        .put("a-z", "a-z")
-        .put("A-Z", "A-Z")
-        .put("0-9", "0-9")
-        .build();
+    private static final ImmutableMap<String, String> CHARACTER_TYPE_KEYWORDS =
+        new ImmutableMap.Builder<String, String>().put("a-z", "a-z")
+                                                  .put("A-Z", "A-Z")
+                                                  .put("0-9", "0-9")
+                                                  .build();
 
     // TODO(dmikurube): Revisit the limitation.
     // It should be practically acceptable to assume any output accepts column names with 8 characters at least...
-    private final int minimumMaxLengthInUniqueNumberSuffix = 8;
+    private static final int minimumMaxLengthInUniqueNumberSuffix = 8;
 }
