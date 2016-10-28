@@ -284,19 +284,13 @@ public class RenameFilterPlugin
             throw new ConfigException("\"digits\" in rule \"unique_number_suffix\" must be equal to or larger than digits of number of columns");
         }
 
-        // Columns shouldn't be truncated here initially even if a "max_length" option is implemented in "unique".
-        // Uniqueness should be identified before truncated.
+        // Columns should not be truncated here initially. Uniqueness should be identified before truncated.
 
-        // Look for conflicts on the original column names
+        // Iterate for initial states.
         HashSet<String> originalColumnNames = new HashSet<>();
-        HashMap<String, Integer> columnNameConflicts = new HashMap<>();
         HashMap<String, Integer> columnNameCountups = new HashMap<>();
         for (Column column : inputSchema.getColumns()) {
             originalColumnNames.add(column.getName());
-            if (!columnNameConflicts.containsKey(column.getName())) {
-                columnNameConflicts.put(column.getName(), 0);
-            }
-            columnNameConflicts.put(column.getName(), columnNameConflicts.get(column.getName()) + 1);
             // TODO(dmikurube): Configure "offset" for this.
             columnNameCountups.put(column.getName(), 1);
         }
