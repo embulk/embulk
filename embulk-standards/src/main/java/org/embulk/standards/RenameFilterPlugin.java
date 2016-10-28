@@ -132,9 +132,17 @@ public class RenameFilterPlugin
         @ConfigDefault("null")
         Optional<Integer> getDigits();
 
+        @Config("esteem_original_names")
+        @ConfigDefault("true")
+        boolean getEsteemOriginalNames();
+
         @Config("max_length")
         @ConfigDefault("null")
         Optional<Integer> getMaxLength();
+
+        @Config("offset")
+        @ConfigDefault("1")
+        int getOffset();
     }
 
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
@@ -264,7 +272,9 @@ public class RenameFilterPlugin
     private Schema applyUniqueNumberSuffixRule(Schema inputSchema, UniqueNumberSuffixRule rule) {
         final String delimiter = rule.getDelimiter();
         final Optional<Integer> digits = rule.getDigits();
+        final boolean esteemOriginalNames = rule.getEsteemOriginalNames();
         final Optional<Integer> max_length = rule.getMaxLength();
+        final int offset = rule.getOffset();
 
         // |delimiter| must consist of just 1 character to check quickly that it does not contain any digit.
         if (delimiter == null || delimiter.length() != 1 || Character.isDigit(delimiter.charAt(0))) {
@@ -276,12 +286,12 @@ public class RenameFilterPlugin
         if (max_length.isPresent() && digits.isPresent() && max_length.get() < digits.get()) {
             throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than \"digits\"");
         }
-        int digitsOfNumberOfColumns = Integer.toString(inputSchema.getColumnCount()).length();
-        if (max_length.isPresent() && max_length.get() < digitsOfNumberOfColumns) {
-            throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be equal to or larger than digits of number of columns");
+        int digitsOfNumberOfColumns = Integer.toString(inputSchema.getColumnCount() + offset - 1).length();
+        if (max_length.isPresent() && max_length.get() <= digitsOfNumberOfColumns) {
+            throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than digits of ((number of columns) + \"offset\" - 1)");
         }
-        if (digits.isPresent() && digits.get() < digitsOfNumberOfColumns) {
-            throw new ConfigException("\"digits\" in rule \"unique_number_suffix\" must be equal to or larger than digits of number of columns");
+        if (digits.isPresent() && digits.get() <= digitsOfNumberOfColumns) {
+            throw new ConfigException("\"digits\" in rule \"unique_number_suffix\" must be larger than digits of ((number of columns) + \"offset\" - 1)");
         }
 
         // Columns should not be truncated here initially. Uniqueness should be identified before truncated.
@@ -291,8 +301,7 @@ public class RenameFilterPlugin
         HashMap<String, Integer> columnNameCountups = new HashMap<>();
         for (Column column : inputSchema.getColumns()) {
             originalColumnNames.add(column.getName());
-            // TODO(dmikurube): Configure "offset" for this.
-            columnNameCountups.put(column.getName(), 1);
+            columnNameCountups.put(column.getName(), offset);
         }
 
         Schema.Builder outputBuilder = Schema.builder();
@@ -334,7 +343,8 @@ public class RenameFilterPlugin
                 }
                 ++index;
             // Conflicts with original names matter when creating new names with suffixes.
-            } while (fixedColumnNames.contains(concatenatedName) || originalColumnNames.contains(concatenatedName));
+            } while (fixedColumnNames.contains(concatenatedName) ||
+                     (esteemOriginalNames && originalColumnNames.contains(concatenatedName)));
             // The original name is counted up.
             columnNameCountups.put(column.getName(), index);
             // The concatenated&truncated name is fixed.
