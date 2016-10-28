@@ -11,10 +11,15 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -117,6 +122,21 @@ public class RenameFilterPlugin
         String getReplace();
     }
 
+    private interface UniqueNumberSuffixRule
+            extends Rule {
+        @Config("delimiter")
+        @ConfigDefault("\"_\"")
+        String getDelimiter();
+
+        @Config("digits")
+        @ConfigDefault("null")
+        Optional<Integer> getDigits();
+
+        @Config("max_length")
+        @ConfigDefault("null")
+        Optional<Integer> getMaxLength();
+    }
+
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException
     {
         Rule rule = ruleConfig.loadConfig(Rule.class);
@@ -131,6 +151,8 @@ public class RenameFilterPlugin
             return applyTruncateRule(inputSchema, ruleConfig.loadConfig(TruncateRule.class));
         case "upper_to_lower":
             return applyUpperToLowerRule(inputSchema);
+        case "unique_number_suffix":
+            return applyUniqueNumberSuffixRule(inputSchema, ruleConfig.loadConfig(UniqueNumberSuffixRule.class));
         default:
             throw new ConfigException("Renaming rule \"" +rule+ "\" is unknown");
         }
@@ -207,9 +229,131 @@ public class RenameFilterPlugin
         return builder.build();
     }
 
+    /**
+     * Resolves conflicting column names by suffixing numbers.
+     *
+     * Conflicts are resolved by the following rules. The rules should not be changed casually because changing the
+     * rules breaks compatibility.
+     *
+     * 1. Count all duplicates in the original column names. Indexes are counted up per original column name.
+     * 2. Fix new column names from the left to the right
+     *   - Try to append the current index for the original column name (with truncation if requested (not implemented))
+     *     - Fix the new name if no duplication is found with fixed column names on the left and original column names
+     *     - Retry with an index incremented if a duplication is found with fixed column names on the left
+     *
+     * Examples:
+     *     [c, c1, c1,   c2, c,   c3]
+     * ==> [c, c1, c1_2, c2, c_2, c3]
+     *
+     * If a newly suffixed name newly conflicts with other columns, the index is just skipped. For example:
+     *     [c, c,   c_0, c_1, c_2]
+     * ==> [c, c_3, c_0, c_1, c_2]
+     *
+     * If truncation is requested simultaneously with uniqueness (not implemented), it should work like:
+     *     [co, c, co  , c  , co  , c  , ..., co  , c  , co  , c   , co  , c   ]
+     * ==> [co, c, co_2, c_2, co_3, c_3, ..., co_9, c_9, c_10, c_11, c_12, c_13] (max_length:4)
+     *
+     *     [co, co  , co  , ..., co  , c, c  , ..., c  , co  , c  , co  , c  , co  , c   ]
+     * ==> [co, co_2, co_3, ..., co_9, c, c_2, ..., c_7, c_10, c_8, c_11, c_9, c_12, c_13] (max_length:4)
+     *
+     * Note that a delimiter should not be omitted. Recurring conflicts may confuse users.
+     *     [c, c,  c,  ..., c,   c,   c,   c,   c1, c1,  c1]
+     * NG: [c, c2, c3, ..., c10, c11, c12, c13, c1, c12, c13] (not unique!)
+     * ==> [c, c2, c3, ..., c10, c11, c12, c13, c1, c14, c15] (confusing)
+     */
+    private Schema applyUniqueNumberSuffixRule(Schema inputSchema, UniqueNumberSuffixRule rule) {
+        final String delimiter = rule.getDelimiter();
+        final Optional<Integer> digits = rule.getDigits();
+        final Optional<Integer> max_length = rule.getMaxLength();
+
+        // |delimiter| must consist of just 1 character to check quickly that it does not contain any digit.
+        if (delimiter == null || delimiter.length() != 1 || Character.isDigit(delimiter.charAt(0))) {
+            throw new ConfigException("\"delimiter\" in rule \"unique_number_suffix\" must contain just 1 non-digit character");
+        }
+        if (max_length.isPresent() && max_length.get() < minimumMaxLengthInUniqueNumberSuffix) {
+            throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than " +(minimumMaxLengthInUniqueNumberSuffix-1));
+        }
+        if (max_length.isPresent() && digits.isPresent() && max_length.get() < digits.get()) {
+            throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than \"digits\"");
+        }
+        int digitsOfNumberOfColumns = Integer.toString(inputSchema.getColumnCount()).length();
+        if (max_length.isPresent() && max_length.get() < digitsOfNumberOfColumns) {
+            throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be equal to or larger than digits of number of columns");
+        }
+        if (digits.isPresent() && digits.get() < digitsOfNumberOfColumns) {
+            throw new ConfigException("\"digits\" in rule \"unique_number_suffix\" must be equal to or larger than digits of number of columns");
+        }
+
+        // Columns shouldn't be truncated here initially even if a "max_length" option is implemented in "unique".
+        // Uniqueness should be identified before truncated.
+
+        // Look for conflicts on the original column names
+        HashSet<String> originalColumnNames = new HashSet<>();
+        HashMap<String, Integer> columnNameConflicts = new HashMap<>();
+        HashMap<String, Integer> columnNameCountups = new HashMap<>();
+        for (Column column : inputSchema.getColumns()) {
+            originalColumnNames.add(column.getName());
+            if (!columnNameConflicts.containsKey(column.getName())) {
+                columnNameConflicts.put(column.getName(), 0);
+            }
+            columnNameConflicts.put(column.getName(), columnNameConflicts.get(column.getName()) + 1);
+            // TODO(dmikurube): Configure "offset" for this.
+            columnNameCountups.put(column.getName(), 1);
+        }
+
+        Schema.Builder outputBuilder = Schema.builder();
+
+        HashSet<String> fixedColumnNames = new HashSet<>();
+        for (Column column : inputSchema.getColumns()) {
+            String truncatedName = column.getName();
+            if (column.getName().length() > max_length.or(Integer.MAX_VALUE)) {
+                truncatedName = column.getName().substring(0, max_length.get());
+            }
+
+            if (!(fixedColumnNames.contains(truncatedName) && originalColumnNames.contains(truncatedName))) {
+                // The original name is counted up.
+                columnNameCountups.put(column.getName(), columnNameCountups.get(column.getName()) + 1);
+                // The truncated name is fixed.
+                fixedColumnNames.add(truncatedName);
+                outputBuilder.add(truncatedName, column.getType());
+                continue;
+            }
+
+            int index = columnNameCountups.get(column.getName());
+            String concatenatedName;
+            do {
+                // String#format is not used to avoid locale-related problems.
+                String differentiatorString = Integer.toString(index);
+                if (digits.isPresent() && (digits.get() > differentiatorString.length())) {
+                    differentiatorString =
+                        Strings.repeat("0", digits.get() - differentiatorString.length()) + differentiatorString;
+                }
+                differentiatorString = delimiter + differentiatorString;
+
+                concatenatedName = column.getName() + differentiatorString;
+                if (concatenatedName.length() > max_length.or(Integer.MAX_VALUE)) {
+                    concatenatedName =
+                        column.getName().substring(0, max_length.get() - differentiatorString.length())
+                        + differentiatorString;
+                }
+                ++index;
+            } while (fixedColumnNames.contains(concatenatedName) || originalColumnNames.contains(concatenatedName));
+            // The original name is counted up.
+            columnNameCountups.put(column.getName(), index);
+            // The concatenated&truncated name is fixed.
+            fixedColumnNames.add(concatenatedName);
+            outputBuilder.add(concatenatedName, column.getType());
+        }
+        return outputBuilder.build();
+    }
+
     private final ImmutableMap<String, String> CHARACTER_TYPE_KEYWORDS = new ImmutableMap.Builder<String, String>()
         .put("a-z", "a-z")
         .put("A-Z", "A-Z")
         .put("0-9", "0-9")
         .build();
+
+    // TODO(dmikurube): Revisit the limitation.
+    // It should be practically acceptable to assume any output accepts column names with 8 characters at least...
+    private final int minimumMaxLengthInUniqueNumberSuffix = 8;
 }

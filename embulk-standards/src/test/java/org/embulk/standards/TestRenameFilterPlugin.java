@@ -2,6 +2,7 @@ package org.embulk.standards;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
@@ -18,6 +19,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.HashMap;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.embulk.spi.type.Types.STRING;
@@ -367,6 +371,214 @@ public class TestRenameFilterPlugin
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.copyOf(parameters)));
         renameAndCheckSchema(config, original, expected);
+    }
+
+    public void checkUniqueNumberSuffixRuleEmptyDelimiter()
+    {
+        final String columnNames[] = { "c" };
+        try {
+            checkUniqueNumberSuffixRuleInternal(columnNames, columnNames, "");
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRuleLongDelimiter()
+    {
+        final String columnNames[] = { "c" };
+        try {
+            checkUniqueNumberSuffixRuleInternal(columnNames, columnNames, "__");
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRuleDigitDelimiter()
+    {
+        final String columnNames[] = { "c" };
+        try {
+            checkUniqueNumberSuffixRuleInternal(columnNames, columnNames, "2");
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRuleShortMaxLength()
+    {
+        final String columnNames[] = { "c" };
+        try {
+            checkUniqueNumberSuffixRuleInternal(columnNames, columnNames, DEFAULT, -1, 7);
+        } catch (Throwable t) {
+            assertTrue(t instanceof ConfigException);
+        }
+    }
+
+    // TODO(dmikurube): Test a nil/null delimiter in "unique".
+    // - rule: unique
+    //   delimiter:
+
+    @Test
+    public void checkUniqueNumberSuffixRule0()
+    {
+        final String originalColumnNames[] = { "a", "b", "c", "d", "e" };
+        final String expectedColumnNames[] = { "a", "b", "c", "d", "e" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule1()
+    {
+        final String originalColumnNames[] = { "c", "c",   "c1", "c2", "c2"   };
+        final String expectedColumnNames[] = { "c", "c_2", "c1", "c2", "c2_2" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule2()
+    {
+        final String originalColumnNames[] = { "c", "c",   "c_1", "c_3", "c"   };
+        final String expectedColumnNames[] = { "c", "c_2", "c_1", "c_3", "c_4" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule3()
+    {
+        final String originalColumnNames[] = {
+            "c", "c",   "c",   "c",   "c",   "c",   "c",   "c",   "c",   "c",    "c_1", "c_1"   };
+        final String expectedColumnNames[] = {
+            "c", "c_2", "c_3", "c_4", "c_5", "c_6", "c_7", "c_8", "c_9", "c_10", "c_1", "c_1_2" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule4DifferentDelimiter()
+    {
+        final String originalColumnNames[] = { "c", "c",   "c1", "c2", "c2"   };
+        final String expectedColumnNames[] = { "c", "c-2", "c1", "c2", "c2-2" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, "-");
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule5Digits()
+    {
+        final String originalColumnNames[] = { "c", "c",      "c1", "c2", "c2"   };
+        final String expectedColumnNames[] = { "c", "c_0002", "c1", "c2", "c2_0002" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, 4, -1);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule6MaxLength1()
+    {
+        final String originalColumnNames[] = { "column", "column",   "column_1", "column_2", "column_2" };
+        final String expectedColumnNames[] = { "column", "column_3", "column_1", "column_2", "column_4" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule7()
+    {
+        final String originalColumnNames[] = { "column", "column",   "column_2", "column_3" };
+        final String expectedColumnNames[] = { "column", "column_4", "column_2", "column_3" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule7MaxLength2()
+    {
+        final String originalColumnNames[] = {
+            "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",
+            "column",   "colum",   "column",   "colum",   "column",   "colum",   "column",   "colum",
+            "column",   "colum",    "column",   "colum"    };
+        final String expectedColumnNames[] = {
+            "column",   "colum",   "column_2", "colum_2", "column_3", "colum_3", "column_4", "colum_4", "column_5", "colum_5",
+            "column_6", "colum_6", "column_7", "colum_7", "column_8", "colum_8", "column_9", "colum_9",
+            "colum_10", "colum_11", "colum_12", "colum_13" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule8MaxLength3()
+    {
+        final String originalColumnNames[] = {
+            "column", "column",   "column",   "column",   "column",   "column",   "column",   "column",   "column",
+            "colum",  "colum",    "colum",    "colum",    "colum",    "colum",    "colum",    "colum",
+            "column",   "colum",   "column",   "colum",    "column"   };
+        final String expectedColumnNames[] = {
+            "column", "column_2", "column_3", "column_4", "column_5", "column_6", "column_7", "column_8", "column_9",
+            "colum",  "colum_2",  "colum_3",  "colum_4",  "colum_5",  "colum_6",  "colum_7",  "colum_8",
+            "colum_10", "colum_9", "colum_11", "colum_12", "colum_13" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
+    }
+
+    private void checkUniqueNumberSuffixRuleInternal(
+            final String originalColumnNames[],
+            final String expectedColumnNames[]) {
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames,
+                                            expectedColumnNames,
+                                            DEFAULT,
+                                            -1,
+                                            -1);
+    }
+
+    private void checkUniqueNumberSuffixRuleInternal(
+            final String originalColumnNames[],
+            final String expectedColumnNames[],
+            String delimiter) {
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames,
+                                            expectedColumnNames,
+                                            delimiter,
+                                            -1,
+                                            -1);
+    }
+
+    private void checkUniqueNumberSuffixRuleInternal(
+            final String originalColumnNames[],
+            final String expectedColumnNames[],
+            String delimiter,
+            int digits,
+            int max_length)
+    {
+        Schema.Builder originalSchemaBuilder = Schema.builder();
+        for (String originalColumnName : originalColumnNames) {
+            originalSchemaBuilder.add(originalColumnName, STRING);
+        }
+        final Schema ORIGINAL_SCHEMA = originalSchemaBuilder.build();
+
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "unique_number_suffix");
+        if (!delimiter.equals(DEFAULT)) {
+            parameters.put("delimiter", delimiter);
+        }
+        if (digits >= 0) {
+            parameters.put("digits", digits);
+        }
+        if (max_length >= 0) {
+            parameters.put("max_length", max_length);
+        }
+        ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+
+        filter.transaction(pluginConfig, ORIGINAL_SCHEMA, new FilterPlugin.Control() {
+            @Override
+            public void run(TaskSource task, Schema newSchema)
+            {
+                ArrayList<String> resolvedColumnNamesList = new ArrayList<>(newSchema.size());
+                for (Column resolvedColumn : newSchema.getColumns()) {
+                    resolvedColumnNamesList.add(resolvedColumn.getName());
+                }
+                String[] resolvedColumnNames = Iterables.toArray(resolvedColumnNamesList, String.class);
+                assertEquals(expectedColumnNames, resolvedColumnNames);
+                for (int i = 0; i < expectedColumnNames.length; ++i) {
+                    Column original = ORIGINAL_SCHEMA.getColumn(i);
+                    Column resolved = newSchema.getColumn(i);
+                    assertEquals(original.getType(), resolved.getType());
+                }
+            }
+        });
     }
 
     private Schema makeSchema(final String columnNames[])
