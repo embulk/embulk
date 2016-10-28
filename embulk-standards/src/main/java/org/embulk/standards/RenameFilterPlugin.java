@@ -106,6 +106,25 @@ public class RenameFilterPlugin
         String getReplace();
     }
 
+    private interface FirstCharacterTypesRule
+            extends Rule {
+        @Config("replace")
+        @ConfigDefault("null")
+        Optional<String> getReplace();
+
+        @Config("pass_types")
+        @ConfigDefault("[]")
+        List<String> getPassTypes();
+
+        @Config("pass_characters")
+        @ConfigDefault("\"\"")
+        String getPassCharacters();
+
+        @Config("prefix")
+        @ConfigDefault("null")
+        Optional<String> getPrefix();
+    }
+
     private interface TruncateRule
             extends Rule {
         @Config("max_length")
@@ -151,6 +170,8 @@ public class RenameFilterPlugin
         switch (rule.getRule()) {
         case "character_types":
             return applyCharacterTypesRule(inputSchema, ruleConfig.loadConfig(CharacterTypesRule.class));
+        case "first_character_types":
+            return applyFirstCharacterTypesRule(inputSchema, ruleConfig.loadConfig(FirstCharacterTypesRule.class));
         case "lower_to_upper":
             return applyLowerToUpperRule(inputSchema);
         case "regex_replace":
@@ -199,6 +220,61 @@ public class RenameFilterPlugin
             schemaBuilder.add(column.getName().replaceAll(regexBuilder.toString(), replace), column.getType());
         }
         return schemaBuilder.build();
+    }
+
+    private Schema applyFirstCharacterTypesRule(Schema inputSchema, FirstCharacterTypesRule rule) {
+        final Optional<String> replace = rule.getReplace();
+        final List<String> passTypes = rule.getPassTypes();
+        final String passCharacters = rule.getPassCharacters();
+        final Optional<String> prefix = rule.getPrefix();
+
+        if (replace.isPresent() && replace.get().length() != 1) {
+            throw new ConfigException("\"replace\" in \"first_character_types\" must contain just 1 character if specified");
+        }
+        if (prefix.isPresent() && prefix.get().length() != 1) {
+            throw new ConfigException("\"prefix\" in \"first_character_types\" must contain just 1 character if specified");
+        }
+        if (prefix.isPresent() && replace.isPresent()) {
+            throw new ConfigException("\"replace\" and \"prefix\" in \"first_character_types\" must not be specified together");
+        }
+        if ((!prefix.isPresent()) && (!replace.isPresent())) {
+            throw new ConfigException("Either of \"replace\" or \"prefix\" must be specified in \"first_character_types\"");
+        }
+        // TODO(dmikurube): Revisit this for better escaping.
+        if (passCharacters.contains("\\E")) {
+            throw new ConfigException("\"pass_characters\" in \"first_character_types\" must not contain \"\\E\"");
+        }
+
+        StringBuilder regexBuilder = new StringBuilder();
+        regexBuilder.append("^[^");
+        for (String target : passTypes) {
+            if (CHARACTER_TYPE_KEYWORDS.containsKey(target)) {
+                regexBuilder.append(CHARACTER_TYPE_KEYWORDS.get(target));
+            } else {
+                throw new ConfigException("\"" +target+ "\" is an unknown character type keyword");
+            }
+        }
+        if (!passCharacters.isEmpty()) {
+            regexBuilder.append("\\Q");
+            regexBuilder.append(passCharacters);
+            regexBuilder.append("\\E");
+        }
+        regexBuilder.append("].*");
+
+        Schema.Builder schemaBuidler = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            String name = column.getName();
+            if (name.matches(regexBuilder.toString())) {
+                if (replace.isPresent()) {
+                    name = replace.get() + name.substring(1);
+                }
+                else if (prefix.isPresent()) {
+                    name = prefix.get() + name;
+                }
+            }
+            schemaBuidler.add(name, column.getType());
+        }
+        return schemaBuidler.build();
     }
 
     private Schema applyLowerToUpperRule(Schema inputSchema) {

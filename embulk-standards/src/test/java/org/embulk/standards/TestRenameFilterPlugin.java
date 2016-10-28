@@ -19,9 +19,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.HashMap;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.embulk.spi.type.Types.STRING;
@@ -368,6 +367,270 @@ public class TestRenameFilterPlugin
         parameters.put("rule", "regex_replace");
         parameters.put("match", match);
         parameters.put("replace", replace);
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceSingleHyphen()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "_oo", "_12foo", "_bar", "_AZ", "_ban", "_jar", "_zip", "-zap" };
+        final String pass_types[] = {};
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types, "-");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceMultipleSingles()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "_oo", "_12foo", "@bar", "_AZ", "_ban", "_jar", "*zip", "-zap" };
+        final String pass_types[] = {};
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types, "-@*");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceAlphabet()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "foo", "_12foo", "_bar", "BAZ", "_ban", "_jar", "_zip", "_zap" };
+        final String pass_types[] = { "a-z", "A-Z" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceAlphanumeric()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "foo", "012foo", "_bar", "BAZ", "_ban", "_jar", "_zip", "_zap" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceLowercase()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "foo", "_12foo", "_bar", "_AZ", "_ban", "_jar", "_zip", "_zap" };
+        final String pass_types[] = { "a-z" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceLowerwording()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "foo", "012foo", "-bar", "-AZ", "-ban", "_jar", "-zip", "-zap" };
+        final String pass_types[] = { "a-z", "0-9" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "-", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceNumeric()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "_oo", "012foo", "_bar", "_AZ", "_ban", "_jar", "_zip", "_zap" };
+        final String pass_types[] = { "0-9" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceUppercase()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "_oo", "_12foo", "_bar", "BAZ", "_ban", "_jar", "_zip", "_zap" };
+        final String pass_types[] = { "A-Z" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceUpperwording()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "-oo", "012foo", "-bar", "BAZ", "-ban", "_jar", "-zip", "-zap" };
+        final String pass_types[] = { "A-Z", "0-9" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "-", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceWording()
+    {
+        final String original[] = { "foo", "012foo", "@bar", "BAZ", "&ban", "_jar", "*zip", "-zap" };
+        final String expected[] = { "foo", "012foo", "$bar", "BAZ", "$ban", "_jar", "$zip", "$zap" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, "$", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRuleReplaceUnknownFirst()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = { "some_unknown_type" };
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRuleReplaceInternal(original, original, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixSingleHyphen()
+    {
+        final String original[] = { "foo",  "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "_foo", "_012foo", "_@bar", "_BAZ", "_&ban", "__jar", "_*zip",  "-zap" };
+        final String pass_types[] = {};
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types, "-");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixMultipleSingles()
+    {
+        final String original[] = { "foo",  "012foo",  "@bar", "BAZ",  "&ban",  "_jar",  "*zip", "-zap"  };
+        final String expected[] = { "_foo", "_012foo", "@bar", "_BAZ", "_&ban", "__jar", "*zip", "-zap" };
+        final String pass_types[] = {};
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types, "-@*");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixAlphabet()
+    {
+        final String original[] = { "foo", "012foo",  "@bar",  "BAZ", "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "foo", "_012foo", "_@bar", "BAZ", "_&ban", "__jar", "_*zip", "_-zap" };
+        final String pass_types[] = { "a-z", "A-Z" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixAlphanumeric()
+    {
+        final String original[] = { "foo", "012foo", "@bar",  "BAZ", "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "foo", "012foo", "_@bar", "BAZ", "_&ban", "__jar", "_*zip", "_-zap" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixLowercase()
+    {
+        final String original[] = { "foo", "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "foo", "_012foo", "_@bar", "_BAZ", "_&ban", "__jar", "_*zip", "_-zap" };
+        final String pass_types[] = { "a-z" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixLowerwording()
+    {
+        final String original[] = { "foo", "012foo", "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "foo", "012foo", "-@bar", "-BAZ", "-&ban", "_jar", "-*zip", "--zap" };
+        final String pass_types[] = { "a-z", "0-9" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "-", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixNumeric()
+    {
+        final String original[] = { "foo",  "012foo", "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "_foo", "012foo", "_@bar", "_BAZ", "_&ban", "__jar", "_*zip", "_-zap" };
+        final String pass_types[] = { "0-9" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixUppercase()
+    {
+        final String original[] = { "foo",  "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "_foo", "_012foo", "_@bar", "BAZ",  "_&ban", "__jar", "_*zip", "_-zap" };
+        final String pass_types[] = { "A-Z" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "_", pass_types);
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixUpperwording()
+    {
+        final String original[] = { "foo",  "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "-foo", "012foo",  "-@bar", "BAZ",  "-&ban", "_jar",  "-*zip", "--zap" };
+        final String pass_types[] = { "A-Z", "0-9" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "-", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixWording()
+    {
+        final String original[] = { "foo",  "012foo",  "@bar",  "BAZ",  "&ban",  "_jar",  "*zip",  "-zap"  };
+        final String expected[] = { "foo",  "012foo",  "$@bar", "BAZ",  "$&ban", "_jar",  "$*zip", "$-zap" };
+        final String pass_types[] = { "a-z", "A-Z", "0-9" };
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, "$", pass_types, "_");
+    }
+
+    @Test
+    public void checkFirstCharacterTypesRulePrefixUnknownFirst()
+    {
+        final String original[] = { "foo" };
+        final String pass_types[] = { "some_unknown_type" };
+        exception.expect(ConfigException.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkFirstCharacterTypesRulePrefixInternal(original, original, "_", pass_types);
+    }
+
+    private void checkFirstCharacterTypesRuleReplaceInternal(
+            final String original[],
+            final String expected[],
+            final String replace,
+            final String pass_types[]) {
+        checkFirstCharacterTypesRuleReplaceInternal(original, expected, replace, pass_types, DEFAULT);
+    }
+
+    private void checkFirstCharacterTypesRuleReplaceInternal(
+            final String original[],
+            final String expected[],
+            final String replace,
+            final String pass_types[],
+            final String pass_characters)
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "first_character_types");
+        if (pass_types.length > 0) {
+            parameters.put("pass_types", Arrays.asList(pass_types));
+        }
+        if (!pass_characters.equals(DEFAULT)) {
+            parameters.put("pass_characters", pass_characters);
+        }
+        if (!replace.equals(DEFAULT)) {
+            parameters.put("replace", replace);
+        }
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.copyOf(parameters)));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    private void checkFirstCharacterTypesRulePrefixInternal(
+            final String original[],
+            final String expected[],
+            final String prefix,
+            final String pass_types[]) {
+        checkFirstCharacterTypesRulePrefixInternal(original, expected, prefix, pass_types, DEFAULT);
+    }
+
+    private void checkFirstCharacterTypesRulePrefixInternal(
+            final String original[],
+            final String expected[],
+            final String prefix,
+            final String pass_types[],
+            final String pass_characters)
+    {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("rule", "first_character_types");
+        if (pass_types.length > 0) {
+            parameters.put("pass_types", Arrays.asList(pass_types));
+        }
+        if (!pass_characters.equals(DEFAULT)) {
+            parameters.put("pass_characters", pass_characters);
+        }
+        if (!prefix.equals(DEFAULT)) {
+            parameters.put("prefix", prefix);
+        }
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.copyOf(parameters)));
         renameAndCheckSchema(config, original, expected);
