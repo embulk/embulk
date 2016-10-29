@@ -322,28 +322,34 @@ public class BulkLoader
 
         public ExecutionResult buildExecuteResult()
         {
-            return buildExecuteResultWithWarningException(null);
+            return buildExecuteResultWithWarningException(false, null);
         }
 
-        public ExecutionResult buildExecuteResultWithWarningException(Throwable ex)
+        public ExecutionResult buildExecuteResultWithWarningException(boolean skipped, Throwable ex)
         {
-            ConfigDiff configDiff = Exec.newConfigDiff();
-            if (inputConfigDiff != null) {
-                configDiff.getNestedOrSetEmpty("in").merge(inputConfigDiff);
+            ConfigDiff configDiff;
+            if (skipped) {
+                configDiff = ((SkipTransactionException) ex).getConfigDiff();
             }
-            if (outputConfigDiff != null) {
-                configDiff.getNestedOrSetEmpty("out").merge(outputConfigDiff);
+            else {
+                configDiff = Exec.newConfigDiff();
+                if (inputConfigDiff != null) {
+                    configDiff.getNestedOrSetEmpty("in").merge(inputConfigDiff);
+                }
+                if (outputConfigDiff != null) {
+                    configDiff.getNestedOrSetEmpty("out").merge(outputConfigDiff);
+                }
             }
 
             ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
             for (Throwable e : getExceptions()) {
                 ignoredExceptions.add(e);
             }
-            if (ex != null) {
+            if (ex != null && !skipped) {
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(configDiff, ignoredExceptions.build());
+            return new ExecutionResult(configDiff, skipped, ignoredExceptions.build());
         }
 
         public ResumeState buildResumeState(ExecSession exec)
@@ -565,9 +571,10 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
+            boolean skipped = isSkippedTransaction(ex);
+            if (skipped || (state.isAllTasksCommitted() && state.isAllTransactionsCommitted())) {
                 // ignore the exception
-                return state.buildExecuteResultWithWarningException(ex);
+                return state.buildExecuteResultWithWarningException(skipped, ex);
             }
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
@@ -642,12 +649,18 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
+            boolean skipped = isSkippedTransaction(ex);
+            if (skipped || (state.isAllTasksCommitted() && state.isAllTransactionsCommitted())) {
                 // ignore the exception
-                return state.buildExecuteResultWithWarningException(ex);
+                return state.buildExecuteResultWithWarningException(skipped, ex);
             }
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
+    }
+
+    private static boolean isSkippedTransaction(Throwable ex)
+    {
+        return ex instanceof SkipTransactionException;
     }
 
     private static void restoreResumedTaskReports(ResumeState resume, LoaderState state)
