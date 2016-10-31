@@ -7,6 +7,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
@@ -16,13 +17,18 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.slf4j.Logger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.PatternSyntaxException;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 
 public class RenameFilterPlugin
         implements FilterPlugin
@@ -102,6 +108,7 @@ public class RenameFilterPlugin
 
         @Config("replace")
         @ConfigDefault("\"_\"")
+        @Size(min = 1, max = 1)
         String getReplace();
     }
 
@@ -128,6 +135,7 @@ public class RenameFilterPlugin
             extends Rule {
         @Config("max_length")
         @ConfigDefault("128")
+        @Min(0)
         int getMaxLength();
     }
 
@@ -160,6 +168,7 @@ public class RenameFilterPlugin
 
         @Config("offset")
         @ConfigDefault("1")
+        @Min(0)
         int getOffset();
     }
 
@@ -291,7 +300,17 @@ public class RenameFilterPlugin
     private Schema applyTruncateRule(Schema inputSchema, TruncateRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
-            builder.add(column.getName().substring(0, rule.getMaxLength()), column.getType());
+            if (column.getName().length() < rule.getMaxLength()) {
+                builder.add(column.getName(), column.getType());
+            }
+            else {
+                try {
+                    builder.add(column.getName().substring(0, rule.getMaxLength()), column.getType());
+                }
+                catch (IndexOutOfBoundsException ex) {
+                    logger.error("FATAL unexpected error in \"truncate\" rule: substring failed.");
+                }
+            }
         }
         return builder.build();
     }
@@ -311,7 +330,12 @@ public class RenameFilterPlugin
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             // TODO(dmikurube): Check if we need a kind of sanitization?
-            builder.add(column.getName().replaceAll(match, replace), column.getType());
+            try {
+                builder.add(column.getName().replaceAll(match, replace), column.getType());
+            }
+            catch (PatternSyntaxException ex) {
+                throw new ConfigException(ex);
+            }
         }
         return builder.build();
     }
@@ -447,4 +471,6 @@ public class RenameFilterPlugin
     // TODO(dmikurube): Revisit the limitation.
     // It should be practically acceptable to assume any output accepts column names with 8 characters at least...
     private static final int minimumMaxLengthInUniqueNumberSuffix = 8;
+
+    private final Logger logger = Exec.getLogger(getClass());
 }

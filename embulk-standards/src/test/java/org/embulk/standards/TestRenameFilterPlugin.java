@@ -15,6 +15,7 @@ import org.embulk.spi.SchemaConfigException;
 import org.embulk.standards.RenameFilterPlugin.PluginTask;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -22,6 +23,7 @@ import org.junit.rules.ExpectedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.regex.PatternSyntaxException;
 
 import static org.embulk.spi.type.Types.STRING;
 import static org.embulk.spi.type.Types.TIMESTAMP;
@@ -163,8 +165,8 @@ public class TestRenameFilterPlugin
     @Test
     public void checkTruncateRule()
     {
-        final String original[] = { "foo", "bar", "foobar", "foobarbaz" };
-        final String expected[] = { "foo", "bar", "foo",    "foo"       };
+        final String original[] = { "foo", "bar", "gj", "foobar", "foobarbaz" };
+        final String expected[] = { "foo", "bar", "gj", "foo",    "foo"       };
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.of("rule", "truncate", "max_length", "3")));
         renameAndCheckSchema(config, original, expected);
@@ -180,6 +182,19 @@ public class TestRenameFilterPlugin
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.of("rule", "truncate")));
         renameAndCheckSchema(config, original, expected);
+    }
+
+    @Test
+    @Ignore("AssertError could not be expected.")
+    public void checkTruncateRuleNegative()
+    {
+        final String original[] = { "foo" };
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "truncate", "max_length", -1)));
+        exception.expect(AssertionError.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        renameAndCheckSchema(config, original, original);
     }
 
     @Test
@@ -274,22 +289,24 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    @Ignore("AssertError could not be expected.")
     public void checkCharacterTypesRuleLongReplace()
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(ConfigException.class);
+        exception.expect(AssertionError.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "___");
     }
 
     @Test
+    @Ignore("AssertError could not be expected.")
     public void checkCharacterTypesRuleEmptyReplace()
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(ConfigException.class);
+        exception.expect(AssertionError.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "");
@@ -899,6 +916,17 @@ public class TestRenameFilterPlugin
         checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
     }
 
+    @Test
+    @Ignore("AssertError could not be expected.")
+    public void checkUniqueNumberSuffixRuleNegativeLength()
+    {
+        final String originalColumnNames[] = { "column" };
+        exception.expect(AssertionError.class);
+        // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
+        // Needs to import org.hamcrest.Matchers... in addition to org.junit...
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, originalColumnNames, DEFAULT, -1, -2);
+    }
+
     private void checkUniqueNumberSuffixRuleInternal(
             final String originalColumnNames[],
             final String expectedColumnNames[]) {
@@ -958,7 +986,7 @@ public class TestRenameFilterPlugin
         if (digits >= 0) {
             parameters.put("digits", digits);
         }
-        if (max_length >= 0) {
+        if (max_length != -1) {
             parameters.put("max_length", max_length);
         }
         if (esteem_original_names != null) {
