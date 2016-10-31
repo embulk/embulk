@@ -89,7 +89,12 @@ public class ModelManager
 
     public void validate(Object object)
     {
-        taskValidator.validateModel(object);
+        try {
+            taskValidator.validateModel(object);
+        }
+        catch (AssertionError ex) {
+            throw new ConfigException(ex);
+        }
     }
 
     // visible for DataSource.set
