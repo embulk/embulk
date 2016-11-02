@@ -917,6 +917,22 @@ public class TestRenameFilterPlugin
     }
 
     @Test
+    public void checkUniqueNumberSuffixRule10EsteemOriginalNames()
+    {
+        final String originalColumnNames[] = { "c", "c",   "c_2" };
+        final String expectedColumnNames[] = { "c", "c_3", "c_2" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, -1, true);
+    }
+
+    @Test
+    public void checkUniqueNumberSuffixRule10NonEsteemOriginalNames()
+    {
+        final String originalColumnNames[] = { "c", "c",   "c_2"   };
+        final String expectedColumnNames[] = { "c", "c_2", "c_2_2" };
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, -1, false);
+    }
+
+    @Test
     @Ignore("AssertError could not be expected.")
     public void checkUniqueNumberSuffixRuleNegativeLength()
     {
