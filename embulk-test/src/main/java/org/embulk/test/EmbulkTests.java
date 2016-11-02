@@ -15,6 +15,7 @@ import org.embulk.EmbulkEmbed;
 import org.embulk.config.ConfigSource;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
@@ -41,6 +42,15 @@ public class EmbulkTests
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    public static void copyResource(String resource, Path dest)
+        throws IOException
+    {
+        Files.createDirectories(dest.getParent());
+        try (InputStream input = Resources.getResource(resource).openStream()) {
+            Files.copy(input, dest, REPLACE_EXISTING);
         }
     }
 
