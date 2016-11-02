@@ -295,6 +295,28 @@ Example
         - {name: comment, type: string}
 
 
+.. note::
+
+    CSV parser supports ``format: '%s'`` to parse UNIX timestamp in seconds (e.g. 1470148959) as timestamp.
+
+    However, CSV parser itself can't parse UNIX timestamp in millisecond (e.g. 1470148959542) as timestamp. You can still parse the column as ``long`` type first, then apply `timestamp_format <https://github.com/sonots/embulk-filter-timestamp_format>`_ filter plugin to convert long to timestamp. Here is an example:
+
+    .. code-block:: yaml
+
+       in:
+         type: file
+         path_prefix: /my_csv_files
+         parser:
+           ...
+           columns:
+           - {name: timestamp_in_seconds, type: timestamp, format: '%s'}
+           - {name: timestamp_in_millis, type: long}
+       filters:
+         - type: timestamp_format
+           columns:
+             - {name: timestamp_in_millis, from_unit: ms}
+
+
 JSON parser plugin
 ------------------
 
