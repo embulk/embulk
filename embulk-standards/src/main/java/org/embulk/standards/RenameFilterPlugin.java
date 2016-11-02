@@ -158,10 +158,6 @@ public class RenameFilterPlugin
         @ConfigDefault("null")
         Optional<Integer> getDigits();
 
-        @Config("esteem_original_names")
-        @ConfigDefault("true")
-        boolean getEsteemOriginalNames();
-
         @Config("max_length")
         @ConfigDefault("null")
         Optional<Integer> getMaxLength();
@@ -376,7 +372,6 @@ public class RenameFilterPlugin
     private Schema applyUniqueNumberSuffixRule(Schema inputSchema, UniqueNumberSuffixRule rule) {
         final String delimiter = rule.getDelimiter();
         final Optional<Integer> digits = rule.getDigits();
-        final boolean esteemOriginalNames = rule.getEsteemOriginalNames();
         final Optional<Integer> maxLength = rule.getMaxLength();
         final int offset = rule.getOffset();
 
@@ -429,11 +424,6 @@ public class RenameFilterPlugin
             }
 
             int index = columnNameCountups.get(column.getName());
-            if (index <= offset) {
-                // It may happen if |esteem_original_names| is false.
-                // See |TestRenameFilterPlugin#checkUniqueNumberSuffixRule7WithoutEsteemOriginalNames|.
-                index = offset + 1;
-            }
             String concatenatedName;
             do {
                 // This can be replaced with String#format(Locale.ENGLISH, ...), but Java's String#format does not
@@ -452,8 +442,7 @@ public class RenameFilterPlugin
                 }
                 ++index;
             // Conflicts with original names matter when creating new names with suffixes.
-            } while (fixedColumnNames.contains(concatenatedName) ||
-                     (esteemOriginalNames && originalColumnNames.contains(concatenatedName)));
+            } while (fixedColumnNames.contains(concatenatedName) || originalColumnNames.contains(concatenatedName));
             // The original name is counted up.
             columnNameCountups.put(column.getName(), index);
             // The concatenated&truncated name is fixed.

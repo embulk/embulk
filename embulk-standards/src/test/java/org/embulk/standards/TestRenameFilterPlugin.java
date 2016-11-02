@@ -865,27 +865,11 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    public void checkUniqueNumberSuffixRule6MaxLength1WithoutEsteemOriginalNames()
-    {
-        final String originalColumnNames[] = { "column", "column",   "column_1", "column_2", "column_2" };
-        final String expectedColumnNames[] = { "column", "column_2", "column_1", "column_3", "column_4" };
-        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8, false);
-    }
-
-    @Test
     public void checkUniqueNumberSuffixRule7()
     {
         final String originalColumnNames[] = { "column", "column",   "column_2", "column_3" };
         final String expectedColumnNames[] = { "column", "column_4", "column_2", "column_3" };
         checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8);
-    }
-
-    @Test
-    public void checkUniqueNumberSuffixRule7WithoutEsteemOriginalNames()
-    {
-        final String originalColumnNames[] = { "column", "column",   "column_2", "column_3" };
-        final String expectedColumnNames[] = { "column", "column_2", "column_3", "column_4" };
-        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, 8, false);
     }
 
     @Test
@@ -921,15 +905,7 @@ public class TestRenameFilterPlugin
     {
         final String originalColumnNames[] = { "c", "c",   "c_2" };
         final String expectedColumnNames[] = { "c", "c_3", "c_2" };
-        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, -1, true);
-    }
-
-    @Test
-    public void checkUniqueNumberSuffixRule10NonEsteemOriginalNames()
-    {
-        final String originalColumnNames[] = { "c", "c",   "c_2"   };
-        final String expectedColumnNames[] = { "c", "c_2", "c_2_2" };
-        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, -1, false);
+        checkUniqueNumberSuffixRuleInternal(originalColumnNames, expectedColumnNames, DEFAULT, -1, -1);
     }
 
     @Test
@@ -950,8 +926,7 @@ public class TestRenameFilterPlugin
                                             expectedColumnNames,
                                             DEFAULT,
                                             -1,
-                                            -1,
-                                            null);
+                                            -1);
     }
 
     private void checkUniqueNumberSuffixRuleInternal(
@@ -962,8 +937,7 @@ public class TestRenameFilterPlugin
                                             expectedColumnNames,
                                             delimiter,
                                             -1,
-                                            -1,
-                                            null);
+                                            -1);
     }
 
     private void checkUniqueNumberSuffixRuleInternal(
@@ -971,22 +945,7 @@ public class TestRenameFilterPlugin
             final String expectedColumnNames[],
             String delimiter,
             int digits,
-            int max_length) {
-        checkUniqueNumberSuffixRuleInternal(originalColumnNames,
-                                            expectedColumnNames,
-                                            delimiter,
-                                            digits,
-                                            max_length,
-                                            null);
-    }
-
-    private void checkUniqueNumberSuffixRuleInternal(
-            final String originalColumnNames[],
-            final String expectedColumnNames[],
-            String delimiter,
-            int digits,
-            int max_length,
-            Boolean esteem_original_names)
+            int max_length)
     {
         Schema.Builder originalSchemaBuilder = Schema.builder();
         for (String originalColumnName : originalColumnNames) {
@@ -1004,9 +963,6 @@ public class TestRenameFilterPlugin
         }
         if (max_length != -1) {
             parameters.put("max_length", max_length);
-        }
-        if (esteem_original_names != null) {
-            parameters.put("esteem_original_names", esteem_original_names);
         }
         ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.copyOf(parameters)));
