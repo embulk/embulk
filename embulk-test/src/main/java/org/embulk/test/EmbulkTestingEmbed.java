@@ -26,6 +26,9 @@ import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class EmbulkTestingEmbed
 {
+    // TODO Wrap EmbulkTestingEmbed in EmbulkTestingRule that implements org.junit.rules.TestRule
+    // so that EmbulkTestingEmbed.destroy is automatically called.
+
     public static class Builder
     {
         private List<Module> modules = new ArrayList<>();
