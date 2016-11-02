@@ -123,6 +123,9 @@ public class EmbulkTestingEmbed
         {
             return ignoredExceptions;
         }
+
+        // TODO add RunResult.getOutputSchema() to let test cases validate schema.
+        //      especially for filter plugins.
     }
 
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
@@ -172,4 +175,11 @@ public class EmbulkTestingEmbed
             result.getConfigDiff(),
             result.getIgnoredExceptions());
     }
+
+    // TODO add runOutput(ConfigSource outConfig, Path inputPath) where inputPath is a path to a CSV file
+    // whose column types can be naturally guessed using csv guess plugin. Callers use EmbulkTests.copyResource
+    // to copy a resource file to a temp file before calling it.
+
+    // TODO add runFilter(ConfigSource filterConfig, Path inputPath, Path outputPath) where inputPath is a path to
+    // a CSV file whose column types can be naturally guessed using csv guess plugin.
 }
