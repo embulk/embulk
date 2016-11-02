@@ -300,7 +300,7 @@ public class RenameFilterPlugin
     private Schema applyTruncateRule(Schema inputSchema, TruncateRule rule) {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
-            if (column.getName().length() < rule.getMaxLength()) {
+            if (column.getName().length() <= rule.getMaxLength()) {
                 builder.add(column.getName(), column.getType());
             }
             else {
@@ -309,6 +309,7 @@ public class RenameFilterPlugin
                 }
                 catch (IndexOutOfBoundsException ex) {
                     logger.error("FATAL unexpected error in \"truncate\" rule: substring failed.");
+                    throw new AssertionError("FATAL unexpected error in \"truncate\" rule: substring failed.", ex);
                 }
             }
         }
@@ -376,21 +377,21 @@ public class RenameFilterPlugin
         final String delimiter = rule.getDelimiter();
         final Optional<Integer> digits = rule.getDigits();
         final boolean esteemOriginalNames = rule.getEsteemOriginalNames();
-        final Optional<Integer> max_length = rule.getMaxLength();
+        final Optional<Integer> maxLength = rule.getMaxLength();
         final int offset = rule.getOffset();
 
         // |delimiter| must consist of just 1 character to check quickly that it does not contain any digit.
         if (delimiter == null || delimiter.length() != 1 || Character.isDigit(delimiter.charAt(0))) {
             throw new ConfigException("\"delimiter\" in rule \"unique_number_suffix\" must contain just 1 non-digit character");
         }
-        if (max_length.isPresent() && max_length.get() < minimumMaxLengthInUniqueNumberSuffix) {
+        if (maxLength.isPresent() && maxLength.get() < minimumMaxLengthInUniqueNumberSuffix) {
             throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than " +(minimumMaxLengthInUniqueNumberSuffix-1));
         }
-        if (max_length.isPresent() && digits.isPresent() && max_length.get() < digits.get()) {
+        if (maxLength.isPresent() && digits.isPresent() && maxLength.get() < digits.get() + delimiter.length()) {
             throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than \"digits\"");
         }
         int digitsOfNumberOfColumns = Integer.toString(inputSchema.getColumnCount() + offset - 1).length();
-        if (max_length.isPresent() && max_length.get() <= digitsOfNumberOfColumns) {
+        if (maxLength.isPresent() && maxLength.get() <= digitsOfNumberOfColumns) {
             throw new ConfigException("\"max_length\" in rule \"unique_number_suffix\" must be larger than digits of ((number of columns) + \"offset\" - 1)");
         }
         if (digits.isPresent() && digits.get() <= digitsOfNumberOfColumns) {
@@ -412,8 +413,8 @@ public class RenameFilterPlugin
         HashSet<String> fixedColumnNames = new HashSet<>();
         for (Column column : inputSchema.getColumns()) {
             String truncatedName = column.getName();
-            if (column.getName().length() > max_length.or(Integer.MAX_VALUE)) {
-                truncatedName = column.getName().substring(0, max_length.get());
+            if (column.getName().length() > maxLength.or(Integer.MAX_VALUE)) {
+                truncatedName = column.getName().substring(0, maxLength.get());
             }
 
             // Fix with the new name candidate if the new name does not conflict with the fixed names on the left.
@@ -435,18 +436,18 @@ public class RenameFilterPlugin
             }
             String concatenatedName;
             do {
-                // String#format is not used to avoid locale-related problems.
+                // This can be replaced with String#format(Locale.ENGLISH, ...), but Java's String#format does not
+                // have variable widths ("%*d" in C's printf). It cannot be very simple with String#format.
                 String differentiatorString = Integer.toString(index);
                 if (digits.isPresent() && (digits.get() > differentiatorString.length())) {
                     differentiatorString =
                         Strings.repeat("0", digits.get() - differentiatorString.length()) + differentiatorString;
                 }
                 differentiatorString = delimiter + differentiatorString;
-
                 concatenatedName = column.getName() + differentiatorString;
-                if (concatenatedName.length() > max_length.or(Integer.MAX_VALUE)) {
+                if (concatenatedName.length() > maxLength.or(Integer.MAX_VALUE)) {
                     concatenatedName =
-                        column.getName().substring(0, max_length.get() - differentiatorString.length())
+                        column.getName().substring(0, maxLength.get() - differentiatorString.length())
                         + differentiatorString;
                 }
                 ++index;
