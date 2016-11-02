@@ -35,8 +35,8 @@ public class LocalFileOutputPlugin
         String getFileNameExtension();
 
         @Config("sequence_format")
-        @ConfigDefault("\"%03d.%02d.\"")
-        String getSequenceFormat();
+        @ConfigDefault("\".%03d.%02d\"")
+        public String getSequenceFormat();
     }
 
     private final Logger log = Exec.getLogger(getClass());
