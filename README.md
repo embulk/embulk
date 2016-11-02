@@ -204,7 +204,7 @@ Run following commands and follow its instruction:
 
 ```
 ./gradlew releaseCheck
-./gradlew release
+./gradlew clean cli gem && ./gradlew release
 git commit -am v$VERSION
 git tag v$VERSION
 ```
