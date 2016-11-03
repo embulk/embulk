@@ -13,6 +13,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDiff;
@@ -24,11 +29,9 @@ import org.embulk.spi.TempFileSpace;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
-public class EmbulkTestingEmbed
+public class TestingEmbulk
+        implements TestRule
 {
-    // TODO Wrap EmbulkTestingEmbed in EmbulkTestingRule that implements org.junit.rules.TestRule
-    // so that EmbulkTestingEmbed.destroy is automatically called.
-
     public static class Builder
     {
         private List<Module> modules = new ArrayList<>();
@@ -47,9 +50,9 @@ public class EmbulkTestingEmbed
             return this;
         }
 
-        public EmbulkTestingEmbed build()
+        public TestingEmbulk build()
         {
-            return new EmbulkTestingEmbed(this);
+            return new TestingEmbulk(this);
         }
     }
 
@@ -58,14 +61,25 @@ public class EmbulkTestingEmbed
         return new Builder();
     }
 
-    private final EmbulkEmbed embed;
-    private final TempFileSpace tempFiles;
+    private final List<Module> modules;
 
-    EmbulkTestingEmbed(Builder builder)
+    private EmbulkEmbed embed;
+    private TempFileSpace tempFiles;
+
+    TestingEmbulk(Builder builder)
     {
+        this.modules = ImmutableList.copyOf(builder.modules);
+        reset();
+    }
+
+    public void reset()
+    {
+        destroy();
+
         this.embed = new EmbulkEmbed.Bootstrap()
-            .addModules(builder.modules)
+            .addModules(modules)
             .initializeCloseable();
+
         try {
             this.tempFiles = new TempFileSpace(Files.createTempDirectory("embulk-test-temp-").toFile());
         }
@@ -76,8 +90,36 @@ public class EmbulkTestingEmbed
 
     public void destroy()
     {
-        embed.destroy();
-        tempFiles.cleanup();
+        if (embed != null) {
+            embed.destroy();
+            embed = null;
+        }
+        if (tempFiles != null) {
+            tempFiles.cleanup();
+            tempFiles = null;
+        }
+    }
+
+    @Override
+    public Statement apply(Statement base, Description description)
+    {
+        return new EmbulkTestingEmbedWatcher().apply(base, description);
+    }
+
+    private class EmbulkTestingEmbedWatcher
+            extends TestWatcher
+    {
+        @Override
+        protected void starting(Description description)
+        {
+            reset();
+        }
+
+        @Override
+        protected void finished(Description description)
+        {
+            destroy();
+        }
     }
 
     public Path createTempFile(String suffix)
