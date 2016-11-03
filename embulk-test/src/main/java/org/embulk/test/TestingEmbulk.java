@@ -1,5 +1,7 @@
 package org.embulk.test;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -13,19 +15,20 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import com.google.common.collect.ImmutableList;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
 import org.embulk.exec.ExecutionResult;
+import org.embulk.spi.Schema;
 import org.embulk.spi.TempFileException;
 import org.embulk.spi.TempFileSpace;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
@@ -78,6 +81,7 @@ public class TestingEmbulk
 
         this.embed = new EmbulkEmbed.Bootstrap()
             .addModules(modules)
+            .overrideModules(TestingBulkLoader.override())
             .initializeCloseable();
 
         try {
@@ -148,29 +152,19 @@ public class TestingEmbulk
             .fromYamlString(EmbulkTests.readResource(name));
     }
 
-    public static class RunResult
+    public static interface RunResult
     {
-        private final ConfigDiff configDiff;
-        private final List<Throwable> ignoredExceptions;
+        ConfigDiff getConfigDiff();
 
-        RunResult(ConfigDiff configDiff, List<Throwable> ignoredExceptions)
-        {
-            this.configDiff = configDiff;
-            this.ignoredExceptions = ignoredExceptions;
-        }
+        List<Throwable> getIgnoredExceptions();
 
-        public ConfigDiff getConfigDiff()
-        {
-            return configDiff;
-        }
+        Schema getInputSchema();
 
-        public List<Throwable> getIgnoredExceptions()
-        {
-            return ignoredExceptions;
-        }
+        Schema getOutputSchema();
 
-        // TODO add RunResult.getOutputSchema() to let test cases validate schema.
-        //      especially for filter plugins.
+        List<TaskReport> getInputTaskReports();
+
+        List<TaskReport> getOutputTaskReports();
     }
 
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
@@ -199,7 +193,8 @@ public class TestingEmbulk
             .set("in", inConfig)
             .set("out", outConfig);
 
-        ExecutionResult result = embed.run(config);
+        // embed.run returns TestingBulkLoader.TestingExecutionResult because
+        RunResult result = (RunResult) embed.run(config);
 
         try (OutputStream out = Files.newOutputStream(outputPath)) {
             List<Path> fragments = new ArrayList<Path>();
@@ -216,9 +211,7 @@ public class TestingEmbulk
             }
         }
 
-        return new RunResult(
-            result.getConfigDiff(),
-            result.getIgnoredExceptions());
+        return result;
     }
 
     // TODO add runOutput(ConfigSource outConfig, Path inputPath) where inputPath is a path to a CSV file

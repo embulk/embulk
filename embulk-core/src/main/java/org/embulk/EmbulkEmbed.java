@@ -126,7 +126,7 @@ public class EmbulkEmbed
     {
         this.injector = injector;
         injector.getInstance(org.slf4j.ILoggerFactory.class);
-        this.bulkLoader = new BulkLoader(injector, systemConfig);
+        this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = injector.getInstance(PreviewExecutor.class);
     }

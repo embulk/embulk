@@ -26,6 +26,8 @@ public class ExecModule
     {
         Preconditions.checkNotNull(binder, "binder is null.");
 
+        binder.bind(BulkLoader.class);
+
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).to(PooledBufferAllocator.class).in(Scopes.SINGLETON);
