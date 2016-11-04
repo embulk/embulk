@@ -7,6 +7,7 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
+import org.embulk.config.TaskValidationException;
 import org.embulk.spi.Column;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Exec;
@@ -15,7 +16,6 @@ import org.embulk.spi.SchemaConfigException;
 import org.embulk.standards.RenameFilterPlugin.PluginTask;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -185,13 +185,12 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    @Ignore("AssertError could not be expected.")
     public void checkTruncateRuleNegative()
     {
         final String original[] = { "foo" };
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.of("rule", "truncate", "max_length", -1)));
-        exception.expect(AssertionError.class);
+        exception.expect(TaskValidationException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         renameAndCheckSchema(config, original, original);
@@ -289,24 +288,22 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    @Ignore("AssertError could not be expected.")
     public void checkCharacterTypesRuleLongReplace()
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(AssertionError.class);
+        exception.expect(TaskValidationException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "___");
     }
 
     @Test
-    @Ignore("AssertError could not be expected.")
     public void checkCharacterTypesRuleEmptyReplace()
     {
         final String original[] = { "fooBAR" };
         final String pass_types[] = { "a-z" };
-        exception.expect(AssertionError.class);
+        exception.expect(TaskValidationException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "");
@@ -909,11 +906,10 @@ public class TestRenameFilterPlugin
     }
 
     @Test
-    @Ignore("AssertError could not be expected.")
     public void checkUniqueNumberSuffixRuleNegativeLength()
     {
         final String originalColumnNames[] = { "column" };
-        exception.expect(AssertionError.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkUniqueNumberSuffixRuleInternal(originalColumnNames, originalColumnNames, DEFAULT, -1, -2);
