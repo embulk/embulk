@@ -81,7 +81,7 @@ class TestingBulkLoader
         public TestingExecutionResult(ExecutionResult orig,
                 ResumeState resumeState, ExecSession session)
         {
-            super(orig.getConfigDiff(), orig.getIgnoredExceptions());
+            super(orig.getConfigDiff(), orig.isSkipped(), orig.getIgnoredExceptions());
             this.inputSchema = resumeState.getInputSchema();
             this.outputSchema = resumeState.getOutputSchema();
             this.inputTaskReports = buildReports(resumeState.getInputTaskReports(), session);
