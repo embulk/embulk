@@ -580,12 +580,13 @@ Options
 +---------+----------+----------------------------------------------------------------------+--------------------+
 | name    | type     | description                                                          | required?          |
 +=========+==========+======================================================================+====================+
-| columns | hash     | A map whose keys are existing column names. values are new names.    | ``{}`` by default  |
-+---------+----------+----------------------------------------------------------------------+--------------------+
 | rules   | array    | An array of rule-based renaming operations. (See below for rules.)   | ``[]`` by default  |
 +---------+----------+----------------------------------------------------------------------+--------------------+
+| columns | hash     | A map whose keys are existing column names. values are new names.    | ``{}`` by default  |
++---------+----------+----------------------------------------------------------------------+--------------------+
 
-Renaming by ``columns`` are done before ``rules``.
+Renaming rules
+~~~~~~~~~~~~~~~
 
 The ``rules`` is an array of rules as below applied top-down for all the columns.
 
@@ -607,7 +608,7 @@ The ``rules`` is an array of rules as below applied top-down for all the columns
 | unique\_number\_suffix  | Make column names unique in the schema.                                                |
 +-------------------------+----------------------------------------------------------------------------------------+
 
-Renaming Rule: character\_types
+Renaming rule: character\_types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``character_types`` replaces restricted characters.
@@ -637,7 +638,7 @@ Example
           pass_types: [ "a-z", "0-9" ]
 
 
-Renaming Rule: first\_character\_types
+Renaming rule: first\_character\_types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``first_character_types`` prefixes or replaces a restricted character at the beginning.
@@ -669,7 +670,7 @@ Example
           pass_types: [ "a-z" ]
           prefix: "_"
 
-Renaming Rule: lower\_to\_upper
+Renaming rule: lower\_to\_upper
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``lower_to_upper`` converts lower-case alphabets to upper-case.
@@ -687,7 +688,7 @@ Example
         - rule: lower_to_upper
 
 
-Renaming Rule: regex\_replace
+Renaming rule: regex\_replace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``regex_replace`` replaces column names based on a regular expression.
@@ -715,7 +716,7 @@ Example
           replace: "USD$1"
 
 
-Renaming Rule: truncate
+Renaming rule: truncate
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``truncate`` truncates column names.
@@ -739,7 +740,7 @@ Example
         - rule: truncate
           max_length: 20
 
-Renaming Rule: upper\_to\_lower
+Renaming rule: upper\_to\_lower
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``upper_to_lower`` converts upper-case alphabets to lower-case.
@@ -756,7 +757,7 @@ Example
         rules:
         - rule: upper_to_lower
 
-Renaming Rule: unique\_number\_suffix
+Renaming rule: unique\_number\_suffix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The rule ``unique_number_suffix`` makes column names unique in the schema by suffixing numbers.
@@ -802,9 +803,25 @@ Example
         rules:
         - rule: unique_number_suffix
 
+Example of renaming rules
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Example
-~~~~~~~~
+.. code-block:: yaml
+
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: upper_to_lower        # All upper-case are converted to lower-case.
+        - rule: character_types       # Only lower-case, digits and "_" are allowed. (No upper-case by the rule ahove.)
+          pass_types: [ "a-z", "0-9" ]
+          pass_characters: "_"
+        - rule: unique_number_suffix  # Ensure all column names are unique.
+
+Columns: not recommended
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``columns`` is not recommended to use anymore. Consider using ``rules`` instead.
 
 .. code-block:: yaml
 
@@ -814,12 +831,9 @@ Example
         columns:
           my_existing_column1: new_column1
           my_existing_column2: new_column2
-        rules:
-        - rule: upper_to_lower
-        - rule: character_types
-          pass_types: [ "a-z", "A-Z", "0-9" ]
-          pass_characters: "_"
-        - rule: unique_number_suffix
+
+.. hint::
+   ``columns`` are applied before ``rules`` if ``columns`` and ``rules`` are specified together. (It is discouraged to specify them together, though.)
 
 Local executor plugin
 ----------------------
