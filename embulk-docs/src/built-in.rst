@@ -582,6 +582,226 @@ Options
 +=========+==========+======================================================================+====================+
 | columns | hash     | A map whose keys are existing column names. values are new names.    | ``{}`` by default  |
 +---------+----------+----------------------------------------------------------------------+--------------------+
+| rules   | array    | An array of rule-based renaming operations. (See below for rules.)   | ``[]`` by default  |
++---------+----------+----------------------------------------------------------------------+--------------------+
+
+Renaming by ``columns`` are done before ``rules``.
+
+The ``rules`` is an array of rules as below applied top-down for all the columns.
+
++-------------------------+----------------------------------------------------------------------------------------+
+| rule                    | description                                                                            |
++=========================+========================================================================================+
+| character\_types        | Restrict characters by types. Replace restricted characteres.                          |
++-------------------------+----------------------------------------------------------------------------------------+
+| first\_character\_types | Restrict the first character by types. Prefix or replace first restricted characters.  |
++-------------------------+----------------------------------------------------------------------------------------+
+| lower\_to\_upper        | Convert lower-case alphabets to upper-case.                                            |
++-------------------------+----------------------------------------------------------------------------------------+
+| regex\_replace          | Replace with a regular expressions.                                                    |
++-------------------------+----------------------------------------------------------------------------------------+
+| truncate                | Truncate.                                                                              |
++-------------------------+----------------------------------------------------------------------------------------+
+| upper\_to\_lower        | Convert upper-case alphabets to lower-case                                             |
++-------------------------+----------------------------------------------------------------------------------------+
+| unique\_number\_suffix  | Make column names unique in the schema.                                                |
++-------------------------+----------------------------------------------------------------------------------------+
+
+Renaming Rule: character\_types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``character_types`` replaces restricted characters.
+
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
+| option            | description                                                                                                                                | required?          |
++===================+============================================================================================================================================+====================+
+| pass\_characteres | Characters to be allowed.                                                                                                                  | ``""`` by default  |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
+| pass\_types       | Sets of characters to be allowed. The array must consist of "a-z" (lower-case alphabets), "A-Z" (upper-case alphabets), or "0-9" (digits). | ``[]`` by default  |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
+| replace           | A character that disallowed characters are replaced with. It must consist of just 1 character.                                             | ``"_"`` by default |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration replaces characters into "_" except for "_", lower-case alphabets, and digits.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: character_types
+          pass_characters: "_"
+          pass_types: [ "a-z", "0-9" ]
+
+
+Renaming Rule: first\_character\_types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``first_character_types`` prefixes or replaces a restricted character at the beginning.
+
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------+
+| option            | description                                                                                                                                | required?                                    |
++===================+============================================================================================================================================+==============================================+
+| pass\_characteres | Characters to be allowed.                                                                                                                  | ``""`` by default                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------+
+| pass\_types       | Sets of characters to be allowed. The array must consist of "a-z" (lower-case alphabets), "A-Z" (upper-case alphabets), or "0-9" (digits). | ``[]`` by default                            |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------+
+| prefix            | A character that a disallowed first character is replaced with.                                                                            | one of ``prefix`` or ``replace`` is required |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------+
+| replace           | A character that a disallowed first character is prefixed with.                                                                            | one of ``prefix`` or ``replace`` is required |
++-------------------+--------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------+
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration prefixes a column name with "_" unless the name starts from "_" or a lower-case alphabet.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: first_character_types
+          pass_characters: "_"
+          pass_types: [ "a-z" ]
+          prefix: "_"
+
+Renaming Rule: lower\_to\_upper
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``lower_to_upper`` converts lower-case alphabets to upper-case.
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration converts all lower-case alphabets to upper-case.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: lower_to_upper
+
+
+Renaming Rule: regex\_replace
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``regex_replace`` replaces column names based on a regular expression.
+
++---------+--------------------------------------------------------------------------------------------------------------------------------------+-----------+
+| option  | description                                                                                                                          | required? |
++=========+======================================================================================================================================+===========+
+| match   | A `Java-style regular expression <https://docs.oracle.com/javase/tutorial/essential/regex/>`_ to which this string is to be matched. | required  |
++---------+--------------------------------------------------------------------------------------------------------------------------------------+-----------+
+| replace | A string to be substibuted for each match in Java-style.                                                                             | required  |
++---------+--------------------------------------------------------------------------------------------------------------------------------------+-----------+
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration replaces all patterns
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: regex_replace
+          match: "([0-9]+)_dollars"
+          replace: "USD$1"
+
+
+Renaming Rule: truncate
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``truncate`` truncates column names.
+
++------------+-----------------------------------------------------+--------------------+
+| option     | description                                         | required?          |
++============+=====================================================+====================+
+| max_length | The length to which the column names are truncated. | ``128`` by default |
++------------+-----------------------------------------------------+--------------------+
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration drops all characters after the 20th character.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: truncate
+          max_length: 20
+
+Renaming Rule: upper\_to\_lower
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``upper_to_lower`` converts upper-case alphabets to lower-case.
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration converts all upper-case alphabets to lower-case.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: upper_to_lower
+
+Renaming Rule: unique\_number\_suffix
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``unique_number_suffix`` makes column names unique in the schema by suffixing numbers.
+
++------------+-----------------------------------------------------------------------------------------------------------------------------+--------------------+
+| option     | description                                                                                                                 | required?          |
++============+=============================================================================================================================+====================+
+| delimiter  | A delimiter character inserted before a suffix number. It must be just 1 non-digit character.                               | ``"_"`` by default |
++------------+-----------------------------------------------------------------------------------------------------------------------------+--------------------+
+| digits     | An integer that specifies the number of zero-filled digits of a suffix number. The suffix number zero-filled to the digits. | optional           |
++------------+-----------------------------------------------------------------------------------------------------------------------------+--------------------+
+| max_length | The length to which the column names are truncated. The column name is truncated before the suffix number.                  | optional           |
++------------+-----------------------------------------------------------------------------------------------------------------------------+--------------------+
+| offset     | An integer where the suffix number starts. The first duplicative column name is suffixed by (```offset``` + 1).             | ``1`` by default   |
++------------+-----------------------------------------------------------------------------------------------------------------------------+--------------------+
+
+.. hint::
+   The procedure to make column names unique is not very trivial. There are many feasible ways. This renaming rule works as follows:
+
+   Basic policies:
+
+   * Suffix numbers are counted per original column name.
+   * Column names are fixed from the first column to the last column.
+
+   Actual procedure applied from the first (leftmost) column to the last (rightmost) column:
+
+   1. Fix the column name as-is with truncating if the truncated name is not duplicated with left columns.
+   2. Suffix the column name otherwise.
+
+      a. Try to append the suffix number for the original column name with truncating.
+      b. Fix it if the suffixed name is not duplicated with left columns nor original columns.
+      c. Retry (a) with the suffix number increased otherwise.
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration suffixes numbers to duplicative column names. (Ex. ["column", "column", "column"] goes to ["column", "column_2", "column_3"].)
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: unique_number_suffix
+
 
 Example
 ~~~~~~~~
@@ -594,6 +814,12 @@ Example
         columns:
           my_existing_column1: new_column1
           my_existing_column2: new_column2
+        rules:
+        - rule: upper_to_lower
+        - rule: character_types
+          pass_types: [ "a-z", "A-Z", "0-9" ]
+          pass_characters: "_"
+        - rule: unique_number_suffix
 
 Local executor plugin
 ----------------------
