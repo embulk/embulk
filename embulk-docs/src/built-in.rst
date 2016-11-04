@@ -1,12 +1,12 @@
 Configuration
-==================================
+==============
 
 .. contents::
    :local:
    :depth: 2
 
 Embulk configuration file format
-------------------
+---------------------------------
 
 Embulk uses a YAML file to define a bulk data loading. Here is an example of the file:
 
@@ -60,7 +60,7 @@ In many cases, what you need to write is **in:**, **out**: and **formatter** sec
 
 
 Using variables
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 You can embed environment variables in configuration file using `Liquid template engine <http://liquidmarkup.org/>`_ (This is experimental feature. Behavior might change or be removed in future releases).
 
@@ -89,7 +89,7 @@ Environment variables are set to ``env`` variable.
 
 
 Including files
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
 Configuration file can include another configuration file. To use it, configuration file name must end with ``.yml.liquid``.
 
@@ -121,12 +121,12 @@ With above 2 files, actual configuration file will be:
 
 
 Local file input plugin
-------------------
+------------------------
 
 The ``file`` input plugin reads files from local file system.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +----------------+----------+------------------------------------------------+-----------+
 | name           | type     | description                                    | required? |
@@ -168,7 +168,7 @@ For example, if you set ``last_path: /path/to/files/sample_02.csv``, Embulk read
                 |-- sample_04.csv   -> read
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -187,7 +187,7 @@ CSV parser plugin
 The ``csv`` parser plugin parses CSV and TSV files.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+---------------------------+
 | name                       | type     | description                                                                                                    |              required?    |
@@ -271,7 +271,7 @@ The ``null_string`` option converts certain values to NULL. Values will be conve
 You can use ``guess`` to automatically generate the column settings. See also `Quick Start <https://github.com/embulk/embulk#quick-start>`_.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -318,7 +318,7 @@ Example
 
 
 JSON parser plugin
-------------------
+-------------------
 
 The ``json`` parser plugin parses a JSON file that contains a sequence of JSON objects. Example:
 
@@ -332,7 +332,7 @@ The ``json`` parser plugin parses a JSON file that contains a sequence of JSON o
 ``json`` parser plugin outputs a single record named "record" (type is json).
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------+
 | name                       | type     | description                                                                                                    |              required? |
@@ -342,7 +342,7 @@ Options
 
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -351,17 +351,17 @@ Example
         type: json
 
 Gzip decoder plugin
-------------------
+--------------------
 
 The ``gzip`` decoder plugin decompresses gzip files before input plugins read them.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 This plugin doesn't have any options.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -372,17 +372,17 @@ Example
 
 
 BZip2 decoder plugin
-------------------
+---------------------
 
 The ``bzip2`` decoder plugin decompresses bzip2 files before input plugins read them.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 This plugin doesn't have any options.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -393,12 +393,12 @@ Example
 
 
 File output plugin
-------------------
+-------------------
 
 The ``file`` output plugin writes records to local file system.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +--------------------+----------+---------------------------------------------------+----------------------------+
 | name               | type     | description                                       | required?                  |
@@ -426,7 +426,7 @@ For example, if you set ``path_prefix: /path/to/output/sample_``, ``sequence_for
 ``sequence_format`` formats task index and sequence number in a task.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -438,12 +438,12 @@ Example
         ...
 
 CSV formatter plugin
-------------------
+---------------------
 
 The ``csv`` formatter plugin formats records using CSV or TSV format.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-------------------------------+
 | name                 | type    | description                                                                                           | required?                     |
@@ -496,7 +496,7 @@ The ``column_options`` option is a map whose keys are name of columns, and value
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-----------------------------------------+
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -518,12 +518,12 @@ Example
           mycol2: {format: '%Y-%m-%d %H:%M:%S', timezone: 'America/Los_Angeles'}
 
 Gzip encoder plugin
-------------------
+--------------------
 
 The ``gzip`` encoder plugin compresses output files using gzip.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +---------+----------+----------------------------------------------------------------------+--------------------+
 | name    | type     | description                                                          | required?          |
@@ -532,7 +532,7 @@ Options
 +---------+----------+----------------------------------------------------------------------+--------------------+
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -542,39 +542,14 @@ Example
       - type: gzip
         level: 1
 
-
-Gzip encoder plugin
-------------------
-
-The ``gzip`` encoder plugin compresses output files using gzip.
-
-Options
-~~~~~~~~~~~~~~~~~~
-
-+---------+----------+----------------------------------------------------------------------+--------------------+
-| name    | type     | description                                                          | required?          |
-+=========+==========+======================================================================+====================+
-| level   | integer  | Compression level. From 0 (no compression) to 9 (best compression).  | ``6`` by default   |
-+---------+----------+----------------------------------------------------------------------+--------------------+
-
-Example
-~~~~~~~~~~~~~~~~~~
-
-.. code-block:: yaml
-
-    out:
-      ...
-      encoders:
-      - type: gzip
-        level: 1
 
 BZip2 encoder plugin
-------------------
+---------------------
 
 The ``bzip2`` encoder plugin compresses output files using bzip2.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +---------+----------+----------------------------------------------------------------------+--------------------+
 | name    | type     | description                                                          | required?          |
@@ -583,7 +558,7 @@ Options
 +---------+----------+----------------------------------------------------------------------+--------------------+
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -595,12 +570,12 @@ Example
 
 
 Rename filter plugin
-------------------
+---------------------
 
 The ``rename`` filter plugin changes column names. This plugin has no impact on performance.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +---------+----------+----------------------------------------------------------------------+--------------------+
 | name    | type     | description                                                          | required?          |
@@ -609,7 +584,7 @@ Options
 +---------+----------+----------------------------------------------------------------------+--------------------+
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -621,12 +596,12 @@ Example
           my_existing_column2: new_column2
 
 Local executor plugin
-------------------
+----------------------
 
 The ``local`` executor plugin runs tasks using local threads. This is the only built-in executor plugin.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +------------------+----------+----------------------------------------------------------------------+--------------------------------------+
 | name             | type     | description                                                          | required?                            |
@@ -642,7 +617,7 @@ The ``max_threads`` option controls maximum concurrency. Setting smaller number 
 The ``min_output_tasks`` option enables "page scattering". The feature is enabled if number of input tasks is less than ``min_output_tasks``. It uses multiple filter & output threads for each input task so that one input task can use multiple threads. Setting larger number here is useful if embulk doesn't use multi-threading with enough concurrency due to too few number of input tasks. Setting 1 here disables page scattering completely.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
@@ -657,12 +632,12 @@ Example
       ...
 
 Guess executor
-------------------
+---------------
 
 The guess executor is called by ``guess`` command. It executes default guess plugins in a sequential order and suggests Embulk config by appropriate guess plugin. The default guess plugins and the order are ``gzip``, ``'bzip2``, ``json`` and ``csv``.
 
 Options
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 +-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
 | name                  | type     | description                                                          | required?                            |
@@ -679,7 +654,7 @@ The ``exclude_guess_plugins`` option exclude specified guess plugins from the li
 This example shows how to use ``csv_all_strings`` guess plugin, which suggests column types within CSV files as string types. It needs to be explicitly specified by users when it's used instead of ``csv`` guess plugin because the plugin is not included in default guess plugins. We also can exclude default ``csv`` guess plugin.
 
 Example
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~
 
 .. code-block:: yaml
 
