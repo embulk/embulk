@@ -543,31 +543,6 @@ Example
         level: 1
 
 
-Gzip encoder plugin
---------------------
-
-The ``gzip`` encoder plugin compresses output files using gzip.
-
-Options
-~~~~~~~~
-
-+---------+----------+----------------------------------------------------------------------+--------------------+
-| name    | type     | description                                                          | required?          |
-+=========+==========+======================================================================+====================+
-| level   | integer  | Compression level. From 0 (no compression) to 9 (best compression).  | ``6`` by default   |
-+---------+----------+----------------------------------------------------------------------+--------------------+
-
-Example
-~~~~~~~~
-
-.. code-block:: yaml
-
-    out:
-      ...
-      encoders:
-      - type: gzip
-        level: 1
-
 BZip2 encoder plugin
 ---------------------
 
