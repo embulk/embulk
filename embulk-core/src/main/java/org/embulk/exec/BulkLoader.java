@@ -343,7 +343,17 @@ public class BulkLoader
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(configDiff, ignoredExceptions.build());
+            return new ExecutionResult(configDiff, false, ignoredExceptions.build());
+        }
+
+        public ExecutionResult buildExecuteResultOfSkippedExecution(ConfigDiff configDiff)
+        {
+            ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
+            for (Throwable e : getExceptions()) {
+                ignoredExceptions.add(e);
+            }
+
+            return new ExecutionResult(configDiff, true, ignoredExceptions.build());
         }
 
         public ResumeState buildResumeState(ExecSession exec)
@@ -565,7 +575,11 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
+            if (isSkippedTransaction(ex)) {
+                ConfigDiff configDiff = ((SkipTransactionException) ex).getConfigDiff();
+                return state.buildExecuteResultOfSkippedExecution(configDiff);
+            }
+            else if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
@@ -642,12 +656,21 @@ public class BulkLoader
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
-            if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
+            if (isSkippedTransaction(ex)) {
+                ConfigDiff configDiff = ((SkipTransactionException) ex).getConfigDiff();
+                return state.buildExecuteResultOfSkippedExecution(configDiff);
+            }
+            else if (state.isAllTasksCommitted() && state.isAllTransactionsCommitted()) {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
+    }
+
+    private static boolean isSkippedTransaction(Throwable ex)
+    {
+        return ex instanceof SkipTransactionException;
     }
 
     private static void restoreResumedTaskReports(ResumeState resume, LoaderState state)
