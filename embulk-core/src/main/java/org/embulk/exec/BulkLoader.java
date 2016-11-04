@@ -62,7 +62,7 @@ public class BulkLoader
         this.injector = injector;
     }
 
-    private static class LoaderState
+    protected static class LoaderState
             implements ProcessState
     {
         private final Logger logger;
@@ -374,6 +374,11 @@ public class BulkLoader
         }
     }
 
+    protected LoaderState newLoaderState(Logger logger, ProcessPluginSet plugins)
+    {
+        return new LoaderState(logger, plugins);
+    }
+
     public ExecutionResult run(ExecSession exec, final ConfigSource config)
     {
         try {
@@ -428,7 +433,7 @@ public class BulkLoader
         }
     }
 
-    private static class ProcessPluginSet
+    protected static class ProcessPluginSet
     {
         private final PluginType inputPluginType;
         private final PluginType outputPluginType;
@@ -517,7 +522,7 @@ public class BulkLoader
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
+        final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
             ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
@@ -594,7 +599,7 @@ public class BulkLoader
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = new LoaderState(Exec.getLogger(BulkLoader.class), plugins);
+        final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
             ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
