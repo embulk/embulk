@@ -31,6 +31,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+/**
+ * Testing |RenameFilterPlugin|.
+ *
+ * NOTE: DO NOT CHANGE THE EXISTING TESTS.
+ *
+ * As written in the comment of |RenameFilterPlugin|, the existing behaviors
+ * should not change so that users are not confused.
+ */
 public class TestRenameFilterPlugin
 {
     @Rule
