@@ -30,6 +30,19 @@ import java.util.regex.PatternSyntaxException;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
+/**
+ * |RenameFilterPlugin| renames column names.
+ *
+ * NOTE: This filter should bahave always in the same way for the same configuration.
+ * Changes in its behavior confuse users who are working with the same configuration.
+ *
+ * Even when a buggy behavior is found, fix it by:
+ * 1) Adding a new option, and
+ * 2) Implementing a new behavior in the new option.
+ *
+ * Keep the buggy behavior with the old configuration except for fatal failures so
+ * that users are not confused.
+ */
 public class RenameFilterPlugin
         implements FilterPlugin
 {
