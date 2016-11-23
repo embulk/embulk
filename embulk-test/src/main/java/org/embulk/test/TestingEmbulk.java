@@ -1,7 +1,6 @@
 package org.embulk.test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.base.Optional;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -16,12 +15,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.embulk.EmbulkEmbed;
-import org.embulk.config.Config;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
-import org.embulk.exec.ExecutionResult;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TempFileException;
 import org.embulk.spi.TempFileSpace;
@@ -167,51 +164,95 @@ public class TestingEmbulk
         List<TaskReport> getOutputTaskReports();
     }
 
+    public static RunInputBuilder runInputBuilder()
+    {
+        return new RunInputBuilder();
+    }
+
+    public static class RunInputBuilder
+    {
+        private ConfigSource inConfig;
+        private ConfigSource execConfig;
+        private Path outputPath;
+
+        public RunInputBuilder in(ConfigSource inConfig)
+        {
+            this.inConfig = inConfig;
+            return this;
+        }
+
+        public RunInputBuilder exec(ConfigSource execConfig)
+        {
+            this.execConfig = execConfig;
+            return this;
+        }
+
+        public RunInputBuilder outputPath(Path outputPath)
+        {
+            this.outputPath = outputPath;
+            return this;
+        }
+
+        public RunResult run(TestingEmbulk embulk)
+                throws IOException
+        {
+            String fileName = outputPath.getFileName().toString();
+            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
+
+            Files.createDirectories(dir);
+
+            // exec: config
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+            execConfig.set("min_output_tasks", 1);
+
+            // out: config
+            ConfigSource outConfig = embulk.newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", dir.resolve("fragments_").toString())
+                    .set("file_ext", "csv")
+                    .set("formatter", embulk.newConfig()
+                            .set("type", "csv")
+                            .set("header_line", false)
+                            .set("newline", "LF"));
+
+            // combine exec:, out: and in:
+            ConfigSource config = embulk.newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig)
+                    .set("out", outConfig);
+
+            // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            RunResult result = (RunResult) embulk.embed.run(config);
+
+            try (OutputStream out = Files.newOutputStream(outputPath)) {
+                List<Path> fragments = new ArrayList<Path>();
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
+                    for (Path fragment : stream) {
+                        fragments.add(fragment);
+                    }
+                }
+                Collections.sort(fragments);
+                for (Path fragment : fragments) {
+                    try (InputStream in = Files.newInputStream(fragment)) {
+                        ByteStreams.copy(in, out);
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
+
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
         throws IOException
     {
-        String fileName = outputPath.getFileName().toString();
-        checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
-        Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
-
-        Files.createDirectories(dir);
-
-        ConfigSource execConfig = newConfig()
-            .set("min_output_tasks", 1);
-
-        ConfigSource outConfig = newConfig()
-            .set("type", "file")
-            .set("path_prefix", dir.resolve("fragments_").toString())
-            .set("file_ext", "csv")
-            .set("formatter", newConfig()
-                    .set("type", "csv")
-                    .set("header_line", false)
-                    .set("newline", "LF"));
-
-        ConfigSource config = newConfig()
-            .set("exec", execConfig)
-            .set("in", inConfig)
-            .set("out", outConfig);
-
-        // embed.run returns TestingBulkLoader.TestingExecutionResult because
-        RunResult result = (RunResult) embed.run(config);
-
-        try (OutputStream out = Files.newOutputStream(outputPath)) {
-            List<Path> fragments = new ArrayList<Path>();
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
-                for (Path fragment : stream) {
-                    fragments.add(fragment);
-                }
-            }
-            Collections.sort(fragments);
-            for (Path fragment : fragments) {
-                try (InputStream in = Files.newInputStream(fragment)) {
-                    ByteStreams.copy(in, out);
-                }
-            }
-        }
-
-        return result;
+        return runInputBuilder()
+                .in(inConfig)
+                .outputPath(outputPath)
+                .run(this);
     }
 
     // TODO add runOutput(ConfigSource outConfig, Path inputPath) where inputPath is a path to a CSV file
