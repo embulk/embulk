@@ -255,6 +255,16 @@ public class TestingEmbulk
                 .run(this);
     }
 
+    public RunResult runInput(ConfigSource execConfig, ConfigSource inConfig, Path outputPath)
+            throws IOException
+    {
+        return runInputBuilder()
+                .exec(execConfig)
+                .in(inConfig)
+                .outputPath(outputPath)
+                .run(this);
+    }
+
     // TODO add runOutput(ConfigSource outConfig, Path inputPath) where inputPath is a path to a CSV file
     // whose column types can be naturally guessed using csv guess plugin. Callers use EmbulkTests.copyResource
     // to copy a resource file to a temp file before calling it.
