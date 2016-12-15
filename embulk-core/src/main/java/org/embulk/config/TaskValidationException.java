@@ -4,7 +4,7 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 
 public class TaskValidationException
-        extends RuntimeException
+        extends ConfigException
 {
     @SuppressWarnings("unchecked")
     private final Set violations;
