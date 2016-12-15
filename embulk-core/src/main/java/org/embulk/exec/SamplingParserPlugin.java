@@ -37,6 +37,8 @@ public class SamplingParserPlugin
                     if (taskCount == 0) {
                         throw new NoSampleException("No input files to read sample data");
                     }
+                    int maxSize = -1;
+                    int maxSizeTaskIndex = -1;
                     for (int taskIndex=0; taskIndex < taskCount; taskIndex++) {
                         try {
                             runner.run(taskSource, schema, taskIndex, new PageOutput() {
@@ -51,10 +53,33 @@ public class SamplingParserPlugin
                                 public void close() { }
                             });
                         } catch (NotEnoughSampleError ex) {
+                            if (maxSize < ex.getSize()) {
+                                maxSize = ex.getSize();
+                                maxSizeTaskIndex = taskIndex;
+                            }
                             continue;
                         }
                     }
-                    throw new NoSampleException("All input files are smaller than minimum sampling size");  // TODO include minSampleSize in message
+                    if (maxSize <= 0) {
+                        throw new NoSampleException("All input files are empty");
+                    }
+                    taskSource.getNested("ParserTaskSource").set("force", true);
+                    try {
+                        runner.run(taskSource, schema, maxSizeTaskIndex, new PageOutput() {
+                            @Override
+                            public void add(Page page)
+                            {
+                                throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
+                            }
+
+                            public void finish() { }
+
+                            public void close() { }
+                        });
+                    } catch (NotEnoughSampleError ex) {
+                        throw new NoSampleException("All input files are smaller than minimum sampling size");
+                    }
+                    throw new NoSampleException("All input files are smaller than minimum sampling size");
                 }
             });
             throw new AssertionError("SamplingParserPlugin must throw SampledNoticeError");
@@ -81,7 +106,19 @@ public class SamplingParserPlugin
 
     public static class NotEnoughSampleError
             extends Error
-    { }
+    {
+        private final int size;
+
+        public NotEnoughSampleError(int size)
+        {
+            this.size = size;
+        }
+
+        public int getSize()
+        {
+            return size;
+        }
+    }
 
     private final int minSampleSize;
     private final int sampleSize;
@@ -105,8 +142,10 @@ public class SamplingParserPlugin
             FileInput input, PageOutput output)
     {
         Buffer buffer = readSample(input, sampleSize);
-        if (buffer.limit() < minSampleSize) {
-            throw new NotEnoughSampleError();
+        if (!taskSource.get(boolean.class, "force", false)) {
+            if (buffer.limit() < minSampleSize) {
+                throw new NotEnoughSampleError(buffer.limit());
+            }
         }
         throw new SampledNoticeError(buffer);
     }
