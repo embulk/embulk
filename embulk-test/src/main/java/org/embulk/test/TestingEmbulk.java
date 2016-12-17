@@ -35,6 +35,9 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.newBufferedReader;
+import static java.util.Locale.ENGLISH;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -161,6 +164,10 @@ public class TestingEmbulk
             .fromYamlString(EmbulkTests.readResource(name));
     }
 
+    private static final List<String> SUPPORTED_TYPES = ImmutableList.of(
+        "boolean", "long", "double", "string", "timestamp", "json"
+    );
+
     public static interface RunResult
     {
         ConfigDiff getConfigDiff();
@@ -283,38 +290,42 @@ public class TestingEmbulk
                 .run(this);
     }
 
-    public static RunOutputBuilder runOutputBuilder()
+    public static OutputBuilder outputBuilder()
     {
-        return new RunOutputBuilder();
+        return new OutputBuilder();
     }
 
-    public static class RunOutputBuilder
+    public static class OutputBuilder
     {
         private ConfigSource outConfig;
         private ConfigSource execConfig;
         private Path inputPath;
         private SchemaConfig inputSchema;
 
-        public RunOutputBuilder out(ConfigSource outConfig)
+        public OutputBuilder out(ConfigSource outConfig)
         {
+            checkNotNull(outConfig, "outConfig");
             this.outConfig = outConfig;
             return this;
         }
 
-        public RunOutputBuilder exec(ConfigSource execConfig)
+        public OutputBuilder exec(ConfigSource execConfig)
         {
+            checkNotNull(execConfig, "execConfig");
             this.execConfig = execConfig;
             return this;
         }
 
-        public RunOutputBuilder inputPath(Path inputPath)
+        public OutputBuilder inputPath(Path inputPath)
         {
+            checkNotNull(inputPath, "inputPath");
             this.inputPath = inputPath;
             return this;
         }
 
-        public RunOutputBuilder inputSchema(SchemaConfig inputSchema)
+        public OutputBuilder inputSchema(SchemaConfig inputSchema)
         {
+            checkNotNull(inputSchema, "inputSchema");
             this.inputSchema = inputSchema;
             return this;
         }
@@ -322,13 +333,16 @@ public class TestingEmbulk
         public RunResult run(TestingEmbulk embulk)
                 throws IOException
         {
+            checkState(outConfig != null, "out config must be set");
+            checkState(inputPath != null, "inputPath must be set");
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+
             String fileName = inputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
 
             // exec: config
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
             execConfig.set("min_output_tasks", 1);
 
             // in: config
@@ -356,7 +370,7 @@ public class TestingEmbulk
                     .set("delimiter", ",")
                     .set("quote", "\"")
                     .set("escape", "\"")
-                    .set("columns", inputSchema != null ? inputSchema : newSchemaConfig(embulk));
+                    .set("columns", newSchemaConfig(embulk));
         }
 
         private SchemaConfig newSchemaConfig(TestingEmbulk embulk)
@@ -378,20 +392,24 @@ public class TestingEmbulk
 
         private ColumnConfig newColumnConfig(TestingEmbulk embulk, String column)
         {
-            // TODO need to build column conifg
-            String[] tuple = column.split(":");
+            String[] tuple = column.split(":", 2);
             checkArgument(tuple.length == 2, "tuple must be a pair of column name and type");
+            String type = tuple[1];
+            if (!SUPPORTED_TYPES.contains(type)) {
+                throw new IllegalArgumentException(String.format(ENGLISH,
+                            "Unknown column type %s. Supported types are boolean, long, double, string, timestamp and json: %s",
+                            tuple[1], column));
+            }
             return new ColumnConfig(embulk.newConfig()
                     .set("name", tuple[0])
-                    .set("type", embulk.injector().getInstance(ModelManager.class).readObject(Type.class, tuple[1]))
-            );
+                    .set("type", type));
         }
     }
 
     public RunResult runOutput(ConfigSource outConfig, Path inputPath)
             throws IOException
     {
-        return runOutputBuilder()
+        return outputBuilder()
                 .out(outConfig)
                 .inputPath(inputPath)
                 .run(this);
@@ -400,7 +418,7 @@ public class TestingEmbulk
     public RunResult runOutput(ConfigSource execConfig, ConfigSource outConfig, Path inputPath)
             throws IOException
     {
-        return runOutputBuilder()
+        return outputBuilder()
                 .exec(execConfig)
                 .out(outConfig)
                 .inputPath(inputPath)
