@@ -27,6 +27,8 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class TestingEmbulk
@@ -164,31 +166,34 @@ public class TestingEmbulk
         List<TaskReport> getOutputTaskReports();
     }
 
-    public static RunInputBuilder runInputBuilder()
+    public static InputBuilder inputBuilder()
     {
-        return new RunInputBuilder();
+        return new InputBuilder();
     }
 
-    public static class RunInputBuilder
+    public static class InputBuilder
     {
-        private ConfigSource inConfig;
-        private ConfigSource execConfig;
-        private Path outputPath;
+        private ConfigSource inConfig = null;
+        private ConfigSource execConfig = null;
+        private Path outputPath = null;
 
-        public RunInputBuilder in(ConfigSource inConfig)
+        public InputBuilder in(ConfigSource inConfig)
         {
-            this.inConfig = inConfig;
+            checkNotNull(inConfig, "inConfig");
+            this.inConfig = inConfig.deepCopy();
             return this;
         }
 
-        public RunInputBuilder exec(ConfigSource execConfig)
+        public InputBuilder exec(ConfigSource execConfig)
         {
-            this.execConfig = execConfig;
+            checkNotNull(execConfig, "execConfig");
+            this.execConfig = execConfig.deepCopy();
             return this;
         }
 
-        public RunInputBuilder outputPath(Path outputPath)
+        public InputBuilder outputPath(Path outputPath)
         {
+            checkNotNull(outputPath, "outputPath");
             this.outputPath = outputPath;
             return this;
         }
@@ -196,6 +201,12 @@ public class TestingEmbulk
         public RunResult run(TestingEmbulk embulk)
                 throws IOException
         {
+            checkState(inConfig != null, "in config must be set");
+            checkState(outputPath != null, "outputPath must be set");
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+
             String fileName = outputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
             Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
@@ -203,9 +214,6 @@ public class TestingEmbulk
             Files.createDirectories(dir);
 
             // exec: config
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
             execConfig.set("min_output_tasks", 1);
 
             // out: config
@@ -249,16 +257,16 @@ public class TestingEmbulk
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
         throws IOException
     {
-        return runInputBuilder()
+        return inputBuilder()
                 .in(inConfig)
                 .outputPath(outputPath)
                 .run(this);
     }
 
-    public RunResult runInput(ConfigSource execConfig, ConfigSource inConfig, Path outputPath)
+    public RunResult runInput(ConfigSource inConfig, Path outputPath, ConfigSource execConfig)
             throws IOException
     {
-        return runInputBuilder()
+        return inputBuilder()
                 .exec(execConfig)
                 .in(inConfig)
                 .outputPath(outputPath)
