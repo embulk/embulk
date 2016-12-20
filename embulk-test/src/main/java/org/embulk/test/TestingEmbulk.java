@@ -1,10 +1,13 @@
 package org.embulk.test;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,21 +17,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ModelManager;
 import org.embulk.config.TaskReport;
+import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.TempFileException;
 import org.embulk.spi.TempFileSpace;
+import org.embulk.spi.type.Type;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.newBufferedReader;
+import static java.util.Locale.ENGLISH;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.newBufferedReader;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 public class TestingEmbulk
@@ -150,6 +163,10 @@ public class TestingEmbulk
         return configLoader()
             .fromYamlString(EmbulkTests.readResource(name));
     }
+
+    private static final List<String> SUPPORTED_TYPES = ImmutableList.of(
+        "boolean", "long", "double", "string", "timestamp", "json"
+    );
 
     public static interface RunResult
     {
@@ -273,9 +290,140 @@ public class TestingEmbulk
                 .run(this);
     }
 
-    // TODO add runOutput(ConfigSource outConfig, Path inputPath) where inputPath is a path to a CSV file
-    // whose column types can be naturally guessed using csv guess plugin. Callers use EmbulkTests.copyResource
-    // to copy a resource file to a temp file before calling it.
+    public static OutputBuilder outputBuilder()
+    {
+        return new OutputBuilder();
+    }
+
+    public static class OutputBuilder
+    {
+        private ConfigSource outConfig;
+        private ConfigSource execConfig;
+        private Path inputPath;
+        private SchemaConfig inputSchema;
+
+        public OutputBuilder out(ConfigSource outConfig)
+        {
+            checkNotNull(outConfig, "outConfig");
+            this.outConfig = outConfig;
+            return this;
+        }
+
+        public OutputBuilder exec(ConfigSource execConfig)
+        {
+            checkNotNull(execConfig, "execConfig");
+            this.execConfig = execConfig;
+            return this;
+        }
+
+        public OutputBuilder inputPath(Path inputPath)
+        {
+            checkNotNull(inputPath, "inputPath");
+            this.inputPath = inputPath;
+            return this;
+        }
+
+        public OutputBuilder inputSchema(SchemaConfig inputSchema)
+        {
+            checkNotNull(inputSchema, "inputSchema");
+            this.inputSchema = inputSchema;
+            return this;
+        }
+
+        public RunResult run(TestingEmbulk embulk)
+                throws IOException
+        {
+            checkState(outConfig != null, "out config must be set");
+            checkState(inputPath != null, "inputPath must be set");
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+
+            String fileName = inputPath.toAbsolutePath().toString();
+            checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
+
+            // exec: config
+            execConfig.set("min_output_tasks", 1);
+
+            // in: config
+            ConfigSource inConfig = embulk.newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", fileName)
+                    .set("parser", newParserConfig(embulk));
+
+            // combine exec:, out: and in:
+            ConfigSource config = embulk.newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig)
+                    .set("out", outConfig);
+
+            // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            return (RunResult) embulk.embed.run(config);
+        }
+
+        private ConfigSource newParserConfig(TestingEmbulk embulk)
+        {
+            return embulk.newConfig()
+                    .set("charset", "UTF-8")
+                    .set("newline", "LF")
+                    .set("type", "csv")
+                    .set("delimiter", ",")
+                    .set("quote", "\"")
+                    .set("escape", "\"")
+                    .set("columns", newSchemaConfig(embulk));
+        }
+
+        private SchemaConfig newSchemaConfig(TestingEmbulk embulk)
+        {
+            ImmutableList.Builder<ColumnConfig> schema = ImmutableList.builder();
+            try (BufferedReader reader = newBufferedReader(inputPath, UTF_8)) {
+                for (String column : reader.readLine().split(",")) {
+                    ColumnConfig columnConfig = newColumnConfig(embulk, column);
+                    if (columnConfig != null) {
+                        schema.add(columnConfig);
+                    }
+                }
+                return new SchemaConfig(schema.build());
+            }
+            catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+
+        private ColumnConfig newColumnConfig(TestingEmbulk embulk, String column)
+        {
+            String[] tuple = column.split(":", 2);
+            checkArgument(tuple.length == 2, "tuple must be a pair of column name and type");
+            String type = tuple[1];
+            if (!SUPPORTED_TYPES.contains(type)) {
+                throw new IllegalArgumentException(String.format(ENGLISH,
+                            "Unknown column type %s. Supported types are boolean, long, double, string, timestamp and json: %s",
+                            tuple[1], column));
+            }
+            return new ColumnConfig(embulk.newConfig()
+                    .set("name", tuple[0])
+                    .set("type", type));
+        }
+    }
+
+    public RunResult runOutput(ConfigSource outConfig, Path inputPath)
+            throws IOException
+    {
+        return outputBuilder()
+                .out(outConfig)
+                .inputPath(inputPath)
+                .run(this);
+    }
+
+    public RunResult runOutput(ConfigSource execConfig, ConfigSource outConfig, Path inputPath)
+            throws IOException
+    {
+        return outputBuilder()
+                .exec(execConfig)
+                .out(outConfig)
+                .inputPath(inputPath)
+                .run(this);
+    }
 
     // TODO add runFilter(ConfigSource filterConfig, Path inputPath, Path outputPath) where inputPath is a path to
     // a CSV file whose column types can be naturally guessed using csv guess plugin.
