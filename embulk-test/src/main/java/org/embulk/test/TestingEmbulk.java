@@ -339,7 +339,7 @@ public class TestingEmbulk
                 execConfig = embulk.newConfig();
             }
 
-            String fileName = inputPath.getFileName().toString();
+            String fileName = inputPath.toAbsolutePath().toString();
             checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
 
             // exec: config
