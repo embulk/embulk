@@ -70,8 +70,7 @@ Embulk bundles some built-in plugins such as `embulk-encoder-gzip` or `embulk-fo
 
 ```yaml
 in:
-  type: file
-  path_prefix: "./try1/csv/sample_"
+  ...snip (see the previous configuration file)...
 out:
   type: command
   command: "cat - > task.$INDEX.$SEQID.csv.gz"
