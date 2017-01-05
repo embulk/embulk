@@ -72,6 +72,7 @@ Embulk bundles some built-in plugins such as `embulk-encoder-gzip` or `embulk-fo
 in:
   type: file
   path_prefix: "./try1/csv/sample_"
+  ...
 out:
   type: command
   command: "cat - > task.$INDEX.$SEQID.csv.gz"
