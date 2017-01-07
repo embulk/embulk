@@ -59,6 +59,15 @@ public class TestCsvGuessPlugin
                 "test_backslash_escape_guessed.yml");
     }
 
+    @Test
+    public void testSemicolonDelimiter()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_semicolon_delimiter_seed.yml", "test_semicolon_delimiter.csv",
+                "test_semicolon_delimiter_guessed.yml");
+    }
+
     static void assertGuessByResource(TestingEmbulk embulk, String seedYamlResourceName, String sourceCsvResourceName,
             String resultResourceName)
             throws IOException
