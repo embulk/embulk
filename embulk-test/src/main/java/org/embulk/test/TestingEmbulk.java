@@ -294,6 +294,14 @@ public class TestingEmbulk
                 .guess(this);
     }
 
+    public ConfigDiff runGuess(ConfigSource inConfig, ConfigSource execConfig)
+    {
+        return inputBuilder()
+                .exec(execConfig)
+                .in(inConfig)
+                .guess(this);
+    }
+
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
         throws IOException
     {
