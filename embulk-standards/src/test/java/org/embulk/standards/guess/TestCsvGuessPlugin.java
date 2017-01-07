@@ -36,6 +36,14 @@ public class TestCsvGuessPlugin
                 "test_tab_delimiter_seed.yml", "test_tab_delimiter_guessed.yml", "test_tab_delimiter.csv");
     }
 
+    @Test
+    public void testSemicolonDelimiter()
+            throws Exception
+    {
+        assertConfigs(embulk, BASIC_RESOURCE_PATH,
+                "test_semicolon_delimiter_seed.yml", "test_semicolon_delimiter_guessed.yml", "test_semicolon_delimiter.csv");
+    }
+
     static void assertConfigs(TestingEmbulk embulk, String resourcePath, String seedYamlFile, String guessedYamlFile, String csvFile)
             throws IOException
     {
