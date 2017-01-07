@@ -215,6 +215,22 @@ public class TestingEmbulk
             return this;
         }
 
+        public ConfigDiff guess(TestingEmbulk embulk)
+        {
+            checkState(inConfig != null, "in config must be set");
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+
+            // combine exec:, in:
+            ConfigSource config = embulk.newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig);
+
+            // embed.guess returns GuessExecutor.ConfigDiff
+            return embulk.embed.guess(config);
+        }
+
         public RunResult run(TestingEmbulk embulk)
                 throws IOException
         {
@@ -269,6 +285,13 @@ public class TestingEmbulk
 
             return result;
         }
+    }
+
+    public ConfigDiff runGuess(ConfigSource inConfig)
+    {
+        return inputBuilder()
+                .in(inConfig)
+                .guess(this);
     }
 
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
