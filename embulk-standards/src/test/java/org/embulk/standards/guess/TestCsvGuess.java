@@ -41,17 +41,24 @@ public class TestCsvGuess
     }
 
     @Test
-    public void test() throws Exception
+    public void testSimple()
+            throws Exception
+    {
+        assertConfigs("test_simple_seed.yml", "test_simple_guessed.yml", "test_simple.csv");
+    }
+
+    private void assertConfigs(String seedYamlFile, String guessedYamlFile, String csvFile)
+            throws IOException
     {
         Path inputPath = embulk.createTempFile("csv");
-        copyResource("test_sample.csv", inputPath);
+        copyResource(csvFile, inputPath);
 
         ConfigSource seed = baseConfig
-                .merge(loadYamlResource(embulk, "test_seed.yml"))
+                .merge(loadYamlResource(embulk, seedYamlFile))
                 .set("path_prefix", inputPath.toAbsolutePath().toString());
         ConfigSource guessed = (ConfigSource) embulk.runGuess(seed);
 
-        assertThat(guessed.getNested("in"), is(loadYamlResource(embulk, "test_guessed.yml")));
+        assertThat(guessed.getNested("in"), is(loadYamlResource(embulk, guessedYamlFile)));
     }
 }
 
