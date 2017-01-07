@@ -6,7 +6,7 @@ module Embulk
       Plugin.register_guess('csv', self)
 
       DELIMITER_CANDIDATES = [
-        ",", "\t", "|"
+        ",", "\t", "|", ";"
       ]
 
       QUOTE_CANDIDATES = [
