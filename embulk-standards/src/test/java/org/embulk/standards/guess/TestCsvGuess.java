@@ -47,6 +47,13 @@ public class TestCsvGuess
         assertConfigs("test_simple_seed.yml", "test_simple_guessed.yml", "test_simple.csv");
     }
 
+    @Test
+    public void testTabDelimiter()
+            throws Exception
+    {
+        assertConfigs("test_tab_delimiter_seed.yml", "test_tab_delimiter_guessed.yml", "test_tab_delimiter.csv");
+    }
+
     private void assertConfigs(String seedYamlFile, String guessedYamlFile, String csvFile)
             throws IOException
     {
