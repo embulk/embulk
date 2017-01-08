@@ -15,6 +15,8 @@ public class ResumableInputStream
     protected InputStream in;
     private long offset;
     private long markedOffset;
+    private Exception lastClosedCause;
+    private boolean closed;
 
     public ResumableInputStream(InputStream initialInputStream, Reopener reopener)
     {
@@ -22,6 +24,7 @@ public class ResumableInputStream
         this.in = initialInputStream;
         this.offset = 0L;
         this.markedOffset = 0L;
+        this.lastClosedCause = null;
     }
 
     public ResumableInputStream(Reopener reopener) throws IOException
@@ -32,6 +35,7 @@ public class ResumableInputStream
     private void reopen(Exception closedCause) throws IOException
     {
         if (in != null) {
+            lastClosedCause = closedCause;
             try {
                 in.close();
             } catch (IOException ignored) {
@@ -39,11 +43,13 @@ public class ResumableInputStream
             in = null;
         }
         in = reopener.reopen(offset, closedCause);
+        lastClosedCause = null;
     }
 
     @Override
     public int read() throws IOException
     {
+        ensureOpened();
         while (true) {
             try {
                 int v = in.read();
@@ -58,6 +64,7 @@ public class ResumableInputStream
     @Override
     public int read(byte[] b) throws IOException
     {
+        ensureOpened();
         while (true) {
             try {
                 int r = in.read(b);
@@ -72,6 +79,7 @@ public class ResumableInputStream
     @Override
     public int read(byte[] b, int off, int len) throws IOException
     {
+        ensureOpened();
         while (true) {
             try {
                 int r = in.read(b, off, len);
@@ -86,6 +94,7 @@ public class ResumableInputStream
     @Override
     public long skip(long n) throws IOException
     {
+        ensureOpened();
         while (true) {
             try {
                 long r = in.skip(n);
@@ -100,18 +109,29 @@ public class ResumableInputStream
     @Override
     public int available() throws IOException
     {
+        ensureOpened();
         return in.available();
     }
 
     @Override
     public void close() throws IOException
     {
-        in.close();
+        if (in != null) {
+            in.close();
+            closed = true;
+            in = null;
+        }
     }
 
     @Override
     public void mark(int readlimit)
     {
+        try {
+            ensureOpened();
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         in.mark(readlimit);
         markedOffset = offset;
     }
@@ -119,6 +139,7 @@ public class ResumableInputStream
     @Override
     public void reset() throws IOException
     {
+        ensureOpened();
         in.reset();
         offset = markedOffset;
     }
@@ -126,6 +147,22 @@ public class ResumableInputStream
     @Override
     public boolean markSupported()
     {
+        try {
+            ensureOpened();
+        }
+        catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         return in.markSupported();
+    }
+
+    private void ensureOpened() throws IOException
+    {
+        if (in == null) {
+            if (closed) {
+                throw new IOException("stream closed");
+            }
+            reopen(lastClosedCause);
+        }
     }
 }
