@@ -43,7 +43,7 @@ module Embulk
     end
 
     # upgrade gradle version
-    if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-2\.\d+-/)
+    if migrator.match("gradle/wrapper/gradle-wrapper.properties", /gradle-[23]\.\d+(\.\d+)?-/)
       # gradle < 3.2.1
       require 'embulk/data/package_data'
       data = PackageData.new("new", migrator.path)
