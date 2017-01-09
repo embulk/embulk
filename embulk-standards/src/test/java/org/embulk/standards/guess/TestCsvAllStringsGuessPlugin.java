@@ -3,15 +3,11 @@ package org.embulk.standards.guess;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ConfigDiff;
 import org.embulk.config.DataSource;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.nio.file.Path;
-
-import static org.embulk.test.EmbulkTests.copyResource;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
