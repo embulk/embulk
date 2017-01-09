@@ -42,11 +42,8 @@ public class TestCsvGuessPlugin
         Path inputPath = embulk.createTempFile("csv");
         EmbulkTests.copyResource(resourcePath + csvFile, inputPath);
 
-        ConfigSource seed = embulk.newConfig()
-                .set("type", "file")
-                .merge(embulk.loadYamlResource(resourcePath + seedYamlFile))
-                .set("path_prefix", inputPath.toAbsolutePath().toString());
-        ConfigSource guessed = (ConfigSource) embulk.guessInput(seed);
+        ConfigSource seed = embulk.loadYamlResource(resourcePath + seedYamlFile);
+        ConfigSource guessed = (ConfigSource) embulk.guessParser(seed, inputPath);
 
         assertThat(guessed.getNested("in"), is(embulk.loadYamlResource(resourcePath + guessedYamlFile)));
     }
