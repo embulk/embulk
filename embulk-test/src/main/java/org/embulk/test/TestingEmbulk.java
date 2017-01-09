@@ -183,6 +183,86 @@ public class TestingEmbulk
         List<TaskReport> getOutputTaskReports();
     }
 
+    public static ParserBuilder parserBuilder()
+    {
+        return new ParserBuilder();
+    }
+
+    public static class ParserBuilder
+    {
+        private ConfigSource parserConfig = null;
+        private ConfigSource execConfig = null;
+        private Path inputPath = null;
+
+        public ParserBuilder parser(ConfigSource parserConfig)
+        {
+            checkNotNull(parserConfig, "parserConfig");
+            this.parserConfig = parserConfig.deepCopy();
+            return this;
+        }
+
+        public ParserBuilder exec(ConfigSource execConfig)
+        {
+            checkNotNull(execConfig, "execConfig");
+            this.execConfig = execConfig.deepCopy();
+            return this;
+        }
+
+        public ParserBuilder inputPath(Path inputPath)
+        {
+            checkNotNull(inputPath, "inputPath");
+            this.inputPath = inputPath;
+            return this;
+        }
+
+        public ConfigDiff guess(TestingEmbulk embulk)
+        {
+            if (execConfig == null) {
+                execConfig = embulk.newConfig();
+            }
+
+            // generate in:
+            ConfigSource inConfig = embulk.newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", inputPath.toAbsolutePath().toString());
+            if (parserConfig != null) {
+                inConfig.set("parser", parserConfig);
+            }
+
+            // combine exec:, in:
+            ConfigSource config = embulk.newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig);
+
+            // embed.guess returns GuessExecutor.ConfigDiff
+            return embulk.embed.guess(config);
+        }
+    }
+
+    public ConfigDiff guessParser(Path inputPath)
+    {
+        return parserBuilder()
+                .inputPath(inputPath)
+                .guess(this);
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath)
+    {
+        return parserBuilder()
+                .parser(parserConfig)
+                .inputPath(inputPath)
+                .guess(this);
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath, ConfigSource execConfig)
+    {
+        return parserBuilder()
+                .parser(parserConfig)
+                .inputPath(inputPath)
+                .exec(execConfig)
+                .guess(this);
+    }
+
     public static InputBuilder inputBuilder()
     {
         return new InputBuilder();
@@ -287,14 +367,14 @@ public class TestingEmbulk
         }
     }
 
-    public ConfigDiff runGuess(ConfigSource inConfig)
+    public ConfigDiff guessInput(ConfigSource inConfig)
     {
         return inputBuilder()
                 .in(inConfig)
                 .guess(this);
     }
 
-    public ConfigDiff runGuess(ConfigSource inConfig, ConfigSource execConfig)
+    public ConfigDiff guessInput(ConfigSource inConfig, ConfigSource execConfig)
     {
         return inputBuilder()
                 .exec(execConfig)
