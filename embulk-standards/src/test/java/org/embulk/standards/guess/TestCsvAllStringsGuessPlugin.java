@@ -33,6 +33,6 @@ public class TestCsvAllStringsGuessPlugin
                 .set("exclude_guess_plugins", ImmutableList.of("csv"));
         ConfigSource guessed = (ConfigSource) embulk.guessParser(parser, inputPath, exec);
 
-        assertThat(guessed.getNested("in"), is(embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
+        assertThat(guessed.getNested("in").getNested("parser"), is(embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
     }
 }

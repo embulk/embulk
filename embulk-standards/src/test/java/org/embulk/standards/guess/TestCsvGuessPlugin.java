@@ -45,7 +45,7 @@ public class TestCsvGuessPlugin
         ConfigSource seed = embulk.loadYamlResource(resourcePath + seedYamlFile);
         ConfigSource guessed = (ConfigSource) embulk.guessParser(seed, inputPath);
 
-        assertThat(guessed.getNested("in"), is(embulk.loadYamlResource(resourcePath + guessedYamlFile)));
+        assertThat(guessed.getNested("in").getNested("parser"), is(embulk.loadYamlResource(resourcePath + guessedYamlFile)));
     }
 }
 
