@@ -287,14 +287,14 @@ public class TestingEmbulk
         }
     }
 
-    public ConfigDiff runGuess(ConfigSource inConfig)
+    public ConfigDiff guessInput(ConfigSource inConfig)
     {
         return inputBuilder()
                 .in(inConfig)
                 .guess(this);
     }
 
-    public ConfigDiff runGuess(ConfigSource inConfig, ConfigSource execConfig)
+    public ConfigDiff guessInput(ConfigSource inConfig, ConfigSource execConfig)
     {
         return inputBuilder()
                 .exec(execConfig)

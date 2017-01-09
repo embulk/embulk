@@ -34,7 +34,7 @@ public class TestCsvAllStringsGuessPlugin
         ConfigSource exec = embulk.newConfig()
                 .set("guess_plugins", ImmutableList.of("csv_all_strings"))
                 .set("exclude_guess_plugins", ImmutableList.of("csv"));
-        ConfigSource guessed = (ConfigSource) embulk.runGuess(in, exec);
+        ConfigSource guessed = (ConfigSource) embulk.guessInput(in, exec);
 
         assertThat(guessed.getNested("in"), is(embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
     }
