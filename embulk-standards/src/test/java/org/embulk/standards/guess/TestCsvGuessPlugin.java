@@ -46,7 +46,7 @@ public class TestCsvGuessPlugin
                 .set("type", "file")
                 .merge(embulk.loadYamlResource(resourcePath + seedYamlFile))
                 .set("path_prefix", inputPath.toAbsolutePath().toString());
-        ConfigSource guessed = (ConfigSource) embulk.runGuess(seed);
+        ConfigSource guessed = (ConfigSource) embulk.guessInput(seed);
 
         assertThat(guessed.getNested("in"), is(embulk.loadYamlResource(resourcePath + guessedYamlFile)));
     }
