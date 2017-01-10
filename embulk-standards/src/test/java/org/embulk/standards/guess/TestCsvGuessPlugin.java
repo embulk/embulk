@@ -41,6 +41,24 @@ public class TestCsvGuessPlugin
                 "test_tab_delimiter_guessed.yml");
     }
 
+    @Test
+    public void suggestSingleQuoteAsQuote()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_single_quote_seed.yml", "test_single_quote.csv",
+                "test_single_quote_guessed.yml");
+    }
+
+    @Test
+    public void suggestBackslashAsEscape()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_backslash_escape_seed.yml", "test_backslash_escape.csv",
+                "test_backslash_escape_guessed.yml");
+    }
+
     static void assertGuessByResource(TestingEmbulk embulk, String seedYamlResourceName, String sourceCsvResourceName,
             String resultResourceName)
             throws IOException
