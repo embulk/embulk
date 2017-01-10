@@ -1,6 +1,8 @@
 package org.embulk.standards.guess;
 
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.DataSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
@@ -43,9 +45,9 @@ public class TestCsvGuessPlugin
         EmbulkTests.copyResource(resourcePath + csvFile, inputPath);
 
         ConfigSource seed = embulk.loadYamlResource(resourcePath + seedYamlFile);
-        ConfigSource guessed = (ConfigSource) embulk.guessParser(seed, inputPath);
+        ConfigDiff guessed = embulk.guessParser(seed, inputPath);
 
-        assertThat(guessed.getNested("in").getNested("parser"), is(embulk.loadYamlResource(resourcePath + guessedYamlFile)));
+        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(resourcePath + guessedYamlFile)));
     }
 }
 

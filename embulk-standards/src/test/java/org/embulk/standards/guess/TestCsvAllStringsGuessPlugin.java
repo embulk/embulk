@@ -1,7 +1,9 @@
 package org.embulk.standards.guess;
 
 import com.google.common.collect.ImmutableList;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.DataSource;
 import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
@@ -31,8 +33,8 @@ public class TestCsvAllStringsGuessPlugin
         ConfigSource exec = embulk.newConfig()
                 .set("guess_plugins", ImmutableList.of("csv_all_strings"))
                 .set("exclude_guess_plugins", ImmutableList.of("csv"));
-        ConfigSource guessed = (ConfigSource) embulk.guessParser(parser, inputPath, exec);
+        ConfigDiff guessed = embulk.guessParser(parser, inputPath, exec);
 
-        assertThat(guessed.getNested("in").getNested("parser"), is(embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
+        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
     }
 }
