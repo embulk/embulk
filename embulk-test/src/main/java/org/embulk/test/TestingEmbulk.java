@@ -230,7 +230,7 @@ public class TestingEmbulk
                 execConfig = embulk.newConfig();
             }
 
-            // generate in:
+            // in: config
             ConfigSource inConfig = embulk.newConfig()
                     .set("type", "file")
                     .set("path_prefix", inputPath.toAbsolutePath().toString());
@@ -238,12 +238,12 @@ public class TestingEmbulk
                 inConfig.set("parser", parserConfig);
             }
 
-            // combine exec:, in:
+            // config = {exec: execConfig, in: inConfig}
             ConfigSource config = embulk.newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig);
 
-            // embed.guess returns GuessExecutor.ConfigDiff
+            // embed.guess calls GuessExecutor and returns ConfigDiff
             return embulk.embed.guess(config);
         }
 
@@ -284,13 +284,14 @@ public class TestingEmbulk
                             .set("header_line", false)
                             .set("newline", "LF"));
 
-            // combine exec:, out: and in:
+            // config = {exec: execConfig, in: inConfig, out: outConfig}
             ConfigSource config = embulk.newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig)
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
             RunResult result = (RunResult) embulk.embed.run(config);
 
             try (OutputStream out = Files.newOutputStream(outputPath)) {
@@ -319,38 +320,38 @@ public class TestingEmbulk
                 .guess(this);
     }
 
-    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath)
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath)
     {
         return parserBuilder()
-                .parser(parserConfig)
+                .parser(parserSeedConfig)
                 .inputPath(inputPath)
                 .guess(this);
     }
 
-    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath, ConfigSource execConfig)
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath, ConfigSource execConfig)
     {
         return parserBuilder()
-                .parser(parserConfig)
+                .parser(parserSeedConfig)
                 .inputPath(inputPath)
                 .exec(execConfig)
                 .guess(this);
     }
 
-    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath)
+    public RunResult runParser(ConfigSource parserSeedConfig, Path inputPath, Path outputPath)
             throws IOException
     {
         return parserBuilder()
-                .parser(parserConfig)
+                .parser(parserSeedConfig)
                 .inputPath(inputPath)
                 .outputPath(outputPath)
                 .run(this);
     }
 
-    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath, ConfigSource execConfig)
+    public RunResult runParser(ConfigSource parserSeedConfig, Path inputPath, Path outputPath, ConfigSource execConfig)
             throws IOException
     {
         return parserBuilder()
-                .parser(parserConfig)
+                .parser(parserSeedConfig)
                 .inputPath(inputPath)
                 .outputPath(outputPath)
                 .exec(execConfig)
@@ -396,7 +397,7 @@ public class TestingEmbulk
                 execConfig = embulk.newConfig();
             }
 
-            // combine exec:, in:
+            // config = {exec: execConfig, in: inConfig}
             ConfigSource config = embulk.newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig);
@@ -440,6 +441,7 @@ public class TestingEmbulk
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
             RunResult result = (RunResult) embulk.embed.run(config);
 
             try (OutputStream out = Files.newOutputStream(outputPath)) {
@@ -461,36 +463,36 @@ public class TestingEmbulk
         }
     }
 
-    public ConfigDiff guessInput(ConfigSource inConfig)
+    public ConfigDiff guessInput(ConfigSource inSeedConfig)
     {
         return inputBuilder()
-                .in(inConfig)
+                .in(inSeedConfig)
                 .guess(this);
     }
 
-    public ConfigDiff guessInput(ConfigSource inConfig, ConfigSource execConfig)
+    public ConfigDiff guessInput(ConfigSource inSeedConfig, ConfigSource execConfig)
     {
         return inputBuilder()
                 .exec(execConfig)
-                .in(inConfig)
+                .in(inSeedConfig)
                 .guess(this);
     }
 
-    public RunResult runInput(ConfigSource inConfig, Path outputPath)
+    public RunResult runInput(ConfigSource inSeedConfig, Path outputPath)
         throws IOException
     {
         return inputBuilder()
-                .in(inConfig)
+                .in(inSeedConfig)
                 .outputPath(outputPath)
                 .run(this);
     }
 
-    public RunResult runInput(ConfigSource inConfig, Path outputPath, ConfigSource execConfig)
+    public RunResult runInput(ConfigSource inSeedConfig, Path outputPath, ConfigSource execConfig)
             throws IOException
     {
         return inputBuilder()
                 .exec(execConfig)
-                .in(inConfig)
+                .in(inSeedConfig)
                 .outputPath(outputPath)
                 .run(this);
     }
@@ -556,13 +558,14 @@ public class TestingEmbulk
                     .set("path_prefix", fileName)
                     .set("parser", newParserConfig(embulk));
 
-            // combine exec:, out: and in:
+            // config = {exec: execConfig, in: inConfig, out: outConfig}
             ConfigSource config = embulk.newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig)
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
             return (RunResult) embulk.embed.run(config);
         }
 
@@ -620,7 +623,7 @@ public class TestingEmbulk
                 .run(this);
     }
 
-    public RunResult runOutput(ConfigSource execConfig, ConfigSource outConfig, Path inputPath)
+    public RunResult runOutput(ConfigSource outConfig, Path inputPath, ConfigSource execConfig)
             throws IOException
     {
         return outputBuilder()
