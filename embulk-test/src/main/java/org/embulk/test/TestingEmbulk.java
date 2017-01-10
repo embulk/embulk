@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedReader;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
+import static org.embulk.test.EmbulkTests.copyResource;
 
 public class TestingEmbulk
         implements TestRule
@@ -186,7 +187,7 @@ public class TestingEmbulk
     public class InputBuilder
     {
         private ConfigSource inConfig = null;
-        private ConfigSource execConfig = null;
+        private ConfigSource execConfig = newConfig();
         private Path outputPath = null;
 
         private InputBuilder()
@@ -216,9 +217,6 @@ public class TestingEmbulk
         public ConfigDiff guess()
         {
             checkState(inConfig != null, "in config must be set");
-            if (execConfig == null) {
-                execConfig = newConfig();
-            }
 
             // config = {exec: execConfig, in: inConfig}
             ConfigSource config = newConfig()
@@ -226,7 +224,7 @@ public class TestingEmbulk
                     .set("in", inConfig);
 
             // embed.guess returns GuessExecutor.ConfigDiff
-            return embed.guess(config);
+            return embed.guess(config).getNested("in");
         }
 
         public RunResult run()
@@ -234,9 +232,6 @@ public class TestingEmbulk
         {
             checkState(inConfig != null, "in config must be set");
             checkState(outputPath != null, "outputPath must be set");
-            if (execConfig == null) {
-                execConfig = newConfig();
-            }
 
             String fileName = outputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
@@ -273,8 +268,8 @@ public class TestingEmbulk
 
     public class ParserBuilder
     {
-        private ConfigSource parserConfig = null;
-        private ConfigSource execConfig = null;
+        private ConfigSource parserConfig = newConfig();
+        private ConfigSource execConfig = newConfig();
         private Path inputPath = null;
         private Path outputPath = null;
 
@@ -302,6 +297,15 @@ public class TestingEmbulk
             return this;
         }
 
+        public ParserBuilder inputResource(String resourceName)
+            throws IOException
+        {
+            checkNotNull(resourceName, "resourceName");
+            Path path = createTempFile("csv");
+            copyResource(resourceName, path);
+            return inputPath(path);
+        }
+
         public ParserBuilder outputPath(Path outputPath)
         {
             checkNotNull(outputPath, "outputPath");
@@ -312,17 +316,12 @@ public class TestingEmbulk
         public ConfigDiff guess()
         {
             checkState(inputPath != null, "inputPath must be set");
-            if (execConfig == null) {
-                execConfig = newConfig();
-            }
 
             // in: config
             ConfigSource inConfig = newConfig()
                     .set("type", "file")
                     .set("path_prefix", inputPath.toAbsolutePath().toString());
-            if (parserConfig != null) {
-                inConfig.set("parser", parserConfig);
-            }
+            inConfig.set("parser", parserConfig);
 
             // config = {exec: execConfig, in: inConfig}
             ConfigSource config = newConfig()
@@ -330,7 +329,7 @@ public class TestingEmbulk
                     .set("in", inConfig);
 
             // embed.guess calls GuessExecutor and returns ConfigDiff
-            return embed.guess(config);
+            return embed.guess(config).getNested("in").getNested("parser");
         }
 
         public RunResult run()
@@ -339,9 +338,6 @@ public class TestingEmbulk
             checkState(parserConfig != null, "parser config must be set");
             checkState(inputPath != null, "inputPath must be set");
             checkState(outputPath != null, "outputPath must be set");
-            if (execConfig == null) {
-                execConfig = newConfig();
-            }
 
             String fileName = outputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
@@ -353,9 +349,7 @@ public class TestingEmbulk
             ConfigSource inConfig = newConfig()
                     .set("type", "file")
                     .set("path_prefix", inputPath.toAbsolutePath().toString());
-            if (parserConfig != null) {
-                inConfig.set("parser", parserConfig);
-            }
+            inConfig.set("parser", parserConfig);
 
             // exec: config
             execConfig.set("min_output_tasks", 1);
@@ -386,8 +380,8 @@ public class TestingEmbulk
 
     public class OutputBuilder
     {
-        private ConfigSource outConfig;
-        private ConfigSource execConfig;
+        private ConfigSource outConfig = null;
+        private ConfigSource execConfig = newConfig();
         private Path inputPath;
         private SchemaConfig inputSchema;
 
@@ -415,6 +409,15 @@ public class TestingEmbulk
             return this;
         }
 
+        public OutputBuilder inputResource(String resourceName)
+            throws IOException
+        {
+            checkNotNull(resourceName, "resourceName");
+            Path path = createTempFile("csv");
+            copyResource(resourceName, path);
+            return inputPath(path);
+        }
+
         public OutputBuilder inputSchema(SchemaConfig inputSchema)
         {
             checkNotNull(inputSchema, "inputSchema");
@@ -427,9 +430,6 @@ public class TestingEmbulk
         {
             checkState(outConfig != null, "out config must be set");
             checkState(inputPath != null, "inputPath must be set");
-            if (execConfig == null) {
-                execConfig = newConfig();
-            }
 
             String fileName = inputPath.toAbsolutePath().toString();
             checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
@@ -535,30 +535,6 @@ public class TestingEmbulk
         return new OutputBuilder();
     }
 
-    public ConfigDiff guessParser(Path inputPath)
-    {
-        return parserBuilder()
-                .inputPath(inputPath)
-                .guess();
-    }
-
-    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath)
-    {
-        return parserBuilder()
-                .parser(parserSeedConfig)
-                .inputPath(inputPath)
-                .guess();
-    }
-
-    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath, ConfigSource execConfig)
-    {
-        return parserBuilder()
-                .parser(parserSeedConfig)
-                .inputPath(inputPath)
-                .exec(execConfig)
-                .guess();
-    }
-
     public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath)
             throws IOException
     {
@@ -578,21 +554,6 @@ public class TestingEmbulk
                 .outputPath(outputPath)
                 .exec(execConfig)
                 .run();
-    }
-
-    public ConfigDiff guessInput(ConfigSource inSeedConfig)
-    {
-        return inputBuilder()
-                .in(inSeedConfig)
-                .guess();
-    }
-
-    public ConfigDiff guessInput(ConfigSource inSeedConfig, ConfigSource execConfig)
-    {
-        return inputBuilder()
-                .exec(execConfig)
-                .in(inSeedConfig)
-                .guess();
     }
 
     public RunResult runInput(ConfigSource inConfig, Path outputPath)
@@ -631,6 +592,45 @@ public class TestingEmbulk
                 .out(outConfig)
                 .inputPath(inputPath)
                 .run();
+    }
+
+    public ConfigDiff guessInput(ConfigSource inSeedConfig)
+    {
+        return inputBuilder()
+                .in(inSeedConfig)
+                .guess();
+    }
+
+    public ConfigDiff guessInput(ConfigSource inSeedConfig, ConfigSource execConfig)
+    {
+        return inputBuilder()
+                .exec(execConfig)
+                .in(inSeedConfig)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(Path inputPath)
+    {
+        return parserBuilder()
+                .inputPath(inputPath)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath)
+    {
+        return parserBuilder()
+                .parser(parserSeedConfig)
+                .inputPath(inputPath)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath, ConfigSource execConfig)
+    {
+        return parserBuilder()
+                .parser(parserSeedConfig)
+                .inputPath(inputPath)
+                .exec(execConfig)
+                .guess();
     }
 
     // TODO add runFilter(ConfigSource filterConfig, Path inputPath, Path outputPath) where inputPath is a path to

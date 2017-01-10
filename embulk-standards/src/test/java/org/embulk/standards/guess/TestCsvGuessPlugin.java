@@ -45,13 +45,15 @@ public class TestCsvGuessPlugin
             String resultResourceName)
             throws IOException
     {
-        Path inputPath = embulk.createTempFile("csv");
-        copyResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName, inputPath);
-
         ConfigSource seed = embulk.loadYamlResource(RESOURCE_NAME_PREFIX + seedYamlResourceName);
-        ConfigDiff guessed = embulk.guessParser(seed, inputPath);
 
-        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(RESOURCE_NAME_PREFIX + resultResourceName)));
+        ConfigDiff guessed =
+            embulk.parserBuilder()
+            .parser(seed)
+            .inputResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName)
+            .guess();
+
+        assertThat(guessed, is((DataSource) embulk.loadYamlResource(RESOURCE_NAME_PREFIX + resultResourceName)));
     }
 }
 
