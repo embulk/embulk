@@ -192,6 +192,7 @@ public class TestingEmbulk
     {
         private ConfigSource inConfig = null;
         private ConfigSource execConfig = null;
+        private ConfigSource outConfig = null;
         private Path outputPath = null;
 
         public InputBuilder in(ConfigSource inConfig)
@@ -208,6 +209,13 @@ public class TestingEmbulk
             return this;
         }
 
+        public InputBuilder out(ConfigSource execConfig)
+        {
+            checkNotNull(execConfig, "outConfig");
+            this.outConfig = execConfig.deepCopy();
+            return this;
+        }
+
         public InputBuilder outputPath(Path outputPath)
         {
             checkNotNull(outputPath, "outputPath");
@@ -219,29 +227,32 @@ public class TestingEmbulk
                 throws IOException
         {
             checkState(inConfig != null, "in config must be set");
-            checkState(outputPath != null, "outputPath must be set");
             if (execConfig == null) {
                 execConfig = embulk.newConfig();
             }
 
-            String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
-            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
+            Path dir = null;
+            if (outConfig == null) {
+                checkState(outputPath != null, "outputPath must be set");
+                String fileName = outputPath.getFileName().toString();
+                checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+                dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
 
-            Files.createDirectories(dir);
+                Files.createDirectories(dir);
 
-            // exec: config
-            execConfig.set("min_output_tasks", 1);
+                // exec: config
+                execConfig.set("min_output_tasks", 1);
 
-            // out: config
-            ConfigSource outConfig = embulk.newConfig()
-                    .set("type", "file")
-                    .set("path_prefix", dir.resolve("fragments_").toString())
-                    .set("file_ext", "csv")
-                    .set("formatter", embulk.newConfig()
-                            .set("type", "csv")
-                            .set("header_line", false)
-                            .set("newline", "LF"));
+                // out: config
+                outConfig = embulk.newConfig()
+                        .set("type", "file")
+                        .set("path_prefix", dir.resolve("fragments_").toString())
+                        .set("file_ext", "csv")
+                        .set("formatter", embulk.newConfig()
+                                .set("type", "csv")
+                                .set("header_line", false)
+                                .set("newline", "LF"));
+            }
 
             // combine exec:, out: and in:
             ConfigSource config = embulk.newConfig()
@@ -252,17 +263,19 @@ public class TestingEmbulk
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
             RunResult result = (RunResult) embulk.embed.run(config);
 
-            try (OutputStream out = Files.newOutputStream(outputPath)) {
-                List<Path> fragments = new ArrayList<Path>();
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
-                    for (Path fragment : stream) {
-                        fragments.add(fragment);
+            if (outputPath != null && dir != null) {
+                try (OutputStream out = Files.newOutputStream(outputPath)) {
+                    List<Path> fragments = new ArrayList<Path>();
+                    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
+                        for (Path fragment : stream) {
+                            fragments.add(fragment);
+                        }
                     }
-                }
-                Collections.sort(fragments);
-                for (Path fragment : fragments) {
-                    try (InputStream in = Files.newInputStream(fragment)) {
-                        ByteStreams.copy(in, out);
+                    Collections.sort(fragments);
+                    for (Path fragment : fragments) {
+                        try (InputStream in = Files.newInputStream(fragment)) {
+                            ByteStreams.copy(in, out);
+                        }
                     }
                 }
             }
