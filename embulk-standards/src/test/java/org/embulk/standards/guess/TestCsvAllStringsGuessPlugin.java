@@ -3,20 +3,21 @@ package org.embulk.standards.guess;
 import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ConfigDiff;
 import org.embulk.config.DataSource;
-import org.embulk.test.EmbulkTests;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.file.Path;
 
+import static org.embulk.test.EmbulkTests.copyResource;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 public class TestCsvAllStringsGuessPlugin
 {
-    private static final String RESOURCE_PATH = "org/embulk/standards/guess/csv_all_strings/test/";
+    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/guess/csv_all_strings/test/";
 
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
@@ -27,7 +28,7 @@ public class TestCsvAllStringsGuessPlugin
             throws Exception
     {
         Path inputPath = embulk.createTempFile("csv");
-        EmbulkTests.copyResource(RESOURCE_PATH + "test_simple.csv", inputPath);
+        copyResource(RESOURCE_NAME_PREFIX + "test_simple.csv", inputPath);
 
         ConfigSource parser = embulk.newConfig();
         ConfigSource exec = embulk.newConfig()
@@ -35,6 +36,6 @@ public class TestCsvAllStringsGuessPlugin
                 .set("exclude_guess_plugins", ImmutableList.of("csv"));
         ConfigDiff guessed = embulk.guessParser(parser, inputPath, exec);
 
-        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(RESOURCE_PATH + "test_simple_guessed.yml")));
+        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(RESOURCE_NAME_PREFIX + "test_simple_guessed.yml")));
     }
 }
