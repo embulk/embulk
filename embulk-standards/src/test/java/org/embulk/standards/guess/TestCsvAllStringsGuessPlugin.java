@@ -26,15 +26,16 @@ public class TestCsvAllStringsGuessPlugin
     public void testSimple()
             throws Exception
     {
-        Path inputPath = embulk.createTempFile("csv");
-        copyResource(RESOURCE_NAME_PREFIX + "test_simple.csv", inputPath);
-
-        ConfigSource parser = embulk.newConfig();
         ConfigSource exec = embulk.newConfig()
                 .set("guess_plugins", ImmutableList.of("csv_all_strings"))
                 .set("exclude_guess_plugins", ImmutableList.of("csv"));
-        ConfigDiff guessed = embulk.guessParser(parser, inputPath, exec);
 
-        assertThat(guessed.getNested("in").getNested("parser"), is((DataSource) embulk.loadYamlResource(RESOURCE_NAME_PREFIX + "test_simple_guessed.yml")));
+        ConfigDiff guessed =
+            embulk.parserBuilder()
+            .exec(exec)
+            .inputResource(RESOURCE_NAME_PREFIX + "test_simple.csv")
+            .guess();
+
+        assertThat(guessed, is((DataSource) embulk.loadYamlResource(RESOURCE_NAME_PREFIX + "test_simple_guessed.yml")));
     }
 }
