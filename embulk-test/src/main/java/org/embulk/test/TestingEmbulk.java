@@ -43,6 +43,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedReader;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
+import static org.embulk.test.EmbulkTests.copyResource;
 
 public class TestingEmbulk
         implements TestRule
@@ -183,190 +184,14 @@ public class TestingEmbulk
         List<TaskReport> getOutputTaskReports();
     }
 
-    public static ParserBuilder parserBuilder()
-    {
-        return new ParserBuilder();
-    }
-
-    public static class ParserBuilder
-    {
-        private ConfigSource parserConfig = null;
-        private ConfigSource execConfig = null;
-        private Path inputPath = null;
-        private Path outputPath = null;
-
-        public ParserBuilder parser(ConfigSource parserConfig)
-        {
-            checkNotNull(parserConfig, "parserConfig");
-            this.parserConfig = parserConfig.deepCopy();
-            return this;
-        }
-
-        public ParserBuilder exec(ConfigSource execConfig)
-        {
-            checkNotNull(execConfig, "execConfig");
-            this.execConfig = execConfig.deepCopy();
-            return this;
-        }
-
-        public ParserBuilder inputPath(Path inputPath)
-        {
-            checkNotNull(inputPath, "inputPath");
-            this.inputPath = inputPath;
-            return this;
-        }
-
-        public ParserBuilder outputPath(Path outputPath)
-        {
-            checkNotNull(outputPath, "outputPath");
-            this.outputPath = outputPath;
-            return this;
-        }
-
-        public ConfigDiff guess(TestingEmbulk embulk)
-        {
-            checkState(inputPath != null, "inputPath must be set");
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
-
-            // generate in:
-            ConfigSource inConfig = embulk.newConfig()
-                    .set("type", "file")
-                    .set("path_prefix", inputPath.toAbsolutePath().toString());
-            if (parserConfig != null) {
-                inConfig.set("parser", parserConfig);
-            }
-
-            // combine exec:, in:
-            ConfigSource config = embulk.newConfig()
-                    .set("exec", execConfig)
-                    .set("in", inConfig);
-
-            // embed.guess returns GuessExecutor.ConfigDiff
-            return embulk.embed.guess(config);
-        }
-
-        public RunResult run(TestingEmbulk embulk)
-                throws IOException
-        {
-            checkState(parserConfig != null, "parser config must be set");
-            checkState(inputPath != null, "inputPath must be set");
-            checkState(outputPath != null, "outputPath must be set");
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
-
-            String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
-            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
-
-            Files.createDirectories(dir);
-
-            // in: config
-            ConfigSource inConfig = embulk.newConfig()
-                    .set("type", "file")
-                    .set("path_prefix", inputPath.toAbsolutePath().toString());
-            if (parserConfig != null) {
-                inConfig.set("parser", parserConfig);
-            }
-
-            // exec: config
-            execConfig.set("min_output_tasks", 1);
-
-            // out: config
-            ConfigSource outConfig = embulk.newConfig()
-                    .set("type", "file")
-                    .set("path_prefix", dir.resolve("fragments_").toString())
-                    .set("file_ext", "csv")
-                    .set("formatter", embulk.newConfig()
-                            .set("type", "csv")
-                            .set("header_line", false)
-                            .set("newline", "LF"));
-
-            // combine exec:, out: and in:
-            ConfigSource config = embulk.newConfig()
-                    .set("exec", execConfig)
-                    .set("in", inConfig)
-                    .set("out", outConfig);
-
-            // embed.run returns TestingBulkLoader.TestingExecutionResult because
-            RunResult result = (RunResult) embulk.embed.run(config);
-
-            try (OutputStream out = Files.newOutputStream(outputPath)) {
-                List<Path> fragments = new ArrayList<Path>();
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
-                    for (Path fragment : stream) {
-                        fragments.add(fragment);
-                    }
-                }
-                Collections.sort(fragments);
-                for (Path fragment : fragments) {
-                    try (InputStream in = Files.newInputStream(fragment)) {
-                        ByteStreams.copy(in, out);
-                    }
-                }
-            }
-
-            return result;
-        }
-    }
-
-    public ConfigDiff guessParser(Path inputPath)
-    {
-        return parserBuilder()
-                .inputPath(inputPath)
-                .guess(this);
-    }
-
-    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath)
-    {
-        return parserBuilder()
-                .parser(parserConfig)
-                .inputPath(inputPath)
-                .guess(this);
-    }
-
-    public ConfigDiff guessParser(ConfigSource parserConfig, Path inputPath, ConfigSource execConfig)
-    {
-        return parserBuilder()
-                .parser(parserConfig)
-                .inputPath(inputPath)
-                .exec(execConfig)
-                .guess(this);
-    }
-
-    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath)
-            throws IOException
-    {
-        return parserBuilder()
-                .parser(parserConfig)
-                .inputPath(inputPath)
-                .outputPath(outputPath)
-                .run(this);
-    }
-
-    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath, ConfigSource execConfig)
-            throws IOException
-    {
-        return parserBuilder()
-                .parser(parserConfig)
-                .inputPath(inputPath)
-                .outputPath(outputPath)
-                .exec(execConfig)
-                .run(this);
-    }
-
-    public static InputBuilder inputBuilder()
-    {
-        return new InputBuilder();
-    }
-
-    public static class InputBuilder
+    public class InputBuilder
     {
         private ConfigSource inConfig = null;
-        private ConfigSource execConfig = null;
+        private ConfigSource execConfig = newConfig();
         private Path outputPath = null;
+
+        private InputBuilder()
+        { }
 
         public InputBuilder in(ConfigSource inConfig)
         {
@@ -389,30 +214,24 @@ public class TestingEmbulk
             return this;
         }
 
-        public ConfigDiff guess(TestingEmbulk embulk)
+        public ConfigDiff guess()
         {
             checkState(inConfig != null, "in config must be set");
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
 
-            // combine exec:, in:
-            ConfigSource config = embulk.newConfig()
+            // config = {exec: execConfig, in: inConfig}
+            ConfigSource config = newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig);
 
             // embed.guess returns GuessExecutor.ConfigDiff
-            return embulk.embed.guess(config);
+            return embed.guess(config).getNested("in");
         }
 
-        public RunResult run(TestingEmbulk embulk)
+        public RunResult run()
                 throws IOException
         {
             checkState(inConfig != null, "in config must be set");
             checkState(outputPath != null, "outputPath must be set");
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
 
             String fileName = outputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
@@ -424,88 +243,150 @@ public class TestingEmbulk
             execConfig.set("min_output_tasks", 1);
 
             // out: config
-            ConfigSource outConfig = embulk.newConfig()
+            ConfigSource outConfig = newConfig()
                     .set("type", "file")
                     .set("path_prefix", dir.resolve("fragments_").toString())
                     .set("file_ext", "csv")
-                    .set("formatter", embulk.newConfig()
+                    .set("formatter", newConfig()
                             .set("type", "csv")
                             .set("header_line", false)
                             .set("newline", "LF"));
 
             // combine exec:, out: and in:
-            ConfigSource config = embulk.newConfig()
+            ConfigSource config = newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig)
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
-            RunResult result = (RunResult) embulk.embed.run(config);
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
+            RunResult result = (RunResult) embed.run(config);
 
-            try (OutputStream out = Files.newOutputStream(outputPath)) {
-                List<Path> fragments = new ArrayList<Path>();
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "fragments_*.csv")) {
-                    for (Path fragment : stream) {
-                        fragments.add(fragment);
-                    }
-                }
-                Collections.sort(fragments);
-                for (Path fragment : fragments) {
-                    try (InputStream in = Files.newInputStream(fragment)) {
-                        ByteStreams.copy(in, out);
-                    }
-                }
-            }
-
-            return result;
+            return buildRunResultWithOutput(result, dir, outputPath);
         }
     }
 
-    public ConfigDiff guessInput(ConfigSource inConfig)
+    public class ParserBuilder
     {
-        return inputBuilder()
-                .in(inConfig)
-                .guess(this);
-    }
+        private ConfigSource parserConfig = newConfig();
+        private ConfigSource execConfig = newConfig();
+        private Path inputPath = null;
+        private Path outputPath = null;
 
-    public ConfigDiff guessInput(ConfigSource inConfig, ConfigSource execConfig)
-    {
-        return inputBuilder()
-                .exec(execConfig)
-                .in(inConfig)
-                .guess(this);
-    }
+        private ParserBuilder()
+        { }
 
-    public RunResult runInput(ConfigSource inConfig, Path outputPath)
-        throws IOException
-    {
-        return inputBuilder()
-                .in(inConfig)
-                .outputPath(outputPath)
-                .run(this);
-    }
+        public ParserBuilder parser(ConfigSource parserConfig)
+        {
+            checkNotNull(parserConfig, "parserConfig");
+            this.parserConfig = parserConfig.deepCopy();
+            return this;
+        }
 
-    public RunResult runInput(ConfigSource inConfig, Path outputPath, ConfigSource execConfig)
+        public ParserBuilder exec(ConfigSource execConfig)
+        {
+            checkNotNull(execConfig, "execConfig");
+            this.execConfig = execConfig.deepCopy();
+            return this;
+        }
+
+        public ParserBuilder inputPath(Path inputPath)
+        {
+            checkNotNull(inputPath, "inputPath");
+            this.inputPath = inputPath;
+            return this;
+        }
+
+        public ParserBuilder inputResource(String resourceName)
             throws IOException
-    {
-        return inputBuilder()
-                .exec(execConfig)
-                .in(inConfig)
-                .outputPath(outputPath)
-                .run(this);
+        {
+            checkNotNull(resourceName, "resourceName");
+            Path path = createTempFile("csv");
+            copyResource(resourceName, path);
+            return inputPath(path);
+        }
+
+        public ParserBuilder outputPath(Path outputPath)
+        {
+            checkNotNull(outputPath, "outputPath");
+            this.outputPath = outputPath;
+            return this;
+        }
+
+        public ConfigDiff guess()
+        {
+            checkState(inputPath != null, "inputPath must be set");
+
+            // in: config
+            ConfigSource inConfig = newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", inputPath.toAbsolutePath().toString());
+            inConfig.set("parser", parserConfig);
+
+            // config = {exec: execConfig, in: inConfig}
+            ConfigSource config = newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig);
+
+            // embed.guess calls GuessExecutor and returns ConfigDiff
+            return embed.guess(config).getNested("in").getNested("parser");
+        }
+
+        public RunResult run()
+                throws IOException
+        {
+            checkState(parserConfig != null, "parser config must be set");
+            checkState(inputPath != null, "inputPath must be set");
+            checkState(outputPath != null, "outputPath must be set");
+
+            String fileName = outputPath.getFileName().toString();
+            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
+
+            Files.createDirectories(dir);
+
+            // in: config
+            ConfigSource inConfig = newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", inputPath.toAbsolutePath().toString());
+            inConfig.set("parser", parserConfig);
+
+            // exec: config
+            execConfig.set("min_output_tasks", 1);
+
+            // out: config
+            ConfigSource outConfig = newConfig()
+                    .set("type", "file")
+                    .set("path_prefix", dir.resolve("fragments_").toString())
+                    .set("file_ext", "csv")
+                    .set("formatter", newConfig()
+                            .set("type", "csv")
+                            .set("header_line", false)
+                            .set("newline", "LF"));
+
+            // config = {exec: execConfig, in: inConfig, out: outConfig}
+            ConfigSource config = newConfig()
+                    .set("exec", execConfig)
+                    .set("in", inConfig)
+                    .set("out", outConfig);
+
+            // embed.run returns TestingBulkLoader.TestingExecutionResult because
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
+            RunResult result = (RunResult) embed.run(config);
+
+            return buildRunResultWithOutput(result, dir, outputPath);
+        }
     }
 
-    public static OutputBuilder outputBuilder()
+    public class OutputBuilder
     {
-        return new OutputBuilder();
-    }
-
-    public static class OutputBuilder
-    {
-        private ConfigSource outConfig;
-        private ConfigSource execConfig;
+        private ConfigSource outConfig = null;
+        private ConfigSource execConfig = newConfig();
         private Path inputPath;
         private SchemaConfig inputSchema;
+
+        public OutputBuilder()
+        { }
 
         public OutputBuilder out(ConfigSource outConfig)
         {
@@ -528,6 +409,15 @@ public class TestingEmbulk
             return this;
         }
 
+        public OutputBuilder inputResource(String resourceName)
+            throws IOException
+        {
+            checkNotNull(resourceName, "resourceName");
+            Path path = createTempFile("csv");
+            copyResource(resourceName, path);
+            return inputPath(path);
+        }
+
         public OutputBuilder inputSchema(SchemaConfig inputSchema)
         {
             checkNotNull(inputSchema, "inputSchema");
@@ -535,14 +425,11 @@ public class TestingEmbulk
             return this;
         }
 
-        public RunResult run(TestingEmbulk embulk)
+        public RunResult run()
                 throws IOException
         {
             checkState(outConfig != null, "out config must be set");
             checkState(inputPath != null, "inputPath must be set");
-            if (execConfig == null) {
-                execConfig = embulk.newConfig();
-            }
 
             String fileName = inputPath.toAbsolutePath().toString();
             checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
@@ -551,39 +438,40 @@ public class TestingEmbulk
             execConfig.set("min_output_tasks", 1);
 
             // in: config
-            ConfigSource inConfig = embulk.newConfig()
+            ConfigSource inConfig = newConfig()
                     .set("type", "file")
                     .set("path_prefix", fileName)
-                    .set("parser", newParserConfig(embulk));
+                    .set("parser", newParserConfig());
 
-            // combine exec:, out: and in:
-            ConfigSource config = embulk.newConfig()
+            // config = {exec: execConfig, in: inConfig, out: outConfig}
+            ConfigSource config = newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig)
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because
-            return (RunResult) embulk.embed.run(config);
+            // LoaderState.buildExecuteResultWithWarningException is overridden.
+            return (RunResult) embed.run(config);
         }
 
-        private ConfigSource newParserConfig(TestingEmbulk embulk)
+        private ConfigSource newParserConfig()
         {
-            return embulk.newConfig()
+            return newConfig()
                     .set("charset", "UTF-8")
                     .set("newline", "LF")
                     .set("type", "csv")
                     .set("delimiter", ",")
                     .set("quote", "\"")
                     .set("escape", "\"")
-                    .set("columns", newSchemaConfig(embulk));
+                    .set("columns", newSchemaConfig());
         }
 
-        private SchemaConfig newSchemaConfig(TestingEmbulk embulk)
+        private SchemaConfig newSchemaConfig()
         {
             ImmutableList.Builder<ColumnConfig> schema = ImmutableList.builder();
             try (BufferedReader reader = newBufferedReader(inputPath, UTF_8)) {
                 for (String column : reader.readLine().split(",")) {
-                    ColumnConfig columnConfig = newColumnConfig(embulk, column);
+                    ColumnConfig columnConfig = newColumnConfig(column);
                     if (columnConfig != null) {
                         schema.add(columnConfig);
                     }
@@ -595,7 +483,7 @@ public class TestingEmbulk
             }
         }
 
-        private ColumnConfig newColumnConfig(TestingEmbulk embulk, String column)
+        private ColumnConfig newColumnConfig(String column)
         {
             String[] tuple = column.split(":", 2);
             checkArgument(tuple.length == 2, "tuple must be a pair of column name and type");
@@ -605,10 +493,86 @@ public class TestingEmbulk
                             "Unknown column type %s. Supported types are boolean, long, double, string, timestamp and json: %s",
                             tuple[1], column));
             }
-            return new ColumnConfig(embulk.newConfig()
+            return new ColumnConfig(newConfig()
                     .set("name", tuple[0])
                     .set("type", type));
         }
+    }
+
+    private RunResult buildRunResultWithOutput(RunResult result, Path outputDir, Path outputPath)
+            throws IOException
+    {
+        try (OutputStream out = Files.newOutputStream(outputPath)) {
+            List<Path> fragments = new ArrayList<Path>();
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(outputDir, "fragments_*.csv")) {
+                for (Path fragment : stream) {
+                    fragments.add(fragment);
+                }
+            }
+            Collections.sort(fragments);
+            for (Path fragment : fragments) {
+                try (InputStream in = Files.newInputStream(fragment)) {
+                    ByteStreams.copy(in, out);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public InputBuilder inputBuilder()
+    {
+        return new InputBuilder();
+    }
+
+    public ParserBuilder parserBuilder()
+    {
+        return new ParserBuilder();
+    }
+
+    public OutputBuilder outputBuilder()
+    {
+        return new OutputBuilder();
+    }
+
+    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath)
+            throws IOException
+    {
+        return parserBuilder()
+                .parser(parserConfig)
+                .inputPath(inputPath)
+                .outputPath(outputPath)
+                .run();
+    }
+
+    public RunResult runParser(ConfigSource parserConfig, Path inputPath, Path outputPath, ConfigSource execConfig)
+            throws IOException
+    {
+        return parserBuilder()
+                .parser(parserConfig)
+                .inputPath(inputPath)
+                .outputPath(outputPath)
+                .exec(execConfig)
+                .run();
+    }
+
+    public RunResult runInput(ConfigSource inConfig, Path outputPath)
+        throws IOException
+    {
+        return inputBuilder()
+                .in(inConfig)
+                .outputPath(outputPath)
+                .run();
+    }
+
+    public RunResult runInput(ConfigSource inConfig, Path outputPath, ConfigSource execConfig)
+            throws IOException
+    {
+        return inputBuilder()
+                .exec(execConfig)
+                .in(inConfig)
+                .outputPath(outputPath)
+                .run();
     }
 
     public RunResult runOutput(ConfigSource outConfig, Path inputPath)
@@ -617,17 +581,56 @@ public class TestingEmbulk
         return outputBuilder()
                 .out(outConfig)
                 .inputPath(inputPath)
-                .run(this);
+                .run();
     }
 
-    public RunResult runOutput(ConfigSource execConfig, ConfigSource outConfig, Path inputPath)
+    public RunResult runOutput(ConfigSource outConfig, Path inputPath, ConfigSource execConfig)
             throws IOException
     {
         return outputBuilder()
                 .exec(execConfig)
                 .out(outConfig)
                 .inputPath(inputPath)
-                .run(this);
+                .run();
+    }
+
+    public ConfigDiff guessInput(ConfigSource inSeedConfig)
+    {
+        return inputBuilder()
+                .in(inSeedConfig)
+                .guess();
+    }
+
+    public ConfigDiff guessInput(ConfigSource inSeedConfig, ConfigSource execConfig)
+    {
+        return inputBuilder()
+                .exec(execConfig)
+                .in(inSeedConfig)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(Path inputPath)
+    {
+        return parserBuilder()
+                .inputPath(inputPath)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath)
+    {
+        return parserBuilder()
+                .parser(parserSeedConfig)
+                .inputPath(inputPath)
+                .guess();
+    }
+
+    public ConfigDiff guessParser(ConfigSource parserSeedConfig, Path inputPath, ConfigSource execConfig)
+    {
+        return parserBuilder()
+                .parser(parserSeedConfig)
+                .inputPath(inputPath)
+                .exec(execConfig)
+                .guess();
     }
 
     // TODO add runFilter(ConfigSource filterConfig, Path inputPath, Path outputPath) where inputPath is a path to
