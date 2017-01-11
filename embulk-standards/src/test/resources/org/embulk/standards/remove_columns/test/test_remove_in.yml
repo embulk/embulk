@@ -1,0 +1,18 @@
+type: file
+parser:
+  charset: UTF-8
+  newline: CRLF
+  type: csv
+  delimiter: ','
+  quote: '"'
+  escape: '"'
+  trim_if_not_quoted: false
+  skip_header_lines: 1
+  allow_extra_columns: false
+  allow_optional_columns: false
+  columns:
+  - {name: id, type: long}
+  - {name: account, type: long}
+  - {name: time, type: timestamp, format: '%Y-%m-%d %H:%M:%S'}
+  - {name: purchase, type: string}
+  - {name: comment, type: string}
