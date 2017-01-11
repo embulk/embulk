@@ -1,210 +1,113 @@
 package org.embulk.standards;
 
 import com.google.common.collect.ImmutableList;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.FilterPlugin;
-import org.embulk.spi.Schema;
-import org.embulk.spi.type.Types;
-import org.embulk.standards.RemoveColumnsFilterPlugin.PluginTask;
-import org.junit.Before;
+import org.embulk.exec.PartialExecutionException;
+import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.embulk.spi.Exec.newConfigSource;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import java.io.IOException;
+import java.nio.file.Path;
+
+import static org.embulk.test.EmbulkTests.copyResource;
+import static org.embulk.test.EmbulkTests.readResource;
+import static org.embulk.test.EmbulkTests.readSortedFile;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TestRemoveColumnsFilterPlugin
 {
+    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/remove_columns/test/";
+
     @Rule
-    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
+    public TestingEmbulk embulk = TestingEmbulk.builder().build();
 
-    private RemoveColumnsFilterPlugin plugin;
-    private Schema inputSchema;
-
-    @Before
-    public void createResources()
+    @Test
+    public void useKeepOption()
+            throws Exception
     {
-        plugin = new RemoveColumnsFilterPlugin();
-        inputSchema = Schema.builder()
-                .add("_c0", Types.STRING)
-                .add("_c1", Types.STRING)
-                .add("_c2", Types.STRING)
-                .add("_c3", Types.STRING)
-                .add("_c4", Types.STRING)
-                .build();
+        assertRecordsByResource(embulk, "test_keep_in.yml", "test_keep_filter.yml",
+                "test_keep.csv", "test_keep_expected.csv");
     }
 
     @Test
-    public void checkDefaultValues()
+    public void useKeepWithAcceptUnmatched()
+            throws Exception
     {
-        PluginTask task = newConfigSource().loadConfig(PluginTask.class);
-        assertTrue(!task.getRemove().isPresent());
-        assertTrue(!task.getKeep().isPresent());
-        assertFalse(task.getAcceptUnmatchedColumns());
+        assertRecordsByResource(embulk, "test_keep_in.yml", "test_keep_with_unmatched_filter.yml",
+                "test_keep.csv", "test_keep_expected.csv");
     }
 
     @Test
-    public void checkValidation()
+    public void useKeepWithoutAcceptUnmatched()
+            throws Exception
     {
-        // throw ConfigError if remove: and keep: are multi-select.
-        {
-            ConfigSource config = newConfigSource()
-                    .set("remove", ImmutableList.of("_c0", "_c1"))
-                    .set("keep", ImmutableList.of("_c2", "_c3"));
-            try {
-                transaction(config, inputSchema);
-                fail();
-            }
-            catch (Throwable t) {
-                assertTrue(t instanceof ConfigException);
-            }
+        try {
+            assertRecordsByResource(embulk, "test_keep_in.yml", "test_keep_without_unmatched_filter.yml",
+                    "test_keep.csv", "test_keep_expected.csv");
+            fail();
         }
-
-        // throw ConfigError if an user dones't use both of them.
-        {
-            ConfigSource config = newConfigSource();
-            try {
-                transaction(config, inputSchema);
-                fail();
-            }
-            catch (Throwable t) {
-                assertTrue(t instanceof ConfigException);
-            }
-        }
-
-        // throw ConfigError if keep: has unmatched columns with accept_unmatched_columns=false
-        {
-            ConfigSource config = newConfigSource()
-                    .set("keep", ImmutableList.of("_c5"))
-                    .set("accept_unmatched_columns", false);
-            try {
-                transaction(config, inputSchema);
-                fail();
-            }
-            catch (Throwable t) {
-                assertTrue(t instanceof ConfigException);
-            }
-        }
-
-        // return normally if keep: has unmatched columns with accept_unmatched_columns=true
-        {
-            ConfigSource config = newConfigSource()
-                    .set("keep", ImmutableList.of("_c5"))
-                    .set("accept_unmatched_columns", true);
-            transaction(config, inputSchema); // return normally
-        }
-
-        // throw ConfigError if remove: has unmatched columns with accept_unmatched_columns=false
-        {
-            ConfigSource config = newConfigSource()
-                    .set("remove", ImmutableList.of("_c5"))
-                    .set("accept_unmatched_columns", false);
-            try {
-                transaction(config, inputSchema);
-                fail();
-            }
-            catch (Throwable t) {
-                assertTrue(t instanceof ConfigException);
-            }
-        }
-
-        // return normally if remove: has unmatched columns with accept_unmatched_columns=true
-        {
-            ConfigSource config = newConfigSource()
-                    .set("remove", ImmutableList.of("_c5"))
-                    .set("accept_unmatched_columns", true);
-            transaction(config, inputSchema); // return normally
+        catch (Throwable t) {
+            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
         }
     }
 
     @Test
-    public void checkRemove()
+    public void useRemove()
+            throws Exception
     {
-        // accept_unmatched_columns=false
-        {
-            ConfigSource config = newConfigSource()
-                    .set("remove", ImmutableList.of("_c2", "_c3", "_c4"))
-                    .set("accept_unmatched_columns", false);
-            plugin.transaction(config, inputSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema outputSchema)
-                {
-                    assertEquals(2, outputSchema.getColumnCount());
-                    assertEquals("_c0", outputSchema.getColumn(0).getName());
-                    assertEquals("_c1", outputSchema.getColumn(1).getName());
-                }
-            });
-        }
-
-        // accept_unmatched_columns=true
-        {
-            ConfigSource config = newConfigSource()
-                    .set("remove", ImmutableList.of("_c2", "_c3", "_c4", "_c5", "_c6"))
-                    .set("accept_unmatched_columns", true);
-            plugin.transaction(config, inputSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema outputSchema)
-                {
-                    assertEquals(2, outputSchema.getColumnCount());
-                    assertEquals("_c0", outputSchema.getColumn(0).getName());
-                    assertEquals("_c1", outputSchema.getColumn(1).getName());
-                }
-            });
-        }
+        assertRecordsByResource(embulk, "test_remove_in.yml", "test_remove_filter.yml",
+                "test_remove.csv", "test_remove_expected.csv");
     }
 
     @Test
-    public void checkKeep()
+    public void useRemoveWithAcceptUnmatched()
+            throws Exception
     {
-        // accept_unmatched_columns=false
-        {
-            ConfigSource config = newConfigSource()
-                    .set("keep", ImmutableList.of("_c2", "_c3", "_c4"))
-                    .set("accept_unmatched_columns", false);
-            plugin.transaction(config, inputSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema outputSchema)
-                {
-                    assertEquals(3, outputSchema.getColumnCount());
-                    assertEquals("_c2", outputSchema.getColumn(0).getName());
-                    assertEquals("_c3", outputSchema.getColumn(1).getName());
-                    assertEquals("_c4", outputSchema.getColumn(2).getName());
-                }
-            });
-        }
+        assertRecordsByResource(embulk, "test_remove_in.yml", "test_remove_with_unmatched_filter.yml",
+                "test_remove.csv", "test_remove_expected.csv");
+    }
 
-        // accept_unmatched_columns=true
-        {
-            ConfigSource config = newConfigSource()
-                    .set("keep", ImmutableList.of("_c2", "_c3", "_c4", "_c5", "_c6"))
-                    .set("accept_unmatched_columns", true);
-            plugin.transaction(config, inputSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema outputSchema)
-                {
-                    assertEquals(3, outputSchema.getColumnCount());
-                    assertEquals("_c2", outputSchema.getColumn(0).getName());
-                    assertEquals("_c3", outputSchema.getColumn(1).getName());
-                    assertEquals("_c4", outputSchema.getColumn(2).getName());
-                }
-            });
+    @Test
+    public void useRemoveWithoutAcceptUnmatched()
+            throws Exception
+    {
+        try {
+            assertRecordsByResource(embulk, "test_remove_in.yml", "test_remove_without_unmatched_filter.yml",
+                    "test_remove.csv", "test_remove_expected.csv");
+            fail();
+        }
+        catch (Throwable t) {
+            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
         }
     }
 
-    private void transaction(ConfigSource config, Schema inputSchema)
+    static void assertRecordsByResource(TestingEmbulk embulk,
+            String inConfigYamlResourceName, String filterConfigYamlResourceName,
+            String sourceCsvResourceName, String resultCsvResourceName)
+            throws IOException
     {
-        plugin.transaction(config, inputSchema, new FilterPlugin.Control() {
-            @Override
-            public void run(TaskSource taskSource, Schema outputSchema)
-            {
-                // do nothing
-            }
-        });
+        Path inputPath = embulk.createTempFile("csv");
+        Path outputPath = embulk.createTempFile("csv");
+
+        // in: config
+        copyResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName, inputPath);
+        ConfigSource inConfig = embulk.loadYamlResource(RESOURCE_NAME_PREFIX + inConfigYamlResourceName)
+                .set("path_prefix", inputPath.toAbsolutePath().toString());
+
+        // remove_columns filter config
+        ConfigSource filterConfig = embulk.loadYamlResource(RESOURCE_NAME_PREFIX + filterConfigYamlResourceName);
+
+        TestingEmbulk.RunResult result = embulk.inputBuilder()
+                .in(inConfig)
+                .filters(ImmutableList.of(filterConfig))
+                .outputPath(outputPath)
+                .run();
+
+        assertThat(readSortedFile(outputPath), is(readResource(RESOURCE_NAME_PREFIX + resultCsvResourceName)));
     }
 }
