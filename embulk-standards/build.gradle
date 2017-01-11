@@ -3,4 +3,5 @@ dependencies {
     compile 'org.apache.commons:commons-compress:1.10'
 
     testCompile project(':embulk-core').sourceSets.test.output
+    testCompile project(':embulk-test')
 }
