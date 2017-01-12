@@ -51,9 +51,17 @@ public class TestRemoveColumnsFilterPlugin
                     "test_keep.csv", "test_keep_expected.csv");
             fail();
         }
-        catch (Throwable t) {
-            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
+        catch (PartialExecutionException ex) {
+            assertTrue(ex.getCause() instanceof ConfigException);
         }
+    }
+
+    @Test
+    public void useKeepWithDuplicatedColumnNames()
+            throws Exception
+    {
+        assertRecordsByResource(embulk, "test_keep_with_duplicated_column_names_in.yml", "test_keep_with_duplicated_column_names.yml",
+                "test_keep_with_duplicated_column_names.csv", "test_keep_with_duplicated_column_names_expected.csv");
     }
 
     @Test
@@ -81,8 +89,8 @@ public class TestRemoveColumnsFilterPlugin
                     "test_remove.csv", "test_remove_expected.csv");
             fail();
         }
-        catch (Throwable t) {
-            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
+        catch (PartialExecutionException ex) {
+            assertTrue(ex.getCause() instanceof ConfigException);
         }
     }
 
