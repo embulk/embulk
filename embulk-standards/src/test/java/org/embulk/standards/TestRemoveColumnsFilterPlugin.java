@@ -57,6 +57,14 @@ public class TestRemoveColumnsFilterPlugin
     }
 
     @Test
+    public void useKeepWithDuplicatedColumnNames()
+            throws Exception
+    {
+        assertRecordsByResource(embulk, "test_keep_with_duplicated_column_names_in.yml", "test_keep_with_duplicated_column_names.yml",
+                "test_keep_with_duplicated_column_names.csv", "test_keep_with_duplicated_column_names_expected.csv");
+    }
+
+    @Test
     public void useRemove()
             throws Exception
     {
