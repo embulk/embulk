@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import static java.util.Locale.ENGLISH;
 import static org.embulk.spi.Exec.getBufferAllocator;
@@ -49,6 +50,9 @@ public class RemoveColumnsFilterPlugin
         @Config("accept_unmatched_columns")
         @ConfigDefault("false")
         public boolean getAcceptUnmatchedColumns();
+
+        public void setIndexMapping(int[] mapping);
+        public int[] getIndexMapping();
     }
 
     private final Logger LOG;
@@ -73,26 +77,36 @@ public class RemoveColumnsFilterPlugin
         }
 
         boolean acceptUnmatchedColumns = task.getAcceptUnmatchedColumns();
-        List<String> existentColumns;
-        Schema.Builder outputSchema = Schema.builder();
+
+        ImmutableList.Builder<Column> outputColumns = ImmutableList.builder();
+        int index = 0;
+        int[] indexMapping = new int[inputSchema.size()];
+        for (int i = 0; i < indexMapping.length; i++) {
+            indexMapping[i] = -1;
+        }
         if (task.getRemove().isPresent()) { // specify remove:
-            existentColumns = getExistentColumns(inputSchema, task.getRemove().get(), acceptUnmatchedColumns);
+            List<String> removeColumns = getExistentColumns(inputSchema, task.getRemove().get(), acceptUnmatchedColumns);
             for (Column column : inputSchema.getColumns()) {
-                if (!existentColumns.contains(column.getName())) {
-                    outputSchema.add(column.getName(), column.getType());
+                if (!removeColumns.contains(column.getName())) {
+                    outputColumns.add(new Column(index, column.getName(), column.getType()));
+                    indexMapping[column.getIndex()] = index;
+                    index++;
                 }
             }
         }
         else { // specify keep:
-            existentColumns = getExistentColumns(inputSchema, task.getKeep().get(), acceptUnmatchedColumns);
+            List<String> keepColumns = getExistentColumns(inputSchema, task.getKeep().get(), acceptUnmatchedColumns);
             for (Column column : inputSchema.getColumns()) {
-                if (existentColumns.contains(column.getName())) {
-                    outputSchema.add(column.getName(), column.getType());
+                if (keepColumns.contains(column.getName())) {
+                    outputColumns.add(new Column(index, column.getName(), column.getType()));
+                    indexMapping[column.getIndex()] = index;
+                    index++;
                 }
             }
         }
 
-        control.run(task.dump(), outputSchema.build());
+        task.setIndexMapping(indexMapping);
+        control.run(task.dump(), new Schema(outputColumns.build()));
     }
 
     private List<String> getExistentColumns(Schema schema, List<String> specifiedColumns, boolean acceptUnmatch)
@@ -116,9 +130,10 @@ public class RemoveColumnsFilterPlugin
     public PageOutput open(TaskSource taskSource, Schema inputSchema,
             Schema outputSchema, PageOutput output)
     {
+        PluginTask task = taskSource.loadTask(PluginTask.class);
         PageReader pageReader = new PageReader(inputSchema);
         PageBuilder pageBuilder = new PageBuilder(getBufferAllocator(), outputSchema, output);
-        return new PageConverter(pageReader, pageBuilder);
+        return new PageConverter(pageReader, pageBuilder, task.getIndexMapping());
     }
 
     static class PageConverter
@@ -126,26 +141,26 @@ public class RemoveColumnsFilterPlugin
     {
         private final PageReader pageReader;
         private final PageBuilder pageBuilder;
+        private final int[] indexMapping;
 
-        PageConverter(PageReader pageReader, PageBuilder pageBuilder)
+        PageConverter(PageReader pageReader, PageBuilder pageBuilder, int[] indexMapping)
         {
             this.pageReader = pageReader;
             this.pageBuilder = pageBuilder;
+            this.indexMapping = indexMapping;
         }
 
         @Override
         public void add(Page page)
         {
-            final Map<String, Integer> outputColumnIndex = newColumnIndex(pageBuilder.getSchema());
-
             pageReader.setPage(page);
             while (pageReader.nextRecord()) {
                 pageReader.getSchema().visitColumns(new ColumnVisitor() {
                     @Override
                     public void booleanColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
@@ -158,8 +173,8 @@ public class RemoveColumnsFilterPlugin
                     @Override
                     public void longColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
@@ -172,8 +187,8 @@ public class RemoveColumnsFilterPlugin
                     @Override
                     public void doubleColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
@@ -186,8 +201,8 @@ public class RemoveColumnsFilterPlugin
                     @Override
                     public void stringColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
@@ -200,8 +215,8 @@ public class RemoveColumnsFilterPlugin
                     @Override
                     public void timestampColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
@@ -214,8 +229,8 @@ public class RemoveColumnsFilterPlugin
                     @Override
                     public void jsonColumn(Column inputColumn)
                     {
-                        if (outputColumnIndex.containsKey(inputColumn.getName())) {
-                            int index = outputColumnIndex.get(inputColumn.getName());
+                        int index = indexMapping[inputColumn.getIndex()];
+                        if (index >= 0) {
                             if (pageReader.isNull(inputColumn)) {
                                 pageBuilder.setNull(index);
                             }
