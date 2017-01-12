@@ -51,8 +51,8 @@ public class TestRemoveColumnsFilterPlugin
                     "test_keep.csv", "test_keep_expected.csv");
             fail();
         }
-        catch (Throwable t) {
-            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
+        catch (PartialExecutionException ex) {
+            assertTrue(ex.getCause() instanceof ConfigException);
         }
     }
 
@@ -81,8 +81,8 @@ public class TestRemoveColumnsFilterPlugin
                     "test_remove.csv", "test_remove_expected.csv");
             fail();
         }
-        catch (Throwable t) {
-            assertTrue(((PartialExecutionException) t).getCause() instanceof ConfigException);
+        catch (PartialExecutionException ex) {
+            assertTrue(ex.getCause() instanceof ConfigException);
         }
     }
 
