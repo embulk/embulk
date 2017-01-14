@@ -29,14 +29,11 @@ module Embulk
           raise Java::TimestampParseException.new("Failed to parse '" + text + "'")
         end
 
-        if seconds = hash[:seconds]
-          if sec_fraction = hash[:sec_fraction]  # Rational
-            usec = sec_fraction * 1_000_000 if sec_fraction
-            return seconds * 1_000_000 + usec.to_i
-          else # ex) %Q return Rational object.
-            t = Time.at(seconds,0)
-            return (seconds * 1_000_000).to_i
-          end
+        if seconds = hash[:seconds] # if %s, it's Integer. if %Q, Rational.
+          sec_fraction = hash[:sec_fraction]  # Rational
+          usec = sec_fraction * 1_000_000 if sec_fraction
+          return (seconds * 1_000_000).to_i + usec.to_i
+
         else
           year = hash[:year]
           mon = hash[:mon]
