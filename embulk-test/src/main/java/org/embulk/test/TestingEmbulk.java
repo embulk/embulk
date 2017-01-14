@@ -2,6 +2,7 @@ package org.embulk.test;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -187,6 +188,7 @@ public class TestingEmbulk
     public class InputBuilder
     {
         private ConfigSource inConfig = null;
+        private List<ConfigSource> filtersConfig = ImmutableList.of();
         private ConfigSource execConfig = newConfig();
         private Path outputPath = null;
 
@@ -197,6 +199,17 @@ public class TestingEmbulk
         {
             checkNotNull(inConfig, "inConfig");
             this.inConfig = inConfig.deepCopy();
+            return this;
+        }
+
+        public InputBuilder filters(List<ConfigSource> filtersConfig)
+        {
+            checkNotNull(filtersConfig, "filtersConfig");
+            ImmutableList.Builder<ConfigSource> builder = ImmutableList.builder();
+            for (ConfigSource filter : filtersConfig) {
+                builder.add(filter.deepCopy());
+            }
+            this.filtersConfig = builder.build();
             return this;
         }
 
@@ -221,7 +234,8 @@ public class TestingEmbulk
             // config = {exec: execConfig, in: inConfig}
             ConfigSource config = newConfig()
                     .set("exec", execConfig)
-                    .set("in", inConfig);
+                    .set("in", inConfig)
+                    .set("filters", filtersConfig);
 
             // embed.guess returns GuessExecutor.ConfigDiff
             return embed.guess(config).getNested("in");
@@ -256,6 +270,7 @@ public class TestingEmbulk
             ConfigSource config = newConfig()
                     .set("exec", execConfig)
                     .set("in", inConfig)
+                    .set("filters", filtersConfig)
                     .set("out", outConfig);
 
             // embed.run returns TestingBulkLoader.TestingExecutionResult because

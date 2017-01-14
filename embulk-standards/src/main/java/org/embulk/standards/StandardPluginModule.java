@@ -47,6 +47,7 @@ public class StandardPluginModule
 
         // filter plugins
         registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
+        registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
