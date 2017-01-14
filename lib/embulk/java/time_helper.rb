@@ -30,10 +30,13 @@ module Embulk
         end
 
         if seconds = hash[:seconds]
-          sec_fraction = hash[:sec_fraction]  # Rational
-          usec = sec_fraction * 1_000_000 if sec_fraction
-          return seconds * 1_000_000 + usec.to_i
-
+          if sec_fraction = hash[:sec_fraction]  # Rational
+            usec = sec_fraction * 1_000_000 if sec_fraction
+            return seconds * 1_000_000 + usec.to_i
+          else # ex) %Q return Rational object.
+            t = Time.at(seconds,0)
+            return (seconds * 1_000_000).to_i
+          end
         else
           year = hash[:year]
           mon = hash[:mon]
