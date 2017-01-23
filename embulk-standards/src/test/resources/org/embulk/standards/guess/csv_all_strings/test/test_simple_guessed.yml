@@ -1,5 +1,5 @@
 charset: UTF-8
-newline: CRLF
+newline: LF
 type: csv
 delimiter: ','
 quote: '"'
