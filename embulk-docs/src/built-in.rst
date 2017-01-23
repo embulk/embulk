@@ -835,6 +835,40 @@ Columns: not recommended
 .. hint::
    ``columns`` are applied before ``rules`` if ``columns`` and ``rules`` are specified together. (It is discouraged to specify them together, though.)
 
+
+Remove columns filter plugin
+-----------------------------
+
+The ``remove_columns`` filter plugin removes columns from schema.
+
+Options
+~~~~~~~~
+
++--------------------------+----------+------------------------------------------------------------+-----------------------+
+| name                     | type     | description                                                | required?             |
++==========================+==========+============================================================+=======================+
+| remove                   | array    | An array of names of columns that it removes from schema.  | ``[]`` by default     |
++--------------------------+----------+------------------------------------------------------------+-----------------------+
+| keep                     | array    | An array of names of columns that it keeps in schema.      | ``[]`` by default     |
++--------------------------+----------+------------------------------------------------------------+-----------------------+
+| accept_unmatched_columns | boolean  | If true, skip columns that aren't included in schemas.     | ``false`` by default  |
++--------------------------+----------+------------------------------------------------------------+-----------------------+
+
+
+remove: and keep: options are not multi-select.
+
+Example
+~~~~~~~~
+
+.. code-block:: yaml
+
+    # This configuration removes "_c0" and "_c1" named columns from schema.
+    filters:
+      ...
+      - type: remove_columns
+        remove: ["_c0", "_c1"]
+
+
 Local executor plugin
 ----------------------
 
