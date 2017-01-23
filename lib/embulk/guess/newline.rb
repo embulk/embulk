@@ -4,10 +4,16 @@ module Embulk
     class NewlineGuessPlugin < TextGuessPlugin
       Plugin.register_guess('newline', self)
 
-      def guess_text(config, sample_text)
-        cr_count = sample_text.count("\r")
-        lf_count = sample_text.count("\n")
-        crlf_count = sample_text.scan(/\r\n/).length
+      def guess(config, sample)
+        if config.fetch('parser', {}).fetch('charset', nil).nil?
+          require 'embulk/guess/charset'
+          charset_guess = Guess::CharsetGuessPlugin.new
+          return charset_guess.guess(config, sample)
+        end
+
+        cr_count = sample.count("\r")
+        lf_count = sample.count("\n")
+        crlf_count = sample.scan(/\r\n/).length
         if crlf_count > cr_count / 2 && crlf_count > lf_count / 2
           return {"parser" => {"newline" => "CRLF"}}
         elsif cr_count > lf_count / 2

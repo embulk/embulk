@@ -30,6 +30,33 @@ public class TestCsvGuessPlugin
     }
 
     @Test
+    public void testFor1RowsAndHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_rows_and_header_seed.yml", "test_1_rows_and_header.csv",
+                "test_1_rows_and_header_guessed.yml");
+    }
+
+    @Test
+    public void testFor2Rows()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_2_rows_seed.yml", "test_2_rows.csv",
+                "test_2_rows_guessed.yml");
+    }
+
+    @Test
+    public void testFor2RowsAndHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_2_rows_and_header_seed.yml", "test_2_rows_and_header.csv",
+                "test_2_rows_and_header_guessed.yml");
+    }
+
+    @Test
     public void suggestTabAsDelimiter()
             throws Exception
     {

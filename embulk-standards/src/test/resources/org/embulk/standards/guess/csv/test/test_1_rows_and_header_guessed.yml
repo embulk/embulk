@@ -4,7 +4,6 @@ type: csv
 delimiter: ','
 quote: '"'
 escape: '"'
-null_string: "NULL"
 trim_if_not_quoted: false
 skip_header_lines: 1
 allow_extra_columns: false

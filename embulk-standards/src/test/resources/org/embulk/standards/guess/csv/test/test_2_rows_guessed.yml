@@ -1,9 +1,9 @@
-type: csv
 charset: UTF-8
 newline: LF
-delimiter: "\t"
-quote: null
-null_string: "NULL"
+type: csv
+delimiter: ','
+quote: '"'
+escape: '"'
 trim_if_not_quoted: false
 skip_header_lines: 0
 allow_extra_columns: false
