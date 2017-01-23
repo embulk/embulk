@@ -30,6 +30,15 @@ public class TestCsvGuessPlugin
     }
 
     @Test
+    public void testFor1Rows()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_rows_seed.yml", "test_1_rows.csv",
+                "test_1_rows_guessed.yml");
+    }
+
+    @Test
     public void testFor1RowsAndHeader()
             throws Exception
     {
