@@ -92,6 +92,7 @@ module Embulk
         sample_records = split_lines(parser_guessed, false, sample_lines, delim, {})
         skip_header_lines = guess_skip_header_lines(sample_records)
         sample_lines = sample_lines[skip_header_lines..-1]
+        one_line_file = sample_lines.size == 1
         sample_records = sample_records[skip_header_lines..-1]
 
         unless parser_guessed.has_key?("comment_line_marker")
@@ -106,24 +107,32 @@ module Embulk
 
         first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
         other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
+        column_types = !one_line_file ? other_types : first_types
 
-        if first_types.size <= 1 || other_types.size <= 1
+        if first_types.size <= 1 && (!one_line_file && other_types.size <= 1)
           # guess failed
           return {}
         end
 
         unless parser_guessed.has_key?("trim_if_not_quoted")
           sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
-          other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
-          if other_types != other_types_trimmed
+          column_types_trimmed = SchemaGuess.types_from_array_records(!one_line_file ? sample_records_trimmed[1..-1] || [] : sample_records_trimmed[0, 1])
+          if column_types != column_types_trimmed
             parser_guessed["trim_if_not_quoted"] = true
-            other_types = other_types_trimmed
+            if !one_line_file
+              other_types = column_types_trimmed
+            else
+              first_types = column_types_trimmed
+            end
           else
             parser_guessed["trim_if_not_quoted"] = false
           end
         end
 
-        header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
+        # When CSV file has one line only, header_line is set to nil. The plugin cannot recognize that the one line is actually a header or not.
+        if !one_line_file
+          header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
+        end
 
         if header_line
           parser_guessed["skip_header_lines"] = skip_header_lines + 1
@@ -137,10 +146,10 @@ module Embulk
         if header_line
           column_names = sample_records.first
         else
-          column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
+          column_names = (0..column_types.size).to_a.map {|i| "c#{i}" }
         end
         schema = []
-        column_names.zip(other_types).each do |name,type|
+        column_names.zip(column_types).each do |name,type|
           if name && type
             schema << new_column(name, type)
           end
