@@ -92,7 +92,6 @@ module Embulk
         sample_records = split_lines(parser_guessed, false, sample_lines, delim, {})
         skip_header_lines = guess_skip_header_lines(sample_records)
         sample_lines = sample_lines[skip_header_lines..-1]
-        one_line_file = sample_lines.size == 1
         sample_records = sample_records[skip_header_lines..-1]
 
         unless parser_guessed.has_key?("comment_line_marker")
@@ -105,33 +104,47 @@ module Embulk
 
         sample_records = split_lines(parser_guessed, true, sample_lines, delim, {})
 
-        first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
-        other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
-        column_types = !one_line_file ? other_types : first_types
+        if sample_lines.size == 1
+          # The file contains only 1 line. Assume that there are no header line.
+          header_line = false
 
-        if first_types.size <= 1 && (!one_line_file && other_types.size <= 1)
-          # guess failed
-          return {}
-        end
+          column_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
 
-        unless parser_guessed.has_key?("trim_if_not_quoted")
-          sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
-          column_types_trimmed = SchemaGuess.types_from_array_records(!one_line_file ? sample_records_trimmed[1..-1] || [] : sample_records_trimmed[0, 1])
-          if column_types != column_types_trimmed
-            parser_guessed["trim_if_not_quoted"] = true
-            if !one_line_file
-              other_types = column_types_trimmed
+          unless parser_guessed.has_key?("trim_if_not_quoted")
+            sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
+            column_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed)
+            if column_types != column_types_trimmed
+              parser_guessed["trim_if_not_quoted"] = true
+              column_types = column_types_trimmed
             else
-              first_types = column_types_trimmed
+              parser_guessed["trim_if_not_quoted"] = false
             end
-          else
-            parser_guessed["trim_if_not_quoted"] = false
           end
+        else
+          # The file contains more than 1 line. If guessed first line's column types are all strings or boolean, and the types are
+          # different from the other lines, assume that the first line is column names.
+          first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
+          other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
+
+          unless parser_guessed.has_key?("trim_if_not_quoted")
+            sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
+            other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
+            if other_types != other_types_trimmed
+              parser_guessed["trim_if_not_quoted"] = true
+              other_types = other_types_trimmed
+            else
+              parser_guessed["trim_if_not_quoted"] = false
+            end
+          end
+
+          header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
+          column_types = other_types
         end
 
-        # When CSV file has one line only, header_line is set to nil. The plugin cannot recognize that the one line is actually a header or not.
-        if !one_line_file
-          header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
+        if column_types.size <= 1
+          # TODO here is making the guessing failed if the file contains on columns or only one column. However,
+          #      this may not be convenient for users.
+          return {}
         end
 
         if header_line
