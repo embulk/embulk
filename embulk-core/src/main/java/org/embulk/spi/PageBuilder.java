@@ -123,6 +123,11 @@ public class PageBuilder
 
     public void setString(int columnIndex, String value)
     {
+        if (value == null) {
+            setNull(columnIndex);
+            return;
+        }
+
         Integer reuseIndex = stringReferences.get(value);
         if (reuseIndex != null) {
             bufferSlice.setInt(getOffset(columnIndex), reuseIndex);
@@ -143,6 +148,11 @@ public class PageBuilder
 
     public void setJson(int columnIndex, Value value)
     {
+        if (value == null) {
+            setNull(columnIndex);
+            return;
+        }
+
         int index = valueReferences.size();
         valueReferences.add(value.immutableValue());
         bufferSlice.setInt(getOffset(columnIndex), index);
@@ -158,6 +168,11 @@ public class PageBuilder
 
     public void setTimestamp(int columnIndex, Timestamp value)
     {
+        if (value == null) {
+            setNull(columnIndex);
+            return;
+        }
+
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
         bufferSlice.setInt(offset + 8, value.getNano());
