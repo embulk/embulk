@@ -201,19 +201,22 @@ task updateResources(dependsOn: 'classpath') {
 //
 // classpath task
 //
-task classpath(dependsOn: ['build', ':embulk-cli:classpath']) << { }
+task classpath(dependsOn: ['build', ':embulk-cli:classpath']) { doLast {} }
+
 clean { delete 'classpath' }
 
 //
 // cli task
 //
-task cli(dependsOn: ':embulk-cli:shadowJar') << {
-    file('pkg').mkdirs()
-    File f = file("pkg/embulk-${project.version}.jar")
-    f.write("")
-    f.append(file("embulk-cli/src/main/sh/selfrun.sh").readBytes())
-    f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
-    f.setExecutable(true)
+task cli(dependsOn: ':embulk-cli:shadowJar') {
+    doLast {
+        file('pkg').mkdirs()
+        File f = file("pkg/embulk-${project.version}.jar")
+        f.write("")
+        f.append(file("embulk-cli/src/main/sh/selfrun.sh").readBytes())
+        f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
+        f.setExecutable(true)
+    }
 }
 bintrayUpload.dependsOn(['cli'])
 
@@ -282,58 +285,64 @@ task rubyGemsUpload(type: Exec, dependsOn: ["gem", "rubyGemsUploadJRuby"]) {
 //
 // releaseCheck and release tasks
 //
-task releaseCheck << {
-    if (!file("lib/embulk/version.rb").getText().contains("${project.version}")) {
-        throw new GradleException("lib/embulk/version.rb doesn't include ${project.version}")
+task releaseCheck {
+    doLast {
+        if (!file("lib/embulk/version.rb").getText().contains("${project.version}")) {
+            throw new GradleException("lib/embulk/version.rb doesn't include ${project.version}")
+        }
+        if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
+            throw new GradleException("Release note for ${project.version} doesn't exist")
+        }
+        if (!file("embulk-docs/src/release.rst").getText().contains("release-${project.version}")) {
+            throw new GradleException("embulk-docs/src/release.rst doesn't include release-${project.version}")
+        }
+        String date = new Date().format("yyyy-MM-dd")
+        if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains(date)) {
+            throw new GradleException("embulk-docs/src/release/release-${project.version}.rst doesn't include today's release date")
+        }
+        // TODO check git-ls-files includes release-<version>.rst file
+        println "Ready. Run 'release' task."
     }
-    if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
-        throw new GradleException("Release note for ${project.version} doesn't exist")
-    }
-    if (!file("embulk-docs/src/release.rst").getText().contains("release-${project.version}")) {
-        throw new GradleException("embulk-docs/src/release.rst doesn't include release-${project.version}")
-    }
-    String date = new Date().format("yyyy-MM-dd")
-    if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains(date)) {
-        throw new GradleException("embulk-docs/src/release/release-${project.version}.rst doesn't include today's release date")
-    }
-    // TODO check git-ls-files includes release-<version>.rst file
-    println "Ready. Run 'release' task."
 }
 
-task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload", "rubyGemsUpload"]) << {
-    println """
+task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload", "rubyGemsUpload"]) {
+    doLast {
+        println """
 Manual operations:
 
   git commit -am v${project.version}
   git tag v${project.version}
 
 """
+    }
 }
 bintrayUpload.mustRunAfter('releaseCheck')
 rubyGemsUpload.mustRunAfter('releaseCheck')
 rubyGemsUploadJRuby.mustRunAfter('releaseCheck')
 
-task setVersion << {
-    if (!project.hasProperty("to")) {
-        throw new GradleException("Usage: ./gradlew setVersion -Pto=VERSION")
+task setVersion {
+    doLast {
+        if (!project.hasProperty("to")) {
+            throw new GradleException("Usage: ./gradlew setVersion -Pto=VERSION")
+        }
+
+        File gradle_ver = file('build.gradle')
+        gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
+
+        File ruby_ver = file('lib/embulk/version.rb')
+        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
+
+        List<String> docs = [
+            'README.md',
+        ]
+        docs.each() { path ->
+            File doc = file(path)
+            doc.write(doc.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
+        }
+
+        file("embulk-docs/src/release/release-${to}.rst").append("")
+        "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
+
+        println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
     }
-
-    File gradle_ver = file('build.gradle')
-    gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
-
-    File ruby_ver = file('lib/embulk/version.rb')
-    ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
-
-    List<String> docs = [
-        'README.md',
-    ]
-    docs.each() { path ->
-        File doc = file(path)
-        doc.write(doc.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
-    }
-
-    file("embulk-docs/src/release/release-${to}.rst").append("")
-    "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
-
-    println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
 }
