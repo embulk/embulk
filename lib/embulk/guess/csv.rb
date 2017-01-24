@@ -141,8 +141,8 @@ module Embulk
           column_types = other_types
         end
 
-        if column_types.size <= 1
-          # TODO here is making the guessing failed if the file contains on columns or only one column. However,
+        if column_types.empty?
+          # TODO here is making the guessing failed if the file doesn't contain any columns. However,
           #      this may not be convenient for users.
           return {}
         end
