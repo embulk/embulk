@@ -39,6 +39,15 @@ public class TestCsvGuessPlugin
     }
 
     @Test
+    public void testFor1RowsWithTrimNeeded()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_rows_with_trim_needed_seed.yml", "test_1_rows_with_trim_needed.csv",
+                "test_1_rows_with_trim_needed_guessed.yml");
+    }
+
+    @Test
     public void testFor1RowsAndHeader()
             throws Exception
     {
