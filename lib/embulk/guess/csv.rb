@@ -157,7 +157,7 @@ module Embulk
         parser_guessed["allow_optional_columns"] = false unless parser_guessed.has_key?("allow_optional_columns")
 
         if header_line
-          column_names = sample_records.first
+          column_names = sample_records.first.map(&:strip)
         else
           column_names = (0..column_types.size).to_a.map {|i| "c#{i}" }
         end
