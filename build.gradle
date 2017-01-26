@@ -346,3 +346,35 @@ task setVersion {
         println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
     }
 }
+
+task updateJRuby {
+    doLast {
+        if (!project.hasProperty("to")) {
+            throw new GradleException("Usage: ./gradlew updateJRuby -Pto=VERSION")
+        }
+
+        File gradle_ver = file('build.gradle')
+        gradle_ver.write(gradle_ver.getText().replaceFirst("jrubyVersion = '(\\d+)(\\.\\d+){3}'", "jrubyVersion = '${to}'"))
+
+        File gemspec_ver  = file('embulk.gemspec')
+        gemspec_ver.write(gemspec_ver.getText().replaceFirst("gem.add_dependency \"jruby-jars\", '= (\\d+)(\\.\\d+){3}'", "gem.add_dependency \"jruby-jars\", '= ${to}'"))
+
+        File migrate_plugin_ver  = file('lib/embulk/command/embulk_migrate_plugin.rb')
+        migrate_plugin_ver.write(migrate_plugin_ver.getText().replaceFirst("\".ruby-version\", \"jruby-(\\d+)(\\.\\d+){3}\"", "\".ruby-version\", \"jruby-${to}\""))
+
+        File gemfile_lock_ver  = file('Gemfile.lock')
+        gemfile_lock_ver.write(gemfile_lock_ver.getText().replaceFirst("jruby-jars \\(= (\\d+)(\\.\\d+){3}\\)", "jruby-jars (= ${to})"))
+
+        gemfile_lock_ver.write(gemfile_lock_ver.getText().replaceFirst("jruby-jars \\((\\d+)(\\.\\d+){3}\\)", "jruby-jars (${to})"))
+
+        List<String> dot_ruby_vers = [
+            'lib/embulk/data/bundle/.ruby-version',
+            'lib/embulk/data/new/ruby/.ruby-version'
+        ]
+        dot_ruby_vers.each() { path ->
+            File dot_ruby_ver = file(path)
+            dot_ruby_ver.write(dot_ruby_ver.getText().replaceAll('jruby-(\\d+)(\\.\\d+){3}', "jruby-${to}"))
+        }
+
+    }
+}
