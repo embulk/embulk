@@ -200,7 +200,7 @@ bintray_api_key=(bintray api key)
 Run following commands and follow its instruction:
 
 ```
-./gradlew set_version -Pto=$VERSION
+./gradlew setVersion -Pto=$VERSION
 ```
 
 ```
