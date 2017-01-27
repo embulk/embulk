@@ -41,8 +41,8 @@ module Embulk
         else
           delim = guess_delimiter(sample_lines)
           unless delim
-            # not CSV file
-            return {}
+            # assuming single column CSV
+            delim = DELIMITER_CANDIDATES.first
           end
         end
 
@@ -335,7 +335,7 @@ module Embulk
         first = sample_records.first
         first.count.times do |column_index|
           lengths = sample_records.map {|row| row[column_index] }.compact.map {|v| v.to_s.size }
-          if lengths.size > 2
+          if lengths.size > 1
             if array_variance(lengths[1..-1]) <= 0.2
               avg = array_avg(lengths[1..-1])
               if avg == 0.0 ? lengths[0] > 1 : (avg - lengths[0]).abs / avg > 0.7
