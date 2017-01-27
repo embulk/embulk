@@ -1,0 +1,12 @@
+charset: UTF-8
+newline: LF
+type: csv
+delimiter: ','
+quote: '"'
+escape: '"'
+trim_if_not_quoted: false
+skip_header_lines: 1
+allow_extra_columns: false
+allow_optional_columns: false
+columns:
+- {name: id, type: string}
