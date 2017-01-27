@@ -104,26 +104,48 @@ module Embulk
 
         sample_records = split_lines(parser_guessed, true, sample_lines, delim, {})
 
-        first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
-        other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
+        if sample_lines.size == 1
+          # The file contains only 1 line. Assume that there are no header line.
+          header_line = false
 
-        if first_types.size <= 1 || other_types.size <= 1
-          # guess failed
+          column_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
+
+          unless parser_guessed.has_key?("trim_if_not_quoted")
+            sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
+            column_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed)
+            if column_types != column_types_trimmed
+              parser_guessed["trim_if_not_quoted"] = true
+              column_types = column_types_trimmed
+            else
+              parser_guessed["trim_if_not_quoted"] = false
+            end
+          end
+        else
+          # The file contains more than 1 line. If guessed first line's column types are all strings or boolean, and the types are
+          # different from the other lines, assume that the first line is column names.
+          first_types = SchemaGuess.types_from_array_records(sample_records[0, 1])
+          other_types = SchemaGuess.types_from_array_records(sample_records[1..-1] || [])
+
+          unless parser_guessed.has_key?("trim_if_not_quoted")
+            sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
+            other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
+            if other_types != other_types_trimmed
+              parser_guessed["trim_if_not_quoted"] = true
+              other_types = other_types_trimmed
+            else
+              parser_guessed["trim_if_not_quoted"] = false
+            end
+          end
+
+          header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
+          column_types = other_types
+        end
+
+        if column_types.empty?
+          # TODO here is making the guessing failed if the file doesn't contain any columns. However,
+          #      this may not be convenient for users.
           return {}
         end
-
-        unless parser_guessed.has_key?("trim_if_not_quoted")
-          sample_records_trimmed = split_lines(parser_guessed, true, sample_lines, delim, {"trim_if_not_quoted" => true})
-          other_types_trimmed = SchemaGuess.types_from_array_records(sample_records_trimmed[1..-1] || [])
-          if other_types != other_types_trimmed
-            parser_guessed["trim_if_not_quoted"] = true
-            other_types = other_types_trimmed
-          else
-            parser_guessed["trim_if_not_quoted"] = false
-          end
-        end
-
-        header_line = (first_types != other_types && first_types.all? {|t| ["string", "boolean"].include?(t) }) || guess_string_header_line(sample_records)
 
         if header_line
           parser_guessed["skip_header_lines"] = skip_header_lines + 1
@@ -135,12 +157,12 @@ module Embulk
         parser_guessed["allow_optional_columns"] = false unless parser_guessed.has_key?("allow_optional_columns")
 
         if header_line
-          column_names = sample_records.first
+          column_names = sample_records.first.map(&:strip)
         else
-          column_names = (0..other_types.size).to_a.map {|i| "c#{i}" }
+          column_names = (0..column_types.size).to_a.map {|i| "c#{i}" }
         end
         schema = []
-        column_names.zip(other_types).each do |name,type|
+        column_names.zip(column_types).each do |name,type|
           if name && type
             schema << new_column(name, type)
           end
