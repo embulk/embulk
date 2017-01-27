@@ -1,5 +1,6 @@
 package org.embulk.standards.guess;
 
+import com.google.common.collect.ImmutableList;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
@@ -84,6 +85,96 @@ public class TestCsvGuessPlugin
     }
 
     @Test
+    public void testFor1IntSingleColumnRow()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_int_single_column_row_seed.yml", "test_1_int_single_column_row.csv",
+                "test_1_int_single_column_row_guessed.yml");
+    }
+
+    @Test
+    public void testFor1StringSingleColumnRow()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_string_single_column_row_seed.yml", "test_1_string_single_column_row.csv",
+                "test_1_string_single_column_row_guessed.yml");
+    }
+
+    @Test
+    public void testFor2StringSingleColumnRows()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_2_string_single_column_rows_seed.yml", "test_2_string_single_column_rows.csv",
+                "test_2_string_single_column_rows_guessed.yml");
+    }
+
+    @Test
+    public void testFor1StringSingleColumnAndHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_string_single_column_row_and_header_seed.yml", "test_1_string_single_column_row_and_header.csv",
+                "test_1_string_single_column_row_and_header_guessed.yml");
+    }
+
+    @Test
+    public void testFor2IntSingleColumnRows()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_2_int_single_column_rows_seed.yml", "test_2_int_single_column_rows.csv",
+                "test_2_int_single_column_rows_guessed.yml");
+    }
+
+    @Test
+    public void testFor1IntSingleColumnAndHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_1_int_single_column_row_and_header_seed.yml", "test_1_int_single_column_row_and_header.csv",
+                "test_1_int_single_column_row_and_header_guessed.yml");
+    }
+
+    @Test
+    public void testIntSingleColumnWithHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_int_single_column_with_header_seed.yml", "test_int_single_column_with_header.csv",
+                "test_int_single_column_with_header_guessed.yml");
+    }
+
+    @Test
+    public void testIntSingleColumn()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_int_single_column_seed.yml", "test_int_single_column.csv",
+                "test_int_single_column_guessed.yml");
+    }
+
+    @Test
+    public void testStringSingleColumnWithHeader()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_string_single_column_with_header_seed.yml", "test_string_single_column_with_header.csv",
+                "test_string_single_column_with_header_guessed.yml");
+    }
+
+    @Test
+    public void testStringSingleColumn()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_string_single_column_seed.yml", "test_string_single_column.csv",
+                "test_string_single_column_guessed.yml");
+    }
+
+    @Test
     public void suggestTabAsDelimiter()
             throws Exception
     {
@@ -128,6 +219,7 @@ public class TestCsvGuessPlugin
         ConfigDiff guessed =
             embulk.parserBuilder()
             .parser(seed)
+            .exec(embulk.newConfig().set("exclude_guess_plugins", ImmutableList.of("json")))
             .inputResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName)
             .guess();
 
