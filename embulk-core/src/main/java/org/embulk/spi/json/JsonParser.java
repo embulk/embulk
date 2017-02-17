@@ -180,7 +180,7 @@ public class JsonParser
                 try {
                     return ValueFactory.newInteger(parser.getLongValue());
                 }
-                catch (JsonParseException ex) {
+                catch (com.fasterxml.jackson.core.JsonParseException ex) {
                     return ValueFactory.newInteger(parser.getBigIntegerValue());
                 }
             case VALUE_STRING:
