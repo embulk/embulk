@@ -29,6 +29,7 @@ public class JsonParser
     {
         this.factory = new JsonFactory();
         factory.enable(Feature.ALLOW_UNQUOTED_CONTROL_CHARS);
+        factory.enable(Feature.ALLOW_NON_NUMERIC_NUMBERS);
     }
 
     public Stream open(InputStream in) throws IOException
