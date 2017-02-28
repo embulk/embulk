@@ -44,7 +44,7 @@ dependencies {
     compile 'com.ibm.icu:icu4j:54.1.1'
 
     gems 'rubygems:bundler:1.10.6'
-    gems 'rubygems:msgpack:0.7.4'
+    gems 'rubygems:msgpack:1.0.3'
     gems 'rubygems:liquid:3.0.6'
 }
 
