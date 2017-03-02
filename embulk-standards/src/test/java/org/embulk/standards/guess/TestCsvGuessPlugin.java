@@ -31,183 +31,153 @@ public class TestCsvGuessPlugin
     }
 
     @Test
-    public void testFor1Rows()
+    public void testForAFewRows()
             throws Exception
     {
+        // for only 1 row
         assertGuessByResource(embulk,
                 "test_1_rows_seed.yml", "test_1_rows.csv",
                 "test_1_rows_guessed.yml");
-    }
 
-    @Test
-    public void testFor1RowsWithTrimNeeded()
-            throws Exception
-    {
+        // for only 1 row with trim needed
         assertGuessByResource(embulk,
                 "test_1_rows_with_trim_needed_seed.yml", "test_1_rows_with_trim_needed.csv",
                 "test_1_rows_with_trim_needed_guessed.yml");
-    }
 
-    @Test
-    public void testFor1RowsAndHeader()
-            throws Exception
-    {
+        // for header and 1 row
         assertGuessByResource(embulk,
                 "test_1_rows_and_header_seed.yml", "test_1_rows_and_header.csv",
                 "test_1_rows_and_header_guessed.yml");
-    }
 
-    @Test
-    public void testFor1RowsAndHeaderWithTrimNeeded()
-            throws Exception
-    {
+        // for header and 1 row with trim needed
         assertGuessByResource(embulk,
                 "test_1_rows_and_header_with_trim_needed_seed.yml", "test_1_rows_and_header_with_trim_needed.csv",
                 "test_1_rows_and_header_with_trim_needed_guessed.yml");
-    }
 
-    @Test
-    public void testFor2Rows()
-            throws Exception
-    {
+        // for 2 rows
         assertGuessByResource(embulk,
                 "test_2_rows_seed.yml", "test_2_rows.csv",
                 "test_2_rows_guessed.yml");
-    }
 
-    @Test
-    public void testFor2RowsAndHeader()
-            throws Exception
-    {
+        // for header and 2 rows
         assertGuessByResource(embulk,
                 "test_2_rows_and_header_seed.yml", "test_2_rows_and_header.csv",
                 "test_2_rows_and_header_guessed.yml");
     }
 
     @Test
-    public void testFor1IntSingleColumnRow()
+    public void testSingleColumnRows()
             throws Exception
     {
+        // for 1 single int column row
         assertGuessByResource(embulk,
                 "test_1_int_single_column_row_seed.yml", "test_1_int_single_column_row.csv",
                 "test_1_int_single_column_row_guessed.yml");
-    }
 
-    @Test
-    public void testFor1StringSingleColumnRow()
-            throws Exception
-    {
+        // for 1 single string column row
         assertGuessByResource(embulk,
                 "test_1_string_single_column_row_seed.yml", "test_1_string_single_column_row.csv",
                 "test_1_string_single_column_row_guessed.yml");
-    }
 
-    @Test
-    public void testFor2StringSingleColumnRows()
-            throws Exception
-    {
-        assertGuessByResource(embulk,
-                "test_2_string_single_column_rows_seed.yml", "test_2_string_single_column_rows.csv",
-                "test_2_string_single_column_rows_guessed.yml");
-    }
-
-    @Test
-    public void testFor1StringSingleColumnAndHeader()
-            throws Exception
-    {
-        assertGuessByResource(embulk,
-                "test_1_string_single_column_row_and_header_seed.yml", "test_1_string_single_column_row_and_header.csv",
-                "test_1_string_single_column_row_and_header_guessed.yml");
-    }
-
-    @Test
-    public void testFor2IntSingleColumnRows()
-            throws Exception
-    {
-        assertGuessByResource(embulk,
-                "test_2_int_single_column_rows_seed.yml", "test_2_int_single_column_rows.csv",
-                "test_2_int_single_column_rows_guessed.yml");
-    }
-
-    @Test
-    public void testFor1IntSingleColumnAndHeader()
-            throws Exception
-    {
+        // for header and 1 single int column row
         assertGuessByResource(embulk,
                 "test_1_int_single_column_row_and_header_seed.yml", "test_1_int_single_column_row_and_header.csv",
                 "test_1_int_single_column_row_and_header_guessed.yml");
-    }
 
-    @Test
-    public void testIntSingleColumnWithHeader()
-            throws Exception
-    {
+        // for header and 1 single string column row
+        assertGuessByResource(embulk,
+                "test_1_string_single_column_row_and_header_seed.yml", "test_1_string_single_column_row_and_header.csv",
+                "test_1_string_single_column_row_and_header_guessed.yml");
+
+        // for 2 single int column rows
+        assertGuessByResource(embulk,
+                "test_2_int_single_column_rows_seed.yml", "test_2_int_single_column_rows.csv",
+                "test_2_int_single_column_rows_guessed.yml");
+
+        // for 2 single string column rows
+        assertGuessByResource(embulk,
+                "test_2_string_single_column_rows_seed.yml", "test_2_string_single_column_rows.csv",
+                "test_2_string_single_column_rows_guessed.yml");
+
+        // for header and multiple single int column rows
         assertGuessByResource(embulk,
                 "test_int_single_column_with_header_seed.yml", "test_int_single_column_with_header.csv",
                 "test_int_single_column_with_header_guessed.yml");
-    }
 
-    @Test
-    public void testIntSingleColumn()
-            throws Exception
-    {
-        assertGuessByResource(embulk,
-                "test_int_single_column_seed.yml", "test_int_single_column.csv",
-                "test_int_single_column_guessed.yml");
-    }
-
-    @Test
-    public void testStringSingleColumnWithHeader()
-            throws Exception
-    {
+        // for header and multiple single string column rows
         assertGuessByResource(embulk,
                 "test_string_single_column_with_header_seed.yml", "test_string_single_column_with_header.csv",
                 "test_string_single_column_with_header_guessed.yml");
-    }
 
-    @Test
-    public void testStringSingleColumn()
-            throws Exception
-    {
+        // for multiple single int column rows
+        assertGuessByResource(embulk,
+                "test_int_single_column_seed.yml", "test_int_single_column.csv",
+                "test_int_single_column_guessed.yml");
+
+        // for multiple single string column rows
         assertGuessByResource(embulk,
                 "test_string_single_column_seed.yml", "test_string_single_column.csv",
                 "test_string_single_column_guessed.yml");
     }
 
     @Test
-    public void suggestTabAsDelimiter()
+    public void suggestDelimiter()
             throws Exception
     {
+        // comma
+        assertGuessByResource(embulk,
+                "test_comma_delimiter_seed.yml", "test_comma_delimiter.csv",
+                "test_comma_delimiter_guessed.yml");
+
+        // tab
         assertGuessByResource(embulk,
                 "test_tab_delimiter_seed.yml", "test_tab_delimiter.csv",
                 "test_tab_delimiter_guessed.yml");
-    }
 
-    @Test
-    public void suggestSemicolonAsDelimiter()
-            throws Exception
-    {
+        // vertical bar
+        assertGuessByResource(embulk,
+                "test_vertical_bar_delimiter_seed.yml", "test_vertical_bar_delimiter.csv",
+                "test_vertical_bar_delimiter_guessed.yml");
+
+        // semicolon
         assertGuessByResource(embulk,
                 "test_semicolon_delimiter_seed.yml", "test_semicolon_delimiter.csv",
                 "test_semicolon_delimiter_guessed.yml");
     }
 
     @Test
-    public void suggestSingleQuoteAsQuote()
+    public void suggestQuote()
             throws Exception
     {
+        // single quote
         assertGuessByResource(embulk,
                 "test_single_quote_seed.yml", "test_single_quote.csv",
                 "test_single_quote_guessed.yml");
+
+        // double quote
+        assertGuessByResource(embulk,
+                "test_double_quote_seed.yml", "test_double_quote.csv",
+                "test_double_quote_guessed.yml");
+
+        // nil quote
+        assertGuessByResource(embulk,
+                "test_nil_quote_seed.yml", "test_nil_quote.csv",
+                "test_nil_quote_guessed.yml");
     }
 
     @Test
-    public void suggestBackslashAsEscape()
+    public void suggestEscape()
             throws Exception
     {
+        // backslash
         assertGuessByResource(embulk,
                 "test_backslash_escape_seed.yml", "test_backslash_escape.csv",
                 "test_backslash_escape_guessed.yml");
+
+        // double quote
+        assertGuessByResource(embulk,
+                "test_double_quote_escape_seed.yml", "test_double_quote_escape.csv",
+                "test_double_quote_escape_guessed.yml");
     }
 
     static void assertGuessByResource(TestingEmbulk embulk, String seedYamlResourceName, String sourceCsvResourceName,

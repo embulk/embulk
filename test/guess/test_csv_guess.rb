@@ -3,50 +3,6 @@ require 'time'
 require 'embulk/guess/csv'
 
 class CsvGuessTest < ::Test::Unit::TestCase
-  class TestDelimiter < self
-    data(
-      "\t" => "\t",
-      "," => ",",
-      "|" => "|",
-    )
-    def test_delimiter_detection(delim)
-      actual = guess([
-        ["1", "foo"].join(delim),
-        ["2", "bar"].join(delim),
-      ])
-      assert_equal delim, actual["parser"]["delimiter"]
-    end
-  end
-
-  class TestQuote < self
-    data(
-      "'" => "'",
-      '"' => '"',
-      nil => nil,
-    )
-    def test_quote(quotation)
-      actual = guess([
-        %w(1 foo).map{|str| %Q(#{quotation}#{str}#{quotation})}.join("\t"),
-        %w(2 bar).map{|str| %Q(#{quotation}#{str}#{quotation})}.join("\t"),
-      ])
-      assert_equal quotation, actual["parser"]["quote"]
-    end
-  end
-
-  class TestEscape < self
-    data(
-      "\\" => "\\",
-      '"' => '"',
-    )
-    def test_escape(char)
-      actual = guess([
-        %Q('1'\t'F#{char}'OO'),
-        %Q('2'\t'FOOOOOOOO#{char}'OO'),
-      ])
-      assert_equal char, actual["parser"]["escape"]
-    end
-  end
-
   class TestSkipHeaderLines < self
     def test_skip_header_lines_one
       actual = guess([
@@ -86,17 +42,6 @@ class CsvGuessTest < ::Test::Unit::TestCase
     end
   end
 
-  class TestTrim < self
-    def test_trim_flag_when_will_be_long_if_strip_arround_space
-      actual = guess([
-        "  1 \tfoo",
-        "  2 \tfoo",
-        "  3 \tfoo",
-      ])
-      assert_equal true, actual["parser"]["trim_if_not_quoted"]
-    end
-  end
-
   class TestCommentLineMarker < self
     data(
       "#" => "#",
@@ -113,33 +58,6 @@ class CsvGuessTest < ::Test::Unit::TestCase
   end
 
   class TestColumns < self
-    def test_columns_without_header
-      actual = guess([
-        "1\tfoo\t2000-01-01T00:00:00+0900",
-        "2\tbar\t2000-01-01T00:00:00+0900",
-      ])
-      expected = [
-        {"name" => "c0", "type" => "long"},
-        {"name" => "c1", "type" => "string"},
-        {"name" => "c2", "type" => "timestamp", "format"=>"%Y-%m-%dT%H:%M:%S%z"},
-      ]
-      assert_equal expected, actual["parser"]["columns"]
-    end
-
-    def test_columns_with_header
-      actual = guess([
-        "num\tstr\ttime",
-        "1\tfoo\t2000-01-01T00:00:00+0900",
-        "2\tbar\t2000-01-01T00:00:00+0900",
-      ])
-      expected = [
-        {"name" => "num", "type" => "long"},
-        {"name" => "str", "type" => "string"},
-        {"name" => "time", "type" => "timestamp", "format"=>"%Y-%m-%dT%H:%M:%S%z"},
-      ]
-      assert_equal expected, actual["parser"]["columns"]
-    end
-
     def test_complex_line
       actual = guess([
         %Q(this is useless header),
