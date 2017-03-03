@@ -62,7 +62,7 @@ module Embulk::Guess
           return "long"
         end
 
-        if str =~ /^[-]?([1-9]\d*|0)(\.\d+)$/
+        if str =~ /^[-+]?([1-9]\d*|0)(\.\d+)([eE][-+]?[0-9]+)?$/
           return "double"
         end
 
