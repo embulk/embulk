@@ -62,11 +62,8 @@ module Embulk::Guess
           return "long"
         end
 
-        if str.include?('.')
-          a, b = str.split(".", 2)
-          if a.to_i.to_s == a && b.to_i.to_s == b
-            return "double"
-          end
+        if str =~ /^[-]?([1-9]\d*|0)(\.\d+)$/
+          return "double"
         end
 
         if str.empty?
