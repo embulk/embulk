@@ -62,11 +62,12 @@ module Embulk::Guess
           return "long"
         end
 
-        if str.include?('.')
-          a, b = str.split(".", 2)
-          if a.to_i.to_s == a && b.to_i.to_s == b
-            return "double"
-          end
+        # Introduce a regular expression to make better suggestion to double type. It refers to Guava 21.0's regular
+        # expression in Doubles#fpPattern() but, there're difference as following:
+        # * It intentionaly rejects float values when they start with "0" like "001.0", "010.01". "0.1" is ok.
+        # * It doesn't support hexadecimal representation. It could be improved more later.
+        if str =~ /^[+-]?(NaN|Infinity|([1-9]\d*|0)(\.\d+)([eE][+-]?\d+)?[fFdD]?)$/
+          return "double"
         end
 
         if str.empty?

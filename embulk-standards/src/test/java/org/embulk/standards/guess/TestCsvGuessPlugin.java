@@ -157,6 +157,15 @@ public class TestCsvGuessPlugin
     }
 
     @Test
+    public void testDoubleSingleColumn()
+            throws Exception
+    {
+        assertGuessByResource(embulk,
+                "test_double_single_column_seed.yml", "test_double_single_column.csv",
+                "test_double_single_column_guessed.yml");
+    }
+
+    @Test
     public void testStringSingleColumnWithHeader()
             throws Exception
     {
