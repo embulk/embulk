@@ -104,6 +104,11 @@ module Embulk
 
         sample_records = split_lines(parser_guessed, true, sample_lines, delim, {})
 
+        # It should fail if CSV parser cannot parse sample_lines.
+        if sample_records.nil? || sample_records.empty?
+          return {}
+        end
+
         if sample_lines.size == 1
           # The file contains only 1 line. Assume that there are no header line.
           header_line = false
