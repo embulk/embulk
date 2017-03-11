@@ -1,4 +1,5 @@
-
+ENV['EMBULK_ORIG_GEM_HOME'] = ENV['GEM_HOME']
+ENV['EMBULK_ORIG_GEM_PATH'] = ENV['GEM_PATH']
 bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
 
