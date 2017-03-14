@@ -2,6 +2,8 @@ package org.embulk.exec;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Locale;
+
 import javax.validation.constraints.NotNull;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -26,6 +28,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.util.Filters;
+import org.slf4j.Logger;
 
 public class PreviewExecutor
 {
@@ -104,6 +107,9 @@ public class PreviewExecutor
 
     private PreviewResult doPreview(final PreviewTask task, final InputPlugin input, final List<FilterPlugin> filterPlugins)
     {
+        final Logger logger = Exec.getLogger(PreviewExecutor.class);
+        logger.info(String.format(Locale.ENGLISH,"Preview read a sample from the first file up to 32KB. It may raise an exception if input file larger than 32KB."));
+        logger.info(String.format(Locale.ENGLISH,"See also: https://github.com/embulk/embulk/issues/476"));
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
                 public List<TaskReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount)
