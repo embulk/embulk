@@ -75,14 +75,18 @@ Documents
 
    customization
 
-* `JavaDoc <javadoc/index.html>`_
-
-* `RDoc <rdoc/_index.html>`_
-
-* `Github <https://github.com/embulk/embulk>`_
-
 .. toctree::
    :maxdepth: 2
 
    release
 
+For developers
+---------------
+
+* `Github <https://github.com/embulk/embulk>`_
+
+* `JavaDoc <javadoc/index.html>`_
+
+* `RDoc <rdoc/_index.html>`_
+
+* `Other resources for developers <developers/index.html>`_
