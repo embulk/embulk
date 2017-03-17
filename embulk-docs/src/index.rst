@@ -71,11 +71,6 @@ Documents
    built-in
 
 .. toctree::
-   :maxdepth: 3
-
-   customization
-
-.. toctree::
    :maxdepth: 2
 
    release
@@ -90,3 +85,8 @@ For developers
 * `RDoc <rdoc/_index.html>`_
 
 * `Other resources for developers <developers/index.html>`_
+
+.. toctree::
+   :maxdepth: 3
+
+   customization
