@@ -29,7 +29,7 @@ module Embulk
       puts "Checking the latest version..."
       target_version = check_latest_version
 
-      current_version = Gem::Version.new(Embulk::VERSION)
+      current_version = Gem::Version.new(org.embulk.EmbulkVersion::VERSION)
       if Gem::Version.new(target_version) <= current_version
         puts "Already up-to-date. #{current_version} is the latest version."
         return
@@ -64,6 +64,7 @@ module Embulk
           data = File.read("jar:#{java.io.File.new(tmp.path).toURI.toURL}!/embulk/version.rb")
           m = Module.new
           m.module_eval(data)
+          # These Embulk::VERSION is kept for forward compatibility. They are reading downloaded jars.
           unless m::Embulk::VERSION == target_version
             raise "Embulk::VERSION does not match with #{target_version}"
           end

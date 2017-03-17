@@ -249,9 +249,22 @@ task rubyTest(type: JRubyExec) {
 rubyTest.dependsOn('classpath')
 
 //
-// gem task
+// gem tasks
 //
-task gemJRuby(type: JRubyExec, dependsOn: ["classpath"]) {
+
+// TODO(v2)[#566]: Remove this task at the same time with stopping embulk.gem.
+// https://github.com/embulk/embulk/issues/566
+task versionRubyForGemspec() {
+    file("build/tmp").mkdirs()
+    file("build/tmp/embulk").mkdirs()
+    file("build/tmp/embulk/version_for_gemspec.rb").withWriter { out ->
+        out.println("module Embulk")
+        out.println("  VERSION_FOR_GEMSPEC = '${project.version}'")
+        out.println("end")
+    }
+}
+
+task gemJRuby(type: JRubyExec, dependsOn: ["versionRubyForGemspec", "classpath"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
     script './lib/embulk/version.rb'  // dummy
     scriptArgs 'build', 'embulk.gemspec'
@@ -329,8 +342,10 @@ task setVersion {
         File gradle_ver = file('build.gradle')
         gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
 
+        // TODO(v2)[#562]: Remove this part to update the version number in lib/embulk/version.rb.
+        // https://github.com/embulk/embulk/issues/562
         File ruby_ver = file('lib/embulk/version.rb')
-        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
+        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION_INTERNAL = '(\\d+)(\\.\\d+){2}'", "VERSION_INTERNAL = '${to}'"))
 
         List<String> docs = [
             'README.md',
