@@ -236,12 +236,12 @@ public class CsvParserPlugin
         final boolean allowOptionalColumns = task.getAllowOptionalColumns();
         final boolean allowExtraColumns = task.getAllowExtraColumns();
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
-        int skipHeaderLines = task.getSkipHeaderLines();
+        final int skipHeaderLines = task.getSkipHeaderLines();
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (tokenizer.nextFile()) {
                 // skip the header lines for each file
-                for (; skipHeaderLines > 0; skipHeaderLines--) {
+                for (int skipHeaderLineNumber = skipHeaderLines; skipHeaderLineNumber > 0; skipHeaderLineNumber--) {
                     if (!tokenizer.skipHeaderLine()) {
                         break;
                     }
