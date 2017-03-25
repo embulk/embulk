@@ -3,9 +3,12 @@ package org.embulk.exec;
 import java.util.List;
 import com.google.inject.Inject;
 import com.google.common.base.Preconditions;
+import org.embulk.config.Config;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
+import org.embulk.exec.PreviewExecutor.PreviewExecutorTask;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.Page;
@@ -15,6 +18,7 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.PageOutput;
+
 import static org.embulk.spi.util.Inputs.each;
 
 /*
@@ -25,9 +29,18 @@ public class SamplingParserPlugin
 {
     public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig)
     {
+        return runFileInputSampling(runner, inputConfig, Exec.newConfigSource());
+    }
+
+    public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig, ConfigSource execConfig)
+    {
+        PreviewExecutorTask execTask = execConfig.loadConfig(PreviewExecutorTask.class);
+
         // override in.parser.type so that FileInputRunner creates SamplingParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
-        samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
+        samplingInputConfig.getNestedOrSetEmpty("parser")
+                .set("type", "system_sampling")
+                .set("sample_size", execTask.getSampleSize());
         samplingInputConfig.set("decoders", null);
 
         try {
@@ -121,27 +134,35 @@ public class SamplingParserPlugin
     }
 
     private final int minSampleSize;
-    private final int sampleSize;
+
+    public interface PluginTask
+            extends Task
+    {
+        @Config("sample_size")
+        public int getSampleSize();
+    }
 
     @Inject
     public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
         this.minSampleSize = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
-        this.sampleSize = 32*1024;  // TODO get sample size from system config. See also GuessExecutor.run.
-        Preconditions.checkArgument(minSampleSize < sampleSize, "minSampleSize must be smaller than sampleSize");
     }
 
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
-        control.run(Exec.newTaskSource(), null);
+        PluginTask task = config.loadConfig(PluginTask.class);
+        Preconditions.checkArgument(minSampleSize < task.getSampleSize(), "minSampleSize must be smaller than sampleSize");
+
+        control.run(task.dump(), null);
     }
 
     @Override
     public void run(TaskSource taskSource, Schema schema,
             FileInput input, PageOutput output)
     {
-        Buffer buffer = readSample(input, sampleSize);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        Buffer buffer = readSample(input, task.getSampleSize());
         if (!taskSource.get(boolean.class, "force", false)) {
             if (buffer.limit() < minSampleSize) {
                 throw new NotEnoughSampleError(buffer.limit());
