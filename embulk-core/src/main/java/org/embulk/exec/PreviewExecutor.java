@@ -148,12 +148,14 @@ public class PreviewExecutor
         private final Schema schema;
         private List<Page> pages;
         private int recordCount;
+        private PreviewResult res;
 
         public SamplingPageOutput(int sampleRows, Schema schema)
         {
             this.sampleRows = sampleRows;
             this.schema = schema;
             this.pages = new ArrayList<Page>();
+            this.res = null;
         }
 
         public int getRecordCount()
@@ -174,10 +176,15 @@ public class PreviewExecutor
         @Override
         public void finish()
         {
+            if (res != null) {
+                // if PreviewResult object already exists, we should reuse it and throw PreviewedNoticeError.
+                throw new PreviewedNoticeError(res);
+            }
+
             if (recordCount == 0) {
                 throw new NoSampleException("No input records to preview");
             }
-            PreviewResult res = new PreviewResult(schema, pages);
+            res = new PreviewResult(schema, pages);
             pages = null;
             throw new PreviewedNoticeError(res);
         }
