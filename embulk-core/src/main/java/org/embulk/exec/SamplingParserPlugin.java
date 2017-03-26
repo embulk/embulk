@@ -1,6 +1,8 @@
 package org.embulk.exec;
 
+import java.text.NumberFormat;
 import java.util.List;
+
 import com.google.inject.Inject;
 import com.google.common.base.Preconditions;
 import org.embulk.config.Config;
@@ -18,7 +20,9 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.PageOutput;
+import org.slf4j.Logger;
 
+import static java.util.Locale.ENGLISH;
 import static org.embulk.spi.util.Inputs.each;
 
 /*
@@ -133,6 +137,8 @@ public class SamplingParserPlugin
         }
     }
 
+    private final NumberFormat numberFormat = NumberFormat.getNumberInstance(ENGLISH);
+    private final Logger log = Exec.getLogger(this.getClass());
     private final int minSampleSize;
 
     public interface PluginTask
@@ -154,6 +160,7 @@ public class SamplingParserPlugin
         PluginTask task = config.loadConfig(PluginTask.class);
         Preconditions.checkArgument(minSampleSize < task.getSampleSize(), "minSampleSize must be smaller than sampleSize");
 
+        log.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleSize()));
         control.run(task.dump(), null);
     }
 
