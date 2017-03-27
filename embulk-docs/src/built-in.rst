@@ -941,3 +941,35 @@ Example
     out:
       type: ...
       ...
+
+Preview executor
+---------------
+
+The preview executor is called by ``preview`` command. It tries to read sample buffer from a specified input source and writes them to Page objects. ``preview`` outputs the Page objects to console.
+
+Options
+~~~~~~~~
+
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                  | type     | description                                                          | required?                            |
++=======================+==========+======================================================================+======================================+
+| preview_sample_size   | int      | Size of sample buffer that it tries to read from input source.       | 32768 (32KB) by default              |
++-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+
+The ``preview_sample_size`` option controls the size of sample buffer that PreviewExecutor tries to read from specified input source.
+
+This example shows how to change the size of sample buffer.
+
+Example
+~~~~~~~~
+
+.. code-block:: yaml
+
+    exec:
+      preview_sample_size: 65536 # 64KB
+    in:
+      type: ...
+      ...
+    out:
+      type: ...
+      ...
