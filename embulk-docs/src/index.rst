@@ -71,18 +71,22 @@ Documents
    built-in
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
-   customization
+   release
+
+For developers
+---------------
+
+* `Github <https://github.com/embulk/embulk>`_
 
 * `JavaDoc <javadoc/index.html>`_
 
 * `RDoc <rdoc/_index.html>`_
 
-* `Github <https://github.com/embulk/embulk>`_
+* `Other resources for developers <developers/index.html>`_
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   release
-
+   customization
