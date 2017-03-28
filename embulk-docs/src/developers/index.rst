@@ -31,9 +31,15 @@ Design docs for core developers
 * `Summary <https://docs.google.com/document/d/1-8jDAisymt9SwnJpQiEnACIKC-OGMt7Ygv5FpkCeApU/edit>`_
 
   * `Un-JRuby in the boot process <https://docs.google.com/document/d/1f-ziuHY4fXXmSLNHCXP3AAXUajEyPMLQAvH4jgTjpGg/edit>`_
+
   * [TBD] Update plugin loading: non-Gem plugins, namespaces, and versions
+
   * [TBD] Un-JRuby in the plugin load process
+
   * [TBD] Provide better OAuth support in plugins
+
   * [TBD] Buffer in output plugins
+
   * [TBD] Structure documents: configs and errors
+
   * [TBD] Deliver errors and notifications more flexibly
