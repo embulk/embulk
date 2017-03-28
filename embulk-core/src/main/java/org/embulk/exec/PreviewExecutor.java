@@ -26,6 +26,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.util.Filters;
+import org.slf4j.Logger;
 
 public class PreviewExecutor
 {
@@ -144,16 +145,19 @@ public class PreviewExecutor
     private static class SamplingPageOutput
             implements PageOutput
     {
+        private final Logger log = Exec.getLogger(this.getClass());
         private final int sampleRows;
         private final Schema schema;
         private List<Page> pages;
         private int recordCount;
+        private PreviewResult res;
 
         public SamplingPageOutput(int sampleRows, Schema schema)
         {
             this.sampleRows = sampleRows;
             this.schema = schema;
             this.pages = new ArrayList<Page>();
+            this.res = null;
         }
 
         public int getRecordCount()
@@ -174,10 +178,14 @@ public class PreviewExecutor
         @Override
         public void finish()
         {
+            if (res != null) {
+                log.error("PreviewResult recreation will cause a bug. The plugin must call PageOutput#finish() only once.");
+            }
+
             if (recordCount == 0) {
                 throw new NoSampleException("No input records to preview");
             }
-            PreviewResult res = new PreviewResult(schema, pages);
+            res = new PreviewResult(schema, pages);
             pages = null;
             throw new PreviewedNoticeError(res);
         }
