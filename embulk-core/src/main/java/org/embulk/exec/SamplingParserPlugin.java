@@ -44,7 +44,7 @@ public class SamplingParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
         samplingInputConfig.getNestedOrSetEmpty("parser")
                 .set("type", "system_sampling")
-                .set("sample_size", execTask.getSampleSize());
+                .set("sample_buffer_bytes", execTask.getSampleBufferBytes());
         samplingInputConfig.set("decoders", null);
 
         try {
@@ -139,28 +139,28 @@ public class SamplingParserPlugin
 
     private final NumberFormat numberFormat = NumberFormat.getNumberInstance(ENGLISH);
     private final Logger log = Exec.getLogger(this.getClass());
-    private final int minSampleSize;
+    private final int minSampleBufferBytes;
 
     public interface PluginTask
             extends Task
     {
-        @Config("sample_size")
-        public int getSampleSize();
+        @Config("sample_buffer_bytes")
+        public int getSampleBufferBytes();
     }
 
     @Inject
     public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
-        this.minSampleSize = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
+        this.minSampleBufferBytes = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
     }
 
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
-        Preconditions.checkArgument(minSampleSize < task.getSampleSize(), "minSampleSize must be smaller than sampleSize");
+        Preconditions.checkArgument(minSampleBufferBytes < task.getSampleBufferBytes(), "minSampleBufferBytes must be smaller than preview_sample_buffer_bytes");
 
-        log.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleSize()));
+        log.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
         control.run(task.dump(), null);
     }
 
@@ -169,21 +169,21 @@ public class SamplingParserPlugin
             FileInput input, PageOutput output)
     {
         PluginTask task = taskSource.loadTask(PluginTask.class);
-        Buffer buffer = readSample(input, task.getSampleSize());
+        Buffer buffer = readSample(input, task.getSampleBufferBytes());
         if (!taskSource.get(boolean.class, "force", false)) {
-            if (buffer.limit() < minSampleSize) {
+            if (buffer.limit() < minSampleBufferBytes) {
                 throw new NotEnoughSampleError(buffer.limit());
             }
         }
         throw new SampledNoticeError(buffer);
     }
 
-    public static Buffer readSample(FileInput fileInput, int sampleSize)
+    public static Buffer readSample(FileInput fileInput, int sampleBufferBytes)
     {
-        return readSample(fileInput, Buffer.allocate(sampleSize), 0, sampleSize);
+        return readSample(fileInput, Buffer.allocate(sampleBufferBytes), 0, sampleBufferBytes);
     }
 
-    public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleSize)
+    public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleBufferBytes)
     {
         if (!fileInput.nextFile()) {
             // no input files
@@ -196,7 +196,7 @@ public class SamplingParserPlugin
                 sample.setBytes(offset, buffer, 0, size);
                 offset += size;
                 buffer.release();
-                if (offset >= sampleSize) {
+                if (offset >= sampleBufferBytes) {
                     break;
                 }
             }

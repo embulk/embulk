@@ -59,9 +59,9 @@ public class PreviewExecutor
     public interface PreviewExecutorTask
             extends Task
     {
-        @Config("preview_sample_size")
+        @Config("preview_sample_buffer_bytes")
         @ConfigDefault("32768") // 32 * 1024
-        public int getSampleSize();
+        public int getSampleBufferBytes();
     }
 
     @Inject

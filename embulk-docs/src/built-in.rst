@@ -950,15 +950,15 @@ The preview executor is called by ``preview`` command. It tries to read sample b
 Options
 ~~~~~~~~
 
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| name                  | type     | description                                                          | required?                            |
-+=======================+==========+======================================================================+======================================+
-| preview_sample_size   | int      | Size of sample buffer that it tries to read from input source.       | 32768 (32KB) by default              |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
++-------------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                          | type     | description                                                          | required?                            |
++===============================+==========+======================================================================+======================================+
+| preview_sample_buffer_bytes   | int      | Bytes of sample buffer that it tries to read from input source.      | 32768 (32KB) by default              |
++-------------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
 
-The ``preview_sample_size`` option controls the size of sample buffer that PreviewExecutor tries to read from specified input source.
+The ``preview_sample_buffer_bytes`` option controls the bytes of sample buffer that PreviewExecutor tries to read from specified input source.
 
-This example shows how to change the size of sample buffer.
+This example shows how to change the bytes of sample buffer.
 
 Example
 ~~~~~~~~
@@ -966,7 +966,7 @@ Example
 .. code-block:: yaml
 
     exec:
-      preview_sample_size: 65536 # 64KB
+      preview_sample_buffer_bytes: 65536 # 64KB
     in:
       type: ...
       ...
