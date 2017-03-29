@@ -1,5 +1,5 @@
-Scheduled bulk data loading to Elasticsearch + Kibana 4 from CSV files
-==================================
+Scheduled bulk data loading to Elasticsearch + Kibana 5 from CSV files
+======================================================================
 
 .. contents::
    :local:
@@ -11,56 +11,58 @@ This article shows how to:
 * Visualize the data with Kibana interactively.
 * Schedule the data loading every hour using cron.
 
-This guide assumes you are using Ubuntu 12.04 Precise or Mac OS X.
+This guide assumes you are using Ubuntu 16.10 Precise or macOS.
 
-Setup Elasticsearch and Kibana 4
-------------------
+Setup Elasticsearch and Kibana 5
+--------------------------------
 
 Step 1. Download and start Elasticsearch.
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can find releases from the `Elasticsearch website <http://www.elasticsearch.org/download/>`_.
+You can find releases from the `Elasticsearch website <https://www.elastic.co/downloads/elasticsearch>`_.
 For the smallest setup, you can unzip the package and run `./bin/elasticsearch` command:
 
 .. code-block:: console
 
-    $ wget https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/2.2.0/elasticsearch-2.2.0.zip
-    $ unzip elasticsearch-2.2.0.zip
-    $ cd elasticsearch-2.2.0
+    $ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.3.0.zip
+    $ unzip elasticsearch-5.3.0.zip
+    $ cd elasticsearch-5.3.0
     $ ./bin/elasticsearch
 
 Step 2. Download and unzip Kibana:
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can find releases from the `Kibana website <http://www.elasticsearch.org/overview/kibana/installation/>`_. Open a new console and run following commands:
+You can find releases from the `Kibana website <https://www.elastic.co/downloads/kibana>`_. Open a new console and run following commands:
 
 .. code-block:: console
 
-    $ wget https://download.elastic.co/kibana/kibana/kibana-4.4.0-linux-x64.tar.gz
-    $ tar zxvf kibana-4.4.0-linux-x64.tar.gz
-    $ cd kibana-4.4.0-linux-x64
+    $ wget https://artifacts.elastic.co/downloads/kibana/kibana-5.3.0-linux-x86_64.tar.gz
+    $ tar zxvf kibana-5.3.0-linux-x86_64.tar.gz
+    $ cd kibana-5.3.0-linux-x86_64
     $ ./bin/kibana
 
-Note: If you're using Mac OS X, https://download.elastic.co/kibana/kibana/kibana-4.4.0-darwin-x64.tar.gz is the URL to download.
+Note: If you're using macOS, https://artifacts.elastic.co/downloads/kibana/kibana-5.3.0-darwin-x86_64.tar.gz is the URL to download.
 
 Now Elasticsearch and Kibana started. Open http://localhost:5601/ using your browser to see the Kibana's graphical interface.
 
 
 Setup Embulk
-------------------
+------------
 
 Step 1. Download Embulk binary:
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can find the latest embulk binary from the `releases <https://bintray.com/embulk/maven/embulk/view#files>`_. Because Embulk is a single executable binary, you can simply download it to /usr/local/bin directory and set executable flag as following:
+You can find the latest embulk binary from the `releases <https://bintray.com/embulk/maven/embulk/view#files>`_. Because Embulk is a single executable binary, you can simply download it to ~/.embulk/bin directory and set executable flag as following:
 
 .. code-block:: console
 
-    $ sudo wget http://dl.embulk.org/embulk-latest.jar -O /usr/local/bin/embulk
-    $ sudo chmod +x /usr/local/bin/embulk
+    $ curl --create-dirs -o ~/.embulk/bin/embulk -L "https://dl.embulk.org/embulk-latest.jar"
+    $ chmod +x ~/.embulk/bin/embulk
+    $ echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
+    $ source ~/.bashrc
 
 Step 2. Install Elasticsearch plugin
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You also need Elasticsearch plugin for Embulk. You can install the plugin with this command:
 
@@ -140,7 +142,7 @@ Now, you can run the bulk loading:
     $ embulk run config.yml -c diff.yml
 
 Scheduling loading by cron
-------------------
+--------------------------
 
 At the last step, you ran embulk command with ``-c diff.yml`` file. The ``diff.yml`` file should include a parameter named ``last_path``:
 
