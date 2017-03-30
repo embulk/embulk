@@ -30,6 +30,10 @@ import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
 
+import java.nio.file.FileVisitOption;
+import java.util.Set;
+import java.util.EnumSet;
+
 public class LocalFileInputPlugin
         implements FileInputPlugin
 {
@@ -42,6 +46,10 @@ public class LocalFileInputPlugin
         @Config("last_path")
         @ConfigDefault("null")
         Optional<String> getLastPath();
+
+        @Config("follow_symlinks")
+        @ConfigDefault("false")
+        Boolean getFollowSymlinks();
 
         List<String> getFiles();
         void setFiles(List<String> files);
@@ -120,7 +128,16 @@ public class LocalFileInputPlugin
         final String lastPath = task.getLastPath().orNull();
         try {
             log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory.equals(CURRENT_DIR) ? "." : directory.toString(), fileNamePrefix);
-            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
+
+            int maxDepth = Integer.MAX_VALUE;
+            Set<FileVisitOption> opts;
+            if( task.getFollowSymlinks() ) {
+                opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
+            } else {
+                opts = EnumSet.noneOf(FileVisitOption.class);
+            }
+
+            Files.walkFileTree(directory, opts, maxDepth, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs)
                 {
@@ -148,6 +165,13 @@ public class LocalFileInputPlugin
                 @Override
                 public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
                 {
+                    try {
+                        if(  Files.isDirectory(path.toRealPath()) ) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    } catch (IOException ex){
+                        new Throwable(ex);
+                    }
                     if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
                         return FileVisitResult.CONTINUE;
                     } else {
