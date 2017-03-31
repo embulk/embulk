@@ -27,7 +27,8 @@ public class TempFileSpace
 
     public File createTempFile(String fileExt)
     {
-        return createTempFile(Thread.currentThread().getName()+"_", fileExt);
+        // Thread names contain ':' which is not valid as file names in Windows.
+        return createTempFile(Thread.currentThread().getName().replaceAll(":", "_") + "_", fileExt);
     }
 
     public File createTempFile(String prefix, String fileExt)
