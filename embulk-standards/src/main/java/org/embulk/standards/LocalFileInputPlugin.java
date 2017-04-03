@@ -31,8 +31,8 @@ import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
 
 import java.nio.file.FileVisitOption;
-import java.util.Set;
 import java.util.EnumSet;
+import java.util.Set;
 
 public class LocalFileInputPlugin
         implements FileInputPlugin
@@ -48,8 +48,8 @@ public class LocalFileInputPlugin
         Optional<String> getLastPath();
 
         @Config("follow_symlinks")
-        @ConfigDefault("false")
-        Boolean getFollowSymlinks();
+        @ConfigDefault("true")
+        boolean getFollowSymlinks();
 
         List<String> getFiles();
         void setFiles(List<String> files);
@@ -166,11 +166,14 @@ public class LocalFileInputPlugin
                 public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
                 {
                     try {
-                        if(  Files.isDirectory(path.toRealPath()) ) {
+                        // Check symbolic file which points to a directory.
+                        // This part is called if the option `follow_symlinks` false.
+                        // If the real path is a directory, just ignore it.
+                        if(Files.isDirectory(path.toRealPath())) {
                             return FileVisitResult.CONTINUE;
                         }
                     } catch (IOException ex){
-                        new Throwable(ex);
+                        throw new RuntimeException("Can't resolve symbolic link",ex);
                     }
                     if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
                         return FileVisitResult.CONTINUE;
