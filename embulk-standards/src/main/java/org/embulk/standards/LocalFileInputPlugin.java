@@ -135,6 +135,7 @@ public class LocalFileInputPlugin
                 opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             } else {
                 opts = EnumSet.noneOf(FileVisitOption.class);
+                log.info("The option `follow_symlinks` set to `false`. Disable visit symbolic links to directories.");
             }
 
             Files.walkFileTree(directory, opts, maxDepth, new SimpleFileVisitor<Path>() {
