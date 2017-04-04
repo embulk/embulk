@@ -13,12 +13,12 @@ public final class EmbulkVersion
     static {
         final Properties properties = new Properties();
         String versionLoaded = null;
-        try (InputStream input = EmbulkVersion.class.getClassLoader().getResourceAsStream("version.properties")) {
+        try (InputStream input = EmbulkVersion.class.getClassLoader().getResourceAsStream("embulk.properties")) {
             properties.load(input);
             versionLoaded = properties.getProperty("version");
         }
         catch (IOException ex) {
-            versionLoaded = "(version-properties-not-found)";
+            versionLoaded = "(embulk-java-properties-not-found)";
         }
         VERSION = versionLoaded;
     }

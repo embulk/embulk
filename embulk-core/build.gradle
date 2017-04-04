@@ -4,9 +4,9 @@ apply plugin: "com.github.jruby-gradle.jar"
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
 processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gemlib")
 
-task versionProperty(dependsOn: processResources) {
+task embulkJavaProperty(dependsOn: processResources) {
     doLast {
-        new File("$buildDir/resources/main/version.properties").withWriter { w ->
+        new File("$buildDir/resources/main/embulk.properties").withWriter { w ->
             Properties p = new Properties()
             p['version'] = project.version.toString()
             p.store w, null
@@ -15,7 +15,7 @@ task versionProperty(dependsOn: processResources) {
 }
 
 classes {
-    dependsOn versionProperty
+    dependsOn embulkJavaProperty
 }
 
 configurations {
