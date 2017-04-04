@@ -176,6 +176,16 @@ Task `dependencies` shows dependency tree of embulk-core project:
 ./gradlew :embulk-core:dependencies
 ```
 
+### Update JRuby
+
+Task `updateJRuby` updates JRuby version of embulk-core project.
+
+This is an example to update JRuby to `9.1.5.0`.
+
+```
+./gradlew updateJRuby -Pto=9.1.5.0
+```
+
 ### Documents
 
 Embulk uses Sphinx, YARD (Ruby API) and JavaDoc (Java API) for document generation.
