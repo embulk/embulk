@@ -131,7 +131,7 @@ public class LocalFileInputPlugin
 
             int maxDepth = Integer.MAX_VALUE;
             Set<FileVisitOption> opts;
-            if( task.getFollowSymlinks() ) {
+            if(task.getFollowSymlinks()) {
                 opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             } else {
                 opts = EnumSet.noneOf(FileVisitOption.class);
@@ -166,14 +166,15 @@ public class LocalFileInputPlugin
                 public FileVisitResult visitFile(Path path, BasicFileAttributes attrs)
                 {
                     try {
-                        // Check symbolic file which points to a directory.
-                        // This part is called if the option `follow_symlinks` false.
-                        // If the real path is a directory, just ignore it.
-                        if(Files.isDirectory(path.toRealPath())) {
+                        // Avoid directories from listing.
+                        // Directories are normally unvisited with |FileVisitor#visitFile|, but symbolic links to
+                        // directories are visited like files unless |FOLLOW_LINKS| is set in |Files#walkFileTree|.
+                        // Symbolic links to directories are explicitly skipped here by checking with |Path#toReadlPath|.
+                        if (Files.isDirectory(path.toRealPath())) {
                             return FileVisitResult.CONTINUE;
                         }
                     } catch (IOException ex){
-                        throw new RuntimeException("Can't resolve symbolic link",ex);
+                        throw new RuntimeException("Can't resolve symbolic link", ex);
                     }
                     if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
                         return FileVisitResult.CONTINUE;
