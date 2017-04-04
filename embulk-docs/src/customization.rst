@@ -19,7 +19,7 @@ Creating a new plugin is 4 steps:
 This article describes how to create a plugin step by step.
 
 Step 1: Creating a new project
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Embulk comes with a number of templates that generates a new project so that you can start development instantly. Because the generated project contains completely working code without additional code, you can focus on the necessary coding.
 
@@ -59,7 +59,7 @@ For example, if you want to parse a new file format using Java, type this comman
 This will create a Java-based parser plugin called ``myformat`` in ``embulk-parser-myformat`` directory.
 
 Step 2: Building the project
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the plugin is Java-based, you need to build the project. To build, type this command:
 
@@ -71,7 +71,7 @@ If the plugin is Java-based, you need to build the project. To build, type this 
 Now, the plugin is ready to use.
 
 Step 3: Confirm it works
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The next step is to actually use the plugin.
 
@@ -82,7 +82,7 @@ Let's suppose you have a configuration file named ``your-config.yml``. You can u
     $ embulk run -L ./embulk-parser-myformat/ your-config.yml
 
 Step 4: Modifying the code
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The final step is to modify code as you want!
 
@@ -104,7 +104,7 @@ Releasing plugins
 You can release publicly so that all people can use your awesome plugins.
 
 Checking plugin description
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To prepare the plugin ready to release, you need to include some additional information. The plugin information is written in this file:
 
@@ -136,14 +136,14 @@ You will find following section in the file.
 The items in above example are important. Please make sure that they are good.
 
 Creating account on RubyGems.org
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Embulk uses `RubyGems.org <https://rubygems.org/>`_ as a package distribution service. Please create an account there to release plugins at `Sign Up <https://rubygems.org/sign_up>`_ page.
 
 Don't forget the password! It will be necessary at the next step.
 
 Releasing the plugin to RubyGems.org
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now, you're ready to release the plugin. To release, type following command:
 
@@ -158,7 +158,7 @@ Now, you're ready to release the plugin. To release, type following command:
 If everything is good, you can find your plugin at https://rubygems.org/. Congratulations!
 
 Installing your plugin
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 Usage of plugin installer is:
 
