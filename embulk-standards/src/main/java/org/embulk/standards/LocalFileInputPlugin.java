@@ -131,11 +131,11 @@ public class LocalFileInputPlugin
 
             int maxDepth = Integer.MAX_VALUE;
             Set<FileVisitOption> opts;
-            if(task.getFollowSymlinks()) {
+            if (task.getFollowSymlinks()) {
                 opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             } else {
                 opts = EnumSet.noneOf(FileVisitOption.class);
-                log.info("The option `follow_symlinks` set to `false`. Disable visit symbolic links to directories.");
+                log.info("\"follow_symlinks\" is set false. Note that symbolic links to directories are skipped.");
             }
 
             Files.walkFileTree(directory, opts, maxDepth, new SimpleFileVisitor<Path>() {
