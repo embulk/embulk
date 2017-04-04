@@ -11,10 +11,10 @@ module Embulk
       unless @@warned
         if Embulk.method_defined?(:logger)
           Embulk.logger.warn(DEPRECATED_MESSAGE)
+          @@warned = true
         else
           STDERR.puts(DEPRECATED_MESSAGE)
         end
-        @@warned = true
       end
       return VERSION_INTERNAL
     else
