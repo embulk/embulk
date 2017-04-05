@@ -1,9 +1,10 @@
-$LOAD_PATH.push File.expand_path("../build/tmp", __FILE__)
-require 'embulk/version_for_gemspec'
+# TODO(v2)[#566]: Remove this embulk.gemspec.
+$LOAD_PATH.push File.expand_path("../lib", __FILE__)
+require 'embulk/version'
 
 Gem::Specification.new do |gem|
   gem.name          = "embulk"
-  gem.version       = Embulk::VERSION_FOR_GEMSPEC
+  gem.version       = Embulk::VERSION_INTERNAL
 
   gem.summary       = "Embulk, a plugin-based parallel bulk data loader"
   gem.description   = "Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control."

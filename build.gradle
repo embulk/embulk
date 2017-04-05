@@ -249,22 +249,9 @@ task rubyTest(type: JRubyExec) {
 rubyTest.dependsOn('classpath')
 
 //
-// gem tasks
+// gem task
 //
-
-// TODO(v2)[#566]: Remove this task at the same time with stopping embulk.gem.
-// https://github.com/embulk/embulk/issues/566
-task versionRubyForGemspec() {
-    file("build/tmp").mkdirs()
-    file("build/tmp/embulk").mkdirs()
-    file("build/tmp/embulk/version_for_gemspec.rb").withWriter { out ->
-        out.println("module Embulk")
-        out.println("  VERSION_FOR_GEMSPEC = '${project.version}'")
-        out.println("end")
-    }
-}
-
-task gemJRuby(type: JRubyExec, dependsOn: ["versionRubyForGemspec", "classpath"]) {
+task gemJRuby(type: JRubyExec, dependsOn: ["classpath"]) {
     jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
     script './lib/embulk/version.rb'  // dummy
     scriptArgs 'build', 'embulk.gemspec'
