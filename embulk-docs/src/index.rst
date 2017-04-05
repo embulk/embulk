@@ -29,7 +29,7 @@ You can define a bulk data loading using combination of input and output plugins
    :width: 640px
    :target: https://github.com/embulk/embulk#quick-start
 
-For example, `this tutorial <recipe/scheduled-csv-load-to-elasticsearch-kibana4.html>`_ describes how to use **file** input plugin with **csv** parser plugin and **gzip** decoder plugin to read CSV files, and **elasticsearch** output plugin to load the records to Elasticsearch.
+For example, `this tutorial <recipe/scheduled-csv-load-to-elasticsearch-kibana5.html>`_ describes how to use **file** input plugin with **csv** parser plugin and **gzip** decoder plugin to read CSV files, and **elasticsearch** output plugin to load the records to Elasticsearch.
 
 Documents
 ------------------
