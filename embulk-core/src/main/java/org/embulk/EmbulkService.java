@@ -9,6 +9,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
+import org.embulk.jar.JarPluginSourceModule;
 import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.jruby.JRubyScriptingModule;
@@ -45,6 +46,7 @@ public class EmbulkService
                 new ExtensionServiceLoaderModule(systemConfig),
                 new PluginClassLoaderModule(systemConfig),
                 new BuiltinPluginSourceModule(),
+                new JarPluginSourceModule(systemConfig),
                 new JRubyScriptingModule(systemConfig));
     }
 
