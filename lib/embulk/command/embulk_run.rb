@@ -226,17 +226,7 @@ examples:
 
     case subcmd
     when :example
-      require 'embulk/command/embulk_example'
-      path = ARGV[0] || "embulk-example"
-      puts "Creating #{path} directory..."
-      Embulk.create_example(path)
-      puts ""
-      puts "Run following subcommands to try embulk:"
-      puts ""
-      puts "   1. embulk guess #{File.join(path, 'seed.yml')} -o config.yml"
-      puts "   2. embulk preview config.yml"
-      puts "   3. embulk run config.yml"
-      puts ""
+      (org.embulk.cli.EmbulkExample.new).createExample(ARGV[0] || "embulk-example")
 
     when :new
       lang_cate = ARGV[0]
