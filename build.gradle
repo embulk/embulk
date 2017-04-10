@@ -329,8 +329,10 @@ task setVersion {
         File gradle_ver = file('build.gradle')
         gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
 
+        // TODO(v2)[#562]: Remove this part to update the version number in lib/embulk/version.rb.
+        // https://github.com/embulk/embulk/issues/562
         File ruby_ver = file('lib/embulk/version.rb')
-        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION = '(\\d+)(\\.\\d+){2}'", "VERSION = '${to}'"))
+        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION_INTERNAL = '(\\d+)(\\.\\d+){2}'", "VERSION_INTERNAL = '${to}'"))
 
         List<String> docs = [
             'README.md',

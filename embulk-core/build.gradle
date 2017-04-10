@@ -4,6 +4,20 @@ apply plugin: "com.github.jruby-gradle.jar"
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
 processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gemlib")
 
+task embulkJavaProperty(dependsOn: processResources) {
+    doLast {
+        new File("$buildDir/resources/main/embulk.properties").withWriter { w ->
+            Properties p = new Properties()
+            p['version'] = project.version.toString()
+            p.store w, null
+        }
+    }
+}
+
+classes {
+    dependsOn embulkJavaProperty
+}
+
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
     // with ones bundled in jruby-complete and cause bytecode compatibility error

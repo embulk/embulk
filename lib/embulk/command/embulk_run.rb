@@ -11,7 +11,7 @@ module Embulk
     i = argv.find_index {|arg| arg !~ /^\-/ }
     unless i
       if argv.include?('--version')
-        puts "embulk #{Embulk::VERSION}"
+        puts "embulk #{org.embulk.EmbulkVersion::VERSION}"
         system_exit_success
       end
       usage nil
@@ -21,9 +21,9 @@ module Embulk
     require 'java'
     require 'optparse'
     op = OptionParser.new
-    op.version = Embulk::VERSION
+    op.version = org.embulk.EmbulkVersion::VERSION
 
-    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{Embulk::VERSION}"
+    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{org.embulk.EmbulkVersion::VERSION}"
 
     plugin_paths = []
     load_paths = []
@@ -399,7 +399,7 @@ examples:
   end
 
   def self.usage(message)
-    STDERR.puts "Embulk v#{Embulk::VERSION}"
+    STDERR.puts "Embulk v#{org.embulk.EmbulkVersion::VERSION}"
     STDERR.puts "Usage: embulk [-vm-options] <command> [--options]"
     STDERR.puts "Commands:"
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
