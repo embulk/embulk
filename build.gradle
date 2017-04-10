@@ -366,7 +366,7 @@ task updateJRuby {
         File gemspec_ver  = file('embulk.gemspec')
         gemspec_ver.write(gemspec_ver.getText().replaceFirst("gem.add_dependency \"jruby-jars\", '= (\\d+)(\\.\\d+){3}'", "gem.add_dependency \"jruby-jars\", '= ${to}'"))
 
-        File migrate_plugin_ver  = file('lib/embulk/command/embulk_migrate_plugin.rb')
+        File migrate_plugin_ver  = file('embulk-cli/src/main/java/org/embulk/cli/EmbulkMigrate.java')
         migrate_plugin_ver.write(migrate_plugin_ver.getText().replaceFirst("\".ruby-version\", \"jruby-(\\d+)(\\.\\d+){3}\"", "\".ruby-version\", \"jruby-${to}\""))
 
         File gemfile_lock_ver  = file('Gemfile.lock')

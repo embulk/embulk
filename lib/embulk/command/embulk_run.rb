@@ -232,9 +232,7 @@ examples:
       (org.embulk.cli.EmbulkNew.new(ARGV[0], ARGV[1], org.embulk.EmbulkVersion::VERSION)).newPlugin()
 
     when :migrate
-      path = ARGV[0]
-      require 'embulk/command/embulk_migrate_plugin'
-      Embulk.migrate_plugin(path)
+      (org.embulk.cli.EmbulkMigrate.new).migratePlugin(ARGV[0], org.embulk.EmbulkVersion::VERSION)
 
     when :selfupdate
       (org.embulk.cli.EmbulkSelfUpdate.new).updateSelf(org.embulk.EmbulkVersion::VERSION,
