@@ -1,6 +1,7 @@
 dependencies {
     compile project(':embulk-core')
     compile project(':embulk-standards')
+    compile 'org.apache.velocity:velocity:1.7'
 
     testCompile project(':embulk-core').sourceSets.test.output
 }

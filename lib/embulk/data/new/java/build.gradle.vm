@@ -19,8 +19,8 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 dependencies {
-    compile  "org.embulk:embulk-core:<%= org.embulk.EmbulkVersion::VERSION %>"
-    provided "org.embulk:embulk-core:<%= org.embulk.EmbulkVersion::VERSION %>"
+    compile  "org.embulk:embulk-core:${embulkVersion}"
+    provided "org.embulk:embulk-core:${embulkVersion}"
     // compile "YOUR_JAR_DEPENDENCY_GROUP:YOUR_JAR_DEPENDENCY_MODULE:YOUR_JAR_DEPENDENCY_VERSION"
     testCompile "junit:junit:4.+"
 }
@@ -63,7 +63,7 @@ task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
 task "package"(dependsOn: ["gemspec", "classpath"]) {
     doLast {
         println "> Build succeeded."
-        println "> You can run embulk with '-L ${file(".").absolutePath}' argument."
+        println "> You can run embulk with ${argumentToRunEmbulkJava} argument."
     }
 }
 
@@ -75,12 +75,12 @@ task gemspec {
 Gem::Specification.new do |spec|
   spec.name          = "${project.name}"
   spec.version       = "${project.version}"
-  spec.authors       = [<%= author.dump %>]
-  spec.summary       = %[<%= display_name %> <%= display_category %> plugin for Embulk]
-  spec.description   = %[<%= description %>]
-  spec.email         = [<%= email.dump %>]
+  spec.authors       = ["${author}"]
+  spec.summary       = %[${displayName} ${displayCategory} plugin for Embulk]
+  spec.description   = %[${description}]
+  spec.email         = ["${email}"]
   spec.licenses      = ["MIT"]
-  # TODO set this: spec.homepage      = <%= "https://github.com/#{email[/([^@]*)/]}/#{full_project_name}".dump %>
+  # TODO set this: spec.homepage      = "https://github.com/${expectedGitHubAccount}/${fullProjectName}"
 
   spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
   spec.test_files    = spec.files.grep(%r"^(test|spec)/")

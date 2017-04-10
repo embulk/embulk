@@ -1,21 +1,23 @@
-package <%= java_package_name %>;
+package ${javaPackageName};
 
 import java.io.InputStream;
 import java.io.IOException;
+
 import com.google.common.base.Optional;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.FileInput;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.util.FileInputInputStream;
 import org.embulk.spi.util.InputStreamFileInput;
 
-public class <%= java_class_name %>
+public class ${javaClassName}
         implements DecoderPlugin
 {
     public interface PluginTask
@@ -53,7 +55,7 @@ public class <%= java_class_name %>
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         // Write your code here :)
-        throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet");
+        throw new UnsupportedOperationException("${javaClassName}.open method is not implemented yet");
 
         // If expect InputStream, you can use this code:
 

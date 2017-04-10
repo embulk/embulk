@@ -1,8 +1,8 @@
 module Embulk
   module Input
 
-    class <%= ruby_class_name %> < InputPlugin
-      Plugin.register_input(<%= name.dump %>, self)
+    class ${rubyClassName} < InputPlugin
+      Plugin.register_input("${name}", self)
 
       def self.transaction(config, &control)
         # configuration code:
@@ -29,14 +29,14 @@ module Embulk
       end
 
       # TODO
-      #def self.guess(config)
-      #  sample_records = [
-      #    {"example"=>"a", "column"=>1, "value"=>0.1},
-      #    {"example"=>"a", "column"=>2, "value"=>0.2},
-      #  ]
-      #  columns = Guess::SchemaGuess.from_hash_records(sample_records)
-      #  return {"columns" => columns}
-      #end
+      # def self.guess(config)
+      #   sample_records = [
+      #     {"example"=>"a", "column"=>1, "value"=>0.1},
+      #     {"example"=>"a", "column"=>2, "value"=>0.2},
+      #   ]
+      #   columns = Guess::SchemaGuess.from_hash_records(sample_records)
+      #   return {"columns" => columns}
+      # end
 
       def init
         # initialization code:

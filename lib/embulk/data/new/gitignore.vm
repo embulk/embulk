@@ -1,7 +1,7 @@
 *~
 /pkg/
 /tmp/
-%if language == :java
+#if (${language} == "java")
 *.gemspec
 .gradle/
 /classpath/
@@ -11,7 +11,7 @@ build/
 /.metadata/
 .classpath
 .project
-%elsif language == :ruby
+#elseif (${language} == "ruby")
 /.bundle/
 /Gemfile.lock
-%end
+#end
