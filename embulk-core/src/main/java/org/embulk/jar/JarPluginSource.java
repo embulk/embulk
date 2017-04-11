@@ -8,6 +8,8 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -72,14 +74,35 @@ public class JarPluginSource
 
         final URL jarUrl;
         final URL urlPluginProperties;
+        final URL urlJarSelf;
         try {
             jarUrl = jarPath.toUri().toURL();
+            urlJarSelf = new URL("jar:" + jarPath.toUri().toURL().toString() + "!/");
             urlPluginProperties = new URL("jar:" + jarPath.toUri().toURL().toString() + "!/plugin.properties");
         }
         catch (MalformedURLException ex) {
             throw new PluginSourceNotMatchException("Invalid plugin path: " + jarPath.toString(), ex);
         }
 
+        final JarURLConnection jarUrlConnection;
+        try {
+            jarUrlConnection = (JarURLConnection) urlJarSelf.openConnection();
+        }
+        catch (IOException ex) {
+            throw new PluginSourceNotMatchException("Invalid plugin: invalid jar format.", ex);
+        }
+        final Manifest pluginManifest;
+        try {
+            pluginManifest = jarUrlConnection.getManifest();
+        }
+        catch (IOException ex) {
+            throw new PluginSourceNotMatchException("Invalid plugin: invalid manifest.", ex);
+        }
+
+        final String pluginMainClassName = pluginManifest.getMainAttributes().getValue("Embulk-Plugin-Main-Class");
+        System.out.printf("Read manifest: %s\n", pluginMainClassName);
+
+        /*
         final Properties pluginProperties = new Properties();
         try (final InputStream inputFromProperties =
              ((JarURLConnection) urlPluginProperties.openConnection()).getInputStream()) {
@@ -90,6 +113,8 @@ public class JarPluginSource
         }
 
         final String pluginMainClassName = pluginProperties.getProperty("pluginMainClass");
+        */
+
         if (pluginMainClassName == null) {
             throw new PluginSourceNotMatchException("Invalid plugin: \"pluginMainClass\" not in plugin.properties.");
         }
