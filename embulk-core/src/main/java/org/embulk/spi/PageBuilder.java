@@ -1,14 +1,8 @@
 package org.embulk.spi;
 
-import java.io.Serializable;
-import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Collections;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import org.msgpack.value.Value;
@@ -30,7 +24,7 @@ public class PageBuilder
     private int count;
     private int position;
     private final byte[] nullBitSet;
-    private final BiMap<String, Integer> stringReferences = HashBiMap.create();
+    private List<String> stringReferences = new ArrayList<>();
     private List<ImmutableValue> valueReferences = new ArrayList<>();
     private int referenceSize;
     private int nextVariableLengthDataOffset;
@@ -128,15 +122,10 @@ public class PageBuilder
             return;
         }
 
-        Integer reuseIndex = stringReferences.get(value);
-        if (reuseIndex != null) {
-            bufferSlice.setInt(getOffset(columnIndex), reuseIndex);
-        } else {
-            int index = stringReferences.size();
-            stringReferences.put(value, index);
-            bufferSlice.setInt(getOffset(columnIndex), index);
-            referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
-        }
+        int index = stringReferences.size();
+        stringReferences.add(value);
+        bufferSlice.setInt(getOffset(columnIndex), index);
+        referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
         clearNull(columnIndex);
     }
 
@@ -184,33 +173,6 @@ public class PageBuilder
         return position + columnOffsets[columnIndex];
     }
 
-    private static class StringReferenceSortComparator
-            implements Comparator<Map.Entry<String, Integer>>, Serializable
-    {
-        @Override
-        public int compare(Map.Entry<String, Integer> e1, Map.Entry<String, Integer> e2)
-        {
-            return e1.getValue().compareTo(e2.getValue());
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            return obj instanceof StringReferenceSortComparator;
-        }
-    }
-
-    private List<String> getSortedStringReferences()
-    {
-        ArrayList<Map.Entry<String, Integer>> s = new ArrayList<>(stringReferences.entrySet());
-        Collections.sort(s, new StringReferenceSortComparator());
-        String[] array = new String[s.size()];
-        for (int i=0; i < array.length; i++) {
-            array[i] = s.get(i).getKey();
-        }
-        return Arrays.asList(array);
-    }
-
     public void addRecord()
     {
         // record header
@@ -237,7 +199,7 @@ public class PageBuilder
 
             // flush page
             Page page = Page.wrap(buffer)
-                .setStringReferences(getSortedStringReferences())
+                .setStringReferences(stringReferences)
                 .setValueReferences(valueReferences);
             buffer = null;
             bufferSlice = null;
