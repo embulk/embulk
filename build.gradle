@@ -224,6 +224,8 @@ project(':embulk-cli') {
     apply plugin: 'com.github.johnrengelman.shadow'
 
     shadowJar {
+        // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
+        // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
         manifest {
             attributes 'Implementation-Title': project.name,
                        'Implementation-Version': project.version,
