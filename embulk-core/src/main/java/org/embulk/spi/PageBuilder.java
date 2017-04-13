@@ -24,6 +24,7 @@ public class PageBuilder
     private int count;
     private int position;
     private final byte[] nullBitSet;
+    private final Row row;
     private List<String> stringReferences = new ArrayList<>();
     private List<ImmutableValue> valueReferences = new ArrayList<>();
     private int referenceSize;
@@ -37,6 +38,7 @@ public class PageBuilder
         this.columnOffsets = PageFormat.columnOffsets(schema);
         this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
         Arrays.fill(nullBitSet, (byte) -1);
+        this.row = Row.newRow(schema);
         this.fixedRecordSize = PageFormat.recordHeaderSize(schema) + PageFormat.totalColumnSize(schema);
         this.nextVariableLengthDataOffset = fixedRecordSize;
         newBuffer();
@@ -65,12 +67,8 @@ public class PageBuilder
 
     public void setNull(int columnIndex)
     {
-        nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
-    }
+        row.setNull(columnIndex);
 
-    private void clearNull(int columnIndex)
-    {
-        nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
     }
 
     public void setBoolean(Column column, boolean value)
@@ -81,8 +79,7 @@ public class PageBuilder
 
     public void setBoolean(int columnIndex, boolean value)
     {
-        bufferSlice.setByte(getOffset(columnIndex), value ? (byte) 1 : (byte) 0);
-        clearNull(columnIndex);
+        row.setBoolean(columnIndex, value);
     }
 
     public void setLong(Column column, long value)
@@ -93,8 +90,7 @@ public class PageBuilder
 
     public void setLong(int columnIndex, long value)
     {
-        bufferSlice.setLong(getOffset(columnIndex), value);
-        clearNull(columnIndex);
+        row.setLong(columnIndex, value);
     }
 
     public void setDouble(Column column, double value)
@@ -105,8 +101,7 @@ public class PageBuilder
 
     public void setDouble(int columnIndex, double value)
     {
-        bufferSlice.setDouble(getOffset(columnIndex), value);
-        clearNull(columnIndex);
+        row.setDouble(columnIndex, value);
     }
 
     public void setString(Column column, String value)
@@ -119,14 +114,10 @@ public class PageBuilder
     {
         if (value == null) {
             setNull(columnIndex);
-            return;
         }
-
-        int index = stringReferences.size();
-        stringReferences.add(value);
-        bufferSlice.setInt(getOffset(columnIndex), index);
-        referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
-        clearNull(columnIndex);
+        else {
+            row.setString(columnIndex, value);
+        }
     }
 
     public void setJson(Column column, Value value)
@@ -139,14 +130,10 @@ public class PageBuilder
     {
         if (value == null) {
             setNull(columnIndex);
-            return;
         }
-
-        int index = valueReferences.size();
-        valueReferences.add(value.immutableValue());
-        bufferSlice.setInt(getOffset(columnIndex), index);
-        referenceSize += 256;  // TODO how to estimate size of the value?
-        clearNull(columnIndex);
+        else {
+            row.setJson(columnIndex, value);
+        }
     }
 
     public void setTimestamp(Column column, Timestamp value)
@@ -159,13 +146,64 @@ public class PageBuilder
     {
         if (value == null) {
             setNull(columnIndex);
-            return;
         }
+        else {
+            row.setTimestamp(columnIndex, value);
+        }
+    }
 
+    void writeNull(int columnIndex)
+    {
+        nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
+    }
+
+    private void clearNullVal(int columnIndex)
+    {
+        nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
+    }
+
+    void writeBoolean(int columnIndex, boolean value)
+    {
+        bufferSlice.setByte(getOffset(columnIndex), value ? (byte) 1 : (byte) 0);
+        clearNullVal(columnIndex);
+    }
+
+    void writeLong(int columnIndex, long value)
+    {
+        bufferSlice.setLong(getOffset(columnIndex), value);
+        clearNullVal(columnIndex);
+    }
+
+    void writeDouble(int columnIndex, double value)
+    {
+        bufferSlice.setDouble(getOffset(columnIndex), value);
+        clearNullVal(columnIndex);
+    }
+
+    void writeString(int columnIndex, String value)
+    {
+        int index = stringReferences.size();
+        stringReferences.add(value);
+        bufferSlice.setInt(getOffset(columnIndex), index);
+        referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
+        clearNullVal(columnIndex);
+    }
+
+    void writeJson(int columnIndex, Value value)
+    {
+        int index = valueReferences.size();
+        valueReferences.add(value.immutableValue());
+        bufferSlice.setInt(getOffset(columnIndex), index);
+        referenceSize += 256;  // TODO how to estimate size of the value?
+        clearNullVal(columnIndex);
+    }
+
+    void writeTimestamp(int columnIndex, Timestamp value)
+    {
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
         bufferSlice.setInt(offset + 8, value.getNano());
-        clearNull(columnIndex);
+        clearNullVal(columnIndex);
     }
 
     private int getOffset(int columnIndex)
@@ -175,6 +213,9 @@ public class PageBuilder
 
     public void addRecord()
     {
+        // record
+        Row.writeRow(this, row);
+
         // record header
         bufferSlice.setInt(position, nextVariableLengthDataOffset);  // nextVariableLengthDataOffset means record size
         bufferSlice.setBytes(position + 4, nullBitSet);
