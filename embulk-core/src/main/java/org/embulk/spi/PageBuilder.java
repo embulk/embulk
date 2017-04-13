@@ -214,7 +214,7 @@ public class PageBuilder
     public void addRecord()
     {
         // record
-        Row.writeRow(this, row);
+        row.write(this);
 
         // record header
         bufferSlice.setInt(position, nextVariableLengthDataOffset);  // nextVariableLengthDataOffset means record size

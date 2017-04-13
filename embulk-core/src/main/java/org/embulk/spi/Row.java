@@ -16,13 +16,6 @@ class Row
         return new Row(values);
     }
 
-    static void writeRow(PageBuilder pageBuilder, Row row)
-    {
-        for (Val v : row.values) {
-            v.writeValue(pageBuilder);
-        }
-    }
-
     private static Val newValue(Column column)
     {
         Type type = column.getType();
@@ -63,51 +56,58 @@ class Row
 
     void setBoolean(int columnIndex, boolean value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setBoolean(value);
     }
 
     void setLong(int columnIndex, long value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setLong(value);
     }
 
     void setDouble(int columnIndex, double value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setDouble(value);
     }
 
     void setString(int columnIndex, String value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setString(value);
     }
 
     void setJson(int columnIndex, Value value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setJson(value);
     }
 
     void setTimestamp(int columnIndex, Timestamp value)
     {
-        values[columnIndex].set(value);
+        values[columnIndex].setTimestamp(value);
+    }
+
+    void write(PageBuilder pageBuilder)
+    {
+        for (Val v : values) {
+            v.write(pageBuilder);
+        }
     }
 
     interface Val
     {
-        void set(boolean value);
+        void setBoolean(boolean value);
 
-        void set(long value);
+        void setLong(long value);
 
-        void set(double value);
+        void setDouble(double value);
 
-        void set(String value);
+        void setString(String value);
 
-        void set(Value value);
+        void setJson(Value value);
 
-        void set(Timestamp value);
+        void setTimestamp(Timestamp value);
 
         void setNull();
 
-        void writeValue(PageBuilder pageBuilder);
+        void write(PageBuilder pageBuilder);
     }
 
     static abstract class AbstractVal
@@ -121,34 +121,34 @@ class Row
             this.column = column;
         }
 
-        public void set(boolean value)
+        public void setBoolean(boolean value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
-        public void set(long value)
+        public void setLong(long value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
-        public void set(double value)
+        public void setDouble(double value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
-        public void set(String value)
+        public void setString(String value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
-        public void set(Value value)
+        public void setJson(Value value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
-        public void set(Timestamp value)
+        public void setTimestamp(Timestamp value)
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not reach here");
         }
 
         public void setNull()
@@ -156,7 +156,7 @@ class Row
             isNull = true;
         }
 
-        public void writeValue(PageBuilder pageBuilder)
+        public void write(PageBuilder pageBuilder)
         {
             if (!isNull) {
                 writeNotNull(pageBuilder);
@@ -180,7 +180,7 @@ class Row
         }
 
         @Override
-        public void set(boolean value)
+        public void setBoolean(boolean value)
         {
             this.value = value;
             this.isNull = false;
@@ -204,7 +204,7 @@ class Row
         }
 
         @Override
-        public void set(long value)
+        public void setLong(long value)
         {
             this.value = value;
             this.isNull = false;
@@ -228,7 +228,7 @@ class Row
         }
 
         @Override
-        public void set(double value)
+        public void setDouble(double value)
         {
             this.value = value;
             this.isNull = false;
@@ -252,7 +252,7 @@ class Row
         }
 
         @Override
-        public void set(String value)
+        public void setString(String value)
         {
             this.value = value;
             this.isNull = false;
@@ -276,7 +276,7 @@ class Row
         }
 
         @Override
-        public void set(Value value)
+        public void setJson(Value value)
         {
             this.value = value;
             this.isNull = false;
@@ -300,7 +300,7 @@ class Row
         }
 
         @Override
-        public void set(Timestamp value)
+        public void setTimestamp(Timestamp value)
         {
             this.value = value;
             this.isNull = false;
