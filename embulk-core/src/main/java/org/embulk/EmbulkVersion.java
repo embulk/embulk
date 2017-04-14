@@ -59,7 +59,6 @@ public final class EmbulkVersion
             }
 
             try (final JarFile selfJarFile = new JarFile(selfJarPathString)) {
-                final Manifest selfJarManifest;
                 try {
                     return selfJarFile.getManifest();
                 }
