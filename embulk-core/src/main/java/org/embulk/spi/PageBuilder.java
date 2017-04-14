@@ -157,7 +157,7 @@ public class PageBuilder
         nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
     }
 
-    private void clearNullVal(int columnIndex)
+    private void clearNull(int columnIndex)
     {
         nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
     }
@@ -165,19 +165,19 @@ public class PageBuilder
     void writeBoolean(int columnIndex, boolean value)
     {
         bufferSlice.setByte(getOffset(columnIndex), value ? (byte) 1 : (byte) 0);
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     void writeLong(int columnIndex, long value)
     {
         bufferSlice.setLong(getOffset(columnIndex), value);
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     void writeDouble(int columnIndex, double value)
     {
         bufferSlice.setDouble(getOffset(columnIndex), value);
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     void writeString(int columnIndex, String value)
@@ -186,7 +186,7 @@ public class PageBuilder
         stringReferences.add(value);
         bufferSlice.setInt(getOffset(columnIndex), index);
         referenceSize += value.length() * 2 + 4;  // assuming size of char = size of byte * 2 + length
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     void writeJson(int columnIndex, Value value)
@@ -195,7 +195,7 @@ public class PageBuilder
         valueReferences.add(value.immutableValue());
         bufferSlice.setInt(getOffset(columnIndex), index);
         referenceSize += 256;  // TODO how to estimate size of the value?
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     void writeTimestamp(int columnIndex, Timestamp value)
@@ -203,7 +203,7 @@ public class PageBuilder
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
         bufferSlice.setInt(offset + 8, value.getNano());
-        clearNullVal(columnIndex);
+        clearNull(columnIndex);
     }
 
     private int getOffset(int columnIndex)

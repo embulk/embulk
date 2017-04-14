@@ -5,6 +5,9 @@ import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
 import org.msgpack.value.Value;
 
+/**
+ * This class is a temporal container for storing a row only.
+ */
 class Row
 {
     static Row newRow(Schema schema)
