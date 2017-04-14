@@ -322,7 +322,7 @@ JSON parser plugin
 
 The ``json`` parser plugin parses a JSON file that contains a sequence of JSON objects. Example:
 
-.. code-block:: json
+.. code-block:: javascript
 
     {"time":1455829282,"ip":"93.184.216.34","name":frsyuki}
     {"time":1455829282,"ip":"172.36.8.109":sadayuki}
