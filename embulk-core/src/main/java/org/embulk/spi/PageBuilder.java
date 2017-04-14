@@ -50,7 +50,7 @@ public class PageBuilder
         this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
-        this.stringReferences.clear();
+        this.stringReferences = new ArrayList<>();
         this.valueReferences = new ArrayList<>();
         this.referenceSize = 0;
     }
