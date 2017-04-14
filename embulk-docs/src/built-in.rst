@@ -95,7 +95,7 @@ Configuration file can include another configuration file. To use it, configurat
 
 File will be searched from the relative path of the input configuration file. And file name will be ``_<name>.yml.liquid``. For example, if you add ``{% include 'subdir/inc' %}`` tag to ``myconfig/config.yml.liquid`` file, it includes ``myconfig/subdir/_inc.yml.liquid`` file.
 
-.. code-block:: yaml
+.. code-block:: liquid
 
     # config.yml.liquid
     {% include 'in_mysql' %}
