@@ -1,4 +1,4 @@
-# ${displayName} ${displayCategory} plugin for Embulk
+#[[#]]# ${displayName} ${displayCategory} plugin for Embulk
 
 #if (${language} == "ruby")
 TODO: Write short description here and ${fullProjectName}.gemspec file.
@@ -8,7 +8,7 @@ TODO: Write short description here and build.gradle file.
 TODO: Write short description here.
 #end
 
-## Overview
+#[[##]]# Overview
 
 #if (${category} == "output" || ${category} == "file_output")
 * **Plugin type**: ${displayCategory}
@@ -31,13 +31,13 @@ TODO: Write short description here.
 * **Plugin type**: ${displayCategory}
 #end
 
-## Configuration
+#[[##]]# Configuration
 
 - **option1**: description (integer, required)
 - **option2**: description (string, default: `"myvalue"`)
 - **option3**: description (string, default: `null`)
 
-## Example
+#[[##]]# Example
 
 ```yaml
 #if (${category} == "input" || ${category} == "file_input")
@@ -95,7 +95,7 @@ $ embulk guess -g ${name} config.yml -o guessed.yml
 ```
 #end
 
-## Build
+#[[##]]# Build
 
 ```
 #if (${language} == "ruby")

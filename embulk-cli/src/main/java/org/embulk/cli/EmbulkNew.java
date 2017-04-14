@@ -354,10 +354,12 @@ public class EmbulkNew
         velocityContext.put("expectedGitHubAccount", expectedGitHubAccount);
         velocityContext.put("fullProjectName", fullProjectName);
         velocityContext.put("javaClassName", javaClassName);
+        velocityContext.put("javaGuessClassName", javaClassName.replace("Plugin", "GuessPlugin"));
         velocityContext.put("javaPackageName", javaPackageName);
         velocityContext.put("language", language);
         velocityContext.put("name", name);
         velocityContext.put("rubyClassName", rubyClassName);
+        velocityContext.put("rubyGuessClassName", rubyClassName.replace("Plugin", "GuessPlugin"));
         return velocityContext;
     }
 

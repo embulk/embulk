@@ -9,10 +9,10 @@ module Embulk
     #      or line guess (LineGuessPlugin).
 #if (${language} == "ruby")
 
-    # require "embulk/${embulkCategory}/${name}.rb" %>
+    # require "embulk/${embulkCategory}/${name}.rb"
 #end
 
-    # class ${rubyClassName}.replace("Plugin", "GuessPlugin") < GuessPlugin
+    # class ${rubyGuessClassName} < GuessPlugin
     #   Plugin.register_guess("${name}", self)
     #
     #   def guess(config, sample_buffer)
@@ -27,7 +27,7 @@ module Embulk
     #   end
     # end
 
-    # class ${rubyClassName}.replace("Plugin", "GuessPlugin") < TextGuessPlugin
+    # class ${rubyGuessClassName} < TextGuessPlugin
     #   Plugin.register_guess("${name}", self)
     #
     #   def guess_text(config, sample_text)
@@ -43,7 +43,7 @@ module Embulk
     #   end
     # end
 
-    # class ${rubyClassName}.replace("Plugin", "GuessPlugin") < LineGuessPlugin
+    # class ${rubyGuessClassName} < LineGuessPlugin
     #   Plugin.register_guess("${name}", self)
     #
     #   def guess_lines(config, sample_lines)

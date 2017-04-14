@@ -8,7 +8,7 @@ module Embulk
     # require "embulk/${embulkCategory}/${name}.rb"
 #end
 
-    # class ${rubyClassName}.replace("Plugin", "GuessPlugin") < GuessPlugin
+    # class ${rubyGuessClassName} < GuessPlugin
     #   Plugin.register_guess("${name}", self)
     #
     #   FOO_BAR_HEADER = "\x1f\x8b".force_encoding('ASCII-8BIT').freeze
