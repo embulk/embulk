@@ -9,14 +9,15 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static org.embulk.test.EmbulkTests.copyResource;
 import static org.embulk.test.EmbulkTests.readFile;
 import static org.embulk.test.EmbulkTests.readResource;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class TestCsvPreview
+public class TestFilePreview
 {
-    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/preview/csv/test/";
+    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/preview/file/test/";
 
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
@@ -33,15 +34,16 @@ public class TestCsvPreview
             String loadYamlResourceName, String sourceCsvResourceName, String resultCsvResourceName)
             throws IOException
     {
+        Path inputPath = embulk.createTempFile("csv");
         Path outputPath = embulk.createTempFile("csv");
 
-        // parser: config
-        ConfigSource load = embulk.loadYamlResource(RESOURCE_NAME_PREFIX + loadYamlResourceName);
+        // in: config
+        copyResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName, inputPath);
+        ConfigSource load = embulk.loadYamlResource(RESOURCE_NAME_PREFIX + loadYamlResourceName)
+                .set("path_prefix", inputPath.toAbsolutePath().toString());
 
-        PreviewResult result =
-                embulk.parserBuilder()
-                .parser(load)
-                .inputResource(RESOURCE_NAME_PREFIX + sourceCsvResourceName)
+        PreviewResult result = embulk.inputBuilder()
+                .in(load)
                 .outputPath(outputPath)
                 .preview();
 
