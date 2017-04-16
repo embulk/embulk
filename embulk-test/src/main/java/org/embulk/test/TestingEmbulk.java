@@ -245,6 +245,47 @@ public class TestingEmbulk
             return embed.guess(config).getNested("in");
         }
 
+        /**
+         * This method returns PreviewResult.
+         *
+         * @return PreviewResult returns the result by PreviewExecutor
+         * @throws IOException
+         */
+        public PreviewResult preview()
+                throws IOException
+        {
+            checkState(inConfig != null, "inputPath must be set");
+            checkState(outputPath != null, "outputPath must be set");
+
+            // Execute preview to get PreviewResult
+            ConfigSource previewConfig = newConfig()
+                    .set("exec", execConfig.set("min_output_tasks", 1)) // exec: config
+                    .set("in", inConfig)
+                    .set("filters", filtersConfig);
+            PreviewResult result = embed.preview(previewConfig);
+            TestingBulkLoader.PreviewResultInputPlugin.setPreviewResult(result);
+
+            String fileName = outputPath.getFileName().toString();
+            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
+            Files.createDirectories(dir);
+
+            // Execute run to write PreviewResult's Page objects to output files
+            ConfigSource runConfig = newConfig()
+                    .set("in", newConfig().set("type", "preview_result")) // in: config
+                    .set("out", newConfig() // out: config
+                            .set("type", "file")
+                            .set("path_prefix", dir.resolve("fragments_").toString())
+                            .set("file_ext", "csv")
+                            .set("formatter", newConfig()
+                                    .set("type", "csv")
+                                    .set("header_line", false)
+                                    .set("newline", "LF")));
+            embed.run(runConfig);
+
+            return buildPreviewResultWithOutput(result, dir, outputPath);
+        }
+
         public RunResult run()
                 throws IOException
         {
@@ -349,51 +390,6 @@ public class TestingEmbulk
 
             // embed.guess calls GuessExecutor and returns ConfigDiff
             return embed.guess(config).getNested("in").getNested("parser");
-        }
-
-        /**
-         * This method returns PreviewResult.
-         *
-         * @return PreviewResult returns the result by PreviewExecutor
-         * @throws IOException
-         */
-        public PreviewResult preview()
-                throws IOException
-        {
-            checkState(parserConfig != null, "parser config must be set");
-            checkState(inputPath != null, "inputPath must be set");
-            checkState(outputPath != null, "outputPath must be set");
-
-            // Execute preview to get PreviewResult
-            ConfigSource previewConfig = newConfig()
-                    .set("exec", execConfig // exec: config
-                            .set("min_output_tasks", 1))
-                    .set("in", newConfig() // in: config
-                            .set("type", "file")
-                            .set("path_prefix", inputPath.toAbsolutePath().toString())
-                            .set("parser", parserConfig));
-            PreviewResult result = embed.preview(previewConfig);
-            TestingBulkLoader.PreviewResultInputPlugin.setPreviewResult(result);
-
-            String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
-            Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
-            Files.createDirectories(dir);
-
-            // Execute run to write PreviewResult's Page objects to output files
-            ConfigSource runConfig = newConfig()
-                    .set("in", newConfig().set("type", "preview_result")) // in: config
-                    .set("out", newConfig() // out: config
-                            .set("type", "file")
-                            .set("path_prefix", dir.resolve("fragments_").toString())
-                            .set("file_ext", "csv")
-                            .set("formatter", newConfig()
-                                    .set("type", "csv")
-                                    .set("header_line", false)
-                                    .set("newline", "LF")));
-            embed.run(runConfig);
-
-            return buildPreviewResultWithOutput(result, dir, outputPath);
         }
 
         public RunResult run()

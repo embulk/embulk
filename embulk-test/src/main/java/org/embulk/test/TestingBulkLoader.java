@@ -53,7 +53,7 @@ class TestingBulkLoader
     }
 
     /**
-     * This plugin is used for TestingEmbulk.ParserBuilder.preview().
+     * This plugin is used for TestingEmbulk.InputBuilder.preview().
      */
     static final class PreviewResultInputPlugin
             implements InputPlugin
