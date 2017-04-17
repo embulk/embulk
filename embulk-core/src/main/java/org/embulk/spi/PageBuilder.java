@@ -154,7 +154,7 @@ public class PageBuilder
         }
     }
 
-    void writeNull(int columnIndex)
+    private void writeNull(int columnIndex)
     {
         nullBitSet[columnIndex >>> 3] |= (1 << (columnIndex & 7));
     }
@@ -164,25 +164,25 @@ public class PageBuilder
         nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
     }
 
-    void writeBoolean(int columnIndex, boolean value)
+    private void writeBoolean(int columnIndex, boolean value)
     {
         bufferSlice.setByte(getOffset(columnIndex), value ? (byte) 1 : (byte) 0);
         clearNull(columnIndex);
     }
 
-    void writeLong(int columnIndex, long value)
+    private void writeLong(int columnIndex, long value)
     {
         bufferSlice.setLong(getOffset(columnIndex), value);
         clearNull(columnIndex);
     }
 
-    void writeDouble(int columnIndex, double value)
+    private void writeDouble(int columnIndex, double value)
     {
         bufferSlice.setDouble(getOffset(columnIndex), value);
         clearNull(columnIndex);
     }
 
-    void writeString(int columnIndex, String value)
+    private void writeString(int columnIndex, String value)
     {
         int index = stringReferences.size();
         stringReferences.add(value);
@@ -191,7 +191,7 @@ public class PageBuilder
         clearNull(columnIndex);
     }
 
-    void writeJson(int columnIndex, Value value)
+    private void writeJson(int columnIndex, Value value)
     {
         int index = valueReferences.size();
         valueReferences.add(value.immutableValue());
@@ -200,7 +200,7 @@ public class PageBuilder
         clearNull(columnIndex);
     }
 
-    void writeTimestamp(int columnIndex, Timestamp value)
+    private void writeTimestamp(int columnIndex, Timestamp value)
     {
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
@@ -369,7 +369,7 @@ public class PageBuilder
         }
     }
 
-    interface ColumnValue
+    private interface ColumnValue
     {
         void setBoolean(boolean value);
 
@@ -388,7 +388,7 @@ public class PageBuilder
         void write(PageBuilder pageBuilder);
     }
 
-    static abstract class AbstractColumnValue
+    private static abstract class AbstractColumnValue
             implements ColumnValue
     {
         protected final Column column;
@@ -447,7 +447,7 @@ public class PageBuilder
         protected abstract void writeNotNull(PageBuilder pageBuilder);
     }
 
-    static class BooleanColumnValue
+    private static class BooleanColumnValue
             extends AbstractColumnValue
     {
         private boolean value;
@@ -471,7 +471,7 @@ public class PageBuilder
         }
     }
 
-    static class LongColumnValue
+    private static class LongColumnValue
             extends AbstractColumnValue
     {
         private long value;
@@ -495,7 +495,7 @@ public class PageBuilder
         }
     }
 
-    static class DoubleColumnValue
+    private static class DoubleColumnValue
             extends AbstractColumnValue
     {
         private double value;
@@ -519,7 +519,7 @@ public class PageBuilder
         }
     }
 
-    static class StringColumnValue
+    private static class StringColumnValue
             extends AbstractColumnValue
     {
         private String value;
@@ -543,7 +543,7 @@ public class PageBuilder
         }
     }
 
-    static class JsonColumnValue
+    private static class JsonColumnValue
             extends AbstractColumnValue
     {
         private Value value;
@@ -567,7 +567,7 @@ public class PageBuilder
         }
     }
 
-    static class TimestampColumnValue
+    private static class TimestampColumnValue
             extends AbstractColumnValue
     {
         private Timestamp value;
