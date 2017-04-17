@@ -286,42 +286,42 @@ public class PageBuilder
     {
         private static Row newRow(Schema schema)
         {
-            Val[] values = new Val[schema.getColumnCount()];
+            ColumnValue[] values = new ColumnValue[schema.getColumnCount()];
             for (Column column : schema.getColumns()) {
                 values[column.getIndex()] = newValue(column);
             }
             return new Row(values);
         }
 
-        private static Val newValue(Column column)
+        private static ColumnValue newValue(Column column)
         {
             Type type = column.getType();
             if (type.equals(Types.BOOLEAN)) {
-                return new BooleanVal(column);
+                return new BooleanColumnValue(column);
             }
             else if (type.equals(Types.DOUBLE)) {
-                return new DoubleVal(column);
+                return new DoubleColumnValue(column);
             }
             else if (type.equals(Types.LONG)) {
-                return new LongVal(column);
+                return new LongColumnValue(column);
             }
             else if (type.equals(Types.STRING)) {
-                return new StringVal(column);
+                return new StringColumnValue(column);
             }
             else if (type.equals(Types.JSON)) {
-                return new JsonVal(column);
+                return new JsonColumnValue(column);
             }
             else if (type.equals(Types.TIMESTAMP)) {
-                return new TimestampVal(column);
+                return new TimestampColumnValue(column);
             }
             else {
                 throw new IllegalStateException("Unsupported type " + type.getName());
             }
         }
 
-        private final Val[] values;
+        private final ColumnValue[] values;
 
-        private Row(Val[] values)
+        private Row(ColumnValue[] values)
         {
             this.values = values;
         }
@@ -363,13 +363,13 @@ public class PageBuilder
 
         private void write(PageBuilder pageBuilder)
         {
-            for (Val v : values) {
+            for (ColumnValue v : values) {
                 v.write(pageBuilder);
             }
         }
     }
 
-    interface Val
+    interface ColumnValue
     {
         void setBoolean(boolean value);
 
@@ -388,13 +388,13 @@ public class PageBuilder
         void write(PageBuilder pageBuilder);
     }
 
-    static abstract class AbstractVal
-            implements Val
+    static abstract class AbstractColumnValue
+            implements ColumnValue
     {
         protected final Column column;
         protected boolean isNull;
 
-        protected AbstractVal(Column column)
+        protected AbstractColumnValue(Column column)
         {
             this.column = column;
         }
@@ -447,12 +447,12 @@ public class PageBuilder
         protected abstract void writeNotNull(PageBuilder pageBuilder);
     }
 
-    static class BooleanVal
-            extends AbstractVal
+    static class BooleanColumnValue
+            extends AbstractColumnValue
     {
         private boolean value;
 
-        BooleanVal(Column column)
+        BooleanColumnValue(Column column)
         {
             super(column);
         }
@@ -471,12 +471,12 @@ public class PageBuilder
         }
     }
 
-    static class LongVal
-            extends AbstractVal
+    static class LongColumnValue
+            extends AbstractColumnValue
     {
         private long value;
 
-        LongVal(Column column)
+        LongColumnValue(Column column)
         {
             super(column);
         }
@@ -495,12 +495,12 @@ public class PageBuilder
         }
     }
 
-    static class DoubleVal
-            extends AbstractVal
+    static class DoubleColumnValue
+            extends AbstractColumnValue
     {
         private double value;
 
-        DoubleVal(Column column)
+        DoubleColumnValue(Column column)
         {
             super(column);
         }
@@ -519,12 +519,12 @@ public class PageBuilder
         }
     }
 
-    static class StringVal
-            extends AbstractVal
+    static class StringColumnValue
+            extends AbstractColumnValue
     {
         private String value;
 
-        StringVal(Column column)
+        StringColumnValue(Column column)
         {
             super(column);
         }
@@ -543,12 +543,12 @@ public class PageBuilder
         }
     }
 
-    static class JsonVal
-            extends AbstractVal
+    static class JsonColumnValue
+            extends AbstractColumnValue
     {
         private Value value;
 
-        JsonVal(Column column)
+        JsonColumnValue(Column column)
         {
             super(column);
         }
@@ -567,12 +567,12 @@ public class PageBuilder
         }
     }
 
-    static class TimestampVal
-            extends AbstractVal
+    static class TimestampColumnValue
+            extends AbstractColumnValue
     {
         private Timestamp value;
 
-        TimestampVal(Column column)
+        TimestampColumnValue(Column column)
         {
             super(column);
         }
