@@ -2,7 +2,7 @@ Release 0.5.0
 ==================================
 
 New Guess Plugin Architecture
-------------------
+-----------------------------
 
 Embulk v0.5.0 supports dynamically loadable guess plugins.
 

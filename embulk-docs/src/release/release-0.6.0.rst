@@ -2,7 +2,7 @@ Release 0.6.0
 ==================================
 
 Executor Plugin Mechanism
-------------------
+-------------------------
 
 Now executor of Embulk is fully extensible using plugins. Executor plugins get input, filter and output plugins from the Embulk framework and runs them using multiple threads, processes, or servers. While input, filter and output plugins are response for data processing, executor plugins are responsible for scheduling the processing tasks and managing parallelism for performance.
 

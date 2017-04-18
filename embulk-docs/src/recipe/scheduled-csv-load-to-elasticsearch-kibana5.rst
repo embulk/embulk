@@ -157,7 +157,7 @@ For example, if you create ``./mydata/csv/sample_02.csv.gz`` file, embulk skips 
 
 So, if you want to loads newly created files every day, you can setup this cron schedule:
 
-.. code-block:: cron
+.. code-block:: text
 
     0 * * * * embulk run /path/to/config.yml -c /path/to/diff.yml
 

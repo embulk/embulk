@@ -48,7 +48,7 @@ A configuration file consists of following sections:
 
 * **out:** Output plugin options. An output plugin is either record-based (`Oracle <https://github.com/embulk/embulk-output-jdbc>`_, `Elasticsearch <https://github.com/muga/embulk-output-elasticsearch>`_, etc) or file-based (`Google Cloud Storage <https://github.com/hakobera/embulk-output-gcs>`_, `Command <https://github.com/embulk/embulk-output-command>`_, etc)
 
-  * **formatter:** If the output is file-based, formatter plugin formats a file format (such as built-in csv, `JSON <https://github.com/takei-yuya/embulk-formatter-jsonl>`_)
+  * **formatter:** If the output is file-based, formatter plugin formats a file format (such as built-in csv, `jsonl <https://github.com/takei-yuya/embulk-formatter-jsonl>`_)
 
   * **encoder:** If the output is file-based, encoder plugin encodes compression or encryption (such as built-in gzip or bzip2)
 
@@ -95,7 +95,7 @@ Configuration file can include another configuration file. To use it, configurat
 
 File will be searched from the relative path of the input configuration file. And file name will be ``_<name>.yml.liquid``. For example, if you add ``{% include 'subdir/inc' %}`` tag to ``myconfig/config.yml.liquid`` file, it includes ``myconfig/subdir/_inc.yml.liquid`` file.
 
-.. code-block:: yaml
+.. code-block:: liquid
 
     # config.yml.liquid
     {% include 'in_mysql' %}
@@ -322,7 +322,7 @@ JSON parser plugin
 
 The ``json`` parser plugin parses a JSON file that contains a sequence of JSON objects. Example:
 
-.. code-block:: json
+.. code-block:: javascript
 
     {"time":1455829282,"ip":"93.184.216.34","name":frsyuki}
     {"time":1455829282,"ip":"172.36.8.109":sadayuki}

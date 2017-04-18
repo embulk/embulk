@@ -2,7 +2,7 @@ Release 0.4.0
 ==================================
 
 Plugin Template Generator
-------------------
+-------------------------
 
 A new CLI subcommand ``new`` generate a plugin template.
 
