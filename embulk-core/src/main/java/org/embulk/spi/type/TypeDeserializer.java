@@ -15,6 +15,7 @@ public class TypeDeserializer
 
     static {
         ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
+        builder.put(BinaryType.BINARY.getName(), BinaryType.BINARY);
         builder.put(BooleanType.BOOLEAN.getName(), BooleanType.BOOLEAN);
         builder.put(LongType.LONG.getName(), LongType.LONG);
         builder.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);

@@ -58,6 +58,14 @@ public class MockFormatterPlugin implements FormatterPlugin
                 final List<Object> record = new ArrayList<>();
                 schema.visitColumns(new ColumnVisitor()
                 {
+                    @Override
+                    public void binaryColumn(Column column)
+                    {
+                        if (!pageReader.isNull(column)) {
+                            record.add(pageReader.getBinary(column));
+                        }
+                    }
+
                     public void booleanColumn(Column column)
                     {
                         if (!pageReader.isNull(column)) {

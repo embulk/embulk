@@ -66,6 +66,17 @@ public class PageReader
         return (nullBitSet[columnIndex >>> 3] & (1 << (columnIndex & 7))) != 0;
     }
 
+    public byte[] getBinary(Column column)
+    {
+        return getBinary(column.getIndex());
+    }
+
+    public byte[] getBinary(int columnIndex)
+    {
+        int index = pageSlice.getInt(getOffset(columnIndex));
+        return page.getBinaryReference(index);
+    }
+
     public boolean getBoolean(Column column)
     {
         // TODO check type?

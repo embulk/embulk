@@ -47,6 +47,8 @@ module Embulk
 
     def self.new_java_type(ruby_type)
       case ruby_type
+      when :binary
+        Java::Types::BINARY
       when :boolean
         Java::Types::BOOLEAN
       when :long

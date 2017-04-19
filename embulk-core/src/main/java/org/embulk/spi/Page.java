@@ -6,6 +6,7 @@ import org.msgpack.value.ImmutableValue;
 public class Page
 {
     private final Buffer buffer;
+    private List<byte[]> binaryReferences;
     private List<String> stringReferences;
     private List<ImmutableValue> valueReferences;
 
@@ -24,6 +25,12 @@ public class Page
         return new Page(buffer);
     }
 
+    public Page setBinaryReferences(List<byte[]> binaryReferences)
+    {
+        this.binaryReferences = binaryReferences;
+        return this;
+    }
+
     public Page setStringReferences(List<String> values)
     {
         this.stringReferences = values;
@@ -36,6 +43,12 @@ public class Page
         return this;
     }
 
+    public List<byte[]> getBinaryReferences()
+    {
+        // TODO used by mapreduce executor
+        return binaryReferences;
+    }
+
     public List<String> getStringReferences()
     {
         // TODO used by mapreduce executor
@@ -46,6 +59,11 @@ public class Page
     {
         // TODO used by mapreduce executor
         return valueReferences;
+    }
+
+    public byte[] getBinaryReference(int index)
+    {
+        return binaryReferences.get(index);
     }
 
     public String getStringReference(int index)

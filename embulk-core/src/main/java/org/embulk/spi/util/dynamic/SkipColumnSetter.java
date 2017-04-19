@@ -28,6 +28,10 @@ public class SkipColumnSetter
     { }
 
     @Override
+    public void set(byte[] v)
+    { }
+
+    @Override
     public void set(boolean v)
     { }
 

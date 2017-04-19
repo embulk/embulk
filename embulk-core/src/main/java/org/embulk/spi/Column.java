@@ -4,6 +4,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.embulk.spi.type.Type;
+import org.embulk.spi.type.BinaryType;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
 import org.embulk.spi.type.LongType;
@@ -48,7 +49,9 @@ public class Column
 
     public void visit(ColumnVisitor visitor)
     {
-        if (type instanceof BooleanType) {
+        if (type instanceof BinaryType) {
+            visitor.binaryColumn(this);
+        } else if (type instanceof BooleanType) {
             visitor.booleanColumn(this);
         } else if (type instanceof LongType) {
             visitor.longColumn(this);

@@ -25,6 +25,8 @@ module Embulk
           "record << nil\n" <<
           "else\n" <<
           case column.type
+          when :binary
+            "record << reader.getBinary(#{idx})"
           when :boolean
             "record << reader.getBoolean(#{idx})"
           when :long
@@ -57,6 +59,8 @@ module Embulk
           "builder.setNull(#{idx})\n" <<
           "else\n" <<
           case column.type
+          when :binary
+            "builder.setBinary(#{idx}, record[#{idx}])"
           when :boolean
             "builder.setBoolean(#{idx}, record[#{idx}])"
           when :long

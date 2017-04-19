@@ -2,6 +2,8 @@ package org.embulk.spi.type;
 
 public class Types
 {
+    public static final BinaryType BINARY = BinaryType.BINARY;
+
     public static final BooleanType BOOLEAN = BooleanType.BOOLEAN;
 
     public static final LongType LONG = LongType.LONG;

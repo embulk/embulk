@@ -41,6 +41,9 @@ public class MockParserPlugin implements ParserPlugin
                     for (Column column : schema.getColumns()) {
                         Type type = column.getType();
                         switch (type.getName()) {
+                        case "binary":
+                            pageBuilder.setBinary(column, "Hello World".getBytes());
+                            break;
                         case "boolean":
                             pageBuilder.setBoolean(column, true);
                             break;

@@ -1,5 +1,6 @@
 package org.embulk.spi.util;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.ArrayList;
 import org.embulk.spi.time.Timestamp;
@@ -72,6 +73,12 @@ public class PagePrinter
         public ToStringColumnVisitor(PageReader reader)
         {
             this.reader = reader;
+        }
+
+        @Override
+        public void binaryColumn(Column column)
+        {
+            string = new String(reader.getBinary(column), Charset.defaultCharset());
         }
 
         public void booleanColumn(Column column)

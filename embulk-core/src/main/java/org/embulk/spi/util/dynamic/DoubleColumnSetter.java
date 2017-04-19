@@ -1,6 +1,8 @@
 package org.embulk.spi.util.dynamic;
 
 import java.math.RoundingMode;
+import java.nio.charset.Charset;
+
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -19,6 +21,12 @@ public class DoubleColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
+    }
+
+    @Override
+    public void set(byte[] v)
+    {
+        set(new String(v, Charset.defaultCharset()));
     }
 
     @Override
