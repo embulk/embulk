@@ -44,11 +44,38 @@ while true; do
     esac
 done
 
+embulk_args="$@"
+
+while [ $# -gt 0 ] ; do
+    case "$1" in
+        "-b" | "--bundle")
+            shift
+            export EMBULK_BUNDLE_PATH="$1"
+            shift
+            break
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+if test -z ${EMBULK_BUNDLE_PATH}; then
+    unset EMBULK_BUNDLE_PATH
+    unset BUNDLE_GEMFILE
+    export GEM_HOME="$(cd && pwd)/.embulk/jruby/$(java -cp $0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]')"
+    export GEM_PATH=""
+else
+    export BUNDLE_GEMFILE="$(cd ${EMBULK_BUNDLE_PATH} && pwd)/Gemfile"
+    unset GEM_HOME
+    unset GEM_PATH
+fi
+
 if test "$overwrite_optimize" = "true" -o "$default_optimize" -a "$overwrite_optimize" != "false"; then
     java_args="-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC $java_args"
 else
     java_args="-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none $java_args"
 fi
 
-exec java $java_args -jar "$0" $jruby_args "$@"
+exec java $java_args -jar "$0" $jruby_args "$embulk_args"
 exit 127
