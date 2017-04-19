@@ -328,6 +328,68 @@ public class TestPageBuilderReader
     }
 
     @Test
+    public void testDoubleWriteStringsToRow()
+    {
+        MockPageOutput output = new MockPageOutput();
+        Schema schema = Schema.builder()
+                .add("col0", STRING)
+                .add("col1", STRING)
+                .add("col2", STRING)
+                .build();
+
+        builder = new PageBuilder(bufferAllocator, schema, output);
+        builder.setString(0, "v0");
+        builder.setString(1, "v1");
+        builder.setNull(2);
+        builder.setString(0, "v2"); // stored to page for col0
+        builder.setNull(1);         // null is stored to page for col1
+        builder.setString(2, "v3"); // stored to page for col2
+        builder.addRecord();
+        builder.finish();
+        builder.close();
+
+        reader = new PageReader(schema);
+        reader.setPage(output.pages.get(0));
+        assertTrue(reader.nextRecord());
+        assertEquals(reader.getString(0), "v2");
+        assertTrue(reader.isNull(1));
+        assertEquals(reader.getString(2), "v3");
+        assertFalse(reader.nextRecord());
+        reader.close();
+    }
+
+    @Test
+    public void testDoubleWriteJsonsToRow()
+    {
+        MockPageOutput output = new MockPageOutput();
+        Schema schema = Schema.builder()
+                .add("col0", JSON)
+                .add("col1", JSON)
+                .add("col2", JSON)
+                .build();
+
+        builder = new PageBuilder(bufferAllocator, schema, output);
+        builder.setJson(0, newString("v0"));
+        builder.setJson(1, newString("v1"));
+        builder.setNull(2);
+        builder.setJson(0, newString("v2")); // store to page for col0
+        builder.setNull(1);                  // null is stored to page for col1
+        builder.setJson(2, newString("v3")); // store to page for col2
+        builder.addRecord();
+        builder.finish();
+        builder.close();
+
+        reader = new PageReader(schema);
+        reader.setPage(output.pages.get(0));
+        assertTrue(reader.nextRecord());
+        assertEquals(reader.getJson(0), newString("v2"));
+        assertTrue(reader.isNull(1));
+        assertEquals(reader.getJson(2), newString("v3"));
+        assertFalse(reader.nextRecord());
+        reader.close();
+    }
+
+    @Test
     public void testRepeatableClose()
     {
         MockPageOutput output = new MockPageOutput();
