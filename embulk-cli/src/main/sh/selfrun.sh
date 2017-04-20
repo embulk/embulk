@@ -50,7 +50,8 @@ while [ $# -gt 0 ] ; do
     case "$1" in
         "-b" | "--bundle")
             shift
-            export EMBULK_BUNDLE_PATH="$1"
+            EMBULK_BUNDLE_PATH="$1"
+            export EMBULK_BUNDLE_PATH
             shift
             break
             ;;
@@ -63,10 +64,21 @@ done
 if test -z ${EMBULK_BUNDLE_PATH}; then
     unset EMBULK_BUNDLE_PATH
     unset BUNDLE_GEMFILE
-    export GEM_HOME="$(cd && pwd)/.embulk/jruby/$(java -cp $0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]')"
-    export GEM_PATH=""
+    GEM_HOME="`cd && pwd`/.embulk/jruby/`java -cp $0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`"
+    export GEM_HOME
+    GEM_PATH=""
+    export GEM_PATH
 else
-    export BUNDLE_GEMFILE="$(cd ${EMBULK_BUNDLE_PATH} && pwd)/Gemfile"
+    if test ! -d ${EMBULK_BUNDLE_PATH}; then
+        echo "Directory not found: \"${EMBULK_BUNDLE_PATH}\""
+        exit 127
+    fi
+    BUNDLE_GEMFILE="`cd ${EMBULK_BUNDLE_PATH} && pwd`/Gemfile"
+    if test ! -f ${BUNDLE_GEMFILE}; then
+        echo "Gemfile not found: \"${BUNDLE_GEMFILE}\""
+        exit 127
+    fi
+    export BUNDLE_GEMFILE
     unset GEM_HOME
     unset GEM_PATH
 fi

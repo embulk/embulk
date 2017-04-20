@@ -30,6 +30,38 @@ if "%overwrite_optimize%" == "true" (
     )
 )
 
+for %%a in (%*) do (
+    if %%a == "-b" (
+        set found_bundle_option=true
+    ) else if %%a == "--bundle" (
+        set found_bundle_option=true
+    ) else if %found_bundle_option% == "true"
+        set EMBULK_BUNDLE_PATH=%%a
+        set found_bundle_option=
+    )
+)
+
+if not defined EMBULK_BUNDLE_PATH (
+    set EMBULK_BUNDLE_PATH=
+    set BUNDLE_GEMFILE=
+    FOR /F usebackq IN (`java -cp %0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`) DO SET rb_version=%%w
+    set GEM_HOME="%USERPROFILE%/.embulk/jruby/%rb_version%"
+    set GEM_PATH=""
+) else (
+    if not exist "%EMBULK_BUNDLE_PATH%\" (
+        echo Directory not found: "%EMBULK_BUNDLE_PATH%"
+        exit /b 1
+    )
+    call :absolute_path %EMBULK_BUNDLE_PATH%
+    set BUNDLE_GEMFILE="%absolute_path%/Gemfile"
+    if not exist "%BUNDLE_GEMFILE%" (
+        echo Gemfile not found: "%BUNDLE_GEMFILE%"
+        exit /b 1
+    )
+    set GEM_HOME=
+    set GEM_PATH=
+)
+
 if "%optimize%" == "true" (
     set java_args=-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC %java_args%
 ) else (
@@ -95,4 +127,8 @@ if not exist "%~1" (
     for /f "delims=" %%i in (%~1) do set java_args=%java_args% %%i
 )
 set status=
+exit /b
+
+:absolute_path
+set absolute_path=%~dp1
 exit /b

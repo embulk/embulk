@@ -1,4 +1,4 @@
-jjjbundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
+bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
 
 # Search for -b or --bundle, and remove it.
