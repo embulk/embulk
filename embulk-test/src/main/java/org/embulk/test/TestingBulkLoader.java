@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import java.util.List;
+
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
@@ -17,8 +18,11 @@ import org.embulk.exec.ForSystemConfig;
 import org.embulk.exec.ResumeState;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
+import org.embulk.spi.InputPlugin;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
+
+import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 class TestingBulkLoader
         extends BulkLoader
@@ -33,6 +37,7 @@ class TestingBulkLoader
                     public void configure(Binder binder)
                     {
                         binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
+                        registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
                     }
                 };
                 return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));
