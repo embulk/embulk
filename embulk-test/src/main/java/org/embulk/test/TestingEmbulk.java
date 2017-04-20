@@ -263,7 +263,7 @@ public class TestingEmbulk
                     .set("in", inConfig)
                     .set("filters", filtersConfig);
             PreviewResult result = embed.preview(previewConfig);
-            TestingBulkLoader.PreviewResultInputPlugin.setPreviewResult(result);
+            PreviewResultInputPlugin.setPreviewResult(result);
 
             String fileName = outputPath.getFileName().toString();
             checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
