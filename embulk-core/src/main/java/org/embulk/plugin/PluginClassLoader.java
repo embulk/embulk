@@ -10,6 +10,10 @@ import java.nio.file.Path;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.MalformedURLException;
+import java.security.AllPermission;
+import java.security.CodeSource;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -18,14 +22,25 @@ import com.google.common.collect.Iterators;
 public class PluginClassLoader
         extends URLClassLoader
 {
+    private static final Permissions ALL_PERMISSION;
+
+    static {
+        ALL_PERMISSION = new Permissions();
+        ALL_PERMISSION.add(new java.security.AllPermission());
+    }
+
     private final List<String> parentFirstPackagePrefixes;
     private final List<String> parentFirstResourcePrefixes;
+    private final PermissionCollection permissions;
 
-    public PluginClassLoader(Collection<URL> urls, ClassLoader parent,
-            Collection<String> parentFirstPackages,
-            Collection<String> parentFirstResources)
+    public PluginClassLoader(Collection<URL> urls,
+                             ClassLoader parent,
+                             Collection<String> parentFirstPackages,
+                             Collection<String> parentFirstResources,
+                             PermissionCollection permissions)
     {
         super(urls.toArray(new URL[urls.size()]), parent);
+        this.permissions = permissions;
         this.parentFirstPackagePrefixes = ImmutableList.copyOf(
                 Iterables.transform(parentFirstPackages, new Function<String, String>() {
                     public String apply(String pkg)
@@ -40,6 +55,14 @@ public class PluginClassLoader
                         return pkg + "/";
                     }
                 }));
+    }
+
+    public PluginClassLoader(Collection<URL> urls,
+                             ClassLoader parent,
+                             Collection<String> parentFirstPackages,
+                             Collection<String> parentFirstResources)
+    {
+        this(urls, parent, parentFirstPackages, parentFirstResources, ALL_PERMISSION);
     }
 
     public void addPath(Path path)
@@ -144,6 +167,13 @@ public class PluginClassLoader
         }
 
         return Iterators.asEnumeration(Iterators.concat(resources.iterator()));
+    }
+
+    @Override
+    protected PermissionCollection getPermissions(CodeSource codeSource)
+    {
+        return this.permissions;
+
     }
 
     private boolean isParentFirstPackage(String name)

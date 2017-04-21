@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.net.URL;
 import java.io.InputStream;
 import java.io.IOException;
+import java.security.PermissionCollection;
 import com.google.inject.Module;
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
@@ -65,6 +66,17 @@ public class PluginClassLoaderModule
             {
                 return new PluginClassLoader(urls, parentClassLoader,
                         parentFirstPackages, parentFirstResources);
+            }
+
+            public PluginClassLoader create(Collection<URL> urls,
+                                            ClassLoader parentClassLoader,
+                                            PermissionCollection permissions)
+            {
+                return new PluginClassLoader(urls,
+                                             parentClassLoader,
+                                             parentFirstPackages,
+                                             parentFirstResources,
+                                             permissions);
             }
         }
     }

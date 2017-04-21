@@ -119,10 +119,38 @@ public class JarPluginSource
             throw new PluginSourceNotMatchException("Invalid plugin: \"pluginMainClass\" not in plugin.properties.");
         }
 
+        final String pluginPolicy = pluginManifest.getMainAttributes().getValue("Embulk-Plugin-Security-Policy");
+
         final PluginClassLoaderFactory pluginClassLoaderFactory =
             this.injector.getInstance(PluginClassLoaderFactory.class);
-        final PluginClassLoader pluginClassLoader =
-            pluginClassLoaderFactory.create(ImmutableList.of(jarUrl), JarPluginSource.class.getClassLoader());
+
+        final PluginClassLoader pluginClassLoader;
+        if (pluginPolicy != null) {
+            final java.security.Permissions permissions = new java.security.Permissions();
+            for (String policyTerm : java.util.Arrays.asList(pluginPolicy.split(":"))) {
+                if (policyTerm.equals("all")) {
+                    permissions.add(new java.security.AllPermission());
+                }
+                else if (policyTerm.equals("files")) {
+                    permissions.add(new java.io.FilePermission("<<ALL FILES>>", "read,write"));
+                }
+                else if (policyTerm.equals("runtime")) {
+                    permissions.add(new RuntimePermission("accessDeclaredMembers"));
+                    permissions.add(new RuntimePermission("createClassLoader"));
+                    permissions.add(new RuntimePermission("modifyThread"));
+                    permissions.add(new RuntimePermission("accessClassInPackage.*"));
+                    permissions.add(new java.lang.reflect.ReflectPermission("suppressAccessChecks"));
+                    permissions.add(new java.util.PropertyPermission("*", "read,write"));
+                }
+            }
+            pluginClassLoader = pluginClassLoaderFactory.create(
+                ImmutableList.of(jarUrl), JarPluginSource.class.getClassLoader(), permissions);
+        }
+        else {
+            pluginClassLoader = pluginClassLoaderFactory.create(
+                ImmutableList.of(jarUrl), JarPluginSource.class.getClassLoader());
+        }
+
         final Class pluginMainClass;
         try {
             pluginMainClass = pluginClassLoader.loadClass(pluginMainClassName);
