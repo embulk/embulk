@@ -219,6 +219,16 @@ public class TestCsvGuessPlugin
                 "test_backslash_escape_guessed.yml");
     }
 
+    @Test
+    public void skipSuggestIfEmptySampleRecords()
+            throws Exception
+    {
+        // This test checks that the CSV guess doesn't suggest anything by invalid formatted CSV file.
+        assertGuessByResource(embulk,
+                "test_skip_suggest_if_empty_sample_records_seed.yml", "test_skip_suggest_if_empty_sample_records.csv",
+                "test_skip_suggest_if_empty_sample_records_guessed.yml");
+    }
+
     static void assertGuessByResource(TestingEmbulk embulk, String seedYamlResourceName, String sourceCsvResourceName,
             String resultResourceName)
             throws IOException
