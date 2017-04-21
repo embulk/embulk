@@ -168,7 +168,7 @@ categories:
     ruby-output                Ruby record output plugin   (like "mysql")
     ruby-filter                Ruby record filter plugin   (like "add-hostname")
     #ruby-file-input           Ruby file input plugin      (like "ftp")          # not implemented yet [#21]
-    #ruby-file-output          Ruby file output plugin     (like "ftp")          # not implemented yet [#22]
+    ruby-file-output           Ruby file output plugin     (like "ftp")
     ruby-parser                Ruby file parser plugin     (like "csv")
     ruby-formatter             Ruby file formatter plugin  (like "csv")
     #ruby-decoder              Ruby file decoder plugin    (like "gzip")         # not implemented yet [#31]
@@ -246,7 +246,7 @@ examples:
         when "ruby-output"      then [:ruby, :output]
         when "ruby-filter"      then [:ruby, :filter]
         when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
-        when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
+        when "ruby-file-output" then [:ruby, :file_output]
         when "ruby-parser"      then [:ruby, :parser]
         when "ruby-formatter"   then [:ruby, :formatter]
         when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
