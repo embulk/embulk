@@ -1,8 +1,8 @@
 module Embulk
   module Output
 
-    class <%= ruby_class_name %> < OutputPlugin
-      Plugin.register_output(<%= name.dump %>, self)
+    class ${rubyClassName} < OutputPlugin
+      Plugin.register_output("${name}", self)
 
       def self.transaction(config, schema, count, &control)
         # configuration code:
@@ -21,12 +21,12 @@ module Embulk
         return next_config_diff
       end
 
-      #def self.resume(task, schema, count, &control)
-      #  task_reports = yield(task)
+      # def self.resume(task, schema, count, &control)
+      #   task_reports = yield(task)
       #
-      #  next_config_diff = {}
-      #  return next_config_diff
-      #end
+      #   next_config_diff = {}
+      #   return next_config_diff
+      # end
 
       def init
         # initialization code:

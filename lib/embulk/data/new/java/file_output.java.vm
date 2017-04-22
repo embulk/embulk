@@ -1,19 +1,21 @@
-package <%= java_package_name %>;
+package ${javaPackageName};
 
 import java.util.List;
+
 import com.google.common.base.Optional;
-import org.embulk.config.TaskReport;
+
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
 
-public class <%= java_class_name %>
+public class ${javaClassName}
         implements FileOutputPlugin
 {
     public interface PluginTask
@@ -69,7 +71,7 @@ public class <%= java_class_name %>
             int taskCount,
             FileOutputPlugin.Control control)
     {
-        throw new UnsupportedOperationException("<%= name %> output plugin does not support resuming");
+        throw new UnsupportedOperationException("${name} output plugin does not support resuming");
     }
 
     @Override
@@ -85,7 +87,7 @@ public class <%= java_class_name %>
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
         // Write your code here :)
-        throw new UnsupportedOperationException("<%= java_class_name %>.open method is not implemented yet");
+        throw new UnsupportedOperationException("${javaClassName}.open method is not implemented yet");
 
         // See LocalFileOutputPlugin as an example implementation:
         // https://github.com/embulk/embulk/blob/master/embulk-standards/src/main/java/org/embulk/standards/LocalFileOutputPlugin.java

@@ -229,34 +229,7 @@ examples:
       (org.embulk.cli.EmbulkExample.new).createExample(ARGV[0] || "embulk-example")
 
     when :new
-      lang_cate = ARGV[0]
-      name = ARGV[1]
-
-      language, category = case lang_cate
-        when "java-input"       then [:java, :input]
-        when "java-output"      then [:java, :output]
-        when "java-filter"      then [:java, :filter]
-        when "java-file-input"  then [:java, :file_input]
-        when "java-file-output" then [:java, :file_output]
-        when "java-parser"      then [:java, :parser]
-        when "java-formatter"   then [:java, :formatter]
-        when "java-decoder"     then [:java, :decoder]
-        when "java-encoder"     then [:java, :encoder]
-        when "ruby-input"       then [:ruby, :input]
-        when "ruby-output"      then [:ruby, :output]
-        when "ruby-filter"      then [:ruby, :filter]
-        when "ruby-file-input"  then raise "ruby-file-input is not implemented yet. See #21 on github." #[:ruby, :file_input]
-        when "ruby-file-output" then raise "ruby-file-output is not implemented yet. See #22 on github." #[:ruby, :file_output]
-        when "ruby-parser"      then [:ruby, :parser]
-        when "ruby-formatter"   then [:ruby, :formatter]
-        when "ruby-decoder"     then raise "ruby-decoder is not implemented yet. See #31 on github." #[:ruby, :decoder]
-        when "ruby-encoder"     then raise "ruby-decoder is not implemented yet. See #32 on github." #[:ruby, :encoder]
-        else
-          usage_op op, "Unknown category '#{lang_cate}'"
-        end
-
-      require 'embulk/command/embulk_new_plugin'
-      Embulk.new_plugin(name, language, category)
+      (org.embulk.cli.EmbulkNew.new(ARGV[0], ARGV[1], org.embulk.EmbulkVersion::VERSION)).newPlugin()
 
     when :migrate
       path = ARGV[0]

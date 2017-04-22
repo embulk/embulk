@@ -1,8 +1,8 @@
 module Embulk
   module Formatter
 
-    class <%= ruby_class_name %> < FormatterPlugin
-      Plugin.register_formatter(<%= name.dump %>, self)
+    class ${rubyClassName} < FormatterPlugin
+      Plugin.register_formatter("${name}", self)
 
       def self.transaction(config, schema, &control)
         # configuration code:
