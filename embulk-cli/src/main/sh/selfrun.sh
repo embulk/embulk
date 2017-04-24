@@ -89,5 +89,5 @@ else
     java_args="-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none $java_args"
 fi
 
-exec java $java_args -jar "$0" $jruby_args "$embulk_args"
+exec java $java_args -jar "$0" $jruby_args $embulk_args
 exit 127

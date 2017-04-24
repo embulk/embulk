@@ -30,37 +30,59 @@ if "%overwrite_optimize%" == "true" (
     )
 )
 
+setlocal enabledelayedexpansion
+
+set found_bundle_option=0
+
 for %%a in (%*) do (
-    if %%a == "-b" (
-        set found_bundle_option=true
-    ) else if %%a == "--bundle" (
-        set found_bundle_option=true
-    ) else if %found_bundle_option% == "true"
-        set EMBULK_BUNDLE_PATH=%%a
-        set found_bundle_option=
+    if %%a == -b (
+        set found_bundle_option=1
+    ) else if %%a == --bundle (
+        set found_bundle_option=1
+    ) else if !found_bundle_option! == 1 (
+        set embulk_bundle_path=%%a
+        set found_bundle_option=2
     )
 )
 
+endlocal && set EMBULK_BUNDLE_PATH=%embulk_bundle_path%
+
 if not defined EMBULK_BUNDLE_PATH (
     set EMBULK_BUNDLE_PATH=
-    set BUNDLE_GEMFILE=
-    FOR /F usebackq IN (`java -cp %0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`) DO SET rb_version=%%w
-    set GEM_HOME="%USERPROFILE%/.embulk/jruby/%rb_version%"
     set GEM_PATH=""
 ) else (
     if not exist "%EMBULK_BUNDLE_PATH%\" (
         echo Directory not found: "%EMBULK_BUNDLE_PATH%"
         exit /b 1
     )
-    call :absolute_path %EMBULK_BUNDLE_PATH%
-    set BUNDLE_GEMFILE="%absolute_path%/Gemfile"
-    if not exist "%BUNDLE_GEMFILE%" (
-        echo Gemfile not found: "%BUNDLE_GEMFILE%"
-        exit /b 1
-    )
-    set GEM_HOME=
     set GEM_PATH=
 )
+
+setlocal enabledelayedexpansion
+
+if not defined EMBULK_BUNDLE_PATH (
+    set bundle_gemfile=
+) else (
+    call :get_absolute_path %EMBULK_BUNDLE_PATH%
+    set bundle_gemfile=!absolute_path!\Gemfile
+    if not exist !bundle_gemfile! (
+        echo Gemfile not found: "!bundle_gemfile!"
+        exit /b 1
+    )
+)
+
+endlocal && set BUNDLE_GEMFILE=%bundle_gemfile%
+
+setlocal enabledelayedexpansion
+
+if not defined EMBULK_BUNDLE_PATH (
+    for /f "usebackq delims=" %%w in (`java -cp %0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`) do set ruby_version=%%w
+    set gem_home=%USERPROFILE%\.embulk\jruby\!ruby_version!
+) else (
+    set gem_home=
+)
+
+endlocal && set GEM_HOME=%gem_home%
 
 if "%optimize%" == "true" (
     set java_args=-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC %java_args%
@@ -129,6 +151,6 @@ if not exist "%~1" (
 set status=
 exit /b
 
-:absolute_path
-set absolute_path=%~dp1
+:get_absolute_path
+set absolute_path=%~f1
 exit /b
