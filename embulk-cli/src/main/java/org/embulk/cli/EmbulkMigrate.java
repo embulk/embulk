@@ -2,10 +2,16 @@ package org.embulk.cli;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,9 +38,9 @@ public class EmbulkMigrate
     {
         final Migrator migrator = new Migrator(path);
 
-        List<Matcher> matchedEmbulkCoreInGradle = migrator.matchers("**/build.gradle", EMBULK_CORE_IN_GRADLE);
-        List<Matcher> matchedNewEmbulkInGemspec = migrator.matchers("**/*.gemspec", NEW_EMBULK_IN_GEMSPEC);
-        List<Matcher> matchedOldEmbulkInGemspec = migrator.matchers("**/*.gemspec", OLD_EMBULK_IN_GEMSPEC);
+        List<Matcher> matchedEmbulkCoreInGradle = migrator.matchersRecursive("build.gradle", EMBULK_CORE_IN_GRADLE);
+        List<Matcher> matchedNewEmbulkInGemspec = migrator.matchersRecursive("*.gemspec", NEW_EMBULK_IN_GEMSPEC);
+        List<Matcher> matchedOldEmbulkInGemspec = migrator.matchersRecursive("*.gemspec", OLD_EMBULK_IN_GEMSPEC);
 
         final Language language;
         final ComparableVersion fromVersion;
@@ -81,8 +87,8 @@ public class EmbulkMigrate
     {
         if (fromVersion.compareTo(new ComparableVersion("0.7.0")) < 0) {
             // rename CommitReport to TaskReport
-            migrator.replace("**/*.java", Pattern.compile("(CommitReport)"), 1, "TaskReport");
-            migrator.replace("**/*.java", Pattern.compile("(commitReport)"), 1, "taskReport");
+            migrator.replaceRecursive("*.java", Pattern.compile("(CommitReport)"), 1, "TaskReport");
+            migrator.replaceRecursive("*.java", Pattern.compile("(commitReport)"), 1, "taskReport");
         }
 
         // upgrade gradle version
@@ -95,18 +101,23 @@ public class EmbulkMigrate
         }
 
         // Add a method |jsonColumn| before the method |timestampColumn| which should exist.
-        if (!migrator.match("**/*.java", JSON_COLUMN_METHOD_IN_ALL_JAVA)) {
-            final List<Matcher> matchers = migrator.matchers("**/*.java", TIMESTAMP_COLUMN_METHOD_IN_ALL_JAVA);
-            final String indent = matchers.get(0).group(1);
-            final String JSON_COLUMN_METHOD = Joiner.on("\n").join(
-                "",
-                indent + "public void jsonColumn(Column column) {",
-                indent + "    throw new UnsupportedOperationException(\"This plugin doesn't support json type. Please try to upgrade version of the plugin using 'embulk gem update' command. If the latest version still doesn't support json type, please contact plugin developers, or change configuration of input plugin not to use json type.\");",
-                indent + "}",
-                "",
-                indent + "@Override",
-                "");
-            migrator.replace("**/*.java", TIMESTAMP_COLUMN_METHOD_AFTER_NEWLINE_IN_ALL_JAVA, 1, JSON_COLUMN_METHOD);
+        if (!migrator.matchRecursive("*.java", JSON_COLUMN_METHOD_IN_ALL_JAVA)) {
+            final List<Matcher> matchers = migrator.matchersRecursive("*.java", TIMESTAMP_COLUMN_METHOD_IN_ALL_JAVA);
+            if (!matchers.isEmpty()) {
+                final String indent = matchers.get(0).group(1);
+                final String JSON_COLUMN_METHOD = Joiner.on("\n").join(
+                    "",
+                    indent + "public void jsonColumn(Column column) {",
+                    indent + "    throw new UnsupportedOperationException(\"This plugin doesn't support json type. Please try to upgrade version of the plugin using 'embulk gem update' command. If the latest version still doesn't support json type, please contact plugin developers, or change configuration of input plugin not to use json type.\");",
+                    indent + "}",
+                    "",
+                    indent + "@Override",
+                    "");
+                migrator.replaceRecursive("*.java",
+                                          TIMESTAMP_COLUMN_METHOD_AFTER_NEWLINE_IN_ALL_JAVA,
+                                          1,
+                                          JSON_COLUMN_METHOD);
+            }
         }
 
         // Add |sourceCompatibility| and |targetCompatibility| in build.gradle before |dependencies| existing.
@@ -119,7 +130,7 @@ public class EmbulkMigrate
                 });
         }
         if (!migrator.match("build.gradle", SOURCE_COMPATIBILITY_IN_GRADLE)) {
-            migrator.insertLine("build.gradle", DEPENDENCIES_IN_GRADLE, new StringUpsert() {
+            migrator.insertLine("build.gradle", TARGET_COMPATIBILITY_IN_GRADLE_WITH_INDENT, new StringUpsert() {
                     @Override
                     public String getUpsertd(Matcher matcher) {
                         return String.format("%ssourceCompatibility = 1.7\n", matcher.group(1));
@@ -174,7 +185,7 @@ public class EmbulkMigrate
         }
 
         // Update |embulk-core| and |embulk-standards| versions depending.
-        migrator.replace("**/build.gradle", EMBULK_CORE_OR_STANDARDS_IN_GRADLE, 1, thisEmbulkVersion);
+        migrator.replaceRecursive("build.gradle", EMBULK_CORE_OR_STANDARDS_IN_GRADLE, 1, thisEmbulkVersion);
     }
 
     private void migrateRubyPlugin(final Migrator migrator,
@@ -187,7 +198,7 @@ public class EmbulkMigrate
         // Update |embulk| version depending.
         if (fromVersion.compareTo(new ComparableVersion("0.1.0")) <= 0) {
             // Add add_development_dependency.
-            migrator.insertLine("**/*.gemspec", DEVELOPMENT_DEPENDENCY_IN_GEMSPEC, new StringUpsert() {
+            migrator.insertLineRecursive("*.gemspec", DEVELOPMENT_DEPENDENCY_IN_GEMSPEC, new StringUpsert() {
                     @Override
                     public String getUpsertd(Matcher matcher) {
                         return String.format("%s.add_development_dependency 'embulk', ['>= %s']",
@@ -197,9 +208,9 @@ public class EmbulkMigrate
                 });
         }
         else {
-            if (migrator.replace("**/*.gemspec", EMBULK_DEPENDENCY_PRERELEASE_IN_GEMSPEC, 1,
+            if (migrator.replaceRecursive("*.gemspec", EMBULK_DEPENDENCY_PRERELEASE_IN_GEMSPEC, 1,
                                  ">= " + thisEmbulkVersion).isEmpty()) {
-                migrator.replace("**/*.gemspec", EMBULK_DEPENDENCY_IN_GEMSPEC, 1, thisEmbulkVersion);
+                migrator.replaceRecursive("*.gemspec", EMBULK_DEPENDENCY_IN_GEMSPEC, 1, thisEmbulkVersion);
             }
         }
     }
@@ -228,127 +239,124 @@ public class EmbulkMigrate
             Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath);
         }
 
-        public boolean match(String glob, String pattern)
+        public boolean match(String filePath, Pattern pattern)
                 throws IOException
         {
-            return !matchers(glob, Pattern.compile(pattern)).isEmpty();
+            final Matcher matcher = pattern.matcher(read(this.basePath.resolve(filePath)));
+            return matcher.find();
         }
 
-        public boolean match(String glob, Pattern pattern)
+        public boolean matchRecursive(String baseFileNameGlob, Pattern pattern)
                 throws IOException
         {
-            return !matchers(glob, pattern).isEmpty();
+            return !matchersRecursive(baseFileNameGlob, pattern).isEmpty();
         }
 
-        public List<Matcher> matchers(String glob, String pattern)
+        public List<Matcher> matchersRecursive(final String baseFileNameGlob, final Pattern pattern)
                 throws IOException
         {
-            return matchers(glob, Pattern.compile(pattern));
-        }
-
-        public List<Matcher> matchers(String glob, Pattern pattern)
-                throws IOException
-        {
-            ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
-            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.basePath, glob)) {
-                for (Path filePath : directoryStream) {
-                    final Matcher matcher = pattern.matcher(read(filePath));
-                    if (matcher.matches()) {
-                        matchers.add(matcher);
-                    }
-                }
-            }
-            return matchers.build();
-        }
-
-        public final List<Matcher> replace(String glob, Pattern pattern, int index, final String immediate)
-                throws IOException
-        {
-            return replace(glob, pattern, index, new StringUpsert()
-                {
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
+            Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
                     @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return immediate;
+                    public FileVisitResult visitFile(Path filePath, BasicFileAttributes attributes) throws IOException {
+                        if (pathMatcher.matches(filePath.getFileName())) {
+                            final Matcher matcher = pattern.matcher(read(filePath));
+                            if (matcher.find()) {
+                                matchers.add(matcher);
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
                 });
-        }
-
-        public List<Matcher> replace(String glob, Pattern pattern, int index, StringUpsert stringUpsert)
-                throws IOException
-        {
-            ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
-            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.basePath, glob)) {
-                for (Path filePath : directoryStream) {
-                    final String originalData = read(filePath);
-                    Matcher first = null;
-                    int position = 0;
-                    String modifiedData = originalData;
-                    while (position < modifiedData.length()) {
-                        final Matcher matcher = pattern.matcher(modifiedData.substring(position));
-                        if (!matcher.matches()) {
-                            break;
-                        }
-                        if (first == null) {
-                            first = matcher;
-                        }
-                        final String replacingString = stringUpsert.getUpsertd(matcher);
-                        modifiedData =
-                            modifiedData.substring(0, matcher.start(index) - 1) +
-                            replacingString +
-                            modifiedData.substring(matcher.end(index));
-                        position =
-                            matcher.start(index) +
-                            replacingString.length() +
-                            (matcher.end() - matcher.end(index));
-                    }
-                    if (first != null) {
-                        modify(filePath, modifiedData);
-                    }
-                    matchers.add(first);
-                }
-            }
             return matchers.build();
         }
 
-        public final List<Matcher> insertLine(String glob, String pattern, StringUpsert stringUpsert)
+        public List<Matcher> replaceRecursive(final String baseFileNameGlob,
+                                              final Pattern pattern,
+                                              final int index,
+                                              final String immediate)
                 throws IOException
         {
-            return insertLine(glob, Pattern.compile(pattern), stringUpsert);
-        }
-
-        public final List<Matcher> insertLine(String glob, Pattern pattern, final String immediate)
-                throws IOException
-        {
-            return insertLine(glob, pattern, new StringUpsert()
-                {
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
+            Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
                     @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return immediate;
+                    public FileVisitResult visitFile(Path filePath, BasicFileAttributes attributes) throws IOException {
+                        if (pathMatcher.matches(filePath.getFileName())) {
+                            final String originalData = read(filePath);
+                            Matcher first = null;
+                            int position = 0;
+                            String modifiedData = originalData;
+                            while (position < modifiedData.length()) {
+                                final Matcher matcher = pattern.matcher(modifiedData.substring(position));
+                                if (!matcher.matches()) {
+                                    break;
+                                }
+                                if (first == null) {
+                                    first = matcher;
+                                }
+                                final String replacingString = immediate;
+                                modifiedData =
+                                    modifiedData.substring(0, matcher.start(index) - 1) +
+                                    replacingString +
+                                    modifiedData.substring(matcher.end(index));
+                                position =
+                                    matcher.start(index) +
+                                    replacingString.length() +
+                                    (matcher.end() - matcher.end(index));
+                            }
+                            if (first != null) {
+                                modify(filePath, modifiedData);
+                                matchers.add(first);
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
                 });
+            return matchers.build();
         }
 
-        public List<Matcher> insertLine(String glob, Pattern pattern, StringUpsert stringUpsert)
+        public boolean insertLine(Path filePath, Pattern pattern, StringUpsert stringUpsert)
                 throws IOException
         {
-            ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
-            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(this.basePath, glob)) {
-                for (Path filePath : directoryStream) {
-                    final String originalData = read(filePath);
-                    final Matcher matcher = pattern.matcher(originalData);
-                    if (matcher.matches()) {
-                        final String preMatch = originalData.substring(0, matcher.start());
-                        final int lineNumber = preMatch.split("\n").length;
-                        final String replacingString = stringUpsert.getUpsertd(matcher);
-                        List<String> lines = new ArrayList<String>(Arrays.asList(originalData.split("\n")));
-                        lines.add(lineNumber + 1, replacingString);
-                        final String modifiedData = Joiner.on("\n").join(lines);
-                        modify(filePath, modifiedData);
-                        matchers.add(matcher);
-                    }
-                }
+            final String originalData = read(filePath);
+            final Matcher matcher = pattern.matcher(originalData);
+            if (matcher.find()) {
+                final String preMatch = originalData.substring(0, matcher.start());
+                final int lineNumber = preMatch.split("\n").length;
+                final String replacingString = stringUpsert.getUpsertd(matcher);
+                List<String> lines = new ArrayList<String>(Arrays.asList(originalData.split("\n")));
+                lines.add(lineNumber + 1, replacingString);
+                final String modifiedData = Joiner.on("\n").join(lines);
+                modify(filePath, modifiedData);
+                return true;
             }
-            return matchers.build();
+            return false;
+        }
+
+        public boolean insertLine(String filePath, Pattern pattern, StringUpsert stringUpsert)
+                throws IOException
+        {
+            return insertLine(this.basePath.resolve(filePath), pattern, stringUpsert);
+        }
+
+        public void insertLineRecursive(final String baseFileNameGlob,
+                                        final Pattern pattern,
+                                        final StringUpsert stringUpsert)
+                throws IOException
+        {
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
+            Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult visitFile(Path filePath, BasicFileAttributes attributes) throws IOException {
+                        if (pathMatcher.matches(filePath.getFileName())) {
+                            insertLine(filePath, pattern, stringUpsert);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
         }
 
         public void write(String fileName, String writtenData)
@@ -364,7 +372,7 @@ public class EmbulkMigrate
         {
             final String originalData = read(filePath);
             if (!originalData.equals(modifiedData)) {
-                Files.write(filePath, modifiedData.getBytes(StandardCharsets.UTF_8));
+                Files.write(filePath, modifiedData.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
                 if (!this.modifiedFiles.contains(filePath)) {
                     if (originalData.isEmpty()) {
                         System.out.printf("  Created %s\n", filePath.toString());
@@ -387,7 +395,12 @@ public class EmbulkMigrate
         private byte[] readBytes(Path filePath)
                 throws IOException
         {
-            return Files.readAllBytes(filePath);
+            try {
+                return Files.readAllBytes(filePath);
+            }
+            catch (NoSuchFileException ex) {
+                return new byte[0];
+            }
         }
 
         private final Path basePath;
@@ -415,7 +428,7 @@ public class EmbulkMigrate
     private static final Pattern JSON_COLUMN_METHOD_IN_ALL_JAVA = Pattern.compile(
         "void\\s+jsonColumn");
     private static final Pattern TIMESTAMP_COLUMN_METHOD_IN_ALL_JAVA = Pattern.compile(
-        "^(\\W+).*?void\\s+timestampColumn");
+        "^(\\W+).*?void\\s+timestampColumn", Pattern.MULTILINE);
     private static final Pattern TIMESTAMP_COLUMN_METHOD_AFTER_NEWLINE_IN_ALL_JAVA = Pattern.compile(
         "(\\r?\\n)(\\W+).*?void\\s+timestampColumn");
     private static final Pattern TARGET_COMPATIBILITY_IN_GRADLE = Pattern.compile(
@@ -423,15 +436,17 @@ public class EmbulkMigrate
     private static final Pattern SOURCE_COMPATIBILITY_IN_GRADLE = Pattern.compile(
         "sourceCompatibility");
     private static final Pattern DEPENDENCIES_IN_GRADLE = Pattern.compile(
-        "^([ \\t]*)dependencies\\s*{");
+        "^([ \\t]*)dependencies\\s*\\{", Pattern.MULTILINE);
+    private static final Pattern TARGET_COMPATIBILITY_IN_GRADLE_WITH_INDENT = Pattern.compile(
+        "^([ \\t]*)targetCompatibility", Pattern.MULTILINE);
     private static final Pattern CHECKSTYLE_PLUGIN_IN_GRADLE = Pattern.compile(
         "id\\s+(?<quote>[\"\'])checkstyle\\k<quote>");
     private static final Pattern JAVA_PLUGIN_IN_GRADLE = Pattern.compile(
-        "^([ \t]*)id( +)([\"\'])java[\"\']");
+        "^([ \t]*)id( +)([\"\'])java[\"\']", Pattern.MULTILINE);
     private static final Pattern CHECKSTYLE_CONFIGURATION_IN_GRADLE = Pattern.compile(
-        "checkstyle\\s+{");
+        "checkstyle\\s+\\{");
     private static final Pattern GEM_TASK_IN_GRADLE = Pattern.compile(
-        "^([ \\t]*)task\\s+gem\\W.*{");
+        "^([ \\t]*)task\\s+gem\\W.*\\{", Pattern.MULTILINE);
     private static final Pattern EMBULK_CORE_OR_STANDARDS_IN_GRADLE = Pattern.compile(
         "org\\.embulk:embulk-(?:core|standards):([\\d\\.\\+]+)?");
     private static final Pattern DEVELOPMENT_DEPENDENCY_IN_GEMSPEC = Pattern.compile(
