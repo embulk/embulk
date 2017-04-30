@@ -55,12 +55,23 @@ public class GuessExecutor
         @Config("exclude_guess_plugins")
         @ConfigDefault("[]")
         public List<PluginType> getExcludeGuessPlugins();
+
+        @Config("guess_sample_buffer_bytes")
+        @ConfigDefault("32768") // 32 * 1024
+        public int getSampleBufferBytes();
     }
 
     public static void registerDefaultGuessPluginTo(Binder binder, PluginType type)
     {
         Multibinder<PluginType> multibinder = Multibinder.newSetBinder(binder, PluginType.class, ForGuess.class);
         multibinder.addBinding().toInstance(type);
+    }
+
+    // Used by FileInputRunner#guess(..)
+    public static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig)
+    {
+        final GuessExecutorTask execTask = execConfig.loadConfig(GuessExecutorTask.class);
+        return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
     }
 
     @Inject

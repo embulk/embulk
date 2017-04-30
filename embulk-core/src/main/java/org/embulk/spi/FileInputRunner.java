@@ -17,6 +17,8 @@ import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.exec.ConfigurableGuessInputPlugin;
 import org.embulk.exec.NoSampleException;
 
+import static org.embulk.exec.GuessExecutor.createSampleBufferConfigFromExecConfig;
+
 public class FileInputRunner
         implements InputPlugin, ConfigurableGuessInputPlugin
 {
@@ -80,14 +82,15 @@ public class FileInputRunner
         return guess(Exec.newConfigSource(), config);
     }
 
-    public ConfigDiff guess(ConfigSource execConfig, ConfigSource config)
+    public ConfigDiff guess(ConfigSource execConfig, ConfigSource inputConfig)
     {
-        Buffer sample = SamplingParserPlugin.runFileInputSampling(this, config);
+        final ConfigSource sampleBufferConfig = createSampleBufferConfigFromExecConfig(execConfig);
+        final Buffer sample = SamplingParserPlugin.runFileInputSampling(this, inputConfig, sampleBufferConfig);
         // SamplingParserPlugin.runFileInputSampling throws NoSampleException if there're
         // no files or all files are smaller than minSampleSize (40 bytes).
 
         GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
-        return guessExecutor.guessParserConfig(sample, config, execConfig);
+        return guessExecutor.guessParserConfig(sample, inputConfig, execConfig);
     }
 
     private class RunnerControl
