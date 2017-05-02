@@ -128,17 +128,19 @@ The ``file`` input plugin reads files from local file system.
 Options
 ~~~~~~~~
 
-+----------------+----------+------------------------------------------------+-----------+
-| name           | type     | description                                    | required? |
-+================+==========+================================================+===========+
-| path\_prefix   | string   | Path prefix of input files                     | required  |
-+----------------+----------+------------------------------------------------+-----------+
-| parsers        | hash     | Parsers configurations (see below)             | required  |
-+----------------+----------+------------------------------------------------+-----------+
-| decoders       | array    | Decoder configuration (see below)              |           |
-+----------------+----------+------------------------------------------------+-----------+
-| last\_path     | string   | Name of last read file in previous operation   |           |
-+----------------+----------+------------------------------------------------+-----------+
++------------------+----------+------------------------------------------------+-----------------------+
+| name             | type     | description                                    | required?             |
++==================+==========+================================================+=======================+
+| path\_prefix     | string   | Path prefix of input files                     | required              |
++------------------+----------+------------------------------------------------+-----------------------+
+| parsers          | hash     | Parsers configurations (see below)             | required              |
++------------------+----------+------------------------------------------------+-----------------------+
+| decoders         | array    | Decoder configuration (see below)              |                       |
++------------------+----------+------------------------------------------------+-----------------------+
+| last\_path       | string   | Name of last read file in previous operation   |                       |
++------------------+----------+------------------------------------------------+-----------------------+
+| follow\_symlinks | boolean  | If `true`, follow symbolic link directories    | ``false`` by default  |
++------------------+----------+------------------------------------------------+-----------------------+
 
 The ``path_prefix`` option is required. If you have files as following, you may set ``path_prefix: /path/to/files/sample_``:
 
