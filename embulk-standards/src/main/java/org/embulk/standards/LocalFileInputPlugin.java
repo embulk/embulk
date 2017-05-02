@@ -48,7 +48,7 @@ public class LocalFileInputPlugin
         Optional<String> getLastPath();
 
         @Config("follow_symlinks")
-        @ConfigDefault("true")
+        @ConfigDefault("false")
         boolean getFollowSymlinks();
 
         List<String> getFiles();
