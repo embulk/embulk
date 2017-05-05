@@ -47,7 +47,8 @@ public class RubyDateParser
             "am", "pm", "a.m.", "p.m."
     };
 
-    public static class Bag
+    // Ported Date::Format::Bag from lib/ruby/stdlib/date/format.rb in JRuby
+    public static class FormatBag
     {
         int mday = Integer.MIN_VALUE;
         int wday = Integer.MIN_VALUE;
@@ -413,7 +414,7 @@ public class RubyDateParser
 
     public RubyTime parse(List<StrptimeToken> compiledPattern, String text)
     {
-        final Bag bag = parseInternal(compiledPattern, text);
+        final FormatBag bag = parseInternal(compiledPattern, text);
         if (bag == null) {
             return null;
         }
@@ -426,13 +427,13 @@ public class RubyDateParser
     }
 
     // Ported from date__strptime_internal in ext/date/date_strptime.c
-    public Bag parseInternal(final String format, final String text)
+    public FormatBag parseInternal(final String format, final String text)
     {
         final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
         return parseInternal(compiledPattern, text);
     }
 
-    public Bag parseInternal(final List<StrptimeToken> compiledPattern, final String text)
+    public FormatBag parseInternal(final List<StrptimeToken> compiledPattern, final String text)
     {
         return new StringParser(text).parse(compiledPattern);
     }
@@ -446,7 +447,7 @@ public class RubyDateParser
                         ")", Pattern.CASE_INSENSITIVE);
 
         private final String text;
-        private final Bag bag;
+        private final FormatBag bag;
 
         private int pos;
         private boolean fail;
@@ -454,13 +455,13 @@ public class RubyDateParser
         private StringParser(String text)
         {
             this.text = text;
-            this.bag = new Bag();
+            this.bag = new FormatBag();
 
             this.pos = 0;
             this.fail = false;
         }
 
-        private Bag parse(final List<StrptimeToken> compiledPattern)
+        private FormatBag parse(final List<StrptimeToken> compiledPattern)
         {
             for (int tokenIndex = 0; tokenIndex < compiledPattern.size(); tokenIndex++) {
                 final StrptimeToken token = compiledPattern.get(tokenIndex);

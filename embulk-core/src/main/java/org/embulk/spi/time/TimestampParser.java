@@ -16,7 +16,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
-import org.embulk.spi.time.RubyDateParser.Bag;
+import org.embulk.spi.time.RubyDateParser.FormatBag;
 import org.embulk.spi.time.RubyDateParser.LocalTime;
 
 import java.util.List;
@@ -137,7 +137,7 @@ public class TimestampParser
             throw new TimestampParseException("text is null or empty string.");
         }
 
-        final Bag bag = parser.parseInternal(compiledPattern, text);
+        final FormatBag bag = parser.parseInternal(compiledPattern, text);
         if (bag == null) {
             throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
         }
