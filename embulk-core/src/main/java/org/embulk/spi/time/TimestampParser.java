@@ -9,6 +9,7 @@ import java.util.Calendar;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
@@ -17,7 +18,6 @@ import org.embulk.config.ConfigException;
 import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
 import org.embulk.spi.time.RubyDateParser.FormatBag;
-import org.embulk.spi.time.RubyDateParser.LocalTime;
 
 import java.util.List;
 
@@ -145,7 +145,7 @@ public class TimestampParser
         bag.setMonthIfNotSet(calendar.get(Calendar.MONTH) + 1);
         bag.setMdayIfNotSet(calendar.get(Calendar.DAY_OF_MONTH));
 
-        final LocalTime local = bag.makeLocalTime();
+        final LocalTime local = createLocalTimeFromFormatBag(bag);
         final String zone = local.getZone();
         final DateTimeZone timeZone;
         if (zone != null) {
@@ -161,5 +161,85 @@ public class TimestampParser
 
         final long sec = timeZone.convertLocalToUTC(local.getSeconds() * 1000, false) / 1000;
         return Timestamp.ofEpochSecond(sec, local.getNsecFraction());
+    }
+
+    public LocalTime createLocalTimeFromFormatBag(FormatBag bag)
+    {
+        final long sec_fraction_nsec;
+        if (FormatBag.has(bag.sec_fraction)) {
+            sec_fraction_nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
+        }
+        else {
+            sec_fraction_nsec = 0;
+        }
+
+        final long sec;
+        if (bag.hasSeconds()) {
+            if (FormatBag.has(bag.seconds_size)) {
+                sec = bag.seconds / (int)Math.pow(10, bag.seconds_size);
+            }
+            else { // int
+                sec = bag.seconds;
+            }
+
+        } else {
+            final int year;
+            if (FormatBag.has(bag.year)) {
+                year = bag.year;
+            }
+            else {
+                year = 1970;
+            }
+
+            // set up with min this and then add to allow rolling over
+            DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
+            if (FormatBag.has(bag.mon)) {
+                dt = dt.plusMonths(bag.mon - 1);
+            }
+            if (FormatBag.has(bag.mday)) {
+                dt = dt.plusDays(bag.mday - 1);
+            }
+            if (FormatBag.has(bag.hour)) {
+                dt = dt.plusHours(bag.hour);
+            }
+            if (FormatBag.has(bag.min)) {
+                dt = dt.plusMinutes(bag.min);
+            }
+            if (FormatBag.has(bag.sec)) {
+                dt = dt.plusSeconds(bag.sec);
+            }
+            sec = dt.getMillis() / 1000;
+        }
+
+        return new LocalTime(sec, sec_fraction_nsec, bag.zone);
+    }
+
+    private static class LocalTime
+    {
+        private final long seconds;
+        private final long nsecFraction;
+        private final String zone;  // +0900, JST, UTC
+
+        public LocalTime(long seconds, long nsecFraction, String zone)
+        {
+            this.seconds = seconds;
+            this.nsecFraction = nsecFraction;
+            this.zone = zone;
+        }
+
+        public long getSeconds()
+        {
+            return seconds;
+        }
+
+        public long getNsecFraction()
+        {
+            return nsecFraction;
+        }
+
+        public String getZone()
+        {
+            return zone;
+        }
     }
 }

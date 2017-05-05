@@ -84,53 +84,6 @@ public class RubyDateParser
             fail = true;
         }
 
-        // @see https://github.com/jruby/jruby/blob/master/core/src/main/java/org/jruby/RubyTime.java#L1366
-        public LocalTime makeLocalTime()
-        {
-            long sec_fraction_nsec = 0;
-            if (has(this.sec_fraction)) {
-                sec_fraction_nsec = this.sec_fraction * (int)Math.pow(10, 9 - this.sec_fraction_size);
-            }
-
-            long sec;
-            if (hasSeconds()) {
-                if (has(this.seconds_size)) {
-                    sec = this.seconds / (int)Math.pow(10, this.seconds_size);
-                } else { // int
-                    sec = this.seconds;
-                }
-
-            } else {
-                int year;
-                if (has(this.year)) {
-                    year = this.year;
-                } else {
-                    year = 1970;
-                }
-
-                // set up with min this and then add to allow rolling over
-                DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-                if (has(this.mon)) {
-                    dt = dt.plusMonths(this.mon - 1);
-                }
-                if (has(this.mday)) {
-                    dt = dt.plusDays(this.mday - 1);
-                }
-                if (has(this.hour)) {
-                    dt = dt.plusHours(this.hour);
-                }
-                if (has(this.min)) {
-                    dt = dt.plusMinutes(this.min);
-                }
-                if (has(this.sec)) {
-                    dt = dt.plusSeconds(this.sec);
-                }
-                sec = dt.getMillis() / 1000;
-            }
-
-            return new LocalTime(sec, sec_fraction_nsec, zone);
-        }
-
         public HashMap<String, Object> toMap(ThreadContext context)
         {
             HashMap<String, Object> map = new HashMap<>();
@@ -237,43 +190,14 @@ public class RubyDateParser
             }
         }
 
-        private boolean hasSeconds()
+        public boolean hasSeconds()
         {
             return seconds != Long.MIN_VALUE;
         }
 
-        private static boolean has(int v)
+        public static boolean has(int v)
         {
             return v != Integer.MIN_VALUE;
-        }
-    }
-
-    public static class LocalTime
-    {
-        private final long seconds;
-        private final long nsecFraction;
-        private final String zone;  // +0900, JST, UTC
-
-        public LocalTime(long seconds, long nsecFraction, String zone)
-        {
-            this.seconds = seconds;
-            this.nsecFraction = nsecFraction;
-            this.zone = zone;
-        }
-
-        public long getSeconds()
-        {
-            return seconds;
-        }
-
-        public long getNsecFraction()
-        {
-            return nsecFraction;
-        }
-
-        public String getZone()
-        {
-            return zone;
         }
     }
 
