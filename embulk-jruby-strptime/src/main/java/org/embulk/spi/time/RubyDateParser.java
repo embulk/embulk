@@ -23,6 +23,8 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.util.ByteList;
 import org.jruby.util.RubyTimeOutputFormatter;
 
+import static org.jruby.RubyRational.newRationalCanonicalize;
+
 /**
  * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.x.
  */
@@ -92,7 +94,7 @@ public class RubyDateParser
 
             long sec;
             if (hasSeconds()) {
-                if (has(this.seconds_size)) { // Rational
+                if (has(this.seconds_size)) {
                     sec = this.seconds / (int)Math.pow(10, this.seconds_size);
                 } else { // int
                     sec = this.seconds;
@@ -129,7 +131,7 @@ public class RubyDateParser
             return new LocalTime(sec, sec_fraction_nsec, zone);
         }
 
-        public HashMap<String, Object> toMap()
+        public HashMap<String, Object> toMap(ThreadContext context)
         {
             HashMap<String, Object> map = new HashMap<>();
             if (has(mday)) {
@@ -179,15 +181,13 @@ public class RubyDateParser
                 }
             }
             if (has(sec_fraction)) {
-                int sec_fraction_rational = (int)Math.pow(10, sec_fraction_size);
-                map.put("sec_fraction", ((float) sec_fraction / sec_fraction_rational));
-                // TODO return Rational
+                map.put("sec_fraction", newRationalCanonicalize(context, sec_fraction, (long)Math.pow(10, sec_fraction_size)));
             }
             if (hasSeconds()) {
                 if (has(seconds_size)) {
-                    int seconds_rational = (int)Math.pow(10, seconds_size);
-                    map.put("seconds", ((float) seconds / seconds_rational));
-                } else {
+                    map.put("seconds", newRationalCanonicalize(context, seconds, (long) Math.pow(10, seconds_size)));
+                }
+                else {
                     map.put("seconds", seconds);
                 }
             }
@@ -445,7 +445,7 @@ public class RubyDateParser
         final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
         final FormatBag bag = parse(compiledPattern, text);
         if (bag != null) {
-            return bag.toMap();
+            return bag.toMap(context);
         }
         else {
             return null;
