@@ -137,7 +137,7 @@ public class TimestampParser
             throw new TimestampParseException("text is null or empty string.");
         }
 
-        final FormatBag bag = parser.parseInternal(compiledPattern, text);
+        final FormatBag bag = parser.parse(compiledPattern, text);
         if (bag == null) {
             throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
         }

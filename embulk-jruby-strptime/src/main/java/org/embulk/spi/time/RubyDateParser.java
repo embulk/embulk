@@ -18,7 +18,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import org.jruby.RubyString;
-import org.jruby.RubyTime;
 import org.embulk.spi.time.lexer.StrptimeLexer;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.util.ByteList;
@@ -301,12 +300,6 @@ public class RubyDateParser
         }
     }
 
-    /** Convenience method when using no pattern caching */
-    public RubyTime compileAndParse(final RubyString format, final boolean dateLibrary, final RubyString text)
-    {
-        return parse(compilePattern(format, dateLibrary), text.decodeString());
-    }
-
     // Ported from org.jruby.util.RubyDateFormatter#compilePattern
     public List<StrptimeToken> compilePattern(final RubyString format, final boolean dateLibrary)
     {
@@ -412,30 +405,51 @@ public class RubyDateParser
         return compiledPattern;
     }
 
-    public RubyTime parse(List<StrptimeToken> compiledPattern, String text)
+    // Ported Date._strptime_i method in lib/ruby/stdlib/date/format.rb in JRuby
+    public FormatBag parse(final List<StrptimeToken> compiledPattern, final String text)
     {
-        final FormatBag bag = parseInternal(compiledPattern, text);
+        final FormatBag bag = new StringParser(text).parse(compiledPattern);
         if (bag == null) {
             return null;
         }
 
-        final LocalTime local = bag.makeLocalTime();
-        long sec = local.getSeconds() + RubyDateParse.dateZoneToDiff(local.getZone());
-        long msec = sec + local.getNsecFraction() / 1000000;
-        int nsec = (int) (local.getNsecFraction() % 1000000);
-        return RubyTime.newTime(context.runtime, new DateTime(msec, DateTimeZone.UTC), nsec);
+        if (FormatBag.has(bag._cent)) {
+            if (FormatBag.has(bag.cwyear)) {
+                bag.cwyear += bag._cent * 100;
+            }
+            if (FormatBag.has(bag.year)) {
+                bag.year += bag._cent * 100;
+            }
+
+            // delete bag._cent
+            bag._cent = Integer.MIN_VALUE;
+        }
+
+        if (FormatBag.has(bag._merid)) {
+            if (FormatBag.has(bag.hour)) {
+                bag.hour %= 12;
+                bag.hour += bag._merid;
+            }
+
+            // delete bag._merid
+            bag._merid = Integer.MIN_VALUE;
+        }
+
+        return bag;
     }
 
-    // Ported from date__strptime_internal in ext/date/date_strptime.c
-    public FormatBag parseInternal(final String format, final String text)
+    // Ported from Date._strptime method in lib/ruby/stdlib/date/format.rb in JRuby
+    // This is Java implementation of date__strptime method in ext/date/date_strptime.c in Ruby
+    public HashMap<String, Object> parse(final String format, final String text)
     {
         final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
-        return parseInternal(compiledPattern, text);
-    }
-
-    public FormatBag parseInternal(final List<StrptimeToken> compiledPattern, final String text)
-    {
-        return new StringParser(text).parse(compiledPattern);
+        final FormatBag bag = parse(compiledPattern, text);
+        if (bag != null) {
+            return bag.toMap();
+        }
+        else {
+            return null;
+        }
     }
 
     private static class StringParser
@@ -796,28 +810,6 @@ public class RubyDateParser
 
             if (text.length() > pos) {
                 bag.leftover = text.substring(pos, text.length());
-            }
-
-            if (bag.has(bag._cent)) {
-                if (bag.has(bag.cwyear)) {
-                    bag.cwyear += bag._cent * 100;
-                }
-                if (bag.has(bag.year)) {
-                    bag.year += bag._cent * 100;
-                }
-
-                // delete bag._cent
-                bag._cent = Integer.MIN_VALUE;
-            }
-
-            if (bag.has(bag._merid)) {
-                if (bag.has(bag.hour)) {
-                    bag.hour %= 12;
-                    bag.hour += bag._merid;
-                }
-
-                // delete bag._merid
-                bag._merid = Integer.MIN_VALUE;
             }
 
             return bag;
