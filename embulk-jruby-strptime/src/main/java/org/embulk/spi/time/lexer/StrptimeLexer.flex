@@ -55,7 +55,7 @@ Width = [1-9][0-9]*
 // Chars are sorted by | ruby -e 'p STDIN.each_char.sort{|a,b|a.casecmp(b).tap{|c|break a<=>b if c==0}}.join'
 Conversion = [\+AaBbCcDdeFGgHhIjkLlMmNnPpQRrSsTtUuVvWwXxYyZz] | {IgnoredModifier} | {Zone}
 // From MRI strftime.c
-IgnoredModifier = E[CcXxYy] | O[deHkIlMmSUuVWwy]
+IgnoredModifier = E[CcXxYy] | O[deHIMmSUuVWwy]
 Zone = :{1,3} z
 
 SimpleDirective = "%"
