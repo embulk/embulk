@@ -1,4 +1,6 @@
-package org.jruby.util;
+package org.embulk.spi.time;
+
+import org.jruby.util.RubyTimeOutputFormatter;
 
 // Ported from org.jruby.util.RubyDateFormatter.Token in JRuby
 public class StrftimeToken

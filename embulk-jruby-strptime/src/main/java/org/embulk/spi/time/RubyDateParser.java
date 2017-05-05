@@ -1,4 +1,4 @@
-package org.jruby.util;
+package org.embulk.spi.time;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,8 +19,10 @@ import org.joda.time.DateTimeZone;
 
 import org.jruby.RubyString;
 import org.jruby.RubyTime;
-import org.jruby.lexer.StrptimeLexer;
+import org.embulk.spi.time.lexer.StrptimeLexer;
 import org.jruby.runtime.ThreadContext;
+import org.jruby.util.ByteList;
+import org.jruby.util.RubyTimeOutputFormatter;
 
 /**
  * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.x.

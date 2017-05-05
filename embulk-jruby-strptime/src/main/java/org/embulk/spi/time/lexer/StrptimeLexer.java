@@ -2,9 +2,9 @@
 
 /* IMPORTANT: must compile with JFlex 1.4, JFlex 1.4.3 seems buggy with look-ahead */
 
-package org.jruby.lexer;
+package org.embulk.spi.time.lexer;
 
-import org.jruby.util.StrftimeToken;
+import org.embulk.spi.time.StrftimeToken;
 import org.jruby.util.RubyTimeOutputFormatter;
 
 
@@ -482,7 +482,7 @@ public class StrptimeLexer {
    * @return      the next token
    * @exception   java.io.IOException  if any I/O-Error occurs
    */
-  public org.jruby.util.StrftimeToken yylex() throws java.io.IOException {
+  public StrftimeToken yylex() throws java.io.IOException {
     int zzInput;
     int zzAction;
 

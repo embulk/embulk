@@ -1,4 +1,4 @@
-package org.jruby.util;
+package org.embulk.spi.time;
 
 import java.util.HashMap;
 import java.util.Map;
