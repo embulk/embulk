@@ -16,10 +16,8 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
-import org.jruby.util.RubyDateParser;
-import org.jruby.util.RubyDateParser.Bag;
-import org.jruby.util.RubyDateParser.LocalTime;
-import org.jruby.util.StrftimeToken;
+import org.embulk.spi.time.RubyDateParser.Bag;
+import org.embulk.spi.time.RubyDateParser.LocalTime;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 /* IMPORTANT: must compile with JFlex 1.4, JFlex 1.4.3 seems buggy with look-ahead */
 
-package org.jruby.lexer;
+package org.embulk.spi.time.lexer;
 
-import org.jruby.util.StrftimeToken;
+import org.embulk.spi.time.StrftimeToken;
 import org.jruby.util.RubyTimeOutputFormatter;
 
 %%
@@ -10,7 +10,7 @@ import org.jruby.util.RubyTimeOutputFormatter;
 %class StrptimeLexer
 //%debug
 %unicode
-%type org.jruby.util.StrftimeToken
+%type org.embulk.spi.time.StrftimeToken
 %{
     StringBuilder stringBuf = new StringBuilder();
 

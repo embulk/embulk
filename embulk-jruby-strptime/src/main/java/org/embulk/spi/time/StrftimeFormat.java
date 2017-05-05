@@ -1,6 +1,4 @@
-package org.jruby.util;
-
-import static org.jruby.util.StrftimeToken.CONVERSION2TOKEN;
+package org.embulk.spi.time;
 
 // Ported from org.jruby.util.RubyDateFormatter.Format in JRuby
 enum StrftimeFormat
@@ -89,12 +87,12 @@ enum StrftimeFormat
 
     private StrftimeFormat(char conversion)
     {
-        CONVERSION2TOKEN[conversion] = new StrftimeToken(this);
+        StrftimeToken.CONVERSION2TOKEN[conversion] = new StrftimeToken(this);
     }
 
     private StrftimeFormat(char conversion, char alias)
     {
         this(conversion);
-        CONVERSION2TOKEN[alias] = CONVERSION2TOKEN[conversion];
+        StrftimeToken.CONVERSION2TOKEN[alias] = StrftimeToken.CONVERSION2TOKEN[conversion];
     }
 }
