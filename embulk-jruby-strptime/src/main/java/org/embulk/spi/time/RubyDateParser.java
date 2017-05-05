@@ -287,15 +287,15 @@ public class RubyDateParser
     }
 
     // Ported from org.jruby.util.RubyDateFormatter#addToPattern
-    private void addToPattern(final List<StrftimeToken> compiledPattern, final String str)
+    private void addToPattern(final List<StrptimeToken> compiledPattern, final String str)
     {
         for (int i = 0; i < str.length(); i++) {
             final char c = str.charAt(i);
             if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
-                compiledPattern.add(StrftimeToken.format(c));
+                compiledPattern.add(StrptimeToken.format(c));
             }
             else {
-                compiledPattern.add(StrftimeToken.str(Character.toString(c)));
+                compiledPattern.add(StrptimeToken.str(Character.toString(c)));
             }
         }
     }
@@ -307,32 +307,32 @@ public class RubyDateParser
     }
 
     // Ported from org.jruby.util.RubyDateFormatter#compilePattern
-    public List<StrftimeToken> compilePattern(final RubyString format, final boolean dateLibrary)
+    public List<StrptimeToken> compilePattern(final RubyString format, final boolean dateLibrary)
     {
         return compilePattern(format.getByteList(), dateLibrary);
     }
 
     // Ported from org.jruby.util.RubyDateFormatter#compilePattern
-    public List<StrftimeToken> compilePattern(final ByteList pattern, final boolean dateLibrary)
+    public List<StrptimeToken> compilePattern(final ByteList pattern, final boolean dateLibrary)
     {
-        final List<StrftimeToken> compiledPattern = new LinkedList<>();
+        final List<StrptimeToken> compiledPattern = new LinkedList<>();
 
         final Encoding enc = pattern.getEncoding();
         if (!enc.isAsciiCompatible()) {
             throw context.runtime.newArgumentError("format should have ASCII compatible encoding");
         }
         if (enc != ASCIIEncoding.INSTANCE) { // default for ByteList
-            compiledPattern.add(new StrftimeToken(StrftimeFormat.FORMAT_ENCODING, enc));
+            compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_ENCODING, enc));
         }
 
         ByteArrayInputStream in = new ByteArrayInputStream(pattern.getUnsafeBytes(), pattern.getBegin(), pattern.getRealSize());
         Reader reader = new InputStreamReader(in, context.runtime.getEncodingService().charsetForEncoding(pattern.getEncoding()));
         lexer.yyreset(reader);
 
-        StrftimeToken token;
+        StrptimeToken token;
         try {
             while ((token = lexer.yylex()) != null) {
-                if (token.getFormat() != StrftimeFormat.FORMAT_SPECIAL) {
+                if (token.getFormat() != StrptimeFormat.FORMAT_SPECIAL) {
                     compiledPattern.add(token);
                 }
                 else {
@@ -349,14 +349,14 @@ public class RubyDateParser
                             addToPattern(compiledPattern, "Y-m-d");
                             break;
                         case 'n':
-                            compiledPattern.add(StrftimeToken.str("\n"));
+                            compiledPattern.add(StrptimeToken.str("\n"));
                             break;
                         case 'Q':
                             if (dateLibrary) {
-                                compiledPattern.add(new StrftimeToken(StrftimeFormat.FORMAT_MICROSEC_EPOCH));
+                                compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_MICROSEC_EPOCH));
                             }
                             else {
-                                compiledPattern.add(StrftimeToken.str("%Q"));
+                                compiledPattern.add(StrptimeToken.str("%Q"));
                             }
                             break;
                         case 'R':
@@ -370,31 +370,32 @@ public class RubyDateParser
                             addToPattern(compiledPattern, "H:M:S");
                             break;
                         case 't':
-                            compiledPattern.add(StrftimeToken.str("\t"));
+                            compiledPattern.add(StrptimeToken.str("\t"));
                             break;
                         case 'v':
                             addToPattern(compiledPattern, "e-");
                             if (!dateLibrary)
-                                compiledPattern.add(StrftimeToken.formatter(new RubyTimeOutputFormatter("^", 0)));
+                                compiledPattern.add(
+                                    StrptimeToken.formatter(new RubyTimeOutputFormatter("^", 0)));
                             addToPattern(compiledPattern, "b-Y");
                             break;
                         case 'Z':
                             if (dateLibrary) {
                                 // +HH:MM in 'date', never zone name
-                                compiledPattern.add(StrftimeToken.zoneOffsetColons(1));
+                                compiledPattern.add(StrptimeToken.zoneOffsetColons(1));
                             }
                             else {
-                                compiledPattern.add(new StrftimeToken(StrftimeFormat.FORMAT_ZONE_ID));
+                                compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_ZONE_ID));
                             }
                             break;
                         case '+':
                             if (!dateLibrary) {
-                                compiledPattern.add(StrftimeToken.str("%+"));
+                                compiledPattern.add(StrptimeToken.str("%+"));
                                 break;
                             }
                             addToPattern(compiledPattern, "a b e H:M:S ");
                             // %Z: +HH:MM in 'date', never zone name
-                            compiledPattern.add(StrftimeToken.zoneOffsetColons(1));
+                            compiledPattern.add(StrptimeToken.zoneOffsetColons(1));
                             addToPattern(compiledPattern, " Y");
                             break;
                         default:
@@ -410,7 +411,7 @@ public class RubyDateParser
         return compiledPattern;
     }
 
-    public RubyTime parse(List<StrftimeToken> compiledPattern, String text)
+    public RubyTime parse(List<StrptimeToken> compiledPattern, String text)
     {
         final Bag bag = parseInternal(compiledPattern, text);
         if (bag == null) {
@@ -427,11 +428,11 @@ public class RubyDateParser
     // Ported from date__strptime_internal in ext/date/date_strptime.c
     public Bag parseInternal(final String format, final String text)
     {
-        final List<StrftimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
+        final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
         return parseInternal(compiledPattern, text);
     }
 
-    public Bag parseInternal(final List<StrftimeToken> compiledPattern, final String text)
+    public Bag parseInternal(final List<StrptimeToken> compiledPattern, final String text)
     {
         return new StringParser(text).parse(compiledPattern);
     }
@@ -459,10 +460,10 @@ public class RubyDateParser
             this.fail = false;
         }
 
-        private Bag parse(final List<StrftimeToken> compiledPattern)
+        private Bag parse(final List<StrptimeToken> compiledPattern)
         {
             for (int tokenIndex = 0; tokenIndex < compiledPattern.size(); tokenIndex++) {
-                final StrftimeToken token = compiledPattern.get(tokenIndex);
+                final StrptimeToken token = compiledPattern.get(tokenIndex);
 
                 switch (token.getFormat()) {
                     case FORMAT_ENCODING: {
@@ -616,7 +617,7 @@ public class RubyDateParser
                         final long v;
                         final int initPos = pos;
                         if (isNumberPattern(compiledPattern, tokenIndex)) {
-                            if (token.getFormat() == StrftimeFormat.FORMAT_MILLISEC) {
+                            if (token.getFormat() == StrptimeFormat.FORMAT_MILLISEC) {
                                 v = readDigits(3);
                             }
                             else {
@@ -697,7 +698,7 @@ public class RubyDateParser
                             fail = true;
                         }
 
-                        if (token.getFormat() == StrftimeFormat.FORMAT_WEEK_YEAR_S) {
+                        if (token.getFormat() == StrptimeFormat.FORMAT_WEEK_YEAR_S) {
                             bag.wnum0 = (int)week;
                         } else {
                             bag.wnum1 = (int)week;
@@ -878,15 +879,15 @@ public class RubyDateParser
         }
 
         // Ported num_pattern_p from ext/date/date_strptime.c
-        private static boolean isNumberPattern(final List<StrftimeToken> compiledPattern, final int i)
+        private static boolean isNumberPattern(final List<StrptimeToken> compiledPattern, final int i)
         {
             if (compiledPattern.size() <= i + 1) {
                 return false;
             }
             else {
-                final StrftimeToken nextToken = compiledPattern.get(i + 1);
-                final StrftimeFormat f = nextToken.getFormat();
-                if (f == StrftimeFormat.FORMAT_STRING && isDigit(((String) nextToken.getData()).charAt(0))) {
+                final StrptimeToken nextToken = compiledPattern.get(i + 1);
+                final StrptimeFormat f = nextToken.getFormat();
+                if (f == StrptimeFormat.FORMAT_STRING && isDigit(((String) nextToken.getData()).charAt(0))) {
                     return true;
                 }
                 else if (NUMBER_PATTERNS.contains(f)) {
@@ -899,37 +900,37 @@ public class RubyDateParser
         }
 
         // CDdeFGgHIjkLlMmNQRrSsTUuVvWwXxYy
-        private static final EnumSet<StrftimeFormat> NUMBER_PATTERNS =
+        private static final EnumSet<StrptimeFormat> NUMBER_PATTERNS =
                 EnumSet.copyOf(Arrays.asList(
-                        StrftimeFormat.FORMAT_CENTURY, // 'C'
+                        StrptimeFormat.FORMAT_CENTURY, // 'C'
                         // D
-                        StrftimeFormat.FORMAT_DAY, // 'd'
-                        StrftimeFormat.FORMAT_DAY_S, // 'e'
+                        StrptimeFormat.FORMAT_DAY, // 'd'
+                        StrptimeFormat.FORMAT_DAY_S, // 'e'
                         // F
-                        StrftimeFormat.FORMAT_WEEKYEAR, // 'G'
-                        StrftimeFormat.FORMAT_WEEKYEAR_SHORT, // 'g'
-                        StrftimeFormat.FORMAT_HOUR, // 'H'
-                        StrftimeFormat.FORMAT_HOUR_M, // 'I'
-                        StrftimeFormat.FORMAT_DAY_YEAR, // 'j'
-                        StrftimeFormat.FORMAT_HOUR_BLANK, // 'k'
-                        StrftimeFormat.FORMAT_MILLISEC, // 'L'
-                        StrftimeFormat.FORMAT_HOUR_S, // 'l'
-                        StrftimeFormat.FORMAT_MINUTES, // 'M'
-                        StrftimeFormat.FORMAT_MONTH, // 'm'
-                        StrftimeFormat.FORMAT_NANOSEC, // 'N'
+                        StrptimeFormat.FORMAT_WEEKYEAR, // 'G'
+                        StrptimeFormat.FORMAT_WEEKYEAR_SHORT, // 'g'
+                        StrptimeFormat.FORMAT_HOUR, // 'H'
+                        StrptimeFormat.FORMAT_HOUR_M, // 'I'
+                        StrptimeFormat.FORMAT_DAY_YEAR, // 'j'
+                        StrptimeFormat.FORMAT_HOUR_BLANK, // 'k'
+                        StrptimeFormat.FORMAT_MILLISEC, // 'L'
+                        StrptimeFormat.FORMAT_HOUR_S, // 'l'
+                        StrptimeFormat.FORMAT_MINUTES, // 'M'
+                        StrptimeFormat.FORMAT_MONTH, // 'm'
+                        StrptimeFormat.FORMAT_NANOSEC, // 'N'
                         // Q, R, r
-                        StrftimeFormat.FORMAT_SECONDS, // 'S'
-                        StrftimeFormat.FORMAT_EPOCH, // 's'
+                        StrptimeFormat.FORMAT_SECONDS, // 'S'
+                        StrptimeFormat.FORMAT_EPOCH, // 's'
                         // T
-                        StrftimeFormat.FORMAT_WEEK_YEAR_S, // 'U'
-                        StrftimeFormat.FORMAT_DAY_WEEK2, // 'u'
-                        StrftimeFormat.FORMAT_WEEK_WEEKYEAR, // 'V'
+                        StrptimeFormat.FORMAT_WEEK_YEAR_S, // 'U'
+                        StrptimeFormat.FORMAT_DAY_WEEK2, // 'u'
+                        StrptimeFormat.FORMAT_WEEK_WEEKYEAR, // 'V'
                         // v
-                        StrftimeFormat.FORMAT_WEEK_YEAR_M, // 'W'
-                        StrftimeFormat.FORMAT_DAY_WEEK, // 'w'
+                        StrptimeFormat.FORMAT_WEEK_YEAR_M, // 'W'
+                        StrptimeFormat.FORMAT_DAY_WEEK, // 'w'
                         // X, x
-                        StrftimeFormat.FORMAT_YEAR_LONG, // 'Y'
-                        StrftimeFormat.FORMAT_YEAR_SHORT // 'y'
+                        StrptimeFormat.FORMAT_YEAR_LONG, // 'Y'
+                        StrptimeFormat.FORMAT_YEAR_SHORT // 'y'
                 ));
 
         // Ported valid_range_p from ext/date/date_strptime.c

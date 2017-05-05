@@ -1,7 +1,7 @@
 package org.embulk.spi.time;
 
 // Ported from org.jruby.util.RubyDateFormatter.Format in JRuby
-enum StrftimeFormat
+enum StrptimeFormat
 {
     /** encoding to give to output */
     FORMAT_ENCODING,
@@ -81,18 +81,18 @@ enum StrftimeFormat
     /** %Q */
     FORMAT_MICROSEC_EPOCH;
 
-    private StrftimeFormat()
+    private StrptimeFormat()
     {
     }
 
-    private StrftimeFormat(char conversion)
+    private StrptimeFormat(char conversion)
     {
-        StrftimeToken.CONVERSION2TOKEN[conversion] = new StrftimeToken(this);
+        StrptimeToken.CONVERSION2TOKEN[conversion] = new StrptimeToken(this);
     }
 
-    private StrftimeFormat(char conversion, char alias)
+    private StrptimeFormat(char conversion, char alias)
     {
         this(conversion);
-        StrftimeToken.CONVERSION2TOKEN[alias] = StrftimeToken.CONVERSION2TOKEN[conversion];
+        StrptimeToken.CONVERSION2TOKEN[alias] = StrptimeToken.CONVERSION2TOKEN[conversion];
     }
 }

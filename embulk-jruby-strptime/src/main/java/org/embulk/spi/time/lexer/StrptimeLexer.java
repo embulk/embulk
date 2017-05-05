@@ -4,7 +4,7 @@
 
 package org.embulk.spi.time.lexer;
 
-import org.embulk.spi.time.StrftimeToken;
+import org.embulk.spi.time.StrptimeToken;
 import org.jruby.util.RubyTimeOutputFormatter;
 
 
@@ -231,25 +231,25 @@ public class StrptimeLexer {
   /* user code: */
     StringBuilder stringBuf = new StringBuilder();
 
-    public StrftimeToken rawString() {
+    public StrptimeToken rawString() {
         String str = stringBuf.toString();
         stringBuf.setLength(0);
-        return StrftimeToken.str(str);
+        return StrptimeToken.str(str);
     }
 
-    public StrftimeToken directive(char c) {
-        StrftimeToken token;
+    public StrptimeToken directive(char c) {
+        StrptimeToken token;
         if (c == 'z') {
             int colons = yylength()-1; // can only be colons except the 'z'
-            return StrftimeToken.zoneOffsetColons(colons);
-        } else if ((token = StrftimeToken.format(c)) != null) {
+            return StrptimeToken.zoneOffsetColons(colons);
+        } else if ((token = StrptimeToken.format(c)) != null) {
             return token;
         } else {
-            return StrftimeToken.special(c);
+            return StrptimeToken.special(c);
         }
     }
 
-    public StrftimeToken formatter(String str) {
+    public StrptimeToken formatter(String str) {
         int len = str.length();
         int i = 1; // first char is '%'
         char c;
@@ -261,7 +261,7 @@ public class StrptimeLexer {
             width = 10 * width + (str.charAt(i) - '0');
             i++;
         }
-        return StrftimeToken.formatter(new RubyTimeOutputFormatter(flags, width));
+        return StrptimeToken.formatter(new RubyTimeOutputFormatter(flags, width));
     }
 
 
@@ -482,7 +482,7 @@ public class StrptimeLexer {
    * @return      the next token
    * @exception   java.io.IOException  if any I/O-Error occurs
    */
-  public StrftimeToken yylex() throws java.io.IOException {
+  public StrptimeToken yylex() throws java.io.IOException {
     int zzInput;
     int zzAction;
 
@@ -572,7 +572,7 @@ public class StrptimeLexer {
           }
         case 8: break;
         case 5: 
-          { return StrftimeToken.str("%");
+          { return StrptimeToken.str("%");
           }
         case 9: break;
         case 1: 

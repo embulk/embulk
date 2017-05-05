@@ -2,7 +2,7 @@
 
 package org.embulk.spi.time.lexer;
 
-import org.embulk.spi.time.StrftimeToken;
+import org.embulk.spi.time.StrptimeToken;
 import org.jruby.util.RubyTimeOutputFormatter;
 
 %%
@@ -10,29 +10,29 @@ import org.jruby.util.RubyTimeOutputFormatter;
 %class StrptimeLexer
 //%debug
 %unicode
-%type org.embulk.spi.time.StrftimeToken
+%type org.embulk.spi.time.StrptimeToken
 %{
     StringBuilder stringBuf = new StringBuilder();
 
-    public StrftimeToken rawString() {
+    public StrptimeToken rawString() {
         String str = stringBuf.toString();
         stringBuf.setLength(0);
-        return StrftimeToken.str(str);
+        return StrptimeToken.str(str);
     }
 
-    public StrftimeToken directive(char c) {
-        StrftimeToken token;
+    public StrptimeToken directive(char c) {
+        StrptimeToken token;
         if (c == 'z') {
             int colons = yylength()-1; // can only be colons except the 'z'
-            return StrftimeToken.zoneOffsetColons(colons);
-        } else if ((token = StrftimeToken.format(c)) != null) {
+            return StrptimeToken.zoneOffsetColons(colons);
+        } else if ((token = StrptimeToken.format(c)) != null) {
             return token;
         } else {
-            return StrftimeToken.special(c);
+            return StrptimeToken.special(c);
         }
     }
 
-    public StrftimeToken formatter(String str) {
+    public StrptimeToken formatter(String str) {
         int len = str.length();
         int i = 1; // first char is '%'
         char c;
@@ -44,7 +44,7 @@ import org.jruby.util.RubyTimeOutputFormatter;
             width = 10 * width + (str.charAt(i) - '0');
             i++;
         }
-        return StrftimeToken.formatter(new RubyTimeOutputFormatter(flags, width));
+        return StrptimeToken.formatter(new RubyTimeOutputFormatter(flags, width));
     }
 %}
 
@@ -68,7 +68,7 @@ Unknown = .|\n
 %%
 
 <YYINITIAL> {
-  {LiteralPercent}                  { return StrftimeToken.str("%"); }
+  {LiteralPercent}                  { return StrptimeToken.str("%"); }
   {SimpleDirective}  / {Conversion} { yybegin(CONVERSION); }
   {ComplexDirective} / {Conversion} { yybegin(CONVERSION); return formatter(yytext()); }
 }

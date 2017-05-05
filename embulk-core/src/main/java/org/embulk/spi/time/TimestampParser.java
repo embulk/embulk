@@ -75,7 +75,7 @@ public class TimestampParser
     private final String format;
     private final RubyDateParser parser;
     private final Calendar calendar;
-    private final List<StrftimeToken> compiledPattern;
+    private final List<StrptimeToken> compiledPattern;
 
     @Deprecated
     public TimestampParser(String format, ParserTask task)
