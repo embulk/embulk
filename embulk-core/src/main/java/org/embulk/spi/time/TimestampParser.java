@@ -76,7 +76,7 @@ public class TimestampParser
     private final DateTimeZone defaultTimeZone;
     private final String format;
     private final RubyDateParser parser;
-    private final Calendar cal;
+    private final Calendar calendar;
     private final List<StrftimeToken> compiledPattern;
 
     @Deprecated
@@ -86,9 +86,10 @@ public class TimestampParser
     }
 
     @VisibleForTesting
-    TimestampParser(Task task)
+    static TimestampParser createTimestampParserForTesting(Task task)
+
     {
-        this(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
+        return new TimestampParser(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
     }
 
     public TimestampParser(Task task, TimestampColumnOption columnOption)
@@ -123,8 +124,8 @@ public class TimestampParser
         catch (ParseException ex) {
             throw new ConfigException("Invalid date format. Expected yyyy-MM-dd: " + defaultDate);
         }
-        this.cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        this.cal.setTime(utc);
+        this.calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        this.calendar.setTime(utc);
     }
 
     public DateTimeZone getDefaultTimeZone()
@@ -142,9 +143,9 @@ public class TimestampParser
         if (bag == null) {
             throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
         }
-        bag.setYearIfNotSet(cal.get(Calendar.YEAR));
-        bag.setMonthIfNotSet(cal.get(Calendar.MONTH) + 1);
-        bag.setMdayIfNotSet(cal.get(Calendar.DAY_OF_MONTH));
+        bag.setYearIfNotSet(calendar.get(Calendar.YEAR));
+        bag.setMonthIfNotSet(calendar.get(Calendar.MONTH) + 1);
+        bag.setMdayIfNotSet(calendar.get(Calendar.DAY_OF_MONTH));
 
         final LocalTime local = bag.makeLocalTime();
         final String zone = local.getZone();
