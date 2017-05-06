@@ -2,6 +2,7 @@ package org.embulk.spi.util;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -164,8 +165,14 @@ public class InputStreamFileInput
                 current.close();
                 current = null;
             }
-            current = provider.openNext();
-            return current != null;
+
+            InputStream in = provider.openNext();
+            if (in == null) {
+                return false;
+            }
+            current = new BufferedInputStream(in);
+            return true;
+
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
