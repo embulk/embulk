@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jcodings.Encoding;
-import org.jcodings.specific.ASCIIEncoding;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -239,9 +238,6 @@ public class RubyDateParser
         if (!enc.isAsciiCompatible()) {
             throw context.runtime.newArgumentError("format should have ASCII compatible encoding");
         }
-        if (enc != ASCIIEncoding.INSTANCE) { // default for ByteList
-            compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_ENCODING, enc));
-        }
 
         ByteArrayInputStream in = new ByteArrayInputStream(pattern.getUnsafeBytes(), pattern.getBegin(), pattern.getRealSize());
         Reader reader = new InputStreamReader(in, context.runtime.getEncodingService().charsetForEncoding(pattern.getEncoding()));
@@ -405,9 +401,6 @@ public class RubyDateParser
                 final StrptimeToken token = compiledPattern.get(tokenIndex);
 
                 switch (token.getFormat()) {
-                    case FORMAT_ENCODING: {
-                        continue; // skip
-                    }
                     case FORMAT_OUTPUT: {
                         continue; // skip
                     }
