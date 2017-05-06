@@ -2,10 +2,45 @@ package org.embulk.spi.time;
 
 import org.jruby.util.RubyTimeOutputFormatter;
 
+import static org.embulk.spi.time.StrptimeFormat.*;
+
 // Ported from org.jruby.util.RubyDateFormatter.Token in JRuby
 public class StrptimeToken
 {
     static final StrptimeToken[] CONVERSION2TOKEN = new StrptimeToken[256];
+
+    static {
+        CONVERSION2TOKEN['A'] = new StrptimeToken(FORMAT_WEEK_LONG);
+        CONVERSION2TOKEN['a'] = new StrptimeToken(FORMAT_WEEK_SHORT);
+        CONVERSION2TOKEN['B'] = new StrptimeToken(FORMAT_MONTH_LONG);
+        CONVERSION2TOKEN['b'] = new StrptimeToken(FORMAT_MONTH_SHORT);
+        CONVERSION2TOKEN['h'] = CONVERSION2TOKEN['b'];
+        CONVERSION2TOKEN['C'] = new StrptimeToken(FORMAT_CENTURY);
+        CONVERSION2TOKEN['d'] = new StrptimeToken(FORMAT_DAY);
+        CONVERSION2TOKEN['e'] = new StrptimeToken(FORMAT_DAY_S);
+        CONVERSION2TOKEN['G'] = new StrptimeToken(FORMAT_WEEKYEAR);
+        CONVERSION2TOKEN['g'] = new StrptimeToken(FORMAT_WEEKYEAR_SHORT);
+        CONVERSION2TOKEN['H'] = new StrptimeToken(FORMAT_HOUR);
+        CONVERSION2TOKEN['I'] = new StrptimeToken(FORMAT_HOUR_M);
+        CONVERSION2TOKEN['j'] = new StrptimeToken(FORMAT_DAY_YEAR);
+        CONVERSION2TOKEN['k'] = new StrptimeToken(FORMAT_HOUR_BLANK);
+        CONVERSION2TOKEN['L'] = new StrptimeToken(FORMAT_MILLISEC);
+        CONVERSION2TOKEN['l'] = new StrptimeToken(FORMAT_HOUR_S);
+        CONVERSION2TOKEN['M'] = new StrptimeToken(FORMAT_MINUTES);
+        CONVERSION2TOKEN['m'] = new StrptimeToken(FORMAT_MONTH);
+        CONVERSION2TOKEN['N'] = new StrptimeToken(FORMAT_NANOSEC);
+        CONVERSION2TOKEN['P'] = new StrptimeToken(FORMAT_MERIDIAN_LOWER_CASE);
+        CONVERSION2TOKEN['p'] = new StrptimeToken(FORMAT_MERIDIAN);
+        CONVERSION2TOKEN['S'] = new StrptimeToken(FORMAT_SECONDS);
+        CONVERSION2TOKEN['s'] = new StrptimeToken(FORMAT_EPOCH);
+        CONVERSION2TOKEN['U'] = new StrptimeToken(FORMAT_WEEK_YEAR_S);
+        CONVERSION2TOKEN['u'] = new StrptimeToken(FORMAT_DAY_WEEK2);
+        CONVERSION2TOKEN['V'] = new StrptimeToken(FORMAT_WEEK_WEEKYEAR);
+        CONVERSION2TOKEN['W'] = new StrptimeToken(FORMAT_WEEK_YEAR_M);
+        CONVERSION2TOKEN['w'] = new StrptimeToken(FORMAT_DAY_WEEK);
+        CONVERSION2TOKEN['Y'] = new StrptimeToken(FORMAT_YEAR_LONG);
+        CONVERSION2TOKEN['y'] = new StrptimeToken(FORMAT_YEAR_SHORT);
+    }
 
     private final StrptimeFormat format;
     private final Object data;
