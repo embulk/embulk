@@ -4,8 +4,7 @@ package org.embulk.spi.time;
 enum StrptimeFormat
 {
     FORMAT_STRING, // raw string, no formatting
-    FORMAT_OUTPUT, //formatter
-    FORMAT_SPECIAL, // composition of other formats, or depends on library
+    FORMAT_SPECIAL, // composition of other formats
 
     FORMAT_WEEK_LONG, // %A
     FORMAT_WEEK_SHORT, // %a

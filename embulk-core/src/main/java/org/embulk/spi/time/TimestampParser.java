@@ -109,7 +109,7 @@ public class TimestampParser
         Ruby runtime = jruby.getProvider().getRuntime();
         this.format = format;
         this.parser = new RubyDateParser(runtime.getCurrentContext());
-        this.compiledPattern = this.parser.compilePattern(runtime.newString(format), true);
+        this.compiledPattern = this.parser.compilePattern(runtime.newString(format));
         this.defaultTimeZone = defaultTimeZone;
 
         // calculate default date
