@@ -1,7 +1,5 @@
 package org.embulk.spi.time;
 
-import org.jruby.util.RubyTimeOutputFormatter;
-
 import static org.embulk.spi.time.StrptimeFormat.*;
 
 // Ported from org.jruby.util.RubyDateFormatter.Token in JRuby
@@ -74,11 +72,6 @@ public class StrptimeToken
     public static StrptimeToken special(char c)
     {
         return new StrptimeToken(StrptimeFormat.FORMAT_SPECIAL, c);
-    }
-
-    public static StrptimeToken formatter(RubyTimeOutputFormatter formatter)
-    {
-        return new StrptimeToken(StrptimeFormat.FORMAT_OUTPUT, formatter);
     }
 
     /**

@@ -20,7 +20,6 @@ import org.jruby.RubyString;
 import org.embulk.spi.time.lexer.StrptimeLexer;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.util.ByteList;
-import org.jruby.util.RubyTimeOutputFormatter;
 
 import static org.jruby.RubyRational.newRationalCanonicalize;
 
@@ -224,13 +223,13 @@ public class RubyDateParser
     }
 
     // Ported from org.jruby.util.RubyDateFormatter#compilePattern
-    public List<StrptimeToken> compilePattern(final RubyString format, final boolean dateLibrary)
+    public List<StrptimeToken> compilePattern(final RubyString format)
     {
-        return compilePattern(format.getByteList(), dateLibrary);
+        return compilePattern(format.getByteList());
     }
 
     // Ported from org.jruby.util.RubyDateFormatter#compilePattern
-    public List<StrptimeToken> compilePattern(final ByteList pattern, final boolean dateLibrary)
+    public List<StrptimeToken> compilePattern(final ByteList pattern)
     {
         final List<StrptimeToken> compiledPattern = new LinkedList<>();
 
@@ -266,12 +265,7 @@ public class RubyDateParser
                             compiledPattern.add(StrptimeToken.str("\n"));
                             break;
                         case 'Q':
-                            if (dateLibrary) {
-                                compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_MICROSEC_EPOCH));
-                            }
-                            else {
-                                compiledPattern.add(StrptimeToken.str("%Q"));
-                            }
+                            compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_MICROSEC_EPOCH));
                             break;
                         case 'R':
                             addToPattern(compiledPattern, "H:M");
@@ -287,26 +281,13 @@ public class RubyDateParser
                             compiledPattern.add(StrptimeToken.str("\t"));
                             break;
                         case 'v':
-                            addToPattern(compiledPattern, "e-");
-                            if (!dateLibrary)
-                                compiledPattern.add(
-                                    StrptimeToken.formatter(new RubyTimeOutputFormatter("^", 0)));
-                            addToPattern(compiledPattern, "b-Y");
+                            addToPattern(compiledPattern, "e-b-Y");
                             break;
                         case 'Z':
-                            if (dateLibrary) {
-                                // +HH:MM in 'date', never zone name
-                                compiledPattern.add(StrptimeToken.zoneOffsetColons(1));
-                            }
-                            else {
-                                compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_ZONE_ID));
-                            }
+                            // +HH:MM in 'date', never zone name
+                            compiledPattern.add(StrptimeToken.zoneOffsetColons(1));
                             break;
                         case '+':
-                            if (!dateLibrary) {
-                                compiledPattern.add(StrptimeToken.str("%+"));
-                                break;
-                            }
                             addToPattern(compiledPattern, "a b e H:M:S ");
                             // %Z: +HH:MM in 'date', never zone name
                             compiledPattern.add(StrptimeToken.zoneOffsetColons(1));
@@ -362,7 +343,7 @@ public class RubyDateParser
     // This is Java implementation of date__strptime method in ext/date/date_strptime.c in Ruby
     public HashMap<String, Object> parse(final String format, final String text)
     {
-        final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format), true);
+        final List<StrptimeToken> compiledPattern = compilePattern(context.runtime.newString(format));
         final FormatBag bag = parse(compiledPattern, text);
         if (bag != null) {
             return bag.toMap(context);
@@ -401,9 +382,6 @@ public class RubyDateParser
                 final StrptimeToken token = compiledPattern.get(tokenIndex);
 
                 switch (token.getFormat()) {
-                    case FORMAT_OUTPUT: {
-                        continue; // skip
-                    }
                     case FORMAT_STRING: {
                         final String str = token.getData().toString();
                         for (int i = 0; i < str.length(); i++) {
