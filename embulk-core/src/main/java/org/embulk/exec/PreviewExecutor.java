@@ -12,9 +12,9 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
+import org.embulk.exec.SamplingParserPlugin.SampleBufferTask;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
@@ -36,6 +36,10 @@ public class PreviewExecutor
     public interface PreviewTask
             extends Task
     {
+        @Config("exec")
+        @ConfigDefault("{}")
+        public ConfigSource getExecConfig();
+
         @Config("in")
         @NotNull
         public ConfigSource getInputConfig();
@@ -51,6 +55,14 @@ public class PreviewExecutor
 
         public TaskSource getInputTask();
         public void setInputTask(TaskSource taskSource);
+    }
+
+    public interface PreviewExecutorTask
+            extends Task
+    {
+        @Config("preview_sample_buffer_bytes")
+        @ConfigDefault("32768") // 32 * 1024
+        public int getSampleBufferBytes();
     }
 
     @Inject
@@ -94,13 +106,19 @@ public class PreviewExecutor
         List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
         if (inputPlugin instanceof FileInputRunner) { // file input runner
-            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"));
+            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"), createSampleBufferConfigFromExecConfig(config.getNested("exec")));
             FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample));
             return doPreview(task, previewRunner, filterPlugins);
         }
         else {
             return doPreview(task, inputPlugin, filterPlugins);
         }
+    }
+
+    private static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig)
+    {
+        final PreviewExecutorTask execTask = execConfig.loadConfig(PreviewExecutorTask.class);
+        return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
     }
 
     private PreviewResult doPreview(final PreviewTask task, final InputPlugin input, final List<FilterPlugin> filterPlugins)

@@ -943,3 +943,35 @@ Example
     out:
       type: ...
       ...
+
+Preview executor
+---------------
+
+The preview executor is called by ``preview`` command. It tries to read sample buffer from a specified input source and writes them to Page objects. ``preview`` outputs the Page objects to console.
+
+Options
+~~~~~~~~
+
++-------------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                          | type     | description                                                          | required?                            |
++===============================+==========+======================================================================+======================================+
+| preview_sample_buffer_bytes   | int      | Bytes of sample buffer that it tries to read from input source.      | 32768 (32KB) by default              |
++-------------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+
+The ``preview_sample_buffer_bytes`` option controls the bytes of sample buffer that PreviewExecutor tries to read from specified input source.
+
+This example shows how to change the bytes of sample buffer.
+
+Example
+~~~~~~~~
+
+.. code-block:: yaml
+
+    exec:
+      preview_sample_buffer_bytes: 65536 # 64KB
+    in:
+      type: ...
+      ...
+    out:
+      type: ...
+      ...

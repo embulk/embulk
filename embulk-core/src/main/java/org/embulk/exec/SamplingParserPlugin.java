@@ -1,8 +1,13 @@
 package org.embulk.exec;
 
+import java.text.NumberFormat;
 import java.util.List;
+
 import com.google.inject.Inject;
 import com.google.common.base.Preconditions;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -15,6 +20,9 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.PageOutput;
+import org.slf4j.Logger;
+
+import static java.util.Locale.ENGLISH;
 import static org.embulk.spi.util.Inputs.each;
 
 /*
@@ -25,9 +33,18 @@ public class SamplingParserPlugin
 {
     public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig)
     {
+        return runFileInputSampling(runner, inputConfig, Exec.newConfigSource());
+    }
+
+    public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig, ConfigSource sampleBufferConfig)
+    {
+        final SampleBufferTask sampleBufferTask = sampleBufferConfig.loadConfig(SampleBufferTask.class);
+
         // override in.parser.type so that FileInputRunner creates SamplingParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
-        samplingInputConfig.getNestedOrSetEmpty("parser").set("type", "system_sampling");
+        samplingInputConfig.getNestedOrSetEmpty("parser")
+                .set("type", "system_sampling")
+                .set("sample_buffer_bytes", sampleBufferTask.getSampleBufferBytes());
         samplingInputConfig.set("decoders", null);
 
         try {
@@ -120,42 +137,59 @@ public class SamplingParserPlugin
         }
     }
 
-    private final int minSampleSize;
-    private final int sampleSize;
+    private final NumberFormat numberFormat = NumberFormat.getNumberInstance(ENGLISH);
+    private final Logger log = Exec.getLogger(this.getClass());
+    private final int minSampleBufferBytes;
+
+    public interface PluginTask
+            extends Task, SampleBufferTask
+    {
+    }
+
+    public interface SampleBufferTask
+            extends Task
+    {
+        @Config("sample_buffer_bytes")
+        @ConfigDefault("32768") // 32 * 1024
+        public int getSampleBufferBytes();
+    }
 
     @Inject
     public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig)
     {
-        this.minSampleSize = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
-        this.sampleSize = 32*1024;  // TODO get sample size from system config. See also GuessExecutor.run.
-        Preconditions.checkArgument(minSampleSize < sampleSize, "minSampleSize must be smaller than sampleSize");
+        this.minSampleBufferBytes = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
     }
 
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control)
     {
-        control.run(Exec.newTaskSource(), null);
+        PluginTask task = config.loadConfig(PluginTask.class);
+        Preconditions.checkArgument(minSampleBufferBytes < task.getSampleBufferBytes(), "minSampleBufferBytes must be smaller than sample_buffer_bytes");
+
+        log.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
+        control.run(task.dump(), null);
     }
 
     @Override
     public void run(TaskSource taskSource, Schema schema,
             FileInput input, PageOutput output)
     {
-        Buffer buffer = readSample(input, sampleSize);
+        PluginTask task = taskSource.loadTask(PluginTask.class);
+        Buffer buffer = readSample(input, task.getSampleBufferBytes());
         if (!taskSource.get(boolean.class, "force", false)) {
-            if (buffer.limit() < minSampleSize) {
+            if (buffer.limit() < minSampleBufferBytes) {
                 throw new NotEnoughSampleError(buffer.limit());
             }
         }
         throw new SampledNoticeError(buffer);
     }
 
-    public static Buffer readSample(FileInput fileInput, int sampleSize)
+    public static Buffer readSample(FileInput fileInput, int sampleBufferBytes)
     {
-        return readSample(fileInput, Buffer.allocate(sampleSize), 0, sampleSize);
+        return readSample(fileInput, Buffer.allocate(sampleBufferBytes), 0, sampleBufferBytes);
     }
 
-    public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleSize)
+    public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleBufferBytes)
     {
         if (!fileInput.nextFile()) {
             // no input files
@@ -168,7 +202,7 @@ public class SamplingParserPlugin
                 sample.setBytes(offset, buffer, 0, size);
                 offset += size;
                 buffer.release();
-                if (offset >= sampleSize) {
+                if (offset >= sampleBufferBytes) {
                     break;
                 }
             }
