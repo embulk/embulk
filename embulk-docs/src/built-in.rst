@@ -915,17 +915,21 @@ The guess executor is called by ``guess`` command. It executes default guess plu
 Options
 ~~~~~~~~
 
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| name                  | type     | description                                                          | required?                            |
-+=======================+==========+======================================================================+======================================+
-| guess_plugins         | array    | ``guess`` command uses specified guess plugins.                      | ``[]`` by default                    |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
-| exclude_guess_plugins | array    | ``guess`` command doesn't use specified plugins.                     | ``[]`` by default                    |
-+-----------------------+----------+----------------------------------------------------------------------+--------------------------------------+
++---------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| name                      | type     | description                                                          | required?                            |
++===========================+==========+======================================================================+======================================+
+| guess_plugins             | array    | ``guess`` command uses specified guess plugins.                      | ``[]`` by default                    |
++---------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| exclude_guess_plugins     | array    | ``guess`` command doesn't use specified plugins.                     | ``[]`` by default                    |
++---------------------------+----------+----------------------------------------------------------------------+--------------------------------------+
+| guess_sample_buffer_bytes | int      | Bytes of sample buffer that it tries to read from input source.      | 32768 (32KB) by default              |
++-------------------------------+----------+----------------------------------------------------------------------+----------------------------------+
 
 The ``guess_plugins`` option includes specified guess plugin in the bottom of the list of default guess plugins.
 
 The ``exclude_guess_plugins`` option exclude specified guess plugins from the list of default guess plugins that the guess executor uses.
+
+The ``guess_sample_buffer_bytes`` option controls the bytes of sample buffer that GuessExecutor tries to read from specified input source.
 
 This example shows how to use ``csv_all_strings`` guess plugin, which suggests column types within CSV files as string types. It needs to be explicitly specified by users when it's used instead of ``csv`` guess plugin because the plugin is not included in default guess plugins. We also can exclude default ``csv`` guess plugin.
 
