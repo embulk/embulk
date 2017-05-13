@@ -106,7 +106,7 @@ public class PreviewExecutor
         List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
         if (inputPlugin instanceof FileInputRunner) { // file input runner
-            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"), createSampleBufferConfigFromExecConfig(config.getNested("exec")));
+            Buffer sample = SamplingParserPlugin.runFileInputSampling((FileInputRunner)inputPlugin, config.getNested("in"), createSampleBufferConfigFromExecConfig(task.getExecConfig()));
             FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample));
             return doPreview(task, previewRunner, filterPlugins);
         }
