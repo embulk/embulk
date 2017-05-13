@@ -136,7 +136,7 @@ public class Timestamp
         }
     }
 
-    static Timestamp fromString(String text)
+    public static Timestamp fromString(String text)
     {
         // TODO exception handling
         Matcher m = FROM_STRING_PATTERN.matcher(text);
