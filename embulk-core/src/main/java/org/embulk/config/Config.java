@@ -12,4 +12,9 @@ import java.lang.annotation.Target;
 public @interface Config
 {
     String value();
+
+    /**
+     * Description of this configuration parameter
+     */
+    String desc() default "";
 }
