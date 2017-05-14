@@ -43,6 +43,9 @@ module Embulk
       op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do |level|
         options[:system_config][:log_level] = level
       end
+      op.on('--logback-config PATH', 'Logback configuration file (default: -)') do |config|
+        options[:system_config][:logback_config] = config
+      end
       op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
         k, v = kv.split('=', 2)
         v ||= "true"
