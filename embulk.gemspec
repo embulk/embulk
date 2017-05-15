@@ -22,7 +22,7 @@ Gem::Specification.new do |gem|
 
   if RUBY_PLATFORM =~ /java/i
     gem.add_dependency "bundler", '>= 1.10.6'
-    gem.add_dependency "msgpack", '~> 0.7.3'
+    gem.add_dependency "msgpack", '~> 1.1.0'
     gem.add_dependency "liquid", '~> 3.0.6'
 
     # For embulk/guess/charset.rb. See also embulk-core/build.gradle
