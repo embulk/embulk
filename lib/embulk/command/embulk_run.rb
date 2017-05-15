@@ -11,7 +11,7 @@ module Embulk
     i = argv.find_index {|arg| arg !~ /^\-/ }
     unless i
       if argv.include?('--version')
-        puts "embulk #{org.embulk.EmbulkVersion::VERSION}"
+        puts "embulk #{Embulk::VERSION_INTERNAL}"
         system_exit_success
       end
       usage nil
@@ -21,9 +21,9 @@ module Embulk
     require 'java'
     require 'optparse'
     op = OptionParser.new
-    op.version = org.embulk.EmbulkVersion::VERSION
+    op.version = Embulk::VERSION_INTERNAL
 
-    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{org.embulk.EmbulkVersion::VERSION}"
+    puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Embulk v#{Embulk::VERSION_INTERNAL}"
 
     plugin_paths = []
     load_paths = []
@@ -229,13 +229,13 @@ examples:
       (org.embulk.cli.EmbulkExample.new).createExample(ARGV[0] || "embulk-example")
 
     when :new
-      (org.embulk.cli.EmbulkNew.new(ARGV[0], ARGV[1], org.embulk.EmbulkVersion::VERSION)).newPlugin()
+      (org.embulk.cli.EmbulkNew.new(ARGV[0], ARGV[1], Embulk::VERSION_INTERNAL)).newPlugin()
 
     when :migrate
-      (org.embulk.cli.EmbulkMigrate.new).migratePlugin(ARGV[0], org.embulk.EmbulkVersion::VERSION)
+      (org.embulk.cli.EmbulkMigrate.new).migratePlugin(ARGV[0], Embulk::VERSION_INTERNAL)
 
     when :selfupdate
-      (org.embulk.cli.EmbulkSelfUpdate.new).updateSelf(org.embulk.EmbulkVersion::VERSION,
+      (org.embulk.cli.EmbulkSelfUpdate.new).updateSelf(Embulk::VERSION_INTERNAL,
                                                        ARGV[0],
                                                        __FILE__,
                                                        options[:force])
@@ -361,7 +361,7 @@ examples:
   end
 
   def self.usage(message)
-    STDERR.puts "Embulk v#{org.embulk.EmbulkVersion::VERSION}"
+    STDERR.puts "Embulk v#{Embulk::VERSION_INTERNAL}"
     STDERR.puts "Usage: embulk [-vm-options] <command> [--options]"
     STDERR.puts "Commands:"
     STDERR.puts "   mkbundle   <directory>                             # create a new plugin bundle environment."
