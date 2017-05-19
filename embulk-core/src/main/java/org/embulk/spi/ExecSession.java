@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
 import com.google.common.base.Optional;
@@ -22,6 +23,10 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Locale;
+
 public class ExecSession
 {
     private final Injector injector;
@@ -32,8 +37,10 @@ public class ExecSession
 
     private final Timestamp transactionTime;
     private final TempFileSpace tempFileSpace;
+    private final String randomString;
 
     private final boolean preview;
+    private final SecureRandom random = new SecureRandom();
 
     @Deprecated
     public interface SessionTask
@@ -110,6 +117,8 @@ public class ExecSession
         TempFileAllocator tempFileAllocator = injector.getInstance(TempFileAllocator.class);
         this.tempFileSpace = tempFileAllocator.newSpace(transactionTime.toString());
 
+        // make random 65bit string. and encode base 32(5bit*13byte)
+        this.randomString = new BigInteger(65, random).toString(32);
         this.preview = false;
     }
 
@@ -123,6 +132,7 @@ public class ExecSession
 
         this.transactionTime = copy.transactionTime;
         this.tempFileSpace = copy.tempFileSpace;
+        this.randomString = copy.randomString;
 
         this.preview = preview;
     }
@@ -220,5 +230,15 @@ public class ExecSession
     public void cleanup()
     {
         tempFileSpace.cleanup();
+    }
+
+    public String getTransactionUniqueName(){
+        String transactionTimeString = DateTimeFormat.forPattern("yyyyMMdd_HHmmss")
+                .withZoneUTC()
+                .print(transactionTime.getEpochSecond() * 1000);
+        return String.format(Locale.ENGLISH,"%s_%09d_%s",
+                transactionTimeString,
+                transactionTime.getNano(),
+                randomString);
     }
 }
