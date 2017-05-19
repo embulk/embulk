@@ -22,10 +22,16 @@ import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
+import org.embulk.plugin.PluginManager;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ErrorDataPlugin;
+import org.embulk.spi.ErrorDataReporter;
 import org.embulk.spi.ExecSession;
 import org.embulk.guice.Bootstrap;
 import org.embulk.guice.LifeCycleInjector;
+import org.embulk.spi.util.DefaultErrorDataReporter;
+
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -226,7 +232,30 @@ public class EmbulkEmbed
     private ExecSession newExecSession(ConfigSource config)
     {
         ConfigSource execConfig = config.deepCopy().getNestedOrGetEmpty("exec");
-        return ExecSession.builder(injector).fromExecConfig(execConfig).build();
+        final ConfigSource errorDataConfig = config.deepCopy().getNestedOrGetEmpty("error_data");
+        final ErrorDataReporter errorDataReporter = createErrorDataReporter(errorDataConfig);
+        return ExecSession.builder(injector)
+                .fromExecConfig(execConfig)
+                .setErrorDataReporter(errorDataReporter)
+                .build();
+    }
+
+    private ErrorDataReporter createErrorDataReporter(final ConfigSource config)
+    {
+        if (config.isEmpty()) {
+            return DefaultErrorDataReporter.create();
+        }
+        else {
+            final ErrorDataPlugin errorDataPlugin = createErrorDataPlugin(config);
+            return errorDataPlugin.open(config);
+        }
+    }
+
+    private ErrorDataPlugin createErrorDataPlugin(final ConfigSource config)
+    {
+        final PluginManager pluginManager = injector.getInstance(PluginManager.class);
+        final PluginType pluginType = config.get(PluginType.class, "type");
+        return pluginManager.newPlugin(ErrorDataPlugin.class, pluginType);
     }
 
     public ResumeStateAction resumeState(ConfigSource config, ConfigSource resumeStateConfig)

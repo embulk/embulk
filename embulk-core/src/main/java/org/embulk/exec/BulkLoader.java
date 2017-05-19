@@ -53,6 +53,9 @@ public class BulkLoader
         @Config("out")
         public ConfigSource getOutputConfig();
 
+        @Config("error_data")
+        public ConfigSource getErrorDataConfig();
+
         public TaskSource getOutputTask();
         public void setOutputTask(TaskSource taskSource);
     }
