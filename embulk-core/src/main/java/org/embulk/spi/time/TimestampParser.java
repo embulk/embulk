@@ -163,12 +163,12 @@ public class TimestampParser
 
     public LocalTime createLocalTimeFromFormatBag(FormatBag bag)
     {
-        final long sec_fraction_nsec;
+        final long secFractionNsec;
         if (FormatBag.has(bag.getSecFraction())) {
-            sec_fraction_nsec = bag.getSecFraction() * (int)Math.pow(10, 9 - bag.getSecFractionSize());
+            secFractionNsec = bag.getSecFraction() * (int)Math.pow(10, 9 - bag.getSecFractionSize());
         }
         else {
-            sec_fraction_nsec = 0;
+            secFractionNsec = 0;
         }
 
         final long sec;
@@ -209,7 +209,7 @@ public class TimestampParser
             sec = dt.getMillis() / 1000;
         }
 
-        return new LocalTime(sec, sec_fraction_nsec, bag.getZone());
+        return new LocalTime(sec, secFractionNsec, bag.getZone());
     }
 
     private static class LocalTime
