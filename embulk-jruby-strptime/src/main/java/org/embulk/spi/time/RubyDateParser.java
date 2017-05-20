@@ -9,25 +9,25 @@ import static org.embulk.spi.time.StrptimeParser.FormatBag.has;
 import static org.jruby.RubyRational.newRationalCanonicalize;
 
 /**
- * This class extends {@code StrptimeParser} and provides methods that are calls from JRuby.
+ * This class has {@code StrptimeParser} and provides methods that are calls from JRuby.
  */
 public class RubyDateParser
-        extends StrptimeParser
 {
     private final ThreadContext context;
+    private final StrptimeParser strptimeParser;
 
     public RubyDateParser(ThreadContext context)
     {
-        super();
         this.context = context;
+        this.strptimeParser = new StrptimeParser();
     }
 
     // Ported from Date._strptime method in lib/ruby/stdlib/date/format.rb in JRuby
     // This is Java implementation of date__strptime method in ext/date/date_strptime.c in Ruby
     public HashMap<String, Object> parse(final String format, final String text)
     {
-        final List<StrptimeToken> compiledPattern = compilePattern(format);
-        final FormatBag bag = parse(compiledPattern, text);
+        final List<StrptimeToken> compiledPattern = strptimeParser.compilePattern(format);
+        final StrptimeParser.FormatBag bag = strptimeParser.parse(compiledPattern, text);
         if (bag != null) {
             return convertFormatBagToHash(bag);
         }
@@ -36,7 +36,7 @@ public class RubyDateParser
         }
     }
 
-    private HashMap<String, Object> convertFormatBagToHash(FormatBag bag)
+    private HashMap<String, Object> convertFormatBagToHash(StrptimeParser.FormatBag bag)
     {
         final HashMap<String, Object> map = new HashMap<>();
 
