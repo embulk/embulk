@@ -164,8 +164,8 @@ public class TimestampParser
     public LocalTime createLocalTimeFromFormatBag(FormatBag bag)
     {
         final long sec_fraction_nsec;
-        if (FormatBag.has(bag.sec_fraction)) {
-            sec_fraction_nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
+        if (FormatBag.has(bag.getSecFraction())) {
+            sec_fraction_nsec = bag.getSecFraction() * (int)Math.pow(10, 9 - bag.getSecFractionSize());
         }
         else {
             sec_fraction_nsec = 0;
@@ -173,17 +173,17 @@ public class TimestampParser
 
         final long sec;
         if (bag.hasSeconds()) {
-            if (FormatBag.has(bag.seconds_size)) {
-                sec = bag.seconds / (int)Math.pow(10, bag.seconds_size);
+            if (FormatBag.has(bag.getSecondsSize())) {
+                sec = bag.getSeconds() / (int)Math.pow(10, bag.getSecondsSize());
             }
             else { // int
-                sec = bag.seconds;
+                sec = bag.getSeconds();
             }
 
         } else {
             final int year;
-            if (FormatBag.has(bag.year)) {
-                year = bag.year;
+            if (FormatBag.has(bag.getYear())) {
+                year = bag.getYear();
             }
             else {
                 year = 1970;
@@ -191,25 +191,25 @@ public class TimestampParser
 
             // set up with min this and then add to allow rolling over
             DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-            if (FormatBag.has(bag.mon)) {
-                dt = dt.plusMonths(bag.mon - 1);
+            if (FormatBag.has(bag.getMon())) {
+                dt = dt.plusMonths(bag.getMon() - 1);
             }
-            if (FormatBag.has(bag.mday)) {
-                dt = dt.plusDays(bag.mday - 1);
+            if (FormatBag.has(bag.getMDay())) {
+                dt = dt.plusDays(bag.getMDay() - 1);
             }
-            if (FormatBag.has(bag.hour)) {
-                dt = dt.plusHours(bag.hour);
+            if (FormatBag.has(bag.getHour())) {
+                dt = dt.plusHours(bag.getHour());
             }
-            if (FormatBag.has(bag.min)) {
-                dt = dt.plusMinutes(bag.min);
+            if (FormatBag.has(bag.getMin())) {
+                dt = dt.plusMinutes(bag.getMin());
             }
-            if (FormatBag.has(bag.sec)) {
-                dt = dt.plusSeconds(bag.sec);
+            if (FormatBag.has(bag.getSec())) {
+                dt = dt.plusSeconds(bag.getSec());
             }
             sec = dt.getMillis() / 1000;
         }
 
-        return new LocalTime(sec, sec_fraction_nsec, bag.zone);
+        return new LocalTime(sec, sec_fraction_nsec, bag.getZone());
     }
 
     private static class LocalTime

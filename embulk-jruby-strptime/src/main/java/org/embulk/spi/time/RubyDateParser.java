@@ -40,71 +40,71 @@ public class RubyDateParser
     {
         final HashMap<String, Object> map = new HashMap<>();
 
-        if (has(bag.mday)) {
-            map.put("mday", bag.mday);
+        if (has(bag.getMDay())) {
+            map.put("mday", bag.getMDay());
         }
-        if (has(bag.wday)) {
-            map.put("wday", bag.wday);
+        if (has(bag.getWDay())) {
+            map.put("wday", bag.getWDay());
         }
-        if (has(bag.cwday)) {
-            map.put("cwday", bag.cwday);
+        if (has(bag.getCWDay())) {
+            map.put("cwday", bag.getCWDay());
         }
-        if (has(bag.yday)) {
-            map.put("yday", bag.yday);
+        if (has(bag.getYDay())) {
+            map.put("yday", bag.getYDay());
         }
-        if (has(bag.cweek)) {
-            map.put("cweek", bag.cweek);
+        if (has(bag.getCWeek())) {
+            map.put("cweek", bag.getCWeek());
         }
-        if (has(bag.cwyear)) {
-            map.put("cwyear", bag.cwyear);
+        if (has(bag.getCWYear())) {
+            map.put("cwyear", bag.getCWYear());
         }
-        if (has(bag.min)) {
-            map.put("min", bag.min);
+        if (has(bag.getMin())) {
+            map.put("min", bag.getMin());
         }
-        if (has(bag.mon)) {
-            map.put("mon", bag.mon);
+        if (has(bag.getMon())) {
+            map.put("mon", bag.getMon());
         }
-        if (has(bag.hour)) {
-            map.put("hour", bag.hour);
+        if (has(bag.getHour())) {
+            map.put("hour", bag.getHour());
         }
-        if (has(bag.year)) {
-            map.put("year", bag.year);
+        if (has(bag.getYear())) {
+            map.put("year", bag.getYear());
         }
-        if (has(bag.sec)) {
-            map.put("sec", bag.sec);
+        if (has(bag.getSec())) {
+            map.put("sec", bag.getSec());
         }
-        if (has(bag.wnum0)) {
-            map.put("wnum0", bag.wnum0);
+        if (has(bag.getWNum0())) {
+            map.put("wnum0", bag.getWNum0());
         }
-        if (has(bag.wnum1)) {
-            map.put("wnum1", bag.wnum1);
+        if (has(bag.getWNum1())) {
+            map.put("wnum1", bag.getWNum1());
         }
-        if (bag.zone != null) {
-            map.put("zone", bag.zone);
-            int offset = RubyDateParse.dateZoneToDiff(bag.zone);
+        if (bag.getZone() != null) {
+            map.put("zone", bag.getZone());
+            int offset = RubyDateParse.dateZoneToDiff(bag.getZone());
             if (offset != Integer.MIN_VALUE) {
                 map.put("offset", offset);
             }
         }
-        if (has(bag.sec_fraction)) {
-            map.put("sec_fraction", newRationalCanonicalize(context, bag.sec_fraction, (long)Math.pow(10, bag.sec_fraction_size)));
+        if (has(bag.getSecFraction())) {
+            map.put("sec_fraction", newRationalCanonicalize(context, bag.getSecFraction(), (long)Math.pow(10, bag.getSecFractionSize())));
         }
         if (bag.hasSeconds()) {
-            if (has(bag.seconds_size)) {
-                map.put("seconds", newRationalCanonicalize(context, bag.seconds, (long) Math.pow(10, bag.seconds_size)));
+            if (has(bag.getSecondsSize())) {
+                map.put("seconds", newRationalCanonicalize(context, bag.getSeconds(), (long) Math.pow(10, bag.getSecondsSize())));
             }
             else {
-                map.put("seconds", bag.seconds);
+                map.put("seconds", bag.getSeconds());
             }
         }
-        if (has(bag._merid)) {
-            map.put("_merid", bag._merid);
+        if (has(bag.getMerid())) {
+            map.put("_merid", bag.getMerid());
         }
-        if (has(bag._cent)) {
-            map.put("_cent", bag._cent);
+        if (has(bag.getCent())) {
+            map.put("_cent", bag.getCent());
         }
-        if (bag.leftover != null) {
-            map.put("leftover", bag.leftover);
+        if (bag.getLeftover() != null) {
+            map.put("leftover", bag.getLeftover());
         }
 
         return map;

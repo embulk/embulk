@@ -38,37 +38,142 @@ public class StrptimeParser
     // Ported Date::Format::Bag from lib/ruby/stdlib/date/format.rb in JRuby
     public static class FormatBag
     {
-        int mday = Integer.MIN_VALUE;
-        int wday = Integer.MIN_VALUE;
-        int cwday = Integer.MIN_VALUE;
-        int yday = Integer.MIN_VALUE;
-        int cweek = Integer.MIN_VALUE;
-        int cwyear = Integer.MIN_VALUE;
-        int min = Integer.MIN_VALUE;
-        int mon = Integer.MIN_VALUE;
-        int hour = Integer.MIN_VALUE;
-        int year = Integer.MIN_VALUE;
-        int sec = Integer.MIN_VALUE;
-        int wnum0 = Integer.MIN_VALUE;
-        int wnum1 = Integer.MIN_VALUE;
+        private int mDay = Integer.MIN_VALUE;
+        private int wDay = Integer.MIN_VALUE;
+        private int cWDay = Integer.MIN_VALUE;
+        private int yDay = Integer.MIN_VALUE;
+        private int cWeek = Integer.MIN_VALUE;
+        private int cWYear = Integer.MIN_VALUE;
+        private int min = Integer.MIN_VALUE;
+        private int mon = Integer.MIN_VALUE;
+        private int hour = Integer.MIN_VALUE;
+        private int year = Integer.MIN_VALUE;
+        private int sec = Integer.MIN_VALUE;
+        private int wNum0 = Integer.MIN_VALUE;
+        private int wNum1 = Integer.MIN_VALUE;
 
-        String zone = null;
+        private String zone = null;
 
-        int sec_fraction = Integer.MIN_VALUE; // Rational
-        int sec_fraction_size = Integer.MIN_VALUE;
+        private int secFraction = Integer.MIN_VALUE; // Rational
+        private int secFractionSize = Integer.MIN_VALUE;
 
-        long seconds = Long.MIN_VALUE; // long or Rational
-        int seconds_size = Integer.MIN_VALUE;
+        private long seconds = Long.MIN_VALUE; // long or Rational
+        private int secondsSize = Integer.MIN_VALUE;
 
-        int _merid = Integer.MIN_VALUE;
-        int _cent = Integer.MIN_VALUE;
+        private int merid = Integer.MIN_VALUE;
+        private int cent = Integer.MIN_VALUE;
 
-        boolean fail = false;
-        String leftover = null;
+        private boolean fail = false;
+        private String leftover = null;
+
+        public int getMDay()
+        {
+            return mDay;
+        }
+
+        public int getWDay()
+        {
+            return wDay;
+        }
+
+        public int getCWDay()
+        {
+            return cWDay;
+        }
+
+        public int getYDay()
+        {
+            return yDay;
+        }
+
+        public int getCWeek()
+        {
+            return cWeek;
+        }
+
+        public int getCWYear()
+        {
+            return cWYear;
+        }
+
+        public int getMin()
+        {
+            return min;
+        }
+
+        public int getMon()
+        {
+            return mon;
+        }
+
+        public int getHour()
+        {
+            return hour;
+        }
+
+        public int getYear()
+        {
+            return year;
+        }
+
+        public int getSec()
+        {
+            return sec;
+        }
+
+        public int getWNum0()
+        {
+            return wNum0;
+        }
+
+        public int getWNum1()
+        {
+            return wNum1;
+        }
+
+        public String getZone()
+        {
+            return zone;
+        }
+
+        public int getSecFraction()
+        {
+            return secFraction;
+        }
+
+        public int getSecFractionSize()
+        {
+            return secFractionSize;
+        }
+
+        public long getSeconds()
+        {
+            return seconds;
+        }
+
+        public int getSecondsSize()
+        {
+            return secondsSize;
+        }
+
+        public int getMerid()
+        {
+            return merid;
+        }
+
+        public int getCent()
+        {
+            return cent;
+        }
 
         void fail()
         {
             fail = true;
+        }
+
+        public String getLeftover()
+        {
+            return leftover;
         }
 
         public boolean setYearIfNotSet(int v)
@@ -95,11 +200,11 @@ public class StrptimeParser
 
         public boolean setMdayIfNotSet(int v)
         {
-            if (has(mday)) {
+            if (has(mDay)) {
                 return false;
             }
             else {
-                mday = v;
+                mDay = v;
                 return true;
             }
         }
@@ -214,26 +319,26 @@ public class StrptimeParser
             return null;
         }
 
-        if (FormatBag.has(bag._cent)) {
-            if (FormatBag.has(bag.cwyear)) {
-                bag.cwyear += bag._cent * 100;
+        if (FormatBag.has(bag.cent)) {
+            if (FormatBag.has(bag.cWYear)) {
+                bag.cWYear += bag.cent * 100;
             }
             if (FormatBag.has(bag.year)) {
-                bag.year += bag._cent * 100;
+                bag.year += bag.cent * 100;
             }
 
             // delete bag._cent
-            bag._cent = Integer.MIN_VALUE;
+            bag.cent = Integer.MIN_VALUE;
         }
 
-        if (FormatBag.has(bag._merid)) {
+        if (FormatBag.has(bag.merid)) {
             if (FormatBag.has(bag.hour)) {
                 bag.hour %= 12;
-                bag.hour += bag._merid;
+                bag.hour += bag.merid;
             }
 
             // delete bag._merid
-            bag._merid = Integer.MIN_VALUE;
+            bag.merid = Integer.MIN_VALUE;
         }
 
         return bag;
@@ -290,7 +395,7 @@ public class StrptimeParser
                     case FORMAT_WEEK_SHORT: { // %a - The abbreviated name (``Sun'')
                         final int dayIndex = findIndexInPatterns(DAY_NAMES);
                         if (dayIndex >= 0) {
-                            bag.wday = dayIndex % 7;
+                            bag.wDay = dayIndex % 7;
                             pos += DAY_NAMES[dayIndex].length();
                         }
                         else {
@@ -318,7 +423,7 @@ public class StrptimeParser
                         else {
                             cent = readDigitsMax();
                         }
-                        bag._cent = (int)cent;
+                        bag.cent = (int)cent;
                         break;
                     }
                     case FORMAT_DAY: // %d, %Od - Day of the month, zero-padded (01..31)
@@ -335,7 +440,7 @@ public class StrptimeParser
                         if (!validRange(day, 1, 31)) {
                             fail = true;
                         }
-                        bag.mday = (int)day;
+                        bag.mDay = (int)day;
                         break;
                     }
                     case FORMAT_WEEKYEAR: { // %G - The week-based year
@@ -346,7 +451,7 @@ public class StrptimeParser
                         else {
                             year = readDigitsMax();
                         }
-                        bag.cwyear = (int)year;
+                        bag.cWYear = (int)year;
                         break;
                     }
                     case FORMAT_WEEKYEAR_SHORT: { // %g - The last 2 digits of the week-based year (00..99)
@@ -354,9 +459,9 @@ public class StrptimeParser
                         if (!validRange(v, 0, 99)) {
                             fail = true;
                         }
-                        bag.cwyear = (int)v;
-                        if (!bag.has(bag._cent)) {
-                            bag._cent = v >= 69 ? 19 : 20;
+                        bag.cWYear = (int)v;
+                        if (!bag.has(bag.cent)) {
+                            bag.cent = v >= 69 ? 19 : 20;
                         }
                         break;
                     }
@@ -399,7 +504,7 @@ public class StrptimeParser
                         if (!validRange(day, 1, 365)) {
                             fail = true;
                         }
-                        bag.yday = (int)day;
+                        bag.yDay = (int)day;
                         break;
                     }
                     case FORMAT_MILLISEC: // %L - Millisecond of the second (000..999)
@@ -424,8 +529,8 @@ public class StrptimeParser
                             v = readDigitsMax();
                         }
 
-                        bag.sec_fraction = (int)(!negative ? v : -v);
-                        bag.sec_fraction_size = pos - initPos;
+                        bag.secFraction = (int)(!negative ? v : -v);
+                        bag.secFractionSize = pos - initPos;
                         break;
                     }
                     case FORMAT_MINUTES: { // %M, %OM - Minute of the hour (00..59)
@@ -448,7 +553,7 @@ public class StrptimeParser
                     case FORMAT_MERIDIAN_LOWER_CASE: { // %p - Meridian indicator, uppercase (``AM'' or ``PM'')
                         final int meridIndex = findIndexInPatterns(MERID_NAMES);
                         if (meridIndex >= 0) {
-                            bag._merid = meridIndex % 2 == 0 ? 0 : 12;
+                            bag.merid = meridIndex % 2 == 0 ? 0 : 12;
                             pos += MERID_NAMES[meridIndex].length();
                         }
                         else {
@@ -465,7 +570,7 @@ public class StrptimeParser
 
                         final long sec = readDigitsMax();
                         bag.seconds = !negative ? sec : -sec;
-                        bag.seconds_size = 3;
+                        bag.secondsSize = 3;
                         break;
                     }
                     case FORMAT_SECONDS: { // %S - Second of the minute (00..59)
@@ -495,9 +600,9 @@ public class StrptimeParser
                         }
 
                         if (token.getFormat() == StrptimeFormat.FORMAT_WEEK_YEAR_S) {
-                            bag.wnum0 = (int)week;
+                            bag.wNum0 = (int)week;
                         } else {
-                            bag.wnum1 = (int)week;
+                            bag.wNum1 = (int)week;
                         }
                         break;
                     }
@@ -506,7 +611,7 @@ public class StrptimeParser
                         if (!validRange(day, 1, 7)) {
                             fail = true;
                         }
-                        bag.cwday = (int)day;
+                        bag.cWDay = (int)day;
                         break;
                     }
                     case FORMAT_WEEK_WEEKYEAR: { // %V, %OV - Week number of the week-based year (01..53)
@@ -514,7 +619,7 @@ public class StrptimeParser
                         if (!validRange(week, 1, 53)) {
                             fail = true;
                         }
-                        bag.cweek = (int)week;
+                        bag.cWeek = (int)week;
                         break;
                     }
                     case FORMAT_DAY_WEEK: { // %w - Day of the week (Sunday is 0, 0..6)
@@ -522,7 +627,7 @@ public class StrptimeParser
                         if (!validRange(day, 0, 6)) {
                             fail = true;
                         }
-                        bag.wday = (int)day;
+                        bag.wDay = (int)day;
                         break;
                     }
                     case FORMAT_YEAR_LONG: {
@@ -550,8 +655,8 @@ public class StrptimeParser
                             fail = true;
                         }
                         bag.year = (int)y;
-                        if (!bag.has(bag._cent)) {
-                            bag._cent = y >= 69 ? 19 : 20;
+                        if (!bag.has(bag.cent)) {
+                            bag.cent = y >= 69 ? 19 : 20;
                         }
                         break;
                     }
