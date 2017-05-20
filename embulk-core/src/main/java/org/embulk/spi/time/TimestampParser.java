@@ -15,9 +15,8 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
-import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
-import org.embulk.spi.time.RubyDateParser.FormatBag;
+import org.embulk.spi.time.StrptimeParser.FormatBag;
 
 import java.util.List;
 
@@ -73,7 +72,7 @@ public class TimestampParser
 
     private final DateTimeZone defaultTimeZone;
     private final String format;
-    private final RubyDateParser parser;
+    private final StrptimeParser parser;
     private final Calendar calendar;
     private final List<StrptimeToken> compiledPattern;
 
@@ -106,10 +105,9 @@ public class TimestampParser
     public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone, String defaultDate)
     {
         // TODO get default current time from ExecTask.getExecTimestamp
-        Ruby runtime = jruby.getProvider().getRuntime();
         this.format = format;
-        this.parser = new RubyDateParser(runtime.getCurrentContext());
-        this.compiledPattern = this.parser.compilePattern(runtime.newString(format));
+        this.parser = new StrptimeParser();
+        this.compiledPattern = this.parser.compilePattern(format);
         this.defaultTimeZone = defaultTimeZone;
 
         // calculate default date
