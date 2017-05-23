@@ -77,6 +77,7 @@ public class FileOutputOutputStream
         if (pos > 0) {
             buffer.limit(pos);
             out.add(buffer);
+            buffer.release();
             buffer = Buffer.EMPTY;
             pos = 0;
             return true;
