@@ -1,5 +1,6 @@
 module Embulk
 
+  require 'embulk/builder'
   require 'embulk/data_source'
   require 'embulk/schema'
   require 'embulk/page_builder'
