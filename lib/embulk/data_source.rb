@@ -190,6 +190,10 @@ module Embulk
       end
 
       return value
+
+    rescue => e
+      raise e unless Embulk.java?
+      raise org.embulk.config.ConfigException.new(e)
     end
 
     def self.from_java(java_data_source_impl)
