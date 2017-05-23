@@ -3,6 +3,8 @@ module Embulk
   require 'embulk/buffer'
 
   class FileInput
+    attr_reader :java_file_input
+
     def initialize(java_file_input)
       @java_file_input = java_file_input
       @buffer = nil
