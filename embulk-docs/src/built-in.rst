@@ -494,7 +494,7 @@ The ``column_options`` option is a map whose keys are name of columns, and value
 +======================+=========+=======================================================================================================+=========================================+
 | timezone             | string  | Time zone if type of this column is timestamp. If not set, ``default\_timezone`` is used.             | optional                                |
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-----------------------------------------+
-| format               | string  | Timestamp format if type of this column is timestamp.                                                 | ``%Y-%m-%d %H:%M:%S.%6N %z`` by default |
+| format               | string  | Timestamp format if type of this column is timestamp.                                                 | ``%Y-%m-%d %H:%M:%S.%6N %z`` by default. The Timestamp format refers to https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime |
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-----------------------------------------+
 
 Example
