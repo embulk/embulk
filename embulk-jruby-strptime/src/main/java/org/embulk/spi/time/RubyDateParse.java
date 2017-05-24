@@ -3,6 +3,12 @@ package org.embulk.spi.time;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * TODO
+ * This class is tentatively required for {@code StrptimeParser} class.
+ * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
+ * will be removed from Embulk.
+ */
 public class RubyDateParse
 {
     // Ported zones_source in ext/date/date_parse.c

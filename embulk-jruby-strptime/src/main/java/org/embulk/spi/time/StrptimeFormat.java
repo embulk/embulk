@@ -1,6 +1,13 @@
 package org.embulk.spi.time;
 
-// Ported from org.jruby.util.RubyDateFormatter.Format in JRuby
+/**
+ * Ported from org.jruby.util.RubyDateFormatter.Format in JRuby
+ *
+ * TODO
+ * This class is tentatively required for {@code StrptimeParser} class.
+ * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
+ * will be removed from Embulk.
+ */
 enum StrptimeFormat
 {
     FORMAT_STRING, // raw string, no formatting

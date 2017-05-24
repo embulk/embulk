@@ -10,6 +10,11 @@ import static org.jruby.RubyRational.newRationalCanonicalize;
 
 /**
  * This class has {@code StrptimeParser} and provides methods that are calls from JRuby.
+ *
+ * TODO
+ * This class is tentatively required for executing test/mri/date/test_date_strptime.rb
+ * (#617). After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
+ * will be removed from Embulk.
  */
 public class RubyDateParser
 {

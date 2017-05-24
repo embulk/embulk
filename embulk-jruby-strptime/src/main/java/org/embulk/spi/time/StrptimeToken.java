@@ -2,7 +2,14 @@ package org.embulk.spi.time;
 
 import static org.embulk.spi.time.StrptimeFormat.*;
 
-// Ported from org.jruby.util.RubyDateFormatter.Token in JRuby
+/**
+ * Ported from org.jruby.util.RubyDateFormatter.Token in JRuby
+ *
+ * TODO
+ * This class is tentatively required for {@code StrptimeParser} class.
+ * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
+ * will be removed from Embulk.
+ */
 public class StrptimeToken
 {
     static final StrptimeToken[] CONVERSION2TOKEN = new StrptimeToken[256];

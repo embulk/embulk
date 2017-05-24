@@ -14,6 +14,11 @@ import org.embulk.spi.time.lexer.StrptimeLexer;
 
 /**
  * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.x.
+ *
+ * TODO
+ * This class is tentatively required for {@code TimestampParser} class.
+ * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
+ * will be removed from Embulk.
  */
 public class StrptimeParser
 {
