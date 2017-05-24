@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ *
+ * @see https://github.com/ruby/ruby/blob/44e329ea7f2926764bdd33807cde2a2b16d55d1d/ext/date/date_parse.c
+ *
  * TODO
  * This class is tentatively required for {@code StrptimeParser} class.
  * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
  * will be removed from Embulk.
  */
-public class RubyDateParse
+public class TimeZoneConverter
 {
     // Ported zones_source in ext/date/date_parse.c
     static final Map<String, Integer> ZONES_SOURCE;
@@ -211,8 +214,8 @@ public class RubyDateParse
             dst = false;
         }
 
-        if (RubyDateParse.ZONES_SOURCE.containsKey(z)) {
-            int offset = RubyDateParse.ZONES_SOURCE.get(z);
+        if (TimeZoneConverter.ZONES_SOURCE.containsKey(z)) {
+            int offset = TimeZoneConverter.ZONES_SOURCE.get(z);
             if (dst) {
                 offset += 3600;
             }
@@ -287,7 +290,7 @@ public class RubyDateParse
         return sign ? offset : -offset;
     }
 
-    private RubyDateParse()
+    private TimeZoneConverter()
     {
     }
 }
