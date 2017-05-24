@@ -4,8 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- * @see https://github.com/ruby/ruby/blob/44e329ea7f2926764bdd33807cde2a2b16d55d1d/ext/date/date_parse.c
+ * This is utility class to convert given timezone into integer based timezone
+ * diff. It's ported from ext/date/date_parse.c in MRI 2.3.1 under BSDL.
+ * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_parse.c
  *
  * TODO
  * This class is tentatively required for {@code StrptimeParser} class.

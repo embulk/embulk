@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 import org.embulk.spi.time.lexer.StrptimeLexer;
 
 /**
- * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.x.
+ * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.1.
+ * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c
  *
  * TODO
  * This class is tentatively required for {@code TimestampParser} class.
@@ -40,7 +41,10 @@ public class StrptimeParser
             "am", "pm", "a.m.", "p.m."
     };
 
-    // Ported Date::Format::Bag from lib/ruby/stdlib/date/format.rb in JRuby
+    /**
+     * Ported Date::Format::Bag from JRuby 9.1.5.0's lib/ruby/stdlib/date/format.rb.
+     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb
+     */
     public static class FormatBag
     {
         private int mDay = Integer.MIN_VALUE;
@@ -232,7 +236,11 @@ public class StrptimeParser
         this.lexer = new StrptimeLexer((Reader) null);
     }
 
-    // Ported from org.jruby.util.RubyDateFormatter#addToPattern
+    /**
+     * Ported from org.jruby.util.RubyDateFormatter#addToPattern in JRuby 9.1.5.0
+     * under EPL.
+     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java
+     */
     private void addToPattern(final List<StrptimeToken> compiledPattern, final String str)
     {
         for (int i = 0; i < str.length(); i++) {
@@ -246,7 +254,11 @@ public class StrptimeParser
         }
     }
 
-    // Ported from org.jruby.util.RubyDateFormatter#compilePattern
+    /**
+     * Ported from org.jruby.util.RubyDateFormatter#compilePattern in JRuby 9.1.5.0
+     * under EPL.
+     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java
+     */
     public List<StrptimeToken> compilePattern(final String pattern)
     {
         final List<StrptimeToken> compiledPattern = new LinkedList<>();
@@ -706,7 +718,10 @@ public class StrptimeParser
             return bag;
         }
 
-        // Ported read_digits from ext/date/date_strptime.c
+        /**
+         * Ported read_digits in MRI 2.3.1's ext/date/date_strptime.c
+         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         */
         private long readDigits(final int len)
         {
             char c;
@@ -735,7 +750,10 @@ public class StrptimeParser
             return v;
         }
 
-        // Ported READ_DIGITS_MAX from ext/date/date_strptime.c
+        /**
+         * Ported from READ_DIGITS_MAX in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
+         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         */
         private long readDigitsMax()
         {
             return readDigits(Integer.MAX_VALUE);
@@ -762,7 +780,10 @@ public class StrptimeParser
             return -1; // text doesn't match at any patterns.
         }
 
-        // Ported num_pattern_p from ext/date/date_strptime.c
+        /**
+         * Ported from num_pattern_p in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
+         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         */
         private static boolean isNumberPattern(final List<StrptimeToken> compiledPattern, final int i)
         {
             if (compiledPattern.size() <= i + 1) {
@@ -817,7 +838,10 @@ public class StrptimeParser
                         StrptimeFormat.FORMAT_YEAR_SHORT // 'y'
                 ));
 
-        // Ported valid_range_p from ext/date/date_strptime.c
+        /**
+         * Ported from valid_pattern_p in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
+         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         */
         private static boolean validRange(long v, int lower, int upper)
         {
             return lower <= v && v <= upper;
@@ -825,8 +849,6 @@ public class StrptimeParser
 
         private static boolean isSpace(char c)
         {
-            // @see space characters are declared in date_strptime.c
-            // https://github.com/ruby/ruby/blob/trunk/ext/date/date_strptime.c#L624
             return c == ' ' || c == '\t' || c == '\n' ||
                     c == '\u000b' || c == '\f' || c == '\r';
         }
