@@ -286,4 +286,8 @@ public class RubyDateParse
         int offset = hour * 3600 + min * 60 + sec;
         return sign ? offset : -offset;
     }
+
+    private RubyDateParse()
+    {
+    }
 }
