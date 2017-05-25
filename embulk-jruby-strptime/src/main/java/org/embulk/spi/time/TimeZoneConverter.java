@@ -366,7 +366,7 @@ public class TimeZoneConverter
     {
         String z = zone.toLowerCase();
 
-        boolean dst;
+        final boolean dst;
         if (z.endsWith(" daylight time")) {
             z = z.substring(0, z.length() - " daylight time".length());
             dst = true;
@@ -395,7 +395,7 @@ public class TimeZoneConverter
             z = z.substring(3, z.length()); // remove "gmt" or "utc"
         }
 
-        boolean sign;
+        final boolean sign;
         if (z.charAt(0) == '+') {
             sign = true;
         }
@@ -410,7 +410,7 @@ public class TimeZoneConverter
 
         int hour = 0, min = 0, sec = 0;
         if (z.contains(":")) {
-            String[] splited = z.split(":");
+            final String[] splited = z.split(":");
             if (splited.length == 2) {
                 hour = Integer.parseInt(splited[0]);
                 min = Integer.parseInt(splited[1]);
@@ -430,7 +430,7 @@ public class TimeZoneConverter
 
         }
         else {
-            int len = z.length();
+            final int len = z.length();
             if (len % 2 != 0) {
                 if (len >= 1) {
                     hour = Integer.parseInt(z.substring(0, 1));
@@ -455,7 +455,7 @@ public class TimeZoneConverter
             }
         }
 
-        int offset = hour * 3600 + min * 60 + sec;
+        final int offset = hour * 3600 + min * 60 + sec;
         return sign ? offset : -offset;
     }
 
