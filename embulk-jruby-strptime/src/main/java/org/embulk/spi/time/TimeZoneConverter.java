@@ -1,8 +1,5 @@
 package org.embulk.spi.time;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * This is utility class to convert given timezone into integer based timezone
  * diff. It's ported from ext/date/date_parse.c in MRI 2.3.1 under BSDL.
@@ -16,181 +13,352 @@ import java.util.Map;
 public class TimeZoneConverter
 {
     // Ported zones_source in ext/date/date_parse.c
-    static final Map<String, Integer> ZONES_SOURCE;
-
-    static {
-        Map<String, Integer> map = new HashMap<>();
-        map.put("ut",                     0*3600);
-        map.put("gmt",                    0*3600);
-        map.put("est",                   -5*3600);
-        map.put("edt",                   -4*3600);
-        map.put("cst",                   -6*3600);
-        map.put("cdt",                   -5*3600);
-        map.put("mst",                   -7*3600);
-        map.put("mdt",                   -6*3600);
-        map.put("pst",                   -8*3600);
-        map.put("pdt",                   -7*3600);
-        map.put("a",                      1*3600);
-        map.put("b",                      2*3600);
-        map.put("c",                      3*3600);
-        map.put("d",                      4*3600);
-        map.put("e",                      5*3600);
-        map.put("f",                      6*3600);
-        map.put("g",                      7*3600);
-        map.put("h",                      8*3600);
-        map.put("i",                      9*3600);
-        map.put("k",                     10*3600);
-        map.put("l",                     11*3600);
-        map.put("m",                     12*3600);
-        map.put("n",                     -1*3600);
-        map.put("o",                     -2*3600);
-        map.put("p",                     -3*3600);
-        map.put("q",                     -4*3600);
-        map.put("r",                     -5*3600);
-        map.put("s",                     -6*3600);
-        map.put("t",                     -7*3600);
-        map.put("u",                     -8*3600);
-        map.put("v",                     -9*3600);
-        map.put("w",                    -10*3600);
-        map.put("x",                    -11*3600);
-        map.put("y",                    -12*3600);
-        map.put("z",                      0*3600);
-        map.put("utc",                    0*3600);
-        map.put("wet",                    0*3600);
-        map.put("at",                    -2*3600);
-        map.put("brst",                  -2*3600);
-        map.put("ndt",            -(2*3600+1800));
-        map.put("art",                   -3*3600);
-        map.put("adt",                   -3*3600);
-        map.put("brt",                   -3*3600);
-        map.put("clst",                  -3*3600);
-        map.put("nst",            -(3*3600+1800));
-        map.put("ast",                   -4*3600);
-        map.put("clt",                   -4*3600);
-        map.put("akdt",                  -8*3600);
-        map.put("ydt",                   -8*3600);
-        map.put("akst",                  -9*3600);
-        map.put("hadt",                  -9*3600);
-        map.put("hdt",                   -9*3600);
-        map.put("yst",                   -9*3600);
-        map.put("ahst",                 -10*3600);
-        map.put("cat",                  -10*3600);
-        map.put("hast",                 -10*3600);
-        map.put("hst",                  -10*3600);
-        map.put("nt",                   -11*3600);
-        map.put("idlw",                 -12*3600);
-        map.put("bst",                    1*3600);
-        map.put("cet",                    1*3600);
-        map.put("fwt",                    1*3600);
-        map.put("met",                    1*3600);
-        map.put("mewt",                   1*3600);
-        map.put("mez",                    1*3600);
-        map.put("swt",                    1*3600);
-        map.put("wat",                    1*3600);
-        map.put("west",                   1*3600);
-        map.put("cest",                   2*3600);
-        map.put("eet",                    2*3600);
-        map.put("fst",                    2*3600);
-        map.put("mest",                   2*3600);
-        map.put("mesz",                   2*3600);
-        map.put("sast",                   2*3600);
-        map.put("sst",                    2*3600);
-        map.put("bt",                     3*3600);
-        map.put("eat",                    3*3600);
-        map.put("eest",                   3*3600);
-        map.put("msk",                    3*3600);
-        map.put("msd",                    4*3600);
-        map.put("zp4",                    4*3600);
-        map.put("zp5",                    5*3600);
-        map.put("ist",             (5*3600+1800));
-        map.put("zp6",                    6*3600);
-        map.put("wast",                   7*3600);
-        map.put("cct",                    8*3600);
-        map.put("sgt",                    8*3600);
-        map.put("wadt",                   8*3600);
-        map.put("jst",                    9*3600);
-        map.put("kst",                    9*3600);
-        map.put("east",                  10*3600);
-        map.put("gst",                   10*3600);
-        map.put("eadt",                  11*3600);
-        map.put("idle",                  12*3600);
-        map.put("nzst",                  12*3600);
-        map.put("nzt",                   12*3600);
-        map.put("nzdt",                  13*3600);
-        map.put("afghanistan",             16200);
-        map.put("alaskan",                -32400);
-        map.put("arab",                    10800);
-        map.put("arabian",                 14400);
-        map.put("arabic",                  10800);
-        map.put("atlantic",               -14400);
-        map.put("aus central",             34200);
-        map.put("aus eastern",             36000);
-        map.put("azores",                  -3600);
-        map.put("canada central",         -21600);
-        map.put("cape verde",              -3600);
-        map.put("caucasus",                14400);
-        map.put("cen. australia",          34200);
-        map.put("central america",        -21600);
-        map.put("central asia",            21600);
-        map.put("central europe",           3600);
-        map.put("central european",         3600);
-        map.put("central pacific",         39600);
-        map.put("central",                -21600);
-        map.put("china",                   28800);
-        map.put("dateline",               -43200);
-        map.put("e. africa",               10800);
-        map.put("e. australia",            36000);
-        map.put("e. europe",                7200);
-        map.put("e. south america",       -10800);
-        map.put("eastern",                -18000);
-        map.put("egypt",                    7200);
-        map.put("ekaterinburg",            18000);
-        map.put("fiji",                    43200);
-        map.put("fle",                      7200);
-        map.put("greenland",              -10800);
-        map.put("greenwich",                   0);
-        map.put("gtb",                      7200);
-        map.put("hawaiian",               -36000);
-        map.put("india",                   19800);
-        map.put("iran",                    12600);
-        map.put("jerusalem",                7200);
-        map.put("korea",                   32400);
-        map.put("mexico",                 -21600);
-        map.put("mid-atlantic",            -7200);
-        map.put("mountain",               -25200);
-        map.put("myanmar",                 23400);
-        map.put("n. central asia",         21600);
-        map.put("nepal",                   20700);
-        map.put("new zealand",             43200);
-        map.put("newfoundland",           -12600);
-        map.put("north asia east",         28800);
-        map.put("north asia",              25200);
-        map.put("pacific sa",             -14400);
-        map.put("pacific",                -28800);
-        map.put("romance",                  3600);
-        map.put("russian",                 10800);
-        map.put("sa eastern",             -10800);
-        map.put("sa pacific",             -18000);
-        map.put("sa western",             -14400);
-        map.put("samoa",                  -39600);
-        map.put("se asia",                 25200);
-        map.put("malay peninsula",         28800);
-        map.put("south africa",             7200);
-        map.put("sri lanka",               21600);
-        map.put("taipei",                  28800);
-        map.put("tasmania",                36000);
-        map.put("tokyo",                   32400);
-        map.put("tonga",                   46800);
-        map.put("us eastern",             -18000);
-        map.put("us mountain",            -25200);
-        map.put("vladivostok",             36000);
-        map.put("w. australia",            28800);
-        map.put("w. central africa",        3600);
-        map.put("w. europe",                3600);
-        map.put("west asia",               18000);
-        map.put("west pacific",            36000);
-        map.put("yakutsk",                 32400);
-        ZONES_SOURCE = new HashMap<>(map);
+    private static int getOffsetFromZonesSource(String z)
+    {
+        switch (z) {
+            case "ut":
+                return 0 * 3600;
+            case "gmt":
+                return 0 * 3600;
+            case "est":
+                return -5 * 3600;
+            case "edt":
+                return -4 * 3600;
+            case "cst":
+                return -6 * 3600;
+            case "cdt":
+                return -5 * 3600;
+            case "mst":
+                return -7 * 3600;
+            case "mdt":
+                return -6 * 3600;
+            case "pst":
+                return -8 * 3600;
+            case "pdt":
+                return -7 * 3600;
+            case "a":
+                return 1 * 3600;
+            case "b":
+                return 2 * 3600;
+            case "c":
+                return 3 * 3600;
+            case "d":
+                return 4 * 3600;
+            case "e":
+                return 5 * 3600;
+            case "f":
+                return 6 * 3600;
+            case "g":
+                return 7 * 3600;
+            case "h":
+                return 8 * 3600;
+            case "i":
+                return 9 * 3600;
+            case "k":
+                return 10 * 3600;
+            case "l":
+                return 11 * 3600;
+            case "m":
+                return 12 * 3600;
+            case "n":
+                return -1 * 3600;
+            case "o":
+                return -2 * 3600;
+            case "p":
+                return -3 * 3600;
+            case "q":
+                return -4 * 3600;
+            case "r":
+                return -5 * 3600;
+            case "s":
+                return -6 * 3600;
+            case "t":
+                return -7 * 3600;
+            case "u":
+                return -8 * 3600;
+            case "v":
+                return -9 * 3600;
+            case "w":
+                return -10 * 3600;
+            case "x":
+                return -11 * 3600;
+            case "y":
+                return -12 * 3600;
+            case "z":
+                return 0 * 3600;
+            case "utc":
+                return 0 * 3600;
+            case "wet":
+                return 0 * 3600;
+            case "at":
+                return -2 * 3600;
+            case "brst":
+                return -2 * 3600;
+            case "ndt":
+                return -(2 * 3600 + 1800);
+            case "art":
+                return -3 * 3600;
+            case "adt":
+                return -3 * 3600;
+            case "brt":
+                return -3 * 3600;
+            case "clst":
+                return -3 * 3600;
+            case "nst":
+                return -(3 * 3600 + 1800);
+            case "ast":
+                return -4 * 3600;
+            case "clt":
+                return -4 * 3600;
+            case "akdt":
+                return -8 * 3600;
+            case "ydt":
+                return -8 * 3600;
+            case "akst":
+                return -9 * 3600;
+            case "hadt":
+                return -9 * 3600;
+            case "hdt":
+                return -9 * 3600;
+            case "yst":
+                return -9 * 3600;
+            case "ahst":
+                return -10 * 3600;
+            case "cat":
+                return -10 * 3600;
+            case "hast":
+                return -10 * 3600;
+            case "hst":
+                return -10 * 3600;
+            case "nt":
+                return -11 * 3600;
+            case "idlw":
+                return -12 * 3600;
+            case "bst":
+                return 1 * 3600;
+            case "cet":
+                return 1 * 3600;
+            case "fwt":
+                return 1 * 3600;
+            case "met":
+                return 1 * 3600;
+            case "mewt":
+                return 1 * 3600;
+            case "mez":
+                return 1 * 3600;
+            case "swt":
+                return 1 * 3600;
+            case "wat":
+                return 1 * 3600;
+            case "west":
+                return 1 * 3600;
+            case "cest":
+                return 2 * 3600;
+            case "eet":
+                return 2 * 3600;
+            case "fst":
+                return 2 * 3600;
+            case "mest":
+                return 2 * 3600;
+            case "mesz":
+                return 2 * 3600;
+            case "sast":
+                return 2 * 3600;
+            case "sst":
+                return 2 * 3600;
+            case "bt":
+                return 3 * 3600;
+            case "eat":
+                return 3 * 3600;
+            case "eest":
+                return 3 * 3600;
+            case "msk":
+                return 3 * 3600;
+            case "msd":
+                return 4 * 3600;
+            case "zp4":
+                return 4 * 3600;
+            case "zp5":
+                return 5 * 3600;
+            case "ist":
+                return 5 * 3600 + 1800;
+            case "zp6":
+                return 6 * 3600;
+            case "wast":
+                return 7 * 3600;
+            case "cct":
+                return 8 * 3600;
+            case "sgt":
+                return 8 * 3600;
+            case "wadt":
+                return 8 * 3600;
+            case "jst":
+                return 9 * 3600;
+            case "kst":
+                return 9 * 3600;
+            case "east":
+                return 10 * 3600;
+            case "gst":
+                return 10 * 3600;
+            case "eadt":
+                return 11 * 3600;
+            case "idle":
+                return 12 * 3600;
+            case "nzst":
+                return 12 * 3600;
+            case "nzt":
+                return 12 * 3600;
+            case "nzdt":
+                return 13 * 3600;
+            case "afghanistan":
+                return 16200;
+            case "alaskan":
+                return -32400;
+            case "arab":
+                return 10800;
+            case "arabian":
+                return 14400;
+            case "arabic":
+                return 10800;
+            case "atlantic":
+                return -14400;
+            case "aus central":
+                return 34200;
+            case "aus eastern":
+                return 36000;
+            case "azores":
+                return -3600;
+            case "canada central":
+                return -21600;
+            case "cape verde":
+                return -3600;
+            case "caucasus":
+                return 14400;
+            case "cen. australia":
+                return 34200;
+            case "central america":
+                return -21600;
+            case "central asia":
+                return 21600;
+            case "central europe":
+                return 3600;
+            case "central european":
+                return 3600;
+            case "central pacific":
+                return 39600;
+            case "central":
+                return -21600;
+            case "china":
+                return 28800;
+            case "dateline":
+                return -43200;
+            case "e. africa":
+                return 10800;
+            case "e. australia":
+                return 36000;
+            case "e. europe":
+                return 7200;
+            case "e. south america":
+                return -10800;
+            case "eastern":
+                return -18000;
+            case "egypt":
+                return 7200;
+            case "ekaterinburg":
+                return 18000;
+            case "fiji":
+                return 43200;
+            case "fle":
+                return 7200;
+            case "greenland":
+                return -10800;
+            case "greenwich":
+                return 0;
+            case "gtb":
+                return 7200;
+            case "hawaiian":
+                return -36000;
+            case "india":
+                return 19800;
+            case "iran":
+                return 12600;
+            case "jerusalem":
+                return 7200;
+            case "korea":
+                return 32400;
+            case "mexico":
+                return -21600;
+            case "mid-atlantic":
+                return -7200;
+            case "mountain":
+                return -25200;
+            case "myanmar":
+                return 23400;
+            case "n. central asia":
+                return 21600;
+            case "nepal":
+                return 20700;
+            case "new zealand":
+                return 43200;
+            case "newfoundland":
+                return -12600;
+            case "north asia east":
+                return 28800;
+            case "north asia":
+                return 25200;
+            case "pacific sa":
+                return -14400;
+            case "pacific":
+                return -28800;
+            case "romance":
+                return 3600;
+            case "russian":
+                return 10800;
+            case "sa eastern":
+                return -10800;
+            case "sa pacific":
+                return -18000;
+            case "sa western":
+                return -14400;
+            case "samoa":
+                return -39600;
+            case "se asia":
+                return 25200;
+            case "malay peninsula":
+                return 28800;
+            case "south africa":
+                return 7200;
+            case "sri lanka":
+                return 21600;
+            case "taipei":
+                return 28800;
+            case "tasmania":
+                return 36000;
+            case "tokyo":
+                return 32400;
+            case "tonga":
+                return 46800;
+            case "us eastern":
+                return -18000;
+            case "us mountain":
+                return -25200;
+            case "vladivostok":
+                return 36000;
+            case "w. australia":
+                return 28800;
+            case "w. central africa":
+                return 3600;
+            case "w. europe":
+                return 3600;
+            case "west asia":
+                return 18000;
+            case "west pacific":
+                return 36000;
+            case "yakutsk":
+                return 32400;
+            default:
+                return Integer.MIN_VALUE;
+        }
     }
 
     // Ported date_zone_to_diff in ext/date/date_parse.c
@@ -215,12 +383,12 @@ public class TimeZoneConverter
             dst = false;
         }
 
-        if (TimeZoneConverter.ZONES_SOURCE.containsKey(z)) {
-            int offset = TimeZoneConverter.ZONES_SOURCE.get(z);
+        int offsetFromZonesSource;
+        if ((offsetFromZonesSource = getOffsetFromZonesSource(z)) != Integer.MIN_VALUE) {
             if (dst) {
-                offset += 3600;
+                offsetFromZonesSource += 3600;
             }
-            return offset;
+            return offsetFromZonesSource;
         }
 
         if (z.startsWith("gmt") || z.startsWith("utc")) {
