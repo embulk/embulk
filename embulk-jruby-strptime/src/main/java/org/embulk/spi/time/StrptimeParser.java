@@ -287,9 +287,6 @@ public class StrptimeParser
                         case 'n':
                             compiledPattern.add(StrptimeToken.str("\n"));
                             break;
-                        case 'Q':
-                            compiledPattern.add(new StrptimeToken(StrptimeFormat.FORMAT_MICROSEC_EPOCH));
-                            break;
                         case 'R':
                             addToPattern(compiledPattern, "H:M");
                             break;

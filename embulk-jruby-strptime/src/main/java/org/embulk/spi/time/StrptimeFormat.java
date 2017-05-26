@@ -35,6 +35,7 @@ enum StrptimeFormat
     FORMAT_NANOSEC, // %N
     FORMAT_MERIDIAN_LOWER_CASE, // %P
     FORMAT_MERIDIAN, // %p
+    FORMAT_MICROSEC_EPOCH, // %Q Only for Date/DateTime from here
     FORMAT_SECONDS, // %S
     FORMAT_EPOCH, // %s
     FORMAT_WEEK_YEAR_S, // %U
@@ -47,7 +48,5 @@ enum StrptimeFormat
 
     FORMAT_COLON_ZONE_OFF, // %z, %:z, %::z, %:::z must be given number of colons as data
 
-    FORMAT_ZONE_ID, // %Z Change between Time and Date
-
-    FORMAT_MICROSEC_EPOCH; // %Q Only for Date/DateTime from here
+    FORMAT_ZONE_ID; // %Z Change between Time and Date
 }
