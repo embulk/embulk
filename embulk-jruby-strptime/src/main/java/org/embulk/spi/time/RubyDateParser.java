@@ -18,12 +18,10 @@ import static org.jruby.RubyRational.newRationalCanonicalize;
  */
 public class RubyDateParser
 {
-    private final ThreadContext context;
     private final StrptimeParser strptimeParser;
 
-    public RubyDateParser(ThreadContext context)
+    public RubyDateParser()
     {
-        this.context = context;
         this.strptimeParser = new StrptimeParser();
     }
 
@@ -34,19 +32,19 @@ public class RubyDateParser
      * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb
      * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c
      */
-    public HashMap<String, Object> parse(final String format, final String text)
+    public HashMap<String, Object> parse(ThreadContext context, final String format, final String text)
     {
         final List<StrptimeToken> compiledPattern = strptimeParser.compilePattern(format);
         final StrptimeParser.FormatBag bag = strptimeParser.parse(compiledPattern, text);
         if (bag != null) {
-            return convertFormatBagToHash(bag);
+            return convertFormatBagToHash(context, bag);
         }
         else {
             return null;
         }
     }
 
-    private HashMap<String, Object> convertFormatBagToHash(StrptimeParser.FormatBag bag)
+    private HashMap<String, Object> convertFormatBagToHash(ThreadContext context, StrptimeParser.FormatBag bag)
     {
         final HashMap<String, Object> map = new HashMap<>();
 
