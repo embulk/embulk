@@ -1,6 +1,7 @@
 package org.embulk.standards;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CharSource;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
@@ -16,9 +17,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.msgpack.value.Value;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +62,7 @@ public class TestJsonParserPlugin
                         "\"_c1\":-10,\n" +
                         "\"_c2\":\"エンバルク\",\n" +
                         "\"_c3\":[\"e0\",\"e1\"]\n" +
-                "}",
+                        "}",
                 "[1, 2, 3]", // this line should be skipped.
                 "\"embulk\"", // this line should be skipped.
                 "10", // this line should be skipped.
@@ -130,6 +132,96 @@ public class TestJsonParserPlugin
         catch (Throwable t) {
             assertTrue(t instanceof DataException);
         }
+    }
+
+
+    @Test
+    public void cleanIllegalChar()
+            throws Exception
+    {
+
+        ConfigSource config = this.config.deepCopy().set("clean_illegal_char", true);
+        transaction(config, new InputStreamFileInput(runtime.getBufferAllocator(), provider(createBrokenRecord())));
+
+        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        assertEquals(2, records.size());
+
+        Object[] record;
+        Map<Value, Value> map;
+        { // "{\"_c0\":true,\"_c1\":10,\"_c2\":\"embulk\",\"_c3\":{\"k\":\"v\"}}"
+            record = records.get(0);
+            assertEquals(1, record.length);
+            map = ((Value)record[0]).asMapValue().map();
+
+            assertEquals(newBoolean(true), map.get(newString("_c0")));
+            assertEquals(newInteger(10L), map.get(newString("_c1")));
+            assertEquals(newString("embulk"), map.get(newString("_c2")));
+            assertEquals(newMap(newString("k"), newString("v")), map.get(newString("_c3")));
+        }
+        { // "{"_c0":"embulk0xF00x5cabc"}"
+            record = records.get(1);
+            assertEquals(1, record.length);
+            map = ((Value)record[0]).asMapValue().map();
+
+            assertEquals(newString("embulkabc"), map.get(newString("_c0")));
+        }
+
+    }
+
+    @Test
+    public void defaultCleanIllegalChar()
+            throws Exception
+    {
+        try {
+            transaction(config, new InputStreamFileInput(runtime.getBufferAllocator(), provider(createBrokenRecord())));
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof DataException);
+        }
+    }
+
+    private ByteArrayInputStream createBrokenRecord() throws Exception {
+        // out of utf-8 range's byte.
+        // 0x5c is backslash.
+        byte[] brokenBytes = { Integer.valueOf(0xF0).byteValue() , 0x5c };
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        // normal record
+        outputStream.write("{\"_c0\":true,\"_c1\":10,\"_c2\":\"embulk\",\"_c3\":{\"k\":\"v\"}}\n".getBytes("UTF-8"));
+
+        // contain illegal char record
+        outputStream.write("{\"_c0\":\"embulk".getBytes("UTF-8"));
+        outputStream.write(brokenBytes); // append dust bytes.
+        outputStream.write("abc".getBytes("UTF-8"));
+        outputStream.write("\"}\n".getBytes("UTF-8"));
+
+        return new ByteArrayInputStream(outputStream.toByteArray());
+    }
+
+    @Test
+    public void checkCleanBackslash()
+            throws Exception
+    {
+        {
+            String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
+            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            assertEquals(json , actual.read());
+        }
+
+        {
+            String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}";
+            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            assertEquals(json , actual.read());
+        }
+
+        {
+            // {"\a":"b"}\ \a and last \ is not allowed.
+            String json = "{\"\\a\":\"b\"}\\";
+            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            // backslash will removed.
+            assertEquals("{\"a\":\"b\"}" , actual.read());
+        }
+
     }
 
     private ConfigSource config()
