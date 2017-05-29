@@ -35,6 +35,17 @@ public class EmbulkTests
         }
     }
 
+    public static ConfigSource configFromString(String yaml)
+    {
+        assumeThat(isNullOrEmpty(yaml), is(false));
+        return EmbulkEmbed.newSystemConfigLoader().fromYamlString(yaml);
+    }
+
+    public static ConfigSource configFromResource(String name)
+    {
+        return configFromString(readResource(name));
+    }
+
     public static String readResource(String name)
     {
         try (InputStream in = Resources.getResource(name).openStream()) {
