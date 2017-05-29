@@ -30,14 +30,31 @@ import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class JsonParserPlugin
         implements ParserPlugin
 {
+
+    public enum InvalidEscapeStringPolicy
+    {
+        PASSTHROUGH("PASSTHROUGH"),
+        SKIP("SKIP"),
+        UNESCAPE("UNESCAPE");
+
+        private final String string;
+
+        private InvalidEscapeStringPolicy(String string)
+        {
+            this.string = string;
+        }
+
+        public String getString()
+        {
+            return string;
+        }
+    }
+
     public interface PluginTask
             extends Task
     {
@@ -45,9 +62,9 @@ public class JsonParserPlugin
         @ConfigDefault("false")
         boolean getStopOnInvalidRecord();
 
-        @Config("clean_illegal_char")
-        @ConfigDefault("false")
-        boolean getCleanIllegalChar();
+        @Config("invalid_string_escapes")
+        @ConfigDefault("\"PASSTHROUGH\"")
+        InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
     }
 
     private final Logger log;
@@ -115,70 +132,77 @@ public class JsonParserPlugin
     }
 
     private JsonParser.Stream newJsonStream(FileInputInputStream in , PluginTask task)
-            throws IOException
-    {
-        if (task.getCleanIllegalChar())
-        {
-            final CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
-            charsetDecoder.onMalformedInput(CodingErrorAction.IGNORE);
-            charsetDecoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
-
-            Iterable<CharSource> lines = Lists.transform(CharStreams.readLines(new BufferedReader(new InputStreamReader(in, charsetDecoder))), cleanIllegalBackslashFunction);
-            return new JsonParser().open(new ReaderInputStream(CharSource.concat(lines).openStream()));
-        }
-        else
-        {
-            return new JsonParser().open(in);
+            throws IOException {
+        InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
+        switch (policy) {
+            case SKIP:
+            case UNESCAPE:
+                Iterable<CharSource> lines = Lists.transform(CharStreams.readLines(new BufferedReader(new InputStreamReader(in))),
+                        invalidEscapeStringFunction(policy));
+                return new JsonParser().open(new ReaderInputStream(CharSource.concat(lines).openStream()));
+            case PASSTHROUGH:
+            default:
+                return new JsonParser().open(in);
         }
     }
 
-    Function<String, CharSource> cleanIllegalBackslashFunction = new Function<String, CharSource>()
-    {
-        Pattern p = Pattern.compile("\\p{XDigit}+");
-        @Override
-        public CharSource apply(@Nullable String input)
-        {
-            assert input != null;
-            int index = 0;
-            StringBuilder s = new StringBuilder();
-            char[] charArray = input.toCharArray();
-            for (char c:charArray) {
-                if (c == '\\') {
-                    if (charArray.length > index + 1) {
-                        char next = charArray[index + 1];
-                        switch (next) {
-                            case 'b':
-                            case 'f':
-                            case 'n':
-                            case 'r':
-                            case 't':
-                            case '"':
-                            case '\\':
-                            case '/':
-                                s.append(c);
-                                break;
-                            case 'u': // hexstring
-                                if (charArray.length > index + 5) {
-                                    char[] hexChars = { charArray[index + 2] , charArray[index + 3] , charArray[index + 4] ,charArray[index + 5] };
-                                    String hexString = new String(hexChars);
-                                    if (p.matcher(hexString).matches()) {
-                                        s.append(c);
-                                    }
-                                }
-                                break;
-                            default:
-                                // ignore backslash.
-                                break;
-                        }
-                    }
-                } else {
-                    s.append(c);
+    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
+        return new Function<String, CharSource>() {
+            final Pattern p = Pattern.compile("\\p{XDigit}+");
+            @Override
+            public CharSource apply(@Nullable String input) {
+                assert input != null;
+                if (policy == InvalidEscapeStringPolicy.PASSTHROUGH) {
+                    return CharSource.wrap(input);
                 }
-                index++;
+                StringBuilder s = new StringBuilder();
+                char[] charArray = input.toCharArray();
+                for (int i=0 ; i < charArray.length ; i++) {
+                    char c = charArray[i];
+                    if (c == '\\') {
+                        if (charArray.length > i + 1) {
+                            char next = charArray[i + 1];
+                            switch (next) {
+                                case 'b':
+                                case 'f':
+                                case 'n':
+                                case 'r':
+                                case 't':
+                                case '"':
+                                case '\\':
+                                case '/':
+                                    s.append(c);
+                                    break;
+                                case 'u': // hexstring such as \u0001
+                                    if (charArray.length > i + 5) {
+                                        char[] hexChars = {charArray[i + 2], charArray[i + 3], charArray[i + 4], charArray[i + 5]};
+                                        String hexString = new String(hexChars);
+                                        if (p.matcher(hexString).matches()) {
+                                            s.append(c);
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    switch (policy) {
+                                        case SKIP:
+                                            i++;
+                                            break;
+                                        case UNESCAPE:
+                                            break;
+                                    }
+                                    break;
+                            }
+                        }
+                    } else {
+                        s.append(c);
+                    }
+                }
+                return CharSource.wrap(s.toString());
             }
-            return CharSource.wrap(s.toString());
-        }
-    };
+        };
+    }
+
+
 
     static class JsonRecordValidateException
             extends DataException

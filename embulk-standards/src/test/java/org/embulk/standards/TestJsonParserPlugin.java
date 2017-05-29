@@ -5,13 +5,12 @@ import com.google.common.io.CharSource;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.DataException;
-import org.embulk.spi.FileInput;
-import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.Schema;
+import org.embulk.spi.*;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.util.InputStreamFileInput;
+import org.embulk.spi.util.Newline;
 import org.embulk.spi.util.Pages;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,11 +18,10 @@ import org.msgpack.value.Value;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
 import java.util.List;
 import java.util.Map;
 
+import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -49,6 +47,17 @@ public class TestJsonParserPlugin
         plugin = new JsonParserPlugin();
         output = new MockPageOutput();
     }
+
+    @Test
+    public void checkDefaultValues()
+    {
+        ConfigSource config = Exec.newConfigSource();
+
+        JsonParserPlugin.PluginTask task = config.loadConfig(JsonParserPlugin.PluginTask.class);
+        assertEquals(false, task.getStopOnInvalidRecord());
+        assertEquals(JsonParserPlugin.InvalidEscapeStringPolicy.PASSTHROUGH, task.getInvalidEscapeStringPolicy());
+    }
+
 
     @Test
     public void readNormalJson()
@@ -134,90 +143,145 @@ public class TestJsonParserPlugin
         }
     }
 
-
     @Test
-    public void cleanIllegalChar()
-            throws Exception
-    {
-
-        ConfigSource config = this.config.deepCopy().set("clean_illegal_char", true);
-        transaction(config, new InputStreamFileInput(runtime.getBufferAllocator(), provider(createBrokenRecord())));
-
-        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
-        assertEquals(2, records.size());
-
-        Object[] record;
-        Map<Value, Value> map;
-        { // "{\"_c0\":true,\"_c1\":10,\"_c2\":\"embulk\",\"_c3\":{\"k\":\"v\"}}"
-            record = records.get(0);
-            assertEquals(1, record.length);
-            map = ((Value)record[0]).asMapValue().map();
-
-            assertEquals(newBoolean(true), map.get(newString("_c0")));
-            assertEquals(newInteger(10L), map.get(newString("_c1")));
-            assertEquals(newString("embulk"), map.get(newString("_c2")));
-            assertEquals(newMap(newString("k"), newString("v")), map.get(newString("_c3")));
-        }
-        { // "{"_c0":"embulk0xF00x5cabc"}"
-            record = records.get(1);
-            assertEquals(1, record.length);
-            map = ((Value)record[0]).asMapValue().map();
-
-            assertEquals(newString("embulkabc"), map.get(newString("_c0")));
-        }
-
-    }
-
-    @Test
-    public void defaultCleanIllegalChar()
+    public void useDefaultInvalidEscapeStringFunction()
             throws Exception
     {
         try {
-            transaction(config, new InputStreamFileInput(runtime.getBufferAllocator(), provider(createBrokenRecord())));
+            transaction(config, fileInput(
+                    "{\"\\a\":\"b\"}\\" // throw DataException
+            ));
             fail();
-        } catch (Throwable t) {
+        }
+        catch (Throwable t) {
             assertTrue(t instanceof DataException);
         }
     }
 
-    private ByteArrayInputStream createBrokenRecord() throws Exception {
-        // out of utf-8 range's byte.
-        // 0x5c is backslash.
-        byte[] brokenBytes = { Integer.valueOf(0xF0).byteValue() , 0x5c };
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        // normal record
-        outputStream.write("{\"_c0\":true,\"_c1\":10,\"_c2\":\"embulk\",\"_c3\":{\"k\":\"v\"}}\n".getBytes("UTF-8"));
-
-        // contain illegal char record
-        outputStream.write("{\"_c0\":\"embulk".getBytes("UTF-8"));
-        outputStream.write(brokenBytes); // append dust bytes.
-        outputStream.write("abc".getBytes("UTF-8"));
-        outputStream.write("\"}\n".getBytes("UTF-8"));
-
-        return new ByteArrayInputStream(outputStream.toByteArray());
+    @Test
+    public void usePassthroughInvalidEscapeStringFunction()
+            throws Exception
+    {
+        try {
+            ConfigSource config = this.config.deepCopy().set("invalid_string_escapes", "PASSTHROUGH");
+            transaction(config, fileInput(
+                    "{\"\\a\":\"b\"}\\" // throw DataException
+            ));
+            fail();
+        }
+        catch (Throwable t) {
+            assertTrue(t instanceof DataException);
+        }
     }
 
     @Test
-    public void checkCleanBackslash()
+    public void useSkipInvalidEscapeString()
             throws Exception
     {
+        ConfigSource config = this.config.deepCopy().set("invalid_string_escapes", "SKIP");
+        transaction(config, fileInput(
+                "{\"\\a\":\"b\"}\\"
+        ));
+
+        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        assertEquals(1, records.size());
+        Object[] record = records.get(0);
+        Map<Value, Value> map = ((Value)record[0]).asMapValue().map();
+        assertEquals(newString("b"), map.get(newString("")));
+    }
+
+    @Test
+    public void useUnEscapeInvalidEscapeString()
+            throws Exception
+    {
+        ConfigSource config = this.config.deepCopy().set("invalid_string_escapes", "UNESCAPE");
+        transaction(config, fileInput(
+                "{\"\\a\":\"b\"}\\"
+        ));
+
+        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        assertEquals(1, records.size());
+        Object[] record = records.get(0);
+        Map<Value, Value> map = ((Value)record[0]).asMapValue().map();
+        assertEquals(newString("b"), map.get(newString("a")));
+    }
+
+    @Test
+    public void checkInvalidEscapeStringFunction()
+            throws Exception
+    {
+        //PASSTHROUGH
         {
             String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
-            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
             assertEquals(json , actual.read());
         }
 
         {
-            String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}";
-            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
             assertEquals(json , actual.read());
         }
 
         {
-            // {"\a":"b"}\ \a and last \ is not allowed.
             String json = "{\"\\a\":\"b\"}\\";
-            CharSource actual = plugin.cleanIllegalBackslashFunction.apply(json);
+            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
+            assertEquals(json , actual.read());
+        }
+
+        //SKIP
+        {
+            String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals(json , actual.read());
+        }
+
+        {
+            // valid charset u0001
+            String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}" , actual.read());
+        }
+
+
+        {
+            // invalid charset u000x remove forwarding backslash
+            String json = "{\"\\u000x\":\"efg\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals("{\"u000x\":\"efg\"}" , actual.read());
+        }
+
+        {
+            String json = "{\"\\a\":\"b\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            // backslash and `a` will removed.
+            assertEquals("{\"\":\"b\"}" , actual.read());
+        }
+
+        //UNESCAPE
+        {
+            String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
+            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals(json , actual.read());
+        }
+
+        {
+            String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}" , actual.read());
+        }
+
+        {
+            // invalid charset u000x remove forwarding backslash
+            String json = "{\"\\u000x\":\"efg\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals("{\"u000x\":\"efg\"}" , actual.read());
+        }
+
+
+        {
+            String json = "{\"\\a\":\"b\"}\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
             // backslash will removed.
             assertEquals("{\"a\":\"b\"}" , actual.read());
         }
