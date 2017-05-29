@@ -18,6 +18,7 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
+import org.embulk.spi.time.Timestamp;
 
 public class EmbulkTestRuntime
         extends GuiceBinder
@@ -47,12 +48,20 @@ public class EmbulkTestRuntime
 
     private ExecSession exec;
 
-    public EmbulkTestRuntime()
+    public EmbulkTestRuntime(Timestamp transactionTime)
     {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
+        if (transactionTime != null) {
+            execConfig.set("transaction_time", transactionTime);
+        }
         this.exec = ExecSession.builder(injector).fromExecConfig(execConfig).build();
+    }
+
+    public EmbulkTestRuntime()
+    {
+        this(null);
     }
 
     public ExecSession getExec()
