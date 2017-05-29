@@ -949,7 +949,7 @@ Example
       ...
 
 Preview executor
----------------
+----------------
 
 The preview executor is called by ``preview`` command. It tries to read sample buffer from a specified input source and writes them to Page objects. ``preview`` outputs the Page objects to console.
 
