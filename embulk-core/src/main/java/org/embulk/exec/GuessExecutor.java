@@ -81,8 +81,8 @@ public class GuessExecutor
         GuessExecutorSystemTask systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
 
         ImmutableList.Builder<PluginType> list = ImmutableList.builder();
-        list.addAll(defaultGuessPlugins);
         list.addAll(systemTask.getGuessPlugins());
+        list.addAll(defaultGuessPlugins);
         this.defaultGuessPlugins = list.build();
     }
 
@@ -135,10 +135,13 @@ public class GuessExecutor
     // called by FileInputRunner
     public ConfigDiff guessParserConfig(Buffer sample, ConfigSource inputConfig, ConfigSource execConfig)
     {
-        List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
+        ImmutableList.Builder<PluginType> builder = ImmutableList.builder();
 
         GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
-        guessPlugins.addAll(task.getGuessPlugins());
+        builder.addAll(task.getGuessPlugins());
+        builder.addAll(defaultGuessPlugins);
+
+        List<PluginType> guessPlugins = new ArrayList<>(builder.build());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
 
         return guessParserConfig(sample, inputConfig, guessPlugins);

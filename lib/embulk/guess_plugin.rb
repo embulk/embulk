@@ -88,13 +88,13 @@ module Embulk
       if config.fetch('parser', {}).fetch('charset', nil).nil?
         require 'embulk/guess/charset'
         charset_guess = Guess::CharsetGuessPlugin.new
-        return charset_guess.guess(config, sample)
+        config = charset_guess.guess(config, sample)
       end
 
       if config.fetch('parser', {}).fetch('newline', nil).nil?
         require 'embulk/guess/newline'
         newline_guess = Guess::NewlineGuessPlugin.new
-        return newline_guess.guess(config, sample)
+        config = newline_guess.guess(config, sample)
       end
 
       # TODO pure-ruby LineDecoder implementation?
