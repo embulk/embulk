@@ -6,7 +6,7 @@
 Embulk
 ==================================
 
-.. image:: _static/embulk-logo.png
+.. image:: _static/embulk-logo-v2/embulk-logo-v2-sq-tr-small.png
    :width: 512px
    :target: https://github.com/embulk/embulk
 
