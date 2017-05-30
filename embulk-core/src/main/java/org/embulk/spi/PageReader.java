@@ -117,10 +117,21 @@ public class PageReader
         return getTimestamp(column.getIndex());
     }
 
+    public Timestamp getTimestamp(Column column, long timeOffset)
+    {
+        // TODO check type?
+        return getTimestamp(column.getIndex(), timeOffset);
+    }
+
     public Timestamp getTimestamp(int columnIndex)
     {
+        return getTimestamp(columnIndex, 0);
+    }
+
+    public Timestamp getTimestamp(int columnIndex, long timeOffset)
+    {
         int offset = getOffset(columnIndex);
-        long sec = pageSlice.getLong(offset);
+        long sec = pageSlice.getLong(offset) + timeOffset;
         int nsec = pageSlice.getInt(offset + 8);
         return Timestamp.ofEpochSecond(sec, nsec);
     }
