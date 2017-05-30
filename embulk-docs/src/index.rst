@@ -75,6 +75,8 @@ Documents
 
    release
 
+   logo
+
 For developers
 ---------------
 
