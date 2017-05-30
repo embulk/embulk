@@ -182,3 +182,10 @@ To check the list of installed plugins and their versions, use this command:
 
     $ embulk gem list
 
+Code style.
+------------------
+
+* Java-based plugins
+
+  * `checkstyle plugin <https://docs.gradle.org/current/userguide/checkstyle_plugin.html>`_
+  * `airlift codestyle <https://github.com/facebook/presto/blob/master/src/checkstyle/checks.xml>`_
