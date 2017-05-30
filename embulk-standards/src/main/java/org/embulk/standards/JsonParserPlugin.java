@@ -23,6 +23,7 @@ import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.type.Types;
 import org.embulk.spi.util.FileInputInputStream;
 import org.jruby.embed.io.ReaderInputStream;
+import org.msgpack.core.Preconditions;
 import org.msgpack.value.Value;
 import org.slf4j.Logger;
 
@@ -96,7 +97,7 @@ public class JsonParserPlugin
         final Column column = schema.getColumn(0); // record column
 
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
-             FileInputInputStream in = new FileInputInputStream(input)) {
+                FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
                 try (JsonParser.Stream stream = newJsonStream(in, task)) {
                     Value value;
@@ -106,6 +107,7 @@ public class JsonParserPlugin
                                 throw new JsonRecordValidateException(
                                         String.format("A Json record must not represent map value but it's %s", value.getValueType().name()));
                             }
+
                             pageBuilder.setJson(column, value);
                             pageBuilder.addRecord();
                         }
@@ -131,8 +133,9 @@ public class JsonParserPlugin
         return new PageBuilder(Exec.getBufferAllocator(), schema, output);
     }
 
-    private JsonParser.Stream newJsonStream(FileInputInputStream in , PluginTask task)
-            throws IOException {
+    private JsonParser.Stream newJsonStream(FileInputInputStream in, PluginTask task)
+            throws IOException
+    {
         InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
         switch (policy) {
             case SKIP:
@@ -146,22 +149,26 @@ public class JsonParserPlugin
         }
     }
 
-    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
-        return new Function<String, CharSource>() {
-            final Pattern p = Pattern.compile("\\p{XDigit}+");
+    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy)
+    {
+        return new Function<String, CharSource>()
+        {
+            final Pattern digitsPattern = Pattern.compile("\\p{XDigit}+");
+
             @Override
-            public CharSource apply(@Nullable String input) {
-                assert input != null;
+            public CharSource apply(@Nullable String input)
+            {
+                Preconditions.checkNotNull(input);
                 if (policy == InvalidEscapeStringPolicy.PASSTHROUGH) {
                     return CharSource.wrap(input);
                 }
-                StringBuilder s = new StringBuilder();
+                StringBuilder builder = new StringBuilder();
                 char[] charArray = input.toCharArray();
-                for (int i=0 ; i < charArray.length ; i++) {
-                    char c = charArray[i];
+                for (int characterIndex = 0; characterIndex < charArray.length; characterIndex++) {
+                    char c = charArray[characterIndex];
                     if (c == '\\') {
-                        if (charArray.length > i + 1) {
-                            char next = charArray[i + 1];
+                        if (charArray.length > characterIndex + 1) {
+                            char next = charArray[characterIndex + 1];
                             switch (next) {
                                 case 'b':
                                 case 'f':
@@ -171,21 +178,22 @@ public class JsonParserPlugin
                                 case '"':
                                 case '\\':
                                 case '/':
-                                    s.append(c);
+                                    builder.append(c);
                                     break;
                                 case 'u': // hexstring such as \u0001
-                                    if (charArray.length > i + 5) {
-                                        char[] hexChars = {charArray[i + 2], charArray[i + 3], charArray[i + 4], charArray[i + 5]};
+                                    if (charArray.length > characterIndex + 5) {
+                                        char[] hexChars = {charArray[characterIndex + 2], charArray[characterIndex + 3], charArray[characterIndex + 4],
+                                                           charArray[characterIndex + 5]};
                                         String hexString = new String(hexChars);
-                                        if (p.matcher(hexString).matches()) {
-                                            s.append(c);
+                                        if (digitsPattern.matcher(hexString).matches()) {
+                                            builder.append(c);
                                         }
                                     }
                                     break;
                                 default:
                                     switch (policy) {
                                         case SKIP:
-                                            i++;
+                                            characterIndex++;
                                             break;
                                         case UNESCAPE:
                                             break;
@@ -193,16 +201,15 @@ public class JsonParserPlugin
                                     break;
                             }
                         }
-                    } else {
-                        s.append(c);
+                    }
+                    else {
+                        builder.append(c);
                     }
                 }
-                return CharSource.wrap(s.toString());
+                return CharSource.wrap(builder.toString());
             }
         };
     }
-
-
 
     static class JsonRecordValidateException
             extends DataException

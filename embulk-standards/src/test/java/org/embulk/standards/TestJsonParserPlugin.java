@@ -5,23 +5,28 @@ import com.google.common.io.CharSource;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.*;
+import org.embulk.spi.DataException;
+import org.embulk.spi.Exec;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.Schema;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.util.InputStreamFileInput;
-import org.embulk.spi.util.Newline;
 import org.embulk.spi.util.Pages;
-import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.msgpack.value.Value;
 
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.*;
+import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.PASSTHROUGH;
+import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.SKIP;
+import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.UNESCAPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -71,7 +76,7 @@ public class TestJsonParserPlugin
                         "\"_c1\":-10,\n" +
                         "\"_c2\":\"エンバルク\",\n" +
                         "\"_c3\":[\"e0\",\"e1\"]\n" +
-                        "}",
+                "}",
                 "[1, 2, 3]", // this line should be skipped.
                 "\"embulk\"", // this line should be skipped.
                 "10", // this line should be skipped.
@@ -258,6 +263,16 @@ public class TestJsonParserPlugin
             assertEquals("{\"\":\"b\"}" , actual.read());
         }
 
+        {
+            // end of lines backspash.
+            String json = "{\"\\a\":\"b\"}" +
+                    "\n" +
+                    "\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            // backslash and `a` will removed.
+            assertEquals("{\"\":\"b\"}\n" , actual.read());
+        }
+
         //UNESCAPE
         {
             String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
@@ -285,6 +300,17 @@ public class TestJsonParserPlugin
             // backslash will removed.
             assertEquals("{\"a\":\"b\"}" , actual.read());
         }
+
+        {
+            // end of lines backspash.
+            String json = "{\"\\a\":\"b\"}" +
+                    "\n" +
+                    "\\";
+            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            // backslash and `a` will removed.
+            assertEquals("{\"\":\"b\"}\n" , actual.read());
+        }
+
 
     }
 
