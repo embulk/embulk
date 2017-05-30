@@ -38,17 +38,21 @@ public class GzipFileDecoderPlugin
         return new InputStreamFileInput(
                 task.getBufferAllocator(),
                 new InputStreamFileInput.Provider() {
+                    private GZIPInputStream gzis;
+
                     public InputStream openNext() throws IOException
                     {
                         if (!files.nextFile()) {
                             return null;
                         }
-                        return new GZIPInputStream(files, 8*1024);
+                        gzis = new GZIPInputStream(files, 8*1024);
+                        return gzis;
                     }
 
                     public void close() throws IOException
                     {
                         files.close();
+                        gzis.close();
                     }
                 });
     }
