@@ -107,6 +107,9 @@ public class PageReader
 
     public String getString(int columnIndex)
     {
+        if (isNull(columnIndex)) {
+            return null;
+        }
         int index = pageSlice.getInt(getOffset(columnIndex));
         return page.getStringReference(index);
     }
@@ -119,6 +122,9 @@ public class PageReader
 
     public Timestamp getTimestamp(int columnIndex)
     {
+        if (isNull(columnIndex)) {
+            return null;
+        }
         int offset = getOffset(columnIndex);
         long sec = pageSlice.getLong(offset);
         int nsec = pageSlice.getInt(offset + 8);
@@ -133,6 +139,9 @@ public class PageReader
 
     public Value getJson(int columnIndex)
     {
+        if (isNull(columnIndex)) {
+            return null;
+        }
         int index = pageSlice.getInt(getOffset(columnIndex));
         return page.getValueReference(index);
     }
