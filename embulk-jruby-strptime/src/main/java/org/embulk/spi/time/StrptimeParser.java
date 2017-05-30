@@ -18,8 +18,9 @@ import org.embulk.spi.time.lexer.StrptimeLexer;
  *
  * TODO
  * This class is tentatively required for {@code TimestampParser} class.
- * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
- * will be removed from Embulk.
+ * The {@code StrptimeParser} and {@code RubyDateParser} will be merged into JRuby
+ * (jruby/jruby#4591). embulk-jruby-strptime is removed when Embulk start using
+ * the JRuby that bundles embulk-jruby-strptime.
  */
 public class StrptimeParser
 {

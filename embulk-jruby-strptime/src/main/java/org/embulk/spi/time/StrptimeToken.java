@@ -9,8 +9,9 @@ import static org.embulk.spi.time.StrptimeFormat.*;
  *
  * TODO
  * This class is tentatively required for {@code StrptimeParser} class.
- * After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
- * will be removed from Embulk.
+ * The {@code StrptimeParser} and {@code RubyDateParser} will be merged into JRuby
+ * (jruby/jruby#4591). embulk-jruby-strptime is removed when Embulk start using
+ * the JRuby that bundles embulk-jruby-strptime.
  */
 public class StrptimeToken
 {

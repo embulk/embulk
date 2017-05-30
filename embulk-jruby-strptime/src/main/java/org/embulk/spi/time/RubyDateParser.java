@@ -13,8 +13,9 @@ import static org.jruby.RubyRational.newRationalCanonicalize;
  *
  * TODO
  * This class is tentatively required for executing test/mri/date/test_date_strptime.rb
- * (#617). After embulk-jruby-strptime will be merged into JRuby, embulk-jruby-strptime
- * will be removed from Embulk.
+ * (#617). The {@code StrptimeParser} and {@code RubyDateParser} will be merged into
+ * JRuby (jruby/jruby#4591). embulk-jruby-strptime is removed when Embulk start using
+ * the JRuby that bundles embulk-jruby-strptime.
  */
 public class RubyDateParser
 {
