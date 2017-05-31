@@ -19,10 +19,10 @@ module Embulk
         one_json_parsed = false
         begin
           while (v = json_parser.next)
-            # JSON object type check (isMapValue) is required for v. Because JsonParserPlugin
-            # accepts only object type. And single column CSV avoids to be guessed as Json
-            # parser type.
-            raise JsonParseException.new("v requires JSON object type") unless v.isMapValue
+            # "v" needs to be JSON object type (isMapValue) because:
+            # 1) Single-column CSV can be mis-guessed as JSON if JSON non-objects are accepted.
+            # 2) JsonParserPlugin accepts only the JSON object type.
+            raise JsonParseException.new("v must be JSON object type") unless v.isMapValue
             one_json_parsed = true
           end
         rescue JsonParseException
