@@ -18,17 +18,21 @@ module Embulk
         json_parser = new_json_parser(sample_buffer)
         one_json_parsed = false
         begin
-          while json_parser.next
-            one_json_parsed = true
+          while (v = json_parser.next)
+            # JSON object type check (isMapValue) is required for v. Because JsonParserPlugin
+            # accepts only object type. And single column CSV avoids to be guessed as Json
+            # parser type.
+            one_json_parsed = true if v.isMapValue
           end
         rescue JsonParseException
-          # the exception is ignored if JsonParser can parse even one JSON data
-          unless one_json_parsed
-            return {}
-          end
+          # the exception is ignored
         end
 
-        return {"parser" => {"type" => "json"}}
+        if one_json_parsed
+          return {"parser" => {"type" => "json"}} # if JsonParser can parse even one JSON data
+        else
+          return {}
+        end
       end
 
       private
