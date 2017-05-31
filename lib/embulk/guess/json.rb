@@ -16,11 +16,16 @@ module Embulk
 
         # Use org.embulk.spi.json.JsonParser to respond to multi-line Json
         json_parser = new_json_parser(sample_buffer)
+        one_json_parsed = false
         begin
           while json_parser.next
+            one_json_parsed = true
           end
         rescue JsonParseException
-          return {}
+          # the exception is ignored if JsonParser can parse even one JSON data
+          unless one_json_parsed
+            return {}
+          end
         end
 
         return {"parser" => {"type" => "json"}}
