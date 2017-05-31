@@ -16,14 +16,24 @@ module Embulk
 
         # Use org.embulk.spi.json.JsonParser to respond to multi-line Json
         json_parser = new_json_parser(sample_buffer)
+        one_json_parsed = false
         begin
-          while json_parser.next
+          while (v = json_parser.next)
+            # "v" needs to be JSON object type (isMapValue) because:
+            # 1) Single-column CSV can be mis-guessed as JSON if JSON non-objects are accepted.
+            # 2) JsonParserPlugin accepts only the JSON object type.
+            raise JsonParseException.new("v must be JSON object type") unless v.isMapValue
+            one_json_parsed = true
           end
         rescue JsonParseException
-          return {}
+          # the exception is ignored
         end
 
-        return {"parser" => {"type" => "json"}}
+        if one_json_parsed
+          return {"parser" => {"type" => "json"}} # if JsonParser can parse even one JSON data
+        else
+          return {}
+        end
       end
 
       private
