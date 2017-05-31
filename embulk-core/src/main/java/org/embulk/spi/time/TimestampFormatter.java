@@ -1,15 +1,16 @@
 package org.embulk.spi.time;
 
-import java.util.Locale;
+import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import com.google.common.base.Optional;
+import org.jruby.Ruby;
 import org.jruby.embed.ScriptingContainer;
-import org.jruby.util.RubyDateFormat;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.util.LineEncoder;
+import org.jruby.util.RubyDateFormatter;
 
 public class TimestampFormatter
 {
@@ -50,7 +51,8 @@ public class TimestampFormatter
         public Optional<String> getFormat();
     }
 
-    private final RubyDateFormat dateFormat;
+    private final RubyDateFormatter formatter;
+    private final List<RubyDateFormatter.Token> compiledPattern;
     private final DateTimeZone timeZone;
 
     @Deprecated
@@ -73,7 +75,9 @@ public class TimestampFormatter
     public TimestampFormatter(ScriptingContainer jruby, String format, DateTimeZone timeZone)
     {
         this.timeZone = timeZone;
-        this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
+        Ruby runtime = jruby.getProvider().getRuntime();
+        this.formatter = runtime.getCurrentContext().getRubyDateFormatter();
+        this.compiledPattern = this.formatter.compilePattern(runtime.newString(format), false);
     }
 
     public DateTimeZone getTimeZone()
@@ -90,8 +94,8 @@ public class TimestampFormatter
     public String format(Timestamp value)
     {
         // TODO optimize by using reused StringBuilder
-        dateFormat.setDateTime(new DateTime(value.getEpochSecond()*1000, timeZone));
-        dateFormat.setNSec(value.getNano());
-        return dateFormat.format(null);
+        DateTime dt = new DateTime(value.getEpochSecond() * 1000 + value.getNano() / 1000000, timeZone);
+        long nsec = value.getNano() % 1000000;
+        return formatter.format(compiledPattern, dt, nsec, null).toString();
     }
 }
