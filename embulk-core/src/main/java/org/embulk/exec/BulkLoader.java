@@ -16,6 +16,8 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.FileInputRunner;
+import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
@@ -502,10 +504,24 @@ public class BulkLoader
             }
         }
 
-        plugins.getInputPlugin().cleanup(resume.getInputTaskSource(), resume.getInputSchema(),
+        final TaskSource inputTaskSource;
+        if (plugins.getInputPlugin() instanceof FileInputRunner) {
+            inputTaskSource = FileInputRunner.getFileInputTaskSource(resume.getInputTaskSource());
+        }
+        else {
+            inputTaskSource = resume.getInputTaskSource();
+        }
+        plugins.getInputPlugin().cleanup(inputTaskSource, resume.getInputSchema(),
                 resume.getInputTaskReports().size(), successfulInputTaskReports.build());
 
-        plugins.getOutputPlugin().cleanup(resume.getOutputTaskSource(), resume.getOutputSchema(),
+        final TaskSource outputTaskSource;
+        if (plugins.getOutputPlugin() instanceof FileOutputRunner) {
+            outputTaskSource = FileOutputRunner.getFileOutputTaskSource(resume.getOutputTaskSource());
+        }
+        else {
+            outputTaskSource = resume.getOutputTaskSource();
+        }
+        plugins.getOutputPlugin().cleanup(outputTaskSource, resume.getOutputSchema(),
                 resume.getOutputTaskReports().size(), successfulOutputTaskReports.build());
     }
 

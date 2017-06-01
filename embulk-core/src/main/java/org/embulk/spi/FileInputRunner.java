@@ -161,4 +161,9 @@ public class FileInputRunner
             }
         }
     }
+
+    public static TaskSource getFileInputTaskSource(TaskSource runnerTaskSource)
+    {
+        return runnerTaskSource.loadTask(RunnerTask.class).getFileInputTaskSource();
+    }
 }

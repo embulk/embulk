@@ -191,4 +191,9 @@ public class FileOutputRunner
             return tran.commit();
         }
     }
+
+    public static TaskSource getFileOutputTaskSource(TaskSource runnerTaskSource)
+    {
+        return runnerTaskSource.loadTask(RunnerTask.class).getFileOutputTaskSource();
+    }
 }
