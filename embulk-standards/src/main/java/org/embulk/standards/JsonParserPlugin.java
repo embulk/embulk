@@ -65,6 +65,7 @@ public class JsonParserPlugin
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
+                boolean evenOneJsonParsed = false;
                 try (JsonParser.Stream stream = newJsonStream(in)) {
                     Value value;
                     while ((value = stream.next()) != null) {
@@ -76,6 +77,7 @@ public class JsonParserPlugin
 
                             pageBuilder.setJson(column, value);
                             pageBuilder.addRecord();
+                            evenOneJsonParsed = true;
                         }
                         catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
@@ -86,6 +88,9 @@ public class JsonParserPlugin
                     }
                 }
                 catch (IOException | JsonParseException e) {
+                    if (Exec.isPreview() && evenOneJsonParsed) {
+                        break;
+                    }
                     throw new DataException(e);
                 }
             }
