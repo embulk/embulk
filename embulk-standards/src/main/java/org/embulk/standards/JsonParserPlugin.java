@@ -89,6 +89,9 @@ public class JsonParserPlugin
                 }
                 catch (IOException | JsonParseException e) {
                     if (Exec.isPreview() && evenOneJsonParsed) {
+			// JsonParseException occurs when it cannot parse the last part of sampling buffer. Because
+			// the last part is sometimes invalid as JSON data. Therefore JsonParseException can be
+			// ignore in preview if at least one JSON is already parsed.
                         break;
                     }
                     throw new DataException(e);
