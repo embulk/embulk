@@ -250,10 +250,10 @@ public class TestJsonParserPlugin
 
 
         {
-            // invalid charset u000x remove forwarding backslash
-            String json = "{\"\\u000x\":\"efg\"}\\";
+            // invalid charset \\u12xY remove forwarding backslash and u
+            String json = "{\"\\u12xY\":\"efg\"}\\";
             CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
-            assertEquals("{\"u000x\":\"efg\"}" , actual.read());
+            assertEquals("{\"12xY\":\"efg\"}" , actual.read());
         }
 
         {

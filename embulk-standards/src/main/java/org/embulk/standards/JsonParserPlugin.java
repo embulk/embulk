@@ -187,6 +187,11 @@ public class JsonParserPlugin
                                         String hexString = new String(hexChars);
                                         if (digitsPattern.matcher(hexString).matches()) {
                                             builder.append(c);
+                                        } else {
+                                            if (policy == InvalidEscapeStringPolicy.SKIP) {
+                                                // remove \\u
+                                                characterIndex++;
+                                            }
                                         }
                                     }
                                     break;
