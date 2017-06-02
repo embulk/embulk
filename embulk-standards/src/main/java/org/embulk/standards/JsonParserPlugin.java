@@ -99,6 +99,7 @@ public class JsonParserPlugin
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
+                boolean evenOneJsonParsed = false;
                 try (JsonParser.Stream stream = newJsonStream(in, task)) {
                     Value value;
                     while ((value = stream.next()) != null) {
@@ -110,6 +111,7 @@ public class JsonParserPlugin
 
                             pageBuilder.setJson(column, value);
                             pageBuilder.addRecord();
+                            evenOneJsonParsed = true;
                         }
                         catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
@@ -120,6 +122,12 @@ public class JsonParserPlugin
                     }
                 }
                 catch (IOException | JsonParseException e) {
+                    if (Exec.isPreview() && evenOneJsonParsed) {
+			// JsonParseException occurs when it cannot parse the last part of sampling buffer. Because
+			// the last part is sometimes invalid as JSON data. Therefore JsonParseException can be
+			// ignore in preview if at least one JSON is already parsed.
+                        break;
+                    }
                     throw new DataException(e);
                 }
             }
