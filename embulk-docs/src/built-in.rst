@@ -241,6 +241,9 @@ The ``columns`` option declares the list of columns. This CSV parser plugin igno
 | date     | Set date part if the format doesn’t include date part  |
 +----------+--------------------------------------------------------+
 
+.. note::
+
+   The Timestamp format refers to `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
 
 List of types:
 
@@ -496,6 +499,10 @@ The ``column_options`` option is a map whose keys are name of columns, and value
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-----------------------------------------+
 | format               | string  | Timestamp format if type of this column is timestamp.                                                 | ``%Y-%m-%d %H:%M:%S.%6N %z`` by default |
 +----------------------+---------+-------------------------------------------------------------------------------------------------------+-----------------------------------------+
+
+.. note::
+
+   The Timestamp format refers to `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
 
 Example
 ~~~~~~~~
