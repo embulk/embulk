@@ -6,6 +6,33 @@ if RUBY_PLATFORM =~ /java/i
     ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
     # include -cp CLASSPATH to LOAD_PATH so that embulk_bundle.rb can load bundler included in embulk-core.jar
     $LOAD_PATH << "uri:classloader:/"
+
+    # Handle environment variables before entering embulk_bundle.rb.
+    # See: https://github.com/embulk/embulk/pull/604
+
+    bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
+    bundle_path = nil if bundle_path.empty?
+
+    # Search for -b or --bundle, and remove it.
+    if ARGV.find_index {|arg| arg == '-b' || arg == '--bundle' }
+      ARGV.slice!(bundle_path_index, 2)[1]
+    end
+    if bundle_path
+      ENV['EMBULK_BUNDLE_PATH'] = bundle_path
+      ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(bundle_path, "Gemfile")
+      ENV.delete('GEM_HOME')
+      ENV.delete('GEM_PATH')
+    else
+      ENV.delete('EMBULK_BUNDLE_PATH')
+      user_home = java.lang.System.properties["user.home"] || ENV['HOME']
+      unless user_home
+        raise "HOME environment variable is not set."
+      end
+      ENV['GEM_HOME'] = File.expand_path File.join(user_home, '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])
+      ENV['GEM_PATH'] = ''
+      ENV.delete('BUNDLE_GEMFILE')
+    end
+
     require_relative '../lib/embulk/command/embulk_bundle'
   else
     # bin/embulk is run by JRuby (embulk gem for JRuby is installed). disable embulk_bundle not to bother the JRuby's bundler
@@ -107,4 +134,3 @@ cmdline << __FILE__
 cmdline.concat ARGV
 exec env, *cmdline
 exit 127
-
