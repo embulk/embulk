@@ -15,7 +15,6 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
-import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -513,7 +512,7 @@ public class BulkLoader
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
     {
         return Exec.newPlugin(ExecutorPlugin.class,
-                task.getExecConfig().get(PluginType.class, "type", DefaultPluginType.create("local")));
+                task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
     private ExecutionResult doRun(ConfigSource config)

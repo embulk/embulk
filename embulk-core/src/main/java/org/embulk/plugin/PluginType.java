@@ -7,6 +7,8 @@ import java.util.Map;
 
 public abstract class PluginType
 {
+    public static final PluginType LOCAL = DefaultPluginType.create("local");
+
     /**
      * Constructs {@code PluginType}.
      *
@@ -19,7 +21,7 @@ public abstract class PluginType
     }
 
     @JsonCreator
-    public static PluginType createFromString(String name)
+    private static PluginType createFromString(String name)
     {
         if (name == null) {
             throw new NullPointerException("name must not be null");
