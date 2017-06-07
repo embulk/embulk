@@ -10,7 +10,7 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
-import org.embulk.plugin.PluginType;
+import org.embulk.plugin.DefaultPluginType;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import static org.embulk.exec.GuessExecutor.registerDefaultGuessPluginTo;
 
@@ -50,10 +50,10 @@ public class StandardPluginModule
         registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
 
         // default guess plugins
-        registerDefaultGuessPluginTo(binder, new PluginType("gzip"));
-        registerDefaultGuessPluginTo(binder, new PluginType("bzip2"));
-        registerDefaultGuessPluginTo(binder, new PluginType("json")); // should be registered before CsvGuessPlugin
-        registerDefaultGuessPluginTo(binder, new PluginType("csv"));
+        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));
+        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("bzip2"));
+        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("json")); // should be registered before CsvGuessPlugin
+        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("csv"));
         // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
 }

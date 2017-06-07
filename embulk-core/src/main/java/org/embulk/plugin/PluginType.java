@@ -1,47 +1,80 @@
 package org.embulk.plugin;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Map;
 
-public class PluginType
+public abstract class PluginType
 {
-    private final String name;
+    /**
+     * Constructs {@code PluginType}.
+     *
+     * The constructor is {@code protected} to be called from subclasses, e.g. {@code DefaultPluginType}.
+     */
+    protected PluginType(final String source, final String name)
+    {
+        this.source = source;
+        this.name = name;
+    }
 
-    // TODO accept isObject()/ObjectNode for complex PluginSource
     @JsonCreator
-    public PluginType(String name)
+    public static PluginType createFromString(String name)
     {
         if (name == null) {
             throw new NullPointerException("name must not be null");
         }
-        this.name = name;
+        return DefaultPluginType.create(name);
     }
 
-    @JsonValue
-    public String getName()
+    @JsonCreator
+    private static PluginType createFromStringMap(Map<String, String> object)
     {
-        return name;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return name.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (!(other instanceof PluginType)) {
-            return false;
+        final String source;
+        if (object.containsKey("source")) {
+            source = object.get("source");
         }
-        PluginType o = (PluginType) other;
-        return name.equals(o.name);
+        else {
+            source = DEFAULT;
+        }
+
+        switch (source) {
+        case DEFAULT:
+            {
+                final String name = object.get("name");
+                return createFromString(name);
+            }
+        default:
+            throw new IllegalArgumentException("\"source\" must be one of: [\"default\"]");
+        }
     }
 
-    @Override
-    public String toString()
+    @VisibleForTesting
+    static PluginType createFromStringForTesting(final String name)
+    {
+        return createFromString(name);
+    }
+
+    @VisibleForTesting
+    static PluginType createFromStringMapForTesting(final Map<String, String> object)
+    {
+        return createFromStringMap(object);
+    }
+
+    @JsonProperty("source")
+    public final String getSource()
+    {
+        return source;
+    }
+
+    @JsonProperty("name")
+    public final String getName()
     {
         return name;
     }
+
+    private static final String DEFAULT = "default";
+
+    private final String source;
+    private final String name;
 }
