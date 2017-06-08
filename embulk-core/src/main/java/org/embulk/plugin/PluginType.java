@@ -2,7 +2,13 @@ package org.embulk.plugin;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ContainerNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.annotations.VisibleForTesting;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public abstract class PluginType
@@ -21,6 +27,30 @@ public abstract class PluginType
     }
 
     @JsonCreator
+    private static PluginType create(final JsonNode typeJson)
+    {
+        if (typeJson.isTextual()) {
+            return createFromString(((TextNode) typeJson).textValue());
+        }
+        else if (typeJson.isObject()) {
+            final HashMap<String, String> stringMap = new HashMap<String, String>();
+            final ObjectNode typeObject = (ObjectNode) typeJson;
+            final Iterator<Map.Entry<String, JsonNode>> fieldIterator = typeObject.fields();
+            while (fieldIterator.hasNext()) {
+                final Map.Entry<String, JsonNode> field = fieldIterator.next();
+                final JsonNode fieldValue = field.getValue();
+                if (fieldValue instanceof ContainerNode) {
+                    throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
+                }
+                stringMap.put(field.getKey(), fieldValue.textValue());
+            }
+            return createFromStringMap(stringMap);
+        }
+        else {
+            throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
+        }
+    }
+
     private static PluginType createFromString(String name)
     {
         if (name == null) {
@@ -29,12 +59,11 @@ public abstract class PluginType
         return DefaultPluginType.create(name);
     }
 
-    @JsonCreator
-    private static PluginType createFromStringMap(Map<String, String> object)
+    private static PluginType createFromStringMap(Map<String, String> stringMap)
     {
         final String source;
-        if (object.containsKey("source")) {
-            source = object.get("source");
+        if (stringMap.containsKey("source")) {
+            source = stringMap.get("source");
         }
         else {
             source = DEFAULT;
@@ -43,7 +72,7 @@ public abstract class PluginType
         switch (source) {
         case DEFAULT:
             {
-                final String name = object.get("name");
+                final String name = stringMap.get("name");
                 return createFromString(name);
             }
         default:
