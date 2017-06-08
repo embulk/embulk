@@ -1,0 +1,14 @@
+apply plugin: "com.github.jruby-gradle.jar"
+
+dependencies {
+    compile 'org.jruby:jruby-complete:' + project.jrubyVersion
+}
+
+import com.github.jrubygradle.JRubyExec
+jruby {
+    execVersion = project.jrubyVersion
+}
+
+task mriTest(type: JRubyExec) {
+    script "${project.projectDir}/test/run-test.rb"
+}
