@@ -76,7 +76,7 @@ endlocal && set BUNDLE_GEMFILE=%bundle_gemfile%
 setlocal enabledelayedexpansion
 
 if not defined EMBULK_BUNDLE_PATH (
-    for /f "usebackq delims=" %%w in (`java -cp %0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`) do set ruby_version=%%w
+    for /f "delims=" %%w in ('java -cp %0 org.jruby.Main -e "print RbConfig::CONFIG['ruby_version']"') do set ruby_version=%%w
     set gem_home=%USERPROFILE%\.embulk\jruby\!ruby_version!
 ) else (
     set gem_home=
