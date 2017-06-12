@@ -19,7 +19,8 @@ public class TestPluginTypeSerDe
             PluginType.class,
             "\"file\"");
         assertTrue(pluginType instanceof DefaultPluginType);
-        assertEquals(pluginType.getName(), "file");
+        assertEquals(PluginSource.Type.DEFAULT, pluginType.getSourceType());
+        assertEquals("file", pluginType.getName());
     }
 
     @Test
@@ -29,6 +30,21 @@ public class TestPluginTypeSerDe
             PluginType.class,
             "{ \"name\": \"dummy\" }");
         assertTrue(pluginType instanceof DefaultPluginType);
-        assertEquals(pluginType.getName(), "dummy");
+        assertEquals(PluginSource.Type.DEFAULT, pluginType.getSourceType());
+        assertEquals("dummy", pluginType.getName());
+    }
+
+    @Test
+    public void testParseTypeMaven()
+    {
+        PluginType pluginType = testRuntime.getModelManager().readObjectWithConfigSerDe(
+            PluginType.class,
+            "{ \"name\": \"foo\", \"source\": \"maven\", \"group\": \"org.embulk.bar\", \"version\": \"0.1.2\" }");
+        assertTrue(pluginType instanceof MavenPluginType);
+        assertEquals(PluginSource.Type.MAVEN, pluginType.getSourceType());
+        MavenPluginType mavenPluginType = (MavenPluginType) pluginType;
+        assertEquals(mavenPluginType.getName(), "foo");
+        assertEquals(mavenPluginType.getGroup(), "org.embulk.bar");
+        assertEquals(mavenPluginType.getVersion(), "0.1.2");
     }
 }

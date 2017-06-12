@@ -22,7 +22,7 @@ public abstract class PluginType
      */
     protected PluginType(final String source, final String name)
     {
-        this.source = source;
+        this.sourceType = PluginSource.Type.of(source);
         this.name = name;
     }
 
@@ -61,22 +61,29 @@ public abstract class PluginType
 
     private static PluginType createFromStringMap(Map<String, String> stringMap)
     {
-        final String source;
+        final PluginSource.Type sourceType;
         if (stringMap.containsKey("source")) {
-            source = stringMap.get("source");
+            sourceType = PluginSource.Type.of(stringMap.get("source"));
         }
         else {
-            source = DEFAULT;
+            sourceType = PluginSource.Type.DEFAULT;
         }
 
-        switch (source) {
+        switch (sourceType) {
         case DEFAULT:
             {
                 final String name = stringMap.get("name");
                 return createFromString(name);
             }
+        case MAVEN:
+            {
+                final String name = stringMap.get("name");
+                final String group = stringMap.get("group");
+                final String version = stringMap.get("version");
+                return MavenPluginType.create(name, group, version);
+            }
         default:
-            throw new IllegalArgumentException("\"source\" must be one of: [\"default\"]");
+            throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");
         }
     }
 
@@ -87,15 +94,20 @@ public abstract class PluginType
     }
 
     @VisibleForTesting
-    static PluginType createFromStringMapForTesting(final Map<String, String> object)
+    static PluginType createFromStringMapForTesting(final Map<String, String> stringMap)
     {
-        return createFromStringMap(object);
+        return createFromStringMap(stringMap);
+    }
+
+    public final PluginSource.Type getSourceType()
+    {
+        return sourceType;
     }
 
     @JsonProperty("source")
-    public final String getSource()
+    public final String getSourceName()
     {
-        return source;
+        return sourceType.toString();
     }
 
     @JsonProperty("name")
@@ -104,8 +116,6 @@ public abstract class PluginType
         return name;
     }
 
-    private static final String DEFAULT = "default";
-
-    private final String source;
+    private final PluginSource.Type sourceType;
     private final String name;
 }
