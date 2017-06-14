@@ -28,7 +28,7 @@ public final class DefaultPluginType
     @Override
     public final int hashCode()
     {
-        return Objects.hash(getSource(), getName());
+        return Objects.hash(getSourceType(), getName());
     }
 
     @Override
@@ -38,7 +38,7 @@ public final class DefaultPluginType
             return false;
         }
         final DefaultPluginType other = (DefaultPluginType) objectOther;
-        return (this.getSource().equals(other.getSource()) &&
+        return (this.getSourceType().equals(other.getSourceType()) &&
                 this.getName().equals(other.getName()));
     }
 

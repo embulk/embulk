@@ -14,6 +14,7 @@ public class TestPluginType
     {
         PluginType type = PluginType.createFromStringForTesting("a");
         assertTrue(type instanceof DefaultPluginType);
+        assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
         assertTrue(type.equals(type));
 
         assertTrue(type.equals(PluginType.createFromStringForTesting("a")));
@@ -29,9 +30,30 @@ public class TestPluginType
 
         PluginType type = PluginType.createFromStringMapForTesting(mapping);
         assertTrue(type instanceof DefaultPluginType);
+        assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
         assertTrue(type.equals(type));
 
         assertTrue(type.equals(PluginType.createFromStringForTesting("c")));
         assertFalse(type.equals(PluginType.createFromStringForTesting("d")));
+    }
+
+    @Test
+    public void testMapping2()
+    {
+        HashMap<String, String> mapping = new HashMap<String, String>();
+        mapping.put("source", "maven");
+        mapping.put("name", "e");
+        mapping.put("group", "org.embulk.foobar");
+        mapping.put("version", "0.1.2");
+
+        PluginType type = PluginType.createFromStringMapForTesting(mapping);
+        assertTrue(type instanceof MavenPluginType);
+        assertEquals(PluginSource.Type.MAVEN, type.getSourceType());
+        MavenPluginType mavenType = (MavenPluginType) type;
+        assertTrue(mavenType.equals(mavenType));
+        assertEquals("e", mavenType.getName());
+        assertEquals("org.embulk.foobar", mavenType.getGroup());
+        assertEquals("0.1.2", mavenType.getVersion());
+        assertEquals("maven:org.embulk.foobar:e:0.1.2", mavenType.getFullName());
     }
 }

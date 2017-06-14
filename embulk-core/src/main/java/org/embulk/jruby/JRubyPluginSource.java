@@ -36,9 +36,13 @@ public class JRubyPluginSource
 
     public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException
     {
-        String name = type.getName();
+        if (type.getSourceType() != PluginSource.Type.DEFAULT) {
+            throw new PluginSourceNotMatchException();
+        }
 
-        String category;
+        final String name = type.getName();
+
+        final String category;
         if (InputPlugin.class.isAssignableFrom(iface)) {
             category = "input";
         } else if (OutputPlugin.class.isAssignableFrom(iface)) {
