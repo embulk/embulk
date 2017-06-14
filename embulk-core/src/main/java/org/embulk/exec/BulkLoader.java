@@ -528,7 +528,7 @@ public class BulkLoader
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task)
     {
         return Exec.newPlugin(ExecutorPlugin.class,
-                task.getExecConfig().get(PluginType.class, "type", new PluginType("local")));
+                task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
     private ExecutionResult doRun(ConfigSource config)
