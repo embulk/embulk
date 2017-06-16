@@ -23,6 +23,7 @@ public class StandardPluginModule
         Preconditions.checkNotNull(binder, "binder is null.");
 
         // input plugins
+        registerPluginTo(binder, InputPlugin.class, "config", ConfigInputPlugin.class);
         registerPluginTo(binder, InputPlugin.class, "file", LocalFileInputPlugin.class);
 
         // parser plugins
