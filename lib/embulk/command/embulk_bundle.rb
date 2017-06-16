@@ -2,8 +2,9 @@ bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
 bundle_path = nil if bundle_path.empty?
 
 # Search for -b or --bundle, and remove it.
-if ARGV.find_index {|arg| arg == '-b' || arg == '--bundle' }
-  ARGV.slice!(bundle_path_index, 2)[1]
+bundle_option_index = ARGV.find_index {|arg| arg == '-b' || arg == '--bundle' }
+if bundle_option_index
+  ARGV.slice!(bundle_option_index, 2)[1]
 end
 
 if bundle_path
