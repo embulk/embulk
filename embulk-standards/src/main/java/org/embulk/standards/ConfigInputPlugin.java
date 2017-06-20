@@ -77,12 +77,9 @@ public class ConfigInputPlugin
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             for (final List<JsonNode> rowValues : taskValues) {
                 schema.visitColumns(new ColumnVisitor() {
-                        private int index = 0;
-
                         public void booleanColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             }
@@ -93,8 +90,7 @@ public class ConfigInputPlugin
 
                         public void longColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             }
@@ -105,8 +101,7 @@ public class ConfigInputPlugin
 
                         public void doubleColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             }
@@ -117,8 +112,7 @@ public class ConfigInputPlugin
 
                         public void stringColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             }
@@ -129,8 +123,7 @@ public class ConfigInputPlugin
 
                         public void timestampColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             } else {
@@ -145,8 +138,7 @@ public class ConfigInputPlugin
 
                         public void jsonColumn(Column column)
                         {
-                            final JsonNode value = rowValues.get(index);
-                            ++index;
+                            final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
                             } else {
