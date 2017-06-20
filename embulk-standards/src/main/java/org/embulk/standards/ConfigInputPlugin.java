@@ -126,11 +126,13 @@ public class ConfigInputPlugin
                             final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
-                            } else {
+                            }
+                            else {
                                 try {
                                     pageBuilder.setTimestamp(column,
                                                              timestampParsers[column.getIndex()].parse(value.asText()));
-                                } catch (TimestampParseException ex) {
+                                }
+                                catch (TimestampParseException ex) {
                                     throw new DataException(ex);
                                 }
                             }
@@ -141,10 +143,12 @@ public class ConfigInputPlugin
                             final JsonNode value = rowValues.get(column.getIndex());
                             if (value == null || value.isNull()) {
                                 pageBuilder.setNull(column);
-                            } else {
+                            }
+                            else {
                                 try {
                                     pageBuilder.setJson(column, jsonParser.parse(value.toString()));
-                                } catch (JsonParseException ex) {
+                                }
+                                catch (JsonParseException ex) {
                                     throw new DataException(ex);
                                 }
                             }
