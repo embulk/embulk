@@ -329,10 +329,10 @@ The ``json`` parser plugin parses a JSON file that contains a sequence of JSON o
 
 .. code-block:: javascript
 
-    {"time":1455829282,"ip":"93.184.216.34","name":frsyuki}
-    {"time":1455829282,"ip":"172.36.8.109":sadayuki}
-    {"time":1455829284,"ip":"example.com","name":Treasure Data}
-    {"time":1455829282,"ip":"10.98.43.1","name":MessagePack}
+    {"time":1455829282,"ip":"93.184.216.34","name":"frsyuki"}
+    {"time":1455829282,"ip":"172.36.8.109", "name":"sadayuki"}
+    {"time":1455829284,"ip":"example.com","name":"Treasure Data"}
+    {"time":1455829282,"ip":"10.98.43.1","name":"MessagePack"}
 
 ``json`` parser plugin outputs a single record named "record" (type is json).
 
