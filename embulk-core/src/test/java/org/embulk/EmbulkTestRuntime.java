@@ -13,6 +13,8 @@ import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
+import org.embulk.plugin.PluginClassLoaderFactory;
+import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
@@ -40,6 +42,7 @@ public class EmbulkTestRuntime
             new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule(systemConfig).configure(binder);
+            new PluginClassLoaderModule(systemConfig).configure(binder);
             new TestUtilityModule().configure(binder);
             new TestPluginSourceModule().configure(binder);
         }
@@ -73,6 +76,11 @@ public class EmbulkTestRuntime
     public Random getRandom()
     {
         return getInstance(RandomManager.class).getRandom();
+    }
+
+    public PluginClassLoaderFactory getPluginClassLoaderFactory()
+    {
+        return getInstance(PluginClassLoaderFactory.class);
     }
 
     @Override
