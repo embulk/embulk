@@ -43,6 +43,13 @@ dependencies {
     // For embulk/guess/charset.rb. See also embulk.gemspec
     compile 'com.ibm.icu:icu4j:54.1.1'
 
+    // For MavenPluginSource / MavenArtifactFinder.
+    compile 'org.eclipse.aether:aether-api:1.1.0'
+    compile 'org.eclipse.aether:aether-spi:1.1.0'
+    compile 'org.eclipse.aether:aether-util:1.1.0'
+    compile 'org.eclipse.aether:aether-impl:1.1.0'
+    compile 'org.apache.maven:maven-aether-provider:3.3.9'
+
     gems 'rubygems:bundler:1.10.6'
     gems 'rubygems:msgpack:1.1.0'
     gems 'rubygems:liquid:3.0.6'
