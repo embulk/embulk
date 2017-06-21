@@ -100,6 +100,9 @@ subprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
         }
+        tasks.withType(Test) {
+            systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
+        }
         tasks.withType(FindBugs) {
             reports {
                 xml.enabled = false
