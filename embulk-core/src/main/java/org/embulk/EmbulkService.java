@@ -11,6 +11,7 @@ import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
+import org.embulk.plugin.maven.MavenPluginSourceModule;
 import org.embulk.jruby.JRubyScriptingModule;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -45,6 +46,7 @@ public class EmbulkService
                 new ExtensionServiceLoaderModule(systemConfig),
                 new PluginClassLoaderModule(systemConfig),
                 new BuiltinPluginSourceModule(),
+                new MavenPluginSourceModule(systemConfig),
                 new JRubyScriptingModule(systemConfig));
     }
 
