@@ -227,6 +227,18 @@ project(':embulk-cli') {
     apply plugin: 'com.github.johnrengelman.shadow'
 
     shadowJar {
+        // 'org.apache.maven' is used in:
+        // - embulk-cli: EmbulkMigrate and EmbulkSelfUpdate (from v0.8.17)
+        // - embulk-core: MavenPluginSource and the related (from v0.8.26)
+        relocate 'org.apache.maven', 'org.embulk.third_party.org.apache.maven'
+
+        // 'org.codehaus.plexus' is used from 'org.apache.maven'.
+        relocate 'org.codehaus.plexus', 'org.embulk.third_party.org.codehaus.plexus'
+
+        // 'org.eclipse.aether' is used in:
+        // - embulk-core: MavenPluginSource and the related (from v0.8.26)
+        relocate 'org.eclipse.aether', 'org.embulk.third_party.org.eclipse.aether'
+
         // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
         // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
         manifest {
