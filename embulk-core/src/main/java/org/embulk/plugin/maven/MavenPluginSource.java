@@ -96,9 +96,8 @@ public class MavenPluginSource
 
         if (!pluginInterface.isAssignableFrom(pluginMainClass)) {
             throw new PluginSourceNotMatchException(
-                "Invalid plugin: \"" + pluginMainClass.getName() + "\" is not " + category + ".");
+                "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
         }
-        // TODO(dmikurube): Inject for each plugin as described in plugin.properties.
 
         final Object pluginMainObject;
         try {
@@ -106,11 +105,22 @@ public class MavenPluginSource
         }
         catch (InstantiationException ex) {
             throw new PluginSourceNotMatchException(
-                "Invalid plugin: \"" + pluginMainClass.getName() + "\" not instantiatable.", ex);
+                "Plugin class \"" + pluginMainClass.getName() + "\" is not instantiatable.", ex);
         }
         catch (IllegalAccessException ex) {
             throw new PluginSourceNotMatchException(
-                "Invalid plugin: \"" + pluginMainClass.getName() + "\" illegal access.", ex);
+                "Plugin class \"" + pluginMainClass.getName() +
+                "\" is not instantiatable due to access to constructor.", ex);
+        }
+        catch (ExceptionInInitializerError ex) {
+            throw new PluginSourceNotMatchException(
+                "Plugin class \"" + pluginMainClass.getName() +
+                "\" is not instantiatable due to exception in initialization.", ex);
+        }
+        catch (SecurityException ex) {
+            throw new PluginSourceNotMatchException(
+                "Plugin class \"" + pluginMainClass.getName() +
+                "\" is not instantiatable due to security manager.", ex);
         }
 
         try {
@@ -118,14 +128,29 @@ public class MavenPluginSource
         }
         catch (ClassCastException ex) {
             throw new PluginSourceNotMatchException(
-                "FATAL: Invalid plugin: \"" + pluginMainClass.getName() + "\" is not " + category + ".");
+                "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not " + category + " actually.",
+                ex);
         }
     }
 
     private Path getLocalMavenRepository()
             throws PluginSourceNotMatchException
     {
-        return getEmbulkHome().resolve("m2").resolve("repository");
+        String env;
+        try {
+            env = System.getenv("M2_REPO");
+        }
+        catch (NullPointerException | SecurityException ex) {
+            // The Exceptions are just ignored, and the default local Maven repository is used.
+            // TODO: Log?
+            env = null;
+        }
+
+        if (env == null) {
+            return getEmbulkHome().resolve("m2").resolve("repository");
+        }
+
+        return Paths.get(env);
     }
 
     private Path getEmbulkHome()
