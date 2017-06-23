@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.embulk.plugin.MavenPluginType;
-import org.embulk.plugin.PluginClassLoader;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
