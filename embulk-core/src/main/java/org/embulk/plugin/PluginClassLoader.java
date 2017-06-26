@@ -42,6 +42,15 @@ public class PluginClassLoader
                 }));
     }
 
+    /**
+     * Adds the specified path to the list of URLs (for {@code URLClassLoader}) to search for classes and resources.
+     *
+     * It internally calls {@code URLClassLoader#addURL}.
+     *
+     * Some plugins (embulk-input-jdbc, for example) are calling this method to load external JAR files.
+     *
+     * @see https://github.com/embulk/embulk-input-jdbc/blob/ebfff0b249d507fc730c87e08b56e6aa492060ca/embulk-input-jdbc/src/main/java/org/embulk/input/jdbc/AbstractJdbcInputPlugin.java#L586-L595
+     */
     public void addPath(Path path)
     {
         try {
@@ -56,17 +65,45 @@ public class PluginClassLoader
         super.addURL(url);
     }
 
+    /**
+     * Loads the class with the specified binary name prioritized by the "parent-first" condition.
+     *
+     * It copy-cats {@code ClassLoader#loadClass} while the "parent-first" priorities are considered.
+     *
+     * If the specified class is "parent-first", it behaves the same as {@code ClassLoader#loadClass} ordered as below.
+     *
+     * <ol>
+     *
+     * <li><p>Invoke the {@code #findLoadedClass} method to check if the class has already been loaded.</p></li>
+     *
+     * <li><p>Invoke the parent's {@code #loadClass} method.
+     *
+     * <li><p>Invoke the {@code #findClass} method of this class loader to find the class.</p></li>
+     *
+     * </ol>
+     *
+     * If the specified class is "NOT parent-first", the 2nd and 3rd actions are swapped.
+     *
+     * @see https://docs.oracle.com/javase/7/docs/api/java/lang/ClassLoader.html#loadClass(java.lang.String,%20boolean)
+     * @see http://hg.openjdk.java.net/jdk7u/jdk7u/jdk/file/jdk7u141-b02/src/share/classes/java/lang/ClassLoader.java
+     */
     @Override
     protected Class<?> loadClass(String name, boolean resolve)
             throws ClassNotFoundException
     {
         synchronized (getClassLoadingLock(name)) {
-            Class<?> loadedClass = findLoadedClass(name);
+            // If the class has already been loaded by this {@code ClassLoader} or the parent's {@code ClassLoader},
+            // find the loaded class and return it.
+            final Class<?> loadedClass = findLoadedClass(name);
+
             if (loadedClass != null) {
                 return resolveClass(loadedClass, resolve);
             }
 
-            boolean parentFirst = isParentFirstPackage(name);
+            final boolean parentFirst = isParentFirstPackage(name);
+
+            // If the class is "not parent-first" (not to be loaded by the parent at first),
+            // try {@code #findClass} of the child's ({@code PluginClassLoader}'s).
             if (!parentFirst) {
                 try {
                     return resolveClass(findClass(name), resolve);
@@ -74,11 +111,14 @@ public class PluginClassLoader
                 }
             }
 
+            // If the class is "parent-first" (to be loaded by the parent at first), try this part at first.
+            // If the class is "not parent-first" (not to be loaded by the parent at first), the above part runs first.
             try {
                 return resolveClass(getParent().loadClass(name), resolve);
             } catch (ClassNotFoundException ignored) {
             }
 
+            // If the class is "parent-first" (to be loaded by the parent at first), this part runs after the above.
             if (parentFirst) {
                 return resolveClass(findClass(name), resolve);
             }
