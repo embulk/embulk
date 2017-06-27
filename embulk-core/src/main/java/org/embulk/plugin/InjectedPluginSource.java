@@ -37,7 +37,7 @@ public class InjectedPluginSource
         this.injector = injector;
     }
 
-    public static interface PluginFactory <T>
+    private static interface PluginFactory <T>
     {
         public T newPlugin(Injector injector);
     }
