@@ -14,6 +14,10 @@ import org.embulk.plugin.jar.InvalidJarPluginException;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileInputRunner;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.GuessPlugin;
@@ -85,7 +89,7 @@ public class MavenPluginSource
             throw new PluginSourceNotMatchException(ex);
         }
 
-        final Class pluginMainClass;
+        final Class<?> pluginMainClass;
         try (JarPluginLoader loader = JarPluginLoader.load(jarPath, pluginClassLoaderFactory)) {
             pluginMainClass = loader.getPluginMainClass();
         }
@@ -100,16 +104,32 @@ public class MavenPluginSource
 
         final Object pluginMainObject;
         try {
-            pluginMainObject = pluginMainClass.newInstance();
-        }
-        catch (InstantiationException ex) {
-            throw new PluginSourceNotMatchException(
-                "Plugin class \"" + pluginMainClass.getName() + "\" is not instantiatable.", ex);
-        }
-        catch (IllegalAccessException ex) {
-            throw new PluginSourceNotMatchException(
-                "Plugin class \"" + pluginMainClass.getName() +
-                "\" is not instantiatable due to access to constructor.", ex);
+            // Unlike InjectedPluginSource and JRubyPluginSource,
+            // MavenPluginSource does not have "registration" before creating an instance of the plugin class.
+            // FileInputPlugin and FileOutputPlugin are wrapped with FileInputRunner and FileOutputRunner here.
+            if (FileInputPlugin.class.isAssignableFrom(pluginMainClass)) {
+                final FileInputPlugin fileInputPluginMainObject;
+                try {
+                    fileInputPluginMainObject = (FileInputPlugin) this.injector.getInstance(pluginMainClass);
+                }
+                catch (ClassCastException ex) {
+                    throw new PluginSourceNotMatchException(
+                        "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-input.", ex);
+                }
+                pluginMainObject = new FileInputRunner(fileInputPluginMainObject);
+            } else if (FileOutputPlugin.class.isAssignableFrom(pluginMainClass)) {
+                final FileOutputPlugin fileOutputPluginMainObject;
+                try {
+                    fileOutputPluginMainObject = (FileOutputPlugin) this.injector.getInstance(pluginMainClass);
+                }
+                catch (ClassCastException ex) {
+                    throw new PluginSourceNotMatchException(
+                        "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-output.", ex);
+                }
+                pluginMainObject = new FileOutputRunner(fileOutputPluginMainObject);
+            } else {
+                pluginMainObject = this.injector.getInstance(pluginMainClass);
+            }
         }
         catch (ExceptionInInitializerError ex) {
             throw new PluginSourceNotMatchException(
