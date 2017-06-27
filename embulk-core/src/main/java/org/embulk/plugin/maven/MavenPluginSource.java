@@ -97,11 +97,6 @@ public class MavenPluginSource
             throw new PluginSourceNotMatchException(ex);
         }
 
-        if (!pluginInterface.isAssignableFrom(pluginMainClass)) {
-            throw new PluginSourceNotMatchException(
-                "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
-        }
-
         final Object pluginMainObject;
         try {
             // Unlike InjectedPluginSource and JRubyPluginSource,
@@ -128,6 +123,10 @@ public class MavenPluginSource
                 }
                 pluginMainObject = new FileOutputRunner(fileOutputPluginMainObject);
             } else {
+                if (!pluginInterface.isAssignableFrom(pluginMainClass)) {
+                    throw new PluginSourceNotMatchException(
+                        "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
+                }
                 pluginMainObject = this.injector.getInstance(pluginMainClass);
             }
         }
