@@ -5,6 +5,7 @@ public class PluginSourceNotMatchException
 {
     public PluginSourceNotMatchException()
     {
+        super();
     }
 
     public PluginSourceNotMatchException(String message)
@@ -15,5 +16,10 @@ public class PluginSourceNotMatchException
     public PluginSourceNotMatchException(Throwable cause)
     {
         super(cause);
+    }
+
+    public PluginSourceNotMatchException(String message, Throwable cause)
+    {
+        super(message, cause);
     }
 }
