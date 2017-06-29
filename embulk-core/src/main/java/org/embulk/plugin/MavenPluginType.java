@@ -37,8 +37,8 @@ public final class MavenPluginType
     public static MavenPluginType create(
             final String name, final String group, final String classifier, final String version)
     {
-        if (name == null) {
-            throw new NullPointerException("\"name\" must not present.");
+        if (name == null || group == null || version == null) {
+            throw new NullPointerException("\"name\", \"group\" and \"version\" must be present.");
         }
         return new MavenPluginType(name, group, classifier, version);
     }
