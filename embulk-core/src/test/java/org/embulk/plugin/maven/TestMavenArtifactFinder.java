@@ -19,7 +19,7 @@ public class TestMavenArtifactFinder
         final Path basePath = getMavenPath();
         final MavenArtifactFinder finder = MavenArtifactFinder.create(basePath);
         assertEquals(buildExpectedPath(basePath, GROUP_DIRECTORY, "embulk-example-maven-artifact", "0.1.2"),
-                     finder.findMavenArtifactJar("org.embulk.example", "embulk-example-maven-artifact", "0.1.2"));
+                     finder.findMavenArtifactJar("org.embulk.example", "embulk-example-maven-artifact", null, "0.1.2"));
     }
 
     private Path getMavenPath() throws URISyntaxException

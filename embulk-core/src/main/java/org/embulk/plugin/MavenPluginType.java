@@ -10,10 +10,11 @@ import java.util.Objects;
 public final class MavenPluginType
         extends PluginType
 {
-    private MavenPluginType(final String name, final String group, final String version)
+    private MavenPluginType(final String name, final String group, final String classifier, final String version)
     {
         super("maven", name);
         this.group = group;
+        this.classifier = classifier;
         this.version = version;
 
         final StringBuilder fullNameBuilder = new StringBuilder();
@@ -33,12 +34,13 @@ public final class MavenPluginType
         this.fullMap = Collections.unmodifiableMap(fullMapMutable);
     }
 
-    public static MavenPluginType create(final String name, final String group, final String version)
+    public static MavenPluginType create(
+            final String name, final String group, final String classifier, final String version)
     {
         if (name == null) {
             throw new NullPointerException("\"name\" must not present.");
         }
-        return new MavenPluginType(name, group, version);
+        return new MavenPluginType(name, group, classifier, version);
     }
 
     @JsonValue
@@ -51,6 +53,12 @@ public final class MavenPluginType
     public final String getGroup()
     {
         return this.group;
+    }
+
+    @JsonProperty("classifier")
+    public final String getClassifier()
+    {
+        return this.classifier;
     }
 
     @JsonProperty("version")
@@ -67,7 +75,7 @@ public final class MavenPluginType
     @Override
     public final int hashCode()
     {
-        return Objects.hash(getSourceType(), getName(), this.group, this.version);
+        return Objects.hash(getSourceType(), getName(), this.group, this.classifier, this.version);
     }
 
     @Override
@@ -80,6 +88,7 @@ public final class MavenPluginType
         return (this.getSourceType().equals(other.getSourceType()) &&
                 this.getName().equals(other.getName()) &&
                 this.getGroup().equals(other.getGroup()) &&
+                this.getClassifier().equals(other.getClassifier()) &&
                 this.getVersion().equals(other.getVersion()));
     }
 
@@ -91,6 +100,7 @@ public final class MavenPluginType
     }
 
     private final String group;
+    private final String classifier;  // |classifier| can be null.
     private final String version;
     private final String fullName;
     private final Map<String, String> fullMap;
