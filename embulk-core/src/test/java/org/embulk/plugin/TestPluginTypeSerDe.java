@@ -1,6 +1,7 @@
 package org.embulk.plugin;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.embulk.EmbulkTestRuntime;
@@ -46,5 +47,21 @@ public class TestPluginTypeSerDe
         assertEquals(mavenPluginType.getName(), "foo");
         assertEquals(mavenPluginType.getGroup(), "org.embulk.bar");
         assertEquals(mavenPluginType.getVersion(), "0.1.2");
+        assertNull(mavenPluginType.getClassifier());
+    }
+
+    @Test
+    public void testParseTypeMavenWithClassifier()
+    {
+        PluginType pluginType = testRuntime.getModelManager().readObjectWithConfigSerDe(
+            PluginType.class,
+            "{ \"name\": \"foo\", \"source\": \"maven\", \"group\": \"org.embulk.bar\", \"version\": \"0.1.2\", \"classifier\": \"foo\" }");
+        assertTrue(pluginType instanceof MavenPluginType);
+        assertEquals(PluginSource.Type.MAVEN, pluginType.getSourceType());
+        MavenPluginType mavenPluginType = (MavenPluginType) pluginType;
+        assertEquals(mavenPluginType.getName(), "foo");
+        assertEquals(mavenPluginType.getGroup(), "org.embulk.bar");
+        assertEquals(mavenPluginType.getVersion(), "0.1.2");
+        assertEquals(mavenPluginType.getClassifier(), "foo");
     }
 }

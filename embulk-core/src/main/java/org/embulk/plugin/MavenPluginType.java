@@ -24,6 +24,10 @@ public final class MavenPluginType
         fullNameBuilder.append(name);
         fullNameBuilder.append(":");
         fullNameBuilder.append(version);
+        if (classifier != null) {
+            fullNameBuilder.append(":");
+            fullNameBuilder.append(classifier);
+        }
         this.fullName = fullNameBuilder.toString();
 
         final HashMap<String, String> fullMapMutable = new HashMap<String, String>();
@@ -88,7 +92,8 @@ public final class MavenPluginType
         return (this.getSourceType().equals(other.getSourceType()) &&
                 this.getName().equals(other.getName()) &&
                 this.getGroup().equals(other.getGroup()) &&
-                this.getClassifier().equals(other.getClassifier()) &&
+                ((this.getClassifier() == null && other.getClassifier() == null) ||
+                 (this.getClassifier() != null && this.getClassifier().equals(other.getClassifier()))) &&
                 this.getVersion().equals(other.getVersion()));
     }
 
