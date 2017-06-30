@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -24,8 +25,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class EmbulkMigrate
 {
@@ -238,7 +237,7 @@ public class EmbulkMigrate
         {
             Path destinationPath = this.basePath.resolve(destinationFileName);
             Files.createDirectories(destinationPath.getParent());
-            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath,REPLACE_EXISTING);
+            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath, StandardCopyOption.REPLACE_EXISTING);
             this.modifiedFiles.add(destinationPath);
         }
 
