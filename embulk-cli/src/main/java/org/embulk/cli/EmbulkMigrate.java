@@ -94,7 +94,8 @@ public class EmbulkMigrate
 
         // upgrade gradle version
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
-            // gradle < 3.2.1
+            // gradle < 4.0
+            migrator.copy("embulk/data/new/java/gradlew", "gradlew");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.jar",
