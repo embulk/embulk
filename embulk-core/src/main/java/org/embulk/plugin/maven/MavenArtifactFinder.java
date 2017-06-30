@@ -64,22 +64,29 @@ public class MavenArtifactFinder
     }
 
     public final Path findMavenArtifactJar(
-            final String groupId, final String artifactId, final String version)
+            final String groupId,
+            final String artifactId,
+            final String classifier,
+            final String version)
         throws MavenArtifactNotFoundException
     {
-        return findMavenArtifact(groupId, artifactId, "jar", version);
+        return findMavenArtifact(groupId, artifactId, classifier, "jar", version);
     }
 
     public Path findMavenArtifact(
-            final String groupId, final String artifactId, final String extension, final String version)
+            final String groupId,
+            final String artifactId,
+            final String classifier,
+            final String extension,
+            final String version)
         throws MavenArtifactNotFoundException
     {
         final ArtifactResult result;
         try {
-            result = resolveMavenArtifact(groupId, artifactId, extension, version);
+            result = resolveMavenArtifact(groupId, artifactId, classifier, extension, version);
         }
         catch (ArtifactResolutionException ex) {
-            throw new MavenArtifactNotFoundException(groupId, artifactId, version,
+            throw new MavenArtifactNotFoundException(groupId, artifactId, classifier, version,
                                                      this.givenLocalMavenRepositoryPath,
                                                      this.absoluteLocalMavenRepositoryPath,
                                                      ex);
@@ -88,11 +95,16 @@ public class MavenArtifactFinder
     }
 
     private ArtifactResult resolveMavenArtifact(
-            final String groupId, final String artifactId, final String extension, final String version)
+            final String groupId,
+            final String artifactId,
+            final String classifier,
+            final String extension,
+            final String version)
         throws ArtifactResolutionException
     {
-        final ArtifactRequest artifactRequest =
-            new ArtifactRequest().setArtifact(new DefaultArtifact(groupId, artifactId, extension, version));
+        // |classifier| can be null for |org.eclipse.aether.artifact.DefaultArtifact|.
+        final ArtifactRequest artifactRequest = new ArtifactRequest().setArtifact(
+            new DefaultArtifact(groupId, artifactId, classifier, extension, version));
 
         return this.repositorySystem.resolveArtifact(this.repositorySystemSession, artifactRequest);
     }

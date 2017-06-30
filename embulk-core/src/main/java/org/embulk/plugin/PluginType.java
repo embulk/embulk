@@ -79,8 +79,9 @@ public abstract class PluginType
             {
                 final String name = stringMap.get("name");
                 final String group = stringMap.get("group");
+                final String classifier = stringMap.get("classifier");
                 final String version = stringMap.get("version");
-                return MavenPluginType.create(name, group, version);
+                return MavenPluginType.create(name, group, classifier, version);
             }
         default:
             throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");

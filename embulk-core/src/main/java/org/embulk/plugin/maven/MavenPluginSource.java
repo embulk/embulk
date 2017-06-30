@@ -83,6 +83,7 @@ public class MavenPluginSource
             jarPath = mavenArtifactFinder.findMavenArtifactJar(
                 mavenPluginType.getGroup(),
                 "embulk-" + category + "-" + mavenPluginType.getName(),
+                mavenPluginType.getClassifier(),
                 mavenPluginType.getVersion());
         }
         catch (MavenArtifactNotFoundException ex) {
