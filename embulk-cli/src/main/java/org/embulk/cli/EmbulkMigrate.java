@@ -237,7 +237,8 @@ public class EmbulkMigrate
         {
             Path destinationPath = this.basePath.resolve(destinationFileName);
             Files.createDirectories(destinationPath.getParent());
-            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath,
+                    StandardCopyOption.REPLACE_EXISTING);
             this.modifiedFiles.add(destinationPath);
         }
 
