@@ -76,7 +76,7 @@ public class EmbulkMigrate
             System.out.println("Done. No files are modified.");
         }
         else {
-            System.out.println("Done. Please check modifieid files.");
+            System.out.println("Done. Please check modified files.");
         }
     }
 
