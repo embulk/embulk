@@ -13,6 +13,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -408,6 +409,18 @@ public class EmbulkMigrate
             catch (NoSuchFileException ex) {
                 return new byte[0];
             }
+        }
+
+        private void setExecutable(String targetFileName)
+                throws IOException
+        {
+            final Path targetPath = this.basePath.resolve(targetFileName);
+            final Set<PosixFilePermission> permissions =
+                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+            permissions.add(PosixFilePermission.OWNER_EXECUTE);
+            permissions.add(PosixFilePermission.GROUP_EXECUTE);
+            permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+            Files.setPosixFilePermissions(targetPath, permissions);
         }
 
         private final Path basePath;
