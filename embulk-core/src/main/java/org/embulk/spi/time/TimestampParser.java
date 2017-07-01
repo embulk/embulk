@@ -1,18 +1,27 @@
 package org.embulk.spi.time;
 
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.Calendar;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import org.joda.time.DateTimeZone;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import org.jruby.embed.ScriptingContainer;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
+import org.jruby.Ruby;
+import org.jruby.embed.ScriptingContainer;
+import org.embulk.spi.time.RubyDateParser.FormatBag;
+
+import java.util.List;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
@@ -62,8 +71,11 @@ public class TimestampParser
         public Optional<String> getDate();
     }
 
-    private final JRubyTimeParserHelper helper;
     private final DateTimeZone defaultTimeZone;
+    private final String format;
+    private final RubyDateParser parser;
+    private final Calendar calendar;
+    private final List<StrptimeToken> compiledPattern;
 
     @Deprecated
     public TimestampParser(String format, ParserTask task)
@@ -71,9 +83,11 @@ public class TimestampParser
         this(task.getJRuby(), format, task.getDefaultTimeZone());
     }
 
-    TimestampParser(Task task)
+    @VisibleForTesting
+    static TimestampParser createTimestampParserForTesting(Task task)
+
     {
-        this(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
+        return new TimestampParser(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
     }
 
     public TimestampParser(Task task, TimestampColumnOption columnOption)
@@ -91,7 +105,12 @@ public class TimestampParser
 
     public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone, String defaultDate)
     {
-        JRubyTimeParserHelperFactory helperFactory = (JRubyTimeParserHelperFactory) jruby.runScriptlet("Embulk::Java::TimeParserHelper::Factory.new");
+        // TODO get default current time from ExecTask.getExecTimestamp
+        Ruby runtime = jruby.getProvider().getRuntime();
+        this.format = format;
+        this.parser = new RubyDateParser(runtime.getCurrentContext());
+        this.compiledPattern = this.parser.compilePattern(runtime.newString(format));
+        this.defaultTimeZone = defaultTimeZone;
 
         // calculate default date
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
@@ -103,15 +122,8 @@ public class TimestampParser
         catch (ParseException ex) {
             throw new ConfigException("Invalid date format. Expected yyyy-MM-dd: " + defaultDate);
         }
-        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        cal.setTime(utc);
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH) + 1;
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-
-        // TODO get default current time from ExecTask.getExecTimestamp
-        this.helper = (JRubyTimeParserHelper) helperFactory.newInstance(format, year, month, day, 0, 0, 0, 0);  // TODO default time zone
-        this.defaultTimeZone = defaultTimeZone;
+        this.calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        this.calendar.setTime(utc);
     }
 
     public DateTimeZone getDefaultTimeZone()
@@ -121,10 +133,21 @@ public class TimestampParser
 
     public Timestamp parse(String text) throws TimestampParseException
     {
-        long localUsec = helper.strptimeUsec(text);
-        String zone = helper.getZone();
+        if (isNullOrEmpty(text)) {
+            throw new TimestampParseException("text is null or empty string.");
+        }
 
-        DateTimeZone timeZone = defaultTimeZone;
+        final FormatBag bag = parser.parse(compiledPattern, text);
+        if (bag == null) {
+            throw new TimestampParseException("Cannot parse '" + text + "' by '" + format + "'");
+        }
+        bag.setYearIfNotSet(calendar.get(Calendar.YEAR));
+        bag.setMonthIfNotSet(calendar.get(Calendar.MONTH) + 1);
+        bag.setMdayIfNotSet(calendar.get(Calendar.DAY_OF_MONTH));
+
+        final LocalTime local = createLocalTimeFromFormatBag(bag);
+        final String zone = local.getZone();
+        final DateTimeZone timeZone;
         if (zone != null) {
             // TODO cache parsed zone?
             timeZone = parseDateTimeZone(zone);
@@ -132,11 +155,91 @@ public class TimestampParser
                 throw new TimestampParseException("Invalid time zone name '" + text + "'");
             }
         }
+        else {
+            timeZone = defaultTimeZone;
+        }
 
-        long localSec = localUsec / 1000000;
-        long usec = localUsec % 1000000;
-        long sec = timeZone.convertLocalToUTC(localSec*1000, false) / 1000;
+        final long sec = timeZone.convertLocalToUTC(local.getSeconds() * 1000, false) / 1000;
+        return Timestamp.ofEpochSecond(sec, local.getNsecFraction());
+    }
 
-        return Timestamp.ofEpochSecond(sec, usec * 1000);
+    public LocalTime createLocalTimeFromFormatBag(FormatBag bag)
+    {
+        final long sec_fraction_nsec;
+        if (FormatBag.has(bag.sec_fraction)) {
+            sec_fraction_nsec = bag.sec_fraction * (int)Math.pow(10, 9 - bag.sec_fraction_size);
+        }
+        else {
+            sec_fraction_nsec = 0;
+        }
+
+        final long sec;
+        if (bag.hasSeconds()) {
+            if (FormatBag.has(bag.seconds_size)) {
+                sec = bag.seconds / (int)Math.pow(10, bag.seconds_size);
+            }
+            else { // int
+                sec = bag.seconds;
+            }
+
+        } else {
+            final int year;
+            if (FormatBag.has(bag.year)) {
+                year = bag.year;
+            }
+            else {
+                year = 1970;
+            }
+
+            // set up with min this and then add to allow rolling over
+            DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
+            if (FormatBag.has(bag.mon)) {
+                dt = dt.plusMonths(bag.mon - 1);
+            }
+            if (FormatBag.has(bag.mday)) {
+                dt = dt.plusDays(bag.mday - 1);
+            }
+            if (FormatBag.has(bag.hour)) {
+                dt = dt.plusHours(bag.hour);
+            }
+            if (FormatBag.has(bag.min)) {
+                dt = dt.plusMinutes(bag.min);
+            }
+            if (FormatBag.has(bag.sec)) {
+                dt = dt.plusSeconds(bag.sec);
+            }
+            sec = dt.getMillis() / 1000;
+        }
+
+        return new LocalTime(sec, sec_fraction_nsec, bag.zone);
+    }
+
+    private static class LocalTime
+    {
+        private final long seconds;
+        private final long nsecFraction;
+        private final String zone;  // +0900, JST, UTC
+
+        public LocalTime(long seconds, long nsecFraction, String zone)
+        {
+            this.seconds = seconds;
+            this.nsecFraction = nsecFraction;
+            this.zone = zone;
+        }
+
+        public long getSeconds()
+        {
+            return seconds;
+        }
+
+        public long getNsecFraction()
+        {
+            return nsecFraction;
+        }
+
+        public String getZone()
+        {
+            return zone;
+        }
     }
 }
