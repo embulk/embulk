@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -236,7 +237,9 @@ public class EmbulkMigrate
         {
             Path destinationPath = this.basePath.resolve(destinationFileName);
             Files.createDirectories(destinationPath.getParent());
-            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath);
+            Files.copy(EmbulkMigrate.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath,
+                    StandardCopyOption.REPLACE_EXISTING);
+            this.modifiedFiles.add(destinationPath);
         }
 
         public boolean match(String filePath, Pattern pattern)
@@ -424,7 +427,7 @@ public class EmbulkMigrate
     private static final Pattern OLD_EMBULK_IN_GEMSPEC = Pattern.compile(
         "embulk-");
     private static final Pattern GRADLE_VERSION_IN_WRAPPER = Pattern.compile(
-        "gradle-[23]\\.\\d+(\\.\\d+)?-/");
+        "gradle-[23]\\.\\d+(\\.\\d+)?-");
     private static final Pattern JSON_COLUMN_METHOD_IN_ALL_JAVA = Pattern.compile(
         "void\\s+jsonColumn");
     private static final Pattern TIMESTAMP_COLUMN_METHOD_IN_ALL_JAVA = Pattern.compile(
