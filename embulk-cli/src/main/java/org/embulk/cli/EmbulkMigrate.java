@@ -13,6 +13,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -96,6 +97,7 @@ public class EmbulkMigrate
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
             // gradle < 4.0
             migrator.copy("embulk/data/new/java/gradlew", "gradlew");
+            migrator.setExecutable("gradlew");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.jar",
@@ -405,6 +407,18 @@ public class EmbulkMigrate
             catch (NoSuchFileException ex) {
                 return new byte[0];
             }
+        }
+
+        private void setExecutable(String targetFileName)
+                throws IOException
+        {
+            final Path targetPath = this.basePath.resolve(targetFileName);
+            final Set<PosixFilePermission> permissions =
+                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+            permissions.add(PosixFilePermission.OWNER_EXECUTE);
+            permissions.add(PosixFilePermission.GROUP_EXECUTE);
+            permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+            Files.setPosixFilePermissions(targetPath, permissions);
         }
 
         private final Path basePath;
