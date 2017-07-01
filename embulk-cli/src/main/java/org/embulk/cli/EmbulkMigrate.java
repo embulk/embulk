@@ -97,6 +97,7 @@ public class EmbulkMigrate
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
             // gradle < 4.1
             migrator.copy("embulk/data/new/java/gradlew", "gradlew");
+            migrator.setExecutable("gradlew");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.jar",
