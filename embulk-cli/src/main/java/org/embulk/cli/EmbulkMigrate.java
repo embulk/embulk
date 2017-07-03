@@ -102,6 +102,10 @@ public class EmbulkMigrate
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.jar",
                           "gradle/wrapper/gradle-wrapper.jar");
+            System.out.println("\n\n** CAUTION **\n\n" +
+                    "If you see this message, you need to modify build.gradle.\n" +
+                    "Please see more detail at this URL: https://github.com/embulk/embulk/pull/698#issuecomment-312422241\n\n" +
+                    "\"The Task.leftShift(Closure) method has been deprecated and is scheduled to be removed in Gradle 5.0. Please use Task.doLast(Action) instead.\"\n\n");
         }
 
         // Add a method |jsonColumn| before the method |timestampColumn| which should exist.
