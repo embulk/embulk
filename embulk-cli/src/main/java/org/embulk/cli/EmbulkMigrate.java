@@ -13,6 +13,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,11 +95,17 @@ public class EmbulkMigrate
 
         // upgrade gradle version
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
-            // gradle < 3.2.1
+            // gradle < 4.0
+            migrator.copy("embulk/data/new/java/gradlew", "gradlew");
+            migrator.setExecutable("gradlew");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("embulk/data/new/java/gradle/wrapper/gradle-wrapper.jar",
                           "gradle/wrapper/gradle-wrapper.jar");
+            System.out.println("\n\n** CAUTION **\n\n" +
+                    "If you see this message, you need to modify build.gradle.\n" +
+                    "Please see more detail at this URL: https://github.com/embulk/embulk/pull/698#issuecomment-312422241\n\n" +
+                    "\"The Task.leftShift(Closure) method has been deprecated and is scheduled to be removed in Gradle 5.0. Please use Task.doLast(Action) instead.\"\n\n");
         }
 
         // Add a method |jsonColumn| before the method |timestampColumn| which should exist.
@@ -404,6 +411,18 @@ public class EmbulkMigrate
             catch (NoSuchFileException ex) {
                 return new byte[0];
             }
+        }
+
+        private void setExecutable(String targetFileName)
+                throws IOException
+        {
+            final Path targetPath = this.basePath.resolve(targetFileName);
+            final Set<PosixFilePermission> permissions =
+                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+            permissions.add(PosixFilePermission.OWNER_EXECUTE);
+            permissions.add(PosixFilePermission.GROUP_EXECUTE);
+            permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+            Files.setPosixFilePermissions(targetPath, permissions);
         }
 
         private final Path basePath;
