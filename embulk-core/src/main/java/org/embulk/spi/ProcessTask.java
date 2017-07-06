@@ -13,9 +13,11 @@ public class ProcessTask
     private final PluginType inputPluginType;
     private final PluginType outputPluginType;
     private final List<PluginType> filterPluginTypes;
+    private final PluginType errorDataPluginType;
     private final TaskSource inputTaskSource;
     private final TaskSource outputTaskSource;
     private final List<TaskSource> filterTaskSources;
+    private final TaskSource errorDataTaskSource;
     private final List<Schema> schemas;
     private final Schema executorSchema;
     private TaskSource executorTaskSource;
@@ -25,9 +27,11 @@ public class ProcessTask
             @JsonProperty("inputType") PluginType inputPluginType,
             @JsonProperty("outputType") PluginType outputPluginType,
             @JsonProperty("filterTypes") List<PluginType> filterPluginTypes,
+            @JsonProperty("errorDataType") PluginType errorDataPluginType,
             @JsonProperty("inputTask") TaskSource inputTaskSource,
             @JsonProperty("outputTask") TaskSource outputTaskSource,
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
+            @JsonProperty("errorDataTask") TaskSource errorDataTaskSource,
             @JsonProperty("schemas") List<Schema> schemas,
             @JsonProperty("executorSchema") Schema executorSchema,
             @JsonProperty("executorTask") TaskSource executorTaskSource)
@@ -35,9 +39,12 @@ public class ProcessTask
         this.inputPluginType = inputPluginType;
         this.outputPluginType = outputPluginType;
         this.filterPluginTypes = filterPluginTypes;
+        this.errorDataPluginType = errorDataPluginType;
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
         this.filterTaskSources = filterTaskSources;
+        this.errorDataTaskSource = errorDataTaskSource;
+
         this.schemas = schemas;
         this.executorSchema = executorSchema;
         this.executorTaskSource = executorTaskSource;
@@ -61,6 +68,12 @@ public class ProcessTask
         return filterPluginTypes;
     }
 
+    @JsonProperty("errorDataType")
+    public PluginType getErrorDataPluginType()
+    {
+        return errorDataPluginType;
+    }
+
     @JsonProperty("inputTask")
     public TaskSource getInputTaskSource()
     {
@@ -77,6 +90,12 @@ public class ProcessTask
     public List<TaskSource> getFilterTaskSources()
     {
         return filterTaskSources;
+    }
+
+    @JsonProperty("errorDataTask")
+    public TaskSource getErrorDataTaskSource()
+    {
+        return errorDataTaskSource;
     }
 
     @JsonProperty("schemas")

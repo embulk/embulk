@@ -16,6 +16,25 @@ public class Exec
 {
     private static final InheritableThreadLocal<ExecSession> session = new InheritableThreadLocal<ExecSession>();
 
+    private static final InheritableThreadLocal<ErrorDataReporter> reporterContext = new InheritableThreadLocal<>();
+
+    public static ErrorDataReporter enterErrorDataReporterContext(final ErrorDataReporter reporter)
+    {
+        final ErrorDataReporter last = reporterContext.get();
+        reporterContext.set(reporter);
+        return last;
+    }
+
+    public static void leaveErrorDataReportrerContext(final ErrorDataReporter last)
+    {
+        if (last == null) {
+            reporterContext.remove();
+        }
+        else {
+            reporterContext.set(last);
+        }
+    }
+
     private Exec() { }
 
     public static <T> T doWith(ExecSession session, ExecAction<T> action) throws ExecutionException
@@ -57,11 +76,6 @@ public class Exec
     public static Logger getLogger(Class<?> name)
     {
         return session().getLogger(name);
-    }
-
-    public static ErrorDataReporter getErrorDataReporter()
-    {
-        return session().getErrorDataReporter();
     }
 
     public static BufferAllocator getBufferAllocator()

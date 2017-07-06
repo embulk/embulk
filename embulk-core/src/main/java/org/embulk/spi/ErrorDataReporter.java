@@ -8,4 +8,6 @@ public interface ErrorDataReporter
     //void skip(Record errorPageData);
 
     void close(); // TODO should consider about the return type
+
+    void commit(); // TODO should return TaskReport??
 }

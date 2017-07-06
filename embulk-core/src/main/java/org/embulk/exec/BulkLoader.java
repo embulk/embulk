@@ -16,6 +16,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.ErrorDataPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.Schema;
@@ -77,6 +78,7 @@ public class BulkLoader
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
+        private volatile TaskSource errorDataTaskSource;
         private volatile List<Schema> schemas;
         private volatile Schema executorSchema;
         private volatile TransactionStage transactionStage;
@@ -128,12 +130,25 @@ public class BulkLoader
             this.filterTaskSources = filterTaskSources;
         }
 
+        public void setErrorDataTaskSource(TaskSource errorDataTaskSource)
+        {
+            this.errorDataTaskSource = errorDataTaskSource;
+        }
+
         public ProcessTask buildProcessTask()
         {
             return new ProcessTask(
-                    plugins.getInputPluginType(), plugins.getOutputPluginType(), plugins.getFilterPluginTypes(),
-                    inputTaskSource, outputTaskSource, filterTaskSources,
-                    schemas, executorSchema, Exec.newTaskSource());
+                    plugins.getInputPluginType(),
+                    plugins.getOutputPluginType(),
+                    plugins.getFilterPluginTypes(),
+                    plugins.getErrorDataPluginType(),
+                    inputTaskSource,
+                    outputTaskSource,
+                    filterTaskSources,
+                    errorDataTaskSource,
+                    schemas,
+                    executorSchema,
+                    Exec.newTaskSource());
         }
 
         @Override
@@ -443,19 +458,23 @@ public class BulkLoader
         private final PluginType inputPluginType;
         private final PluginType outputPluginType;
         private final List<PluginType> filterPluginTypes;
+        private final PluginType errorDataPluginType;
 
         private final InputPlugin inputPlugin;
         private final OutputPlugin outputPlugin;
         private final List<FilterPlugin> filterPlugins;
+        private final ErrorDataPlugin errorDataPlugin;
 
         public ProcessPluginSet(BulkLoaderTask task)
         {
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
             this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
+            this.errorDataPluginType = task.getErrorDataConfig().get(PluginType.class, "type");
             this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
             this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
             this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
+            this.errorDataPlugin = Exec.newPlugin(ErrorDataPlugin.class, errorDataPluginType);
         }
 
         public PluginType getInputPluginType()
@@ -473,6 +492,11 @@ public class BulkLoader
             return filterPluginTypes;
         }
 
+        public PluginType getErrorDataPluginType()
+        {
+            return errorDataPluginType;
+        }
+
         public InputPlugin getInputPlugin()
         {
             return inputPlugin;
@@ -486,6 +510,11 @@ public class BulkLoader
         public List<FilterPlugin> getFilterPlugins()
         {
             return filterPlugins;
+        }
+
+        public ErrorDataPlugin getErrorDataPlugin()
+        {
+            return errorDataPlugin;
         }
     }
 

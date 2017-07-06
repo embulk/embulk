@@ -3,6 +3,9 @@ package org.embulk.spi.util;
 import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.TaskReport;
+import org.embulk.spi.ErrorDataPlugin;
+import org.embulk.spi.ErrorDataReporter;
+import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.Schema;
@@ -36,6 +39,7 @@ public abstract class Executors
         InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
         List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
         OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
+        final ErrorDataPlugin errorDataPlugin = exec.newPlugin(ErrorDataPlugin.class, task.getErrorDataPluginType());
 
         // TODO assert task.getExecutorSchema().equals task.getOutputSchema()
 
@@ -43,6 +47,7 @@ public abstract class Executors
                 inputPlugin, task.getInputSchema(), task.getInputTaskSource(),
                 filterPlugins, task.getFilterSchemas(), task.getFilterTaskSources(),
                 outputPlugin, task.getOutputSchema(), task.getOutputTaskSource(),
+                errorDataPlugin, task.getErrorDataTaskSource(),
                 callback);
     }
 
@@ -50,33 +55,46 @@ public abstract class Executors
             InputPlugin inputPlugin, Schema inputSchema, TaskSource inputTaskSource,
             List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources,
             OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
+            final ErrorDataPlugin errorDataPlugin, final TaskSource errorDataTaskSource,
             ProcessStateCallback callback)
     {
-        TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-            outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
+        try (final ErrorDataReporter errorDataReporter = errorDataPlugin.open(errorDataTaskSource)) {
+            final ErrorDataReporter last = Exec.enterErrorDataReporterContext(errorDataReporter);
+            try {
+                TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
+                        outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
 
-        callback.started();
-        // here needs to use try-with-resource to add exception happend at close() or abort()
-        // to suppressed exception. otherwise exception happend at close() or abort() overwrites
-        // essential exception.
-        try (CloseResource closer = new CloseResource(tran)) {
-            try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
-                PageOutput filtered = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
-                closer.closeThis(filtered);
+                callback.started();
+                // here needs to use try-with-resource to add exception happend at close() or abort()
+                // to suppressed exception. otherwise exception happend at close() or abort() overwrites
+                // essential exception.
+                try (CloseResource closer = new CloseResource(tran)) {
+                    try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
+                        PageOutput filtered = Filters.open(filterPlugins, filterTaskSources, filterSchemas, tran);
+                        closer.closeThis(filtered);
 
-                TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
+                        TaskReport inputTaskReport = inputPlugin.run(inputTaskSource, inputSchema, taskIndex, filtered);
 
-                if (inputTaskReport == null) {
-                    inputTaskReport = exec.newTaskReport();
+                        if (inputTaskReport == null) {
+                            inputTaskReport = exec.newTaskReport();
+                        }
+                        callback.inputCommitted(inputTaskReport);
+
+                        // It's valid to commit reporter here because input plugin already called
+                        // TransactionalPageOutput.finish. No skipping happens == last won't be called.
+                        last.commit();
+
+                        TaskReport outputTaskReport = tran.commit();
+                        aborter.dontAbort();
+                        if (outputTaskReport == null) {
+                            outputTaskReport = exec.newTaskReport();
+                        }
+                        callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
+                    }
                 }
-                callback.inputCommitted(inputTaskReport);
-
-                TaskReport outputTaskReport = tran.commit();
-                aborter.dontAbort();
-                if (outputTaskReport == null) {
-                    outputTaskReport = exec.newTaskReport();
-                }
-                callback.outputCommitted(outputTaskReport);  // TODO check output.finish() is called. wrap or abstract
+            }
+            finally {
+                Exec.leaveErrorDataReportrerContext(last);
             }
         }
     }

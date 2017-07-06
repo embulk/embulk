@@ -30,7 +30,6 @@ public class ExecSession
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
-    private final ErrorDataReporter errorDataReporter;
 
     private final Timestamp transactionTime;
     private final TempFileSpace tempFileSpace;
@@ -50,7 +49,6 @@ public class ExecSession
     {
         private final Injector injector;
         private ILoggerFactory loggerFactory;
-        private ErrorDataReporter errorDataReporter;
         private Timestamp transactionTime;
 
         public Builder(Injector injector)
@@ -70,12 +68,6 @@ public class ExecSession
             return this;
         }
 
-        public Builder setErrorDataReporter(final ErrorDataReporter errorDataReporter)
-        {
-            this.errorDataReporter = errorDataReporter;
-            return this;
-        }
-
         public Builder setTransactionTime(Timestamp timestamp)
         {
             this.transactionTime = timestamp;
@@ -87,9 +79,7 @@ public class ExecSession
             if (transactionTime == null) {
                 transactionTime = Timestamp.ofEpochMilli(System.currentTimeMillis());  // TODO get nanoseconds for default
             }
-            return new ExecSession(injector, transactionTime,
-                    Optional.fromNullable(loggerFactory),
-                    Optional.fromNullable(errorDataReporter));
+            return new ExecSession(injector, transactionTime, Optional.fromNullable(loggerFactory));
         }
     }
 
@@ -105,29 +95,15 @@ public class ExecSession
                 configSource.loadConfig(SessionTask.class).getTransactionTime().or(
                     Timestamp.ofEpochMilli(System.currentTimeMillis())
                     ), // TODO get nanoseconds for default
-                null,
                 null);
     }
 
-    @Deprecated
-    private ExecSession(Injector injector,
-            Timestamp transactionTime,
-            Optional<ILoggerFactory> loggerFactory)
-    {
-        this(injector, transactionTime, loggerFactory, null);
-    }
-
-
-    private ExecSession(Injector injector,
-            Timestamp transactionTime,
-            Optional<ILoggerFactory> loggerFactory,
-            Optional<ErrorDataReporter> errorDataReporter)
+    private ExecSession(Injector injector, Timestamp transactionTime, Optional<ILoggerFactory> loggerFactory)
     {
         this.injector = injector;
         this.loggerFactory = loggerFactory.or(injector.getInstance(ILoggerFactory.class));
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
-        this.errorDataReporter = errorDataReporter.or(DefaultErrorDataReporter.create());
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
         this.transactionTime = transactionTime;
@@ -144,7 +120,6 @@ public class ExecSession
         this.loggerFactory = copy.loggerFactory;
         this.modelManager = copy.modelManager;
         this.pluginManager = copy.pluginManager;
-        this.errorDataReporter = copy.errorDataReporter;
         this.bufferAllocator = copy.bufferAllocator;
 
         this.transactionTime = copy.transactionTime;
@@ -182,11 +157,6 @@ public class ExecSession
     public Logger getLogger(Class<?> name)
     {
         return loggerFactory.getLogger(name.getName());
-    }
-
-    public ErrorDataReporter getErrorDataReporter()
-    {
-        return errorDataReporter;
     }
 
     public BufferAllocator getBufferAllocator()
@@ -251,6 +221,5 @@ public class ExecSession
     public void cleanup()
     {
         tempFileSpace.cleanup();
-        errorDataReporter.close();
     }
 }
