@@ -11,8 +11,8 @@ apply plugin: "com.github.jruby-gradle.jar"
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli"), project(":embulk-test")]
-def release_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-test")]
+def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli"), project(":embulk-test"), project(":embulk-jruby-strptime")]
+def release_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-test"), project(":embulk-jruby-strptime")]
 
 allprojects {
     group = 'org.embulk'
