@@ -4,6 +4,8 @@ jdk:
 cache:
   directories:  # run "travis cache --delete" to delete caches
     - $HOME/.gradle
+    - $HOME/gradle
+    - $HOME/.m2
 sudo: false
 install:
   - pip install --user sphinx
