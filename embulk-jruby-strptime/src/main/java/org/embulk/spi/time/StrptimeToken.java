@@ -5,7 +5,7 @@ import static org.embulk.spi.time.StrptimeFormat.*;
 /**
  * This class is ported from org.jruby.util.RubyDateFormatter.Token in JRuby
  * 9.1.5.0 and modified for StrptimeParser under EPL.
- * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java
+ * @see <a href="https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java">RubyDateFormatter.java</a>
  *
  * TODO
  * This class is tentatively required for {@code StrptimeParser} class.
