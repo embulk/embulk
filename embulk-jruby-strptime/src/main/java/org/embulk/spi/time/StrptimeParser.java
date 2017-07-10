@@ -14,7 +14,7 @@ import org.embulk.spi.time.lexer.StrptimeLexer;
 
 /**
  * This is Java implementation of ext/date/date_strptime.c in Ruby v2.3.1.
- * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c
+ * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c">date_strptime.c</a>
  *
  * TODO
  * This class is tentatively required for {@code TimestampParser} class.
@@ -44,7 +44,7 @@ public class StrptimeParser
 
     /**
      * Ported Date::Format::Bag from JRuby 9.1.5.0's lib/ruby/stdlib/date/format.rb.
-     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb
+     * @see <a href="https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb">format.rb</a>
      */
     public static class FormatBag
     {
@@ -240,7 +240,7 @@ public class StrptimeParser
     /**
      * Ported from org.jruby.util.RubyDateFormatter#addToPattern in JRuby 9.1.5.0
      * under EPL.
-     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java
+     * @see <a href="https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java">RubyDateFormatter.java</a>
      */
     private void addToPattern(final List<StrptimeToken> compiledPattern, final String str)
     {
@@ -258,7 +258,7 @@ public class StrptimeParser
     /**
      * Ported from org.jruby.util.RubyDateFormatter#compilePattern in JRuby 9.1.5.0
      * under EPL.
-     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java
+     * @see <a href="https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/core/src/main/java/org/jruby/util/RubyDateFormatter.java">RubyDateFormatter.java</a>
      */
     public List<StrptimeToken> compilePattern(final String pattern)
     {
@@ -718,7 +718,7 @@ public class StrptimeParser
 
         /**
          * Ported read_digits in MRI 2.3.1's ext/date/date_strptime.c
-         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c">date_strftime.c</a>
          */
         private long readDigits(final int len)
         {
@@ -750,7 +750,7 @@ public class StrptimeParser
 
         /**
          * Ported from READ_DIGITS_MAX in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
-         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c">date_strftime.c</a>
          */
         private long readDigitsMax()
         {
@@ -780,7 +780,7 @@ public class StrptimeParser
 
         /**
          * Ported from num_pattern_p in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
-         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c">date_strftime.c</a>
          */
         private static boolean isNumberPattern(final List<StrptimeToken> compiledPattern, final int i)
         {
@@ -838,7 +838,7 @@ public class StrptimeParser
 
         /**
          * Ported from valid_pattern_p in MRI 2.3.1's ext/date/date_strptime.c under BSDL.
-         * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c
+         * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strftime.c">date_strftime.c</a>
          */
         private static boolean validRange(long v, int lower, int upper)
         {

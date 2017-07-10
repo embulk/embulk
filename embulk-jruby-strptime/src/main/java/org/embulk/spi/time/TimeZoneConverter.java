@@ -3,7 +3,7 @@ package org.embulk.spi.time;
 /**
  * This is utility class to convert given timezone into integer based timezone
  * diff. It's ported from ext/date/date_parse.c in MRI 2.3.1 under BSDL.
- * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_parse.c
+ * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_parse.c">date_parse.c</a>.
  *
  * TODO
  * This class is tentatively required for {@code StrptimeParser} class.

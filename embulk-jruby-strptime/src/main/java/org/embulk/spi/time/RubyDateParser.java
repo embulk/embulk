@@ -30,8 +30,8 @@ public class RubyDateParser
      * Date._strptime method in JRuby 9.1.5.0's lib/ruby/stdlib/date/format.rb is replaced
      * with this method. This is Java implementation of date__strptime method in MRI 2.3.1's
      * ext/date/date_strptime.c.
-     * @see https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb
-     * @see https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c
+     * @see <a href="https://github.com/jruby/jruby/blob/036ce39f0476d4bd718e23e64caff36bb50b8dbc/lib/ruby/stdlib/date/format.rb">format.rb</a>
+     * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_strptime.c">date_strptime.c</a>
      */
     public HashMap<String, Object> parse(ThreadContext context, final String format, final String text)
     {
