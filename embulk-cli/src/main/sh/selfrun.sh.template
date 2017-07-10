@@ -64,7 +64,7 @@ done
 if test -z ${EMBULK_BUNDLE_PATH}; then
     unset EMBULK_BUNDLE_PATH
     unset BUNDLE_GEMFILE
-    GEM_HOME="`cd && pwd`/.embulk/jruby/`java -cp $0 org.jruby.Main -e 'print RbConfig::CONFIG["ruby_version"]'`"
+    GEM_HOME="`cd && pwd`/.embulk/jruby/<%= ruby_version %>"
     export GEM_HOME
     GEM_PATH=""
     export GEM_PATH
