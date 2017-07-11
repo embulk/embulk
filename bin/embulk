@@ -1,22 +1,33 @@
 #!/usr/bin/env ruby
 
 if RUBY_PLATFORM =~ /java/i
-  if ENV['EMBULK_BIN_ENABLE_BUNDLE'] == File.expand_path(__FILE__)
-    # bin/embulk is run by CRuby (embulk gem for CRuby is installed). enable embulk_bundle.
-    ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
-    # include -cp CLASSPATH to LOAD_PATH so that embulk_bundle.rb can load bundler included in embulk-core.jar
-    $LOAD_PATH << "uri:classloader:/"
+  STDERR.puts "################################################################################"
+  STDERR.puts "[WARN] embulk.gem is deprecated, and will be removed from v0.9."
+  STDERR.puts "[WARN] embulk.gem's bin/embulk will be also removed from v0.9."
+  STDERR.puts "[WARN] Use the jar version installed from http://dl.embulk.org/ instead."
+  STDERR.puts "[WARN] See the issue and comment at: https://github.com/embulk/embulk/issues/628"
+  STDERR.puts "################################################################################"
+  STDERR.puts ""
 
-    # Handle environment variables before entering embulk_bundle.rb.
+  require 'java'
+
+  if ENV['EMBULK_BIN_ENABLE_BUNDLE'] == File.expand_path(__FILE__)
+    # bin/embulk is started by CRuby (embulk gem for CRuby is installed), and re-run by JRuby at the end of the script.
+    # Bundler may be enabled in this path.
+    ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
+
+    # Handle environment variables before entering org.embulk.cli.EmbulkBundle.
     # See: https://github.com/embulk/embulk/pull/604
 
     bundle_path = ENV['EMBULK_BUNDLE_PATH'].to_s
     bundle_path = nil if bundle_path.empty?
 
     # Search for -b or --bundle, and remove it.
-    if ARGV.find_index {|arg| arg == '-b' || arg == '--bundle' }
-      ARGV.slice!(bundle_path_index, 2)[1]
+    bundle_option_index = ARGV.find_index {|arg| arg == '-b' || arg == '--bundle' }
+    if bundle_option_index
+      ARGV.slice!(bundle_option_index, 2)[1]
     end
+
     if bundle_path
       ENV['EMBULK_BUNDLE_PATH'] = bundle_path
       ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(bundle_path, "Gemfile")
@@ -33,9 +44,10 @@ if RUBY_PLATFORM =~ /java/i
       ENV.delete('BUNDLE_GEMFILE')
     end
 
-    require_relative '../lib/embulk/command/embulk_bundle'
+    Java::org.embulk.cli.EmbulkBundle::checkBundle(ARGV, Java::JavaUtil::ArrayList.new)
   else
-    # bin/embulk is run by JRuby (embulk gem for JRuby is installed). disable embulk_bundle not to bother the JRuby's bundler
+    # bin/embulk is started by JRuby (embulk gem for JRuby is installed).
+    # Bundler must be disabled in this path not to bother the JRuby's bundler.
     $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
     require 'embulk/command/embulk_main'
   end
