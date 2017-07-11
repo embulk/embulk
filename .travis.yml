@@ -4,11 +4,13 @@ jdk:
 cache:
   directories:  # run "travis cache --delete" to delete caches
     - $HOME/.gradle
+    - $HOME/gradle
+    - $HOME/.m2
 sudo: false
 install:
   - pip install --user sphinx
 script:
-  - ./gradlew --info check rubyTest
+  - ./gradlew --info $GRADLE_TASK
 after_success:
   - PATH="$HOME/.local/bin:$PATH" ./embulk-docs/push-gh-pages.sh
 env:
@@ -16,3 +18,10 @@ env:
     - GIT_USER_NAME=travis
     - GIT_USER_EMAIL=travis@embulk.org
     - secure: K5qT2PcCP/40dNW+1H4NZ6y1+GAZbyP/lMQ1tSMsAICGkMQ/A+Mp5wtnIGIsAf6JGcJ1PvpCoLE1V6wKFL5fEwxi4SRcTnZTh9PkeAk8dgezOMoX4EqeZiQAYv4MM2zKL+Gr6QivjmRA7I5jrZCo8JyaA5XfQ7ygjICKNJy8NaE=
+  matrix:
+    - GRADLE_TASK=':embulk-core:check'
+    - GRADLE_TASK=':embulk-standards:check'
+    - GRADLE_TASK=':embulk-jruby-strptime:check'
+    - GRADLE_TASK=':embulk-test:check'
+    - GRADLE_TASK=':embulk-cli:check'
+    - GRADLE_TASK='rubyTest'
