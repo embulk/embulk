@@ -40,7 +40,11 @@ public class SelfrunTest {
             .replaceAll("java ",
                         "java -classpath "
                         + classpath.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\")
-                        + " org.embulk.cli.DummyMain ");
+                        + " org.embulk.cli.DummyMain ")
+            // The following version string emulates RbConfig::CONFIG["ruby_version"].
+            // RbConfig::CONFIG["ruby_version"] is different from org.jruby.runtime.Constants.RUBY_VERSION.
+            // https://github.com/jruby/jruby/blob/9.1.5.0/core/src/main/java/org/jruby/ext/rbconfig/RbConfigLibrary.java#L229-L235
+            .replace("<%= ruby_version %>", org.jruby.runtime.Constants.RUBY_MAJOR_VERSION + ".0");
 
         // Modify selfrun so that arguments are written in 'args.txt' .
         Files.write(fileSystem.getPath(testSelfrunFile.getAbsolutePath()),
@@ -288,9 +292,9 @@ public class SelfrunTest {
             folder = new File(folder, "embulk-cli");
         }
         if (System.getProperty("file.separator").equals("\\")) {
-            return new File(new File(new File(new File(folder, "src"), "main"), "bat"), "selfrun.bat");
+            return new File(new File(new File(new File(folder, "src"), "main"), "bat"), "selfrun.bat.template");
         } else {
-            return new File(new File(new File(new File(folder, "src"), "main"), "sh"), "selfrun.sh");
+            return new File(new File(new File(new File(folder, "src"), "main"), "sh"), "selfrun.sh.template");
         }
     }
 }
