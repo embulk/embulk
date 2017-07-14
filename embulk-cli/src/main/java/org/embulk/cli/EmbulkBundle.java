@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import org.embulk.EmbulkVersion;
 import org.jruby.RubyInstanceConfig;
 import org.jruby.embed.LocalContextScope;
+import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.PathType;
 import org.jruby.embed.ScriptingContainer;
 import org.jruby.util.cli.Options;
@@ -24,7 +26,10 @@ public class EmbulkBundle
         final String bundlePath = System.getenv("EMBULK_BUNDLE_PATH");
 
         // Running embulk/command/embulk_bundle.rb in CLASSPATH (in the JAR file)
-        final ScriptingContainer jrubyGlobalContainer = new ScriptingContainer(LocalContextScope.SINGLETON);
+        // The JRuby instance is a global singleton so that the settings here affects later execution.
+        // The local variable should be persistent so that local variables are set through ScriptingContainer.put.
+        final ScriptingContainer jrubyGlobalContainer =
+            new ScriptingContainer(LocalContextScope.SINGLETON, LocalVariableBehavior.PERSISTENT);
         final RubyInstanceConfig jrubyGlobalConfig = jrubyGlobalContainer.getProvider().getRubyInstanceConfig();
 
         for (final String jrubyOption : jrubyOptions) {
@@ -41,8 +46,6 @@ public class EmbulkBundle
                 System.err.println("");
             }
         }
-
-        jrubyGlobalContainer.setArgv(removeBundleOption(embulkArgs));
 
         if (bundlePath != null) {
             /* Environment variables are set in the selfrun script:
@@ -78,7 +81,8 @@ public class EmbulkBundle
             //   end
             //
             // TODO: Consider handling LoadError or similar errors.
-            jrubyGlobalContainer.runScriptlet(PathType.CLASSPATH, "embulk/command/embulk_main.rb");
+            final EmbulkRun runner = new EmbulkRun(EmbulkVersion.VERSION, jrubyGlobalContainer);
+            runner.run(removeBundleOption(embulkArgs), jrubyOptions);
         }
         else {
             /* Environment variables are set in the selfrun script:
@@ -104,14 +108,15 @@ public class EmbulkBundle
 
             // NOTE: It was written in Ruby as follows:
             //   require 'embulk/command/embulk_main'
-            jrubyGlobalContainer.runScriptlet(PathType.CLASSPATH, "embulk/command/embulk_main.rb");
+            final EmbulkRun runner = new EmbulkRun(EmbulkVersion.VERSION, jrubyGlobalContainer);
+            runner.run(removeBundleOption(embulkArgs), jrubyOptions);
         }
     }
 
     private static final class UnrecognizedJRubyOptionException extends Exception {}
     private static final class NotWorkingJRubyOptionException extends Exception {}
 
-    private static String[] removeBundleOption(final String[] args)
+    private static List<String> removeBundleOption(final String[] args)
     {
         final ArrayList<String> removed = new ArrayList<String>();
 
@@ -127,7 +132,7 @@ public class EmbulkBundle
                 removed.add(arg);
             }
         }
-        return removed.toArray(new String[removed.size()]);
+        return Collections.unmodifiableList(removed);
     }
 
     private static void processJRubyOption(final String jrubyOption, final RubyInstanceConfig jrubyGlobalConfig)

@@ -26,12 +26,11 @@ public class EmbulkSelfUpdate
     // TODO(dmikurube): Stop catching Exceptions here when embulk_run.rb is replaced to Java.
     public void updateSelf(final String runningVersionString,
                            final String specifiedVersionString,
-                           final String embulkRunRubyPathString,
                            final boolean isForced)
             throws IOException, URISyntaxException
     {
         try {
-            updateSelfWithExceptions(runningVersionString, specifiedVersionString, embulkRunRubyPathString, isForced);
+            updateSelfWithExceptions(runningVersionString, specifiedVersionString, isForced);
         }
         catch (Throwable ex) {
             ex.printStackTrace();
@@ -41,7 +40,6 @@ public class EmbulkSelfUpdate
 
     private void updateSelfWithExceptions(final String runningVersionString,
                                           final String specifiedVersionString,
-                                          final String embulkRunRubyPathString,
                                           final boolean isForced)
             throws IOException, URISyntaxException
     {
@@ -50,17 +48,6 @@ public class EmbulkSelfUpdate
 
         if ((!Files.exists(jarPathJava)) || (!Files.isRegularFile(jarPathJava))) {
             throw exceptionNoSingleJar();
-        }
-
-        if (embulkRunRubyPathString != null) {
-            final String[] splitRubyFile = embulkRunRubyPathString.split("!", 2);
-            if (splitRubyFile.length < 2) {
-                throw exceptionNoSingleJar();
-            }
-            final Path jarPathRuby = Paths.get(splitRubyFile[0]);
-            if (!jarPathJava.equals(jarPathRuby)) {
-                throw exceptionNoSingleJar();
-            }
         }
 
         final String targetVersionString;
