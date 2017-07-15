@@ -161,14 +161,14 @@ public class EmbulkCommandLineParser
 
     public void printHelp(final PrintWriter printWriter)
     {
-        final CliHelpFormatterWithHelpMessages helpFormatter = new CliHelpFormatterWithHelpMessages("Usage: ");
+        final CliHelpFormatterWithHelpMessages helpFormatter = new CliHelpFormatterWithHelpMessages("Usage: ", 32);
         helpFormatter.printHelp(printWriter,  // PrintWriter pw
                                 this.width,  // int width
                                 this.usage,  // String cmdLineSyntax
                                 "",  // String header
                                 this.cliOptions,  // Options options
                                 4,  // int leftPad
-                                3,  // int descPad
+                                5,  // int descPad
                                 ""  // String footer
                                 );
     }

@@ -103,7 +103,7 @@ public class EmbulkRun
 
         // TODO: Revisit the width. JLine may help. https://github.com/jline
         parserBuilder
-            .setWidth(100)
+            .setWidth(160)
             .addHelpMessageLine("  Help:")
             .addOptionDefinition(OptionDefinition.defineHelpOption("h", "help", "Print help."))
             .addHelpMessageLine("");

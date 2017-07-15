@@ -22,9 +22,10 @@ import org.apache.commons.cli.Options;
 final class CliHelpFormatterWithHelpMessages
         extends HelpFormatter
 {
-    CliHelpFormatterWithHelpMessages(final String syntaxPrefix)
+    CliHelpFormatterWithHelpMessages(final String syntaxPrefix, final int prefixWidth)
     {
         super();
+        this.prefixWidth = prefixWidth;
         this.setSyntaxPrefix(syntaxPrefix);
     }
 
@@ -52,7 +53,6 @@ final class CliHelpFormatterWithHelpMessages
         printWriter.flush();
     }
 
-    // TODO: Render the help message in the same way as Ruby optparse.
     @Override
     protected final StringBuffer renderOptions(
             final StringBuffer buffer,
@@ -107,6 +107,10 @@ final class CliHelpFormatterWithHelpMessages
             }
         }
 
+        if (maxOptionLinePrefixLength < this.prefixWidth) {
+            maxOptionLinePrefixLength = this.prefixWidth;
+        }
+
         // The second pass: builds all lines both from options and help messages.
         for (final Option option : allOptions) {
             if (option instanceof HelpMessageAsCliOption) {
@@ -132,4 +136,6 @@ final class CliHelpFormatterWithHelpMessages
         }
         return buffer;
     }
+
+    private final int prefixWidth;
 }
