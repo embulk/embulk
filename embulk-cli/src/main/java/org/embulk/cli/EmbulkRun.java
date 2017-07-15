@@ -634,7 +634,7 @@ public class EmbulkRun
         //   # only for help message. implemented at lib/embulk/command/embulk_bundle.rb
         // end
         parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-            "B", "bundle", "BUNDLE_DIR", "Path to a Gemfile directory (create one using \"embulk mkbundle\" command)",
+            "b", "bundle", "BUNDLE_DIR", "Path to a Gemfile directory (create one using \"embulk mkbundle\" command)",
             new OptionBehavior()
             {
                 public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
