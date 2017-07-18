@@ -252,6 +252,10 @@ project(':embulk-cli') {
         // - embulk-core: MavenPluginSource and the related (from v0.8.26)
         relocate 'org.eclipse.aether', 'org.embulk.third_party.org.eclipse.aether'
 
+        // 'org.apache.commons.cli' is used in:
+        // - embulk-cli: EmbulkCommandLineParser (from v0.8.28)
+        relocate 'org.apache.commons.cli', 'org.embulk.third_party.org.apache.commons.cli'
+
         // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
         // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
         manifest {
