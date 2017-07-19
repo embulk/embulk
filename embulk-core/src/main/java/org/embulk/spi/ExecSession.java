@@ -231,6 +231,9 @@ public class ExecSession
 
     public void cleanup()
     {
+        if (errorDataReporter != null) {
+            errorDataReporter.cleanup();
+        }
         tempFileSpace.cleanup();
     }
 }

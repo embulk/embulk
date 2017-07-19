@@ -6,40 +6,44 @@ import org.embulk.config.TaskSource;
 import org.embulk.spi.ErrorDataPlugin;
 import org.embulk.spi.ErrorDataReporter;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 public class StdoutErrorDataPlugin
         implements ErrorDataPlugin
 {
     @Override
-    public TaskSource createTaskSource(final ConfigSource config)
+    public TaskSource configureTaskSource(final ConfigSource config)
     {
         return config.loadConfig(Task.class).dump();
     }
 
     @Override
-    public ErrorDataReporter open(final TaskSource taskSource)
+    public ErrorDataReporter open(final TaskSource task)
     {
         return new StdoutErrorDataReporter();
     }
 
+    @ThreadSafe
     private static class StdoutErrorDataReporter
             implements ErrorDataReporter
     {
-
         @Override
-        public void skip(String errorData)
+        public void skip(String skipped)
         {
-            System.out.println(errorData);
+            System.out.println("StdoutErrorDataReporter#skip");
+            System.out.println(skipped);
         }
 
         @Override
         public void close()
         {
+            System.out.println("StdoutErrorDataReporter#close");
         }
 
         @Override
-        public void commit()
+        public void cleanup()
         {
-
+            System.out.println("StdoutErrorDataReporter#cleanup");
         }
     }
 }

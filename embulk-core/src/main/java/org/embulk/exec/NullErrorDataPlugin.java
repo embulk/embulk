@@ -38,7 +38,7 @@ public class NullErrorDataPlugin
         }
 
         @Override
-        public void commit()
+        public void cleanup()
         {
         }
     }
