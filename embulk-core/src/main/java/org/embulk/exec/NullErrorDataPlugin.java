@@ -1,4 +1,4 @@
-package org.embulk.standards;
+package org.embulk.exec;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
@@ -6,29 +6,29 @@ import org.embulk.config.TaskSource;
 import org.embulk.spi.ErrorDataPlugin;
 import org.embulk.spi.ErrorDataReporter;
 
-public class StdoutErrorDataPlugin
-        implements ErrorDataPlugin
+public class NullErrorDataPlugin
+    implements ErrorDataPlugin
 {
+
     @Override
-    public TaskSource createTaskSource(final ConfigSource config)
+    public TaskSource createTaskSource(ConfigSource configSource)
     {
-        return config.loadConfig(Task.class).dump();
+        return configSource.loadConfig(Task.class).dump();
     }
 
     @Override
-    public ErrorDataReporter open(final TaskSource taskSource)
+    public ErrorDataReporter open(TaskSource taskSource)
     {
-        return new StdoutErrorDataReporter();
+        return null;
     }
 
-    private static class StdoutErrorDataReporter
+    public static class NullErrorDataReporter
             implements ErrorDataReporter
     {
 
         @Override
         public void skip(String errorData)
         {
-            System.out.println(errorData);
         }
 
         @Override
@@ -39,7 +39,6 @@ public class StdoutErrorDataPlugin
         @Override
         public void commit()
         {
-
         }
     }
 }

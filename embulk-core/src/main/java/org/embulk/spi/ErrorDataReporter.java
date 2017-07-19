@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
 public interface ErrorDataReporter
-    extends AutoCloseable
+        extends AutoCloseable
 {
     void skip(String errorData); // TODO should be changed
     //void skip(Buffer errorBufferData);

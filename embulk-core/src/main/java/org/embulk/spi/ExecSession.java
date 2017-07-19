@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import org.embulk.spi.util.DefaultErrorDataReporter;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -35,6 +34,8 @@ public class ExecSession
     private final TempFileSpace tempFileSpace;
 
     private final boolean preview;
+
+    private ErrorDataReporter errorDataReporter;
 
     @Deprecated
     public interface SessionTask
@@ -206,6 +207,16 @@ public class ExecSession
         config.set("timezone", timezone.getID());
         FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
         return new TimestampFormatter(format, formatterTask);
+    }
+
+    public void setErrorDataReporter(final ErrorDataReporter errorDataReporter)
+    {
+        this.errorDataReporter = errorDataReporter;
+    }
+
+    public ErrorDataReporter getErrorDataReporter()
+    {
+        return this.errorDataReporter;
     }
 
     public TempFileSpace getTempFileSpace()
