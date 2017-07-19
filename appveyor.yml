@@ -4,18 +4,18 @@ build:
   verbosity: detailed
 
 install:
- - ps: $zipPath = "$($env:USERPROFILE)\Handle.zip"
- - ps: (New-Object Net.WebClient).DownloadFile('https://download.sysinternals.com/files/Handle.zip', $zipPath)
- - ps: 7z x $zipPath -y -o"$env:APPVEYOR_BUILD_FOLDER" | Out-Null
+ - if not exist C:\Users\appveyor\handle mkdir C:\Users\appveyor\handle
+ - if not exist C:\Users\appveyor\handle\handle.exe appveyor DownloadFile "https://live.sysinternals.com/handle.exe" -FileName "C:\Users\appveyor\handle\handle.exe"
 
 # To avoid call-selfrun.bat FileNotFound exception, it installs and uses handle.exe as workaround provided by AppVeyor support.
 # see http://help.appveyor.com/discussions/problems/5975-the-process-cannot-access-the-file-because-it-is-being-used-by-another-process
 build_script:
-  - handle.exe -a -u C:\projects\embulk\embulk-cli\build\classes\test\org\embulk\cli\call-selfrun.bat -nobanner
+  - C:\Users\appveyor\handle\handle.exe -a -u C:\projects\embulk\embulk-cli\build\classes\test\org\embulk\cli\call-selfrun.bat -nobanner
   - gradlew.bat --info --no-daemon check rubyTest
 
 cache:
   - C:\Users\appveyor\.gradle
+  - C:\Users\appveyor\handle
 
 environment:
   matrix:
