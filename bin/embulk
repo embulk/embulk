@@ -44,7 +44,10 @@ if RUBY_PLATFORM =~ /java/i
       ENV.delete('BUNDLE_GEMFILE')
     end
 
-    Java::org.embulk.cli.EmbulkBundle::checkBundle(ARGV, Java::JavaUtil::ArrayList.new)
+    require 'embulk/version'
+    Java::org.embulk.cli.EmbulkBundle::checkBundleWithEmbulkVersion(ARGV,
+                                                                    Java::JavaUtil::ArrayList.new,
+                                                                    Embulk::VERSION_INTERNAL)
   else
     # bin/embulk is started by JRuby (embulk gem for JRuby is installed).
     # Bundler must be disabled in this path not to bother the JRuby's bundler.

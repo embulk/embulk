@@ -8,7 +8,18 @@ import org.jruby.embed.ScriptingContainer;
 
 public class EmbulkBundle
 {
-    public static void checkBundle(final String[] embulkArgs, final List<String> jrubyOptions)
+    public static void checkBundle(
+            final String[] embulkArgs,
+            final List<String> jrubyOptions)
+    {
+        checkBundleWithEmbulkVersion(embulkArgs, jrubyOptions, EmbulkVersion.VERSION);
+    }
+
+    // It accepts |embulkVersion| so that it can receive Embulk's version from Ruby (bin/embulk).
+    public static void checkBundleWithEmbulkVersion(
+            final String[] embulkArgs,
+            final List<String> jrubyOptions,
+            final String embulkVersion)
     {
         final String bundlePath = System.getenv("EMBULK_BUNDLE_PATH");
 
@@ -27,7 +38,7 @@ public class EmbulkBundle
         //   require 'embulk/command/embulk_main'
         //
         // TODO: Consider handling LoadError or similar errors.
-        final EmbulkRun runner = new EmbulkRun(EmbulkVersion.VERSION, globalJRubyContainer);
+        final EmbulkRun runner = new EmbulkRun(embulkVersion, globalJRubyContainer);
         runner.run(removeBundleOption(embulkArgs), jrubyOptions);
     }
 
