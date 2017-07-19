@@ -58,6 +58,7 @@ public class StdoutOutputPlugin
 
             public void add(Page page)
             {
+                Exec.getErrorDataReporter().skip("foo 1 at " + Thread.currentThread().getName());
                 reader.setPage(page);
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));

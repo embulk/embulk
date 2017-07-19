@@ -566,19 +566,19 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
-    private ExecutionResult doRun(ConfigSource config)
+    private ExecutionResult doRun(final ConfigSource config)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
-        final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
         try {
-            state.setTransactionStage(TransactionStage.ERROR_DATA_BEGIN);
             ErrorDataReporters.transaction(plugins.getErrorDataPlugin(), task.getErrorDataConfig(), new ErrorDataReporters.Control() {
                 public void run(final TaskSource errorDataTask)
                 {
+                    final ExecutorPlugin exec = newExecutorPlugin(task);
+
                     try (final ErrorDataReporter errorDataReporter = plugins.getErrorDataPlugin().open(errorDataTask)) {
                         state.setErrorDataTaskSource(errorDataTask);
                         Exec.session().setErrorDataReporter(errorDataReporter);
@@ -632,14 +632,12 @@ public class BulkLoader
                             }
                         });
                         state.setInputConfigDiff(inputConfigDiff);
-                        state.setTransactionStage(TransactionStage.ERROR_DATA_COMMIT);
+                        state.setTransactionStage(TransactionStage.CLEANUP);
+
+                        cleanupCommittedTransaction(config, state);
                     }
                 }
             });
-
-            state.setTransactionStage(TransactionStage.CLEANUP);
-
-            cleanupCommittedTransaction(config, state);
 
             return state.buildExecuteResult();
 

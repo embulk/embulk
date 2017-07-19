@@ -2,18 +2,16 @@ package org.embulk.exec;
 
 public enum TransactionStage
 {
-    ERROR_DATA_BEGIN(1),
-    INPUT_BEGIN(2),
-    FILTER_BEGIN(3),
-    EXECUTOR_BEGIN(4),
-    OUTPUT_BEGIN(5),
-    RUN(6),
-    OUTPUT_COMMIT(7),
-    EXECUTOR_COMMIT(8),
-    FILTER_COMMIT(9),
-    INPUT_COMMIT(10),
-    ERROR_DATA_COMMIT(11),
-    CLEANUP(12);
+    INPUT_BEGIN(1),
+    FILTER_BEGIN(2),
+    EXECUTOR_BEGIN(3),
+    OUTPUT_BEGIN(4),
+    RUN(5),
+    OUTPUT_COMMIT(6),
+    EXECUTOR_COMMIT(7),
+    FILTER_COMMIT(8),
+    INPUT_COMMIT(9),
+    CLEANUP(10);
 
     private final int index;
 
