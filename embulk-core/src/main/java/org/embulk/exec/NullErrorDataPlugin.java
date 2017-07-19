@@ -6,26 +6,27 @@ import org.embulk.config.TaskSource;
 import org.embulk.spi.ErrorDataPlugin;
 import org.embulk.spi.ErrorDataReporter;
 
+import javax.annotation.concurrent.ThreadSafe;
+
 public class NullErrorDataPlugin
-    implements ErrorDataPlugin
+        implements ErrorDataPlugin
 {
-
     @Override
-    public TaskSource createTaskSource(ConfigSource configSource)
+    public TaskSource configureTaskSource(final ConfigSource config)
     {
-        return configSource.loadConfig(Task.class).dump();
+        return config.loadConfig(Task.class).dump();
     }
 
     @Override
-    public ErrorDataReporter open(TaskSource taskSource)
+    public ErrorDataReporter open(final TaskSource task)
     {
-        return null;
+        return new NullErrorDataReporter();
     }
 
+    @ThreadSafe
     public static class NullErrorDataReporter
             implements ErrorDataReporter
     {
-
         @Override
         public void skip(String errorData)
         {

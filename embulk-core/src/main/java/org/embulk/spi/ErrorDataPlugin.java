@@ -5,7 +5,7 @@ import org.embulk.config.TaskSource;
 
 public interface ErrorDataPlugin
 {
-    TaskSource createTaskSource(final ConfigSource config);
+    TaskSource configureTaskSource(final ConfigSource config);
 
-    ErrorDataReporter open(final TaskSource taskSource);
+    ErrorDataReporter open(final TaskSource errorDataTask);
 }

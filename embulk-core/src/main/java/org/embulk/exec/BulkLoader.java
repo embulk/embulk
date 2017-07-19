@@ -574,14 +574,16 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
-        state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
+            state.setTransactionStage(TransactionStage.ERROR_DATA_BEGIN);
             ErrorDataReporters.transaction(plugins.getErrorDataPlugin(), task.getErrorDataConfig(), new ErrorDataReporters.Control() {
                 public void run(final TaskSource errorDataTask)
                 {
                     final ErrorDataReporter errorDataReporter = plugins.getErrorDataPlugin().open(errorDataTask);
+                    state.setErrorDataTaskSource(errorDataTask);
                     Exec.session().setErrorDataReporter(errorDataReporter);
 
+                    state.setTransactionStage(TransactionStage.INPUT_BEGIN);
                     ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
                         public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount)
                         {
@@ -630,9 +632,11 @@ public class BulkLoader
                         }
                     });
                     state.setInputConfigDiff(inputConfigDiff);
-                    state.setTransactionStage(TransactionStage.CLEANUP);
+                    state.setTransactionStage(TransactionStage.ERROR_DATA_COMMIT);
                 }
             });
+
+            state.setTransactionStage(TransactionStage.CLEANUP);
 
             cleanupCommittedTransaction(config, state);
 

@@ -59,6 +59,11 @@ public class Exec
         return session().getLogger(name);
     }
 
+    public static ErrorDataReporter getErrorDataReporter()
+    {
+        return session().getErrorDataReporter();
+    }
+
     public static BufferAllocator getBufferAllocator()
     {
         return session().getBufferAllocator();

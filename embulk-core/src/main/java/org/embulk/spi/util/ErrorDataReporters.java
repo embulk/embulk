@@ -4,16 +4,16 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.ErrorDataPlugin;
 
-public class ErrorDataReporters
+public final class ErrorDataReporters
 {
-    public static void transaction(ErrorDataPlugin plugin, ConfigSource config, Control control)
+    public static void transaction(final ErrorDataPlugin plugin, final ConfigSource config, final Control control)
     {
-        final TaskSource taskSource = plugin.createTaskSource(config);
+        final TaskSource taskSource = plugin.configureTaskSource(config);
         control.run(taskSource);
     }
 
     public interface Control
     {
-        public void run(TaskSource taskSource);
+        void run(final TaskSource task);
     }
 }
