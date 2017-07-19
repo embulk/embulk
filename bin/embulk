@@ -49,7 +49,16 @@ if RUBY_PLATFORM =~ /java/i
     # bin/embulk is started by JRuby (embulk gem for JRuby is installed).
     # Bundler must be disabled in this path not to bother the JRuby's bundler.
     $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
-    require 'embulk/command/embulk_main'
+    Dir.glob("#{File.expand_path('../classpath', File.dirname(__FILE__))}/*").each do |f_jar|
+      $CLASSPATH << f_jar
+    end
+    require 'embulk/version'
+    # The ScriptingContainer instance below is the same JRuby instance with the one running this bin/embulk itself
+    # as it's LocalContextScope.SINGLETON. The instance then inherits $LOAD_PATH and $CLASSPATH configured above.
+    global_jruby_container = Java::org.jruby.embed.ScriptingContainer.new(
+      Java::org.jruby.embed.LocalContextScope::SINGLETON, Java::org.jruby.embed.LocalVariableBehavior::PERSISTENT)
+    embulk_run = Java::org.embulk.cli.EmbulkRun.new(Embulk::VERSION_INTERNAL, global_jruby_container)
+    embulk_run.run(Java::JavaUtil::ArrayList.new(ARGV), Java::JavaUtil::ArrayList.new)
   end
   exit 0
 end
