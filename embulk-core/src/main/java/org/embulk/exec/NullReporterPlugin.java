@@ -3,13 +3,14 @@ package org.embulk.exec;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.SkipRecordReporter;
-import org.embulk.spi.SkipRecordReporterPlugin;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
+import org.embulk.spi.util.Reporters;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-public class NullSkipRecordReporterPlugin
-        implements SkipRecordReporterPlugin
+public class NullReporterPlugin
+        implements ReporterPlugin
 {
     @Override
     public TaskSource configureTaskSource(final ConfigSource config)
@@ -18,28 +19,29 @@ public class NullSkipRecordReporterPlugin
     }
 
     @Override
-    public SkipRecordReporter open(final TaskSource task)
+    public Reporter open(final TaskSource task)
     {
-        return new NullSkipRecordReporter();
+        return new NullReporter();
     }
 
     @ThreadSafe
-    public static class NullSkipRecordReporter
-            implements SkipRecordReporter
+    public static class NullReporter
+            implements Reporter
     {
         @Override
         public void skip(String errorData)
-        {
-        }
+        { }
+
+        @Override
+        public void log(Reporters.ReportLevel level, String eventLog)
+        { }
 
         @Override
         public void close()
-        {
-        }
+        { }
 
         @Override
         public void cleanup()
-        {
-        }
+        { }
     }
 }

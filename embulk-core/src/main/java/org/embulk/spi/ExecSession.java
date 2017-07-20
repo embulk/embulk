@@ -215,9 +215,9 @@ public class ExecSession
         this.reporters = reporters;
     }
 
-    public Reporters getReporters()
+    public Reporter getReporter(Reporters.Type type)
     {
-        return this.reporters;
+        return this.reporters.getReporter(type);
     }
 
     public TempFileSpace getTempFileSpace()

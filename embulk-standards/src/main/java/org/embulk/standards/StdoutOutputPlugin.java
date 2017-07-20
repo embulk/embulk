@@ -14,6 +14,7 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.util.PagePrinter;
+import org.embulk.spi.util.Reporters;
 
 public class StdoutOutputPlugin
         implements OutputPlugin
@@ -58,7 +59,7 @@ public class StdoutOutputPlugin
 
             public void add(Page page)
             {
-                Exec.session().getReporters().skip("foo 1 at " + Thread.currentThread().getName());
+                Exec.getReporter(Reporters.Type.SKIPPED_DATA).skip("foo 1 at " + Thread.currentThread().getName());
                 reader.setPage(page);
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));

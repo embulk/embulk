@@ -1,7 +1,6 @@
 package org.embulk.exec;
 
-import org.embulk.spi.EventLogReporterPlugin;
-import org.embulk.spi.SkipRecordReporterPlugin;
+import org.embulk.spi.ReporterPlugin;
 import org.slf4j.ILoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Module;
@@ -43,8 +42,7 @@ public class ExecModule
         registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
         // null reporter plugins
-        registerPluginTo(binder, SkipRecordReporterPlugin.class, "null", NullSkipRecordReporterPlugin.class);
-        registerPluginTo(binder, EventLogReporterPlugin.class, "null", NullEventLogReporterPlugin.class);
+        registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

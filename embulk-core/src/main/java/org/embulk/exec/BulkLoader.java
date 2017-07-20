@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
@@ -18,10 +19,8 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.EventLogReporterPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
-import org.embulk.spi.Reporter;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -30,11 +29,11 @@ import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
-import org.embulk.spi.SkipRecordReporterPlugin;
 import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.util.ReporterPlugins;
 import org.embulk.spi.util.Reporters;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
@@ -81,12 +80,12 @@ public class BulkLoader
         private final Logger logger;
 
         private final ProcessPluginSet plugins;
-        private volatile Map<String, PluginType> reporterPluginTypes;
+        private volatile Map<Reporters.Type, PluginType> reporterPluginTypes;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
-        private volatile Map<String, TaskSource> reporterTaskSources;
+        private volatile Map<Reporters.Type, TaskSource> reporterTaskSources;
         private volatile List<Schema> schemas;
         private volatile Schema executorSchema;
         private volatile TransactionStage transactionStage;
@@ -108,7 +107,7 @@ public class BulkLoader
             return logger;
         }
 
-        public void setReporterPluginTypes(Map<String, PluginType> reporterPluginTypes)
+        public void setReporterPluginTypes(Map<Reporters.Type, PluginType> reporterPluginTypes)
         {
             this.reporterPluginTypes = reporterPluginTypes;
         }
@@ -143,7 +142,7 @@ public class BulkLoader
             this.filterTaskSources = filterTaskSources;
         }
 
-        public void setReporterTaskSources(Map<String, TaskSource> reporterTaskSources)
+        public void setReporterTaskSources(Map<Reporters.Type, TaskSource> reporterTaskSources)
         {
             this.reporterTaskSources = reporterTaskSources;
         }
@@ -562,35 +561,23 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
-    private Map<String, ReporterPlugin> newReporterPlugins(final Map<String, ConfigSource> configs)
+    private Map<Reporters.Type, ReporterPlugin> newReporterPlugins(final Map<Reporters.Type, ConfigSource> configs)
     {
-        final ImmutableMap.Builder<String, ReporterPlugin> plugins = ImmutableMap.builder();
+        final ImmutableMap.Builder<Reporters.Type, ReporterPlugin> plugins = ImmutableMap.builder();
 
-        /* TODO
-        for (final Reporter.ReportType reportType : Reporter.ReportType.values()) {
-            final String reportTypeName = reportType.getType();
-            final ConfigSource config = configs.getOrDefault(reportTypeName, Exec.newConfigSource());
-            plugins.put(reportTypeName, newReporterPlugin(config));
-        }
-        */
-
-        { // TODO workaround
-            final ConfigSource config = configs.getOrDefault("skip_record", Exec.newConfigSource());
-            plugins.put("skip_record", newReporterPlugin(SkipRecordReporterPlugin.class, config));
+        for (final Reporters.Type type : Reporters.Type.values()) {
+            // if the reporter type doesn't appear in Embulk config, it creates new empty config, by default.
+            final ConfigSource config = configs.get(type);
+            plugins.put(type, newReporterPlugin(config));
         }
 
-        { // TODO workaround
-            final ConfigSource config = configs.getOrDefault("event_log", Exec.newConfigSource());
-            plugins.put("event_log", newReporterPlugin(EventLogReporterPlugin.class, config));
-        }
-
-        return plugins.build();
+        return Maps.immutableEnumMap(plugins.build());
     }
 
-    // TODO
-    private ReporterPlugin newReporterPlugin(final Class pluginClass, final ConfigSource config)
+    private ReporterPlugin newReporterPlugin(final ConfigSource config)
     {
-        return (ReporterPlugin) Exec.newPlugin(pluginClass, config.get(PluginType.class, "type", PluginType.NULL));
+        // if 'type' attribute doesn't appear in the reporter section, it returns 'null' reporter plugin.
+        return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.NULL));
     }
 
     private ExecutionResult doRun(final ConfigSource config)
@@ -600,16 +587,16 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<String, ConfigSource> reporterConfigs = Reporters.extractConfigSources(task.getReportersConfig());
-        final Map<String, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
+        final Map<Reporters.Type, ConfigSource> reporterConfigs = ReporterPlugins.extractConfigSources(task.getReportersConfig());
+        final Map<Reporters.Type, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
 
         try {
-            Reporters.transaction(reporterPlugins, reporterConfigs, new Reporters.Control() {
-                public void run(final Map<String, TaskSource> reporterTasks)
+            ReporterPlugins.transaction(reporterPlugins, reporterConfigs, new ReporterPlugins.Control() {
+                public void run(final Map<Reporters.Type, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    try (final Reporters reporters = Reporters.createReporters(reporterPlugins, reporterTasks)) {
+                    try (final Reporters reporters = ReporterPlugins.createReporters(reporterPlugins, reporterTasks)) {
                         state.setReporterTaskSources(reporterTasks);
                         Exec.session().setReporters(reporters);
 

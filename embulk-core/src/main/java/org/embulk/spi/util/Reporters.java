@@ -1,103 +1,76 @@
 package org.embulk.spi.util;
 
-import com.google.common.collect.ImmutableMap;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.EventLogReporter;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.spi.Reporter;
-import org.embulk.spi.ReporterPlugin;
-import org.embulk.spi.SkipRecordReporter;
 
 import java.util.Map;
 
 public final class Reporters
         implements AutoCloseable
 {
-    public static Map<String, ConfigSource> extractConfigSources(final ConfigSource reportersConfig)
+    public enum Type
     {
-        final ImmutableMap.Builder<String, ConfigSource> builder = ImmutableMap.builder();
+        SKIPPED_DATA("skipped_data"),
+        EVENT_LOG("event_log"); // TODO NOTIFICATION
 
-        for (final Reporter.ReportType type : Reporter.ReportType.values()) {
-            final String reportType = type.getType();
-            if (reportersConfig.has(reportType)) { // TODO nullable?
-                final ConfigSource config = reportersConfig.getNested(reportType);
-                builder.put(reportType, config);
+        private final String type;
+
+        Type(final String type)
+        {
+            this.type = type;
+        }
+
+        @JsonCreator
+        public static Type fromString(final String type)
+        {
+            switch (type) {
+                case "skipped_data":
+                    return SKIPPED_DATA;
+                case "event_log":
+                    return EVENT_LOG;
+                default:
+                    throw new IllegalArgumentException();
             }
         }
 
-        return builder.build();
-    }
-
-    public static void transaction(final Map<String, ReporterPlugin> plugins, final Map<String, ConfigSource> configs, final Control control)
-    {
-        final ImmutableMap.Builder<String, TaskSource> builder = ImmutableMap.builder();
-
-        for (final Reporter.ReportType type : Reporter.ReportType.values()) {
-            final String typeName = type.getType();
-            final ConfigSource config = configs.get(typeName);
-            final TaskSource task = configureTaskSource(plugins.get(typeName), config);
-            builder.put(typeName, task);
+        @JsonValue
+        public String toString()
+        {
+            return this.type;
         }
-
-        control.run(builder.build());
     }
 
-    private static TaskSource configureTaskSource(final ReporterPlugin plugin, final ConfigSource config)
+    public enum ReportLevel
     {
-        return plugin.configureTaskSource(config);
+        DEBUG, INFO, WARN, ERROR, FATAL; // TODO
     }
 
-    public static Reporters createReporters(final Map<String, ReporterPlugin> plugins, final Map<String, TaskSource> tasks)
+    private final Map<Reporters.Type, Reporter> reporters;
+
+    Reporters(final Map<Reporters.Type, Reporter> reporters)
     {
-        final Reporter skipRecordReporter = plugins.get(Reporter.ReportType.SKIP_RECORD.getType()).open(
-                tasks.get(Reporter.ReportType.SKIP_RECORD.getType()));
-        final Reporter eventLogReporter = plugins.get(Reporter.ReportType.EVENT_LOG.getType()).open(
-                tasks.get(Reporter.ReportType.EVENT_LOG.getType()));
-
-        // TODO add? exception?
-
-        return new Reporters(
-                (SkipRecordReporter) skipRecordReporter,
-                (EventLogReporter) eventLogReporter);
+        this.reporters = reporters;
     }
 
-    public interface Control
+    public Reporter getReporter(Reporters.Type type)
     {
-        void run(final Map<String, TaskSource> reporterTasks);
-    }
-
-    private final SkipRecordReporter skipRecordReporter;
-    private final EventLogReporter eventLogReporter;
-
-    private Reporters(
-            final SkipRecordReporter skipRecordReporter,
-            final EventLogReporter eventLogReporter)
-    {
-        this.skipRecordReporter = skipRecordReporter;
-        this.eventLogReporter = eventLogReporter;
-    }
-
-    public void skip(String skipped)
-    {
-        this.skipRecordReporter.skip(skipped);
-    }
-
-    public void log(Reporter.ReportLevel level, String eventLog)
-    {
-        this.eventLogReporter.log(level, eventLog);
+        return this.reporters.get(type);
     }
 
     public void close()
     {
-        this.skipRecordReporter.close();
-        this.eventLogReporter.close();
-        // TODO add? exception?
+        for (final Map.Entry<Reporters.Type, Reporter> e : reporters.entrySet()) {
+            final Reporter reporter = e.getValue();
+            reporter.close(); // TODO exception?
+        }
     }
 
     public void cleanup()
     {
-        this.skipRecordReporter.cleanup();
-        this.eventLogReporter.cleanup();
-        // TODO add? exception?
+        for (final Map.Entry<Reporters.Type, Reporter> e : reporters.entrySet()) {
+            final Reporter reporter = e.getValue();
+            reporter.cleanup(); // TODO exception?
+        }
     }
 }

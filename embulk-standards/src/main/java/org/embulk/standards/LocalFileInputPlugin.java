@@ -26,6 +26,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.Reporter;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.embulk.spi.util.Reporters;
@@ -68,7 +69,8 @@ public class LocalFileInputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        Reporters reporters = Exec.session().getReporters();
+        Reporter reporter = Exec.getReporter(Reporters.Type.EVENT_LOG);
+        reporter.log(Reporters.ReportLevel.INFO, "reporter log");
 
         // list files recursively
         List<String> files = listFiles(task);

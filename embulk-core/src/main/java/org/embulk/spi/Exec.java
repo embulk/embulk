@@ -61,9 +61,9 @@ public class Exec
         return session().getLogger(name);
     }
 
-    public static Reporters getReporters()
+    public static Reporter getReporter(Reporters.Type type)
     {
-        return session().getReporters();
+        return session().getReporter(type);
     }
 
     public static BufferAllocator getBufferAllocator()

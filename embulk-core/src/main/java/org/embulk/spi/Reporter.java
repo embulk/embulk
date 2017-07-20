@@ -1,29 +1,15 @@
 package org.embulk.spi;
 
+import org.embulk.spi.util.Reporters;
+
 public interface Reporter
-        extends AutoCloseable
 {
-    public enum ReportType
-    {
-        SKIP_RECORD("skip_record"), EVENT_LOG("event_log"); // TODO
+    void skip(String skipped); // TODO should be changed
+    //void skip(Buffer errorBufferData);
+    //void skip(Record errorPageData);
 
-        private final String type;
-
-        ReportType(final String type)
-        {
-            this.type = type;
-        }
-
-        public String getType()
-        {
-            return this.type;
-        }
-    }
-
-    public enum ReportLevel
-    {
-        DEBUG, INFO, WARN, ERROR, FATAL; // TODO
-    }
+    void log(Reporters.ReportLevel level, String eventLog);
+    //void log(Reporter.ReportLevel level, Map eventLog); // TODO structure event log
 
     void close(); // TODO should consider about the return type
 
