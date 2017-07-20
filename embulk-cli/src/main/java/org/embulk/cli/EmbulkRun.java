@@ -13,6 +13,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.embulk.EmbulkSetup;
 import org.embulk.cli.parse.EmbulkCommandLineHelpRequired;
 import org.embulk.cli.parse.EmbulkCommandLineParseException;
 import org.embulk.cli.parse.EmbulkCommandLineParser;
@@ -434,24 +435,22 @@ public class EmbulkRun
         case CLEANUP:
         case PREVIEW:
         case GUESS:
-            this.jrubyContainer.runScriptlet("require 'embulk'");
+            // NOTE: When it was in Ruby "require 'embulk'" was required on top for Ruby |Embulk::setup|.
+            // Ruby |Embulk::setup| is now replaced with Java |org.embulk.EmbulkSetup.setup|.
 
             // TODO: Move this to initial JRuby instantiation.
             // reset context class loader set by org.jruby.Main.main to nil. embulk manages
             // multiple classloaders. default classloader should be Plugin.class.getClassloader().
             Thread.currentThread().setContextClassLoader(null);
 
-            this.jrubyContainer.runScriptlet("require 'json'");
+            // NOTE: When it was in Ruby ""require 'json'" was required.
 
             setupLoadPaths(commandLine.getLoadPath(), commandLine.getLoad());
             setupClasspaths(commandLine.getClasspath());
 
-            // call setup after setup_classpaths to allow users to overwrite
+            // call |EmbulkSetup.setup| after setup_classpaths to allow users to overwrite
             // embulk classes
-
-            this.jrubyContainer.put("__internal_system_config__", commandLine.getSystemConfig());
-            this.jrubyContainer.runScriptlet("Embulk.setup(__internal_system_config__.map { |key, value| [key, value.kind_of?(Enumerable) ? Array.new(value) : value] }.to_h)");
-            this.jrubyContainer.remove("__internal_system_config__");
+            EmbulkSetup.setup(commandLine.getSystemConfig(), this.jrubyContainer);
 
             this.jrubyContainer.put("__internal_config_file_path__", commandLine.getArguments().get(0));
             // Java's Map<String, String> works as-is in JRuby.

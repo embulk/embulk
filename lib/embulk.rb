@@ -17,7 +17,7 @@ module Embulk
     end
   end
 
-  def self.require_classpath
+  def self.require_classpath(already_warned=false)
     if __FILE__.include?("!")
       # single jar. __FILE__ should point path/to/embulk.jar!/embulk.rb
       # which means that embulk.jar is already loaded in this JVM.
@@ -28,6 +28,16 @@ module Embulk
     else
       # gem package. __FILE__ should point path/to/embulk/lib/embulk.rb
       # that requires here to load ../classpath/*.jar to start EmbulkEmbed.
+
+      unless already_warned
+        STDERR.puts "################################################################################"
+        STDERR.puts "[WARN] Embulk's gem package is deprecated, and will be removed from v0.9."
+        STDERR.puts "[WARN] Use the jar version installed from http://dl.embulk.org/ instead."
+        STDERR.puts "[WARN] See the issue and comment at: https://github.com/embulk/embulk/issues/628"
+        STDERR.puts "################################################################################"
+        STDERR.puts ""
+      end
+
       gem_root = File.expand_path('..', File.dirname(__FILE__))
       classpath_dir = File.join(gem_root, "classpath")
       jars = Dir.entries(classpath_dir).select{|f| f =~ /\.jar$/ }.sort
@@ -38,27 +48,21 @@ module Embulk
   end
 
   def self.setup(system_config={})
+    STDERR.puts "################################################################################"
+    STDERR.puts "[WARN] Embulk's gem package is deprecated, and will be removed from v0.9."
+    STDERR.puts "[WARN] Use the jar version installed from http://dl.embulk.org/ instead."
+    STDERR.puts "[WARN] See the issue and comment at: https://github.com/embulk/embulk/issues/628"
+    STDERR.puts "################################################################################"
+    STDERR.puts ""
+
     unless RUBY_PLATFORM =~ /java/i
       raise "Embulk.setup works only with JRuby."
     end
 
-    require 'json'
+    # require 'json' -- was required to format the system config into a JSON string.
 
-    require_classpath
+    require_classpath(true)
 
-    systemConfigJson = system_config.merge({
-      # use the global ruby runtime for all ScriptingContainer
-      # injected by org.embulk.jruby.JRubyScriptingModule
-      use_global_ruby_runtime: true
-    }).to_json
-
-    bootstrap = org.embulk.EmbulkEmbed::Bootstrap.new
-    systemConfig = bootstrap.getSystemConfigLoader.fromJsonString(systemConfigJson)
-    bootstrap.setSystemConfig(systemConfig)
-    embed = bootstrap.java_method(:initialize).call  # see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
-
-    # see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
-
-    Embulk.const_set :Runner, EmbulkRunner.new(embed)
+    Java::org.embulk.EmbulkSetup::setupWithNewScriptingContainer(Java::java.util.HashMap.new(system_config))
   end
 end
