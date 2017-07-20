@@ -3,29 +3,27 @@ package org.embulk.standards;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.Reporter;
-import org.embulk.spi.ReporterPlugin;
+import org.embulk.spi.SkipRecordReporter;
+import org.embulk.spi.SkipRecordReporterPlugin;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-public class StdoutReporterPlugin
-        implements ReporterPlugin
+public class StdoutSkipRecordReporterPlugin
+        implements SkipRecordReporterPlugin
 {
-    @Override
     public TaskSource configureTaskSource(final ConfigSource config)
     {
         return config.loadConfig(Task.class).dump();
     }
 
-    @Override
-    public Reporter open(final TaskSource task)
+    public SkipRecordReporter open(final TaskSource task)
     {
-        return new StdoutReporter();
+        return new StdoutSkipRecordReporter();
     }
 
     @ThreadSafe
-    private static class StdoutReporter
-            implements Reporter
+    private static class StdoutSkipRecordReporter
+            implements SkipRecordReporter
     {
         @Override
         public void skip(String skipped)

@@ -1,6 +1,8 @@
 package org.embulk.spi;
 
 import java.util.concurrent.ExecutionException;
+
+import org.embulk.spi.util.Reporters;
 import org.slf4j.Logger;
 import com.google.inject.Injector;
 import org.embulk.config.ModelManager;
@@ -59,9 +61,9 @@ public class Exec
         return session().getLogger(name);
     }
 
-    public static Reporter getErrorDataReporter()
+    public static Reporters getReporters()
     {
-        return session().getReporter();
+        return session().getReporters();
     }
 
     public static BufferAllocator getBufferAllocator()

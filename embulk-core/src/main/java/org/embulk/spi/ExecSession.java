@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import org.embulk.spi.util.Reporters;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -35,7 +36,7 @@ public class ExecSession
 
     private final boolean preview;
 
-    private Reporter reporter;
+    private Reporters reporters;
 
     @Deprecated
     public interface SessionTask
@@ -209,14 +210,14 @@ public class ExecSession
         return new TimestampFormatter(format, formatterTask);
     }
 
-    public void setReporter(final Reporter reporter)
+    public void setReporters(final Reporters reporters)
     {
-        this.reporter = reporter;
+        this.reporters = reporters;
     }
 
-    public Reporter getReporter()
+    public Reporters getReporters()
     {
-        return this.reporter;
+        return this.reporters;
     }
 
     public TempFileSpace getTempFileSpace()
@@ -231,8 +232,8 @@ public class ExecSession
 
     public void cleanup()
     {
-        if (reporter != null) {
-            reporter.cleanup();
+        if (reporters != null) {
+            reporters.cleanup();
         }
         tempFileSpace.cleanup();
     }

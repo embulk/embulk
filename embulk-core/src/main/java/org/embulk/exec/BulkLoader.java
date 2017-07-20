@@ -18,6 +18,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.EventLogReporterPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.Reporter;
@@ -29,6 +30,7 @@ import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.ProcessState;
+import org.embulk.spi.SkipRecordReporterPlugin;
 import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
@@ -564,18 +566,31 @@ public class BulkLoader
     {
         final ImmutableMap.Builder<String, ReporterPlugin> plugins = ImmutableMap.builder();
 
-        for (Reporters.Type type : Reporters.Type.values()) {
-            final ConfigSource config = configs.getOrDefault(type.getTypeName(), Exec.newConfigSource());
-            plugins.put(type.getTypeName(), newReporterPlugin(config));
+        /* TODO
+        for (final Reporter.ReportType reportType : Reporter.ReportType.values()) {
+            final String reportTypeName = reportType.getType();
+            final ConfigSource config = configs.getOrDefault(reportTypeName, Exec.newConfigSource());
+            plugins.put(reportTypeName, newReporterPlugin(config));
+        }
+        */
+
+        { // TODO workaround
+            final ConfigSource config = configs.getOrDefault("skip_record", Exec.newConfigSource());
+            plugins.put("skip_record", newReporterPlugin(SkipRecordReporterPlugin.class, config));
+        }
+
+        { // TODO workaround
+            final ConfigSource config = configs.getOrDefault("event_log", Exec.newConfigSource());
+            plugins.put("event_log", newReporterPlugin(EventLogReporterPlugin.class, config));
         }
 
         return plugins.build();
     }
 
-    private ReporterPlugin newReporterPlugin(final ConfigSource config)
+    // TODO
+    private ReporterPlugin newReporterPlugin(final Class pluginClass, final ConfigSource config)
     {
-        return Exec.newPlugin(ReporterPlugin.class,
-                config.get(PluginType.class, "type", PluginType.NULL));
+        return (ReporterPlugin) Exec.newPlugin(pluginClass, config.get(PluginType.class, "type", PluginType.NULL));
     }
 
     private ExecutionResult doRun(final ConfigSource config)
@@ -583,19 +598,20 @@ public class BulkLoader
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
-
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
+
         final Map<String, ConfigSource> reporterConfigs = Reporters.extractConfigSources(task.getReportersConfig());
         final Map<String, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
+
         try {
             Reporters.transaction(reporterPlugins, reporterConfigs, new Reporters.Control() {
                 public void run(final Map<String, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    try (final Reporter reporter = Reporters.open(reporterPlugins, reporterTasks)) {
+                    try (final Reporters reporters = Reporters.createReporters(reporterPlugins, reporterTasks)) {
                         state.setReporterTaskSources(reporterTasks);
-                        Exec.session().setReporter(reporter);
+                        Exec.session().setReporters(reporters);
 
                         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
                         ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {

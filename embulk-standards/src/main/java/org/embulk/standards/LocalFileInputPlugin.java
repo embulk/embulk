@@ -24,11 +24,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.Reporter;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
+import org.embulk.spi.util.Reporters;
 import org.slf4j.Logger;
 
 import java.nio.file.FileVisitOption;
@@ -68,7 +68,7 @@ public class LocalFileInputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        Reporter reporter = Exec.session().getReporter();
+        Reporters reporters = Exec.session().getReporters();
 
         // list files recursively
         List<String> files = listFiles(task);
