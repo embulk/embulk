@@ -13,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.embulk.EmbulkEmbed;
+import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSetup;
 import org.embulk.cli.parse.EmbulkCommandLineHelpRequired;
 import org.embulk.cli.parse.EmbulkCommandLineParseException;
@@ -450,25 +452,30 @@ public class EmbulkRun
 
             // call |EmbulkSetup.setup| after setup_classpaths to allow users to overwrite
             // embulk classes
-            EmbulkSetup.setup(commandLine.getSystemConfig(), this.jrubyContainer);
+            // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
+            // into Ruby |Embulk::Runner|.
+            final EmbulkRunner runner = EmbulkSetup.setup(commandLine.getSystemConfig(), this.jrubyContainer);
 
-            this.jrubyContainer.put("__internal_config_file_path__", commandLine.getArguments().get(0));
-            // Java's Map<String, String> works as-is in JRuby.
-            this.jrubyContainer.put("__internal_options__", commandLine.getOptionsAsMap());
+            final Path configDiffPath =
+                (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
+            final Path outputPath =
+                (commandLine.getOutput() == null ? null : Paths.get(commandLine.getOutput()));
+            final Path resumeStatePath =
+                (commandLine.getResumeState() == null ? null : Paths.get(commandLine.getResumeState()));
 
             try {
                 switch (subcommand) {
                 case GUESS:
-                    this.jrubyContainer.runScriptlet(
-                        "Embulk::Runner.guess(__internal_config_file_path__, __internal_options__)");
+                    runner.guess(Paths.get(commandLine.getArguments().get(0)), outputPath);
                     break;
                 case PREVIEW:
-                    this.jrubyContainer.runScriptlet(
-                        "Embulk::Runner.preview(__internal_config_file_path__, __internal_options__)");
+                    runner.preview(Paths.get(commandLine.getArguments().get(0)), commandLine.getFormat());
                     break;
                 case RUN:
-                    this.jrubyContainer.runScriptlet(
-                        "Embulk::Runner.run(__internal_config_file_path__, __internal_options__)");
+                    runner.run(Paths.get(commandLine.getArguments().get(0)),
+                               configDiffPath,
+                               outputPath,
+                               resumeStatePath);
                     break;
                 }
             }
