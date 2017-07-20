@@ -1,9 +1,11 @@
 package org.embulk.exec;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.common.base.Throwables;
@@ -16,10 +18,10 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.ErrorDataPlugin;
-import org.embulk.spi.ErrorDataReporter;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
@@ -31,7 +33,7 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.util.ErrorDataReporters;
+import org.embulk.spi.util.Reporters;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
 
@@ -56,9 +58,9 @@ public class BulkLoader
         @Config("out")
         public ConfigSource getOutputConfig();
 
-        @Config("error_data")
+        @Config("reporters")
         @ConfigDefault("{}")
-        public ConfigSource getErrorDataConfig();
+        public ConfigSource getReportersConfig();
 
         public TaskSource getOutputTask();
         public void setOutputTask(TaskSource taskSource);
@@ -77,11 +79,12 @@ public class BulkLoader
         private final Logger logger;
 
         private final ProcessPluginSet plugins;
+        private volatile Map<String, PluginType> reporterPluginTypes;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
-        private volatile TaskSource errorDataTaskSource;
+        private volatile Map<String, TaskSource> reporterTaskSources;
         private volatile List<Schema> schemas;
         private volatile Schema executorSchema;
         private volatile TransactionStage transactionStage;
@@ -101,6 +104,11 @@ public class BulkLoader
         public Logger getLogger()
         {
             return logger;
+        }
+
+        public void setReporterPluginTypes(Map<String, PluginType> reporterPluginTypes)
+        {
+            this.reporterPluginTypes = reporterPluginTypes;
         }
 
         public void setSchemas(List<Schema> schemas)
@@ -133,9 +141,9 @@ public class BulkLoader
             this.filterTaskSources = filterTaskSources;
         }
 
-        public void setErrorDataTaskSource(TaskSource errorDataTaskSource)
+        public void setReporterTaskSources(Map<String, TaskSource> reporterTaskSources)
         {
-            this.errorDataTaskSource = errorDataTaskSource;
+            this.reporterTaskSources = reporterTaskSources;
         }
 
         public ProcessTask buildProcessTask()
@@ -144,11 +152,11 @@ public class BulkLoader
                     plugins.getInputPluginType(),
                     plugins.getOutputPluginType(),
                     plugins.getFilterPluginTypes(),
-                    plugins.getErrorDataPluginType(),
+                    reporterPluginTypes,
                     inputTaskSource,
                     outputTaskSource,
                     filterTaskSources,
-                    errorDataTaskSource,
+                    reporterTaskSources,
                     schemas,
                     executorSchema,
                     Exec.newTaskSource());
@@ -461,23 +469,19 @@ public class BulkLoader
         private final PluginType inputPluginType;
         private final PluginType outputPluginType;
         private final List<PluginType> filterPluginTypes;
-        private final PluginType errorDataPluginType;
 
         private final InputPlugin inputPlugin;
         private final OutputPlugin outputPlugin;
         private final List<FilterPlugin> filterPlugins;
-        private final ErrorDataPlugin errorDataPlugin;
 
         public ProcessPluginSet(BulkLoaderTask task)
         {
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
             this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
-            this.errorDataPluginType = task.getErrorDataConfig().get(PluginType.class, "type", PluginType.NULL);
             this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
             this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
             this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
-            this.errorDataPlugin = Exec.newPlugin(ErrorDataPlugin.class, errorDataPluginType);
         }
 
         public PluginType getInputPluginType()
@@ -495,11 +499,6 @@ public class BulkLoader
             return filterPluginTypes;
         }
 
-        public PluginType getErrorDataPluginType()
-        {
-            return errorDataPluginType;
-        }
-
         public InputPlugin getInputPlugin()
         {
             return inputPlugin;
@@ -513,11 +512,6 @@ public class BulkLoader
         public List<FilterPlugin> getFilterPlugins()
         {
             return filterPlugins;
-        }
-
-        public ErrorDataPlugin getErrorDataPlugin()
-        {
-            return errorDataPlugin;
         }
     }
 
@@ -566,6 +560,24 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
+    private Map<String, ReporterPlugin> newReporterPlugins(final Map<String, ConfigSource> configs)
+    {
+        final ImmutableMap.Builder<String, ReporterPlugin> plugins = ImmutableMap.builder();
+
+        for (Reporters.Type type : Reporters.Type.values()) {
+            final ConfigSource config = configs.getOrDefault(type.getTypeName(), Exec.newConfigSource());
+            plugins.put(type.getTypeName(), newReporterPlugin(config));
+        }
+
+        return plugins.build();
+    }
+
+    private ReporterPlugin newReporterPlugin(final ConfigSource config)
+    {
+        return Exec.newPlugin(ReporterPlugin.class,
+                config.get(PluginType.class, "type", PluginType.NULL));
+    }
+
     private ExecutionResult doRun(final ConfigSource config)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
@@ -573,15 +585,17 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
+        final Map<String, ConfigSource> reporterConfigs = Reporters.extractConfigSources(task.getReportersConfig());
+        final Map<String, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
         try {
-            ErrorDataReporters.transaction(plugins.getErrorDataPlugin(), task.getErrorDataConfig(), new ErrorDataReporters.Control() {
-                public void run(final TaskSource errorDataTask)
+            Reporters.transaction(reporterPlugins, reporterConfigs, new Reporters.Control() {
+                public void run(final Map<String, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    try (final ErrorDataReporter errorDataReporter = plugins.getErrorDataPlugin().open(errorDataTask)) {
-                        state.setErrorDataTaskSource(errorDataTask);
-                        Exec.session().setErrorDataReporter(errorDataReporter);
+                    try (final Reporter reporter = Reporters.open(reporterPlugins, reporterTasks)) {
+                        state.setReporterTaskSources(reporterTasks);
+                        Exec.session().setReporter(reporter);
 
                         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
                         ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {

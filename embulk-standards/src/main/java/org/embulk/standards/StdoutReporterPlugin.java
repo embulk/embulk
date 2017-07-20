@@ -3,13 +3,13 @@ package org.embulk.standards;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.ErrorDataPlugin;
-import org.embulk.spi.ErrorDataReporter;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-public class StdoutErrorDataPlugin
-        implements ErrorDataPlugin
+public class StdoutReporterPlugin
+        implements ReporterPlugin
 {
     @Override
     public TaskSource configureTaskSource(final ConfigSource config)
@@ -18,32 +18,32 @@ public class StdoutErrorDataPlugin
     }
 
     @Override
-    public ErrorDataReporter open(final TaskSource task)
+    public Reporter open(final TaskSource task)
     {
-        return new StdoutErrorDataReporter();
+        return new StdoutReporter();
     }
 
     @ThreadSafe
-    private static class StdoutErrorDataReporter
-            implements ErrorDataReporter
+    private static class StdoutReporter
+            implements Reporter
     {
         @Override
         public void skip(String skipped)
         {
-            System.out.println("StdoutErrorDataReporter#skip");
+            System.out.println("StdoutReporter#skip");
             System.out.println(skipped);
         }
 
         @Override
         public void close()
         {
-            System.out.println("StdoutErrorDataReporter#close");
+            System.out.println("StdoutReporter#close");
         }
 
         @Override
         public void cleanup()
         {
-            System.out.println("StdoutErrorDataReporter#cleanup");
+            System.out.println("StdoutReporter#cleanup");
         }
     }
 }

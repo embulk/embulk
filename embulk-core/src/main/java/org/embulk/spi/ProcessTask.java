@@ -1,6 +1,8 @@
 package org.embulk.spi;
 
 import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -13,11 +15,11 @@ public class ProcessTask
     private final PluginType inputPluginType;
     private final PluginType outputPluginType;
     private final List<PluginType> filterPluginTypes;
-    private final PluginType errorDataPluginType;
+    private final Map<String, PluginType> reporterPluginTypes;
     private final TaskSource inputTaskSource;
     private final TaskSource outputTaskSource;
     private final List<TaskSource> filterTaskSources;
-    private final TaskSource errorDataTaskSource;
+    private final Map<String, TaskSource> reportersTaskSource;
     private final List<Schema> schemas;
     private final Schema executorSchema;
     private TaskSource executorTaskSource;
@@ -27,11 +29,11 @@ public class ProcessTask
             @JsonProperty("inputType") PluginType inputPluginType,
             @JsonProperty("outputType") PluginType outputPluginType,
             @JsonProperty("filterTypes") List<PluginType> filterPluginTypes,
-            @JsonProperty("errorDataType") PluginType errorDataPluginType,
+            @JsonProperty("reporterTypes") Map<String, PluginType> reporterPluginTypes,
             @JsonProperty("inputTask") TaskSource inputTaskSource,
             @JsonProperty("outputTask") TaskSource outputTaskSource,
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
-            @JsonProperty("errorDataTask") TaskSource errorDataTaskSource,
+            @JsonProperty("reportersTask") Map<String, TaskSource> reportersTaskSource,
             @JsonProperty("schemas") List<Schema> schemas,
             @JsonProperty("executorSchema") Schema executorSchema,
             @JsonProperty("executorTask") TaskSource executorTaskSource)
@@ -39,11 +41,11 @@ public class ProcessTask
         this.inputPluginType = inputPluginType;
         this.outputPluginType = outputPluginType;
         this.filterPluginTypes = filterPluginTypes;
-        this.errorDataPluginType = errorDataPluginType;
+        this.reporterPluginTypes = reporterPluginTypes;
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
         this.filterTaskSources = filterTaskSources;
-        this.errorDataTaskSource = errorDataTaskSource;
+        this.reportersTaskSource = reportersTaskSource;
 
         this.schemas = schemas;
         this.executorSchema = executorSchema;
@@ -68,10 +70,10 @@ public class ProcessTask
         return filterPluginTypes;
     }
 
-    @JsonProperty("errorDataType")
-    public PluginType getErrorDataPluginType()
+    @JsonProperty("reporterTypes")
+    public Map<String, PluginType> reporterPluginTypes()
     {
-        return errorDataPluginType;
+        return reporterPluginTypes;
     }
 
     @JsonProperty("inputTask")
@@ -92,10 +94,10 @@ public class ProcessTask
         return filterTaskSources;
     }
 
-    @JsonProperty("errorDataTask")
-    public TaskSource getErrorDataTaskSource()
+    @JsonProperty("reportersTask")
+    public Map<String, TaskSource> getReportersTaskSource()
     {
-        return errorDataTaskSource;
+        return reportersTaskSource;
     }
 
     @JsonProperty("schemas")

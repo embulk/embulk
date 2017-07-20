@@ -35,7 +35,7 @@ public class ExecSession
 
     private final boolean preview;
 
-    private ErrorDataReporter errorDataReporter;
+    private Reporter reporter;
 
     @Deprecated
     public interface SessionTask
@@ -209,14 +209,14 @@ public class ExecSession
         return new TimestampFormatter(format, formatterTask);
     }
 
-    public void setErrorDataReporter(final ErrorDataReporter errorDataReporter)
+    public void setReporter(final Reporter reporter)
     {
-        this.errorDataReporter = errorDataReporter;
+        this.reporter = reporter;
     }
 
-    public ErrorDataReporter getErrorDataReporter()
+    public Reporter getReporter()
     {
-        return this.errorDataReporter;
+        return this.reporter;
     }
 
     public TempFileSpace getTempFileSpace()
@@ -231,8 +231,8 @@ public class ExecSession
 
     public void cleanup()
     {
-        if (errorDataReporter != null) {
-            errorDataReporter.cleanup();
+        if (reporter != null) {
+            reporter.cleanup();
         }
         tempFileSpace.cleanup();
     }

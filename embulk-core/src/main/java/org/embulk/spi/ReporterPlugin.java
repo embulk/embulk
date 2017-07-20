@@ -3,9 +3,9 @@ package org.embulk.spi;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 
-public interface ErrorDataPlugin
+public interface ReporterPlugin
 {
     TaskSource configureTaskSource(final ConfigSource config);
 
-    ErrorDataReporter open(final TaskSource errorDataTask);
+    Reporter open(final TaskSource errorDataTask);
 }

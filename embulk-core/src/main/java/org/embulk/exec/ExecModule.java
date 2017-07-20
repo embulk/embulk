@@ -1,6 +1,6 @@
 package org.embulk.exec;
 
-import org.embulk.spi.ErrorDataPlugin;
+import org.embulk.spi.ReporterPlugin;
 import org.slf4j.ILoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.inject.Module;
@@ -41,8 +41,8 @@ public class ExecModule
         // LocalExecutorPlugin
         registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
-        // NullErrorDataPlugin
-        registerPluginTo(binder, ErrorDataPlugin.class, "null", NullErrorDataPlugin.class);
+        // NullReporterPlugin
+        registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

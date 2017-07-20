@@ -1,6 +1,6 @@
 package org.embulk.spi;
 
-public interface ErrorDataReporter
+public interface Reporter
         extends AutoCloseable
 {
     void skip(String skipped); // TODO should be changed
