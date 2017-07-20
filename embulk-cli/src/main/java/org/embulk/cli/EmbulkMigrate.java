@@ -292,9 +292,9 @@ public class EmbulkMigrate
                             int position = 0;
                             String modifiedData = originalData;
                             while (position < modifiedData.length()) {
-                                final String postModifiedData = modifiedData.substring(0,position);
-                                final String preModifiedData = modifiedData.substring(position);
-                                final Matcher matcher = pattern.matcher(preModifiedData);
+                                final String formerModifiedData = modifiedData.substring(0,position);
+                                final String latterModifiedData = modifiedData.substring(position);
+                                final Matcher matcher = pattern.matcher(latterModifiedData);
                                 if (!matcher.find()) {
                                     break;
                                 }
@@ -303,12 +303,12 @@ public class EmbulkMigrate
                                 }
                                 final String replacingString = immediate;
                                 modifiedData =
-                                    postModifiedData +
-                                    preModifiedData.substring(0, matcher.start(index)) +
+                                    formerModifiedData +
+                                    latterModifiedData.substring(0, matcher.start(index)) +
                                     replacingString +
-                                    preModifiedData.substring(matcher.end(index));
+                                    latterModifiedData.substring(matcher.end(index));
                                 position =
-                                    postModifiedData.length() +
+                                    formerModifiedData.length() +
                                     matcher.start(index) +
                                     replacingString.length() +
                                     (matcher.end() - matcher.end(index));
