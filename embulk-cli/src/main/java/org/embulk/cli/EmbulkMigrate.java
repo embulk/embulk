@@ -292,7 +292,7 @@ public class EmbulkMigrate
                             int position = 0;
                             String modifiedData = originalData;
                             while (position < modifiedData.length()) {
-                                final String formerModifiedData = modifiedData.substring(0,position);
+                                final String formerModifiedData = modifiedData.substring(0, position);
                                 final String latterModifiedData = modifiedData.substring(position);
                                 final Matcher matcher = pattern.matcher(latterModifiedData);
                                 if (!matcher.find()) {
