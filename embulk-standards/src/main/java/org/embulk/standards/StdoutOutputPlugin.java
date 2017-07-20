@@ -1,6 +1,8 @@
 package org.embulk.standards;
 
 import java.util.List;
+
+import com.google.common.collect.ImmutableMap;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
@@ -59,7 +61,7 @@ public class StdoutOutputPlugin
 
             public void add(Page page)
             {
-                Exec.getReporter(Reporters.Type.SKIPPED_DATA).skip("foo 1 at " + Thread.currentThread().getName());
+                Exec.getReporter(Reporters.Type.SKIPPED_DATA).report(Reporters.ReportLevel.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
                 reader.setPage(page);
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));

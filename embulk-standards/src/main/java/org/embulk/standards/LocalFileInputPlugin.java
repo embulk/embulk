@@ -15,6 +15,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import jdk.nashorn.internal.ir.annotations.Immutable;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
@@ -26,7 +28,6 @@ import org.embulk.config.TaskReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.Reporter;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.embulk.spi.util.Reporters;
@@ -69,8 +70,7 @@ public class LocalFileInputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        Reporter reporter = Exec.getReporter(Reporters.Type.EVENT_LOG);
-        reporter.log(Reporters.ReportLevel.INFO, "reporter log");
+        Exec.getReporter(Reporters.Type.EVENT_LOG).report(Reporters.ReportLevel.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
 
         // list files recursively
         List<String> files = listFiles(task);

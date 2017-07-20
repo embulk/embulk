@@ -3,55 +3,53 @@ package org.embulk.standards;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.util.Reporters;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import java.util.Map;
+
 public class StdoutReporterPlugin
         implements ReporterPlugin
 {
     @Override
-    public TaskSource configureTaskSource(ConfigSource config)
+    public TaskSource configureTaskSource(final ConfigSource config)
     {
         return config.loadConfig(Task.class).dump();
     }
 
     @Override
-    public Reporter open(TaskSource errorDataTask)
+    public ReporterCloseable open(final TaskSource task)
     {
         return new StdoutReporter();
     }
 
     @ThreadSafe
     private static class StdoutReporter
-            implements Reporter
+            implements ReporterCloseable
     {
         @Override
-        public void skip(String skipped)
+        public void report(Reporters.ReportLevel level, Map<String, Object> event)
         {
-            System.out.println("StdoutReporter#skipped");
-            System.out.println(skipped);
-        }
-
-        @Override
-        public void log(Reporters.ReportLevel level, String eventLog)
-        {
-            System.out.println("StdoutReporter#log");
-            System.out.println(eventLog);
+            // FIXME TODO
+            System.out.println("StdoutReport#report");
+            System.out.println(event);
         }
 
         @Override
         public void close()
         {
-            System.out.println("StdoutReporter#close");
+            // FIXME TODO
+            System.out.println("StdoutReport#close");
         }
 
         @Override
         public void cleanup()
         {
-            System.out.println("StdoutReporter#cleanup");
+            // FIXME TODO
+            System.out.println("StdoutReport#cleanup");
         }
     }
 }

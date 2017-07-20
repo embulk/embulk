@@ -7,7 +7,7 @@ public interface ReporterPlugin
 {
     TaskSource configureTaskSource(final ConfigSource config);
 
-    Reporter open(final TaskSource task);
+    ReporterCloseable open(final TaskSource task);
 
     /*
      * Reporter API

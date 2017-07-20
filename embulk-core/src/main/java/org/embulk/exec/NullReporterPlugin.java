@@ -3,11 +3,13 @@ package org.embulk.exec;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.util.Reporters;
 
 import javax.annotation.concurrent.ThreadSafe;
+
+import java.util.Map;
 
 public class NullReporterPlugin
         implements ReporterPlugin
@@ -19,21 +21,17 @@ public class NullReporterPlugin
     }
 
     @Override
-    public Reporter open(final TaskSource task)
+    public ReporterCloseable open(final TaskSource task)
     {
         return new NullReporter();
     }
 
     @ThreadSafe
     public static class NullReporter
-            implements Reporter
+            implements ReporterCloseable
     {
         @Override
-        public void skip(String errorData)
-        { }
-
-        @Override
-        public void log(Reporters.ReportLevel level, String eventLog)
+        public void report(Reporters.ReportLevel level, Map<String, Object> event)
         { }
 
         @Override

@@ -3,6 +3,7 @@ package org.embulk.spi.util;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterCloseable;
 
 import java.util.Map;
 
@@ -12,7 +13,8 @@ public final class Reporters
     public enum Type
     {
         SKIPPED_DATA("skipped_data"),
-        EVENT_LOG("event_log"); // TODO NOTIFICATION
+        EVENT_LOG("event_log");
+        // TODO NOTIFICATION
 
         private final String type;
 
@@ -61,7 +63,7 @@ public final class Reporters
     public void close()
     {
         for (final Map.Entry<Reporters.Type, Reporter> e : reporters.entrySet()) {
-            final Reporter reporter = e.getValue();
+            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
             reporter.close(); // TODO exception?
         }
     }
@@ -69,7 +71,7 @@ public final class Reporters
     public void cleanup()
     {
         for (final Map.Entry<Reporters.Type, Reporter> e : reporters.entrySet()) {
-            final Reporter reporter = e.getValue();
+            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
             reporter.cleanup(); // TODO exception?
         }
     }
