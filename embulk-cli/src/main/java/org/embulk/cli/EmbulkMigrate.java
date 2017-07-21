@@ -292,8 +292,10 @@ public class EmbulkMigrate
                             int position = 0;
                             String modifiedData = originalData;
                             while (position < modifiedData.length()) {
-                                final Matcher matcher = pattern.matcher(modifiedData.substring(position));
-                                if (!matcher.matches()) {
+                                final String formerModifiedData = modifiedData.substring(0, position);
+                                final String latterModifiedData = modifiedData.substring(position);
+                                final Matcher matcher = pattern.matcher(latterModifiedData);
+                                if (!matcher.find()) {
                                     break;
                                 }
                                 if (first == null) {
@@ -301,10 +303,12 @@ public class EmbulkMigrate
                                 }
                                 final String replacingString = immediate;
                                 modifiedData =
-                                    modifiedData.substring(0, matcher.start(index) - 1) +
+                                    formerModifiedData +
+                                    latterModifiedData.substring(0, matcher.start(index)) +
                                     replacingString +
-                                    modifiedData.substring(matcher.end(index));
+                                    latterModifiedData.substring(matcher.end(index));
                                 position =
+                                    formerModifiedData.length() +
                                     matcher.start(index) +
                                     replacingString.length() +
                                     (matcher.end() - matcher.end(index));
@@ -451,7 +455,7 @@ public class EmbulkMigrate
     private static final Pattern GEM_TASK_IN_GRADLE = Pattern.compile(
         "^([ \\t]*)task\\s+gem\\W.*\\{", Pattern.MULTILINE);
     private static final Pattern EMBULK_CORE_OR_STANDARDS_IN_GRADLE = Pattern.compile(
-        "org\\.embulk:embulk-(?:core|standards):([\\d\\.\\+]+)?");
+        "org\\.embulk:embulk-(?:core|standards|test):([\\d\\.\\+]+)?");
     private static final Pattern DEVELOPMENT_DEPENDENCY_IN_GEMSPEC = Pattern.compile(
         "([ \\t]*\\w+)\\.add_development_dependency");
     private static final Pattern EMBULK_DEPENDENCY_PRERELEASE_IN_GEMSPEC = Pattern.compile(
