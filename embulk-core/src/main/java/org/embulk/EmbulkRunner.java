@@ -1,6 +1,7 @@
 package org.embulk;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -216,8 +217,11 @@ public class EmbulkRunner
     private void guessInternal(final ConfigSource configSource, final Path outputPath)
             throws IOException
     {
-        if (outputPath != null && !Files.isWritable(outputPath)) {
-            throw new RuntimeException("Cannot write.");
+        try {
+            checkFileWritable(outputPath);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Not writable: " + outputPath.toString());
         }
 
         final ConfigDiff configDiff = this.embed.guess(configSource);
@@ -262,14 +266,23 @@ public class EmbulkRunner
             final Path resumeStatePath)
             throws IOException
     {
-        if (outputPath != null && !Files.isWritable(outputPath)) {  // deprecated
-            throw new RuntimeException("Cannot write in: " + outputPath.toString());
+        try {
+            checkFileWritable(outputPath);
         }
-        if (configDiffPath != null && !Files.isWritable(configDiffPath)) {
-            throw new RuntimeException("Cannot write in: " + configDiffPath.toString());
+        catch (IOException ex) {
+            throw new RuntimeException("Not writable: " + outputPath.toString());
         }
-        if (resumeStatePath != null && !Files.isWritable(resumeStatePath)) {
-            throw new RuntimeException("Cannot write in: " + resumeStatePath.toString());
+        try {
+            checkFileWritable(configDiffPath);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Not writable: " + configDiffPath.toString());
+        }
+        try {
+            checkFileWritable(resumeStatePath);
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Not writable: " + resumeStatePath.toString());
         }
 
         final ConfigSource configSource;
@@ -432,6 +445,22 @@ public class EmbulkRunner
         final Object renderedObject =
             this.globalJRubyContainer.runScriptlet("template.render(__internal_liquid_template_data__)");
         return renderedObject.toString();
+    }
+
+    private boolean checkFileWritable(final Path path)
+            throws IOException
+    {
+        if (path != null) {
+            // Open file with append mode and do nothing.
+            // If file is not writable, it throws an exception.
+            // NOTE: |Files.isWritable| does not work for the purpose as it expects the file exists.
+            // Using |Files.newOutputStream| for the binary mode.
+            try (final OutputStream output =
+                     Files.newOutputStream(path, StandardOpenOption.APPEND, StandardOpenOption.CREATE)) {
+                ;
+            }
+        }
+        return true;
     }
 
     private String writeConfig(final Path path, final DataSource modelObject)
