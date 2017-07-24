@@ -23,6 +23,8 @@ import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
 import org.jruby.RubyHash;
 import org.jruby.embed.ScriptingContainer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EmbulkRunner runs the guess, preview, or run subcommand.
@@ -347,15 +349,14 @@ public class EmbulkRunner
                     }
                 }
                 else {
-                    // TODO: Replace System.err with a logger -- Java logger may not be initialized yet here.
-                    System.err.println("[INFO] Writing resume state to '" + resumeStatePath.toString() + "'");
+                    rootLogger.info("Writing resume state to '" + resumeStatePath.toString() + "'");
                     try {
                         writeResumeState(resumeStatePath, resumableResult.getResumeState());
                     }
                     catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
-                    System.err.println("[INFO] Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data.");
+                    rootLogger.info("Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data.");
                 }
                 throw new RuntimeException(resumableResult.getCause());
             }
@@ -376,9 +377,8 @@ public class EmbulkRunner
         }
 
         final ConfigDiff configDiff = executionResult.getConfigDiff();
-        // TODO: Replace System.err with a logger -- Java logger may not be initialized yet here.
-        System.err.println("[INFO] Committed.");
-        System.err.println("[INFO] Next config diff: " + configDiff.toString());
+        rootLogger.info("Committed.");
+        rootLogger.info("Next config diff: " + configDiff.toString());
 
         writeConfig(configDiffPath, configDiff);
         writeConfig(outputPath, configSource.merge(configDiff));  // deprecated
@@ -514,6 +514,9 @@ public class EmbulkRunner
     //     @runner.run(@config, @options.merge(options))
     //   end
     // end
+
+    // NOTE: The root logger directly from |LoggerFactory|, not from |Exec.getLogger| as it's outside of |Exec.doWith|.
+    private static final Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
     private final Pattern EXT_YAML = Pattern.compile(".*\\.ya?ml$");
     private final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
