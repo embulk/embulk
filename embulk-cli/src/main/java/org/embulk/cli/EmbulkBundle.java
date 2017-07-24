@@ -1,6 +1,6 @@
 package org.embulk.cli;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.embulk.EmbulkVersion;
@@ -39,25 +39,6 @@ public class EmbulkBundle
         //
         // TODO: Consider handling LoadError or similar errors.
         final EmbulkRun runner = new EmbulkRun(embulkVersion, globalJRubyContainer);
-        runner.run(removeBundleOption(embulkArgs), jrubyOptions);
-    }
-
-    private static List<String> removeBundleOption(final String[] args)
-    {
-        final ArrayList<String> removed = new ArrayList<String>();
-
-        int status = 0;
-        for (final String arg : args) {
-            if (status == 0 && (arg.equals("-b") || arg.equals("--bundle"))) {
-                status = 1;
-            }
-            else if (status == 1) {
-                status = 2;
-            }
-            else {
-                removed.add(arg);
-            }
-        }
-        return Collections.unmodifiableList(removed);
+        runner.run(Arrays.asList(embulkArgs), jrubyOptions);
     }
 }

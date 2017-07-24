@@ -22,6 +22,9 @@ public class EmbulkArguments
             if (subcommand == null && (!argument.startsWith("-"))) {
                 subcommand = EmbulkSubcommand.of(argument);
             }
+            else if (subcommand == null && (argument.equals("-b") || argument.equals("--bundle"))) {
+                throw new EmbulkCommandLineException("\"-b\" or \"--bundle\" before a subcommand is not supported.");
+            }
             else if (argument.equals("-version")) {
                 return new EmbulkArguments(EmbulkSubcommand.VERSION_ERR, new ArrayList<String>());
             }
