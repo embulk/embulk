@@ -39,6 +39,6 @@ public class EmbulkBundle
         //
         // TODO: Consider handling LoadError or similar errors.
         final EmbulkRun runner = new EmbulkRun(embulkVersion, globalJRubyContainer);
-        runner.run(Arrays.asList(embulkArgs), jrubyOptions);
+        runner.run(Collections.unmodifiableList(Arrays.asList(embulkArgs)), jrubyOptions);
     }
 }
