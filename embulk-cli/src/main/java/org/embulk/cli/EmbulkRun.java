@@ -13,7 +13,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSetup;
 import org.embulk.cli.parse.EmbulkCommandLineHelpRequired;
