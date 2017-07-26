@@ -727,6 +727,7 @@ public class EmbulkRun
 
     private void printGeneralUsage(final PrintStream out)
     {
+        final String gemHomeEnv = System.getenv("GEM_HOME");
         out.println("Embulk v" + this.embulkVersion);
         out.println("Usage: embulk [-vm-options] <command> [--options]");
         out.println("Commands:");
@@ -737,7 +738,7 @@ public class EmbulkRun
         out.println("   preview    <config.yml>                            # dry-run the bulk load without output and show preview.");
         out.println("   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file.");
         out.println("   gem        <install | list | help>                 # install a plugin or show installed plugins.");
-        out.println("                                                      # plugin path is #{ENV['GEM_HOME']}");
+        out.println("                                                      # plugin path is " + (gemHomeEnv == null ? "(empty)" : gemHomeEnv));
         out.println("   new        <category> <name>                       # generates new plugin template");
         out.println("   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API");
         out.println("   example    [path]                                  # creates an example config file and csv file to try embulk.");
