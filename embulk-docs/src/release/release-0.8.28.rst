@@ -11,4 +11,4 @@ General Changes
 
 Release Date
 ------------------
-2017-07-25
+2017-07-27
