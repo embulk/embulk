@@ -241,18 +241,6 @@ public class EmbulkCommandLine
         return this.resumeState;
     }
 
-    // TODO: Remove this when Embulk::Runner is converted to Java.
-    public final Map<String, String> getOptionsAsMap()
-    {
-        final HashMap<String, String> map = new HashMap<String, String>();
-        map.put("bundle_path", getBundlePath());
-        map.put("format", getFormat());
-        map.put("next_config_diff_path", getConfigDiff());
-        map.put("next_config_output_path", getOutput());
-        map.put("resume_state_path", getResumeState());
-        return Collections.unmodifiableMap(map);
-    }
-
     private final List<String> arguments;
     private final Map<String, Object> systemConfig;
     private final String bundle;

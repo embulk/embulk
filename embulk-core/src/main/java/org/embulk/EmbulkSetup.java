@@ -18,16 +18,18 @@ import org.jruby.embed.ScriptingContainer;
 public class EmbulkSetup
 {
     @Deprecated
-    public static void setupWithNewScriptingContainer(final Map<String, Object> systemConfigGiven)
+    public static EmbulkRunner setupWithNewScriptingContainer(final Map<String, Object> systemConfigGiven)
     {
         // The JRuby instance is a global singleton so that the settings here affects later execution.
         // The local variable should be persistent so that local variables are set through ScriptingContainer.put.
         final ScriptingContainer globalJRubyContainer =
             new ScriptingContainer(LocalContextScope.SINGLETON, LocalVariableBehavior.PERSISTENT);
-        setup(systemConfigGiven, globalJRubyContainer);
+        return setup(systemConfigGiven, globalJRubyContainer);
     }
 
-    public static void setup(final Map<String, Object> systemConfigGiven, final ScriptingContainer globalJRubyContainer)
+    public static EmbulkRunner setup(
+            final Map<String, Object> systemConfigGiven,
+            final ScriptingContainer globalJRubyContainer)
     {
         // NOTE: When it was in Ruby "require 'json'" was required to format the system config into a JSON string.
 
@@ -57,8 +59,12 @@ public class EmbulkSetup
 
         // see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
         globalJRubyContainer.runScriptlet("module Embulk; end");
-        globalJRubyContainer.put("__internal_embed__", embed);
-        globalJRubyContainer.runScriptlet("Embulk.const_set :Runner, Embulk::EmbulkRunner.new(__internal_embed__)");
-        globalJRubyContainer.remove("__internal_embed__");
+        globalJRubyContainer.put("__internal_embulk_setup_embed__", embed);
+        globalJRubyContainer.put("__internal_embulk_setup_global_jruby_container__", globalJRubyContainer);
+        globalJRubyContainer.runScriptlet("Embulk.const_set :Runner, Embulk::EmbulkRunner.new(__internal_embulk_setup_embed__)");
+        globalJRubyContainer.remove("__internal_embulk_setup_global_jruby_container__");
+        globalJRubyContainer.remove("__internal_embulk_setup_embed__");
+
+        return new EmbulkRunner(embed, globalJRubyContainer);
     }
 }
