@@ -83,8 +83,14 @@ public abstract class PluginType
                 final String version = stringMap.get("version");
                 return MavenPluginType.create(name, group, classifier, version);
             }
+        case BUNDLER:
+            {
+                final String name = stringMap.get("name");
+                final String scope = stringMap.get("scope");
+                return BundlerPluginType.create(name, scope);
+            }
         default:
-            throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");
+            throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\", \"bundler\"]");
         }
     }
 

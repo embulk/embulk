@@ -12,6 +12,7 @@ public interface PluginSource
     {
         DEFAULT("default"),  // DEFAULT includes InjectedPluginSource and JRubyPluginSource.
         MAVEN("maven"),
+        BUNDLER("bundler"),
         ;
 
         private Type(final String sourceTypeName)
