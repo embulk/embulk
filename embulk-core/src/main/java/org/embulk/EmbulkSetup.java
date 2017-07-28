@@ -65,6 +65,6 @@ public class EmbulkSetup
         globalJRubyContainer.remove("__internal_embulk_setup_global_jruby_container__");
         globalJRubyContainer.remove("__internal_embulk_setup_embed__");
 
-        return new EmbulkRunner(embed, globalJRubyContainer);
+        return new EmbulkRunner(embed);
     }
 }
