@@ -22,6 +22,7 @@ public class TimestampFormatter
         public DateTimeZone getTimeZone();
 
         @ConfigInject
+        @Deprecated
         public ScriptingContainer getJRuby();
     }
 
@@ -36,6 +37,7 @@ public class TimestampFormatter
         public String getDefaultTimestampFormat();
 
         @ConfigInject
+        @Deprecated
         public ScriptingContainer getJRuby();
     }
 
@@ -56,12 +58,12 @@ public class TimestampFormatter
     @Deprecated
     public TimestampFormatter(String format, FormatterTask task)
     {
-        this(task.getJRuby(), format, task.getTimeZone());
+        this(format, task.getTimeZone());
     }
 
     public TimestampFormatter(Task task, Optional<? extends TimestampColumnOption> columnOption)
     {
-        this(task.getJRuby(),
+        this(
                 columnOption.isPresent() ?
                     columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
                     : task.getDefaultTimestampFormat(),
@@ -70,7 +72,13 @@ public class TimestampFormatter
                     : task.getDefaultTimeZone());
     }
 
+    @Deprecated
     public TimestampFormatter(ScriptingContainer jruby, String format, DateTimeZone timeZone)
+    {
+        this(format, timeZone);
+    }
+
+    public TimestampFormatter(final String format, final DateTimeZone timeZone)
     {
         this.timeZone = timeZone;
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
