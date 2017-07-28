@@ -72,9 +72,7 @@ public class EmbulkSetup
         // see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
         globalJRubyContainer.runScriptlet("module Embulk; end");
         globalJRubyContainer.put("__internal_embulk_setup_embed__", embed);
-        globalJRubyContainer.put("__internal_embulk_setup_global_jruby_container__", globalJRubyContainer);
         globalJRubyContainer.runScriptlet("Embulk.const_set :Runner, Embulk::EmbulkRunner.new(__internal_embulk_setup_embed__)");
-        globalJRubyContainer.remove("__internal_embulk_setup_global_jruby_container__");
         globalJRubyContainer.remove("__internal_embulk_setup_embed__");
 
         return new EmbulkRunner(embed);
