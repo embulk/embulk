@@ -59,6 +59,14 @@ public class TimestampFormatter
     public TimestampFormatter(String format, FormatterTask task)
     {
         this(format, task.getTimeZone());
+        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
+        // TODO: Notify users about deprecated calls through the notification reporter.
+        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
+        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
+        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
+        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+            System.err.println("[WARN] " + stackTrace.toString());
+        }
     }
 
     public TimestampFormatter(Task task, Optional<? extends TimestampColumnOption> columnOption)
@@ -76,6 +84,13 @@ public class TimestampFormatter
     public TimestampFormatter(ScriptingContainer jruby, String format, DateTimeZone timeZone)
     {
         this(format, timeZone);
+        // TODO: Notify users about deprecated calls through the notification reporter.
+        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
+        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
+        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
+        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+            System.err.println("[WARN] " + stackTrace.toString());
+        }
     }
 
     public TimestampFormatter(final String format, final DateTimeZone timeZone)
