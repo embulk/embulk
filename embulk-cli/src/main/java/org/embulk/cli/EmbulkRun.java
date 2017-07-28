@@ -440,14 +440,18 @@ public class EmbulkRun
 
             // NOTE: When it was in Ruby ""require 'json'" was required.
 
-            setupLoadPaths(commandLine.getLoadPath(), commandLine.getLoad());
-            setupClasspaths(commandLine.getClasspath());
+            // NOTE: $LOAD_PATH and $CLASSPATH are set in |EmbulkSetup|.
 
             // call |EmbulkSetup.setup| after setup_classpaths to allow users to overwrite
             // embulk classes
             // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
             // into Ruby |Embulk::Runner|.
-            final EmbulkRunner runner = EmbulkSetup.setup(commandLine.getSystemConfig(), this.jrubyContainer);
+            final EmbulkRunner runner = EmbulkSetup.setup(
+                commandLine.getSystemConfig(),
+                commandLine.getLoadPath(),
+                commandLine.getLoad(),
+                commandLine.getClasspath(),
+                this.jrubyContainer);
 
             final Path configDiffPath =
                 (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
@@ -690,37 +694,6 @@ public class EmbulkRun
                     }
                 }
             }));
-    }
-
-    private void setupLoadPaths(final List<String> loadPaths, final List<String> pluginPaths)
-    {
-        // first $LOAD_PATH has highet priority. later load_paths should have highest priority.
-        for (final String loadPath : loadPaths) {
-            // ruby script directory (use unshift to make it highest priority)
-            this.jrubyContainer.put("__internal_load_path__", loadPath);
-            this.jrubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(__internal_load_path__)");
-            this.jrubyContainer.remove("__internal_load_path__");
-        }
-
-        // # Gem::StubSpecification is an internal API that seems chainging often.
-        // # Gem::Specification.add_spec is deprecated also. Therefore, here makes
-        // # -L <path> option alias of -I <path>/lib by assuming that *.gemspec file
-        // # always has require_paths = ["lib"].
-        for (final String pluginPath : pluginPaths) {
-            this.jrubyContainer.put("__internal_plugin_path__", pluginPath);
-            this.jrubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(File.join(__internal_plugin_path__, 'lib')");
-            this.jrubyContainer.remove("__internal_plugin_path__");
-        }
-    }
-
-    private void setupClasspaths(final List<String> classpaths)
-    {
-        for (final String classpath : classpaths) {
-            this.jrubyContainer.put("__internal_classpath__", classpath);
-            // $CLASSPATH object doesn't have concat method
-            this.jrubyContainer.runScriptlet("$CLASSPATH << __internal_classpath__");
-            this.jrubyContainer.remove("__internal_classpath__");
-        }
     }
 
     private void printGeneralUsage(final PrintStream out)
