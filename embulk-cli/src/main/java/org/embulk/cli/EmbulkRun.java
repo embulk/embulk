@@ -24,6 +24,8 @@ import org.embulk.cli.parse.OptionDefinition;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.jruby.embed.LocalContextScope;
+import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
 
 public class EmbulkRun
@@ -413,24 +415,16 @@ public class EmbulkRun
             }
             return 0;
         case GEM:
-            this.jrubyContainer.runScriptlet("require 'rubygems/gem_runner'");
-            this.jrubyContainer.put("__internal_argv_java__", subcommandArguments);
-            this.jrubyContainer.runScriptlet("__internal_argv__ = Array.new(__internal_argv_java__)");
-            this.jrubyContainer.runScriptlet("Gem::GemRunner.new.run __internal_argv__");
-            this.jrubyContainer.remove("__internal_argv_java__");
+            callJRubyGem(subcommandArguments);
             return 0;
         case MKBUNDLE:
             newBundle(commandLine.getArguments().get(0), commandLine.getBundlePath());
             break;
         case EXEC:
-            this.jrubyContainer.put("__internal_argv_java__", subcommandArguments);
-            this.jrubyContainer.runScriptlet("__internal_argv__ = Array.new(__internal_argv_java__)");
-            this.jrubyContainer.runScriptlet("exec(*__internal_argv__)");
-            this.jrubyContainer.remove("__internal_argv_java__");
+            callJRubyExec(subcommandArguments);
             return 127;
         case IRB:
-            this.jrubyContainer.runScriptlet("require 'irb'");
-            this.jrubyContainer.runScriptlet("IRB.start");
+            callJRubyIRB();
             return 0;
         case RUN:
         case CLEANUP:
@@ -490,12 +484,7 @@ public class EmbulkRun
 
     private int newBundle(final String pathString, final String bundlePath)
     {
-        this.jrubyContainer.runScriptlet("require 'embulk'");
-
         final Path path = Paths.get(pathString);
-        this.jrubyContainer.runScriptlet("require 'fileutils'");
-        this.jrubyContainer.runScriptlet("require 'rubygems/gem_runner'");
-
         if (Files.exists(path)) {
             System.err.println("'" + pathString + "' already exists.");
             return 1;
@@ -511,16 +500,19 @@ public class EmbulkRun
         }
         boolean success = false;
         try {
+            // TODO: Rewrite this part in Java.
+            final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+            localJRubyContainer.runScriptlet("require 'embulk'");
+            localJRubyContainer.runScriptlet("require 'fileutils'");
+            localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
+
             // copy embulk/data/bundle/ contents
-            this.jrubyContainer.runScriptlet("require 'embulk/data/package_data'");
-            this.jrubyContainer.put("__internal_path__", pathString);
-            this.jrubyContainer.runScriptlet("pkg = Embulk::PackageData.new('bundle', __internal_path__)");
-            this.jrubyContainer.remove("__internal_path__");
-            this.jrubyContainer.runScriptlet("%w[Gemfile .ruby-version .bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb].each { |file| pkg.cp(file, file) }");
+            localJRubyContainer.runScriptlet("require 'embulk/data/package_data'");
+            localJRubyContainer.put("__internal_path__", pathString);
+            localJRubyContainer.runScriptlet("pkg = Embulk::PackageData.new('bundle', __internal_path__)");
+            localJRubyContainer.remove("__internal_path__");
+            localJRubyContainer.runScriptlet("%w[Gemfile .ruby-version .bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb].each { |file| pkg.cp(file, file) }");
                                                                                                                                     // run the first bundle-install
-            final ArrayList<String> bundlerArguments = new ArrayList<String>();
-            bundlerArguments.add("install");
-            bundlerArguments.add("--path");
             runBundler(Arrays.asList("install", "--path", bundlePath != null ? bundlePath : "."), path);
             success = true;
         }
@@ -570,26 +562,26 @@ public class EmbulkRun
 
     private void runBundler(final List<String> arguments, final Path path)
     {
-        this.jrubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
+        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        localJRubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
 
         // this hack is necessary to make --help working
-        this.jrubyContainer.runScriptlet("Bundler.define_singleton_method(:which_orig, Bundler.method(:which))");
-        this.jrubyContainer.runScriptlet("Bundler.define_singleton_method(:which) { |executable| (executable == 'man' ? false : which_orig(executable)) }");
+        localJRubyContainer.runScriptlet("Bundler.define_singleton_method(:which_orig, Bundler.method(:which))");
+        localJRubyContainer.runScriptlet("Bundler.define_singleton_method(:which) { |executable| (executable == 'man' ? false : which_orig(executable)) }");
 
-        this.jrubyContainer.runScriptlet("require 'bundler/friendly_errors'");
-        this.jrubyContainer.runScriptlet("require 'bundler/cli'");
+        localJRubyContainer.runScriptlet("require 'bundler/friendly_errors'");
+        localJRubyContainer.runScriptlet("require 'bundler/cli'");
 
-        this.jrubyContainer.put("__internal_argv_java__", arguments);
-        this.jrubyContainer.runScriptlet("__internal_argv__ = Array.new(__internal_argv_java__)");
+        localJRubyContainer.put("__internal_argv_java__", arguments);
         if (path == null) {
-            this.jrubyContainer.runScriptlet("Bundler.with_friendly_errors { Bundler::CLI.start(__internal_argv__, debug: true) }");
+            localJRubyContainer.runScriptlet("Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }");
         }
         else {
-            this.jrubyContainer.put("__internal_working_dir__", path.toString());
-            this.jrubyContainer.runScriptlet("Dir.chdir(__internal_working_dir__) { Bundler.with_friendly_errors { Bundler::CLI.start(__internal_argv__, debug: true) } }");
-            this.jrubyContainer.remove("__internal_working_dir__");
+            localJRubyContainer.put("__internal_working_dir__", path.toString());
+            localJRubyContainer.runScriptlet("Dir.chdir(__internal_working_dir__) { Bundler.with_friendly_errors { Bundler::CLI.start(__internal_argv__, debug: true) } }");
+            localJRubyContainer.remove("__internal_working_dir__");
         }
-        this.jrubyContainer.remove("__internal_argv_java__");
+        localJRubyContainer.remove("__internal_argv_java__");
     }
 
     private void addPluginLoadOptionDefinitions(final EmbulkCommandLineParser.Builder parserBuilder)
@@ -762,6 +754,39 @@ public class EmbulkRun
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
         final String now = DateTime.now().toString(formatter);
         out.println(now + ": Embulk v" + this.embulkVersion);
+    }
+
+    // TODO: Check if it is required to process JRuby options.
+    private ScriptingContainer createLocalJRubyScriptingContainer()
+    {
+        // Not |LocalContextScope.SINGLETON| to narrow down considerations.
+        final ScriptingContainer localJRubyContainer =
+            new ScriptingContainer(LocalContextScope.SINGLETHREAD, LocalVariableBehavior.PERSISTENT);
+        return localJRubyContainer;
+    }
+
+    private void callJRubyGem(final List<String> subcommandArguments)
+    {
+        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
+        localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
+        localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
+        localJRubyContainer.remove("__internal_argv_java__");
+    }
+
+    private void callJRubyExec(final List<String> subcommandArguments)
+    {
+        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
+        localJRubyContainer.runScriptlet("exec(*Array.new(__internal_argv_java__))");
+        localJRubyContainer.remove("__internal_argv_java__");
+    }
+
+    private void callJRubyIRB()
+    {
+        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        localJRubyContainer.runScriptlet("require 'irb'");
+        localJRubyContainer.runScriptlet("IRB.start");
     }
 
     private final String embulkVersion;
