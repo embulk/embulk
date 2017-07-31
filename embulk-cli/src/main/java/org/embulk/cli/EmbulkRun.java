@@ -398,14 +398,14 @@ public class EmbulkRun
             }
             return 0;
         case BUNDLE:
-            if (!commandLine.getArguments().isEmpty() && commandLine.getArguments().get(0).equals("new")) {
-                if (commandLine.getArguments().size() != 2) {
+            if (!subcommandArguments.isEmpty() && subcommandArguments.get(0).equals("new")) {
+                if (subcommandArguments.size() != 2) {
                     printGeneralUsage(System.err);
                     System.err.println("");
                     System.err.println("Use `<command> --help` to see description of the commands.");
                     return 1;
                 }
-                newBundle(commandLine.getArguments().get(1), null);
+                newBundle(subcommandArguments.get(1), null);
                 System.err.println("'embulk bundle new' is deprecated. This will be removed in future release. Please use 'embulk mkbundle' instead.");
             }
             else {
