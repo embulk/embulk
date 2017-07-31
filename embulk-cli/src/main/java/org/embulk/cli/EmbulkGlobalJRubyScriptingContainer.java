@@ -178,7 +178,7 @@ public class EmbulkGlobalJRubyScriptingContainer
 
         final Path locationPath;
         try {
-            locationPath = Paths.get(locationUrl.toURI().getPath());
+            locationPath = Paths.get(locationUrl.toURI());
         }
         catch (URISyntaxException ex) {
             throw new EmbulkCommandLineException("Invalid location: " + locationUrl.toString(), ex);
