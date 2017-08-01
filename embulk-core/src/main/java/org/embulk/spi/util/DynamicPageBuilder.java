@@ -43,6 +43,7 @@ public class DynamicPageBuilder
 
         // required by TimestampFormatter
         @ConfigInject
+        @Deprecated
         public ScriptingContainer getJRuby();
     }
 

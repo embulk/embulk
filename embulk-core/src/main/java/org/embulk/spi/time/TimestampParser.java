@@ -32,6 +32,7 @@ public class TimestampParser
         public DateTimeZone getDefaultTimeZone();
 
         @ConfigInject
+        @Deprecated
         public ScriptingContainer getJRuby();
     }
 
@@ -50,6 +51,7 @@ public class TimestampParser
         public String getDefaultDate();
 
         @ConfigInject
+        @Deprecated
         public ScriptingContainer getJRuby();
     }
 
@@ -77,30 +79,64 @@ public class TimestampParser
     @Deprecated
     public TimestampParser(String format, ParserTask task)
     {
-        this(task.getJRuby(), format, task.getDefaultTimeZone());
+        this(format, task.getDefaultTimeZone());
+        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
+        // TODO: Notify users about deprecated calls through the notification reporter.
+        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
+        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
+        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
+        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+            System.err.println("[WARN] " + stackTrace.toString());
+        }
     }
 
     @VisibleForTesting
     static TimestampParser createTimestampParserForTesting(Task task)
 
     {
-        return new TimestampParser(task.getJRuby(), task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
+        return new TimestampParser(task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
     }
 
     public TimestampParser(Task task, TimestampColumnOption columnOption)
     {
-        this(task.getJRuby(),
+        this(
                 columnOption.getFormat().or(task.getDefaultTimestampFormat()),
                 columnOption.getTimeZone().or(task.getDefaultTimeZone()),
                 columnOption.getDate().or(task.getDefaultDate()));
     }
 
+    @Deprecated
     public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
     {
-        this(jruby, format, defaultTimeZone, "1970-01-01");
+        this(format, defaultTimeZone);
+        // TODO: Notify users about deprecated calls through the notification reporter.
+        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
+        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
+        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
+        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+            System.err.println("[WARN] " + stackTrace.toString());
+        }
     }
 
+    public TimestampParser(String format, DateTimeZone defaultTimeZone)
+    {
+        this(format, defaultTimeZone, "1970-01-01");
+    }
+
+    @Deprecated
     public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone, String defaultDate)
+    {
+        this(format, defaultTimeZone, defaultDate);
+        // TODO: Notify users about deprecated calls through the notification reporter.
+        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
+        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
+        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
+        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+            System.err.println("[WARN] " + stackTrace.toString());
+        }
+    }
+
+    public TimestampParser(final String format, final DateTimeZone defaultTimeZone, final String defaultDate)
     {
         // TODO get default current time from ExecTask.getExecTimestamp
         this.format = format;
