@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.embulk.command.PreviewPrinter;
@@ -21,7 +22,8 @@ import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
-import org.jruby.RubyHash;
+import org.jruby.embed.LocalContextScope;
+import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +37,10 @@ import org.slf4j.LoggerFactory;
 public class EmbulkRunner
 {
     // |EmbulkSetup.setup| initializes:
-    // new EmbulkRunner(embed, globalJRubyContainer)
-    public EmbulkRunner(final EmbulkEmbed embed, final ScriptingContainer globalJRubyContainer)
+    // new EmbulkRunner(embed)
+    public EmbulkRunner(final EmbulkEmbed embed)
     {
         this.embed = embed;  // org.embulk.EmbulkEmbed
-        this.globalJRubyContainer = globalJRubyContainer;
     }
 
     /**
@@ -54,8 +55,7 @@ public class EmbulkRunner
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(
-                configFilePath, new RubyHash(this.globalJRubyContainer.getProvider().getRuntime()), null);
+            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -108,8 +108,7 @@ public class EmbulkRunner
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(
-                configFilePath, new RubyHash(this.globalJRubyContainer.getProvider().getRuntime()), null);
+            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -164,8 +163,7 @@ public class EmbulkRunner
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(
-                configFilePath, new RubyHash(this.globalJRubyContainer.getProvider().getRuntime()), null);
+            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
         }
         catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -289,9 +287,8 @@ public class EmbulkRunner
 
         final ConfigSource configSource;
         if (configDiffPath != null && Files.size(configDiffPath) > 0L) {
-            final ConfigSource lastConfigDiff =
-                readConfig(configDiffPath, new RubyHash(this.globalJRubyContainer.getProvider().getRuntime()), null);
-            configSource = originalConfigSource.merge(lastConfigDiff);
+            configSource = originalConfigSource.merge(
+                readConfig(configDiffPath, Collections.<String, Object>emptyMap(), null));
         }
         else {
             configSource = originalConfigSource;
@@ -391,7 +388,7 @@ public class EmbulkRunner
 
     private ConfigSource readConfig(
             final Path configFilePath,
-            final RubyHash templateParams,
+            final Map<String, Object> templateParams,
             final String templateIncludePath)
             throws IOException
     {
@@ -422,28 +419,34 @@ public class EmbulkRunner
 
     private String runLiquid(
             final String templateSource,
-            final RubyHash templateParams,
+            final Map<String, Object> templateParams,
             final String templateIncludePath)
     {
-        this.globalJRubyContainer.runScriptlet("require 'liquid'");
+        // TODO: Check if it is required to process JRuby options.
+        // Not |LocalContextScope.SINGLETON| to narrow down considerations.
+        final ScriptingContainer localJRubyContainer =
+            new ScriptingContainer(LocalContextScope.SINGLETHREAD, LocalVariableBehavior.PERSISTENT);
 
-        this.globalJRubyContainer.put("__internal_liquid_template_source__", templateSource);
-        this.globalJRubyContainer.runScriptlet("template = Liquid::Template.parse(__internal_liquid_template_source__, :error_mode => :strict)");
-        this.globalJRubyContainer.remove("__internal_liquid_template_source__");
+        localJRubyContainer.runScriptlet("require 'liquid'");
+
+        localJRubyContainer.put("__internal_liquid_template_source__", templateSource);
+        localJRubyContainer.runScriptlet("template = Liquid::Template.parse(__internal_liquid_template_source__, :error_mode => :strict)");
+        localJRubyContainer.remove("__internal_liquid_template_source__");
 
         if (templateIncludePath != null) {
-            this.globalJRubyContainer.put("__internal_liquid_template_include_path_java__", templateIncludePath);
-            this.globalJRubyContainer.runScriptlet("__internal_liquid_template_include_path__ = File.expand_path(__internal_liquid_template_include_path_java__ || File.dirname(config)) unless __internal_liquid_template_include_path_java__ == false");
-            this.globalJRubyContainer.runScriptlet("template.registers[:file_system] = Liquid::LocalFileSystem.new(__internal_liquid_template_include_path__, \"_%s.yml.liquid\")");
-            this.globalJRubyContainer.remove("__internal_liquid_template_include_path__");
+            localJRubyContainer.put("__internal_liquid_template_include_path_java__", templateIncludePath);
+            localJRubyContainer.runScriptlet("__internal_liquid_template_include_path__ = File.expand_path(__internal_liquid_template_include_path_java__ || File.dirname(config)) unless __internal_liquid_template_include_path_java__ == false");
+            localJRubyContainer.runScriptlet("template.registers[:file_system] = Liquid::LocalFileSystem.new(__internal_liquid_template_include_path__, \"_%s.yml.liquid\")");
+            localJRubyContainer.remove("__internal_liquid_template_include_path__");
         }
 
-        this.globalJRubyContainer.put("__internal_liquid_template_params__", templateParams);
-        this.globalJRubyContainer.runScriptlet("__internal_liquid_template_data__ = { 'env' => ENV.to_h }.merge(__internal_liquid_template_params__)");
-        this.globalJRubyContainer.remove("__internal_liquid_template_params__");
+        // TODO: Convert |templateParams| recursively to Ruby's Hash.
+        localJRubyContainer.put("__internal_liquid_template_params__", templateParams);
+        localJRubyContainer.runScriptlet("__internal_liquid_template_data__ = { 'env' => ENV.to_h }.merge(__internal_liquid_template_params__)");
+        localJRubyContainer.remove("__internal_liquid_template_params__");
 
         final Object renderedObject =
-            this.globalJRubyContainer.runScriptlet("template.render(__internal_liquid_template_data__)");
+            localJRubyContainer.runScriptlet("template.render(__internal_liquid_template_data__)");
         return renderedObject.toString();
     }
 
@@ -522,5 +525,4 @@ public class EmbulkRunner
     private final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
 
     private final EmbulkEmbed embed;
-    private final ScriptingContainer globalJRubyContainer;
 }

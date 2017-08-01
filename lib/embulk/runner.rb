@@ -4,22 +4,14 @@ module Embulk
   # Runner = EmbulkRunner.new
 
   class EmbulkRunner
-    def initialize(embed, jruby_container=nil)
+    def initialize(embed)
       @embed = embed  # org.embulk.EmbulkEmbed
-      if jruby_container
-        @jruby_container = jruby_container
-      else
-        # The ScriptingContainer instance below is the same JRuby instance with the one running this runner.rb itself
-        # as it's LocalContextScope.SINGLETON.
-        @jruby_container = Java::org.jruby.embed.ScriptingContainer.new(
-          Java::org.jruby.embed.LocalContextScope::SINGLETON, Java::org.jruby.embed.LocalVariableBehavior::PERSISTENT)
-      end
     end
 
     def guess(config, options={})
       output_path =
         (options[:next_config_output_path] ? Java::java.lang.String.new(options[:next_config_output_path]) : nil)
-      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed, @jruby_container)
+      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed)
 
       case config
       when String
@@ -33,7 +25,7 @@ module Embulk
 
     def preview(config, options={})
       format = (options[:format] ? Java::java.lang.String.new(options[:format]) : nil)
-      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed, @jruby_container)
+      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed)
 
       case config
       when String
@@ -52,7 +44,7 @@ module Embulk
         (options[:next_config_output_path] ? Java::java.lang.String.new(options[:next_config_output_path]) : nil)
       resume_state_path =
         (options[:resume_state_path] ? Java::java.lang.String.new(options[:resume_state_path]) : nil)
-      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed, @jruby_container)
+      embulk_runner_java = Java::org.embulk.EmbulkRunner.new(@embed)
 
       case config
       when String
