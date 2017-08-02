@@ -30,13 +30,12 @@ import org.jruby.embed.ScriptingContainer;
 
 public class EmbulkRun
 {
-    public EmbulkRun(final String embulkVersion, final ScriptingContainer jrubyContainer)
+    public EmbulkRun(final String embulkVersion)
     {
         this.embulkVersion = embulkVersion;
-        this.jrubyContainer = jrubyContainer;
     }
 
-    public int run(final List<String> argsEmbulk, final List<String> argsJRuby)
+    public int run(final List<String> argsEmbulk, final List<String> jrubyOptions)
     {
         final EmbulkArguments arguments;
         try {
@@ -79,7 +78,7 @@ public class EmbulkRun
         case EXEC:
         case GEM:
         case IRB:
-            return runSubcommand(subcommand, subcommandArguments, null);
+            return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
         default:
             final EmbulkCommandLineParser parser = buildCommandLineParser(subcommand);
             final EmbulkCommandLine commandLine;
@@ -97,7 +96,7 @@ public class EmbulkRun
                 parser.printHelp(System.err);
                 return 1;
             }
-            return runSubcommand(subcommand, subcommandArguments, commandLine);
+            return runSubcommand(subcommand, subcommandArguments, commandLine, jrubyOptions);
         }
     }
 
@@ -344,7 +343,8 @@ public class EmbulkRun
 
     private int runSubcommand(final EmbulkSubcommand subcommand,
                               final List<String> subcommandArguments,
-                              final EmbulkCommandLine commandLine)
+                              final EmbulkCommandLine commandLine,
+                              final List<String> jrubyOptions)
     {
         switch (subcommand) {
         case EXAMPLE:
@@ -447,11 +447,12 @@ public class EmbulkRun
             // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
             // into Ruby |Embulk::Runner|.
             final EmbulkRunner runner = EmbulkSetup.setup(
+                jrubyOptions,
                 commandLine.getSystemConfig(),
                 commandLine.getLoadPath(),
                 commandLine.getLoad(),
                 commandLine.getClasspath(),
-                this.jrubyContainer);
+                commandLine.getBundle());
 
             final Path configDiffPath =
                 (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
@@ -763,5 +764,4 @@ public class EmbulkRun
     }
 
     private final String embulkVersion;
-    private final ScriptingContainer jrubyContainer;
 }
