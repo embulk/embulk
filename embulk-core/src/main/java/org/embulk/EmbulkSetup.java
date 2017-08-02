@@ -69,13 +69,15 @@ public class EmbulkSetup
         setupLoadPaths(loadPaths, pluginPaths, globalJRubyContainer);
         setupClasspaths(classpaths, globalJRubyContainer);
 
+        final EmbulkRunner runner = new EmbulkRunner(embed);
+
         // see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
         globalJRubyContainer.runScriptlet("module Embulk; end");
-        globalJRubyContainer.put("__internal_embulk_setup_embed__", embed);
-        globalJRubyContainer.runScriptlet("Embulk.const_set :Runner, Embulk::EmbulkRunner.new(__internal_embulk_setup_embed__)");
-        globalJRubyContainer.remove("__internal_embulk_setup_embed__");
+        globalJRubyContainer.put("__internal_embulk_runner_java__", runner);
+        globalJRubyContainer.runScriptlet("Embulk.const_set :Runner, Embulk::EmbulkRunner.new(__internal_embulk_runner_java__)");
+        globalJRubyContainer.remove("__internal_embulk_runner_java__");
 
-        return new EmbulkRunner(embed);
+        return runner;
     }
 
     private static void setupLoadPaths(
