@@ -1,22 +1,24 @@
 package org.embulk.spi;
 
 import com.google.common.collect.ImmutableMap;
-import org.embulk.spi.Reporter;
 
 import java.util.Map;
 
 public abstract class AbstractReporterImpl
         implements AutoCloseable, Reporter
 {
-    public final void reportLine(Level level, String line)
+    @Override
+    public final void reportString(Level level, String string)
     {
-        report(level, ImmutableMap.of("skipped_line", (Object)line));
+        report(level, ImmutableMap.of("string", (Object)string));
     }
 
     // TODO reportBuffer, Columns,..
 
+    @Override
     public abstract void report(Level level, Map<String, Object> event);
 
+    @Override
     public abstract void close();
 
     public abstract void cleanup();

@@ -7,6 +7,8 @@ import java.util.Map;
 
 public interface Reporter
 {
+    void reportString(Level level, String string);
+
     void report(Level level, Map<String, Object> event);
 
     enum Channel
