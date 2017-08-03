@@ -21,6 +21,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
+import org.embulk.spi.Reporter;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -80,12 +81,12 @@ public class BulkLoader
         private final Logger logger;
 
         private final ProcessPluginSet plugins;
-        private volatile Map<Reporters.Type, PluginType> reporterPluginTypes;
+        private volatile Map<Reporter.Channel, PluginType> reporterPluginTypes;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
-        private volatile Map<Reporters.Type, TaskSource> reporterTaskSources;
+        private volatile Map<Reporter.Channel, TaskSource> reporterTaskSources;
         private volatile List<Schema> schemas;
         private volatile Schema executorSchema;
         private volatile TransactionStage transactionStage;
@@ -107,7 +108,7 @@ public class BulkLoader
             return logger;
         }
 
-        public void setReporterPluginTypes(Map<Reporters.Type, PluginType> reporterPluginTypes)
+        public void setReporterPluginTypes(Map<Reporter.Channel, PluginType> reporterPluginTypes)
         {
             this.reporterPluginTypes = reporterPluginTypes;
         }
@@ -142,7 +143,7 @@ public class BulkLoader
             this.filterTaskSources = filterTaskSources;
         }
 
-        public void setReporterTaskSources(Map<Reporters.Type, TaskSource> reporterTaskSources)
+        public void setReporterTaskSources(Map<Reporter.Channel, TaskSource> reporterTaskSources)
         {
             this.reporterTaskSources = reporterTaskSources;
         }
@@ -561,14 +562,14 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
-    private Map<Reporters.Type, ReporterPlugin> newReporterPlugins(final Map<Reporters.Type, ConfigSource> configs)
+    private Map<Reporter.Channel, ReporterPlugin> newReporterPlugins(final Map<Reporter.Channel, ConfigSource> configs)
     {
-        final ImmutableMap.Builder<Reporters.Type, ReporterPlugin> plugins = ImmutableMap.builder();
+        final ImmutableMap.Builder<Reporter.Channel, ReporterPlugin> plugins = ImmutableMap.builder();
 
-        for (final Reporters.Type type : Reporters.Type.values()) {
-            // if the reporter type doesn't appear in Embulk config, it creates new empty config, by default.
-            final ConfigSource config = configs.get(type);
-            plugins.put(type, newReporterPlugin(config));
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            // if the reporter channel doesn't appear in Embulk config, it creates new empty config, by default.
+            final ConfigSource config = configs.get(channel);
+            plugins.put(channel, newReporterPlugin(config));
         }
 
         return Maps.immutableEnumMap(plugins.build());
@@ -587,12 +588,12 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporters.Type, ConfigSource> reporterConfigs = ReporterPlugins.extractConfigSources(task.getReportersConfig());
-        final Map<Reporters.Type, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
+        final Map<Reporter.Channel, ConfigSource> reporterConfigs = ReporterPlugins.extractConfigSources(task.getReportersConfig());
+        final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
 
         try {
             ReporterPlugins.transaction(reporterPlugins, reporterConfigs, new ReporterPlugins.Control() {
-                public void run(final Map<Reporters.Type, TaskSource> reporterTasks)
+                public void run(final Map<Reporter.Channel, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 

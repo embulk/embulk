@@ -8,6 +8,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.config.Task;
+import org.embulk.spi.Reporter;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
@@ -16,7 +17,6 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.util.PagePrinter;
-import org.embulk.spi.util.Reporters;
 
 public class StdoutOutputPlugin
         implements OutputPlugin
@@ -61,7 +61,7 @@ public class StdoutOutputPlugin
 
             public void add(Page page)
             {
-                Exec.getReporter(Reporters.Type.SKIPPED_DATA).report(Reporters.ReportLevel.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
+                Exec.getReporter(Reporter.Channel.SKIPPED_DATA).report(Reporter.Level.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
                 reader.setPage(page);
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));

@@ -9,18 +9,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.embulk.plugin.PluginType;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.util.Executors;
-import org.embulk.spi.util.Reporters;
 
 public class ProcessTask
 {
     private final PluginType inputPluginType;
     private final PluginType outputPluginType;
     private final List<PluginType> filterPluginTypes;
-    private final Map<Reporters.Type, PluginType> reporterPluginTypes;
+    private final Map<Reporter.Channel, PluginType> reporterPluginTypes;
     private final TaskSource inputTaskSource;
     private final TaskSource outputTaskSource;
     private final List<TaskSource> filterTaskSources;
-    private final Map<Reporters.Type, TaskSource> reportersTaskSource;
+    private final Map<Reporter.Channel, TaskSource> reportersTaskSource;
     private final List<Schema> schemas;
     private final Schema executorSchema;
     private TaskSource executorTaskSource;
@@ -30,11 +29,11 @@ public class ProcessTask
             @JsonProperty("inputType") PluginType inputPluginType,
             @JsonProperty("outputType") PluginType outputPluginType,
             @JsonProperty("filterTypes") List<PluginType> filterPluginTypes,
-            @JsonProperty("reporterTypes") Map<Reporters.Type, PluginType> reporterPluginTypes,
+            @JsonProperty("reporterTypes") Map<Reporter.Channel, PluginType> reporterPluginTypes,
             @JsonProperty("inputTask") TaskSource inputTaskSource,
             @JsonProperty("outputTask") TaskSource outputTaskSource,
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
-            @JsonProperty("reportersTask") Map<Reporters.Type, TaskSource> reportersTaskSource,
+            @JsonProperty("reportersTask") Map<Reporter.Channel, TaskSource> reportersTaskSource,
             @JsonProperty("schemas") List<Schema> schemas,
             @JsonProperty("executorSchema") Schema executorSchema,
             @JsonProperty("executorTask") TaskSource executorTaskSource)
@@ -72,7 +71,7 @@ public class ProcessTask
     }
 
     @JsonProperty("reporterTypes")
-    public Map<Reporters.Type, PluginType> reporterPluginTypes()
+    public Map<Reporter.Channel, PluginType> reporterPluginTypes()
     {
         return reporterPluginTypes;
     }
@@ -96,7 +95,7 @@ public class ProcessTask
     }
 
     @JsonProperty("reportersTask")
-    public Map<Reporters.Type, TaskSource> getReportersTaskSource()
+    public Map<Reporter.Channel, TaskSource> getReportersTaskSource()
     {
         return reportersTaskSource;
     }

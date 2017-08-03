@@ -215,9 +215,9 @@ public class ExecSession
         this.reporters = reporters;
     }
 
-    public Reporter getReporter(Reporters.Type type)
+    public Reporter getReporter(Reporter.Channel channel)
     {
-        return this.reporters.getReporter(type);
+        return this.reporters.getReporter(channel);
     }
 
     public TempFileSpace getTempFileSpace()

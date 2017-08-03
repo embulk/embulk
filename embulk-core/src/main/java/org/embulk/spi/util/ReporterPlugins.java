@@ -11,48 +11,48 @@ import java.util.Map;
 
 public class ReporterPlugins
 {
-    public static Map<Reporters.Type, ConfigSource> extractConfigSources(final ConfigSource reportersConfig)
+    public static Map<Reporter.Channel, ConfigSource> extractConfigSources(final ConfigSource reportersConfig)
     {
-        final ImmutableMap.Builder<Reporters.Type, ConfigSource> builder = ImmutableMap.builder();
-        for (final Reporters.Type type : Reporters.Type.values()) {
-            final String typeName = type.toString();
+        final ImmutableMap.Builder<Reporter.Channel, ConfigSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final String typeName = channel.toString();
             final ConfigSource config = reportersConfig.getNestedOrGetEmpty(typeName);
-            // even though the type doesn't appear in reporters config, empty Json object is stored.
-            builder.put(type, config);
+            // even though the channel doesn't appear in reporters config, empty Json object is stored.
+            builder.put(channel, config);
         }
         return Maps.immutableEnumMap(builder.build());
     }
 
     public static void transaction(
-            final Map<Reporters.Type, ReporterPlugin> plugins,
-            final Map<Reporters.Type, ConfigSource> configs,
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, ConfigSource> configs,
             final Control control)
     {
-        final ImmutableMap.Builder<Reporters.Type, TaskSource> builder = ImmutableMap.builder();
-        for (final Reporters.Type type : Reporters.Type.values()) {
-            final ConfigSource config = configs.get(type);
-            final ReporterPlugin reporterPlugin = plugins.get(type);
+        final ImmutableMap.Builder<Reporter.Channel, TaskSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ConfigSource config = configs.get(channel);
+            final ReporterPlugin reporterPlugin = plugins.get(channel);
             final TaskSource task = reporterPlugin.configureTaskSource(config);
-            builder.put(type, task);
+            builder.put(channel, task);
         }
         control.run(Maps.immutableEnumMap(builder.build()));
     }
 
     public static Reporters createReporters(
-            final Map<Reporters.Type, ReporterPlugin> plugins,
-            final Map<Reporters.Type, TaskSource> tasks)
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, TaskSource> tasks)
     {
-        final ImmutableMap.Builder<Reporters.Type, Reporter> builder = ImmutableMap.builder();
-        for (final Reporters.Type type : Reporters.Type.values()) {
-            final ReporterPlugin plugin = plugins.get(type);
-            final TaskSource task = tasks.get(type);
-            builder.put(type, plugin.open(task));
+        final ImmutableMap.Builder<Reporter.Channel, Reporter> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ReporterPlugin plugin = plugins.get(channel);
+            final TaskSource task = tasks.get(channel);
+            builder.put(channel, plugin.open(task));
         }
         return new Reporters(Maps.immutableEnumMap(builder.build()));
     }
 
     public interface Control
     {
-        void run(final Map<Reporters.Type, TaskSource> reporterTasks);
+        void run(final Map<Reporter.Channel, TaskSource> reporterTasks);
     }
 }

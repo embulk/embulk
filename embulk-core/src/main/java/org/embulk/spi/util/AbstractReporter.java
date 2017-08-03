@@ -8,12 +8,12 @@ import java.util.Map;
 public abstract class AbstractReporter
         implements ReporterCloseable
 {
-    public final void reportLine(Reporters.ReportLevel level, String line)
+    public final void reportLine(Level level, String line)
     {
         report(level, ImmutableMap.of("skipped_line", line));
     }
 
     // TODO reportBuffer, Columns,..
 
-    public abstract void report(Reporters.ReportLevel level, Map<String, Object> event);
+    public abstract void report(Level level, Map<String, Object> event);
 }
