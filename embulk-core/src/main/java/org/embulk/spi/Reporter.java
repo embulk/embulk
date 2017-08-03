@@ -14,7 +14,7 @@ public interface Reporter
     enum Channel
     {
         SKIPPED_DATA("skipped_data"),
-        EVENT_LOG("event_log");
+        LOG("log");
         // TODO NOTIFICATION
 
         private final String channel;
@@ -30,8 +30,8 @@ public interface Reporter
             switch (channel) {
                 case "skipped_data":
                     return SKIPPED_DATA;
-                case "event_log":
-                    return EVENT_LOG;
+                case "log":
+                    return LOG;
                 default:
                     throw new IllegalArgumentException();
             }
