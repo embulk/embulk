@@ -5,7 +5,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
-import org.embulk.spi.util.AbstractReporter;
+import org.embulk.spi.util.AbstractReporterImpl;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -23,12 +23,12 @@ public class NullReporterPlugin
     @Override
     public ReporterCloseable open(final TaskSource task)
     {
-        return new NullReporter();
+        return new NullReporterImpl();
     }
 
     @ThreadSafe
-    public static class NullReporter
-            extends AbstractReporter
+    public static class NullReporterImpl
+            extends AbstractReporterImpl
     {
         @Override
         public void report(Level level, Map<String, Object> event)

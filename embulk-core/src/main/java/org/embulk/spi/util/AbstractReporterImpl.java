@@ -5,7 +5,7 @@ import org.embulk.spi.ReporterCloseable;
 
 import java.util.Map;
 
-public abstract class AbstractReporter
+public abstract class AbstractReporterImpl
         implements ReporterCloseable
 {
     public final void reportLine(Level level, String line)
