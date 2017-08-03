@@ -123,19 +123,9 @@ public class EmbulkGlobalJRubyScriptingContainer
     private static final class UnrecognizedJRubyOptionException extends Exception {}
     private static final class NotWorkingJRubyOptionException extends Exception {}
     private static final class UnrecognizedJRubyLoadPathException extends Exception {
-        public UnrecognizedJRubyLoadPathException()
-        {
-            super();
-        }
-
         public UnrecognizedJRubyLoadPathException(final String message)
         {
             super(message);
-        }
-
-        public UnrecognizedJRubyLoadPathException(final Throwable cause)
-        {
-            super(cause);
         }
 
         public UnrecognizedJRubyLoadPathException(final String message, final Throwable cause)
