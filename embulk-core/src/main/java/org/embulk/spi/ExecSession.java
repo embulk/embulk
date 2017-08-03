@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import org.embulk.spi.util.AbstractReporterImpl;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -234,7 +235,7 @@ public class ExecSession
     public void cleanup()
     {
         for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
             reporter.cleanup(); // TODO exception?
         }
 

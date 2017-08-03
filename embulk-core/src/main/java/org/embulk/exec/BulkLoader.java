@@ -22,7 +22,6 @@ import org.embulk.plugin.PluginType;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.Reporter;
-import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -35,6 +34,7 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.util.AbstractReporterImpl;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
 
@@ -699,7 +699,7 @@ public class BulkLoader
                     }
                     finally {
                         for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-                            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
+                            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
                             reporter.close(); // TODO exception?
                         }
                     }

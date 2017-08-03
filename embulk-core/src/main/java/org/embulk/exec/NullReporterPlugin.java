@@ -3,7 +3,6 @@ package org.embulk.exec;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.util.AbstractReporterImpl;
 
@@ -21,7 +20,7 @@ public class NullReporterPlugin
     }
 
     @Override
-    public ReporterCloseable open(final TaskSource task)
+    public AbstractReporterImpl open(final TaskSource task)
     {
         return new NullReporterImpl();
     }
