@@ -700,7 +700,13 @@ public class BulkLoader
                     finally {
                         for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
                             final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
-                            reporter.close(); // TODO exception?
+                            try {
+                                reporter.close();
+                            }
+                            catch (Exception ex) {
+                                final Reporter.Channel channel = e.getKey();
+                                state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
+                            }
                         }
                     }
                 }
