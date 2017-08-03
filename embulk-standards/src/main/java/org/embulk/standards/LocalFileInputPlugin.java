@@ -15,7 +15,6 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.attribute.BasicFileAttributes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
@@ -27,7 +26,6 @@ import org.embulk.config.TaskReport;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
-import org.embulk.spi.Reporter;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
@@ -68,8 +66,6 @@ public class LocalFileInputPlugin
     public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control)
     {
         PluginTask task = config.loadConfig(PluginTask.class);
-
-        Exec.getReporter(Reporter.Channel.EVENT_LOG).report(Reporter.Level.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
 
         // list files recursively
         List<String> files = listFiles(task);

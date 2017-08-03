@@ -2,13 +2,11 @@ package org.embulk.standards;
 
 import java.util.List;
 
-import com.google.common.collect.ImmutableMap;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.TaskReport;
 import org.embulk.config.Task;
-import org.embulk.spi.Reporter;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Page;
@@ -61,7 +59,6 @@ public class StdoutOutputPlugin
 
             public void add(Page page)
             {
-                Exec.getReporter(Reporter.Channel.SKIPPED_DATA).report(Reporter.Level.INFO, ImmutableMap.<String, Object>of("foo", "bar"));
                 reader.setPage(page);
                 while (reader.nextRecord()) {
                     System.out.println(printer.printRecord(reader, ","));
