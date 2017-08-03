@@ -34,7 +34,6 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.util.ReporterPlugins;
 import org.embulk.spi.util.Reporters;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
@@ -562,6 +561,18 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
+    private static Map<Reporter.Channel, ConfigSource> extractReporterConfigs(final ConfigSource reportersConfig)
+    {
+        final ImmutableMap.Builder<Reporter.Channel, ConfigSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final String typeName = channel.toString();
+            final ConfigSource config = reportersConfig.getNestedOrGetEmpty(typeName);
+            // even though the channel doesn't appear in reporters config, empty Json object is stored.
+            builder.put(channel, config);
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
     private Map<Reporter.Channel, ReporterPlugin> newReporterPlugins(final Map<Reporter.Channel, ConfigSource> configs)
     {
         final ImmutableMap.Builder<Reporter.Channel, ReporterPlugin> plugins = ImmutableMap.builder();
@@ -581,6 +592,39 @@ public class BulkLoader
         return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.NULL));
     }
 
+    private static Reporters createReporters(
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, TaskSource> tasks)
+    {
+        final ImmutableMap.Builder<Reporter.Channel, Reporter> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ReporterPlugin plugin = plugins.get(channel);
+            final TaskSource task = tasks.get(channel);
+            builder.put(channel, plugin.open(task));
+        }
+        return new Reporters(Maps.immutableEnumMap(builder.build()));
+    }
+
+    private static void reportersTransaction(
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, ConfigSource> configs,
+            final ReportersControl control)
+    {
+        final ImmutableMap.Builder<Reporter.Channel, TaskSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ConfigSource config = configs.get(channel);
+            final ReporterPlugin reporterPlugin = plugins.get(channel);
+            final TaskSource task = reporterPlugin.configureTaskSource(config);
+            builder.put(channel, task);
+        }
+        control.run(Maps.immutableEnumMap(builder.build()));
+    }
+
+    private interface ReportersControl
+    {
+        void run(final Map<Reporter.Channel, TaskSource> reporterTasks);
+    }
+
     private ExecutionResult doRun(final ConfigSource config)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
@@ -588,16 +632,16 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporter.Channel, ConfigSource> reporterConfigs = ReporterPlugins.extractConfigSources(task.getReportersConfig());
+        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReportersConfig());
         final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
 
         try {
-            ReporterPlugins.transaction(reporterPlugins, reporterConfigs, new ReporterPlugins.Control() {
+            reportersTransaction(reporterPlugins, reporterConfigs, new ReportersControl() {
                 public void run(final Map<Reporter.Channel, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    try (final Reporters reporters = ReporterPlugins.createReporters(reporterPlugins, reporterTasks)) {
+                    try (final Reporters reporters = createReporters(reporterPlugins, reporterTasks)) {
                         state.setReporterTaskSources(reporterTasks);
                         Exec.session().setReporters(reporters);
 

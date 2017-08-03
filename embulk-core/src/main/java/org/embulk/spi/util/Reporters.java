@@ -11,7 +11,7 @@ public final class Reporters
 
     private final Map<Reporter.Channel, Reporter> reporters;
 
-    Reporters(final Map<Reporter.Channel, Reporter> reporters)
+    public Reporters(final Map<Reporter.Channel, Reporter> reporters)
     {
         this.reporters = reporters;
     }
