@@ -618,6 +618,20 @@ public class BulkLoader
         control.run(Maps.immutableEnumMap(builder.build()));
     }
 
+    private static void closeReporters(final LoaderState state, final Map<Reporter.Channel, Reporter> reporters)
+    {
+        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
+            try {
+                reporter.close();
+            }
+            catch (Exception ex) {
+                final Reporter.Channel channel = e.getKey();
+                state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
+            }
+        }
+    }
+
     private interface ReportersControl
     {
         void run(final Map<Reporter.Channel, TaskSource> reporterTasks);
@@ -698,16 +712,7 @@ public class BulkLoader
                         cleanupCommittedTransaction(config, state);
                     }
                     finally {
-                        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-                            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
-                            try {
-                                reporter.close();
-                            }
-                            catch (Exception ex) {
-                                final Reporter.Channel channel = e.getKey();
-                                state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
-                            }
-                        }
+                        closeReporters(state, reporters);
                     }
                 }
             });
@@ -806,16 +811,7 @@ public class BulkLoader
                         cleanupCommittedTransaction(config, state);
                     }
                     finally {
-                        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-                            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
-                            try {
-                                reporter.close();
-                            }
-                            catch (Exception ex) {
-                                final Reporter.Channel channel = e.getKey();
-                                state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
-                            }
-                        }
+                        closeReporters(state, reporters);
                     }
                 }
             });
