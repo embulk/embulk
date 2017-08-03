@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import org.embulk.spi.util.Reporters;
 import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
@@ -23,6 +22,8 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
+import java.util.Map;
+
 public class ExecSession
 {
     private final Injector injector;
@@ -36,7 +37,7 @@ public class ExecSession
 
     private final boolean preview;
 
-    private Reporters reporters;
+    private Map<Reporter.Channel, Reporter> reporters;
 
     @Deprecated
     public interface SessionTask
@@ -210,14 +211,14 @@ public class ExecSession
         return new TimestampFormatter(format, formatterTask);
     }
 
-    public void setReporters(final Reporters reporters)
+    public void setReporters(final Map<Reporter.Channel, Reporter> reporters)
     {
         this.reporters = reporters;
     }
 
     public Reporter getReporter(Reporter.Channel channel)
     {
-        return this.reporters.getReporter(channel);
+        return this.reporters.get(channel); // getOrDefault?
     }
 
     public TempFileSpace getTempFileSpace()
@@ -232,9 +233,11 @@ public class ExecSession
 
     public void cleanup()
     {
-        if (reporters != null) {
-            reporters.cleanup();
+        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
+            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
+            reporter.cleanup(); // TODO exception?
         }
+
         tempFileSpace.cleanup();
     }
 }

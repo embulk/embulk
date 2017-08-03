@@ -22,6 +22,7 @@ import org.embulk.plugin.PluginType;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
 import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterCloseable;
 import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.Exec;
@@ -34,7 +35,6 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.util.Reporters;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
 
@@ -590,7 +590,7 @@ public class BulkLoader
         return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.NULL));
     }
 
-    private static Reporters createReporters(
+    private static Map<Reporter.Channel, Reporter> createReporters(
             final Map<Reporter.Channel, ReporterPlugin> plugins,
             final Map<Reporter.Channel, TaskSource> tasks)
     {
@@ -600,7 +600,7 @@ public class BulkLoader
             final TaskSource task = tasks.get(channel);
             builder.put(channel, plugin.open(task));
         }
-        return new Reporters(Maps.immutableEnumMap(builder.build()));
+        return Maps.immutableEnumMap(builder.build());
     }
 
     private static void reportersTransaction(
@@ -639,7 +639,8 @@ public class BulkLoader
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    try (final Reporters reporters = createReporters(reporterPlugins, reporterTasks)) {
+                    final Map<Reporter.Channel, Reporter> reporters = createReporters(reporterPlugins, reporterTasks);
+                    try {
                         state.setReporterTaskSources(reporterTasks);
                         Exec.session().setReporters(reporters);
 
@@ -695,6 +696,12 @@ public class BulkLoader
                         state.setTransactionStage(TransactionStage.CLEANUP);
 
                         cleanupCommittedTransaction(config, state);
+                    }
+                    finally {
+                        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
+                            final ReporterCloseable reporter = (ReporterCloseable) e.getValue();
+                            reporter.close(); // TODO exception?
+                        }
                     }
                 }
             });
