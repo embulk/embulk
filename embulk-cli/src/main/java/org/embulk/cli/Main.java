@@ -2,6 +2,7 @@ package org.embulk.cli;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import org.embulk.EmbulkVersion;
 
 public class Main
 {
@@ -18,11 +19,12 @@ public class Main
             }
         }
 
-        final String[] embulkArgs = new String[args.length - i];
-        for (int j = 0; i < args.length; ++i, ++j) {
-            embulkArgs[j] = args[i];
+        final ArrayList<String> embulkArgs = new ArrayList<String>();
+        for (; i < args.length; ++i) {
+            embulkArgs.add(args[i]);
         }
 
-        EmbulkBundle.checkBundle(embulkArgs, Collections.unmodifiableList(jrubyOptions));
+        final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
+        run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
     }
 }

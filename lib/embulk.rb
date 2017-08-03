@@ -63,6 +63,13 @@ module Embulk
 
     require_classpath(true)
 
-    Java::org.embulk.EmbulkSetup::setupWithNewScriptingContainer(Java::java.util.HashMap.new(system_config))
+    Java::org.embulk.EmbulkSetup::setup(
+      Java::java.util.ArrayList.new(),
+      Java::java.util.HashMap.new(system_config),
+      Java::java.util.ArrayList.new(),
+      Java::java.util.ArrayList.new(),
+      Java::java.util.ArrayList.new(),
+      nil
+    )
   end
 end

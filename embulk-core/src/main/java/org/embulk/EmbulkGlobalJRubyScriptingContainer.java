@@ -1,4 +1,4 @@
-package org.embulk.cli;
+package org.embulk;
 
 import java.io.PrintStream;
 import java.net.URISyntaxException;
@@ -33,7 +33,6 @@ public class EmbulkGlobalJRubyScriptingContainer
      * Sets up a ScriptingContainer instance for global use in Embulk.
      */
     public static ScriptingContainer setup(
-            final String[] embulkArgs,
             final List<String> jrubyOptions,
             final String bundlePath,
             final PrintStream warning)
@@ -104,7 +103,16 @@ public class EmbulkGlobalJRubyScriptingContainer
             //
             // NOTE: It was written in Ruby as follows:
             //   $LOAD_PATH << File.expand_path('../../', File.dirname(__FILE__))
-            jrubyGlobalContainer.put("__internal_load_path__", getEmbulkJRubyLoadPath());
+            final String jrubyLoadPath;
+            try {
+                jrubyLoadPath = getEmbulkJRubyLoadPath();
+            }
+            catch (UnrecognizedJRubyLoadPathException ex) {
+                warning.println("[ERROR] Failed to retrieve Embulk's path.");
+                ex.printStackTrace(warning);
+                throw new RuntimeException(ex);
+            }
+            jrubyGlobalContainer.put("__internal_load_path__", jrubyLoadPath);
             jrubyGlobalContainer.runScriptlet("$LOAD_PATH << File.expand_path(__internal_load_path__)");
             jrubyGlobalContainer.remove("__internal_load_path__");
 
@@ -114,6 +122,17 @@ public class EmbulkGlobalJRubyScriptingContainer
 
     private static final class UnrecognizedJRubyOptionException extends Exception {}
     private static final class NotWorkingJRubyOptionException extends Exception {}
+    private static final class UnrecognizedJRubyLoadPathException extends Exception {
+        public UnrecognizedJRubyLoadPathException(final String message)
+        {
+            super(message);
+        }
+
+        public UnrecognizedJRubyLoadPathException(final String message, final Throwable cause)
+        {
+            super(message, cause);
+        }
+    }
 
     private static void processJRubyOption(final String jrubyOption, final RubyInstanceConfig jrubyGlobalConfig)
             throws UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException
@@ -154,26 +173,27 @@ public class EmbulkGlobalJRubyScriptingContainer
      *     "/some/directory"
      */
     private static String getEmbulkJRubyLoadPath()
+            throws UnrecognizedJRubyLoadPathException
     {
         final ProtectionDomain protectionDomain;
         try {
             protectionDomain = EmbulkGlobalJRubyScriptingContainer.class.getProtectionDomain();
         }
         catch (SecurityException ex) {
-            throw new EmbulkCommandLineException("Failed to achieve ProtectionDomain", ex);
+            throw new UnrecognizedJRubyLoadPathException("Failed to achieve ProtectionDomain", ex);
         }
 
         final CodeSource codeSource = protectionDomain.getCodeSource();
         if (codeSource == null) {
-            throw new EmbulkCommandLineException("Failed to achieve CodeSource");
+            throw new UnrecognizedJRubyLoadPathException("Failed to achieve CodeSource");
         }
 
         final URL locationUrl = codeSource.getLocation();
         if (locationUrl == null) {
-            throw new EmbulkCommandLineException("Failed to achieve location");
+            throw new UnrecognizedJRubyLoadPathException("Failed to achieve location");
         }
         else if (!locationUrl.getProtocol().equals("file")) {
-            throw new EmbulkCommandLineException("Invalid location: " + locationUrl.toString());
+            throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString());
         }
 
         final Path locationPath;
@@ -181,7 +201,7 @@ public class EmbulkGlobalJRubyScriptingContainer
             locationPath = Paths.get(locationUrl.toURI());
         }
         catch (URISyntaxException ex) {
-            throw new EmbulkCommandLineException("Invalid location: " + locationUrl.toString(), ex);
+            throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString(), ex);
         }
 
         if (Files.isDirectory(locationPath)) {  // Out of a JAR file
