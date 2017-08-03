@@ -53,7 +53,7 @@ public class StandardPluginModule
         registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
 
         // reporter plugins
-        registerPluginTo(binder, ReporterPlugin.class, "stdout", StdoutReporterPlugin.class);
+        registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));

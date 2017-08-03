@@ -1,10 +1,10 @@
-package org.embulk.exec;
+package org.embulk.standards;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.AbstractReporterImpl;
+import org.embulk.spi.ReporterPlugin;
 
 import javax.annotation.concurrent.ThreadSafe;
 

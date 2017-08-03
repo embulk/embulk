@@ -14,7 +14,7 @@ import java.util.Map;
 public abstract class PluginType
 {
     public static final PluginType LOCAL = DefaultPluginType.create("local");
-    public static final PluginType NULL = DefaultPluginType.create("null");
+    public static final PluginType NULL = DefaultPluginType.create("stdout");
 
     /**
      * Constructs {@code PluginType}.

@@ -41,8 +41,8 @@ public class ExecModule
         // LocalExecutorPlugin
         registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
-        // null reporter plugins
-        registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
+        // stdout reporter plugins
+        registerPluginTo(binder, ReporterPlugin.class, "stdout", StdoutReporterPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

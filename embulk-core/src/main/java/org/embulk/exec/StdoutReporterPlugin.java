@@ -1,15 +1,16 @@
-package org.embulk.standards;
+package org.embulk.exec;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.AbstractReporterImpl;
+import org.embulk.spi.ReporterPlugin;
 
 import javax.annotation.concurrent.ThreadSafe;
 
 import java.util.Map;
 
+// TODO should describe why we need to implement this plugin here.
 public class StdoutReporterPlugin
         implements ReporterPlugin
 {
@@ -32,23 +33,17 @@ public class StdoutReporterPlugin
         @Override
         public void report(Level level, Map<String, Object> event)
         {
-            // FIXME TODO
-            System.out.println("StdoutReport#report");
             System.out.println(event);
         }
 
         @Override
         public void close()
         {
-            // FIXME TODO
-            System.out.println("StdoutReport#close");
         }
 
         @Override
         public void cleanup()
         {
-            // FIXME TODO
-            System.out.println("StdoutReport#cleanup");
         }
     }
 }
