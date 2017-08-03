@@ -47,6 +47,6 @@ public interface Reporter
 
     enum Level
     {
-        DEBUG, INFO, WARN, ERROR, FATAL; // TODO
+        DEBUG, INFO, WARN, ERROR, FATAL
     }
 }
