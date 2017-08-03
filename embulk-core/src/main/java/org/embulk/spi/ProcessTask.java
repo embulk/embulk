@@ -19,7 +19,7 @@ public class ProcessTask
     private final TaskSource inputTaskSource;
     private final TaskSource outputTaskSource;
     private final List<TaskSource> filterTaskSources;
-    private final Map<Reporter.Channel, TaskSource> reportersTaskSource;
+    private final Map<Reporter.Channel, TaskSource> reporterTaskSources;
     private final List<Schema> schemas;
     private final Schema executorSchema;
     private TaskSource executorTaskSource;
@@ -33,7 +33,7 @@ public class ProcessTask
             @JsonProperty("inputTask") TaskSource inputTaskSource,
             @JsonProperty("outputTask") TaskSource outputTaskSource,
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
-            @JsonProperty("reportersTask") Map<Reporter.Channel, TaskSource> reportersTaskSource,
+            @JsonProperty("reporterTasks") Map<Reporter.Channel, TaskSource> reporterTaskSources,
             @JsonProperty("schemas") List<Schema> schemas,
             @JsonProperty("executorSchema") Schema executorSchema,
             @JsonProperty("executorTask") TaskSource executorTaskSource)
@@ -45,7 +45,7 @@ public class ProcessTask
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
         this.filterTaskSources = filterTaskSources;
-        this.reportersTaskSource = reportersTaskSource;
+        this.reporterTaskSources = reporterTaskSources;
 
         this.schemas = schemas;
         this.executorSchema = executorSchema;
@@ -94,10 +94,10 @@ public class ProcessTask
         return filterTaskSources;
     }
 
-    @JsonProperty("reportersTask")
-    public Map<Reporter.Channel, TaskSource> getReportersTaskSource()
+    @JsonProperty("reporterTasks")
+    public Map<Reporter.Channel, TaskSource> getReporterTaskSources()
     {
-        return reportersTaskSource;
+        return reporterTaskSources;
     }
 
     @JsonProperty("schemas")
