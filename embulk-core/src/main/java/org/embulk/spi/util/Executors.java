@@ -4,6 +4,7 @@ import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.config.TaskReport;
 import org.embulk.spi.ExecSession;
+import org.embulk.spi.ProcessState;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.PageOutput;
