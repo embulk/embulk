@@ -34,7 +34,7 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.util.AbstractReporterImpl;
+import org.embulk.spi.AbstractReporterImpl;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
 

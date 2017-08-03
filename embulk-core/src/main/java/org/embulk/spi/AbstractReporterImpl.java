@@ -1,4 +1,4 @@
-package org.embulk.spi.util;
+package org.embulk.spi;
 
 import com.google.common.collect.ImmutableMap;
 import org.embulk.spi.Reporter;

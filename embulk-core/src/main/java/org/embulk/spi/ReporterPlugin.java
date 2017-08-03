@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.util.AbstractReporterImpl;
 
 public interface ReporterPlugin
 {
