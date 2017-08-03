@@ -573,20 +573,18 @@ public class BulkLoader
         return Maps.immutableEnumMap(builder.build());
     }
 
-    private Map<Reporter.Channel, ReporterPlugin> newReporterPlugins(final Map<Reporter.Channel, ConfigSource> configs)
+    private static Map<Reporter.Channel, ReporterPlugin> createReporterPlugins(final Map<Reporter.Channel, ConfigSource> configs)
     {
         final ImmutableMap.Builder<Reporter.Channel, ReporterPlugin> plugins = ImmutableMap.builder();
-
         for (final Reporter.Channel channel : Reporter.Channel.values()) {
             // if the reporter channel doesn't appear in Embulk config, it creates new empty config, by default.
             final ConfigSource config = configs.get(channel);
-            plugins.put(channel, newReporterPlugin(config));
+            plugins.put(channel, createReporterPlugin(config));
         }
-
         return Maps.immutableEnumMap(plugins.build());
     }
 
-    private ReporterPlugin newReporterPlugin(final ConfigSource config)
+    private static ReporterPlugin createReporterPlugin(final ConfigSource config)
     {
         // if 'type' attribute doesn't appear in the reporter section, it returns 'null' reporter plugin.
         return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.NULL));
@@ -633,7 +631,7 @@ public class BulkLoader
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
         final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReportersConfig());
-        final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = newReporterPlugins(reporterConfigs);
+        final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = createReporterPlugins(reporterConfigs);
 
         try {
             reportersTransaction(reporterPlugins, reporterConfigs, new ReportersControl() {
