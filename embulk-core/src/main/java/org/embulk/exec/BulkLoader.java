@@ -587,7 +587,7 @@ public class BulkLoader
     private static ReporterPlugin createReporterPlugin(final ConfigSource config)
     {
         // if 'type' attribute doesn't appear in the reporter section, it returns 'null' reporter plugin.
-        return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.NULL));
+        return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.STDOUT));
     }
 
     private static Map<Reporter.Channel, Reporter> createReporters(
