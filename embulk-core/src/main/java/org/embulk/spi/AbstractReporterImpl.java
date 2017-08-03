@@ -10,7 +10,7 @@ public abstract class AbstractReporterImpl
 {
     public final void reportLine(Level level, String line)
     {
-        report(level, ImmutableMap.of("skipped_line", line));
+        report(level, ImmutableMap.of("skipped_line", (Object)line));
     }
 
     // TODO reportBuffer, Columns,..
