@@ -33,7 +33,8 @@ public interface Reporter
                 case "log":
                     return LOG;
                 default:
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException(String.format(
+                            "Unknown channel '%s'. Supported channel are [skipped_data, log].", channel));
             }
         }
 
