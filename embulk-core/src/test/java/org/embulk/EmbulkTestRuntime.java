@@ -1,6 +1,13 @@
 package org.embulk;
 
+import java.util.Map;
 import java.util.Random;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import org.embulk.plugin.PluginType;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import com.google.inject.Injector;
@@ -94,6 +101,7 @@ public class EmbulkTestRuntime
                     Exec.doWith(exec, new ExecAction<Void>() {
                         public Void run()
                         {
+                            exec.setReporters(createReporters());
                             try {
                                 superStatement.evaluate();
                             } catch (Throwable ex) {
@@ -109,6 +117,21 @@ public class EmbulkTestRuntime
                 }
             }
         };
+    }
+
+    private static Map<Reporter.Channel, Reporter> createReporters()
+    {
+        final ImmutableMap.Builder<Reporter.Channel, Reporter> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            builder.put(channel, createStdoutReporter());
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static Reporter createStdoutReporter()
+    {
+        final ReporterPlugin plugin = Exec.newPlugin(ReporterPlugin.class, PluginType.STDOUT);
+        return plugin.open(Exec.newTaskSource());
     }
 
     private static class RuntimeExecutionException
