@@ -12,7 +12,6 @@ import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.spi.ReporterPlugin;
-
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import static org.embulk.exec.GuessExecutor.registerDefaultGuessPluginTo;
 

@@ -2,7 +2,6 @@ package org.embulk;
 
 import java.util.Map;
 import java.util.Random;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.embulk.plugin.PluginType;

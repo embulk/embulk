@@ -53,7 +53,7 @@ public abstract class Executors
             ProcessStateCallback callback)
     {
         TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-                outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
+            outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
 
         callback.started();
         // here needs to use try-with-resource to add exception happend at close() or abort()
