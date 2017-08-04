@@ -61,7 +61,7 @@ public class BulkLoader
 
         @Config("reporters")
         @ConfigDefault("{}")
-        public ConfigSource getReportersConfig();
+        public ConfigSource getReporterConfigs();
 
         public TaskSource getOutputTask();
         public void setOutputTask(TaskSource taskSource);
@@ -561,13 +561,13 @@ public class BulkLoader
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
-    private static Map<Reporter.Channel, ConfigSource> extractReporterConfigs(final ConfigSource reportersConfig)
+    private static Map<Reporter.Channel, ConfigSource> extractReporterConfigs(final ConfigSource reporterConfigs)
     {
         final ImmutableMap.Builder<Reporter.Channel, ConfigSource> builder = ImmutableMap.builder();
         for (final Reporter.Channel channel : Reporter.Channel.values()) {
             final String typeName = channel.toString();
-            final ConfigSource config = reportersConfig.getNestedOrGetEmpty(typeName);
-            // even though the channel doesn't appear in reporters config, empty Json object is stored.
+            final ConfigSource config = reporterConfigs.getNestedOrGetEmpty(typeName);
+            // even though the channel doesn't appear in reporter config, empty Json object is stored.
             builder.put(channel, config);
         }
         return Maps.immutableEnumMap(builder.build());
@@ -644,7 +644,7 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReportersConfig());
+        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReporterConfigs());
         final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = createReporterPlugins(reporterConfigs);
 
         try {
@@ -739,7 +739,7 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReportersConfig());
+        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReporterConfigs());
         final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = createReporterPlugins(reporterConfigs);
 
         try {
