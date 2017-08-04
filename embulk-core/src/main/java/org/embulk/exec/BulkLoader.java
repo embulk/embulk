@@ -470,19 +470,23 @@ public class BulkLoader
         private final PluginType inputPluginType;
         private final PluginType outputPluginType;
         private final List<PluginType> filterPluginTypes;
+        private final Map<Reporter.Channel, PluginType> reporterPluginTypes;
 
         private final InputPlugin inputPlugin;
         private final OutputPlugin outputPlugin;
         private final List<FilterPlugin> filterPlugins;
+        private final Map<Reporter.Channel, ReporterPlugin> reporterPlugins;
 
         public ProcessPluginSet(BulkLoaderTask task)
         {
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
             this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
+            this.reporterPluginTypes = BulkLoader.getReporterPluginTypes(task.getReporterConfigs());
             this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
             this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
             this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
+            this.reporterPlugins = BulkLoader.createReporterPlugins(Exec.session(), reporterPluginTypes);
         }
 
         public PluginType getInputPluginType()
@@ -500,6 +504,11 @@ public class BulkLoader
             return filterPluginTypes;
         }
 
+        public Map<Reporter.Channel, PluginType> getReporterPluginTypes()
+        {
+            return reporterPluginTypes;
+        }
+
         public InputPlugin getInputPlugin()
         {
             return inputPlugin;
@@ -513,6 +522,11 @@ public class BulkLoader
         public List<FilterPlugin> getFilterPlugins()
         {
             return filterPlugins;
+        }
+
+        public Map<Reporter.Channel, ReporterPlugin> getReporterPlugins()
+        {
+            return reporterPlugins;
         }
     }
 
@@ -573,21 +587,30 @@ public class BulkLoader
         return Maps.immutableEnumMap(builder.build());
     }
 
-    private static Map<Reporter.Channel, ReporterPlugin> createReporterPlugins(final Map<Reporter.Channel, ConfigSource> configs)
+    private static Map<Reporter.Channel, PluginType> getReporterPluginTypes(final ConfigSource reporterConfigs)
+    {
+        final Map<Reporter.Channel, ConfigSource> configs = extractReporterConfigs(reporterConfigs);
+        final ImmutableMap.Builder<Reporter.Channel, PluginType> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ConfigSource config = configs.get(channel);
+            // if 'type' attribute doesn't appear in reporter section, it returns 'stdout' plugin type.
+            final PluginType pluginType = config.get(PluginType.class, "type", PluginType.STDOUT);
+            builder.put(channel, pluginType);
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static Map<Reporter.Channel, ReporterPlugin> createReporterPlugins(
+            final ExecSession exec,
+            final Map<Reporter.Channel, PluginType> pluginTypes)
     {
         final ImmutableMap.Builder<Reporter.Channel, ReporterPlugin> plugins = ImmutableMap.builder();
         for (final Reporter.Channel channel : Reporter.Channel.values()) {
-            // if the reporter channel doesn't appear in Embulk config, it creates new empty config, by default.
-            final ConfigSource config = configs.get(channel);
-            plugins.put(channel, createReporterPlugin(config));
+            final PluginType pluginType = pluginTypes.get(channel);
+            final ReporterPlugin reporterPlugin = exec.newPlugin(ReporterPlugin.class, pluginType);
+            plugins.put(channel, reporterPlugin);
         }
         return Maps.immutableEnumMap(plugins.build());
-    }
-
-    private static ReporterPlugin createReporterPlugin(final ConfigSource config)
-    {
-        // if 'type' attribute doesn't appear in the reporter section, it returns 'null' reporter plugin.
-        return Exec.newPlugin(ReporterPlugin.class, config.get(PluginType.class, "type", PluginType.STDOUT));
     }
 
     private static Map<Reporter.Channel, Reporter> createReporters(
@@ -644,16 +667,13 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReporterConfigs());
-        final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = createReporterPlugins(reporterConfigs);
-
         try {
-            reportersTransaction(reporterPlugins, reporterConfigs, new ReportersControl() {
+            reportersTransaction(plugins.getReporterPlugins(), extractReporterConfigs(task.getReporterConfigs()), new ReportersControl() {
                 public void run(final Map<Reporter.Channel, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    final Map<Reporter.Channel, Reporter> reporters = createReporters(reporterPlugins, reporterTasks);
+                    final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
                     try {
                         state.setReporterTaskSources(reporterTasks);
                         Exec.session().setReporters(reporters);
@@ -739,16 +759,13 @@ public class BulkLoader
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
 
-        final Map<Reporter.Channel, ConfigSource> reporterConfigs = extractReporterConfigs(task.getReporterConfigs());
-        final Map<Reporter.Channel, ReporterPlugin> reporterPlugins = createReporterPlugins(reporterConfigs);
-
         try {
-            reportersTransaction(reporterPlugins, reporterConfigs, new ReportersControl() {
+            reportersTransaction(plugins.getReporterPlugins(), extractReporterConfigs(task.getReporterConfigs()), new ReportersControl() {
                 public void run(final Map<Reporter.Channel, TaskSource> reporterTasks)
                 {
                     final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                    final Map<Reporter.Channel, Reporter> reporters = createReporters(reporterPlugins, reporterTasks);
+                    final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
                     try {
                         state.setReporterTaskSources(reporterTasks);
                         Exec.session().setReporters(reporters);
