@@ -752,7 +752,7 @@ public class BulkLoader
         }
     }
 
-    private ExecutionResult doResume(ConfigSource config, final ResumeState resume)
+    private ExecutionResult doResume(final ConfigSource config, final ResumeState resume)
     {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
