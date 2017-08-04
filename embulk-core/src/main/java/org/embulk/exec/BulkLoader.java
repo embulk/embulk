@@ -643,13 +643,12 @@ public class BulkLoader
 
     private static void closeReporters(final LoaderState state, final Map<Reporter.Channel, Reporter> reporters)
     {
-        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
             try {
                 reporter.close();
             }
             catch (Exception ex) {
-                final Reporter.Channel channel = e.getKey();
                 state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
             }
         }

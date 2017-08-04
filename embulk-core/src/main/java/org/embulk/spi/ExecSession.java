@@ -233,9 +233,14 @@ public class ExecSession
 
     public void cleanup()
     {
-        for (final Map.Entry<Reporter.Channel, Reporter> e : reporters.entrySet()) {
-            final AbstractReporterImpl reporter = (AbstractReporterImpl) e.getValue();
-            reporter.cleanup(); // TODO exception?
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
+            try {
+                reporter.cleanup();
+            }
+            catch (Exception ex) {
+                // ignore exception
+            }
         }
 
         tempFileSpace.cleanup();
