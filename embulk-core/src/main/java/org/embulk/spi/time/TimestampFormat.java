@@ -26,13 +26,13 @@ public class TimestampFormat
     @Deprecated
     public TimestampFormatter newFormatter(TimestampFormatter.FormatterTask task)
     {
-        return new TimestampFormatter(format, task);
+        return new TimestampFormatter(format, task.getTimeZone());
     }
 
     @Deprecated
     public TimestampParser newParser(TimestampParser.ParserTask task)
     {
-        return new TimestampParser(format, task);
+        return new TimestampParser(format, task.getDefaultTimeZone());
     }
 
     private static Set<String> availableTimeZoneNames = ImmutableSet.copyOf(DateTimeZone.getAvailableIDs());
