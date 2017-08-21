@@ -417,7 +417,9 @@ public class EmbulkRunner
             return this.embed.newConfigLoader().fromYamlString(
                 runLiquid(new String(Files.readAllBytes(configFilePath), StandardCharsets.UTF_8),
                           templateParams,
-                          templateIncludePath));
+                          (templateIncludePath == null
+                           ? configFilePath.toAbsolutePath().getParent().toString()
+                           : templateIncludePath)));
         }
         else if (EXT_YAML.matcher(configFilePath.toString()).matches()) {
             return this.embed.newConfigLoader().fromYamlString(
