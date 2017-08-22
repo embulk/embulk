@@ -16,6 +16,7 @@ public class PagePrinter
     private final TimestampFormatter[] timestampFormatters;
     private final ArrayList<String> record;
 
+    // TODO: Update this constructor because |TimestampFormater.FormatterTask| is deprecated since v0.6.14.
     public PagePrinter(Schema schema, TimestampFormatter.FormatterTask task)
     {
         this.schema = schema;
@@ -23,7 +24,7 @@ public class PagePrinter
         for (int i=0; i < timestampFormatters.length; i++) {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
-                timestampFormatters[i] = new TimestampFormatter(type.getFormat(), task);
+                timestampFormatters[i] = new TimestampFormatter(type.getFormat(), task.getTimeZone());
             }
         }
 
