@@ -203,8 +203,9 @@ public class ExecSession
     {
         ConfigSource config = Exec.newConfigSource();
         config.set("timezone", timezone.getID());
+        // TODO: Stop creating the |FormatterTask| as |TimestampFormater.FormatterTask| is deprecated since v0.6.14.
         FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
-        return new TimestampFormatter(format, formatterTask);
+        return new TimestampFormatter(format, formatterTask.getTimeZone());
     }
 
     public TempFileSpace getTempFileSpace()
