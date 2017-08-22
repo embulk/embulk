@@ -563,7 +563,7 @@ public class EmbulkRunner
         // # always has require_paths = ["lib"].
         for (final String pluginPath : pluginPaths) {
             globalJRubyContainer.put("__internal_plugin_path__", pluginPath);
-            globalJRubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(File.join(__internal_plugin_path__, 'lib')");
+            globalJRubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(File.join(__internal_plugin_path__, 'lib'))");
             globalJRubyContainer.remove("__internal_plugin_path__");
         }
 
