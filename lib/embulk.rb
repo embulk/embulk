@@ -66,11 +66,7 @@ module Embulk
     require 'embulk/runner'
 
     # see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
-    runner_java = EmbulkRunner.new(
-      Java::org.embulk.EmbulkSetup::setup(
-        Java::java.util.ArrayList.new(),
-        Java::java.util.HashMap.new(system_config),
-        nil))
+    runner_java = EmbulkRunner.new(Java::org.embulk.EmbulkSetup::setup(Java::java.util.HashMap.new(system_config)))
     Embulk.const_set :Runner, runner_java
   end
 end
