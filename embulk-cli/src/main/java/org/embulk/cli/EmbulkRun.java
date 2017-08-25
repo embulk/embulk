@@ -84,7 +84,7 @@ public class EmbulkRun
             final EmbulkCommandLine commandLine;
             try {
                 commandLine = parser.parse(
-                    subcommandArguments, new PrintWriter(System.out), new PrintWriter(System.err));
+                    subcommandArguments, jrubyOptions, new PrintWriter(System.out), new PrintWriter(System.err));
             }
             catch (EmbulkCommandLineParseException ex) {
                 parser.printHelp(System.err);
@@ -446,7 +446,7 @@ public class EmbulkRun
             // embulk classes
             // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
             // into Ruby |Embulk::Runner|.
-            final EmbulkRunner runner = EmbulkSetup.setup(jrubyOptions, commandLine.getSystemConfig());
+            final EmbulkRunner runner = EmbulkSetup.setup(commandLine.getSystemConfig());
 
             final Path configDiffPath =
                 (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));

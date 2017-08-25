@@ -39,10 +39,9 @@ public class EmbulkRunner
 {
     // |EmbulkSetup.setup| initializes:
     // new EmbulkRunner(embed)
-    public EmbulkRunner(final EmbulkEmbed embed, final List<String> jrubyOptions)
+    public EmbulkRunner(final EmbulkEmbed embed)
     {
         this.embed = embed;  // org.embulk.EmbulkEmbed
-        this.jrubyOptions = jrubyOptions;
     }
 
     /**
@@ -219,7 +218,7 @@ public class EmbulkRunner
     private void guessInternal(final ConfigSource configSource, final Path outputPath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
+        initializeGlobalJRubyScriptingContainer();
 
         try {
             checkFileWritable(outputPath);
@@ -243,7 +242,7 @@ public class EmbulkRunner
     private void previewInternal(final ConfigSource configSource, final String format)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
+        initializeGlobalJRubyScriptingContainer();
 
         final PreviewResult previewResult = this.embed.preview(configSource);
         final ModelManager modelManager = this.embed.getModelManager();
@@ -272,7 +271,7 @@ public class EmbulkRunner
             final Path resumeStatePath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
+        initializeGlobalJRubyScriptingContainer();
 
         try {
             checkFileWritable(outputPath);
@@ -529,10 +528,10 @@ public class EmbulkRunner
     // end
 
     // TODO: Check if it is required to process JRuby options.
-    private void initializeGlobalJRubyScriptingContainer(final List<String> jrubyOptions)
+    private void initializeGlobalJRubyScriptingContainer()
     {
         final ScriptingContainer globalJRubyContainer =
-            EmbulkGlobalJRubyScriptingContainer.setup(jrubyOptions, System.err);
+            new ScriptingContainer(LocalContextScope.SINGLETON, LocalVariableBehavior.PERSISTENT);
 
         // TODO: Remove the Embulk::Runner definition after confirming nobody uses Embulk::Runner from Java.
         globalJRubyContainer.put("__internal_runner_java__", this);
@@ -580,5 +579,4 @@ public class EmbulkRunner
     private final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
 
     private final EmbulkEmbed embed;
-    private final List<String> jrubyOptions;
 }
