@@ -13,7 +13,6 @@ public class EmbulkCommandLine
     private EmbulkCommandLine(
             final List<String> arguments,
             final Map<String, Object> systemConfig,
-            final String bundle,
             final String bundlePath,
             final String configDiff,
             final boolean force,
@@ -23,7 +22,6 @@ public class EmbulkCommandLine
     {
         this.arguments = Collections.unmodifiableList(arguments);
         this.systemConfig = Collections.unmodifiableMap(systemConfig);
-        this.bundle = bundle;
         this.bundlePath = bundlePath;
         this.configDiff = configDiff;
         this.force = force;
@@ -38,7 +36,6 @@ public class EmbulkCommandLine
         {
             this.arguments = new ArrayList<String>();
             this.systemConfig = new HashMap<String, Object>();
-            this.bundle = null;
             this.bundlePath = null;
             this.configDiff = null;
             this.force = false;
@@ -68,7 +65,6 @@ public class EmbulkCommandLine
             return new EmbulkCommandLine(
                 this.arguments,
                 systemConfigJRubyLoadPath,
-                this.bundle,
                 this.bundlePath,
                 this.configDiff,
                 this.force,
@@ -92,12 +88,6 @@ public class EmbulkCommandLine
         public Builder addSystemConfig(final String key, final String value)
         {
             addInHashMap(this.systemConfig, key, value);
-            return this;
-        }
-
-        public Builder setBundle(final String bundle)
-        {
-            this.bundle = bundle;
             return this;
         }
 
@@ -168,7 +158,6 @@ public class EmbulkCommandLine
 
         private ArrayList<String> arguments;
         private HashMap<String, Object> systemConfig;
-        private String bundle;
         private String bundlePath;
         private String configDiff;
         private boolean force;
@@ -192,11 +181,6 @@ public class EmbulkCommandLine
     public final Map<String, Object> getSystemConfig()
     {
         return this.systemConfig;
-    }
-
-    public final String getBundle()
-    {
-        return this.bundle;
     }
 
     public final String getBundlePath()
@@ -231,7 +215,6 @@ public class EmbulkCommandLine
 
     private final List<String> arguments;
     private final Map<String, Object> systemConfig;
-    private final String bundle;
     private final String bundlePath;
     private final String configDiff;
     private final boolean force;

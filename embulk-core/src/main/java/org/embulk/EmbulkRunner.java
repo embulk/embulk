@@ -39,11 +39,10 @@ public class EmbulkRunner
 {
     // |EmbulkSetup.setup| initializes:
     // new EmbulkRunner(embed)
-    public EmbulkRunner(final EmbulkEmbed embed, final List<String> jrubyOptions, final String bundlePath)
+    public EmbulkRunner(final EmbulkEmbed embed, final List<String> jrubyOptions)
     {
         this.embed = embed;  // org.embulk.EmbulkEmbed
         this.jrubyOptions = jrubyOptions;
-        this.bundlePath = bundlePath;
     }
 
     /**
@@ -220,7 +219,7 @@ public class EmbulkRunner
     private void guessInternal(final ConfigSource configSource, final Path outputPath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
 
         try {
             checkFileWritable(outputPath);
@@ -244,7 +243,7 @@ public class EmbulkRunner
     private void previewInternal(final ConfigSource configSource, final String format)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
 
         final PreviewResult previewResult = this.embed.preview(configSource);
         final ModelManager modelManager = this.embed.getModelManager();
@@ -273,7 +272,7 @@ public class EmbulkRunner
             final Path resumeStatePath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions);
 
         try {
             checkFileWritable(outputPath);
@@ -530,10 +529,10 @@ public class EmbulkRunner
     // end
 
     // TODO: Check if it is required to process JRuby options.
-    private void initializeGlobalJRubyScriptingContainer(final List<String> jrubyOptions, final String bundlePath)
+    private void initializeGlobalJRubyScriptingContainer(final List<String> jrubyOptions)
     {
         final ScriptingContainer globalJRubyContainer =
-            EmbulkGlobalJRubyScriptingContainer.setup(jrubyOptions, bundlePath, System.err);
+            EmbulkGlobalJRubyScriptingContainer.setup(jrubyOptions, System.err);
 
         // TODO: Remove the Embulk::Runner definition after confirming nobody uses Embulk::Runner from Java.
         globalJRubyContainer.put("__internal_runner_java__", this);
@@ -582,5 +581,4 @@ public class EmbulkRunner
 
     private final EmbulkEmbed embed;
     private final List<String> jrubyOptions;
-    private final String bundlePath;
 }

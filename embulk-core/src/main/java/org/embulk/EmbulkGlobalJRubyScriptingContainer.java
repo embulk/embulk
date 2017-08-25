@@ -1,13 +1,6 @@
 package org.embulk;
 
 import java.io.PrintStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.List;
 import org.jruby.RubyInstanceConfig;
@@ -32,10 +25,7 @@ public class EmbulkGlobalJRubyScriptingContainer
     /**
      * Sets up a ScriptingContainer instance for global use in Embulk.
      */
-    public static ScriptingContainer setup(
-            final List<String> jrubyOptions,
-            final String bundlePath,
-            final PrintStream warning)
+    public static ScriptingContainer setup(final List<String> jrubyOptions, final PrintStream warning)
     {
         // The JRuby instance is a global singleton so that the settings here affects later execution.
         // The local variable should be persistent so that local variables are set through ScriptingContainer.put.
@@ -58,81 +48,11 @@ public class EmbulkGlobalJRubyScriptingContainer
             }
         }
 
-        if (bundlePath != null) {
-            /* Environment variables are set in the selfrun script or bin/embulk:
-             *   ENV['EMBULK_BUNDLE_PATH']: set through '-b' | '--bundle', or inherit from the runtime environment
-             *   ENV['BUNDLE_GEMFILE']: set for "ENV['EMBULK_BUNDLE_PATH']/Gemfile"
-             *   ENV['GEM_HOME']: unset
-             *   ENV['GEM_PATH']: unset
-             */
-
-            // bundler is included in embulk-core.jar
-            jrubyGlobalContainer.runScriptlet("Gem.clear_paths");
-            jrubyGlobalContainer.runScriptlet("require 'bundler'");
-
-            jrubyGlobalContainer.runScriptlet("Bundler.load.setup_environment");
-            jrubyGlobalContainer.runScriptlet("require 'bundler/setup'");
-            // since here, `require` may load files of different (newer) embulk versions
-            // especially following 'embulk/command/embulk_main'.
-
-            // NOTE: It is intentionally not done by building a Ruby statement string from |bundlePath|.
-            // It can cause insecure injections.
-            //
-            // add bundle directory path to load local plugins at ./embulk
-            jrubyGlobalContainer.put("__internal_bundle_path__", bundlePath);
-            jrubyGlobalContainer.runScriptlet("$LOAD_PATH << File.expand_path(__internal_bundle_path__)");
-            jrubyGlobalContainer.remove("__internal_bundle_path__");
-
-            return jrubyGlobalContainer;
-        }
-        else {
-            /* Environment variables are set in the selfrun script or bin/embulk:
-             *   ENV['EMBULK_BUNDLE_PATH']: unset
-             *   ENV['BUNDLE_GEMFILE']: unset
-             *   ENV['GEM_HOME']: set for "~/.embulk/jruby/${ruby-version}"
-             *   ENV['GEM_PATH']: set for ""
-             */
-
-            jrubyGlobalContainer.runScriptlet("Gem.clear_paths");  // force rubygems to reload GEM_HOME
-
-            // NOTE: The path from |getEmbulkJRubyLoadPath()| is added in $LOAD_PATH just in case.
-            // Though it is not mandatory just to run "embulk_main.rb", it may be required in later steps.
-            //
-            // NOTE: It is intentionally not done by building a Ruby statement string from |getEmbulkJRubyLoadPath()|.
-            // It can cause insecure injections.
-            //
-            // NOTE: It was written in Ruby as follows:
-            //   $LOAD_PATH << File.expand_path('../../', File.dirname(__FILE__))
-            final String jrubyLoadPath;
-            try {
-                jrubyLoadPath = getEmbulkJRubyLoadPath();
-            }
-            catch (UnrecognizedJRubyLoadPathException ex) {
-                warning.println("[ERROR] Failed to retrieve Embulk's path.");
-                ex.printStackTrace(warning);
-                throw new RuntimeException(ex);
-            }
-            jrubyGlobalContainer.put("__internal_load_path__", jrubyLoadPath);
-            jrubyGlobalContainer.runScriptlet("$LOAD_PATH << File.expand_path(__internal_load_path__)");
-            jrubyGlobalContainer.remove("__internal_load_path__");
-
-            return jrubyGlobalContainer;
-        }
+        return jrubyGlobalContainer;
     }
 
     private static final class UnrecognizedJRubyOptionException extends Exception {}
     private static final class NotWorkingJRubyOptionException extends Exception {}
-    private static final class UnrecognizedJRubyLoadPathException extends Exception {
-        public UnrecognizedJRubyLoadPathException(final String message)
-        {
-            super(message);
-        }
-
-        public UnrecognizedJRubyLoadPathException(final String message, final Throwable cause)
-        {
-            super(message, cause);
-        }
-    }
 
     private static void processJRubyOption(final String jrubyOption, final RubyInstanceConfig jrubyGlobalConfig)
             throws UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException
@@ -161,55 +81,5 @@ public class EmbulkGlobalJRubyScriptingContainer
                 throw new UnrecognizedJRubyOptionException();
             }
         }
-    }
-
-    /**
-     * Returns a path to be added in JRuby's $LOAD_PATH.
-     *
-     * In case Embulk runs from the Embulk JAR file (normal case):
-     *     "file:/some/directory/embulk.jar!"
-     *
-     * In case Embulk runs out of a JAR file (irregular case):
-     *     "/some/directory"
-     */
-    private static String getEmbulkJRubyLoadPath()
-            throws UnrecognizedJRubyLoadPathException
-    {
-        final ProtectionDomain protectionDomain;
-        try {
-            protectionDomain = EmbulkGlobalJRubyScriptingContainer.class.getProtectionDomain();
-        }
-        catch (SecurityException ex) {
-            throw new UnrecognizedJRubyLoadPathException("Failed to achieve ProtectionDomain", ex);
-        }
-
-        final CodeSource codeSource = protectionDomain.getCodeSource();
-        if (codeSource == null) {
-            throw new UnrecognizedJRubyLoadPathException("Failed to achieve CodeSource");
-        }
-
-        final URL locationUrl = codeSource.getLocation();
-        if (locationUrl == null) {
-            throw new UnrecognizedJRubyLoadPathException("Failed to achieve location");
-        }
-        else if (!locationUrl.getProtocol().equals("file")) {
-            throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString());
-        }
-
-        final Path locationPath;
-        try {
-            locationPath = Paths.get(locationUrl.toURI());
-        }
-        catch (URISyntaxException ex) {
-            throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString(), ex);
-        }
-
-        if (Files.isDirectory(locationPath)) {  // Out of a JAR file
-            System.err.println("Warning: Embulk looks running out of the Embulk jar file. It is unsupported.");
-            return locationPath.toString();
-        }
-
-        // TODO: Consider checking the file is really a JAR file.
-        return locationUrl.toString() + "!";  // Inside the Embulk JAR file
     }
 }

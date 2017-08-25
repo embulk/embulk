@@ -446,10 +446,7 @@ public class EmbulkRun
             // embulk classes
             // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
             // into Ruby |Embulk::Runner|.
-            final EmbulkRunner runner = EmbulkSetup.setup(
-                jrubyOptions,
-                commandLine.getSystemConfig(),
-                commandLine.getBundle());
+            final EmbulkRunner runner = EmbulkSetup.setup(jrubyOptions, commandLine.getSystemConfig());
 
             final Path configDiffPath =
                 (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
@@ -638,7 +635,7 @@ public class EmbulkRun
             {
                 public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
                 {
-                    commandLineBuilder.setBundle(argument);
+                    commandLineBuilder.setSystemConfig("jruby_global_bundler_plugin_source_directory", argument);
                 }
             }));
     }
