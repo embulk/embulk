@@ -449,9 +449,6 @@ public class EmbulkRun
             final EmbulkRunner runner = EmbulkSetup.setup(
                 jrubyOptions,
                 commandLine.getSystemConfig(),
-                commandLine.getLoadPath(),
-                commandLine.getLoad(),
-                commandLine.getClasspath(),
                 commandLine.getBundle());
 
             final Path configDiffPath =
@@ -628,7 +625,7 @@ public class EmbulkRun
                 {
                     final String[] classpaths = argument.split("\\" + java.io.File.pathSeparator);
                     for (final String classpath : classpaths) {
-                        commandLineBuilder.addClasspath(classpath);
+                        commandLineBuilder.addSystemConfig("jruby_classpath", classpath);
                     }
                 }
             }));

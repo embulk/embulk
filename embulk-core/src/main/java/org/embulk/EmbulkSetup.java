@@ -19,9 +19,6 @@ public class EmbulkSetup
     public static EmbulkRunner setup(
             final List<String> jrubyOptions,
             final Map<String, Object> systemConfigGiven,
-            final List<String> loadPaths,
-            final List<String> pluginPaths,
-            final List<String> classpaths,
             final String bundlePath)
     {
         // NOTE: When it was in Ruby "require 'json'" was required to format the system config into a JSON string.
@@ -50,6 +47,6 @@ public class EmbulkSetup
         bootstrap.setSystemConfig(systemConfig);
         final EmbulkEmbed embed = bootstrap.initialize();  // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
 
-        return new EmbulkRunner(embed, jrubyOptions, loadPaths, pluginPaths, classpaths, bundlePath);
+        return new EmbulkRunner(embed, jrubyOptions, bundlePath);
     }
 }

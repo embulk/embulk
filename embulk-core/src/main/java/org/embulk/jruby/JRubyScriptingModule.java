@@ -2,7 +2,9 @@ package org.embulk.jruby;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
+import org.slf4j.Logger;
 import org.slf4j.ILoggerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -44,6 +46,8 @@ public class JRubyScriptingModule
         private final Injector injector;
         private final boolean useGlobalRubyRuntime;
         private final String gemHome;
+        private final List<String> jrubyClasspath;
+        private final List<String> jrubyLoadPath;
 
         @Inject
         public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
@@ -57,13 +61,62 @@ public class JRubyScriptingModule
             this.gemHome = systemConfig.get(String.class, "gem_home", null);
 
             // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
-            // TODO get jruby-load-paths from systemConfig to call jruby.container.setLoadPaths
+
+            final List jrubyLoadPathNonGeneric = systemConfig.get(List.class, "jruby_load_path", null);
+            final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<String>();
+            if (jrubyLoadPathNonGeneric != null) {
+                for (final Object oneJRubyLoadPath : jrubyLoadPathNonGeneric) {
+                    if (oneJRubyLoadPath instanceof String) {
+                        jrubyLoadPathBuilt.add((String) oneJRubyLoadPath);
+                    }
+                    else {
+                        // It should happen only in very irregular cases. Okay to create |Logger| every time.
+                        Logger logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
+                        logger.warn("System config \"jruby_load_path\" contains non-String.");
+                        jrubyLoadPathBuilt.add(oneJRubyLoadPath.toString());
+                    }
+                }
+            }
+            this.jrubyLoadPath = Collections.unmodifiableList(jrubyLoadPathBuilt);
+
+            final List jrubyClasspathNonGeneric = systemConfig.get(List.class, "jruby_classpath", new ArrayList());
+            final ArrayList<String> jrubyClasspathBuilt = new ArrayList<String>();
+            if (jrubyClasspathNonGeneric != null) {
+                for (final Object oneJRubyClasspath : jrubyClasspathNonGeneric) {
+                    if (oneJRubyClasspath instanceof String) {
+                        jrubyClasspathBuilt.add((String) oneJRubyClasspath);
+                    }
+                    else {
+                        // It should happen only in very irregular cases. Okay to create |Logger| every time.
+                        Logger logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
+                        logger.warn("System config \"jruby_classpath\" contains non-String.");
+                        jrubyClasspathBuilt.add(oneJRubyClasspath.toString());
+                    }
+                }
+            }
+            this.jrubyClasspath = Collections.unmodifiableList(jrubyClasspathBuilt);
         }
 
         public ScriptingContainer get()
         {
             LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
             ScriptingContainer jruby = new ScriptingContainer(scope);
+
+            for (final String oneJRubyLoadPath : this.jrubyLoadPath) {
+                // ruby script directory (use unshift to make it highest priority)
+                jruby.put("__internal_load_path__", oneJRubyLoadPath);
+                // TODO: Check if $LOAD_PATH already contains it.
+                jruby.runScriptlet("$LOAD_PATH.unshift File.expand_path(__internal_load_path__)");
+                jruby.remove("__internal_load_path__");
+            }
+
+            for (final String oneJRubyClasspath : this.jrubyClasspath) {
+                jruby.put("__internal_classpath__", oneJRubyClasspath);
+                // $CLASSPATH object doesn't have concat method
+                // TODO: Check if $CLASSPATH already contains it.
+                jruby.runScriptlet("$CLASSPATH << __internal_classpath__");
+                jruby.remove("__internal_classpath__");
+            }
 
             // Search embulk/java/bootstrap.rb from a $LOAD_PATH.
             // $LOAD_PATH is set by lib/embulk/command/embulk_run.rb if Embulk starts

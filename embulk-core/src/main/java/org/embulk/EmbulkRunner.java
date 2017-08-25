@@ -39,18 +39,10 @@ public class EmbulkRunner
 {
     // |EmbulkSetup.setup| initializes:
     // new EmbulkRunner(embed)
-    public EmbulkRunner(final EmbulkEmbed embed,
-                        final List<String> jrubyOptions,
-                        final List<String> loadPaths,
-                        final List<String> pluginPaths,
-                        final List<String> classpaths,
-                        final String bundlePath)
+    public EmbulkRunner(final EmbulkEmbed embed, final List<String> jrubyOptions, final String bundlePath)
     {
         this.embed = embed;  // org.embulk.EmbulkEmbed
         this.jrubyOptions = jrubyOptions;
-        this.loadPaths = loadPaths;
-        this.pluginPaths = pluginPaths;
-        this.classpaths = classpaths;
         this.bundlePath = bundlePath;
     }
 
@@ -228,8 +220,7 @@ public class EmbulkRunner
     private void guessInternal(final ConfigSource configSource, final Path outputPath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(
-            this.jrubyOptions, this.loadPaths, this.pluginPaths, this.classpaths, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
 
         try {
             checkFileWritable(outputPath);
@@ -253,8 +244,7 @@ public class EmbulkRunner
     private void previewInternal(final ConfigSource configSource, final String format)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(
-            this.jrubyOptions, this.loadPaths, this.pluginPaths, this.classpaths, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
 
         final PreviewResult previewResult = this.embed.preview(configSource);
         final ModelManager modelManager = this.embed.getModelManager();
@@ -283,8 +273,7 @@ public class EmbulkRunner
             final Path resumeStatePath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer(
-            this.jrubyOptions, this.loadPaths, this.pluginPaths, this.classpaths, this.bundlePath);
+        initializeGlobalJRubyScriptingContainer(this.jrubyOptions, this.bundlePath);
 
         try {
             checkFileWritable(outputPath);
@@ -541,40 +530,10 @@ public class EmbulkRunner
     // end
 
     // TODO: Check if it is required to process JRuby options.
-    private void initializeGlobalJRubyScriptingContainer(
-            final List<String> jrubyOptions,
-            final List<String> loadPaths,
-            final List<String> pluginPaths,
-            final List<String> classpaths,
-            final String bundlePath)
+    private void initializeGlobalJRubyScriptingContainer(final List<String> jrubyOptions, final String bundlePath)
     {
         final ScriptingContainer globalJRubyContainer =
             EmbulkGlobalJRubyScriptingContainer.setup(jrubyOptions, bundlePath, System.err);
-
-        // first $LOAD_PATH has highet priority. later load_paths should have highest priority.
-        for (final String loadPath : loadPaths) {
-            // ruby script directory (use unshift to make it highest priority)
-            globalJRubyContainer.put("__internal_load_path__", loadPath);
-            globalJRubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(__internal_load_path__)");
-            globalJRubyContainer.remove("__internal_load_path__");
-        }
-
-        // # Gem::StubSpecification is an internal API that seems chainging often.
-        // # Gem::Specification.add_spec is deprecated also. Therefore, here makes
-        // # -L <path> option alias of -I <path>/lib by assuming that *.gemspec file
-        // # always has require_paths = ["lib"].
-        for (final String pluginPath : pluginPaths) {
-            globalJRubyContainer.put("__internal_plugin_path__", pluginPath);
-            globalJRubyContainer.runScriptlet("$LOAD_PATH.unshift File.expand_path(File.join(__internal_plugin_path__, 'lib'))");
-            globalJRubyContainer.remove("__internal_plugin_path__");
-        }
-
-        for (final String classpath : classpaths) {
-            globalJRubyContainer.put("__internal_classpath__", classpath);
-            // $CLASSPATH object doesn't have concat method
-            globalJRubyContainer.runScriptlet("$CLASSPATH << __internal_classpath__");
-            globalJRubyContainer.remove("__internal_classpath__");
-        }
 
         // see also embulk/java/bootstrap.rb loaded by JRubyScriptingModule
         globalJRubyContainer.runScriptlet("module Embulk; end");
@@ -591,8 +550,5 @@ public class EmbulkRunner
 
     private final EmbulkEmbed embed;
     private final List<String> jrubyOptions;
-    private final List<String> loadPaths;
-    private final List<String> pluginPaths;
-    private final List<String> classpaths;
     private final String bundlePath;
 }

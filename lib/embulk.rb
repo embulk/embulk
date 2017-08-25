@@ -63,12 +63,11 @@ module Embulk
 
     require_classpath(true)
 
+    # TODO: Set up Embulk::Runner with EmbulkRunner here.
+    # Embulk.const_set :Runner, EmbulkRunner.new(...)
     Java::org.embulk.EmbulkSetup::setup(
       Java::java.util.ArrayList.new(),
       Java::java.util.HashMap.new(system_config),
-      Java::java.util.ArrayList.new(),
-      Java::java.util.ArrayList.new(),
-      Java::java.util.ArrayList.new(),
       nil
     )
   end
