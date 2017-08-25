@@ -82,11 +82,12 @@ public class TimestampParser
         this(format, task.getDefaultTimeZone());
         // NOTE: Its deprecation is not actually from ScriptingContainer, though.
         // TODO: Notify users about deprecated calls through the notification reporter.
-        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
-        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
-        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
-        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
-            System.err.println("[WARN] " + stackTrace.toString());
+        if (!deprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
+            // The |deprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            deprecationWarned = true;
         }
     }
 
@@ -110,11 +111,12 @@ public class TimestampParser
     {
         this(format, defaultTimeZone);
         // TODO: Notify users about deprecated calls through the notification reporter.
-        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
-        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
-        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
-        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
-            System.err.println("[WARN] " + stackTrace.toString());
+        if (!deprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
+            // The |deprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            deprecationWarned = true;
         }
     }
 
@@ -128,11 +130,12 @@ public class TimestampParser
     {
         this(format, defaultTimeZone, defaultDate);
         // TODO: Notify users about deprecated calls through the notification reporter.
-        System.err.println("[WARN] A plugin uses a deprecated constructor of org.embulk.spi.time.TimestampFormatter.");
-        System.err.println("[WARN] Please tell the plugin developer to stop using the constructor, or report this to:");
-        System.err.println("[WARN] https://github.com/embulk/embulk/issues/745");
-        for (final StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
-            System.err.println("[WARN] " + stackTrace.toString());
+        if (!deprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
+            // The |deprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            deprecationWarned = true;
         }
     }
 
@@ -274,4 +277,7 @@ public class TimestampParser
             return zone;
         }
     }
+
+    // TODO: Remove this once deprecated constructors are finally removed.
+    private static boolean deprecationWarned = false;
 }
