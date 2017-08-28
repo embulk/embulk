@@ -25,6 +25,7 @@ public class Main
         }
 
         final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
-        run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
+        final int error = run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
+        System.exit(error);
     }
 }
