@@ -56,6 +56,7 @@ public class JRubyScriptingModule
         private final Injector injector;
         private final boolean useGlobalRubyRuntime;
         private final String gemHome;
+        private final boolean useDefaultEmbulkGemHome;
         private final List<String> jrubyClasspath;
         private final List<String> jrubyLoadPath;
         private final List<String> jrubyOptions;
@@ -71,6 +72,8 @@ public class JRubyScriptingModule
             this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
 
             this.gemHome = systemConfig.get(String.class, "gem_home", null);
+            this.useDefaultEmbulkGemHome =
+                systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true");
 
             // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
 
@@ -133,6 +136,13 @@ public class JRubyScriptingModule
         {
             LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
             ScriptingContainer jruby = new ScriptingContainer(scope, LocalVariableBehavior.PERSISTENT);
+            if (this.useDefaultEmbulkGemHome) {
+                // NOTE: Same done in "gem", "exec", and "irb" subcommands.
+                // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are changed.
+                jruby.runScriptlet("ENV.delete('BUNDLE_GEMFILE')");
+                jruby.runScriptlet("ENV['GEM_HOME'] = File.expand_path File.join(Java::java.lang.System.properties['user.home'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])");
+                jruby.runScriptlet("ENV['GEM_PATH'] = ''");
+            }
             final RubyInstanceConfig jrubyInstanceConfig = jruby.getProvider().getRubyInstanceConfig();
             for (final String jrubyOption : this.jrubyOptions) {
                 try {
@@ -250,14 +260,13 @@ public class JRubyScriptingModule
         private void setBundlerPluginSourceDirectory(final ScriptingContainer jruby, final String directory)
         {
             if (directory != null) {
-                /* Environment variables are set in the selfrun script or bin/embulk:
-                 *   ENV['EMBULK_BUNDLE_PATH']: set through '-b' | '--bundle', or inherit from the runtime environment
-                 *   ENV['BUNDLE_GEMFILE']: set for "ENV['EMBULK_BUNDLE_PATH']/Gemfile"
-                 *   ENV['GEM_HOME']: unset
-                 *   ENV['GEM_PATH']: unset
-                 */
+                jruby.put("__internal_bundler_plugin_source_directory__", directory);
+                jruby.runScriptlet("ENV['EMBULK_BUNDLE_PATH'] = __internal_bundler_plugin_source_directory__");
+                jruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(__internal_bundler_plugin_source_directory__, 'Gemfile')");
 
                 // bundler is included in embulk-core.jar
+                jruby.runScriptlet("ENV.delete('GEM_HOME')");
+                jruby.runScriptlet("ENV.delete('GEM_PATH')");
                 jruby.runScriptlet("Gem.clear_paths");
                 jruby.runScriptlet("require 'bundler'");
 
@@ -270,13 +279,11 @@ public class JRubyScriptingModule
                 // It can cause insecure injections.
                 //
                 // add bundle directory path to load local plugins at ./embulk
-                jruby.put("__internal_bundler_plugin_source_directory__", directory);
                 jruby.runScriptlet("$LOAD_PATH << File.expand_path(__internal_bundler_plugin_source_directory__)");
                 jruby.remove("__internal_bundler_plugin_source_directory__");
             }
             else {
-                /* Environment variables are set in the selfrun script or bin/embulk:
-                 *   ENV['EMBULK_BUNDLE_PATH']: unset
+                /* Environment variables are set in ScriptingContainerProvider#get():
                  *   ENV['BUNDLE_GEMFILE']: unset
                  *   ENV['GEM_HOME']: set for "~/.embulk/jruby/${ruby-version}"
                  *   ENV['GEM_PATH']: set for ""
