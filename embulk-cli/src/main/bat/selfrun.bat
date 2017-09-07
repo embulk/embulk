@@ -61,6 +61,13 @@ if "%status%" == "rest" (
 ) else if "%status%" == "read" (
     call :read_file %arg%
 
+) else if "%arg:~0,2%" == "-E" (
+    if not "%arg:~2%" == "" (
+        set external_script=%arg:~2%
+        echo "Running an external batch file: %external_script%"
+        call %arg:~2%
+    )
+
 ) else if "%arg%" == "-J+O" (
     set overwrite_optimize=true
     set status=rest

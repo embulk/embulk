@@ -48,6 +48,11 @@ overwrite_optimize = nil
 until ARGV.empty?
   v = ARGV[0]
   case v
+  when /-E(.*)/
+    external_script = v[2..-1]
+    STDERR.puts "Running an external Ruby script: #{external_script}"
+    load external_script
+    ARGV.shift
   when "-J+O"
     overwrite_optimize = true
     ARGV.shift

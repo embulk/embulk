@@ -5,6 +5,12 @@ overwrite_optimize=""
 
 while true; do
     case "$1" in
+        -E*)
+            external_script="${1#-E}"
+            echo "Running an external shell script: $external_script"
+            source $external_script
+            shift
+            ;;
         "-J+O")
             overwrite_optimize="true"
             shift
