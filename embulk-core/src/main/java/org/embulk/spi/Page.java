@@ -15,6 +15,9 @@ import org.msgpack.value.ImmutableValue;
  * (C) and (D) may not be so meaningful as of v0.7+ (or since earlier) as recent Embulk unlikely
  * allocates so many Pages at the same time. Recent Embulk is streaming-driven instead of
  * multithreaded queue-based.
+ *
+ * Page is NOT for inter-process communication. For multi-process execution such as MapReduce
+ * Executor, the executor plugin takes responsibility about interoperable serialization.
  */
 public class Page
 {
