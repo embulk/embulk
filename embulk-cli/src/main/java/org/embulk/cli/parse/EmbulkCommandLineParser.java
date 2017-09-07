@@ -113,6 +113,7 @@ public class EmbulkCommandLineParser
     }
 
     public EmbulkCommandLine parse(final List<String> argsEmbulk,
+                                   final List<String> jrubyOptions,
                                    final PrintWriter helpPrintWriter,
                                    final PrintWriter errorPrintWriter)
             throws EmbulkCommandLineParseException, EmbulkCommandLineHelpRequired
@@ -144,6 +145,9 @@ public class EmbulkCommandLineParser
         }
 
         final EmbulkCommandLine.Builder commandLineBuilder = EmbulkCommandLine.builder();
+        for (final String jrubyOption : jrubyOptions) {
+            commandLineBuilder.addSystemConfig("jruby_command_line_options", jrubyOption);
+        }
         commandLineBuilder.addArguments(arguments);
         for (final Option cliOptionSpecified : cliCommandLine.getOptions()) {
             final OptionDefinition optionDefinitionSpecified =

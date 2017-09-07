@@ -84,7 +84,7 @@ public class EmbulkRun
             final EmbulkCommandLine commandLine;
             try {
                 commandLine = parser.parse(
-                    subcommandArguments, new PrintWriter(System.out), new PrintWriter(System.err));
+                    subcommandArguments, jrubyOptions, new PrintWriter(System.out), new PrintWriter(System.err));
             }
             catch (EmbulkCommandLineParseException ex) {
                 parser.printHelp(System.err);
@@ -446,13 +446,7 @@ public class EmbulkRun
             // embulk classes
             // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby |Embulk::EmbulkRunner(EmbulkEmbed)|
             // into Ruby |Embulk::Runner|.
-            final EmbulkRunner runner = EmbulkSetup.setup(
-                jrubyOptions,
-                commandLine.getSystemConfig(),
-                commandLine.getLoadPath(),
-                commandLine.getLoad(),
-                commandLine.getClasspath(),
-                commandLine.getBundle());
+            final EmbulkRunner runner = EmbulkSetup.setup(commandLine.getSystemConfig());
 
             final Path configDiffPath =
                 (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
@@ -628,7 +622,7 @@ public class EmbulkRun
                 {
                     final String[] classpaths = argument.split("\\" + java.io.File.pathSeparator);
                     for (final String classpath : classpaths) {
-                        commandLineBuilder.addClasspath(classpath);
+                        commandLineBuilder.addSystemConfig("jruby_classpath", classpath);
                     }
                 }
             }));
@@ -641,7 +635,7 @@ public class EmbulkRun
             {
                 public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
                 {
-                    commandLineBuilder.setBundle(argument);
+                    commandLineBuilder.setSystemConfig("jruby_global_bundler_plugin_source_directory", argument);
                 }
             }));
     }

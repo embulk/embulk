@@ -1,5 +1,6 @@
 package org.embulk.cli;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,27 +13,19 @@ public class EmbulkCommandLine
     private EmbulkCommandLine(
             final List<String> arguments,
             final Map<String, Object> systemConfig,
-            final String bundle,
             final String bundlePath,
-            final List<String> classpath,
             final String configDiff,
             final boolean force,
             final String format,
-            final List<String> load,
-            final List<String> loadPath,
             final String output,
             final String resumeState)
     {
         this.arguments = Collections.unmodifiableList(arguments);
         this.systemConfig = Collections.unmodifiableMap(systemConfig);
-        this.bundle = bundle;
         this.bundlePath = bundlePath;
-        this.classpath = Collections.unmodifiableList(classpath);
         this.configDiff = configDiff;
         this.force = force;
         this.format = format;
-        this.load = Collections.unmodifiableList(load);
-        this.loadPath = Collections.unmodifiableList(loadPath);
         this.output = output;
         this.resumeState = resumeState;
     }
@@ -43,9 +36,7 @@ public class EmbulkCommandLine
         {
             this.arguments = new ArrayList<String>();
             this.systemConfig = new HashMap<String, Object>();
-            this.bundle = null;
             this.bundlePath = null;
-            this.classpath = new ArrayList<String>();
             this.configDiff = null;
             this.force = false;
             this.format = null;
@@ -57,17 +48,27 @@ public class EmbulkCommandLine
 
         public EmbulkCommandLine build()
         {
+            final HashMap<String, Object> systemConfigJRubyLoadPath = new HashMap<String, Object>(this.systemConfig);
+            // first $LOAD_PATH has highet priority. later load_paths should have highest priority.
+            for (final String oneJRubyLoadPath : this.loadPath) {  // "-L"
+                addInHashMap(systemConfigJRubyLoadPath, "jruby_load_path", oneJRubyLoadPath);
+            }
+            // Gem::StubSpecification is an internal API that seems chainging often.
+            // Gem::Specification.add_spec is deprecated also. Therefore, here makes
+            // -L <path> option alias of -I <path>/lib by assuming that *.gemspec file
+            // always has require_paths = ["lib"].
+            for (final String oneJRubyLoadPathToAddLib : this.load) {  // "-I"
+                addInHashMap(systemConfigJRubyLoadPath,
+                             "jruby_load_path",
+                             Paths.get(oneJRubyLoadPathToAddLib).resolve("lib").toString());
+            }
             return new EmbulkCommandLine(
                 this.arguments,
-                this.systemConfig,
-                this.bundle,
+                systemConfigJRubyLoadPath,
                 this.bundlePath,
-                this.classpath,
                 this.configDiff,
                 this.force,
                 this.format,
-                this.load,
-                this.loadPath,
                 this.output,
                 this.resumeState);
         }
@@ -86,37 +87,13 @@ public class EmbulkCommandLine
 
         public Builder addSystemConfig(final String key, final String value)
         {
-            final Object existingValue = this.systemConfig.get(key);
-            if (existingValue != null && existingValue instanceof String) {
-                this.systemConfig.put(key, Arrays.asList((String) existingValue, value));
-            }
-            else if (existingValue != null && existingValue instanceof List) {
-                @SuppressWarnings("unchecked")
-                final ArrayList<String> newList = new ArrayList<String>((List<String>) existingValue);
-                newList.add(value);
-                this.systemConfig.put(key, Collections.unmodifiableList(newList));
-            }
-            else {
-                this.systemConfig.put(key, Arrays.asList(value));
-            }
-            return this;
-        }
-
-        public Builder setBundle(final String bundle)
-        {
-            this.bundle = bundle;
+            addInHashMap(this.systemConfig, key, value);
             return this;
         }
 
         public Builder setBundlePath(final String bundlePath)
         {
             this.bundlePath = bundlePath;
-            return this;
-        }
-
-        public Builder addClasspath(final String classpath)
-        {
-            this.classpath.add(classpath);
             return this;
         }
 
@@ -162,11 +139,26 @@ public class EmbulkCommandLine
             return this;
         }
 
+        private static void addInHashMap(final HashMap<String, Object> map, final String key, final String value)
+        {
+            final Object existingValue = map.get(key);
+            if (existingValue != null && existingValue instanceof String) {
+                map.put(key, Arrays.asList((String) existingValue, value));
+            }
+            else if (existingValue != null && existingValue instanceof List) {
+                @SuppressWarnings("unchecked")
+                final ArrayList<String> newList = new ArrayList<String>((List<String>) existingValue);
+                newList.add(value);
+                map.put(key, Collections.unmodifiableList(newList));
+            }
+            else {
+                map.put(key, Arrays.asList(value));
+            }
+        }
+
         private ArrayList<String> arguments;
         private HashMap<String, Object> systemConfig;
-        private String bundle;
         private String bundlePath;
-        private ArrayList<String> classpath;
         private String configDiff;
         private boolean force;
         private String format;
@@ -191,19 +183,9 @@ public class EmbulkCommandLine
         return this.systemConfig;
     }
 
-    public final String getBundle()
-    {
-        return this.bundle;
-    }
-
     public final String getBundlePath()
     {
         return this.bundlePath;
-    }
-
-    public final List<String> getClasspath()
-    {
-        return this.classpath;
     }
 
     public final String getConfigDiff()
@@ -221,16 +203,6 @@ public class EmbulkCommandLine
         return this.format;
     }
 
-    public final List<String> getLoad()
-    {
-        return this.load;
-    }
-
-    public final List<String> getLoadPath()
-    {
-        return this.loadPath;
-    }
-
     public final String getOutput()
     {
         return this.output;
@@ -243,14 +215,10 @@ public class EmbulkCommandLine
 
     private final List<String> arguments;
     private final Map<String, Object> systemConfig;
-    private final String bundle;
     private final String bundlePath;
-    private final List<String> classpath;
     private final String configDiff;
     private final boolean force;
     private final String format;
-    private final List<String> load;
-    private final List<String> loadPath;
     private final String output;
     private final String resumeState;
 }
