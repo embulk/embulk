@@ -261,7 +261,6 @@ public class JRubyScriptingModule
         {
             if (directory != null) {
                 jruby.put("__internal_bundler_plugin_source_directory__", directory);
-                jruby.runScriptlet("ENV['EMBULK_BUNDLE_PATH'] = __internal_bundler_plugin_source_directory__");
                 jruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(__internal_bundler_plugin_source_directory__, 'Gemfile')");
 
                 // bundler is included in embulk-core.jar
