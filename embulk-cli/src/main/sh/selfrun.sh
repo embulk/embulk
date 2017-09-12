@@ -8,7 +8,7 @@ while true; do
         -E*)
             external_script="${1#-E}"
             echo "Running an external shell script: $external_script"
-            source $external_script
+            . $external_script
             shift
             ;;
         "-J+O")
