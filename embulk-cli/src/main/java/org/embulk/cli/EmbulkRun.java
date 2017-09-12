@@ -693,7 +693,6 @@ public class EmbulkRun
 
     private void printGeneralUsage(final PrintStream out)
     {
-        final String gemHomeEnv = System.getenv("GEM_HOME");
         out.println("Embulk v" + this.embulkVersion);
         out.println("Usage: embulk [-vm-options] <command> [--options]");
         out.println("Commands:");
@@ -704,7 +703,6 @@ public class EmbulkRun
         out.println("   preview    <config.yml>                            # dry-run the bulk load without output and show preview.");
         out.println("   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file.");
         out.println("   gem        <install | list | help>                 # install a plugin or show installed plugins.");
-        out.println("                                                      # plugin path is " + (gemHomeEnv == null ? "(empty)" : gemHomeEnv));
         out.println("   new        <category> <name>                       # generates new plugin template");
         out.println("   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API");
         out.println("   example    [path]                                  # creates an example config file and csv file to try embulk.");
@@ -730,12 +728,24 @@ public class EmbulkRun
         // Not |LocalContextScope.SINGLETON| to narrow down considerations.
         final ScriptingContainer localJRubyContainer =
             new ScriptingContainer(LocalContextScope.SINGLETHREAD, LocalVariableBehavior.PERSISTENT);
+
+        // NOTE: Same done in JRubyScriptingModule.
+        // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
+        localJRubyContainer.runScriptlet("ENV.delete('BUNDLE_GEMFILE')");
+        localJRubyContainer.runScriptlet("ENV['GEM_HOME'] = File.expand_path File.join(Java::java.lang.System.properties['user.home'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])");
+        localJRubyContainer.runScriptlet("ENV['GEM_PATH'] = ''");
+
         return localJRubyContainer;
     }
 
     private void callJRubyGem(final List<String> subcommandArguments)
     {
         final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+
+        localJRubyContainer.runScriptlet("puts ''");
+        localJRubyContainer.runScriptlet("puts 'Gem plugin path is: %s' % (ENV.has_key?('GEM_HOME') ? ENV['GEM_HOME'] : '(empty)')");
+        localJRubyContainer.runScriptlet("puts ''");
+
         localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");

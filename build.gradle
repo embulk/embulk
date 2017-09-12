@@ -218,26 +218,17 @@ task classpath(dependsOn: ['build', ':embulk-cli:classpath']) { doLast {} }
 clean { delete 'classpath' }
 
 //
-// Gets RbConfig::CONFIG['ruby_version'] from the same version of JRuby with Embulk's embedded.
-//
-task retrieveRubyVersion(type: JRubyExec) {
-    standardOutput = new ByteArrayOutputStream()
-    jrubyArgs '-e', "print RbConfig::CONFIG['ruby_version']"
-}
-
-//
 // cli task
 //
-task cli(dependsOn: ['retrieveRubyVersion', ':embulk-cli:shadowJar']) {
+task cli(dependsOn: ':embulk-cli:shadowJar') {
     doLast {
-        def rubyVersion = retrieveRubyVersion.standardOutput.toString().trim()
         file('pkg').mkdirs()
         File f = file("pkg/embulk-${project.version}.jar")
         f.write("")
         f.append("\n: <<END_OF_EMBULK_SELFRUN_BATCH_PART\r\n")
-        f.append(file("embulk-cli/src/main/bat/selfrun.bat.template").getText().replace("<%= ruby_version %>", rubyVersion))
+        f.append(file("embulk-cli/src/main/bat/selfrun.bat").readBytes())
         f.append("\r\nEND_OF_EMBULK_SELFRUN_BATCH_PART\r\n\n")
-        f.append(file("embulk-cli/src/main/sh/selfrun.sh.template").getText().replace("<%= ruby_version %>", rubyVersion))
+        f.append(file("embulk-cli/src/main/sh/selfrun.sh").readBytes())
         f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
         f.setExecutable(true)
     }

@@ -62,6 +62,9 @@ public class EmbulkCommandLine
                              "jruby_load_path",
                              Paths.get(oneJRubyLoadPathToAddLib).resolve("lib").toString());
             }
+            if (this.bundlePath == null) {
+                systemConfigJRubyLoadPath.put("jruby_use_default_embulk_gem_home", "true");
+            }
             return new EmbulkCommandLine(
                 this.arguments,
                 systemConfigJRubyLoadPath,
