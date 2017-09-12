@@ -63,8 +63,7 @@ if "%status%" == "rest" (
 
 ) else if "%arg:~0,2%" == "-E" (
     if not "%arg:~2%" == "" (
-        set external_script=%arg:~2%
-        echo "Running an external batch file: %external_script%"
+        echo Running an external batch file: %arg:~2%
         call %arg:~2%
     )
 
