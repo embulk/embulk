@@ -709,6 +709,9 @@ public class EmbulkRun
         out.println("   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version.");
         out.println("");
         out.println("VM options:");
+        out.println("   -E...                            Run an external script to configure environment variables in JVM");
+        out.println("                                    (Operations not just setting envs are not recommended nor guaranteed.");
+        out.println("                                     Expect side effects by running your external script at your own risk.)");
         out.println("   -J-O                             Disable JVM optimizations to speed up startup time (enabled by default if command is 'run')");
         out.println("   -J+O                             Enable JVM optimizations to speed up throughput");
         out.println("   -J...                            Set JVM options (use -J-help to see available options)");
