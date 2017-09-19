@@ -31,7 +31,7 @@ Gem::Specification.new do |gem|
     gem.platform = 'java'
 
   else
-    gem.add_dependency "jruby-jars", '= 9.1.5.0'
+    gem.add_dependency "jruby-jars", '= 9.1.13.0'
   end
 
   gem.add_development_dependency "rake", [">= 0.10.0"]
