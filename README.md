@@ -180,10 +180,10 @@ Task `dependencies` shows dependency tree of embulk-core project:
 
 Task `updateJRuby` updates JRuby version of embulk-core project.
 
-This is an example to update JRuby to `9.1.5.0`.
+This is an example to update JRuby to `9.1.13.0`.
 
 ```
-./gradlew updateJRuby -Pto=9.1.5.0
+./gradlew updateJRuby -Pto=9.1.13.0
 ```
 
 ### Documents
@@ -223,4 +223,3 @@ git tag v$VERSION
 See also:
 * [Bintray](https://bintray.com)
 * [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_editingyouruserprofile.html#anchorAPIKEY)
-

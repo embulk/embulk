@@ -197,7 +197,7 @@ public class EmbulkMigrate
                                    final String thisEmbulkVersion)
             throws IOException
     {
-        migrator.write(".ruby-version", "jruby-9.1.5.0");
+        migrator.write(".ruby-version", "jruby-9.1.13.0");
 
         // Update |embulk| version depending.
         if (fromVersion.compareTo(new ComparableVersion("0.1.0")) <= 0) {
