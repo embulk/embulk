@@ -62,7 +62,7 @@ dependencies {
 
     gems 'rubygems:bundler:1.10.6'
     gems 'rubygems:msgpack:1.1.0'
-    gems 'rubygems:liquid:3.0.6'
+    gems 'rubygems:liquid:4.0.0'
 }
 
 task unpackGems(type: JRubyPrepare) {
