@@ -61,10 +61,41 @@ public class PluginClassLoaderModule
 
         private class Factory implements PluginClassLoaderFactory
         {
+            @Override
             public PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader)
             {
-                return new PluginClassLoader(urls, parentClassLoader,
-                        parentFirstPackages, parentFirstResources);
+                return PluginClassLoader.createForFlatJars(
+                    parentClassLoader,
+                    urls,
+                    parentFirstPackages,
+                    parentFirstResources);
+            }
+
+            @Override
+            public PluginClassLoader createForNestedJar(
+                    final ClassLoader parentClassLoader,
+                    final URL oneNestedJarUrl)
+            {
+                return PluginClassLoader.createForNestedJar(
+                    parentClassLoader,
+                    oneNestedJarUrl,
+                    null,
+                    parentFirstPackages,
+                    parentFirstResources);
+            }
+
+            @Override
+            public PluginClassLoader createForNestedJar(
+                    final ClassLoader parentClassLoader,
+                    final URL oneNestedJarUrl,
+                    final Collection<String> embeddedJarPathsInNestedJar)
+            {
+                return PluginClassLoader.createForNestedJar(
+                    parentClassLoader,
+                    oneNestedJarUrl,
+                    embeddedJarPathsInNestedJar,
+                    parentFirstPackages,
+                    parentFirstResources);
             }
         }
     }
