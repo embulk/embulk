@@ -1,6 +1,5 @@
 package org.embulk.plugin.jar;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOError;
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -8,6 +7,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import org.embulk.plugin.PluginClassLoader;
@@ -24,6 +26,7 @@ public class JarPluginLoader
 {
     public static final String MANIFEST_PLUGIN_MAIN_CLASS = "Embulk-Plugin-Main-Class";
     public static final String MANIFEST_PLUGIN_SPI_VERSION = "Embulk-Plugin-Spi-Version";
+    public static final String MANIFEST_PLUGIN_CLASS_PATH = "Embulk-Plugin-Class-Path";
 
     private JarPluginLoader(final Manifest pluginManifest,
                             final Attributes pluginManifestAttributes,
@@ -44,7 +47,8 @@ public class JarPluginLoader
 
         if (spiVersion == 0) {
             final String mainClassName = getPluginMainClassNameFromManifest(manifestAttributes);
-            final Class mainClass = loadJarPluginMainClass(jarPath, mainClassName, classLoaderFactory);
+            final List<String> pluginClassPath = getPluginClassPathFromManifest(manifestAttributes);
+            final Class mainClass = loadJarPluginMainClass(jarPath, mainClassName, pluginClassPath, classLoaderFactory);
             return new JarPluginLoader(manifest, manifestAttributes, mainClass);
         }
 
@@ -108,6 +112,7 @@ public class JarPluginLoader
 
     private static Class loadJarPluginMainClass(final Path jarPath,
                                                 final String pluginMainClassName,
+                                                final List<String> pluginClassPath,
                                                 final PluginClassLoaderFactory pluginClassLoaderFactory)
             throws InvalidJarPluginException
     {
@@ -138,9 +143,15 @@ public class JarPluginLoader
             throw new InvalidJarPluginException("JAR plugin path specified is invalid: " + jarPath.toString(), ex);
         }
 
-
-        final PluginClassLoader pluginClassLoader =
-            pluginClassLoaderFactory.create(ImmutableList.of(fileUrlJar), JarPluginLoader.class.getClassLoader());
+        final PluginClassLoader pluginClassLoader;
+        if (pluginClassPath.isEmpty()) {
+            pluginClassLoader = pluginClassLoaderFactory.createForNestedJar(
+                JarPluginLoader.class.getClassLoader(), fileUrlJar);
+        }
+        else {
+            pluginClassLoader = pluginClassLoaderFactory.createForNestedJar(
+                JarPluginLoader.class.getClassLoader(), fileUrlJar, pluginClassPath);
+        }
 
         final Class pluginMainClass;
         try {
@@ -183,6 +194,22 @@ public class JarPluginLoader
         }
 
         return pluginMainClassName;
+    }
+
+    private static List<String> getPluginClassPathFromManifest(final Attributes manifestAttributes)
+            throws InvalidJarPluginException
+    {
+        final String pluginClassPathJoined = getAttributeFromManifest(manifestAttributes, MANIFEST_PLUGIN_CLASS_PATH);
+
+        if (pluginClassPathJoined == null) {
+            return Collections.<String>emptyList();
+        }
+
+        final List<String> pluginClassPath = new ArrayList<String>();
+        for (final String splitPluginClassPath : pluginClassPathJoined.split(" +", 0)) {
+            pluginClassPath.add(splitPluginClassPath);
+        }
+        return pluginClassPath;
     }
 
     private static String getAttributeFromManifest(final Attributes manifestAttributes, final String attributeName)
