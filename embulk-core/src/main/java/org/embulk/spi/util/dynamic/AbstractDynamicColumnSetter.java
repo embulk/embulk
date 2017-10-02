@@ -44,8 +44,17 @@ public abstract class AbstractDynamicColumnSetter
 
     public abstract void set(Value value);
 
+    @Deprecated
     public void setRubyObject(IRubyObject rubyObject)
     {
+        if (!deprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.util.dynamic.AbstractDynamicColumnSetter#setRubyObject");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/799");
+            // The |deprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            deprecationWarned = true;
+        }
+
         if (rubyObject == null || rubyObject instanceof RubyNil) {
             setNull();
         } else if (rubyObject instanceof RubyBoolean) {
@@ -80,4 +89,6 @@ public abstract class AbstractDynamicColumnSetter
             set(RubyValueApi.toValue(rubyObject.getRuntime(), rubyObject));
         }
     }
+
+    private static boolean deprecationWarned = false;
 }
