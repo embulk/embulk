@@ -13,9 +13,24 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.util.ByteList;
 import org.jcodings.specific.ASCIIEncoding;
 
+@Deprecated
 public class RubyValueApi
 {
+    @Deprecated
     public static Value fromMessagePack(RubyString content)
+    {
+        if (!fromMessagePackDeprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.json.RubyValueApi.fromMessagePack");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/802");
+            // The |fromMessagePackDeprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            fromMessagePackDeprecationWarned = true;
+        }
+
+        return fromMessagePackInternal(content);
+    }
+
+    private static Value fromMessagePackInternal(RubyString content)
     {
         ByteList list = content.getByteList();
         try {
@@ -40,8 +55,17 @@ public class RubyValueApi
         }
     }
 
+    @Deprecated
     public static RubyString toMessagePack(Ruby runtime, Value value)
     {
+        if (!toMessagePackDeprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.json.RubyValueApi.toMessagePack");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/802");
+            // The |toMessagePackDeprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            toMessagePackDeprecationWarned = true;
+        }
+
         try {
             MessageBufferPacker packer = MessagePack.newDefaultBufferPacker();
             packer.packValue(value);
@@ -54,9 +78,23 @@ public class RubyValueApi
         }
     }
 
+    @Deprecated
     public static Value toValue(Ruby runtime, IRubyObject object)
     {
+        if (!toValueDeprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.json.RubyValueApi.toValue");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/802");
+            // The |toValueDeprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            toValueDeprecationWarned = true;
+        }
+
         RubyString string = (RubyString) object.callMethod(runtime.getCurrentContext(), "to_msgpack");
-        return fromMessagePack(string);
+        return fromMessagePackInternal(string);
     }
+
+    private static boolean fromMessagePackDeprecationWarned = false;
+    private static boolean toMessagePackDeprecationWarned = false;
+    private static boolean toValueDeprecationWarned = false;
+
 }
