@@ -480,7 +480,7 @@ public class EmbulkRunner
     {
         final String yamlString = dumpDataSourceInYaml(modelObject);
         if (path != null) {
-            Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         }
         return yamlString;
     }
@@ -490,7 +490,7 @@ public class EmbulkRunner
     {
         final String yamlString = dumpResumeStateInYaml(modelObject);
         if (path != null) {
-            Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         }
         return yamlString;
     }
