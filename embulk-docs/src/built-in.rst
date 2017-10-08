@@ -133,7 +133,7 @@ Options
 +==================+==========+================================================+=======================+
 | path\_prefix     | string   | Path prefix of input files                     | required              |
 +------------------+----------+------------------------------------------------+-----------------------+
-| parsers          | hash     | Parsers configurations (see below)             | required              |
+| parser           | hash     | Parser configuration (see below)               | required              |
 +------------------+----------+------------------------------------------------+-----------------------+
 | decoders         | array    | Decoder configuration (see below)              |                       |
 +------------------+----------+------------------------------------------------+-----------------------+
@@ -181,7 +181,7 @@ Example
       parser:
         ...
 
-In most of cases, you'll use guess to configure the parsers and decoders. See also `Quick Start <https://github.com/embulk/embulk#quick-start>`_.
+In most of cases, you'll use guess to configure the parser and decoders. See also `Quick Start <https://github.com/embulk/embulk#quick-start>`_.
 
 CSV parser plugin
 ------------------
