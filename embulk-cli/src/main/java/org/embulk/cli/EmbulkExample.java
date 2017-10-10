@@ -69,7 +69,11 @@ public class EmbulkExample
         StringBuilder ymlBuilder = new StringBuilder();
         ymlBuilder.append("in:\n");
         ymlBuilder.append("  type: file\n");
-        ymlBuilder.append(String.format("  path_prefix: \"%s\"\n",
+
+        // Use single-quotes to quote path strings in YAML for Windows.
+        // Ref YAML spec: Single-Quoted Style
+        // http://yaml.org/spec/1.2/spec.html#id2788097
+        ymlBuilder.append(String.format("  path_prefix: \'%s\'\n",
                                         csvPath.toAbsolutePath().resolve("sample_").toString()));
         ymlBuilder.append("out:\n");
         ymlBuilder.append("  type: stdout\n");
