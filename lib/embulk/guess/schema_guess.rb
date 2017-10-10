@@ -105,7 +105,7 @@ module Embulk::Guess
       FALSE_STRINGS = Hash[%w[
         false False FALSE
         no No NO
-        f N n N
+        f F n N
         off Off OFF
       ].map {|k| [k, true] }]
 
