@@ -26,4 +26,22 @@ class SchemaGuessTest < ::Test::Unit::TestCase
         {"a" => "12345678"},
       ]))
   end
+
+  def test_boolean
+    %w[
+      true false t f
+      yes no y n
+      on off
+    ].each do |str|
+      # If at least one of three kinds of boolean strings (i.e., downcase, upcase, capitalize) is
+      # mistakenly detected as "string," the guesser concludes the column type is "string."
+      assert_equal(
+        [C.new(0, "a", :boolean)],
+        G.from_hash_records([
+          {"a" => str.downcase},
+          {"a" => str.upcase},
+          {"a" => str.capitalize},
+        ]))
+    end
+  end
 end
