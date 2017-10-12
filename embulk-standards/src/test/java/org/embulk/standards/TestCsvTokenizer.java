@@ -293,6 +293,82 @@ public class TestCsvTokenizer
                     "\"trailing\n3\"  ,\"trailing\n4\"  "));
     }
 
+
+    @Test
+    public void parseWithDefaultQuotesInQuotedFields() throws Exception
+    {
+        reloadPluginTask();
+        assertEquals(expectedRecords(
+                         2,
+                         "foo\"bar", "foofoo\"barbar",
+                         "baz\"\"qux", "bazbaz\"\"quxqux"),
+                     parse(
+                         task,
+                         "\"foo\"\"bar\",\"foofoo\"\"barbar\"",
+                         "\"baz\"\"\"\"qux\",\"bazbaz\"\"\"\"quxqux\""));
+    }
+
+    @Test
+    public void parseWithQuotesInQuotedFields_ACCEPT_ONLY_RFC4180_ESCAPED() throws Exception
+    {
+        config.set("quotes_in_quoted_fields", "ACCEPT_ONLY_RFC4180_ESCAPED");
+        reloadPluginTask();
+        assertEquals(expectedRecords(
+                         2,
+                         "foo\"bar", "foofoo\"barbar",
+                         "baz\"\"qux", "bazbaz\"\"quxqux"),
+                     parse(
+                         task,
+                         "\"foo\"\"bar\",\"foofoo\"\"barbar\"",
+                         "\"baz\"\"\"\"qux\",\"bazbaz\"\"\"\"quxqux\""));
+    }
+
+    @Test
+    public void throwWithDefaultQuotesInQuotedFields() throws Exception
+    {
+        reloadPluginTask();
+        try {
+            parse(task, "\"foo\"bar\",\"hoge\"fuga\"");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.InvalidValueException);
+            assertEquals("Unexpected extra character 'b' after a value quoted by '\"'", e.getMessage());
+            return;
+        }
+    }
+
+    @Test
+    public void throwWithQuotesInQuotedFields_ACCEPT_ONLY_RFC4180_ESCAPED() throws Exception
+    {
+        config.set("quotes_in_quoted_fields", "ACCEPT_ONLY_RFC4180_ESCAPED");
+        reloadPluginTask();
+        try {
+            parse(task, "\"foo\"bar\",\"hoge\"fuga\"");
+            fail();
+        } catch (Exception e) {
+            assertTrue(e instanceof CsvTokenizer.InvalidValueException);
+            assertEquals("Unexpected extra character 'b' after a value quoted by '\"'", e.getMessage());
+            return;
+        }
+    }
+
+    @Test
+    public void parseWithQuotesInQuotedFields_ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS() throws Exception
+    {
+        config.set("quotes_in_quoted_fields", "ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS");
+        reloadPluginTask();
+        assertEquals(expectedRecords(
+                         2,
+                         "foo\"bar", "foofoo\"barbar",
+                         "baz\"\"qux", "bazbaz\"\"quxqux",
+                         "\"embulk\"", "\"embul\"\"k\""),
+                     parse(
+                         task,
+                         "\"foo\"bar\",\"foofoo\"\"barbar\"",
+                         "\"baz\"\"\"qux\",\"bazbaz\"\"\"\"quxqux\"",
+                         "\"\"\"embulk\"\",\"\"embul\"\"\"k\"\""));
+    }
+
     @Test
     public void throwQuotedSizeLimitExceededException() throws Exception
     {
