@@ -74,7 +74,9 @@ public class DynamicColumnSetterFactory
         if (option != null) {
             return option.getTimestampFormat();
         } else {
-            return new TimestampFormat("%Y-%m-%d %H:%M:%S.%6N");
+            // DynamicColumnSetter is used for inputs, then datetime parsing.
+            // Ruby's strptime does not accept numeric prefixes in specifiers such as "%6N".
+            return new TimestampFormat("%Y-%m-%d %H:%M:%S.%N");
         }
     }
 

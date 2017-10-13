@@ -50,8 +50,10 @@ public class DynamicPageBuilder
     public static interface ColumnOption
             extends Task
     {
+        // DynamicPageBuilder is used for inputs, then datetime parsing.
+        // Ruby's strptime does not accept numeric prefixes in specifiers such as "%6N".
         @Config("timestamp_format")
-        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N\"")
+        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N\"")
         public TimestampFormat getTimestampFormat();
 
         @Config("timezone")
