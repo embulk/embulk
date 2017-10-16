@@ -24,17 +24,34 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.config.ConfigException;
 
-public class DynamicColumnSetterFactory
+class DynamicColumnSetterFactory
 {
     private final DefaultValueSetter defaultValue;
     private final DynamicPageBuilder.BuilderTask task;
+    private final boolean useColumnForTimestampMetadata;
 
-    DynamicColumnSetterFactory(
-            DynamicPageBuilder.BuilderTask task,
-            DefaultValueSetter defaultValue)
+    private DynamicColumnSetterFactory(
+            final DynamicPageBuilder.BuilderTask task,
+            final DefaultValueSetter defaultValue,
+            final boolean useColumnForTimestampMetadata)
     {
         this.defaultValue = defaultValue;
         this.task = task;
+        this.useColumnForTimestampMetadata = useColumnForTimestampMetadata;
+    }
+
+    static DynamicColumnSetterFactory createWithTimestampMetadataFromBuilderTask(
+            final DynamicPageBuilder.BuilderTask task,
+            final DefaultValueSetter defaultValue)
+    {
+        return new DynamicColumnSetterFactory(task, defaultValue, false);
+    }
+
+    static DynamicColumnSetterFactory createWithTimestampMetadataFromColumn(
+            final DynamicPageBuilder.BuilderTask task,
+            final DefaultValueSetter defaultValue)
+    {
+        return new DynamicColumnSetterFactory(task, defaultValue, true);
     }
 
     public static DefaultValueSetter nullDefaultValue()
@@ -57,8 +74,15 @@ public class DynamicColumnSetterFactory
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
-            TimestampParser parser = new TimestampParser(
-                    getTimestampFormatForParser(column).getFormat(), getTimeZone(column));
+            final TimestampParser parser;
+            if (this.useColumnForTimestampMetadata) {
+                final TimestampType timestampType = (TimestampType) type;
+                parser = new TimestampParser(timestampType.getFormat(), getTimeZone(column));
+            }
+            else {
+                parser = new TimestampParser(
+                        getTimestampFormatForParser(column).getFormat(), getTimeZone(column));
+            }
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
             TimestampFormatter formatter = new TimestampFormatter(

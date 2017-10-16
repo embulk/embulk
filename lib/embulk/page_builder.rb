@@ -24,11 +24,25 @@ module Embulk
   end
 
   class PageBuilder
-    def initialize(schema, java_page_output)
+    def initialize(schema, java_page_output=nil, java_dynamic_page_builder: nil)
+      if java_page_output.nil? && java_dynamic_page_builder.nil?
+        raise ArgumentError, 'PageBuilder.new must take either of java_page_output or java_dynamic_page_builder'
+      end
+      if java_page_output && java_dynamic_page_builder
+        raise ArgumentError, 'PageBuilder.new must not take both java_page_output and java_dynamic_page_builder'
+      end
+
       require 'msgpack'  # used at DynamicPageBuilder.set(Value)
-      # TODO get task as an argument
-      task = Java::SPI::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
-      @page_builder = Java::DynamicPageBuilder.new(task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
+
+      if java_page_output
+        # TODO get task as an argument
+        task = Java::SPI::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
+        @page_builder = Java::DynamicPageBuilder.createWithTimestampMetadataFromBuilderTask(
+            task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
+      else
+        @page_builder = java_dynamic_page_builder
+      end
+
       @schema = schema
     end
 
