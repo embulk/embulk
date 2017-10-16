@@ -7,8 +7,16 @@ Embulk
 ==================================
 
 .. image:: _static/embulk-logo-v2/embulk-logo-v2-sq-tr-small.png
-   :width: 512px
+   :width: 128px
    :target: https://github.com/embulk/embulk
+
+Highlights
+-----------
+
+* Embulk's announcement mailing list (read-only) is ready. Please feel free to subscribe! Embulk core members post important updates such as **key releases**, **compatibility information**, and **feedback requests to users**.
+
+  * `Embulk-announce <https://groups.google.com/forum/#!forum/embulk-announce>`_
+
 
 What's Embulk?
 ------------------
