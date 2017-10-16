@@ -72,6 +72,7 @@ public class EmbulkRun
         }
 
         printEmbulkVersionHeader(System.out);
+        printEmbulkGeneralNotifications(System.out);
 
         switch (subcommand) {
         case BUNDLE:
@@ -723,6 +724,16 @@ public class EmbulkRun
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
         final String now = DateTime.now().toString(formatter);
         out.println(now + ": Embulk v" + this.embulkVersion);
+    }
+
+    private void printEmbulkGeneralNotifications(final PrintStream out)
+    {
+        out.println("");
+        out.println("********************************* INFORMATION *********************************");
+        out.println("  Embulk-announce mailing list (read-only) is ready. Please feel free to join!");
+        out.println("  https://groups.google.com/forum/#!forum/embulk-announce");
+        out.println("*******************************************************************************");
+        out.println("");
     }
 
     // TODO: Check if it is required to process JRuby options.
