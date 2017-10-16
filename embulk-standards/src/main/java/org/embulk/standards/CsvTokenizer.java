@@ -8,6 +8,7 @@ import java.util.ArrayDeque;
 import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
 import org.embulk.config.ConfigException;
+import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
 
 public class CsvTokenizer
 {
@@ -31,6 +32,7 @@ public class CsvTokenizer
     private final char escape;
     private final String newline;
     private final boolean trimIfNotQuoted;
+    private final QuotesInQuotedFields quotesInQuotedFields;
     private final long maxQuotedSizeLimit;
     private final String commentLineMarker;
     private final LineDecoder input;
@@ -62,6 +64,12 @@ public class CsvTokenizer
         escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
+        quotesInQuotedFields = task.getQuotesInQuotedFields();
+        if (trimIfNotQuoted && quotesInQuotedFields != QuotesInQuotedFields.ACCEPT_ONLY_RFC4180_ESCAPED) {
+            // The combination makes some syntax very ambiguous such as:
+            //     val1,  \"\"val2\"\"  ,val3
+            throw new ConfigException("[quotes_in_quoted_fields != ACCEPT_ONLY_RFC4180_ESCAPED] is not allowed to specify with [trim_if_not_quoted = true]");
+        }
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
         commentLineMarker = task.getCommentLineMarker().orNull();
         nullStringOrNull = task.getNullString().orNull();
@@ -313,9 +321,23 @@ public class CsvTokenizer
 
                     } else if (isQuote(c)) {
                         char next = peekNextChar();
-                        if (isQuote(next)) { // escaped quote
+                        final char nextNext = peekNextNextChar();
+                        if (isQuote(next) &&
+                            (quotesInQuotedFields != QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS ||
+                             (!isDelimiter(nextNext) && !isEndOfLine(nextNext)))) {
+                            // Escaped by preceding it with another quote.
+                            // A quote just before a delimiter or an end of line is recognized as a functional quote,
+                            // not just as a non-escaped stray "quote character" included the field, even if
+                            // ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS is specified.
                             quotedValue.append(line.substring(valueStartPos, linePos));
                             valueStartPos = ++linePos;
+                        } else if (quotesInQuotedFields == QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS &&
+                            !(isDelimiter(next) || isEndOfLine(next))) {
+                            // A non-escaped stray "quote character" in the field is processed as a regular character
+                            // if ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS is specified,
+                            if ((linePos - valueStartPos) + quotedValue.length() > maxQuotedSizeLimit) {
+                                throw new QuotedSizeLimitExceededException("The size of the quoted value exceeds the limit size (" + maxQuotedSizeLimit + ")");
+                            }
                         } else {
                             quotedValue.append(line.substring(valueStartPos, linePos - 1));
                             columnState = ColumnState.AFTER_QUOTED_VALUE;
@@ -424,6 +446,17 @@ public class CsvTokenizer
             return END_OF_LINE;
         } else {
             return line.charAt(linePos);
+        }
+    }
+
+    private char peekNextNextChar()
+    {
+        Preconditions.checkState(line != null, "peekNextNextChar is called after end of file");
+
+        if (linePos + 1 >= line.length()) {
+            return END_OF_LINE;
+        } else {
+            return line.charAt(linePos + 1);
         }
     }
 

@@ -77,6 +77,10 @@ public class CsvParserPlugin
         @ConfigDefault("false")
         boolean getTrimIfNotQuoted();
 
+        @Config("quotes_in_quoted_fields")
+        @ConfigDefault("\"ACCEPT_ONLY_RFC4180_ESCAPED\"")
+        QuotesInQuotedFields getQuotesInQuotedFields();
+
         @Config("max_quoted_size_limit")
         @ConfigDefault("131072") //128kB
         long getMaxQuotedSizeLimit();
@@ -96,6 +100,24 @@ public class CsvParserPlugin
         @Config("stop_on_invalid_record")
         @ConfigDefault("false")
         boolean getStopOnInvalidRecord();
+    }
+
+    public enum QuotesInQuotedFields
+    {
+        ACCEPT_ONLY_RFC4180_ESCAPED,
+        ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS,
+        ;
+
+        @JsonCreator
+        public static QuotesInQuotedFields ofString(final String string)
+        {
+            for (final QuotesInQuotedFields value : values()) {
+                if (string.equals(value.toString())) {
+                    return value;
+                }
+            }
+            throw new ConfigException("\"quotes_in_quoted_fields\" must be one of [ACCEPT_ONLY_RFC4180_ESCAPED, ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS].");
+        }
     }
 
     public static class QuoteCharacter
