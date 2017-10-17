@@ -1,3 +1,11 @@
+// TODO: Remove this block once rubygems.lasagna.io is back, or jruby-gradle-jar-plugin is upgraded to 1.5.0.
+// See also: https://github.com/jruby-gradle/jruby-gradle-plugin/issues/297
+// jruby-gradle-jar-plugin is not upgraded yet because its 1.5.0 depends on Java 8.
+repositories {
+    mavenLocal()
+    maven { url 'http://rubygems-proxy.torquebox.org/releases' }
+}
+
 apply plugin: 'com.github.jruby-gradle.base'
 
 import com.github.jrubygradle.JRubyExec
