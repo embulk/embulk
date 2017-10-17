@@ -11,6 +11,10 @@ Embulk is a parallel bulk data loader that **helps data transfer between various
 
 Embulk documents: http://www.embulk.org/docs/
 
+# Mailing list
+
+* [Embulk-announce](https://groups.google.com/forum/#!forum/embulk-announce): Embulk core members post important updates such as **key releases**, **compatibility information**, and **feedback requests to users**.
+
 ## Quick Start
 
 ### Linux & Mac & BSD
