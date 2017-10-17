@@ -117,8 +117,8 @@ public class PluginClassLoader
      * @param parentClassLoader  the parent ClassLoader of this PluginClassLoader instance
      * @param oneNestedJarFileUrl  "file:" URL of the plugin JAR file
      * @param embeddedJarPathsInNestedJar  collection of resource names of embedded dependency JARs in the plugin JAR
-     * @parma parentFirstPackages  collection of package names that are to be loaded first before the plugin's
-     * @parma parentFirstResourcess  collection of resource names that are to be loaded first before the plugin's
+     * @param parentFirstPackages  collection of package names that are to be loaded first before the plugin's
+     * @param parentFirstResourcess  collection of resource names that are to be loaded first before the plugin's
      */
     public static PluginClassLoader createForNestedJar(
             final ClassLoader parentClassLoader,
