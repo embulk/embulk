@@ -1,7 +1,26 @@
 module Embulk
 
   org.embulk.spi.util.dynamic.AbstractDynamicColumnSetter.module_eval do
-    alias_method(:set, :setRubyObject)
+    def set(ruby_object)
+      # Using |java_send| so that it calls Java's correct overloaded |set| method, not Ruby's itself.
+      if ruby_object.nil?
+        self.java_send(:setNull, [])
+      elsif ruby_object == true || ruby_object == false
+        self.java_send(:set, [::Java::boolean], ruby_object.to_java(:boolean))
+      elsif ruby_object.kind_of?(Integer)
+        self.java_send(:set, [::Java::long], ruby_object.to_java(:long))
+      elsif ruby_object.kind_of?(Float)
+        self.java_send(:set, [::Java::double], ruby_object.to_java(:double))
+      elsif ruby_object.kind_of?(String)
+        self.java_send(:set, [::Java::java.lang.String], ruby_object.to_java(::Java::java.lang.String))
+      elsif ruby_object.kind_of?(Time)
+        self.java_send(:set, [::Java::org.embulk.spi.time.Timestamp],
+                       ::Java::org.embulk.spi.time.Timestamp.ofEpochSecond(ruby_object.to_i, ruby_object.nsec))
+      else
+        self.java_send(:set, [::Java::org.msgpack.value.Value],
+                       ::Java::org.msgpack.core.MessagePack.newDefaultUnpacker(ruby_object.to_msgpack.to_java_bytes).unpackValue())
+      end
+    end
   end
 
   class PageBuilder
