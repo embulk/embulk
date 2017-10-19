@@ -20,7 +20,6 @@ import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginManager;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
-import org.embulk.spi.time.TimestampFormatter.FormatterTask;
 
 public class ExecSession
 {
@@ -201,11 +200,7 @@ public class ExecSession
 
     public TimestampFormatter newTimestampFormatter(String format, DateTimeZone timezone)
     {
-        ConfigSource config = Exec.newConfigSource();
-        config.set("timezone", timezone.getID());
-        // TODO: Stop creating the |FormatterTask| as |TimestampFormater.FormatterTask| is deprecated since v0.6.14.
-        FormatterTask formatterTask = config.loadConfig(FormatterTask.class);
-        return new TimestampFormatter(format, formatterTask.getTimeZone());
+        return new TimestampFormatter(format, timezone);
     }
 
     public TempFileSpace getTempFileSpace()
