@@ -33,7 +33,7 @@ module Embulk
           when :string
             "record << reader.getString(#{idx})"
           when :timestamp
-            "record << reader.getTimestamp(#{idx}).getRubyTime(JRuby.runtime)"
+            "record << (java_timestamp = reader.getTimestamp(#{idx}); ruby_time = Java::org.jruby.RubyTime.new(JRuby.runtime, JRuby.runtime.getClass('Time'), Java::org.joda.time.DateTime.new(java_timestamp.toEpochMilli())).gmtime().to_java(Java::org.jruby.RubyTime); ruby_time.setNSec(java_timestamp.getNano()); ruby_time)"
           when :json
             "record << MessagePack.unpack(String.from_java_bytes((::Java::org.msgpack.core.MessagePack.newDefaultBufferPacker()).packValue(reader.getJson(#{idx})).toMessageBuffer().toByteArray()))"
           else
@@ -64,7 +64,8 @@ module Embulk
           when :string
             "builder.setString(#{idx}, record[#{idx}])"
           when :timestamp
-            "builder.setTimestamp(#{idx}, java_timestamp_class.fromRubyTime(record[#{idx}]))"
+            # It was originally expecting that `record[#{idx}]` was a Ruby Time object. Does it really happen?
+            "(ruby_time = record[#{idx}].to_java(Java::org.jruby.RubyTime); msec = ruby_time.getDateTime().getMillis(); builder.setTimestamp(#{idx}, java_timestamp_class.ofEpochSecond(msec / 1000, ruby_time.getNSec() + (msec % 1000) * 1000000)))"
           when :json
             "builder.setJson(#{idx}, ::Java::org.msgpack.core.MessagePack.newDefaultUnpacker(MessagePack.pack(record[#{idx}]).to_java_bytes).unpackValue())"
           else
