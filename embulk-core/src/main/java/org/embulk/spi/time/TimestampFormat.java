@@ -38,11 +38,6 @@ public class TimestampFormat
         return new TimestampFormatter(format, task.getTimeZone());
     }
 
-    public TimestampFormatter newFormatter(final DateTimeZone timezone)
-    {
-        return new TimestampFormatter(format, timezone);
-    }
-
     @Deprecated
     public TimestampParser newParser(TimestampParser.ParserTask task)
     {
@@ -56,11 +51,6 @@ public class TimestampFormat
             newParserDeprecationWarned = true;
         }
         return new TimestampParser(format, task.getDefaultTimeZone());
-    }
-
-    public TimestampParser newParser(final DateTimeZone timezone)
-    {
-        return new TimestampParser(format, timezone);
     }
 
     private static Set<String> availableTimeZoneNames = ImmutableSet.copyOf(DateTimeZone.getAvailableIDs());
