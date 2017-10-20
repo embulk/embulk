@@ -53,28 +53,38 @@ public class DynamicColumnSetterFactory
             return new DoubleColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof StringType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+                    getTimestampFormatForFormatter(column).getFormat(), getTimeZone(column));
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
             TimestampParser parser = new TimestampParser(
-                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+                    getTimestampFormatForParser(column).getFormat(), getTimeZone(column));
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+                    getTimestampFormatForFormatter(column).getFormat(), getTimeZone(column));
             return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
         throw new ConfigException("Unknown column type: "+type);
     }
 
-    private TimestampFormat getTimestampFormat(Column column)
+    private TimestampFormat getTimestampFormatForFormatter(Column column)
     {
         DynamicPageBuilder.ColumnOption option = getColumnOption(column);
         if (option != null) {
             return option.getTimestampFormat();
         } else {
             return new TimestampFormat("%Y-%m-%d %H:%M:%S.%6N");
+        }
+    }
+
+    private TimestampFormat getTimestampFormatForParser(Column column)
+    {
+        DynamicPageBuilder.ColumnOption option = getColumnOption(column);
+        if (option != null) {
+            return option.getTimestampFormat();
+        } else {
+            return new TimestampFormat("%Y-%m-%d %H:%M:%S.%N");
         }
     }
 
