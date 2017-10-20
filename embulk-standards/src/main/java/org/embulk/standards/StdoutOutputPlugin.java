@@ -1,6 +1,8 @@
 package org.embulk.standards;
 
 import java.util.List;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigDiff;
@@ -14,13 +16,17 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.TransactionalPageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.util.PagePrinter;
+import org.joda.time.DateTimeZone;
 
 public class StdoutOutputPlugin
         implements OutputPlugin
 {
     public interface PluginTask
-            extends Task, TimestampFormatter.FormatterTask
+            extends Task
     {
+        @Config("timezone")
+        @ConfigDefault("\"UTC\"")
+        public DateTimeZone getTimeZone();
     }
 
     @Override
@@ -54,7 +60,7 @@ public class StdoutOutputPlugin
 
         return new TransactionalPageOutput() {
             private final PageReader reader = new PageReader(schema);
-            private final PagePrinter printer = new PagePrinter(schema, task);
+            private final PagePrinter printer = new PagePrinter(schema, task.getTimeZone());
 
             public void add(Page page)
             {
