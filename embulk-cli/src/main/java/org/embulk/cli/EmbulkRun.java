@@ -729,10 +729,11 @@ public class EmbulkRun
     private void printEmbulkGeneralNotifications(final PrintStream out)
     {
         out.println("");
-        out.println("********************************* INFORMATION *********************************");
-        out.println("  Embulk-announce mailing list (read-only) is ready. Please feel free to join!");
+        out.println("********************************** INFORMATION **********************************");
+        out.println("  Join us! Embulk-announce mailing list is up for IMPORTANT annoucement such as");
+        out.println("    compatibility-breaking changes and key feature updates.");
         out.println("  https://groups.google.com/forum/#!forum/embulk-announce");
-        out.println("*******************************************************************************");
+        out.println("*********************************************************************************");
         out.println("");
     }
 
