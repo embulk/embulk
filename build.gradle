@@ -24,7 +24,7 @@ def release_projects = [project(":embulk-core"), project(":embulk-standards"), p
 
 allprojects {
     group = 'org.embulk'
-    version = '0.8.35'
+    version = '0.8.36'
 
     ext {
         jrubyVersion = '9.1.13.0'
