@@ -88,15 +88,33 @@ public class Timestamp
         }
     }
 
+    @Deprecated
     public RubyTime getRubyTime(Ruby runtime)
     {
+        if (!getRubyTimeDeprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.time.Timestamp.getRubyTime");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/820");
+            // The |getRubyTimeDeprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            getRubyTimeDeprecationWarned = true;
+        }
+
         RubyTime time = new RubyTime(runtime, runtime.getClass("Time"), new DateTime(toEpochMilli())).gmtime();
         time.setNSec(nano % 1000000);
         return time;
     }
 
+    @Deprecated
     public static Timestamp fromRubyTime(RubyTime time)
     {
+        if (!fromRubyTimeDeprecationWarned) {
+            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.time.Timestamp.fromRubyTime");
+            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/820");
+            // The |fromRubyTimeDeprecationWarned| flag is used only for warning messages.
+            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
+            fromRubyTimeDeprecationWarned = true;
+        }
+
         long msec = time.getDateTime().getMillis();
         long sec = msec / 1000;
         long nsec = time.getNSec() + (msec % 1000) * 1000000;
@@ -156,4 +174,7 @@ public class Timestamp
 
         return new Timestamp(seconds, nano);
     }
+
+    private static boolean getRubyTimeDeprecationWarned = false;
+    private static boolean fromRubyTimeDeprecationWarned = false;
 }
