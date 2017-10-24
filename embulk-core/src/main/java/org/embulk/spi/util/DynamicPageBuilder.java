@@ -61,16 +61,14 @@ public class DynamicPageBuilder
         public Optional<DateTimeZone> getTimeZone();
     }
 
-    public DynamicPageBuilder(BuilderTask task,
-            BufferAllocator allocator, Schema schema, PageOutput output)
+    private DynamicPageBuilder(
+            final DynamicColumnSetterFactory factory,
+            final BufferAllocator allocator,
+            final Schema schema,
+            final PageOutput output)
     {
         this.pageBuilder = new PageBuilder(allocator, schema, output);
         this.schema = schema;
-
-        // TODO configurable default value
-        DynamicColumnSetterFactory factory = new DynamicColumnSetterFactory(task,
-                DynamicColumnSetterFactory.nullDefaultValue());
-
         ImmutableList.Builder<DynamicColumnSetter> setters = ImmutableList.builder();
         ImmutableMap.Builder<String, DynamicColumnSetter> lookup = ImmutableMap.builder();
         for (Column c : schema.getColumns()) {
@@ -80,6 +78,44 @@ public class DynamicPageBuilder
         }
         this.setters = setters.build().toArray(new DynamicColumnSetter[0]);
         this.columnLookup = lookup.build();
+    }
+
+    @Deprecated  // The static creator method "createWithTimestampMetadataFromBuilderTask" is preferred.
+    public DynamicPageBuilder(
+            BuilderTask task,
+            BufferAllocator allocator,
+            Schema schema,
+            PageOutput output)
+    {
+        this(DynamicColumnSetterFactory.createWithTimestampMetadataFromBuilderTask(
+                 task, DynamicColumnSetterFactory.nullDefaultValue()),  // TODO configurable default value
+             allocator,
+             schema,
+             output);
+    }
+
+    public static DynamicPageBuilder createWithTimestampMetadataFromBuilderTask(
+            BuilderTask task,
+            BufferAllocator allocator,
+            Schema schema,
+            PageOutput output)
+    {
+        // TODO configurable default value
+        DynamicColumnSetterFactory factory = DynamicColumnSetterFactory.createWithTimestampMetadataFromBuilderTask(
+                task, DynamicColumnSetterFactory.nullDefaultValue());
+        return new DynamicPageBuilder(factory, allocator, schema, output);
+    }
+
+    public static DynamicPageBuilder createWithTimestampMetadataFromColumn(
+            BuilderTask task,
+            BufferAllocator allocator,
+            Schema schema,
+            PageOutput output)
+    {
+        // TODO configurable default value
+        DynamicColumnSetterFactory factory = DynamicColumnSetterFactory.createWithTimestampMetadataFromColumn(
+                task, DynamicColumnSetterFactory.nullDefaultValue());
+        return new DynamicPageBuilder(factory, allocator, schema, output);
     }
 
     public List<Column> getColumns()

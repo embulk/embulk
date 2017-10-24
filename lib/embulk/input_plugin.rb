@@ -34,6 +34,10 @@ module Embulk
     def init
     end
 
+    def self.create_page_builder(task_source: nil, schema: nil, processor_index: nil, java_page_output: nil)
+      return PageBuilder.new(schema, java_page_output)
+    end
+
     def run
       raise NotImplementedError, "InputPlugin#run must be implemented"
     end
@@ -95,7 +99,10 @@ module Embulk
       def run(java_task_source, java_schema, processor_index, java_output)
         task_source = DataSource.from_java(java_task_source)
         schema = Schema.from_java(java_schema)
-        page_builder = PageBuilder.new(schema, java_output)
+        page_builder = @ruby_class.create_page_builder(task_source: task_source,
+                                                       schema: schema,
+                                                       processor_index: processor_index,
+                                                       java_page_output: java_output)
         begin
           task_report_hash = @ruby_class.new(task_source, schema, processor_index, page_builder).run
           return DataSource.from_ruby_hash(task_report_hash).to_java
