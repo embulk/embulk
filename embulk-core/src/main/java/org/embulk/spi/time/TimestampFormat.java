@@ -57,6 +57,12 @@ public class TimestampFormat
 
     public static DateTimeZone parseDateTimeZone(String s)
     {
+        final int rubyStyleTimeOffsetInSecond = TimeZoneConverter.dateZoneToDiff(s);
+
+        if (rubyStyleTimeOffsetInSecond != Integer.MIN_VALUE) {
+            return DateTimeZone.forOffsetMillis(rubyStyleTimeOffsetInSecond * 1000);
+        }
+
         if(s.startsWith("+") || s.startsWith("-")) {
             return DateTimeZone.forID(s);
 
