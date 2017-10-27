@@ -276,10 +276,14 @@ project(':embulk-cli') {
     }
 }
 
-task rubyTest(type: JRubyExec) {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/run-test.rb'
+task rubyTestVanilla(type: JRubyExec, dependsOn: "classpath") {
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/vanilla/run-test.rb'
 }
-rubyTest.dependsOn('classpath')
+task rubyTestMonkeyStrptime(type: JRubyExec, dependsOn: "classpath") {
+    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/monkey_strptime/run-test.rb'
+}
+task rubyTest(dependsOn: ["rubyTestVanilla", "rubyTestMonkeyStrptime"]) {
+}
 
 //
 // gem task
