@@ -187,7 +187,7 @@ public class TimestampParser
             // TODO cache parsed zone?
             timeZone = parseDateTimeZone(zone);
             if (timeZone == null) {
-                throw new TimestampParseException("Invalid time zone name '" + text + "'");
+                throw new TimestampParseException("Invalid time zone name '" + zone + "' in '" + text + "'");
             }
         }
         else {
