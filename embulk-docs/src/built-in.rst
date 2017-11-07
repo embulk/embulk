@@ -255,7 +255,7 @@ The ``columns`` option declares the list of columns. This CSV parser plugin igno
 
 .. note::
 
-   The Timestamp format refers to `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
+   Our Timestamp format is based on Ruby's strptime format, which is similar, but not identical to, the documented `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
 
 List of types:
 
@@ -531,7 +531,7 @@ The ``column_options`` option is a map whose keys are name of columns, and value
 
 .. note::
 
-   The Timestamp format refers to `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
+   Our Timestamp format is based on Ruby's strptime format, which is similar, but not identical to, the documented `Ruby strftime format <https://docs.ruby-lang.org/en/2.4.0/Date.html#method-i-strftime>`_
 
 Example
 ~~~~~~~~
