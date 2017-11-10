@@ -18,11 +18,11 @@ public class TestTimestampParser {
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test__strptime__3_iso8601() {
         testToParse("2001-02-03", "%Y-%m-%d", 981158400L);
-        testToParse("2001-02-03T23:59:60", "%Y-%m-%dT%H:%M:%S", 981244800L);
-        testToParse("2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 981212400L);
-        testToParse("-2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -125309754000L);
-        testToParse("+012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 327406287600L);
-        testToParse("-012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -451734829200L);
+        testToParse("2001-02-03T23:59:60", "%Y-%m-%dT%H:%M:%S", 981244799L);
+        testToParse("2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 981212399L);
+        testToParse("-2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -125309754001L);
+        testToParse("+012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 327406287599L);
+        testToParse("-012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -451734829201L);
     }
 
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
@@ -163,8 +163,8 @@ public class TestTimestampParser {
 
         testToParse("24:59:59", "%H:%M:%S", 81955414799L);
         testToParse("24:59:59", "%k:%M:%S", 81955414799L);
-        testToParse("24:59:60", "%H:%M:%S", 81955414800L);
-        testToParse("24:59:60", "%k:%M:%S", 81955414800L);
+        testToParse("24:59:60", "%H:%M:%S", 81955414799L);
+        testToParse("24:59:60", "%k:%M:%S", 81955414799L);
 
         failToParse("24:60:59", "%H:%M:%S");
         failToParse("24:60:59", "%k:%M:%S");
