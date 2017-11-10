@@ -365,7 +365,7 @@ if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a
 +----------------------------+------------------+
 | invalid\_string\_escapes   | convert to       |
 +============================+==================+
-| PASSTHROUGH *1             | ``\a``           |
+| PASSTHROUGH \*1            | ``\a``           |
 +----------------------------+------------------+
 | SKIP                       | empty string     |
 +----------------------------+------------------+
