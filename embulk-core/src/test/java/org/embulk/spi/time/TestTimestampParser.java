@@ -113,12 +113,10 @@ public class TestTimestampParser {
         testToParse("12006-08-06", "%Y-%m-%d", 316724342400L);
         testToParse("200608 6", "%Y%m%e", 1154822400L);
 
-        // TODO: Process %j with TimestampParser.
-        // https://github.com/embulk/embulk/issues/834
-        // testToParse("2006333", "%Y%j");
-        // testToParse("20069333", "%Y9%j");
-        // testToParse("12006 333", "%Y %j");
-        // testToParse("12006-333", "%Y-%j");
+        testToParse("2006333", "%Y%j", 1164758400L);
+        testToParse("20069333", "%Y9%j", 1164758400L);
+        testToParse("12006 333", "%Y %j", 316734278400L);
+        testToParse("12006-333", "%Y-%j", 316734278400L);
 
         testToParse("232425", "%H%M%S", 81955409065L);
         testToParse("23924925", "%H9%M9%S", 81955409065L);
