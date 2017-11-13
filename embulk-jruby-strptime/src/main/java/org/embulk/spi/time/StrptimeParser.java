@@ -576,7 +576,7 @@ public class StrptimeParser
                         }
                         break;
                     }
-                    case FORMAT_MICROSEC_EPOCH: { // %Q - Number of microseconds since 1970-01-01 00:00:00 UTC.
+                    case FORMAT_MILLISEC_EPOCH: { // %Q - Number of milliseconds since 1970-01-01 00:00:00 UTC.
                         boolean negative = false;
                         if (isMinus(text, pos)) {
                             negative = true;
