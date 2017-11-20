@@ -25,12 +25,6 @@ public class LongColumnSetter
     }
 
     @Override
-    public void set(byte[] v)
-    {
-        set(new String(v, Charset.defaultCharset()));
-    }
-
-    @Override
     public void set(boolean v)
     {
         pageBuilder.setLong(column, v ? 1L : 0L);
@@ -70,6 +64,13 @@ public class LongColumnSetter
             return;
         }
         pageBuilder.setLong(column, lv);
+    }
+
+    @Override
+    public void set(ByteBuffer v)
+    {
+        // Charset.defaultCharset should not be used. It depends on the runtime environment.
+        this.set(StandardCharsets.UTF_8.decode(v).toString());
     }
 
     @Override

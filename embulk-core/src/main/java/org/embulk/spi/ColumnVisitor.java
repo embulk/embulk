@@ -2,7 +2,11 @@ package org.embulk.spi;
 
 public interface ColumnVisitor
 {
-    void binaryColumn(Column column);
+    void binaryColumn(Column column);  // TODO: Add default implementation
+    /*
+    default void binaryColumn(Column column) {
+    }
+    */
 
     void booleanColumn(Column column);
 

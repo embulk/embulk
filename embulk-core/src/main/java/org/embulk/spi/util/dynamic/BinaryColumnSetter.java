@@ -1,6 +1,7 @@
 package org.embulk.spi.util.dynamic;
 
 import com.google.common.collect.ImmutableSet;
+import java.nio.ByteBuffer;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -12,8 +13,6 @@ import java.nio.charset.Charset;
 public class BinaryColumnSetter
         extends AbstractDynamicColumnSetter
 {
-    private final TimestampFormatter timestampFormatter;
-
     public BinaryColumnSetter(PageBuilder pageBuilder, Column column,
                               DefaultValueSetter defaultValue,
                               TimestampFormatter timestampFormatter)
@@ -26,12 +25,6 @@ public class BinaryColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
-    }
-
-    @Override
-    public void set(byte[] v)
-    {
-        pageBuilder.setBinary(column, v);
     }
 
     @Override
@@ -59,6 +52,12 @@ public class BinaryColumnSetter
     }
 
     @Override
+    public void set(ByteBuffer v)
+    {
+        pageBuilder.setBinary(column, v.asReadOnlyBuffer());
+    }
+
+    @Override
     public void set(Timestamp v)
     {
         pageBuilder.setBinary(column, timestampFormatter.format(v).getBytes(Charset.defaultCharset()));
@@ -69,4 +68,6 @@ public class BinaryColumnSetter
     {
         pageBuilder.setBinary(column, v.toJson().getBytes(Charset.defaultCharset()));
     }
+
+    private final TimestampFormatter timestampFormatter;
 }

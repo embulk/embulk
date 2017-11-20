@@ -59,8 +59,6 @@ module Embulk
           "builder.setNull(#{idx})\n" <<
           "else\n" <<
           case column.type
-          when :binary
-            "builder.setBinary(#{idx}, record[#{idx}])"
           when :boolean
             "builder.setBoolean(#{idx}, record[#{idx}])"
           when :long
@@ -69,6 +67,8 @@ module Embulk
             "builder.setDouble(#{idx}, record[#{idx}])"
           when :string
             "builder.setString(#{idx}, record[#{idx}])"
+          when :binary
+            "builder.setBinary(#{idx}, record[#{idx}])"  # TODO: Need to convert to ByteBuffer?
           when :timestamp
             "builder.setTimestamp(#{idx}, java_timestamp_class.fromRubyTime(record[#{idx}]))"
           when :json

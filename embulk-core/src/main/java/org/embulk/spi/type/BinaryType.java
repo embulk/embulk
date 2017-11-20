@@ -1,5 +1,7 @@
 package org.embulk.spi.type;
 
+import java.nio.ByteBuffer;
+
 public class BinaryType
         extends AbstractType
 {
@@ -7,6 +9,6 @@ public class BinaryType
 
     private BinaryType()
     {
-        super("binary", byte[].class, 4);
+        super("binary", ByteBuffer.class, 4);
     }
 }

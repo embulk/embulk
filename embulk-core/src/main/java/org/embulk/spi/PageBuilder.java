@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ public class PageBuilder
     private int count;
     private int position;
     private final byte[] nullBitSet;
-    private final BiMap<byte[], Integer> binaryReferences = HashBiMap.create();
+    private final BiMap<ByteBuffer, Integer> binaryReferences = HashBiMap.create();
     private final BiMap<String, Integer> stringReferences = HashBiMap.create();
     private List<ImmutableValue> valueReferences = new ArrayList<>();
     private int referenceSize;
@@ -81,14 +82,14 @@ public class PageBuilder
         nullBitSet[columnIndex >>> 3] &= ~(1 << (columnIndex & 7));
     }
 
-    public void setBinary(Column column, byte[] value)
+    public void setBinary(Column column, ByteBuffer value)
     {
         setBinary(column.getIndex(), value);
     }
 
-    public void setBinary(int columnIndex, byte[] value)
+    public void setBinary(int columnIndex, ByteBuffer value)
     {
-        Integer reuseIndex = binaryReferences.get(value);
+        Integer reuseIndex = binaryReferences.get(value.asReadOnlyBuffer());
         if (reuseIndex != null) {
             bufferSlice.setInt(getOffset(columnIndex), reuseIndex);
         } else {
@@ -191,10 +192,10 @@ public class PageBuilder
     }
 
     private static class BinaryReferenceSortComparator
-            implements Comparator<Map.Entry<byte[], Integer>>, Serializable
+            implements Comparator<Map.Entry<ByteBuffer, Integer>>, Serializable
     {
         @Override
-        public int compare(Map.Entry<byte[], Integer> e1, Map.Entry<byte[], Integer> e2)
+        public int compare(Map.Entry<ByteBuffer, Integer> e1, Map.Entry<ByteBuffer, Integer> e2)
         {
             return e1.getValue().compareTo(e2.getValue());
         }
@@ -208,9 +209,9 @@ public class PageBuilder
 
     private List<byte[]> getSortedBinaryReferences()
     {
-        ArrayList<Map.Entry<byte[], Integer>> s = new ArrayList<>(binaryReferences.entrySet());
+        ArrayList<Map.Entry<ByteBuffer, Integer>> s = new ArrayList<>(binaryReferences.entrySet());
         Collections.sort(s, new BinaryReferenceSortComparator());
-        byte[][] array = new byte[s.size()][];
+        ByteBuffer[] array = new ByteBuffer[s.size()];
         for (int i=0; i < array.length; i++) {
             array[i] = s.get(i).getKey();
         }

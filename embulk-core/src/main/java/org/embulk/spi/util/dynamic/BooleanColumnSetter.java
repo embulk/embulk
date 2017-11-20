@@ -5,8 +5,7 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class BooleanColumnSetter
         extends AbstractDynamicColumnSetter
@@ -29,12 +28,6 @@ public class BooleanColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
-    }
-
-    @Override
-    public void set(byte[] v)
-    {
-        set(new String(v, Charset.defaultCharset()));
     }
 
     @Override
@@ -63,6 +56,13 @@ public class BooleanColumnSetter
         } else {
             defaultValue.setBoolean(pageBuilder, column);
         }
+    }
+
+    @Override
+    public void set(ByteBuffer v)
+    {
+        // Charset.defaultCharset should not be used. It depends on the runtime environment.
+        set(StandardCharsets.UTF_8.decode(v).toString());
     }
 
     @Override

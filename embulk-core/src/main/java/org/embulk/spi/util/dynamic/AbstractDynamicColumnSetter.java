@@ -14,6 +14,7 @@ import org.embulk.spi.util.DynamicColumnSetter;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.json.RubyValueApi;
 import org.msgpack.value.Value;
+import java.nio.ByteBuffer;
 
 public abstract class AbstractDynamicColumnSetter
         implements DynamicColumnSetter
@@ -32,8 +33,6 @@ public abstract class AbstractDynamicColumnSetter
 
     public abstract void setNull();
 
-    public abstract void set(byte[] v);
-
     public abstract void set(boolean value);
 
     public abstract void set(long value);
@@ -41,6 +40,11 @@ public abstract class AbstractDynamicColumnSetter
     public abstract void set(double value);
 
     public abstract void set(String value);
+
+    public void set(ByteBuffer value)
+    {
+        // Default implementation for older plugins
+    }
 
     public abstract void set(Timestamp value);
 

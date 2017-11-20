@@ -27,12 +27,6 @@ public class JsonColumnSetter
     }
 
     @Override
-    public void set(byte[] v)
-    {
-        pageBuilder.setJson(column, ValueFactory.newBinary(v));
-    }
-
-    @Override
     public void set(boolean v)
     {
         pageBuilder.setJson(column, ValueFactory.newBoolean(v));
@@ -54,6 +48,13 @@ public class JsonColumnSetter
     public void set(String v)
     {
         pageBuilder.setJson(column, ValueFactory.newString(v));
+    }
+
+    @Override
+    public void set(ByteBuffer v)
+    {
+        // TODO: Convert v to byte[] for msgpack-java.
+        // pageBuilder.setJson(column, ValueFactory.newBinary(v));
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.msgpack.value.Value;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class StringColumnSetter
         extends AbstractDynamicColumnSetter
@@ -25,12 +25,6 @@ public class StringColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
-    }
-
-    @Override
-    public void set(byte[] v)
-    {
-        set(new String(v, Charset.defaultCharset()));
     }
 
     @Override
@@ -55,6 +49,14 @@ public class StringColumnSetter
     public void set(String v)
     {
         pageBuilder.setString(column, v);
+    }
+
+    @Override
+    public void set(ByteBuffer v)
+    {
+        // Charset.defaultCharset should not be used. It depends on the runtime environment.
+        // TODO: Revisit this to hex-encode?
+        this.set(StandardCharsets.UTF_8.decode(v).toString());
     }
 
     @Override

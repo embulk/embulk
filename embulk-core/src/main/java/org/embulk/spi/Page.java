@@ -1,12 +1,13 @@
 package org.embulk.spi;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import org.msgpack.value.ImmutableValue;
 
 public class Page
 {
     private final Buffer buffer;
-    private List<byte[]> binaryReferences;
+    private List<ByteBuffer> binaryReferences;
     private List<String> stringReferences;
     private List<ImmutableValue> valueReferences;
 
@@ -25,7 +26,7 @@ public class Page
         return new Page(buffer);
     }
 
-    public Page setBinaryReferences(List<byte[]> binaryReferences)
+    public Page setBinaryReferences(List<ByteBuffer> binaryReferences)
     {
         this.binaryReferences = binaryReferences;
         return this;
@@ -43,7 +44,7 @@ public class Page
         return this;
     }
 
-    public List<byte[]> getBinaryReferences()
+    public List<ByteBuffer> getBinaryReferences()
     {
         // TODO used by mapreduce executor
         return binaryReferences;
@@ -61,9 +62,9 @@ public class Page
         return valueReferences;
     }
 
-    public byte[] getBinaryReference(int index)
+    public ByteBuffer getBinaryReference(int index)
     {
-        return binaryReferences.get(index);
+        return binaryReferences.get(index).asReadOnlyBuffer();
     }
 
     public String getStringReference(int index)

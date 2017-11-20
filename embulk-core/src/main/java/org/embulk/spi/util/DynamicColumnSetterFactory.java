@@ -1,5 +1,6 @@
 package org.embulk.spi.util;
 
+import java.nio.ByteBuffer;
 import org.joda.time.DateTimeZone;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.Type;
@@ -48,8 +49,8 @@ public class DynamicColumnSetterFactory
     {
         Type type = column.getType();
         if (type instanceof BinaryType) {
-            TimestampFormatter formatter = new TimestampFormatter(task.getJRuby(),
-                    getTimestampFormat(column).getFormat(), getTimeZone(column));
+            final TimestampFormatter formatter = new TimestampFormatter(
+                getTimestampFormat(column).getFormat(), getTimeZone(column));
             return new BinaryColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof BooleanType) {
             return new BooleanColumnSetter(pageBuilder, column, defaultValue);

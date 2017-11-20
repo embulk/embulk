@@ -7,6 +7,7 @@ import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampParseException;
 import org.msgpack.value.Value;
+import java.nio.ByteBuffer;
 
 public class SkipColumnSetter
         extends AbstractDynamicColumnSetter
@@ -28,10 +29,6 @@ public class SkipColumnSetter
     { }
 
     @Override
-    public void set(byte[] v)
-    { }
-
-    @Override
     public void set(boolean v)
     { }
 
@@ -45,6 +42,10 @@ public class SkipColumnSetter
 
     @Override
     public void set(String v)
+    { }
+
+    @Override
+    public void set(ByteBuffer v)
     { }
 
     @Override

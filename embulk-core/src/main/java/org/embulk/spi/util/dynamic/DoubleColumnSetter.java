@@ -1,7 +1,7 @@
 package org.embulk.spi.util.dynamic;
 
 import java.math.RoundingMode;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
@@ -21,12 +21,6 @@ public class DoubleColumnSetter
     public void setNull()
     {
         pageBuilder.setNull(column);
-    }
-
-    @Override
-    public void set(byte[] v)
-    {
-        set(new String(v, Charset.defaultCharset()));
     }
 
     @Override
@@ -58,6 +52,13 @@ public class DoubleColumnSetter
             return;
         }
         pageBuilder.setDouble(column, dv);
+    }
+
+    @Override
+    public void set(ByteBuffer v)
+    {
+        // Charset.defaultCharset should not be used. It depends on the runtime environment.
+        this.set(StandardCharsets.UTF_8.decode(v).toString());
     }
 
     @Override

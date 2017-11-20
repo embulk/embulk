@@ -79,7 +79,7 @@ module Embulk::Guess
         rescue
         end
 
-        if str.encoding == Encoding.find('UTF-8')
+        if str.encoding == Encoding.find('UTF-8')  # TODO: Revisit to confirm this is really okay?
           return "string"
         end
 

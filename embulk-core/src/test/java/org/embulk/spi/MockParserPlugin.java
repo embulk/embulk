@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.nio.ByteBuffer;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
@@ -41,9 +42,6 @@ public class MockParserPlugin implements ParserPlugin
                     for (Column column : schema.getColumns()) {
                         Type type = column.getType();
                         switch (type.getName()) {
-                        case "binary":
-                            pageBuilder.setBinary(column, "Hello World".getBytes());
-                            break;
                         case "boolean":
                             pageBuilder.setBoolean(column, true);
                             break;
@@ -55,6 +53,9 @@ public class MockParserPlugin implements ParserPlugin
                             break;
                         case "string":
                             pageBuilder.setString(column, "45");
+                            break;
+                        case "binary":
+                            pageBuilder.setBinary(column, ByteBuffer.wrap("Hello World".getBytes()));
                             break;
                         case "timestamp":
                             pageBuilder.setTimestamp(column,

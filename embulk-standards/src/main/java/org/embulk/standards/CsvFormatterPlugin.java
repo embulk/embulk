@@ -20,8 +20,7 @@ import org.embulk.spi.util.LineEncoder;
 import org.embulk.spi.util.Timestamps;
 import org.embulk.spi.util.Newline;
 import org.msgpack.value.Value;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class CsvFormatterPlugin
@@ -131,17 +130,6 @@ public class CsvFormatterPlugin
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     schema.visitColumns(new ColumnVisitor() {
-                        @Override
-                        public void binaryColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(new String(pageReader.getBinary(column), Charset.defaultCharset()));
-                            } else {
-                                addNullString();
-                            }
-                        }
-
                         public void booleanColumn(Column column)
                         {
                             addDelimiter(column);
@@ -177,6 +165,18 @@ public class CsvFormatterPlugin
                             addDelimiter(column);
                             if (!pageReader.isNull(column)) {
                                 addValue(pageReader.getString(column));
+                            } else {
+                                addNullString();
+                            }
+                        }
+
+                        @Override
+                        public void binaryColumn(Column column)
+                        {
+                            addDelimiter(column);
+                            if (!pageReader.isNull(column)) {
+                                // Charset.defaultCharset should not be used. It depends on the runtime environment.
+                                addValue(StandardCharsets.UTF_8.decode(pageReader.getBinary(column)).toString());
                             } else {
                                 addNullString();
                             }

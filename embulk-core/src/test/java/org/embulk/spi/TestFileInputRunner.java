@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -118,13 +117,13 @@ public class TestFileInputRunner
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
                 ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "binary", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col2", "type", "boolean", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col3", "type", "long", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col4", "type", "double", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col6", "type", "timestamp", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col7", "type", "json", "option", ImmutableMap.of()))));
+                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col7", "type", "binary", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
         runner.transaction(config, new InputPlugin.Control()
@@ -149,13 +148,13 @@ public class TestFileInputRunner
         assertEquals(2, records.size());
         for (Object[] record : records) {
             assertEquals(7, record.length);
-            assertArrayEquals("Hello World".getBytes(), (byte[])record[0]);
-            assertEquals(true, record[1]);
-            assertEquals(2L, record[2]);
-            assertEquals(3.0D, (Double) record[3], 0.01D);
-            assertEquals("45", record[4]);
-            assertEquals(678L, ((Timestamp) record[5]).toEpochMilli());
-            assertEquals("{\"_c2\":10,\"_c1\":true,\"_c4\":{\"k\":\"v\"},\"_c3\":\"embulk\"}", record[6].toString());
+            assertEquals(true, record[0]);
+            assertEquals(2L, record[1]);
+            assertEquals(3.0D, (Double) record[2], 0.01D);
+            assertEquals("45", record[3]);
+            assertEquals(678L, ((Timestamp) record[4]).toEpochMilli());
+            assertEquals("{\"_c2\":10,\"_c1\":true,\"_c4\":{\"k\":\"v\"},\"_c3\":\"embulk\"}", record[5].toString());
+            assertEquals(ByteBuffer.wrap("Hello World".getBytes()), record[6]);
         }
     }
 
@@ -172,13 +171,13 @@ public class TestFileInputRunner
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
                 ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "binary", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col2", "type", "boolean", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col3", "type", "long", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col4", "type", "double", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col6", "type", "timestamp", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col7", "type", "json", "option", ImmutableMap.of()))));
+                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()),
+                        ImmutableMap.of("name", "col7", "type", "binary", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
 

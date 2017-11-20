@@ -1,6 +1,6 @@
 package org.embulk.spi.util;
 
-import java.nio.charset.Charset;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.ArrayList;
 import org.embulk.spi.time.Timestamp;
@@ -78,7 +78,15 @@ public class PagePrinter
         @Override
         public void binaryColumn(Column column)
         {
-            string = new String(reader.getBinary(column), Charset.defaultCharset());
+            final StringBuilder stringBuilder = new StringBuilder();
+            final ByteBuffer duplicatedBuffer = reader.getBinary(column).duplicate().rewind();
+            while (duplicatedBuffer.hasRemaining()) {
+                if (stringBuilder.length() > 0) {
+                    stringBuilder.append(":");
+                }
+                stringBuilder.append(String.format("%02X", duplicatedBuffer.get()));
+            }
+            string = stringBuilder.toString();
         }
 
         public void booleanColumn(Column column)
