@@ -36,7 +36,7 @@ enum StrptimeFormat
     FORMAT_NANOSEC, // %N
     FORMAT_MERIDIAN_LOWER_CASE, // %P
     FORMAT_MERIDIAN, // %p
-    FORMAT_MICROSEC_EPOCH, // %Q Only for Date/DateTime from here
+    FORMAT_MILLISEC_EPOCH, // %Q Only for Date/DateTime from here
     FORMAT_SECONDS, // %S
     FORMAT_EPOCH, // %s
     FORMAT_WEEK_YEAR_S, // %U

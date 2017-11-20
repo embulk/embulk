@@ -39,7 +39,7 @@ public class StrptimeToken
         CONVERSION2TOKEN['N'] = new StrptimeToken(FORMAT_NANOSEC);
         CONVERSION2TOKEN['P'] = new StrptimeToken(FORMAT_MERIDIAN_LOWER_CASE);
         CONVERSION2TOKEN['p'] = new StrptimeToken(FORMAT_MERIDIAN);
-        CONVERSION2TOKEN['Q'] = new StrptimeToken(FORMAT_MICROSEC_EPOCH);
+        CONVERSION2TOKEN['Q'] = new StrptimeToken(FORMAT_MILLISEC_EPOCH);
         CONVERSION2TOKEN['S'] = new StrptimeToken(FORMAT_SECONDS);
         CONVERSION2TOKEN['s'] = new StrptimeToken(FORMAT_EPOCH);
         CONVERSION2TOKEN['U'] = new StrptimeToken(FORMAT_WEEK_YEAR_S);
