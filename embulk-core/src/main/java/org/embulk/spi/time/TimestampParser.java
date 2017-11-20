@@ -228,11 +228,16 @@ public class TimestampParser
 
             // set up with min this and then add to allow rolling over
             DateTime dt = new DateTime(year, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC);
-            if (FormatBag.has(bag.getMon())) {
-                dt = dt.plusMonths(bag.getMon() - 1);
+            if (FormatBag.has(bag.getYDay())) {  // yday is more prioritized than mon/mday in Ruby's strptime.
+                dt = dt.plusDays(bag.getYDay() - 1);
             }
-            if (FormatBag.has(bag.getMDay())) {
-                dt = dt.plusDays(bag.getMDay() - 1);
+            else {
+                if (FormatBag.has(bag.getMon())) {
+                    dt = dt.plusMonths(bag.getMon() - 1);
+                }
+                if (FormatBag.has(bag.getMDay())) {
+                    dt = dt.plusDays(bag.getMDay() - 1);
+                }
             }
             if (FormatBag.has(bag.getHour())) {
                 dt = dt.plusHours(bag.getHour());
