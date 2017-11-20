@@ -128,19 +128,21 @@ The ``file`` input plugin reads files from local file system.
 Options
 ~~~~~~~~
 
-+------------------+----------+------------------------------------------------+-----------------------+
-| name             | type     | description                                    | required?             |
-+==================+==========+================================================+=======================+
-| path\_prefix     | string   | Path prefix of input files                     | required              |
-+------------------+----------+------------------------------------------------+-----------------------+
-| parsers          | hash     | Parsers configurations (see below)             | required              |
-+------------------+----------+------------------------------------------------+-----------------------+
-| decoders         | array    | Decoder configuration (see below)              |                       |
-+------------------+----------+------------------------------------------------+-----------------------+
-| last\_path       | string   | Name of last read file in previous operation   |                       |
-+------------------+----------+------------------------------------------------+-----------------------+
-| follow\_symlinks | boolean  | If `true`, follow symbolic link directories    | ``false`` by default  |
-+------------------+----------+------------------------------------------------+-----------------------+
++----------------------+----------+------------------------------------------------+-----------------------+
+| name                 | type     | description                                    | required?             |
++======================+==========+================================================+=======================+
+| path\_prefix         | string   | Path prefix of input files                     | required              |
++----------------------+----------+------------------------------------------------+-----------------------+
+| path\_match\_pattern | string   | Regexp to match file paths.                    |                       |
++----------------------+----------+------------------------------------------------+-----------------------+
+| parsers              | hash     | Parsers configurations (see below)             | required              |
++----------------------+----------+------------------------------------------------+-----------------------+
+| decoders             | array    | Decoder configuration (see below)              |                       |
++----------------------+----------+------------------------------------------------+-----------------------+
+| last\_path           | string   | Name of last read file in previous operation   |                       |
++----------------------+----------+------------------------------------------------+-----------------------+
+| follow\_symlinks     | boolean  | If `true`, follow symbolic link directories    | ``false`` by default  |
++----------------------+----------+------------------------------------------------+-----------------------+
 
 The ``path_prefix`` option is required. If you have files as following, you may set ``path_prefix: /path/to/files/sample_``:
 
@@ -168,6 +170,22 @@ For example, if you set ``last_path: /path/to/files/sample_02.csv``, Embulk read
                 |-- sample_02.csv   -> skip
                 |-- sample_03.csv   -> read
                 |-- sample_04.csv   -> read
+
+The ``path_match_pattern`` option is used to skip files If a file path doesn't
+match with this pattern, the file will be skipped.
+For example, if you set ``path_match_pattern: \.csv$``, Embulk reads following
+files.
+
+::
+
+    .
+    `-- path
+        `-- to
+            `-- files
+                |-- sample_01.csv    -> read
+                |-- sample_02.csv.gz -> skip
+                |-- sample_03.csv    -> read
+                |-- sample_04.csv    -> read
 
 Example
 ~~~~~~~~

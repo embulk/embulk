@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import java.nio.file.FileVisitOption;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class LocalFileInputPlugin
         implements FileInputPlugin
@@ -50,6 +51,10 @@ public class LocalFileInputPlugin
         @Config("follow_symlinks")
         @ConfigDefault("false")
         boolean getFollowSymlinks();
+
+        @Config("path_match_pattern")
+        @ConfigDefault("\".*\"")
+        String getPathMatchPattern();
 
         List<String> getFiles();
         void setFiles(List<String> files);
@@ -126,6 +131,8 @@ public class LocalFileInputPlugin
 
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         final String lastPath = task.getLastPath().orNull();
+        final Pattern pathMatchPattern = Pattern.compile(task.getPathMatchPattern());
+
         try {
             log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory.equals(CURRENT_DIR) ? "." : directory.toString(), fileNamePrefix);
 
@@ -177,7 +184,9 @@ public class LocalFileInputPlugin
                     } catch (IOException ex){
                         throw new RuntimeException("Can't resolve symbolic link", ex);
                     }
-                    if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
+                    if(!pathMatchPattern.matcher(path.toString()).find()) {
+                        return FileVisitResult.CONTINUE;
+                    } else if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
                         return FileVisitResult.CONTINUE;
                     } else {
                         Path parent = path.getParent();
