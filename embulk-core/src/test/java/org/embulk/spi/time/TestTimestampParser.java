@@ -205,7 +205,7 @@ public class TestTimestampParser {
         testToParse("-1", "%s", -1L);
         testToParse("-86400", "%s", -86400L);
 
-        testToParse("-999", "%Q", 0L);
+        testToParse("-999", "%Q", 0L, -999000000);
         testToParse("-1000", "%Q", -1L);
     }
 

@@ -201,7 +201,24 @@ public class TimestampParser
     public LocalTime createLocalTimeFromFormatBag(FormatBag bag)
     {
         final long secFractionNsec;
-        if (FormatBag.has(bag.getSecFraction())) {
+        if (FormatBag.has(bag.getSecondsSize())) {  // %Q is specified.
+            // Fractions by %Q are prioritized over fractions by %N.
+            // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
+            // => 789000000
+            // irb(main):003:0> Time.strptime("12.345 123456789", "%S.%N %Q").nsec
+            // => 789000000
+            // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
+            // => 345000000
+            if (bag.hasSeconds()) {
+                secFractionNsec = (bag.getSeconds() % (int)Math.pow(10, bag.getSecondsSize())) *
+                                  (int)Math.pow(10, 9 - bag.getSecondsSize());
+            }
+            else {
+                // It must not happen -- |seconds| is always set if |secondsSize| is set.
+                secFractionNsec = 0;
+            }
+        }
+        else if (FormatBag.has(bag.getSecFraction())) {
             secFractionNsec = bag.getSecFraction() * (int)Math.pow(10, 9 - bag.getSecFractionSize());
         }
         else {
