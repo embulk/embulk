@@ -241,7 +241,12 @@ public class TimestampParser
                 dt = dt.plusMinutes(bag.getMin());
             }
             if (FormatBag.has(bag.getSec())) {
-                dt = dt.plusSeconds(bag.getSec());
+                if (bag.getSec() == 60) {  // Leap seconds are considered as 59 when Ruby converts them to epochs.
+                    dt = dt.plusSeconds(59);
+                }
+                else {
+                    dt = dt.plusSeconds(bag.getSec());
+                }
             }
             sec = dt.getMillis() / 1000;
         }
