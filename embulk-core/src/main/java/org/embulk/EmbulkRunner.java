@@ -218,8 +218,6 @@ public class EmbulkRunner
     private void guessInternal(final ConfigSource configSource, final Path outputPath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer();
-
         try {
             checkFileWritable(outputPath);
         }
@@ -242,8 +240,6 @@ public class EmbulkRunner
     private void previewInternal(final ConfigSource configSource, final String format)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer();
-
         final PreviewResult previewResult = this.embed.preview(configSource);
         final ModelManager modelManager = this.embed.getModelManager();
 
@@ -271,8 +267,6 @@ public class EmbulkRunner
             final Path resumeStatePath)
             throws IOException
     {
-        initializeGlobalJRubyScriptingContainer();
-
         try {
             checkFileWritable(outputPath);
         }
@@ -526,51 +520,6 @@ public class EmbulkRunner
     //     @runner.run(@config, @options.merge(options))
     //   end
     // end
-
-    // TODO: Check if it is required to process JRuby options.
-    private void initializeGlobalJRubyScriptingContainer()
-    {
-        final ScriptingContainer globalJRubyContainer =
-            new ScriptingContainer(LocalContextScope.SINGLETON, LocalVariableBehavior.PERSISTENT);
-
-        // TODO: Remove the Embulk::Runner definition after confirming nobody uses Embulk::Runner from Java.
-        globalJRubyContainer.put("__internal_runner_java__", this);
-        globalJRubyContainer.runScriptlet(
-            "class DummyEmbulkRunner\n" +
-            "  def initialize(runner_orig)\n" +
-            "    @runner_orig = runner_orig\n" +
-            "  end\n" +
-            "  def guess(config, options={})\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts '[WARN] Embulk::Runner will be no longer defined when Embulk runs from Java.'\n" +
-            "    STDERR.puts '[WARN] Comment at https://github.com/embulk/embulk/issues/766 if you see this.'\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts ''\n" +
-            "    @runner_orig.guess(config, options)\n" +
-            "  end\n" +
-            "  def preview(config, options={})\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts '[WARN] Embulk::Runner will be no longer defined when Embulk runs from Java.'\n" +
-            "    STDERR.puts '[WARN] Comment at https://github.com/embulk/embulk/issues/766 if you see this.'\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts ''\n" +
-            "    @runner_orig.preview(config, options)\n" +
-            "  end\n" +
-            "  def run(config, options={})\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts '[WARN] Embulk::Runner will be no longer defined when Embulk runs from Java.'\n" +
-            "    STDERR.puts '[WARN] Comment at https://github.com/embulk/embulk/issues/766 if you see this.'\n" +
-            "    STDERR.puts '################################################################################'\n" +
-            "    STDERR.puts ''\n" +
-            "    @runner_orig.run(config, options)\n" +
-            "  end\n" +
-            "end\n" +
-            "\n" +
-            "unless Embulk.const_defined?(:Runner)\n" +
-            "  Embulk.const_set :Runner, DummyEmbulkRunner.new(Embulk::EmbulkRunner.new(__internal_runner_java__))\n" +
-            "end\n");
-        globalJRubyContainer.remove("__internal_runner_java__");
-    }
 
     // NOTE: The root logger directly from |LoggerFactory|, not from |Exec.getLogger| as it's outside of |Exec.doWith|.
     private static final Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
