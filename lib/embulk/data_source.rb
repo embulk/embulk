@@ -137,6 +137,11 @@ module Embulk
     end
 
     def param(key, type, options={})
+      if self.has_key?('type')
+        plugin_name = self['type'].to_s.dump
+      else
+        plugin_name = "Unknown".dump
+      end
       if self.has_key?(key)
         v = self[key]
         value =
@@ -145,40 +150,40 @@ module Embulk
             begin
               Integer(v)
             rescue => e
-              raise ConfigError.new e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Integer"
             end
           when :float
             begin
               Float(v)
             rescue => e
-              raise ConfigError.new e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Float"
             end
           when :string
             begin
               String(v).dup
             rescue => e
-              raise ConfigError.new e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for String"
             end
           when :bool
             begin
               !!v  # TODO validation
             rescue => e
-              raise ConfigError.new e
+              raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for Boolean"
             end
           when :hash
-            raise ConfigError.new "Invalid value for :hash" unless v.is_a?(Hash)
+            raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for :hash" unless v.is_a?(Hash)
             DataSource.new.merge!(v)
           when :array
-            raise ConfigError.new "Invalid value for :array" unless v.is_a?(Array)
+            raise ConfigError.new "Plugin(#{plugin_name}) Config #{key.dump} has invalid value for :array" unless v.is_a?(Array)
             v.dup
           else
             unless type.respond_to?(:load)
-              raise ArgumentError, "Unknown type #{type.to_s.dump}"
+              raise ArgumentError, "Plugin(#{plugin_name}) Config #{key.dump} has unknown type #{type.to_s.dump}"
             end
             begin
               type.load(v)
             rescue => e
-              raise ConfigError.new e
+              raise ConfigError.new "Plugin(#{plugin_name}) " + e.to_s
             end
           end
 
@@ -186,7 +191,7 @@ module Embulk
         value = options[:default]
 
       else
-        raise ConfigError.new "Required field #{key.to_s.dump} is not set"
+        raise ConfigError.new "Plugin(#{plugin_name}) Required field #{key.to_s.dump} is not set"
       end
 
       return value
