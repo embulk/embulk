@@ -48,34 +48,53 @@ module Embulk
 
         parser_guessed = DataSource.new.merge(parser_config).merge({"type" => "csv", "delimiter" => delim})
 
-        unless parser_guessed.has_key?("quote")
-          quote = guess_quote(sample_lines, delim)
-          unless quote
-            if !guess_force_no_quote(sample_lines, delim, '"')
-              # assuming CSV follows RFC for quoting
-              quote = '"'
-            else
-              # disable quoting (set null)
-            end
+        if parser_guessed.has_key?("quote") || parser_guessed.has_key?("no_quote")
+          # normalize
+          if parser_guessed["quote"]
+            parser_guessed.delete("no_quote")
+          else
+            parser_guessed.delete("quote")
+            parser_guessed["no_quote"] = true
           end
-          parser_guessed["quote"] = quote
+        else
+          quote = guess_quote(sample_lines, delim)
+          if quote.nil? && !guess_force_no_quote(sample_lines, delim, '"')
+            # assuming CSV follows RFC for quoting
+            quote = '"'
+          end
+          if quote.nil?
+            parser_guessed["no_quote"] = true
+          else
+            parser_guessed["quote"] = quote
+          end
         end
-        parser_guessed["quote"] = '"' if parser_guessed["quote"] == ''  # setting '' is not allowed any more. this line converts obsoleted config syntax to explicit syntax.
 
-        unless parser_guessed.has_key?("escape")
+        # setting '' is not allowed any more. this line converts obsoleted config syntax to explicit syntax.
+        parser_guessed["quote"] = '"' if parser_guessed["quote"] == ''
+
+        if parser_guessed.has_key?("escape") || parser_guessed.has_key?("no_escape")
+          # normalize
+          if parser_guessed["escape"]
+            parser_guessed.delete("no_escape")
+          else
+            parser_guessed.delete("escape")
+            parser_guessed["no_escape"] = true
+          end
+        else
           if quote = parser_guessed["quote"]
             escape = guess_escape(sample_lines, delim, quote)
-            unless escape
-              if quote == '"'
-                # assuming this CSV follows RFC for escaping
-                escape = '"'
-              else
-                # disable escaping (set null)
-              end
+            if escape.nil? && quote == '"'
+              # assuming this CSV follows RFC for escaping
+              escape = '"'
             end
-            parser_guessed["escape"] = escape
+            if escape.nil?
+              parser_guessed["no_escape"] = true
+            else
+              parser_guessed["escape"] = escape
+            end
           else
-            # escape does nothing if quote is disabled
+            # escape can do nothing if quote is disabled
+            parser_guessed["no_escape"] = true
           end
         end
 

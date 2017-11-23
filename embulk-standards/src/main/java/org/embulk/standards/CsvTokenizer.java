@@ -7,6 +7,7 @@ import java.util.Deque;
 import java.util.ArrayDeque;
 import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
+import org.embulk.spi.Exec;
 import org.embulk.config.ConfigException;
 import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
 
@@ -60,8 +61,33 @@ public class CsvTokenizer
                 delimiterFollowingString = null;
             }
         }
-        quote = task.getQuoteChar().or(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
-        escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
+
+        if (task.getNoQuote()) {
+            quote = CsvParserPlugin.QuoteCharacter.noQuote().getCharacter();
+            if (task.getQuoteChar().isPresent() && '\"' != task.getQuoteChar().get().getCharacter()) {
+                throw new ConfigException("Setting quote: option is invalid when 'no_quote: true' is set");
+            }
+        }
+        else {
+            if (!task.getQuoteChar().isPresent()) {
+                Exec.getLogger(CsvParserPlugin.class).warn("Setting null to \"quote\" option is obsoleted. Set 'no_quote: true' option instead. This behavior will be removed.");
+            }
+            quote = task.getQuoteChar().or(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
+        }
+
+        if (task.getNoEscape()) {
+            escape = CsvParserPlugin.EscapeCharacter.noEscape().getCharacter();
+            if (task.getEscapeChar().isPresent() && '\\' != task.getEscapeChar().get().getCharacter()) {
+                throw new ConfigException("Setting escape: option is invalid when 'no_quote: true' is set");
+            }
+        }
+        else {
+            if (!task.getEscapeChar().isPresent()) {
+                Exec.getLogger(CsvParserPlugin.class).warn("Setting null to \"escape\" option is obsoleted. Set 'no_quote: true' option instead. This behavior will be removed.");
+            }
+            escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
+        }
+
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         quotesInQuotedFields = task.getQuotesInQuotedFields();
