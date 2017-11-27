@@ -129,7 +129,7 @@ public class EmbulkMigrate
             migrator.insertLine("build.gradle", DEPENDENCIES_IN_GRADLE, new StringUpsert() {
                     @Override
                     public String getUpsertd(Matcher matcher) {
-                        return String.format("%stargetCompatibility = 1.7\n", matcher.group(1));
+                        return String.format("%stargetCompatibility = 1.8\n", matcher.group(1));
                     }
                 });
         }
@@ -137,7 +137,7 @@ public class EmbulkMigrate
             migrator.insertLine("build.gradle", TARGET_COMPATIBILITY_IN_GRADLE_WITH_INDENT, new StringUpsert() {
                     @Override
                     public String getUpsertd(Matcher matcher) {
-                        return String.format("%ssourceCompatibility = 1.7\n", matcher.group(1));
+                        return String.format("%ssourceCompatibility = 1.8\n", matcher.group(1));
                     }
                 });
         }
