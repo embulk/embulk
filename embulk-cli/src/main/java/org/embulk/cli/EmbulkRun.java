@@ -482,9 +482,20 @@ public class EmbulkRun
         return 0;
     }
 
+    private void copyResourceToFile(final String sourceResourceName,
+                                    final Path destinationBasePath,
+                                    final String destinationRelativePath)
+            throws IOException
+    {
+        final Path destinationPath = destinationBasePath.resolve(destinationRelativePath);
+        System.out.println("  Creating " + destinationRelativePath);
+        Files.createDirectories(destinationPath.getParent());
+        Files.copy(EmbulkRun.class.getClassLoader().getResourceAsStream(sourceResourceName), destinationPath);
+    }
+
     private int newBundle(final String pathString, final String bundlePath)
     {
-        final Path path = Paths.get(pathString);
+        final Path path = Paths.get(pathString).toAbsolutePath();
         if (Files.exists(path)) {
             System.err.println("'" + pathString + "' already exists.");
             return 1;
@@ -498,28 +509,30 @@ public class EmbulkRun
             ex.printStackTrace();
             return 1;
         }
+
         boolean success = false;
         try {
-            // TODO: Rewrite this part in Java.
-            final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
-            localJRubyContainer.runScriptlet("require 'embulk'");
-            localJRubyContainer.runScriptlet("require 'fileutils'");
-            localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
-
             // copy embulk/data/bundle/ contents
-            localJRubyContainer.runScriptlet("require 'embulk/data/package_data'");
-            localJRubyContainer.put("__internal_path__", pathString);
-            localJRubyContainer.runScriptlet("pkg = Embulk::PackageData.new('bundle', __internal_path__)");
-            localJRubyContainer.remove("__internal_path__");
-            localJRubyContainer.runScriptlet("%w[Gemfile .ruby-version .bundle/config embulk/input/example.rb embulk/output/example.rb embulk/filter/example.rb].each { |file| pkg.cp(file, file) }");
-                                                                                                                                    // run the first bundle-install
+            copyResourceToFile("new_bundle_templates/Gemfile", path, "Gemfile");
+            copyResourceToFile("new_bundle_templates/.ruby-version", path, ".ruby-version");
+            copyResourceToFile("new_bundle_templates/.bundle/config", path, ".bundle/config");
+            copyResourceToFile("new_bundle_templates/embulk/input/example.rb", path, "embulk/input/example.rb");
+            copyResourceToFile("new_bundle_templates/embulk/output/example.rb", path, "embulk/output/example.rb");
+            copyResourceToFile("new_bundle_templates/embulk/filter/example.rb", path, "embulk/filter/example.rb");
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+
+        try {
+            // run the first bundle-install
             runBundler(Arrays.asList("install", "--path", bundlePath != null ? bundlePath : "."), path);
             success = true;
         }
         catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
-            // success = true;
         }
         finally {
             if (!success) {
