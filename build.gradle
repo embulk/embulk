@@ -269,10 +269,10 @@ project(':embulk-cli') {
 }
 
 task rubyTestVanilla(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/vanilla/run-test.rb'
+    jrubyArgs '-Ilib', '-Itest', '--debug', './test/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
 }
 task rubyTestMonkeyStrptime(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Ilib', '-Itest', '-rtest/unit', '--debug', './test/monkey_strptime/run-test.rb'
+    jrubyArgs '-Ilib', '-Itest', '--debug', './test/monkey_strptime/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
 }
 task rubyTest(dependsOn: ["rubyTestVanilla", "rubyTestMonkeyStrptime"]) {
 }

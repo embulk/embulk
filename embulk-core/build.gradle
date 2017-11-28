@@ -2,7 +2,7 @@ apply plugin: "com.github.jruby-gradle.jar"
 
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gemlib")
+processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gems_as_resources")
 
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
@@ -58,18 +58,24 @@ dependencies {
 }
 
 task unpackGems(type: JRubyPrepare) {
-    outputDir file("${buildDir}/gem")
+    doFirst {
+        delete("${buildDir}/gems_as_resources")
+    }
+    outputDir file("${buildDir}/gems_installed")
     dependencies configurations.gems
     doLast {
-        // move to build/gem/*/lib/* to build/gemlib/
-        file("${buildDir}/gem/gems").eachDir { gemDir ->
+        configurations.gems.each { gemFilePath ->
             copy {
-                from "${gemDir}/lib"
-                into "${buildDir}/gemlib/"
-                include "**"
+                from "${buildDir}/gems_installed"
+                into "${buildDir}/gems_as_resources"
+                // These "include" may contain both pure-Ruby and JRuby gems, e.g. "msgpack" and "msgpack-java".
+                // TODO: Specify exact pure-Ruby or JRuby gems.
+                include "gems/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}/**"
+                include "gems/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}-java/**"
+                include "specifications/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}*.gemspec"
             }
         }
-        fileTree(dir: "${buildDir}/gemlib", include: "**/.jrubydir").each { f -> f.delete() }
+        fileTree(dir: "${buildDir}/gems_as_resources", include: "**/.jrubydir").each { f -> f.delete() }
     }
 }
 processResources.dependsOn("unpackGems")
