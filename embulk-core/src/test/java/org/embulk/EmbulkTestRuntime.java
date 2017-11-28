@@ -1,6 +1,7 @@
 package org.embulk;
 
 import java.util.Random;
+import org.junit.AssumptionViolatedException;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import com.google.inject.Injector;
@@ -103,7 +104,17 @@ public class EmbulkTestRuntime
                         }
                     });
                 } catch (RuntimeException ex) {
-                    throw ex.getCause();
+                    Throwable cause = ex;
+                    boolean throwsCause = true;
+                    while (cause != null) {
+                        if (cause instanceof AssumptionViolatedException) {
+                            throwsCause = false;
+                        }
+                        cause = cause.getCause();
+                    }
+                    if (throwsCause) {
+                        throw ex.getCause();
+                    }
                 } finally {
                     exec.cleanup();
                 }
