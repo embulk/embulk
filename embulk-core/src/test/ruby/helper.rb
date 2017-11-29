@@ -1,6 +1,6 @@
 require 'test/unit'
 
-classpath_dir = File.expand_path('../classpath', File.dirname(__FILE__))
+classpath_dir = File.expand_path('../../../../classpath', File.dirname(__FILE__))
 jars = Dir.entries(classpath_dir).select {|f| f =~ /\.jar$/ }.sort
 jars.each do |jar|
   require File.join(classpath_dir, jar)
@@ -20,4 +20,6 @@ SimpleCov.start 'embulk'
 require 'embulk/java/bootstrap'
 require 'embulk'
 
-Embulk.setup
+require 'embulk/runner'
+runner_java = Embulk::EmbulkRunner.new(Java::org.embulk.EmbulkSetup::setup(Java::java.util.HashMap.new({})))
+Embulk.const_set :Runner, runner_java

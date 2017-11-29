@@ -18,10 +18,6 @@ public class EmbulkSetup
 {
     public static EmbulkRunner setup(final Map<String, Object> systemConfigGiven)
     {
-        // NOTE: When it was in Ruby "require 'json'" was required to format the system config into a JSON string.
-
-        // NOTE: require_classpath is called only when Embulk is loaded as a Ruby gem. (lib/embulk.rb)
-
         final HashMap<String, Object> systemConfigModified = new HashMap<String, Object>(systemConfigGiven);
 
         // use the global ruby runtime for all ScriptingContainer

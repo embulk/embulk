@@ -2,7 +2,7 @@ apply plugin: "com.github.jruby-gradle.jar"
 
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${rootProject.projectDir}/lib/", "${buildDir}/gems_as_resources")
+processResources.from("${buildDir}/embulk_gem_as_resources", "${buildDir}/dependency_gems_as_resources")
 
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
@@ -57,17 +57,30 @@ dependencies {
     gems 'rubygems:liquid:4.0.0'
 }
 
-task unpackGems(type: JRubyPrepare) {
-    doFirst {
-        delete("${buildDir}/gems_as_resources")
+String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
+    if (javaStyleVersion.contains('-')) {
+        List<String> versionTokens = javaStyleVersion.tokenize('-');
+        if (versionTokens.size() != 2) {
+            throw new GradleException('Invalid project version: ' + javaStyleVersion);
+        }
+        return versionTokens.get(0) + '.' + versionTokens.get(1).toLowerCase();
     }
-    outputDir file("${buildDir}/gems_installed")
+    else {
+        return javaStyleVersion;
+    }
+}
+
+task unpackDependencyGems(type: JRubyPrepare) {
+    doFirst {
+        delete("${buildDir}/dependency_gems_as_resources")
+    }
+    outputDir file("${buildDir}/dependency_gems_installed")
     dependencies configurations.gems
     doLast {
         configurations.gems.each { gemFilePath ->
             copy {
-                from "${buildDir}/gems_installed"
-                into "${buildDir}/gems_as_resources"
+                from "${buildDir}/dependency_gems_installed"
+                into "${buildDir}/dependency_gems_as_resources"
                 // These "include" may contain both pure-Ruby and JRuby gems, e.g. "msgpack" and "msgpack-java".
                 // TODO: Specify exact pure-Ruby or JRuby gems.
                 include "gems/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}/**"
@@ -75,7 +88,69 @@ task unpackGems(type: JRubyPrepare) {
                 include "specifications/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}*.gemspec"
             }
         }
-        fileTree(dir: "${buildDir}/gems_as_resources", include: "**/.jrubydir").each { f -> f.delete() }
+        fileTree(dir: "${buildDir}/dependency_gems_as_resources", include: "**/.jrubydir").each { f -> f.delete() }
     }
 }
-processResources.dependsOn("unpackGems")
+processResources.dependsOn("unpackDependencyGems")
+
+task buildEmbulkGem {
+    doFirst {
+        delete("${buildDir}/embulk_gem_as_resources")
+    }
+    doLast {
+        def rubyVersion = buildRubyStyleVersionFromJavaStyleVersion("${project.version}")
+        file("${buildDir}/embulk_gem_as_resources/gems/embulk-${rubyVersion}-java/lib").mkdirs()
+        copy {
+            from "${projectDir}/src/main/ruby"
+            into "${buildDir}/embulk_gem_as_resources/gems/embulk-${rubyVersion}-java/lib"
+        }
+        file("${buildDir}/embulk_gem_as_resources/specifications").mkdirs()
+        // TODO: Build the gemspec properly by the gem command, not by templating.
+        // TODO: Set gem versions directly from this build.gradle's dependencies.
+        // TODO: Fill the rubygems version from the actual JRuby runtime.
+        // NOTE: add_development_dependency (test-unit and others) is basically not required here.
+        file("${buildDir}/embulk_gem_as_resources/specifications/embulk-${rubyVersion}-java.gemspec").write($/\
+# -*- encoding: utf-8 -*-
+# stub: embulk ${rubyVersion} java lib
+
+Gem::Specification.new do |s|
+  s.name = "embulk".freeze
+  s.version = "${rubyVersion}"
+  s.platform = "java".freeze
+
+  s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
+  s.require_paths = ["lib".freeze]
+  s.authors = ["Sadayuki Furuhashi".freeze]
+  s.date = "2017-11-22"
+  s.description = "${project.description}".freeze
+  s.email = ["frsyuki@gmail.com".freeze]
+  s.executables = ["embulk".freeze]
+  s.homepage = "https://github.com/embulk/embulk".freeze
+  s.licenses = ["Apache 2.0".freeze]
+  s.rubygems_version = "2.6.13".freeze
+  s.summary = "${project.ext.summary}".freeze
+
+  s.installed_by_version = "2.6.13" if s.respond_to? :installed_by_version
+
+  if s.respond_to? :specification_version then
+    s.specification_version = 4
+
+    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<bundler>.freeze, [">= 1.10.6"])
+      s.add_runtime_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
+      s.add_runtime_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
+    else
+      s.add_dependency(%q<bundler>.freeze, [">= 1.10.6"])
+      s.add_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
+      s.add_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
+    end
+  else
+    s.add_dependency(%q<bundler>.freeze, [">= 1.10.6"])
+    s.add_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
+    s.add_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
+  end
+end
+/$)
+    }
+}
+processResources.dependsOn("buildEmbulkGem")

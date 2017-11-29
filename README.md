@@ -149,7 +149,6 @@ Older versions are available at [dl.embulk.org](http://dl.embulk.org).
 
 ```
 ./gradlew cli  # creates pkg/embulk-VERSION.jar
-./gradlew gem  # creates pkg/embulk-VERSION.gem
 ```
 
 You can see JaCoCo's test coverage report at `${project}/build/reports/tests/index.html`
@@ -197,7 +196,6 @@ Embulk uses Sphinx, YARD (Ruby API) and JavaDoc (Java API) for document generati
 ```
 brew install python
 pip install sphinx
-gem install yard
 ./gradlew site
 # documents are: embulk-docs/build/html
 ```
@@ -219,7 +217,7 @@ Run following commands and follow its instruction:
 
 ```
 ./gradlew releaseCheck
-./gradlew clean cli gem && ./gradlew release
+./gradlew clean cli && ./gradlew release
 git commit -am v$VERSION
 git tag v$VERSION
 ```
