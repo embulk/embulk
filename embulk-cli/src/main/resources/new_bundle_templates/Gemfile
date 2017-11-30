@@ -1,5 +1,9 @@
 source 'https://rubygems.org/'
-gem 'embulk', '~> 0.8.0'
+
+# No versions are specified for 'embulk' to use the gem embedded in embulk.jar.
+# Note that prerelease versions (e.g. "0.9.0.beta") do not match the statement.
+# Specify the exact prerelease version (like '= 0.9.0.beta') for prereleases.
+gem 'embulk'
 
 #
 # 1. Use following syntax to specify versions of plugins
@@ -28,4 +32,3 @@ gem 'embulk', '~> 0.8.0'
 #   $ embulk run -b path/to/this/directory  ...
 #   $ embulk preview -b path/to/this/directory  ...
 #
-
