@@ -269,6 +269,28 @@ public class JRubyScriptingModule
                 jruby.runScriptlet("Gem.clear_paths");
                 jruby.runScriptlet("require 'bundler'");
 
+                // TODO: Remove the monkey patch once the issue is fixed on Bundler or JRuby side.
+                // @see <a href="https://github.com/bundler/bundler/issues/4565">Bundler::SharedHelpers.clean_load_path does cleanup the default load_path on jruby - Issue #4565 - bundler/bundler</a>
+                final String monkeyPatchOnSharedHelpersCleanLoadPath =
+                    "begin\n" +
+                    "  require 'bundler/shared_helpers'\n" +
+                    "  module Bundler\n" +
+                    "    module DisableCleanLoadPath\n" +
+                    "      def clean_load_path\n" +
+                    "        # Do nothing.\n" +
+                    "      end\n" +
+                    "    end\n" +
+                    "    module SharedHelpers\n" +
+                    "      def included(bundler)\n" +
+                    "        bundler.send :include, DisableCleanLoadPath\n" +
+                    "      end\n" +
+                    "    end\n" +
+                    "  end\n" +
+                    "rescue LoadError\n" +
+                    "  # Ignore LoadError.\n" +
+                    "end\n";
+                jruby.runScriptlet(monkeyPatchOnSharedHelpersCleanLoadPath);
+
                 jruby.runScriptlet("Bundler.load.setup_environment");
                 jruby.runScriptlet("require 'bundler/setup'");
                 // since here, `require` may load files of different (newer) embulk versions
