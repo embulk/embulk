@@ -17,9 +17,11 @@ def release_projects = [project(":embulk-core"), project(":embulk-standards"), p
 allprojects {
     group = 'org.embulk'
     version = '0.9.0-SNAPSHOT'
+    description = "Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control."
 
     ext {
         jrubyVersion = '9.1.13.0'
+        summary = "Embulk, a plugin-based parallel bulk data loader"
     }
 
     apply plugin: 'java'
@@ -269,46 +271,12 @@ project(':embulk-cli') {
 }
 
 task rubyTestVanilla(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Ilib', '-Itest', '--debug', './test/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
+    jrubyArgs '-Iembulk-core/src/main/ruby', '-Iembulk-core/src/test/ruby', '--debug', './embulk-core/src/test/ruby/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
 }
 task rubyTestMonkeyStrptime(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Ilib', '-Itest', '--debug', './test/monkey_strptime/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
+    jrubyArgs '-Iembulk-core/src/main/ruby', '-Iembulk-core/src/test/ruby', '--debug', './embulk-core/src/test/ruby/monkey_strptime/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
 }
 task rubyTest(dependsOn: ["rubyTestVanilla", "rubyTestMonkeyStrptime"]) {
-}
-
-//
-// gem task
-//
-task gemJRuby(type: JRubyExec, dependsOn: ["classpath"]) {
-    jrubyArgs '-rrubygems/gem_runner', '-eGem::GemRunner.new.run(ARGV)'
-    script './lib/embulk/version.rb'  // dummy
-    scriptArgs 'build', 'embulk.gemspec'
-    doLast { file("${project.name}-${project.version}-java.gem").renameTo("pkg/${project.name}-${project.version}-java.gem") }
-}
-
-task gem(type: Exec, dependsOn: ["classpath", "gemJRuby"]) {
-    executable "gem"
-    args "build", "embulk.gemspec"
-    doFirst {
-        def rubyVersion = file(".ruby-version").getText().trim()
-        if (!"ruby --version".execute().text.contains(rubyVersion)) {
-            throw new GradleException("Version of 'ruby' command in PATH must be ${rubyVersion}. Use rbenv and install ${rubyVersion}")
-        }
-    }
-    doLast { file("${project.name}-${project.version}.gem").renameTo("pkg/${project.name}-${project.version}.gem") }
-}
-
-//
-// rubyGemsUpload task
-//
-task rubyGemsUploadJRuby(type: Exec, dependsOn: ["gem"]) {
-    executable "gem"
-    args "push", "pkg/embulk-${project.version}-java.gem"
-}
-task rubyGemsUpload(type: Exec, dependsOn: ["gem", "rubyGemsUploadJRuby"]) {
-    executable "gem"
-    args "push", "pkg/embulk-${project.version}.gem"
 }
 
 //
@@ -316,9 +284,6 @@ task rubyGemsUpload(type: Exec, dependsOn: ["gem", "rubyGemsUploadJRuby"]) {
 //
 task releaseCheck {
     doLast {
-        if (!file("lib/embulk/version.rb").getText().contains("${project.version}")) {
-            throw new GradleException("lib/embulk/version.rb doesn't include ${project.version}")
-        }
         if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
             throw new GradleException("Release note for ${project.version} doesn't exist")
         }
@@ -334,7 +299,7 @@ task releaseCheck {
     }
 }
 
-task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload", "rubyGemsUpload"]) {
+task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload"]) {
     doLast {
         println """
 Manual operations:
@@ -346,8 +311,6 @@ Manual operations:
     }
 }
 bintrayUpload.mustRunAfter('releaseCheck')
-rubyGemsUpload.mustRunAfter('releaseCheck')
-rubyGemsUploadJRuby.mustRunAfter('releaseCheck')
 
 task setVersion {
     doLast {
@@ -357,11 +320,6 @@ task setVersion {
 
         File gradle_ver = file('build.gradle')
         gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
-
-        // TODO(v2)[#562]: Remove this part to update the version number in lib/embulk/version.rb.
-        // https://github.com/embulk/embulk/issues/562
-        File ruby_ver = file('lib/embulk/version.rb')
-        ruby_ver.write(ruby_ver.getText().replaceFirst("VERSION_INTERNAL = '(\\d+)(\\.\\d+){2}'", "VERSION_INTERNAL = '${to}'"))
 
         List<String> docs = [
             'README.md',
@@ -387,25 +345,16 @@ task updateJRuby {
         File gradle_ver = file('build.gradle')
         gradle_ver.write(gradle_ver.getText().replaceFirst("jrubyVersion = '(\\d+)(\\.\\d+){3}'", "jrubyVersion = '${to}'"))
 
-        File gemspec_ver  = file('embulk.gemspec')
-        gemspec_ver.write(gemspec_ver.getText().replaceFirst("gem.add_dependency \"jruby-jars\", '= (\\d+)(\\.\\d+){3}'", "gem.add_dependency \"jruby-jars\", '= ${to}'"))
-
         File migrate_plugin_ver  = file('embulk-cli/src/main/java/org/embulk/cli/EmbulkMigrate.java')
         migrate_plugin_ver.write(migrate_plugin_ver.getText().replaceFirst("\".ruby-version\", \"jruby-(\\d+)(\\.\\d+){3}\"", "\".ruby-version\", \"jruby-${to}\""))
 
-        File gemfile_lock_ver  = file('Gemfile.lock')
-        gemfile_lock_ver.write(gemfile_lock_ver.getText().replaceFirst("jruby-jars \\(= (\\d+)(\\.\\d+){3}\\)", "jruby-jars (= ${to})"))
-
-        gemfile_lock_ver.write(gemfile_lock_ver.getText().replaceFirst("jruby-jars \\((\\d+)(\\.\\d+){3}\\)", "jruby-jars (${to})"))
-
         List<String> dot_ruby_vers = [
-            'lib/embulk/data/bundle/.ruby-version',
-            'lib/embulk/data/new/ruby/.ruby-version'
+            'embulk-cli/src/main/resources/new_bundle_templates/.ruby-version',
+            'embulk-core/src/main/resources/new_plugin_templates/ruby/.ruby-version',
         ]
         dot_ruby_vers.each() { path ->
             File dot_ruby_ver = file(path)
             dot_ruby_ver.write(dot_ruby_ver.getText().replaceAll('jruby-(\\d+)(\\.\\d+){3}', "jruby-${to}"))
         }
-
     }
 }

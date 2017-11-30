@@ -2,12 +2,11 @@ apply plugin: 'com.github.jruby-gradle.base'
 
 import com.github.jrubygradle.JRubyExec
 jruby {
-    execVersion = '9.0.4.0'  // TODO jruby-9.1.2.0 causes "Unhandled Java exception: IRReturnJump..." exception
-    //execVersion = project.jrubyVersion
+    execVersion = project.jrubyVersion
 }
 
 dependencies {
-    jrubyExec 'rubygems:yard:0.9.5'
+    jrubyExec 'rubygems:yard:0.9.12'
 }
 
 task sphinxHtml(type: Exec) {
@@ -25,8 +24,8 @@ task javadocHtml(type: Copy, dependsOn: [':embulk-core:javadoc']) {
 task rdocHtml(type: JRubyExec) {
     workingDir '..'
     jrubyArgs '-ryard', '-eYARD::CLI::Yardoc.run(*ARGV)'
-    script './lib/embulk/version.rb'  // dummy
-    scriptArgs 'lib', '-o', 'embulk-docs/build/html/rdoc'
+    script './embulk-core/src/main/ruby/embulk/version.rb'  // dummy
+    scriptArgs 'embulk-core/src/main/ruby', '-o', 'embulk-docs/build/html/rdoc'
 }
 
 task site(type: Copy, dependsOn: ['sphinxHtml', 'rdocHtml', 'javadocHtml']) {
