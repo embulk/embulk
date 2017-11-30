@@ -124,6 +124,16 @@ subprojects {
             }
         }
 
+        jar {
+            manifest {
+                attributes 'Implementation-Title': project.name,
+                           'Implementation-Version': project.version,
+                           'Implementation-Vendor-Id': project.group,
+                           'Specification-Title': project.name,
+                           'Specification-Version': project.version
+            }
+        }
+
         // add tests/javadoc/source jar tasks as artifacts to be released
         task testsJar(type: Jar, dependsOn: classes) {
             classifier = 'tests'
@@ -252,10 +262,10 @@ project(':embulk-cli') {
         // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
         // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
         manifest {
-            attributes 'Implementation-Title': project.name,
+            attributes 'Implementation-Title': 'embulk',
                        'Implementation-Version': project.version,
                        'Implementation-Vendor-Id': project.group,
-                       'Specification-Title': project.name,
+                       'Specification-Title': 'embulk',
                        'Specification-Version': project.version,
                        'Main-Class': 'org.embulk.cli.Main'
         }
