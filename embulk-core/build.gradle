@@ -52,7 +52,7 @@ dependencies {
     compile 'org.eclipse.aether:aether-impl:1.1.0'
     compile 'org.apache.maven:maven-aether-provider:3.3.9'
 
-    gems 'rubygems:bundler:1.10.6'
+    gems 'rubygems:bundler:1.16.0'
     gems 'rubygems:msgpack:1.1.0'
     gems 'rubygems:liquid:4.0.0'
 }
