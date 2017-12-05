@@ -291,7 +291,9 @@ public class JRubyScriptingModule
                     "end\n";
                 jruby.runScriptlet(monkeyPatchOnSharedHelpersCleanLoadPath);
 
-                jruby.runScriptlet("Bundler.load.setup_environment");
+                // Bundler.load.setup_environment was called in Bundler 1.10.6.
+                jruby.runScriptlet("Bundler::SharedHelpers.set_bundle_environment");
+
                 jruby.runScriptlet("require 'bundler/setup'");
                 // since here, `require` may load files of different (newer) embulk versions
                 // especially following 'embulk/command/embulk_main'.
