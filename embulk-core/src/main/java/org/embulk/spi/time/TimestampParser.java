@@ -16,26 +16,12 @@ import org.embulk.config.ConfigInject;
 import org.embulk.spi.time.StrptimeParser.FormatBag;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.jruby.embed.ScriptingContainer;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.embulk.spi.time.TimestampFormat.parseDateTimeZone;
 
 public class TimestampParser
 {
-    @Deprecated
-    public interface ParserTask
-            extends org.embulk.config.Task
-    {
-        @Config("default_timezone")
-        @ConfigDefault("\"UTC\"")
-        public DateTimeZone getDefaultTimeZone();
-
-        @ConfigInject
-        @Deprecated
-        public ScriptingContainer getJRuby();
-    }
-
     public interface Task
     {
         @Config("default_timezone")
@@ -49,10 +35,6 @@ public class TimestampParser
         @Config("default_date")
         @ConfigDefault("\"1970-01-01\"")
         public String getDefaultDate();
-
-        @ConfigInject
-        @Deprecated
-        public ScriptingContainer getJRuby();
     }
 
     public interface TimestampColumnOption
@@ -76,21 +58,6 @@ public class TimestampParser
     private final Calendar calendar;
     private final List<StrptimeToken> compiledPattern;
 
-    @Deprecated
-    public TimestampParser(String format, ParserTask task)
-    {
-        this(format, task.getDefaultTimeZone());
-        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
-    }
-
     @VisibleForTesting
     static TimestampParser createTimestampParserForTesting(Task task)
 
@@ -106,37 +73,9 @@ public class TimestampParser
                 columnOption.getDate().or(task.getDefaultDate()));
     }
 
-    @Deprecated
-    public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone)
-    {
-        this(format, defaultTimeZone);
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
-    }
-
     public TimestampParser(String format, DateTimeZone defaultTimeZone)
     {
         this(format, defaultTimeZone, "1970-01-01");
-    }
-
-    @Deprecated
-    public TimestampParser(ScriptingContainer jruby, String format, DateTimeZone defaultTimeZone, String defaultDate)
-    {
-        this(format, defaultTimeZone, defaultDate);
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.time.TimestampParser.");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/745");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
     }
 
     public TimestampParser(final String format, final DateTimeZone defaultTimeZone, final String defaultDate)
@@ -304,7 +243,4 @@ public class TimestampParser
             return zone;
         }
     }
-
-    // TODO: Remove this once deprecated constructors are finally removed.
-    private static boolean deprecationWarned = false;
 }

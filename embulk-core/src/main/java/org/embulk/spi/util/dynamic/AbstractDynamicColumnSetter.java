@@ -1,18 +1,9 @@
 package org.embulk.spi.util.dynamic;
 
-import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.RubyNil;
-import org.jruby.RubyBoolean;
-import org.jruby.RubyInteger;
-import org.jruby.RubyFloat;
-import org.jruby.RubyString;
-import org.jruby.RubyTime;
-import org.jruby.exceptions.RaiseException;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.util.DynamicColumnSetter;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.json.RubyValueApi;
 import org.msgpack.value.Value;
 
 public abstract class AbstractDynamicColumnSetter
@@ -43,52 +34,4 @@ public abstract class AbstractDynamicColumnSetter
     public abstract void set(Timestamp value);
 
     public abstract void set(Value value);
-
-    @Deprecated
-    public void setRubyObject(IRubyObject rubyObject)
-    {
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.util.dynamic.AbstractDynamicColumnSetter#setRubyObject");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/799");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
-
-        if (rubyObject == null || rubyObject instanceof RubyNil) {
-            setNull();
-        } else if (rubyObject instanceof RubyBoolean) {
-            RubyBoolean b = (RubyBoolean) rubyObject;
-            set(b.isTrue());
-        } else if (rubyObject instanceof RubyInteger) {
-            RubyInteger i = (RubyInteger) rubyObject;
-            try {
-                set(i.getLongValue());
-            } catch (RaiseException ex) {
-                if ("RangeError".equals(ex.getException().getMetaClass().getBaseName())) {
-                    // integer is too large
-                    throw ex;  //TODO setDefaultValue();
-                } else {
-                    throw ex;
-                }
-            }
-        } else if (rubyObject instanceof RubyFloat) {
-            RubyFloat f = (RubyFloat) rubyObject;
-            set(f.getDoubleValue());
-        } else if (rubyObject instanceof RubyString) {
-            RubyString s = (RubyString) rubyObject;
-            set(s.asJavaString());
-        } else if (rubyObject instanceof RubyTime) {
-            RubyTime time = (RubyTime) rubyObject;
-            long msec = time.getDateTime().getMillis();
-            long nsec = time.getNSec();
-            long sec = msec / 1000 + nsec / 1000000000;
-            int nano = (int) ((msec % 1000) * 1000000 + nsec % 1000000000);
-            set(Timestamp.ofEpochSecond(sec, nano));
-        } else {
-            set(RubyValueApi.toValue(rubyObject.getRuntime(), rubyObject));
-        }
-    }
-
-    private static boolean deprecationWarned = false;
 }

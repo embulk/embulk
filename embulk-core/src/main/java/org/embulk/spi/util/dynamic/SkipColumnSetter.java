@@ -1,6 +1,5 @@
 package org.embulk.spi.util.dynamic;
 
-import org.jruby.runtime.builtin.IRubyObject;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
 import org.embulk.spi.time.Timestamp;
@@ -50,19 +49,4 @@ public class SkipColumnSetter
     @Override
     public void set(Value v)
     { }
-
-    @Deprecated
-    @Override
-    public void setRubyObject(IRubyObject rubyObject)
-    {
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated org.embulk.spi.util.dynamic.SkipColumnSetter#setRubyObject");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/799");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
-    }
-
-    private static boolean deprecationWarned = false;
 }

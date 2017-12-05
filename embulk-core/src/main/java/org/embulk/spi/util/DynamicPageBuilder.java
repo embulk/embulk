@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import com.google.common.base.Optional;
 import org.joda.time.DateTimeZone;
-import org.jruby.embed.ScriptingContainer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
@@ -40,11 +39,6 @@ public class DynamicPageBuilder
         @Config("column_options")
         @ConfigDefault("{}")
         public Map<String, ConfigSource> getColumnOptions();
-
-        // required by TimestampFormatter
-        @ConfigInject
-        @Deprecated
-        public ScriptingContainer getJRuby();
     }
 
     public static interface ColumnOption
@@ -78,20 +72,6 @@ public class DynamicPageBuilder
         }
         this.setters = setters.build().toArray(new DynamicColumnSetter[0]);
         this.columnLookup = lookup.build();
-    }
-
-    @Deprecated  // The static creator method "createWithTimestampMetadataFromBuilderTask" is preferred.
-    public DynamicPageBuilder(
-            BuilderTask task,
-            BufferAllocator allocator,
-            Schema schema,
-            PageOutput output)
-    {
-        this(DynamicColumnSetterFactory.createWithTimestampMetadataFromBuilderTask(
-                 task, DynamicColumnSetterFactory.nullDefaultValue()),  // TODO configurable default value
-             allocator,
-             schema,
-             output);
     }
 
     public static DynamicPageBuilder createWithTimestampMetadataFromBuilderTask(
