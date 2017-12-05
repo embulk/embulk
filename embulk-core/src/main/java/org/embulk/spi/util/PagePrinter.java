@@ -17,22 +17,6 @@ public class PagePrinter
     private final TimestampFormatter[] timestampFormatters;
     private final ArrayList<String> record;
 
-    // TODO: Update this constructor because |TimestampFormater.FormatterTask| is deprecated since v0.6.14.
-    @Deprecated
-    public PagePrinter(Schema schema, TimestampFormatter.FormatterTask task)
-    {
-        this(schema, task.getTimeZone());
-        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!deprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated constructor of org.embulk.spi.util.PagePrinter.");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/827");
-            // The |deprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            deprecationWarned = true;
-        }
-    }
-
     public PagePrinter(final Schema schema, final DateTimeZone timezone)
     {
         this.schema = schema;
@@ -121,6 +105,4 @@ public class PagePrinter
             string = reader.getJson(column).toString();
         }
     }
-
-    private static boolean deprecationWarned = false;
 }

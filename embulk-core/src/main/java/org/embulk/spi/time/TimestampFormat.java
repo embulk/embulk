@@ -23,36 +23,6 @@ public class TimestampFormat
         return format;
     }
 
-    @Deprecated
-    public TimestampFormatter newFormatter(TimestampFormatter.FormatterTask task)
-    {
-        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!newFormatterDeprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated method org.embulk.spi.time.TimestampFormat.newFormatter");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/828");
-            // The |newFormatterDeprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            newFormatterDeprecationWarned = true;
-        }
-        return new TimestampFormatter(format, task.getTimeZone());
-    }
-
-    @Deprecated
-    public TimestampParser newParser(TimestampParser.ParserTask task)
-    {
-        // NOTE: Its deprecation is not actually from ScriptingContainer, though.
-        // TODO: Notify users about deprecated calls through the notification reporter.
-        if (!newParserDeprecationWarned) {
-            System.err.println("[WARN] Plugin uses deprecated method org.embulk.spi.time.TimestampFormat.newParser");
-            System.err.println("[WARN] Report plugins in your config at: https://github.com/embulk/embulk/issues/828");
-            // The |newParserDeprecationWarned| flag is used only for warning messages.
-            // Even in case of race conditions, messages are just duplicated -- should be acceptable.
-            newParserDeprecationWarned = true;
-        }
-        return new TimestampParser(format, task.getDefaultTimeZone());
-    }
-
     private static Set<String> availableTimeZoneNames = ImmutableSet.copyOf(DateTimeZone.getAvailableIDs());
 
     public static DateTimeZone parseDateTimeZone(String s)
@@ -92,9 +62,6 @@ public class TimestampFormat
             return null;
         }
     }
-
-    private static boolean newFormatterDeprecationWarned = false;
-    private static boolean newParserDeprecationWarned = false;
 
     //// Java standard TimeZone
     //static TimeZone parseDateTimeZone(String s)
