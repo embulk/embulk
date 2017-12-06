@@ -55,7 +55,22 @@ public class TestTimestampParser {
     public void test__strptime__3_rfc822() {
         testToParse("Thu, 29 Jul 1999 09:54:21 UT", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
         testToParse("Thu, 29 Jul 1999 09:54:21 GMT", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
-        testToParse("Thu, 29 Jul 1999 09:54:21 PDT", "%a, %d %b %Y %H:%M:%S %Z", 933267261L);
+
+        // It should be 933267261L if PDT (Pacific Daylight Time) is correctly -07:00.
+        //
+        // Joda-Time's DateTimeFormat.forPattern("z").parseMillis("PDT") however returns 8 hours (-08:00).
+        // DateTimeFormat.forPattern("z").parseMillis("PDT") == 28800000
+        // https://github.com/JodaOrg/joda-time/blob/v2.9.2/src/main/java/org/joda/time/DateTimeUtils.java#L446
+        //
+        // Embulk has used it to parse time zones for a very long time since it was v0.1.
+        // https://github.com/embulk/embulk/commit/b97954a5c78397e1269bbb6979d6225dfceb4e05
+        //
+        // It is kept as -08:00 for compatibility as of now.
+        //
+        // TODO: Make time zone parsing consistent.
+        // @see <a href="https://github.com/embulk/embulk/issues/860">https://github.com/embulk/embulk/issues/860</a>
+        testToParse("Thu, 29 Jul 1999 09:54:21 PDT", "%a, %d %b %Y %H:%M:%S %Z", 933270861L);
+
         testToParse("Thu, 29 Jul 1999 09:54:21 z", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
         testToParse("Thu, 29 Jul 1999 09:54:21 +0900", "%a, %d %b %Y %H:%M:%S %Z", 933209661L);
         testToParse("Thu, 29 Jul 1999 09:54:21 +0430", "%a, %d %b %Y %H:%M:%S %Z", 933225861L);
