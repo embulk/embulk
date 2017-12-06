@@ -3,7 +3,7 @@
 module Embulk
   @@warned = false
 
-  VERSION_INTERNAL = '0.8.38'
+  VERSION_INTERNAL = '0.8.39'
 
   DEPRECATED_MESSAGE = 'Embulk::VERSION in (J)Ruby is deprecated. Use org.embulk.EmbulkVersion::VERSION instead. If this message is from a plugin, please tell this to the author of the plugin!'
   def self.const_missing(name)
