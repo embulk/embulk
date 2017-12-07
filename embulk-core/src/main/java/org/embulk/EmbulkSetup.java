@@ -20,10 +20,6 @@ public class EmbulkSetup
     {
         final HashMap<String, Object> systemConfigModified = new HashMap<String, Object>(systemConfigGiven);
 
-        // use the global ruby runtime for all ScriptingContainer
-        // injected by org.embulk.jruby.JRubyScriptingModule
-        systemConfigModified.put("use_global_ruby_runtime", true);
-
         // Calling ObjectMapper simply just as a formatter here so that it does not depend much on Jackson.
         // Do not leak the Jackson object outside.
         final ObjectMapper jacksonObjectMapper = new ObjectMapper();
