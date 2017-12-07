@@ -69,6 +69,8 @@ public class LocalFileInputPlugin
 
         // list files recursively
         List<String> files = listFiles(task);
+        // Sort the files before we set them to the task.
+        Collections.sort(files);
         log.info("Loading files {}", files);
         task.setFiles(files);
 
@@ -97,7 +99,7 @@ public class LocalFileInputPlugin
             }
         } else {
             List<String> files = new ArrayList<String>(task.getFiles());
-            Collections.sort(files);
+            //Need not to sort again
             configDiff.set("last_path", files.get(files.size() - 1));
         }
 
@@ -124,7 +126,8 @@ public class LocalFileInputPlugin
             directory = (d == null ? CURRENT_DIR : d);
         }
 
-        final ImmutableList.Builder<String> builder = ImmutableList.builder();
+        //Using the ArrayList to record the files instead of ImmutableList
+        final List<String> filesArray = new ArrayList<String>();
         final String lastPath = task.getLastPath().orNull();
         try {
             log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory.equals(CURRENT_DIR) ? "." : directory.toString(), fileNamePrefix);
@@ -186,11 +189,11 @@ public class LocalFileInputPlugin
                         }
                         if (parent.equals(directory)) {
                             if (path.getFileName().toString().startsWith(fileNamePrefix)) {
-                                builder.add(path.toString());
+                                filesArray.add(path.toString());
                                 return FileVisitResult.CONTINUE;
                             }
                         } else {
-                            builder.add(path.toString());
+                            filesArray.add(path.toString());
                         }
                         return FileVisitResult.CONTINUE;
                     }
@@ -199,7 +202,7 @@ public class LocalFileInputPlugin
         } catch (IOException ex) {
             throw new RuntimeException(String.format("Failed get a list of local files at '%s'", directory), ex);
         }
-        return builder.build();
+        return filesArray;
     }
 
     @Override
