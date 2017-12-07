@@ -21,5 +21,9 @@ require 'embulk/java/bootstrap'
 require 'embulk'
 
 require 'embulk/runner'
-runner_java = Embulk::EmbulkRunner.new(Java::org.embulk.EmbulkSetup::setup(Java::java.util.HashMap.new({})))
+
+# "use_global_ruby_runtime" needs to be true because this test process starts from JRuby, the global instance.
+runner_java = Embulk::EmbulkRunner.new(Java::org.embulk.EmbulkSetup::setup(
+                                         Java::java.util.HashMap.new({"use_global_ruby_runtime": true})))
+
 Embulk.const_set :Runner, runner_java
