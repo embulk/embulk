@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +22,6 @@ import org.embulk.cli.parse.EmbulkCommandLineParseException;
 import org.embulk.cli.parse.EmbulkCommandLineParser;
 import org.embulk.cli.parse.OptionBehavior;
 import org.embulk.cli.parse.OptionDefinition;
-// TODO: Replace org.joda.time with java.time when Embulk goes to Java 8.
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
@@ -146,8 +144,8 @@ public class EmbulkRun
                     {
                         public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
                         {
-                            final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
-                            final String now = DateTime.now().toString(formatter);
+                            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
+                            final String now = ZonedDateTime.now().format(formatter);
                             errorWriter().println(now + ": Run with -o option is deprecated. Please use -c option instead. For example,");
                             errorWriter().println(now + ": ");
                             errorWriter().println(now + ":   $ embulk run config.yml -c diff.yml");
@@ -734,8 +732,8 @@ public class EmbulkRun
 
     private void printEmbulkVersionHeader(final PrintStream out)
     {
-        final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
-        final String now = DateTime.now().toString(formatter);
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
+        final String now = ZonedDateTime.now().format(formatter);
         out.println(now + ": Embulk v" + this.embulkVersion);
     }
 
