@@ -38,6 +38,9 @@ public class TimestampFormat
         }
         final DateTimeZone jodaDateTimeZone = jodaDateTimeZoneTemporary;
 
+        // Embulk has accepted to parse Joda-Time's time zone IDs in Timestamps since v0.2.0
+        // although the formats are based on Ruby's strptime. Joda-Time's time zone IDs are
+        // continuously to be accepted with higher priority than Ruby's time zone IDs.
         if (jodaDateTimeZone != null && (s.startsWith("+") || s.startsWith("-"))) {
             return jodaDateTimeZone;
 
@@ -85,7 +88,7 @@ public class TimestampFormat
             // "CET", "EET", "Egypt", "Iran", "MET", "WET"
             //
             // Some zone IDs (ex. "PDT") are parsed by DateTimeFormat#parseMillis as shown above.
-            final int rubyStyleTimeOffsetInSecond = TimeZoneConverter.dateZoneToDiff(s);
+            final int rubyStyleTimeOffsetInSecond = RubyTimeZoneTab.dateZoneToDiff(s);
             if (rubyStyleTimeOffsetInSecond != Integer.MIN_VALUE) {
                 return DateTimeZone.forOffsetMillis(rubyStyleTimeOffsetInSecond * 1000);
             }

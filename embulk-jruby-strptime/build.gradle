@@ -1,3 +1,0 @@
-dependencies {
-    compile 'org.jruby:jruby-complete:' + project.jrubyVersion
-}
