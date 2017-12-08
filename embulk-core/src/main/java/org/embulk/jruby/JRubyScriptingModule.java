@@ -244,6 +244,17 @@ public class JRubyScriptingModule
                 super(message, cause);
             }
         }
+        private static final class LocationNotFoundException extends Exception {
+            public LocationNotFoundException(final String message)
+            {
+                super(message);
+            }
+
+            public LocationNotFoundException(final String message, final Throwable cause)
+            {
+                super(message, cause);
+            }
+        }
 
         private void setGemVariables(final ScriptingContainer jruby)
         {
@@ -455,6 +466,26 @@ public class JRubyScriptingModule
         private Path buildEmbulkHome() throws ProvisionException {
             final String userHomeProperty = System.getProperty("user.home");
 
+            final Path embulkHomeFromLocation = getEmbulkHomeFromLocation();
+            if (embulkHomeFromLocation != null) {
+                if (userHomeProperty != null) {
+                    // Getting a full path of user home directory intentionally here and later again.
+                    // It is redundant, but easier to remove this if-block later which is only logging a warning.
+                    Path userHomeTemporary;
+                    try {
+                        userHomeTemporary = Paths.get(userHomeProperty).toAbsolutePath();
+                    }
+                    catch (Exception ex) {
+                        userHomeTemporary = null;
+                    }
+                    if (userHomeTemporary != null && !userHomeTemporary.equals(embulkHomeFromLocation)) {
+                        final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
+                        logger.warn("Embulk's jar executed is located out of ~/.embulk. The directory is considered as Embulk's home: \"" + embulkHomeFromLocation.toString() + "\"");
+                    }
+                }
+                return embulkHomeFromLocation;
+            }
+
             if (userHomeProperty == null) {
                 throw new ProvisionException("User home directory is not set in Java properties.");
             }
@@ -481,33 +512,11 @@ public class JRubyScriptingModule
         private static String buildJRubyLoadPath()
                 throws UnrecognizedJRubyLoadPathException
         {
-            final ProtectionDomain protectionDomain;
-            try {
-                protectionDomain = JRubyScriptingModule.class.getProtectionDomain();
-            }
-            catch (SecurityException ex) {
-                throw new UnrecognizedJRubyLoadPathException("Failed to achieve ProtectionDomain", ex);
-            }
-
-            final CodeSource codeSource = protectionDomain.getCodeSource();
-            if (codeSource == null) {
-                throw new UnrecognizedJRubyLoadPathException("Failed to achieve CodeSource");
-            }
-
-            final URL locationUrl = codeSource.getLocation();
-            if (locationUrl == null) {
-                throw new UnrecognizedJRubyLoadPathException("Failed to achieve location");
-            }
-            else if (!locationUrl.getProtocol().equals("file")) {
-                throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString());
-            }
-
             final Path locationPath;
             try {
-                locationPath = Paths.get(locationUrl.toURI());
-            }
-            catch (URISyntaxException ex) {
-                throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString(), ex);
+                locationPath = findEmbulkLocation();
+            } catch (LocationNotFoundException ex) {
+                throw new UnrecognizedJRubyLoadPathException("Invalid location.", ex);
             }
 
             if (Files.isDirectory(locationPath)) {  // Out of a JAR file
@@ -516,7 +525,56 @@ public class JRubyScriptingModule
             }
 
             // TODO: Consider checking the file is really a JAR file.
-            return locationUrl.toString() + "!";  // Inside the Embulk JAR file
+            return locationPath.toUri().toString() + "!";  // Inside the Embulk JAR file
+        }
+
+        private static Path getEmbulkHomeFromLocation() {
+            final Path locationPath;
+            try {
+                locationPath = findEmbulkLocation();
+            } catch (LocationNotFoundException ex) {
+                return null;
+            }
+
+            if (Files.isDirectory(locationPath)) {
+                // If Embulk runs out of a JAR file, Embulk home is not available from the code source location.
+                return null;
+            }
+
+            return locationPath.getParent().toAbsolutePath();
+        }
+
+        private static Path findEmbulkLocation() throws LocationNotFoundException {
+            final ProtectionDomain protectionDomain;
+            try {
+                protectionDomain = JRubyScriptingModule.class.getProtectionDomain();
+            }
+            catch (SecurityException ex) {
+                throw new LocationNotFoundException("Failed to achieve ProtectionDomain", ex);
+            }
+
+            final CodeSource codeSource = protectionDomain.getCodeSource();
+            if (codeSource == null) {
+                throw new LocationNotFoundException("Failed to achieve CodeSource");
+            }
+
+            final URL locationUrl = codeSource.getLocation();
+            if (locationUrl == null) {
+                throw new LocationNotFoundException("Failed to achieve location");
+            }
+            else if (!locationUrl.getProtocol().equals("file")) {
+                throw new LocationNotFoundException("Invalid location: " + locationUrl.toString());
+            }
+
+            final Path locationPath;
+            try {
+                locationPath = Paths.get(locationUrl.toURI());
+            }
+            catch (URISyntaxException ex) {
+                throw new LocationNotFoundException("Invalid location: " + locationUrl.toString(), ex);
+            }
+
+            return locationPath;
         }
     }
 }
