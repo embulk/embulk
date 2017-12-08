@@ -136,13 +136,8 @@ public class JRubyScriptingModule
         {
             LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
             ScriptingContainer jruby = new ScriptingContainer(scope, LocalVariableBehavior.PERSISTENT);
-            if (this.useDefaultEmbulkGemHome) {
-                // NOTE: Same done in "gem", "exec", and "irb" subcommands.
-                // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are changed.
-                jruby.runScriptlet("ENV.delete('BUNDLE_GEMFILE')");
-                jruby.runScriptlet("ENV['GEM_HOME'] = File.expand_path File.join(Java::java.lang.System.properties['user.home'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])");
-                jruby.runScriptlet("ENV['GEM_PATH'] = ''");
-            }
+            this.setGemVariables(jruby);
+
             final RubyInstanceConfig jrubyInstanceConfig = jruby.getProvider().getRubyInstanceConfig();
             for (final String jrubyOption : this.jrubyOptions) {
                 try {
@@ -190,18 +185,6 @@ public class JRubyScriptingModule
 //                loadPaths.add(coreJarPath);
 //            }
 //            jruby.setLoadPaths(loadPaths);
-
-            if (gemHome != null) {
-                // Overwrites GEM_HOME and GEM_PATH. GEM_PATH becomes same with GEM_HOME. Therefore
-                // with this code, there're no ways to set extra GEM_PATHs in addition to GEM_HOME.
-                // Here doesn't modify ENV['GEM_HOME'] so that a JVM process can create multiple
-                // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
-                // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
-                // is used.
-                jruby.callMethod(
-                        jruby.runScriptlet("Gem"),
-                        "use_paths", gemHome, gemHome);
-            }
 
             // load embulk.rb
             jruby.runScriptlet("require 'embulk'");
@@ -257,16 +240,55 @@ public class JRubyScriptingModule
             }
         }
 
+        private void setGemVariables(final ScriptingContainer jruby)
+        {
+            final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
+
+            final boolean hasBundleGemfile =
+                jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
+            if (hasBundleGemfile) {
+                final String bundleGemFile =
+                    jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
+                logger.warn("BUNDLE_GEMFILE has already been set: \"" + bundleGemFile + "\"");
+            }
+
+            if (this.jrubyBundlerPluginSourceDirectory != null) {
+                if (hasBundleGemfile) {
+                    logger.warn("BUNDLE_GEMFILE is being overwritten.");
+                }
+                jruby.put("__intl_bundle__", this.jrubyBundlerPluginSourceDirectory);
+                jruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = File.join(File.expand_path(__intl_bundle__), 'Gemfile')");
+                jruby.remove("__intl_bundle__");
+                jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => nil, 'GEM_PATH' => nil }");
+            } else {
+                if (hasBundleGemfile) {
+                    logger.warn("BUNDLE_GEMFILE is being unset.");
+                    jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+                }
+                if (this.gemHome != null) {
+                    // The system config "gem_home" is always prioritized.
+                    //
+                    // Overwrites GEM_HOME and GEM_PATH. GEM_PATH becomes same with GEM_HOME. Therefore
+                    // with this code, there're no ways to set extra GEM_PATHs in addition to GEM_HOME.
+                    // Here doesn't modify ENV['GEM_HOME'] so that a JVM process can create multiple
+                    // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
+                    // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
+                    // is used.
+                    jruby.put("__intl_gem__", this.gemHome);
+                    jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => __intl_gem__, 'GEM_PATH' => __intl_gem__ }");
+                    jruby.remove("__intl_gem__");
+                } else if (this.useDefaultEmbulkGemHome) {
+                    // NOTE: Same done in "gem", "exec", and "irb" subcommands.
+                    // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are change
+                    jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => File.join(File.expand_path(Java::java.lang.System.properties['user.home']), '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version']), 'GEM_PATH' => nil }");
+                }
+            }
+        }
+
         private void setBundlerPluginSourceDirectory(final ScriptingContainer jruby, final String directory)
         {
             if (directory != null) {
-                jruby.put("__internal_bundler_plugin_source_directory__", directory);
-                jruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = File.expand_path File.join(__internal_bundler_plugin_source_directory__, 'Gemfile')");
-
                 // bundler is included in embulk-core.jar
-                jruby.runScriptlet("ENV.delete('GEM_HOME')");
-                jruby.runScriptlet("ENV.delete('GEM_PATH')");
-                jruby.runScriptlet("Gem.clear_paths");
                 jruby.runScriptlet("require 'bundler'");
 
                 // TODO: Remove the monkey patch once the issue is fixed on Bundler or JRuby side.
@@ -302,18 +324,11 @@ public class JRubyScriptingModule
                 // It can cause insecure injections.
                 //
                 // add bundle directory path to load local plugins at ./embulk
+                jruby.put("__internal_bundler_plugin_source_directory__", directory);
                 jruby.runScriptlet("$LOAD_PATH << File.expand_path(__internal_bundler_plugin_source_directory__)");
                 jruby.remove("__internal_bundler_plugin_source_directory__");
             }
             else {
-                /* Environment variables are set in ScriptingContainerProvider#get():
-                 *   ENV['BUNDLE_GEMFILE']: unset
-                 *   ENV['GEM_HOME']: set for "~/.embulk/jruby/${ruby-version}"
-                 *   ENV['GEM_PATH']: set for ""
-                 */
-
-                jruby.runScriptlet("Gem.clear_paths");  // force rubygems to reload GEM_HOME
-
                 // NOTE: The path from |buildJRubyLoadPath()| is added in $LOAD_PATH just in case.
                 // Though it is not mandatory just to run "embulk_main.rb", it may be required in later steps.
                 //

@@ -752,16 +752,23 @@ public class EmbulkRun
     private ScriptingContainer createLocalJRubyScriptingContainer()
     {
         // Not |LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainer localJRubyContainer =
+        final ScriptingContainer jruby =
             new ScriptingContainer(LocalContextScope.SINGLETHREAD, LocalVariableBehavior.PERSISTENT);
 
         // NOTE: Same done in JRubyScriptingModule.
         // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
-        localJRubyContainer.runScriptlet("ENV.delete('BUNDLE_GEMFILE')");
-        localJRubyContainer.runScriptlet("ENV['GEM_HOME'] = File.expand_path File.join(Java::java.lang.System.properties['user.home'], '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version'])");
-        localJRubyContainer.runScriptlet("ENV['GEM_PATH'] = ''");
+        final boolean hasBundleGemfile =
+            jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
+        if (hasBundleGemfile) {
+            final String bundleGemFile =
+                jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
+            System.err.println("BUNDLE_GEMFILE has already been set: \"" + bundleGemFile + "\"");
+            System.err.println("BUNDLE_GEMFILE is being unset.");
+            jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+        }
+        jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => File.join(File.expand_path(Java::java.lang.System.properties['user.home']), '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version']), 'GEM_PATH' => nil }");
 
-        return localJRubyContainer;
+        return jruby;
     }
 
     private void callJRubyGem(final List<String> subcommandArguments)
