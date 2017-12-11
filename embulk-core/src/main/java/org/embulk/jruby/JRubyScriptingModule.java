@@ -279,7 +279,7 @@ public class JRubyScriptingModule
                 } else if (this.useDefaultEmbulkGemHome) {
                     // NOTE: Same done in "gem", "exec", and "irb" subcommands.
                     // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are change
-                    final String defaultGemHome = this.buildDefaultGemPath(jruby);
+                    final String defaultGemHome = this.buildDefaultGemPath();
                     this.logger.info("Gem's home and path are set by default: \"" + defaultGemHome + "\"");
                     setGemPaths(jruby, defaultGemHome);
                     this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
@@ -409,11 +409,8 @@ public class JRubyScriptingModule
             jruby.callMethod(jruby.runScriptlet("Gem"), "use_paths", gemPathRuby, gemPathRuby);
         }
 
-        private String buildDefaultGemPath(final ScriptingContainer jruby) throws ProvisionException {
-            final String rubyEngine = jruby.callMethod(jruby.runScriptlet("Gem"), "ruby_engine", String.class);
-            final String rubyVersion = jruby.callMethod(
-                jruby.runScriptlet("RbConfig::CONFIG"), "fetch", "ruby_version", String.class);
-            return this.buildEmbulkHome().resolve(rubyEngine).resolve(rubyVersion).toString();
+        private String buildDefaultGemPath() throws ProvisionException {
+            return this.buildEmbulkHome().resolve("lib").resolve("gems").toString();
         }
 
         private static boolean definedBundleGemfile(final ScriptingContainer jruby) {
