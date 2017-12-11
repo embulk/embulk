@@ -3,6 +3,7 @@ package org.embulk.jruby;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
@@ -21,9 +22,13 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.ProvisionException;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
 import org.jruby.RubyInstanceConfig;
+import org.jruby.RubyNil;
+import org.jruby.RubyObject;
+import org.jruby.RubyString;
 import org.jruby.embed.LocalContextScope;
 import org.jruby.embed.LocalVariableBehavior;
 import org.jruby.embed.ScriptingContainer;
@@ -54,6 +59,7 @@ public class JRubyScriptingModule
             implements ProviderWithDependencies<ScriptingContainer>
     {
         private final Injector injector;
+        private final Logger logger;
         private final boolean useGlobalRubyRuntime;
         private final String gemHome;
         private final boolean useDefaultEmbulkGemHome;
@@ -66,6 +72,7 @@ public class JRubyScriptingModule
         public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
         {
             this.injector = injector;
+            this.logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
 
             // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
             // instantiated in this JVM.
@@ -85,9 +92,7 @@ public class JRubyScriptingModule
                         jrubyLoadPathBuilt.add((String) oneJRubyLoadPath);
                     }
                     else {
-                        // It should happen only in very irregular cases. Okay to create |Logger| every time.
-                        Logger logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
-                        logger.warn("System config \"jruby_load_path\" contains non-String.");
+                        this.logger.warn("System config \"jruby_load_path\" contains non-String.");
                         jrubyLoadPathBuilt.add(oneJRubyLoadPath.toString());
                     }
                 }
@@ -102,9 +107,7 @@ public class JRubyScriptingModule
                         jrubyClasspathBuilt.add((String) oneJRubyClasspath);
                     }
                     else {
-                        // It should happen only in very irregular cases. Okay to create |Logger| every time.
-                        Logger logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
-                        logger.warn("System config \"jruby_classpath\" contains non-String.");
+                        this.logger.warn("System config \"jruby_classpath\" contains non-String.");
                         jrubyClasspathBuilt.add(oneJRubyClasspath.toString());
                     }
                 }
@@ -119,9 +122,7 @@ public class JRubyScriptingModule
                         jrubyOptionsBuilt.add((String) oneJRubyOption);
                     }
                     else {
-                        // It should happen only in very irregular cases. Okay to create |Logger| every time.
-                        Logger logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
-                        logger.warn("System config \"jruby_command_line_options\" contains non-String.");
+                        this.logger.warn("System config \"jruby_command_line_options\" contains non-String.");
                         jrubyOptionsBuilt.add(oneJRubyOption.toString());
                     }
                 }
@@ -132,7 +133,7 @@ public class JRubyScriptingModule
                 systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null);
         }
 
-        public ScriptingContainer get()
+        public ScriptingContainer get() throws ProvisionException
         {
             LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
             ScriptingContainer jruby = new ScriptingContainer(scope, LocalVariableBehavior.PERSISTENT);
@@ -144,15 +145,13 @@ public class JRubyScriptingModule
                     processJRubyOption(jrubyOption, jrubyInstanceConfig);
                 }
                 catch (UnrecognizedJRubyOptionException ex) {
-                    final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
-                    logger.error("The \"-R\" option(s) are not recognized in Embulk: -R" + jrubyOption +
-                                 ". Please add your requests at: https://github.com/embulk/embulk/issues/707", ex);
+                    this.logger.error("The \"-R\" option(s) are not recognized in Embulk: -R" + jrubyOption +
+                                      ". Please add your requests at: https://github.com/embulk/embulk/issues/707", ex);
                     throw new RuntimeException(ex);
 
                 }
                 catch (NotWorkingJRubyOptionException ex) {
-                    final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
-                    logger.warn("The \"-R\" option(s) do not work in Embulk: -R" + jrubyOption + ".", ex);
+                    this.logger.warn("The \"-R\" option(s) do not work in Embulk: -R" + jrubyOption + ".", ex);
                 }
             }
 
@@ -242,28 +241,27 @@ public class JRubyScriptingModule
 
         private void setGemVariables(final ScriptingContainer jruby)
         {
-            final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
-
-            final boolean hasBundleGemfile =
-                jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
+            final boolean hasBundleGemfile = definedBundleGemfile(jruby);
             if (hasBundleGemfile) {
-                final String bundleGemFile =
-                    jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
-                logger.warn("BUNDLE_GEMFILE has already been set: \"" + bundleGemFile + "\"");
+                this.logger.warn("BUNDLE_GEMFILE has already been set: \"" + getBundleGemfile(jruby) + "\"");
             }
 
             if (this.jrubyBundlerPluginSourceDirectory != null) {
+                final String gemfilePath = this.buildGemfilePath(this.jrubyBundlerPluginSourceDirectory);
                 if (hasBundleGemfile) {
-                    logger.warn("BUNDLE_GEMFILE is being overwritten.");
+                    this.logger.warn("BUNDLE_GEMFILE is being overwritten: \"" + gemfilePath + "\"");
+                } else {
+                    this.logger.info("BUNDLE_GEMFILE is being set: \"" + gemfilePath + "\"");
                 }
-                jruby.put("__intl_bundle__", this.jrubyBundlerPluginSourceDirectory);
-                jruby.runScriptlet("ENV['BUNDLE_GEMFILE'] = File.join(File.expand_path(__intl_bundle__), 'Gemfile')");
-                jruby.remove("__intl_bundle__");
-                jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => nil, 'GEM_PATH' => nil }");
+                setBundleGemfile(jruby, gemfilePath);
+                this.logger.info("Gem's home and path are being cleared.");
+                clearGemPaths(jruby);
+                this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
+                this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
             } else {
                 if (hasBundleGemfile) {
-                    logger.warn("BUNDLE_GEMFILE is being unset.");
-                    jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+                    this.logger.warn("BUNDLE_GEMFILE is being unset.");
+                    unsetBundleGemfile(jruby);
                 }
                 if (this.gemHome != null) {
                     // The system config "gem_home" is always prioritized.
@@ -274,13 +272,22 @@ public class JRubyScriptingModule
                     // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
                     // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
                     // is used.
-                    jruby.put("__intl_gem__", this.gemHome);
-                    jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => __intl_gem__, 'GEM_PATH' => __intl_gem__ }");
-                    jruby.remove("__intl_gem__");
+                    this.logger.info("Gem's home and path are set by system config \"gem_home\": \"" + this.gemHome + "\"");
+                    setGemPaths(jruby, this.gemHome);
+                    this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
+                    this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
                 } else if (this.useDefaultEmbulkGemHome) {
                     // NOTE: Same done in "gem", "exec", and "irb" subcommands.
                     // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are change
-                    jruby.runScriptlet("Gem.paths = { 'GEM_HOME' => File.join(File.expand_path(Java::java.lang.System.properties['user.home']), '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version']), 'GEM_PATH' => nil }");
+                    final String defaultGemHome = this.buildDefaultGemPath(jruby);
+                    this.logger.info("Gem's home and path are set by default: \"" + defaultGemHome + "\"");
+                    setGemPaths(jruby, defaultGemHome);
+                    this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
+                    this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
+                } else {
+                    this.logger.info("Gem's home and path are not managed.");
+                    this.logger.info("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
+                    this.logger.info("Gem.paths.path = " + getGemPath(jruby) + "");
                 }
             }
         }
@@ -342,8 +349,7 @@ public class JRubyScriptingModule
                     jrubyLoadPath = buildJRubyLoadPath();
                 }
                 catch (UnrecognizedJRubyLoadPathException ex) {
-                    final Logger logger = this.injector.getInstance(ILoggerFactory.class).getLogger("init");
-                    logger.error("Failed to retrieve Embulk's location.", ex);
+                    this.logger.error("Failed to retrieve Embulk's location.", ex);
                     throw new RuntimeException(ex);
                 }
                 jruby.put("__internal_load_path__", jrubyLoadPath);
@@ -379,6 +385,79 @@ public class JRubyScriptingModule
                     throw new UnrecognizedJRubyOptionException();
                 }
             }
+        }
+
+        private static String getGemHome(final ScriptingContainer jruby) {
+            return jruby.callMethod(getGemPaths(jruby), "home", String.class);
+        }
+
+        private static String getGemPath(final ScriptingContainer jruby) {
+            final List gemPath = jruby.callMethod(getGemPaths(jruby), "path", List.class);
+            return gemPath.toString();
+        }
+
+        private static RubyObject getGemPaths(final ScriptingContainer jruby) {
+            return jruby.callMethod(jruby.runScriptlet("Gem"), "paths", RubyObject.class);
+        }
+
+        private static void clearGemPaths(final ScriptingContainer jruby) {
+            jruby.callMethod(jruby.runScriptlet("Gem"), "use_paths", (RubyNil)null, (RubyNil)null);
+        }
+
+        private static void setGemPaths(final ScriptingContainer jruby, final String gemPath) {
+            final RubyString gemPathRuby = RubyString.newString(jruby.getProvider().getRuntime(), gemPath);
+            jruby.callMethod(jruby.runScriptlet("Gem"), "use_paths", gemPathRuby, gemPathRuby);
+        }
+
+        private String buildDefaultGemPath(final ScriptingContainer jruby) throws ProvisionException {
+            final String rubyEngine = jruby.callMethod(jruby.runScriptlet("Gem"), "ruby_engine", String.class);
+            final String rubyVersion = jruby.callMethod(
+                jruby.runScriptlet("RbConfig::CONFIG"), "fetch", "ruby_version", String.class);
+            return this.buildEmbulkHome().resolve(rubyEngine).resolve(rubyVersion).toString();
+        }
+
+        private static boolean definedBundleGemfile(final ScriptingContainer jruby) {
+            return jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
+        }
+
+        private static String getBundleGemfile(final ScriptingContainer jruby) {
+            return jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
+        }
+
+        private static void setBundleGemfile(final ScriptingContainer jruby, final String gemfilePath) {
+            jruby.callMethod(jruby.runScriptlet("ENV"), "store", "BUNDLE_GEMFILE", gemfilePath);
+        }
+
+        private static void unsetBundleGemfile(final ScriptingContainer jruby) {
+            jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+        }
+
+        private String buildGemfilePath(final String bundleDirectoryString)
+                throws ProvisionException {
+            final Path bundleDirectory;
+            try {
+                bundleDirectory = Paths.get(bundleDirectoryString);
+            } catch (InvalidPathException ex) {
+                throw new ProvisionException("Bundle directory is invalid: \"" + bundleDirectoryString + "\"", ex);
+            }
+            return bundleDirectory.toAbsolutePath().resolve("Gemfile").toString();
+        }
+
+        private Path buildEmbulkHome() throws ProvisionException {
+            final String userHomeProperty = System.getProperty("user.home");
+
+            if (userHomeProperty == null) {
+                throw new ProvisionException("User home directory is not set in Java properties.");
+            }
+
+            final Path userHome;
+            try {
+                userHome = Paths.get(userHomeProperty);
+            } catch (InvalidPathException ex) {
+                throw new ProvisionException("User home directory is invalid: \"" + userHomeProperty + "\"", ex);
+            }
+
+            return userHome.toAbsolutePath().resolve(".embulk");
         }
 
         /**
