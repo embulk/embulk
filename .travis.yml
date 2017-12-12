@@ -22,7 +22,6 @@ env:
   matrix:
     - GRADLE_TASK=':embulk-core:check'
     - GRADLE_TASK=':embulk-standards:check'
-    - GRADLE_TASK=':embulk-jruby-strptime:check'
     - GRADLE_TASK=':embulk-test:check'
     - GRADLE_TASK=':embulk-cli:check'
     - GRADLE_TASK='rubyTest'

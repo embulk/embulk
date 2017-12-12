@@ -1,17 +1,23 @@
 package org.embulk.spi.time;
 
 /**
- * This is utility class to convert given timezone into integer based timezone
- * diff. It's ported from ext/date/date_parse.c in MRI 2.3.1 under BSDL.
- * @see <a href="https://github.com/ruby/ruby/blob/394fa89c67722d35bdda89f10c7de5c304a5efb1/ext/date/date_parse.c">date_parse.c</a>.
+ * RubyTimeZoneTab lists from Ruby-compatible timezone names and their time offsets.
  *
- * TODO
- * This class is tentatively required for {@code StrptimeParser} class.
- * The {@code StrptimeParser} and {@code RubyDateParser} will be merged into JRuby
- * (jruby/jruby#4591). embulk-jruby-strptime is removed when Embulk start using
- * the JRuby that bundles embulk-jruby-strptime.
+ * Embulk's timestamp formats are based on Ruby's formats for historical reasons, and kept for compatibility.
+ * Embulk maintains its own implementation of Ruby-compatible time parser to be independent from JRuby.
+ *
+ * This class is intentionally package-private so that plugins do not directly depend.
+ *
+ * This class is almost reimplementation of Ruby v2.3.1's ext/date/date_parse.c. See its COPYING for license.
+ *
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_parse.c?view=markup">ext/date/date_parse.c</a>
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/COPYING?view=markup">COPYING</a>
+ *
+ * This class is contributed to the JRuby project before it is refactored on the Embulk side.
+ *
+ * @see <a href="https://github.com/jruby/jruby/pull/4635">Implement RubyDateParser in Java by muga - Pull Request #4635 - jruby/jruby</a>
  */
-public class TimeZoneConverter
+class RubyTimeZoneTab
 {
     // Ported zones_source in ext/date/date_parse.c
     private static int getOffsetFromZonesSource(String z)
@@ -460,7 +466,7 @@ public class TimeZoneConverter
         return sign ? offset : -offset;
     }
 
-    private TimeZoneConverter()
+    private RubyTimeZoneTab()
     {
     }
 }
