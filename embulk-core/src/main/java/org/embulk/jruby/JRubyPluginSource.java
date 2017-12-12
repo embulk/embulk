@@ -1,8 +1,6 @@
 package org.embulk.jruby;
 
 import com.google.inject.Inject;
-import org.jruby.embed.ScriptingContainer;
-import org.jruby.embed.InvokeFailedException;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
@@ -19,11 +17,11 @@ import org.embulk.spi.ExecutorPlugin;
 public class JRubyPluginSource
         implements PluginSource
 {
-    private final ScriptingContainer jruby;
+    private final ScriptingContainerDelegate jruby;
     private final Object rubyPluginManager;
 
     @Inject
-    public JRubyPluginSource(ScriptingContainer jruby)
+    public JRubyPluginSource(ScriptingContainerDelegate jruby)
     {
         this.jruby = jruby;
 
@@ -69,8 +67,8 @@ public class JRubyPluginSource
         String methodName = "new_java_" + category;
         try {
             return jruby.callMethod(rubyPluginManager, methodName, name, iface);
-        } catch (InvokeFailedException ex) {
-            throw new PluginSourceNotMatchException(ex.getCause());
+        } catch (JRubyInvokeFailedException ex) {
+            throw new PluginSourceNotMatchException(ex.getCause().getCause());
         }
     }
 }
