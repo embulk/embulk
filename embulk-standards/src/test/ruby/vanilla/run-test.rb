@@ -1,4 +1,4 @@
-# Tests guess, and org.embulk.spi.time.TimestampParser which parses timestamp strings into Embulk's Timestamp.
+# Tests guess of embulk-standards.
 
 this_dir = File.dirname(__FILE__)
 core_dir = File.expand_path(File.join(this_dir, '..', '..', '..', '..'))

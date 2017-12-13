@@ -1,4 +1,3 @@
-require 'helper'
 require 'time'
 require 'embulk/guess/schema_guess'
 

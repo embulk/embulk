@@ -494,7 +494,7 @@ public class JRubyScriptingModule
             try {
                 locationPath = Paths.get(locationUrl.toURI());
             }
-            catch (URISyntaxException ex) {
+            catch (URISyntaxException | IllegalArgumentException ex) {
                 throw new UnrecognizedJRubyLoadPathException("Invalid location: " + locationUrl.toString(), ex);
             }
 

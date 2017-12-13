@@ -1,4 +1,4 @@
-require 'helper'
+# require 'helper'
 require 'time'
 require 'embulk/guess/csv'
 

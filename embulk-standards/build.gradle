@@ -1,7 +1,63 @@
+apply plugin: "com.github.jruby-gradle.jar"
+
+// include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
+// because IntelliJ causes error if srcDirs includes files out of projectDir.
+processResources.from("${buildDir}/embulk_gem_complements")
+
+import com.github.jrubygradle.JRubyExec
+
 dependencies {
     compile project(':embulk-core')
     compile 'org.apache.commons:commons-compress:1.10'
 
     testCompile project(':embulk-core').sourceSets.test.output
     testCompile project(':embulk-test')
+
+    jrubyExec 'rubygems:simplecov:0.10.+'
+    jrubyExec 'rubygems:test-unit:3.0.+'
 }
+
+jruby {
+    execVersion = project.jrubyVersion
+}
+
+task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars"]) {
+    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
+}
+test.dependsOn(['rubyTestVanilla'])
+
+String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
+    if (javaStyleVersion.contains('-')) {
+        List<String> versionTokens = javaStyleVersion.tokenize('-');
+        if (versionTokens.size() != 2) {
+            throw new GradleException('Invalid project version: ' + javaStyleVersion);
+        }
+        return versionTokens.get(0) + '.' + versionTokens.get(1).toLowerCase();
+    }
+    else {
+        return javaStyleVersion;
+    }
+}
+
+task prepareDependencyJars(type: Copy) {
+    doFirst {
+        delete("${buildDir}/dependency_jars")
+    }
+    from configurations.runtime
+    into "${buildDir}/dependency_jars"
+}
+
+task complementEmbulkGem {
+    doFirst {
+        delete("${buildDir}/embulk_gem_complements")
+    }
+    doLast {
+        def rubyVersion = buildRubyStyleVersionFromJavaStyleVersion("${project.version}")
+        file("${buildDir}/embulk_gem_complements/gems/embulk-${rubyVersion}-java/lib").mkdirs()
+        copy {
+            from "${projectDir}/src/main/ruby"
+            into "${buildDir}/embulk_gem_complements/gems/embulk-${rubyVersion}-java/lib"
+        }
+    }
+}
+processResources.dependsOn("complementEmbulkGem")
