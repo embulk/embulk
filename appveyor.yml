@@ -11,7 +11,7 @@ install:
 # see http://help.appveyor.com/discussions/problems/5975-the-process-cannot-access-the-file-because-it-is-being-used-by-another-process
 build_script:
   - C:\Users\appveyor\handle\handle.exe -a -u C:\projects\embulk\embulk-cli\build\classes\test\org\embulk\cli\call-selfrun.bat -nobanner
-  - gradlew.bat --info --no-daemon check rubyTest
+  - gradlew.bat --info --no-daemon check
 
 cache:
   - C:\Users\appveyor\.gradle

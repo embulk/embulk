@@ -53,7 +53,22 @@ dependencies {
     gems 'rubygems:bundler:1.16.0'
     gems 'rubygems:msgpack:1.1.0'
     gems 'rubygems:liquid:4.0.0'
+
+    jrubyExec 'rubygems:simplecov:0.10.+'
+    jrubyExec 'rubygems:test-unit:3.0.+'
 }
+
+jruby {
+    execVersion = project.jrubyVersion
+}
+
+task rubyTestVanilla(type: JRubyExec, dependsOn: ":classpath") {
+    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
+}
+task rubyTestMonkeyStrptime(type: JRubyExec) {
+    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/monkey_strptime/run-test.rb'
+}
+test.dependsOn(['rubyTestVanilla', 'rubyTestMonkeyStrptime'])
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains('-')) {

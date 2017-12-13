@@ -7,7 +7,6 @@ buildscript {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
     }
 }
-apply plugin: "com.github.jruby-gradle.jar"
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.github.johnrengelman.shadow'
 
@@ -170,16 +169,6 @@ task wrapper(type: Wrapper) {
     gradleVersion = '3.2.1'
 }
 
-import com.github.jrubygradle.JRubyExec
-jruby {
-    execVersion = project.jrubyVersion
-}
-
-dependencies {
-    jrubyExec 'rubygems:simplecov:0.10.+'
-    jrubyExec 'rubygems:test-unit:3.0.+'
-}
-
 import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
 task updateResources(dependsOn: 'classpath') {
@@ -278,15 +267,6 @@ project(':embulk-cli') {
         from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
         into dest
     }
-}
-
-task rubyTestVanilla(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Iembulk-core/src/main/ruby', '-Iembulk-core/src/test/ruby', '--debug', './embulk-core/src/test/ruby/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
-}
-task rubyTestMonkeyStrptime(type: JRubyExec, dependsOn: "classpath") {
-    jrubyArgs '-Iembulk-core/src/main/ruby', '-Iembulk-core/src/test/ruby', '--debug', './embulk-core/src/test/ruby/monkey_strptime/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
-}
-task rubyTest(dependsOn: ["rubyTestVanilla", "rubyTestMonkeyStrptime"]) {
 }
 
 //

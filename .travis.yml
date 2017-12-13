@@ -24,4 +24,3 @@ env:
     - GRADLE_TASK=':embulk-standards:check'
     - GRADLE_TASK=':embulk-test:check'
     - GRADLE_TASK=':embulk-cli:check'
-    - GRADLE_TASK='rubyTest'
