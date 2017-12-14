@@ -19,7 +19,10 @@ import java.util.List;
  * </ul>
  */
 public final class ScriptingContainerDelegate {
-    private ScriptingContainerDelegate(final Object scriptingContainer,
+    private ScriptingContainerDelegate(final String jrubyVersion,
+                                       final String rubyVersion,
+
+                                       final Object scriptingContainer,
                                        final Method method_callMethod_ALObject,
                                        final Method method_callMethod_LClass,
                                        final Method method_callMethod_LObject_LClass,
@@ -39,6 +42,9 @@ public final class ScriptingContainerDelegate {
                                        final Method method_setCompileMode_LCompileMode,
 
                                        final Method method_getRuntime) {
+        this.jrubyVersion = jrubyVersion;
+        this.rubyVersion = rubyVersion;
+
         this.scriptingContainer = scriptingContainer;
         this.method_callMethod_ALObject = method_callMethod_ALObject;
         this.method_callMethod_LClass = method_callMethod_LClass;
@@ -61,7 +67,10 @@ public final class ScriptingContainerDelegate {
         this.method_getRuntime = method_getRuntime;
     }
 
-    private ScriptingContainerDelegate(final Object scriptingContainer,
+    private ScriptingContainerDelegate(final String jrubyVersion,
+                                       final String rubyVersion,
+
+                                       final Object scriptingContainer,
                                        final Method method_callMethod_ALObject,
                                        final Method method_callMethod_LClass,
                                        final Method method_callMethod_LObject_LClass,
@@ -71,7 +80,9 @@ public final class ScriptingContainerDelegate {
                                        final Method method_runScriptlet_LString,
 
                                        final Class<?> class_RubyObject) {
-        this(scriptingContainer,
+        this(jrubyVersion,
+             rubyVersion,
+             scriptingContainer,
              method_callMethod_ALObject,
              method_callMethod_LClass,
              method_callMethod_LObject_LClass,
@@ -90,6 +101,8 @@ public final class ScriptingContainerDelegate {
 
     private ScriptingContainerDelegate() {
         this(null,
+             null,
+             null,
              null,
              null,
              null,
@@ -145,6 +158,16 @@ public final class ScriptingContainerDelegate {
             return new ScriptingContainerDelegate();  // TODO: Log.
         }
 
+        final Class<?> class_Constants;
+        try {
+            class_Constants = classLoader.loadClass("org.jruby.runtime.Constants");
+        } catch (ClassNotFoundException ex) {
+            // `org.jruby.runtime.Constants` is not implemented in the JRuby version -- unlikely.
+            return new ScriptingContainerDelegate();  // TODO: Log.
+        }
+        final String jrubyVersion = (String)getStaticField_Constants(class_Constants, "VERSION");
+        final String rubyVersion = (String)getStaticField_Constants(class_Constants, "RUBY_VERSION");
+
         final Method method_getRubyInstanceConfig;
         final Method method_getRuntime;
         try {
@@ -156,6 +179,9 @@ public final class ScriptingContainerDelegate {
             // `org.jruby.embed.internal.LocalContextProvider` nor its required methods are not implemented.
             // It unlikely happens, but it is acceptable.
             return new ScriptingContainerDelegate(
+                jrubyVersion,
+                rubyVersion,
+
                 scriptingContainer,
                 method_callMethod_ALObject,
                 method_callMethod_LClass,
@@ -164,6 +190,7 @@ public final class ScriptingContainerDelegate {
                 method_put_LString_LObject,
                 method_remove_LString,
                 method_runScriptlet_LString,
+
                 class_RubyObject);
         }
 
@@ -175,6 +202,9 @@ public final class ScriptingContainerDelegate {
             classLoader, const_CompileMode_OFF.getClass());
 
         return new ScriptingContainerDelegate(
+            jrubyVersion,
+            rubyVersion,
+
             scriptingContainer,
             method_callMethod_ALObject,
             method_callMethod_LClass,
@@ -347,6 +377,21 @@ public final class ScriptingContainerDelegate {
         }
     }
 
+    private static Object getStaticField_Constants(final Class<?> class_Constants, final String fieldName) {
+        final Field field;
+        try {
+            field = class_Constants.getField(fieldName);
+        } catch (NoSuchFieldException ex) {
+            return null;  // TODO: Log.
+        }
+
+        try {
+            return field.get(null);
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
+            return null;  // TODO: Log.
+        }
+    }
+
     public enum LocalContextScope {
         CONCURRENT,
         SINGLETHREAD,
@@ -367,6 +412,14 @@ public final class ScriptingContainerDelegate {
     public static final class NotWorkingJRubyOptionException extends Exception {
         public NotWorkingJRubyOptionException() { super(); }
         public NotWorkingJRubyOptionException(final Throwable cause) { super(cause); }
+    }
+
+    public String getJRubyVersion() {
+        return this.jrubyVersion;
+    }
+
+    public String getRubyVersion() {
+        return this.rubyVersion;
     }
 
     // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
@@ -648,6 +701,9 @@ public final class ScriptingContainerDelegate {
         }
         return exception;
     }
+
+    private final String jrubyVersion;
+    private final String rubyVersion;
 
     private final Object scriptingContainer;
     private final Method method_callMethod_ALObject;
