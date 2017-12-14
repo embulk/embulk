@@ -62,8 +62,8 @@ jruby {
     execVersion = project.jrubyVersion
 }
 
-task rubyTestVanilla(type: JRubyExec, dependsOn: ":classpath") {
-    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb', "${rootProject.projectDir}/classpath/embulk-core-${project.version}.jar"
+task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars"]) {
+    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
 }
 task rubyTestMonkeyStrptime(type: JRubyExec) {
     jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/monkey_strptime/run-test.rb'
@@ -81,6 +81,14 @@ String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     else {
         return javaStyleVersion;
     }
+}
+
+task prepareDependencyJars(type: Copy) {
+    doFirst {
+        delete("${buildDir}/dependency_jars")
+    }
+    from configurations.runtime
+    into "${buildDir}/dependency_jars"
 }
 
 task unpackDependencyGems(type: JRubyPrepare) {
