@@ -5,13 +5,13 @@ core_dir = File.expand_path(File.join(this_dir, '..', '..', '..', '..'))
 embulk_jar_dir = File.join(core_dir, 'build', 'libs')
 dependency_jars_dir = File.join(core_dir, 'build', 'dependency_jars')
 
-embulk_jars = Dir.entries(embulk_jar_dir).map { |f| File.join(embulk_jar_dir, f) }
+embulk_jars = Dir.entries(embulk_jar_dir).select{|f| f =~ /\.jar$/}.map{|f| File.join(embulk_jar_dir, f)}
 embulk_jars.each do |embulk_jar|
-  $CLASSPATH << embulk_jar
+  require embulk_jar
 end
-dependency_jars = Dir.entries(dependency_jars_dir).map { |f| File.join(dependency_jars_dir, f) }
+dependency_jars = Dir.entries(dependency_jars_dir).select{|f| f =~ /\.jar$/}.map{|f| File.join(dependency_jars_dir, f)}
 dependency_jars.each do |dependency_jar|
-  $CLASSPATH << dependency_jar
+  require dependency_jar
 end
 
 Gem.path << File.join(core_dir, 'build', 'dependency_gems_as_resources')
