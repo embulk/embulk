@@ -1,4 +1,10 @@
-apply plugin: "com.github.jruby-gradle.jar"
+apply plugin: 'com.github.jruby-gradle.jar'
+
+// TODO: Have more details in description and summary.
+description = 'Embulk standard plugins'
+ext {
+    summary = 'Embulk standard plugins'
+}
 
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
@@ -6,10 +12,16 @@ processResources.from("${buildDir}/embulk_gem_complements")
 
 import com.github.jrubygradle.JRubyExec
 
+repositories {
+    mavenCentral()
+    jcenter()  // For org.embulk:guice-bootstrap:0.1.1
+}
+
 dependencies {
     compile project(':embulk-core')
     compile 'org.apache.commons:commons-compress:1.10'
 
+    testCompile 'junit:junit:4.12'
     testCompile project(':embulk-core').sourceSets.test.output
     testCompile project(':embulk-test')
 
@@ -18,7 +30,7 @@ dependencies {
 }
 
 jruby {
-    execVersion = project.jrubyVersion
+    execVersion = rootProject.jrubyVersion
 }
 
 task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars"]) {

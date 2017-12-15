@@ -14,7 +14,7 @@ public final class EmbulkVersion
     {
     }
 
-    // Expecting Embulk is always packaged in the embulk-cli jar whenever the Embulk version is checked in Java.
+    // Expecting Embulk-related pakcages always have proper MANIFEST.MF with Implementation-Version.
     static {
         VERSION = getImplementationVersion(getSelfJarManifest(), "[embulk-version-unavailable]");
     }

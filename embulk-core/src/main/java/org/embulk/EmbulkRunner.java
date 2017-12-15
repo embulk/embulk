@@ -47,12 +47,12 @@ public class EmbulkRunner
     /**
      * Runs the guess subcommand.
      *
-     * It receives Java Paths to be called from Java EmbulkRun in embulk-cli.
+     * It receives Java Paths to be called from org.embulk.cli.EmbulkRun.
      */
     public void guess(final Path configFilePath, final Path outputPath)
     {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
-        // They have not been used from embulk-cli while |template_params| and |template_include_path| are implemented
+        // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
@@ -100,12 +100,12 @@ public class EmbulkRunner
     /**
      * Runs the guess subcommand.
      *
-     * It receives a Java Path and a String to be called from Java's EmbulkRun in embulk-cli.
+     * It receives a Java Path and a String to be called from org.embulk.cli.EmbulkRun.
      */
     public void preview(final Path configFilePath, final String format)
     {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
-        // They have not been used from embulk-cli while |template_params| and |template_include_path| are implemented
+        // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
@@ -151,7 +151,7 @@ public class EmbulkRunner
     /**
      * Runs the run subcommand.
      *
-     * It receives Java Paths to be called from Java EmbulkRun in embulk-cli.
+     * It receives Java Paths to be called from org.embulk.cli.EmbulkRun.
      */
     public void run(
             final Path configFilePath,
@@ -160,7 +160,7 @@ public class EmbulkRunner
             final Path resumeStatePath)
     {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
-        // They have not been used from embulk-cli while |template_params| and |template_include_path| are implemented
+        // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {

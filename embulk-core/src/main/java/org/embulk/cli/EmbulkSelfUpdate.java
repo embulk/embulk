@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
-// It uses |java.net.HttpURLConnection| so that embulk-cli does not need additional dependedcies.
+// It uses |java.net.HttpURLConnection| so that the CLI classes do not need additional dependedcies.
 // TODO(dmikurube): Support HTTP proxy. The original Ruby version did not support as well, though.
 public class EmbulkSelfUpdate
 {
