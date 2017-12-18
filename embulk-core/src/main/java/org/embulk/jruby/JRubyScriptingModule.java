@@ -25,14 +25,6 @@ import com.google.inject.Key;
 import com.google.inject.ProvisionException;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
-import org.jruby.RubyInstanceConfig;
-import org.jruby.RubyNil;
-import org.jruby.RubyObject;
-import org.jruby.RubyString;
-import org.jruby.embed.LocalContextScope;
-import org.jruby.embed.LocalVariableBehavior;
-import org.jruby.embed.ScriptingContainer;
-import org.jruby.util.cli.Options;
 import org.embulk.plugin.PluginSource;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
@@ -49,14 +41,14 @@ public class JRubyScriptingModule
     @Override
     public void configure(Binder binder)
     {
-        binder.bind(ScriptingContainer.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
+        binder.bind(ScriptingContainerDelegate.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
 
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
         multibinder.addBinding().to(JRubyPluginSource.class);
     }
 
     private static class ScriptingContainerProvider
-            implements ProviderWithDependencies<ScriptingContainer>
+            implements ProviderWithDependencies<ScriptingContainerDelegate>
     {
         private final Injector injector;
         private final Logger logger;
@@ -133,24 +125,35 @@ public class JRubyScriptingModule
                 systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null);
         }
 
-        public ScriptingContainer get() throws ProvisionException
+        public ScriptingContainerDelegate get() throws ProvisionException
         {
-            LocalContextScope scope = (useGlobalRubyRuntime ? LocalContextScope.SINGLETON : LocalContextScope.SINGLETHREAD);
-            ScriptingContainer jruby = new ScriptingContainer(scope, LocalVariableBehavior.PERSISTENT);
+            final ScriptingContainerDelegate.LocalContextScope scope =
+                (useGlobalRubyRuntime
+                 ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
+                 : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD);
+            final ScriptingContainerDelegate jruby;
+            try {
+                jruby = ScriptingContainerDelegate.create(
+                    JRubyScriptingModule.class.getClassLoader(),
+                    scope,
+                    ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
+            } catch (Exception ex) {
+                return null;
+            }
+
             this.setGemVariables(jruby);
 
-            final RubyInstanceConfig jrubyInstanceConfig = jruby.getProvider().getRubyInstanceConfig();
             for (final String jrubyOption : this.jrubyOptions) {
                 try {
-                    processJRubyOption(jrubyOption, jrubyInstanceConfig);
+                    jruby.processJRubyOption(jrubyOption);
                 }
-                catch (UnrecognizedJRubyOptionException ex) {
+                catch (ScriptingContainerDelegate.UnrecognizedJRubyOptionException ex) {
                     this.logger.error("The \"-R\" option(s) are not recognized in Embulk: -R" + jrubyOption +
                                       ". Please add your requests at: https://github.com/embulk/embulk/issues/707", ex);
                     throw new RuntimeException(ex);
 
                 }
-                catch (NotWorkingJRubyOptionException ex) {
+                catch (ScriptingContainerDelegate.NotWorkingJRubyOptionException ex) {
                     this.logger.warn("The \"-R\" option(s) do not work in Embulk: -R" + jrubyOption + ".", ex);
                 }
             }
@@ -225,14 +228,11 @@ public class JRubyScriptingModule
                 Dependency.get(Key.get(BufferAllocator.class)));
         }
 
-        private static final class UnrecognizedJRubyOptionException extends Exception {}
-        private static final class NotWorkingJRubyOptionException extends Exception {}
-
-        private void setGemVariables(final ScriptingContainer jruby)
+        private void setGemVariables(final ScriptingContainerDelegate jruby)
         {
-            final boolean hasBundleGemfile = definedBundleGemfile(jruby);
+            final boolean hasBundleGemfile = jruby.isBundleGemfileDefined();
             if (hasBundleGemfile) {
-                this.logger.warn("BUNDLE_GEMFILE has already been set: \"" + getBundleGemfile(jruby) + "\"");
+                this.logger.warn("BUNDLE_GEMFILE has already been set: \"" + jruby.getBundleGemfile() + "\"");
             }
 
             if (this.jrubyBundlerPluginSourceDirectory != null) {
@@ -242,15 +242,15 @@ public class JRubyScriptingModule
                 } else {
                     this.logger.info("BUNDLE_GEMFILE is being set: \"" + gemfilePath + "\"");
                 }
-                setBundleGemfile(jruby, gemfilePath);
+                jruby.setBundleGemfile(gemfilePath);
                 this.logger.info("Gem's home and path are being cleared.");
-                clearGemPaths(jruby);
-                this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
-                this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
+                jruby.clearGemPaths();
+                this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
+                this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
             } else {
                 if (hasBundleGemfile) {
                     this.logger.warn("BUNDLE_GEMFILE is being unset.");
-                    unsetBundleGemfile(jruby);
+                    jruby.unsetBundleGemfile();
                 }
                 if (this.gemHome != null) {
                     // The system config "gem_home" is always prioritized.
@@ -262,26 +262,26 @@ public class JRubyScriptingModule
                     // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
                     // is used.
                     this.logger.info("Gem's home and path are set by system config \"gem_home\": \"" + this.gemHome + "\"");
-                    setGemPaths(jruby, this.gemHome);
-                    this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
-                    this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
+                    jruby.setGemPaths(this.gemHome);
+                    this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
+                    this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
                 } else if (this.useDefaultEmbulkGemHome) {
                     // NOTE: Same done in "gem", "exec", and "irb" subcommands.
                     // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are change
                     final String defaultGemHome = this.buildDefaultGemPath();
                     this.logger.info("Gem's home and path are set by default: \"" + defaultGemHome + "\"");
-                    setGemPaths(jruby, defaultGemHome);
-                    this.logger.debug("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
-                    this.logger.debug("Gem.paths.path = " + getGemPath(jruby) + "");
+                    jruby.setGemPaths(defaultGemHome);
+                    this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
+                    this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
                 } else {
                     this.logger.info("Gem's home and path are not managed.");
-                    this.logger.info("Gem.paths.home = \"" + getGemHome(jruby) + "\"");
-                    this.logger.info("Gem.paths.path = " + getGemPath(jruby) + "");
+                    this.logger.info("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
+                    this.logger.info("Gem.paths.path = " + jruby.getGemPathInString() + "");
                 }
             }
         }
 
-        private void setBundlerPluginSourceDirectory(final ScriptingContainer jruby, final String directory)
+        private void setBundlerPluginSourceDirectory(final ScriptingContainerDelegate jruby, final String directory)
         {
             if (directory != null) {
                 // bundler is included in embulk-core.jar
@@ -326,75 +326,8 @@ public class JRubyScriptingModule
             }
         }
 
-        private static void processJRubyOption(final String jrubyOption, final RubyInstanceConfig jrubyInstanceConfig)
-                throws UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException
-        {
-            if (jrubyOption.charAt(0) != '-') {
-                throw new UnrecognizedJRubyOptionException();
-            }
-
-            for (int index = 1; index < jrubyOption.length(); ++index) {
-                switch (jrubyOption.charAt(index)) {
-                case '-':
-                    if (jrubyOption.equals("--dev")) {
-                        // They are not all of "--dev", but they are most possible configurations after JVM boot.
-                        Options.COMPILE_INVOKEDYNAMIC.force("false");  // NOTE: Options is global.
-                        jrubyInstanceConfig.setCompileMode(RubyInstanceConfig.CompileMode.OFF);
-                        return;
-                    }
-                    else if (jrubyOption.equals("--client")) {
-                        throw new NotWorkingJRubyOptionException();
-                    }
-                    else if (jrubyOption.equals("--server")) {
-                        throw new NotWorkingJRubyOptionException();
-                    }
-                    throw new UnrecognizedJRubyOptionException();
-                default:
-                    throw new UnrecognizedJRubyOptionException();
-                }
-            }
-        }
-
-        private static String getGemHome(final ScriptingContainer jruby) {
-            return jruby.callMethod(getGemPaths(jruby), "home", String.class);
-        }
-
-        private static String getGemPath(final ScriptingContainer jruby) {
-            final List gemPath = jruby.callMethod(getGemPaths(jruby), "path", List.class);
-            return gemPath.toString();
-        }
-
-        private static RubyObject getGemPaths(final ScriptingContainer jruby) {
-            return jruby.callMethod(jruby.runScriptlet("Gem"), "paths", RubyObject.class);
-        }
-
-        private static void clearGemPaths(final ScriptingContainer jruby) {
-            jruby.callMethod(jruby.runScriptlet("Gem"), "use_paths", (RubyNil)null, (RubyNil)null);
-        }
-
-        private static void setGemPaths(final ScriptingContainer jruby, final String gemPath) {
-            final RubyString gemPathRuby = RubyString.newString(jruby.getProvider().getRuntime(), gemPath);
-            jruby.callMethod(jruby.runScriptlet("Gem"), "use_paths", gemPathRuby, gemPathRuby);
-        }
-
         private String buildDefaultGemPath() throws ProvisionException {
             return this.buildEmbulkHome().resolve("lib").resolve("gems").toString();
-        }
-
-        private static boolean definedBundleGemfile(final ScriptingContainer jruby) {
-            return jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
-        }
-
-        private static String getBundleGemfile(final ScriptingContainer jruby) {
-            return jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
-        }
-
-        private static void setBundleGemfile(final ScriptingContainer jruby, final String gemfilePath) {
-            jruby.callMethod(jruby.runScriptlet("ENV"), "store", "BUNDLE_GEMFILE", gemfilePath);
-        }
-
-        private static void unsetBundleGemfile(final ScriptingContainer jruby) {
-            jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
         }
 
         private String buildGemfilePath(final String bundleDirectoryString)
