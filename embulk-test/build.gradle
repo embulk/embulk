@@ -1,7 +1,7 @@
 // TODO: Have more details in description and summary.
 description = 'Embulk test helper'
 ext {
-    summary = 'EMbulk test helper'
+    summary = 'Embulk test helper'
 }
 
 repositories {
