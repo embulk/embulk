@@ -510,7 +510,7 @@ public class EmbulkRun
         try {
             // copy embulk/data/bundle/ contents
             copyResourceToFile("new_bundle_templates/Gemfile", path, "Gemfile");
-            copyResourceToFile("new_bundle_templates/.ruby-version", path, ".ruby-version");
+            // ".ruby-version" is no longer required since JRuby used is embedded in Embulk.
             copyResourceToFile("new_bundle_templates/.bundle/config", path, ".bundle/config");
             copyResourceToFile("new_bundle_templates/embulk/input/example.rb", path, "embulk/input/example.rb");
             copyResourceToFile("new_bundle_templates/embulk/output/example.rb", path, "embulk/output/example.rb");

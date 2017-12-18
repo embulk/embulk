@@ -24,6 +24,8 @@ import com.google.common.io.CharStreams;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
+import org.embulk.jruby.ScriptingContainerDelegate;
+
 public class EmbulkNew
 {
     public EmbulkNew(final String categoryWithLanguage, final String nameGiven, final String embulkVersion)
@@ -146,6 +148,7 @@ public class EmbulkNew
                 fullProjectName,
                 javaClassName,
                 javaPackageName,
+                ScriptingContainerDelegate.getJRubyVersion(EmbulkNew.class.getClassLoader()),
                 language,
                 name,
                 rubyClassName);
@@ -157,7 +160,7 @@ public class EmbulkNew
             case "ruby":
                 copy("new_plugin_templates/ruby/Rakefile", "Rakefile");
                 copy("new_plugin_templates/ruby/Gemfile", "Gemfile");
-                copy("new_plugin_templates/ruby/.ruby-version", ".ruby-version");
+                copyTemplated("new_plugin_templates/ruby/.ruby-version", ".ruby-version", velocityContext);
                 copyTemplated("new_plugin_templates/ruby/gemspec.vm",
                               fullProjectName + ".gemspec",
                               velocityContext);
@@ -335,6 +338,7 @@ public class EmbulkNew
                                                   final String fullProjectName,
                                                   final String javaClassName,
                                                   final String javaPackageName,
+                                                  final String jrubyVersion,
                                                   final String language,
                                                   final String name,
                                                   final String rubyClassName)
@@ -356,6 +360,7 @@ public class EmbulkNew
         velocityContext.put("javaClassName", javaClassName);
         velocityContext.put("javaGuessClassName", javaClassName.replace("Plugin", "GuessPlugin"));
         velocityContext.put("javaPackageName", javaPackageName);
+        velocityContext.put("jrubyVersion", jrubyVersion);
         velocityContext.put("language", language);
         velocityContext.put("name", name);
         velocityContext.put("rubyClassName", rubyClassName);

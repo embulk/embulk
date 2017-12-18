@@ -414,6 +414,17 @@ public final class ScriptingContainerDelegate {
         public NotWorkingJRubyOptionException(final Throwable cause) { super(cause); }
     }
 
+    public static String getJRubyVersion(final ClassLoader classLoader) {
+        final Class<?> class_Constants;
+        try {
+            class_Constants = classLoader.loadClass("org.jruby.runtime.Constants");
+        } catch (ClassNotFoundException ex) {
+            // `org.jruby.runtime.Constants` is not implemented in the JRuby version -- unlikely.
+            return null;
+        }
+        return (String)getStaticField_Constants(class_Constants, "VERSION");
+    }
+
     public String getJRubyVersion() {
         return this.jrubyVersion;
     }
