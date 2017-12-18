@@ -24,36 +24,24 @@ class RubyTimeFormat implements Iterable<RubyTimeFormat.TokenWithNext>
         this.compiledPattern = Collections.unmodifiableList(compiledPattern);
     }
 
-    public static RubyTimeFormat create(final List<RubyTimeFormatToken> compiledPattern)
-    {
-        return new RubyTimeFormat(compiledPattern);
-    }
-
-    public static RubyTimeFormat create(RubyTimeFormatToken compiledPattern)
-    {
-        ArrayList<RubyTimeFormatToken> array = new ArrayList<>();
-        array.add(compiledPattern);
-        return new RubyTimeFormat(array);
-    }
-
     public static RubyTimeFormat compile(final String formatString)
     {
-        final Reader reader = new StringReader(formatString); // TODO Use try-with-resource statement
-        final RubyTimeFormatLexer lexer = new RubyTimeFormatLexer(reader);
+        return new RubyTimeFormat(CompilerForParser.compile(formatString));
+    }
 
-        final List<RubyTimeFormatToken> compiledPattern = new LinkedList<>();
-
-        try {
-            RubyTimeFormat format;
-            while ((format = lexer.yylex()) != null) {
-                compiledPattern.addAll(format.compiledPattern);
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    static RubyTimeFormat createForTesting(final List<RubyTimeFormatToken> compiledPattern)
+    {
         return new RubyTimeFormat(compiledPattern);
+    }
+
+    @Override
+    public boolean equals(final Object otherObject)
+    {
+        if (!(otherObject instanceof RubyTimeFormat)) {
+            return false;
+        }
+        final RubyTimeFormat other = (RubyTimeFormat)otherObject;
+        return this.compiledPattern.equals(other.compiledPattern);
     }
 
     @Override
@@ -77,6 +65,108 @@ class RubyTimeFormat implements Iterable<RubyTimeFormat.TokenWithNext>
 
         private final RubyTimeFormatToken token;
         private final RubyTimeFormatToken nextToken;
+    }
+
+    private static class CompilerForParser
+    {
+        private CompilerForParser(final String formatString)
+        {
+            this.formatString = formatString;
+        }
+
+        public static List<RubyTimeFormatToken> compile(final String formatString)
+        {
+            return new CompilerForParser(formatString).compileInitial();
+        }
+
+        private List<RubyTimeFormatToken> compileInitial()
+        {
+            this.index = 0;
+            this.resultTokens = new ArrayList<>();
+            this.rawStringBuffer = new StringBuilder();
+
+            while (this.index < this.formatString.length()) {
+                final char cur = this.formatString.charAt(this.index);
+                switch (cur) {
+                case '%':
+                    if (this.rawStringBuffer.length() > 0) {
+                        this.resultTokens.add(new RubyTimeFormatToken.Immediate(this.rawStringBuffer.toString()));
+                    }
+                    this.rawStringBuffer = new StringBuilder();
+                    this.index++;
+                    if (!this.compileDirective(this.index)) {
+                        this.rawStringBuffer.append(cur);  // Add '%', and go next ordinarily.
+                    }
+                    break;
+                default:
+                    this.rawStringBuffer.append(cur);
+                    this.index++;
+                }
+            }
+            if (this.rawStringBuffer.length() > 0) {
+                this.resultTokens.add(new RubyTimeFormatToken.Immediate(this.rawStringBuffer.toString()));
+            }
+
+            return Collections.unmodifiableList(this.resultTokens);
+        }
+
+        private boolean compileDirective(final int beginningIndex)
+        {
+            if (beginningIndex >= this.formatString.length()) {
+                return false;
+            }
+            final char cur = this.formatString.charAt(beginningIndex);
+            switch (cur) {
+            case 'E':
+                if (beginningIndex + 1 < this.formatString.length() &&
+                    "cCxXyY".indexOf(this.formatString.charAt(beginningIndex + 1)) >= 0) {
+                    return this.compileDirective(beginningIndex + 1);
+                }
+                else {
+                    return false;
+                }
+            case 'O':
+                if (beginningIndex + 1 < this.formatString.length() &&
+                    "deHImMSuUVwWy".indexOf(this.formatString.charAt(beginningIndex + 1)) >= 0) {
+                    return this.compileDirective(beginningIndex + 1);
+                }
+                else {
+                    return false;
+                }
+            case ':':
+                for (int i = 1; i <= 3; ++i) {
+                    if (beginningIndex + i >= this.formatString.length()) {
+                        return false;
+                    }
+                    if (this.formatString.charAt(beginningIndex + i) == 'z') {
+                        return this.compileDirective(beginningIndex + i);
+                    }
+                    if (this.formatString.charAt(beginningIndex + i) != ':') {
+                        return false;
+                    }
+                }
+                return false;
+            case '%':
+                this.resultTokens.add(new RubyTimeFormatToken.Immediate("%"));
+                this.index = beginningIndex + 1;
+                return true;
+            default:
+                if (RubyTimeFormatDirective.isSpecifier(cur)) {
+                    this.resultTokens.addAll(RubyTimeFormatDirective.of(cur).toTokens());
+                    this.index = beginningIndex + 1;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+        private final String formatString;
+
+        private int index;
+        private List<RubyTimeFormatToken> resultTokens;
+        private StringBuilder rawStringBuffer;
     }
 
     private static class TokenIterator implements Iterator<TokenWithNext> {
