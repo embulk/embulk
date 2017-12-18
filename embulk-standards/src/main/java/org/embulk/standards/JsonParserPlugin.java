@@ -22,15 +22,16 @@ import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.type.Types;
 import org.embulk.spi.util.FileInputInputStream;
-import org.jruby.embed.io.ReaderInputStream;
 import org.msgpack.core.Preconditions;
 import org.msgpack.value.Value;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class JsonParserPlugin
@@ -150,7 +151,7 @@ public class JsonParserPlugin
             case UNESCAPE:
                 Iterable<CharSource> lines = Lists.transform(CharStreams.readLines(new BufferedReader(new InputStreamReader(in))),
                         invalidEscapeStringFunction(policy));
-                return new JsonParser().open(new ReaderInputStream(CharSource.concat(lines).openStream()));
+                return new JsonParser().open(new ByteArrayInputStream(CharStreams.toString(CharSource.concat(lines).openStream()).getBytes(StandardCharsets.UTF_8)));
             case PASSTHROUGH:
             default:
                 return new JsonParser().open(in);

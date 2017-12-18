@@ -22,9 +22,7 @@ import org.embulk.cli.parse.EmbulkCommandLineParseException;
 import org.embulk.cli.parse.EmbulkCommandLineParser;
 import org.embulk.cli.parse.OptionBehavior;
 import org.embulk.cli.parse.OptionDefinition;
-import org.jruby.embed.LocalContextScope;
-import org.jruby.embed.LocalVariableBehavior;
-import org.jruby.embed.ScriptingContainer;
+import org.embulk.jruby.ScriptingContainerDelegate;
 
 public class EmbulkRun
 {
@@ -573,7 +571,7 @@ public class EmbulkRun
 
     private void runBundler(final List<String> arguments, final Path path)
     {
-        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
         localJRubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
 
         // this hack is necessary to make --help working
@@ -749,11 +747,13 @@ public class EmbulkRun
     }
 
     // TODO: Check if it is required to process JRuby options.
-    private ScriptingContainer createLocalJRubyScriptingContainer()
+    private ScriptingContainerDelegate createLocalJRubyScriptingContainerDelegate()
     {
         // Not |LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainer jruby =
-            new ScriptingContainer(LocalContextScope.SINGLETHREAD, LocalVariableBehavior.PERSISTENT);
+        final ScriptingContainerDelegate jruby = ScriptingContainerDelegate.create(
+            EmbulkRun.class.getClassLoader(),
+            ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
+            ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
 
         // NOTE: Same done in JRubyScriptingModule.
         // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
@@ -773,7 +773,7 @@ public class EmbulkRun
 
     private void callJRubyGem(final List<String> subcommandArguments)
     {
-        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
 
         localJRubyContainer.runScriptlet("puts ''");
         localJRubyContainer.runScriptlet("puts 'Gem plugin path is: %s' % (ENV.has_key?('GEM_HOME') ? ENV['GEM_HOME'] : '(empty)')");
@@ -787,7 +787,7 @@ public class EmbulkRun
 
     private void callJRubyExec(final List<String> subcommandArguments)
     {
-        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("exec(*Array.new(__internal_argv_java__))");
         localJRubyContainer.remove("__internal_argv_java__");
@@ -795,7 +795,7 @@ public class EmbulkRun
 
     private void callJRubyIRB()
     {
-        final ScriptingContainer localJRubyContainer = createLocalJRubyScriptingContainer();
+        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
         localJRubyContainer.runScriptlet("require 'irb'");
         localJRubyContainer.runScriptlet("IRB.start");
     }
