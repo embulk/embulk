@@ -19,6 +19,5 @@ module Embulk
     require 'embulk/buffer'
     require 'embulk/data_source'
     require 'embulk/plugin'
-    require 'embulk/runner'
   end
 end
