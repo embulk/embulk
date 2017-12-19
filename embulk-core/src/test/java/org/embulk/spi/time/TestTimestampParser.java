@@ -220,7 +220,9 @@ public class TestTimestampParser {
         testToParse("-1", "%s", -1L);
         testToParse("-86400", "%s", -86400L);
 
-        testToParse("-999", "%Q", 0L, -999000000);
+        // In |java.time.Instant|, it is always 0 <= nanoAdjustment < 1,000,000,000.
+        // -0.9s is represented like -1s + 100ms.
+        testToParse("-999", "%Q", -1L, 1000000);
         testToParse("-1000", "%Q", -1L);
     }
 
