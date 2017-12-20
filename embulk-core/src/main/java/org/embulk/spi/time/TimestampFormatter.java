@@ -1,8 +1,6 @@
 package org.embulk.spi.time;
 
 import java.util.Locale;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import com.google.common.base.Optional;
 import org.jruby.util.RubyDateFormat;
 import org.embulk.config.Config;
@@ -16,7 +14,16 @@ public class TimestampFormatter
     {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public DateTimeZone getDefaultTimeZone();
+        public String getDefaultTimeZoneId();
+
+        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+            if (getDefaultTimeZoneId() != null) {
+                return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
+            }
+            else {
+                return null;
+            }
+        }
 
         @Config("default_timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N %z\"")
@@ -27,7 +34,16 @@ public class TimestampFormatter
     {
         @Config("timezone")
         @ConfigDefault("null")
-        public Optional<DateTimeZone> getTimeZone();
+        public Optional<String> getTimeZoneId();
+
+        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+            if (getTimeZoneId().isPresent()) {
+                return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
+            }
+            else {
+                return Optional.absent();
+            }
+        }
 
         @Config("format")
         @ConfigDefault("null")
@@ -35,7 +51,7 @@ public class TimestampFormatter
     }
 
     private final RubyDateFormat dateFormat;
-    private final DateTimeZone timeZone;
+    private final org.joda.time.DateTimeZone timeZone;
 
     public TimestampFormatter(Task task, Optional<? extends TimestampColumnOption> columnOption)
     {
@@ -48,13 +64,13 @@ public class TimestampFormatter
                     : task.getDefaultTimeZone());
     }
 
-    public TimestampFormatter(final String format, final DateTimeZone timeZone)
+    public TimestampFormatter(final String format, final org.joda.time.DateTimeZone timeZone)
     {
         this.timeZone = timeZone;
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
     }
 
-    public DateTimeZone getTimeZone()
+    public org.joda.time.DateTimeZone getTimeZone()
     {
         return timeZone;
     }
@@ -68,7 +84,7 @@ public class TimestampFormatter
     public String format(Timestamp value)
     {
         // TODO optimize by using reused StringBuilder
-        dateFormat.setDateTime(new DateTime(value.getEpochSecond()*1000, timeZone));
+        dateFormat.setDateTime(new org.joda.time.DateTime(value.getEpochSecond()*1000, timeZone));
         dateFormat.setNSec(value.getNano());
         return dateFormat.format(null);
     }

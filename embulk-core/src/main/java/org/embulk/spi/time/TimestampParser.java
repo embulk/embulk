@@ -13,8 +13,6 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;  // For default year/month/day if absent
 import org.embulk.config.ConfigInject;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -24,7 +22,16 @@ public class TimestampParser
     {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public DateTimeZone getDefaultTimeZone();
+        public String getDefaultTimeZoneId();
+
+        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+            if (getDefaultTimeZoneId() != null) {
+                return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
+            }
+            else {
+                return null;
+            }
+        }
 
         @Config("default_timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N %z\"")
@@ -39,7 +46,16 @@ public class TimestampParser
     {
         @Config("timezone")
         @ConfigDefault("null")
-        public Optional<DateTimeZone> getTimeZone();
+        public Optional<String> getTimeZoneId();
+
+        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+            if (getTimeZoneId().isPresent()) {
+                return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
+            }
+            else {
+                return Optional.absent();
+            }
+        }
 
         @Config("format")
         @ConfigDefault("null")
@@ -50,7 +66,7 @@ public class TimestampParser
         public Optional<String> getDate();
     }
 
-    private final DateTimeZone defaultTimeZone;
+    private final org.joda.time.DateTimeZone defaultTimeZone;
     private final String formatString;
     private final RubyTimeParser parser;
     private final Calendar calendar;
@@ -70,12 +86,14 @@ public class TimestampParser
                 columnOption.getDate().or(task.getDefaultDate()));
     }
 
-    public TimestampParser(String formatString, DateTimeZone defaultTimeZone)
+    public TimestampParser(String formatString, org.joda.time.DateTimeZone defaultTimeZone)
     {
         this(formatString, defaultTimeZone, "1970-01-01");
     }
 
-    public TimestampParser(final String formatString, final DateTimeZone defaultTimeZone, final String defaultDate)
+    public TimestampParser(final String formatString,
+                           final org.joda.time.DateTimeZone defaultTimeZone,
+                           final String defaultDate)
     {
         // TODO get default current time from ExecTask.getExecTimestamp
         this.formatString = formatString;
@@ -97,7 +115,7 @@ public class TimestampParser
         this.calendar.setTime(utc);
     }
 
-    public DateTimeZone getDefaultTimeZone()
+    public org.joda.time.DateTimeZone getDefaultTimeZone()
     {
         return defaultTimeZone;
     }
