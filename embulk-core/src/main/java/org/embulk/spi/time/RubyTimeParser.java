@@ -238,7 +238,7 @@ class RubyTimeParser
                             v = readDigitsMax();
                         }
 
-                        builder.setNanoOfSecond((!negative ? v : -v) * (int) Math.pow(10, 9 - (pos - initPos)));
+                        builder.setNanoOfSecond((int)(!negative ? v : -v) * (int) Math.pow(10, 9 - (pos - initPos)));
                         break;
                     }
                     case MINUTE_OF_HOUR: { // %M, %OM - Minute of the hour (00..59)

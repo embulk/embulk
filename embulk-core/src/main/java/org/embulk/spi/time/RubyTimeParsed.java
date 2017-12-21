@@ -17,7 +17,7 @@ class RubyTimeParsed extends TimeParsed {
             final int weekBasedYear,
             final int hour,
             final int dayOfYear,
-            final long nanoOfSecond,
+            final int nanoOfSecond,
             final int minuteOfHour,
             final int monthOfYear,
             final Instant instantSeconds,
@@ -64,7 +64,7 @@ class RubyTimeParsed extends TimeParsed {
             this.weekBasedYear = Integer.MIN_VALUE;
             this.hour = Integer.MIN_VALUE;
             this.dayOfYear = Integer.MIN_VALUE;
-            this.nanoOfSecond = Long.MIN_VALUE;
+            this.nanoOfSecond = Integer.MIN_VALUE;
             this.minuteOfHour = Integer.MIN_VALUE;
             this.monthOfYear = Integer.MIN_VALUE;
             this.ampmOfDay = Integer.MIN_VALUE;
@@ -279,7 +279,7 @@ class RubyTimeParsed extends TimeParsed {
          * <li> java.time.temporal:
          * </ul>
          */
-        Builder setNanoOfSecond(final long nanoOfSecond) {
+        Builder setNanoOfSecond(final int nanoOfSecond) {
             this.nanoOfSecond = nanoOfSecond;
             return this;
         }
@@ -528,7 +528,7 @@ class RubyTimeParsed extends TimeParsed {
         private int weekBasedYear;
         private int hour;
         private int dayOfYear;
-        private long nanoOfSecond;
+        private int nanoOfSecond;
         private int minuteOfHour;
         private int monthOfYear;
         private int ampmOfDay;
@@ -554,7 +554,7 @@ class RubyTimeParsed extends TimeParsed {
                                  final int defaultDayOfMonth,
                                  final org.joda.time.DateTimeZone defaultTimeZone) {
         final long secondSinceEpoch;
-        final long nanoOfSecondSinceEpoch;
+        final int nanoOfSecondSinceEpoch;
 
         if (this.instantSeconds != null) {
             secondSinceEpoch = this.instantSeconds.getEpochSecond();
@@ -605,7 +605,11 @@ class RubyTimeParsed extends TimeParsed {
                 }
             }
             secondSinceEpoch = datetime.getMillis() / 1000;
-            nanoOfSecondSinceEpoch = this.getNanoOfSecond(0);
+            if (this.nanoOfSecond != Integer.MIN_VALUE) {
+                nanoOfSecondSinceEpoch = this.nanoOfSecond;
+            } else {
+                nanoOfSecondSinceEpoch = 0;
+            }
         }
 
         final String zone = this.timeZoneName;
@@ -636,7 +640,7 @@ class RubyTimeParsed extends TimeParsed {
         putIntIfValid(hash, "cwyear", this.weekBasedYear);
         putIntIfValid(hash, "hour", this.hour);
         putIntIfValid(hash, "yday", this.dayOfYear);
-        putFractionIfValid(hash, "sec_fraction", this.getNanoOfSecond());
+        putFractionIfValid(hash, "sec_fraction", this.nanoOfSecond);
         putIntIfValid(hash, "min", this.minuteOfHour);
         putIntIfValid(hash, "mon", this.monthOfYear);
         putSecondWithFractionIfValid(hash, "seconds", this.instantSeconds);
@@ -660,8 +664,8 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
-    private BigDecimal putFractionIfValid(final Map<String, Object> hash, final String key, final long value) {
-        if (value != Long.MIN_VALUE) {
+    private BigDecimal putFractionIfValid(final Map<String, Object> hash, final String key, final int value) {
+        if (value != Integer.MIN_VALUE) {
             return (BigDecimal) hash.put(key, BigDecimal.ZERO.add(BigDecimal.valueOf(value, 9)));
         }
         return null;
@@ -697,24 +701,13 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
-    private long getNanoOfSecond() {
-        return this.nanoOfSecond;
-    }
-
-    private long getNanoOfSecond(final long defaultValue) {
-        if (this.nanoOfSecond == Long.MIN_VALUE) {
-            return defaultValue;
-        }
-        return this.nanoOfSecond;
-    }
-
     private final String originalString;
 
     private final int dayOfMonth;
     private final int weekBasedYear;
     private final int hour;
     private final int dayOfYear;
-    private final long nanoOfSecond;
+    private final int nanoOfSecond;
     private final int minuteOfHour;
     private final int monthOfYear;
     private final Instant instantSeconds;
