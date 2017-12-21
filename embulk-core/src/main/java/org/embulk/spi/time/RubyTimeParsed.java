@@ -20,7 +20,6 @@ class RubyTimeParsed extends TimeParsed {
             final long nanoOfSecond,
             final int minuteOfHour,
             final int monthOfYear,
-            final int ampmOfDay,
             final long secondSinceEpoch,
             final long nanoOfSecondSinceEpoch,
             final int secondOfMinute,
@@ -44,7 +43,6 @@ class RubyTimeParsed extends TimeParsed {
         this.nanoOfSecond = nanoOfSecond;
         this.minuteOfHour = minuteOfHour;
         this.monthOfYear = monthOfYear;
-        this.ampmOfDay = ampmOfDay;
         this.secondSinceEpoch = secondSinceEpoch;
         this.nanoOfSecondSinceEpoch = nanoOfSecondSinceEpoch;
         this.secondOfMinute = secondOfMinute;
@@ -92,18 +90,26 @@ class RubyTimeParsed extends TimeParsed {
 
         @Override
         public TimeParsed build() {
+            // Merge hour and ampmOfDay as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l685
+            final int hourWithAmPm;
+            if (this.hour != Integer.MIN_VALUE && this.ampmOfDay != Integer.MIN_VALUE) {
+                hourWithAmPm = (this.hour % 12) + this.ampmOfDay;
+            } else {
+                hourWithAmPm = this.hour;
+            }
+
             return new RubyTimeParsed(
                 this.originalString,
 
                 this.century,
                 this.dayOfMonth,
                 this.weekBasedYear,
-                this.hour,
+                hourWithAmPm,
                 this.dayOfYear,
                 this.nanoOfSecond,
                 this.minuteOfHour,
                 this.monthOfYear,
-                this.ampmOfDay,
                 this.secondSinceEpoch,
                 this.nanoOfSecondSinceEpoch,
                 this.secondOfMinute,
@@ -571,7 +577,7 @@ class RubyTimeParsed extends TimeParsed {
                 }
             }
             if (this.hour != Integer.MIN_VALUE) {
-                datetime = datetime.plusHours(this.getHour());
+                datetime = datetime.plusHours(this.hour);
             }
             if (this.minuteOfHour != Integer.MIN_VALUE) {
                 datetime = datetime.plusMinutes(this.minuteOfHour);
@@ -615,7 +621,7 @@ class RubyTimeParsed extends TimeParsed {
 
         putIntIfValid(hash, "mday", this.dayOfMonth);
         putIntIfValid(hash, "cwyear", this.getWeekBasedYear());
-        putIntIfValid(hash, "hour", this.getHour());
+        putIntIfValid(hash, "hour", this.hour);
         putIntIfValid(hash, "yday", this.dayOfYear);
         putFractionIfValid(hash, "sec_fraction", this.getNanoOfSecond());
         putIntIfValid(hash, "min", this.minuteOfHour);
@@ -691,13 +697,6 @@ class RubyTimeParsed extends TimeParsed {
         return this.weekBasedYear;
     }
 
-    private int getHour() {
-        if (this.hour != Integer.MIN_VALUE && this.ampmOfDay != Integer.MIN_VALUE) {
-            return (this.hour % 12) + this.ampmOfDay;
-        }
-        return this.hour;
-    }
-
     private long getNanoOfSecond() {
         return this.nanoOfSecond;
     }
@@ -737,7 +736,6 @@ class RubyTimeParsed extends TimeParsed {
     private final long nanoOfSecond;
     private final int minuteOfHour;
     private final int monthOfYear;
-    private final int ampmOfDay;
     private final long secondSinceEpoch;
     private final long nanoOfSecondSinceEpoch;
     private final int secondOfMinute;
