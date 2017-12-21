@@ -12,7 +12,6 @@ class RubyTimeParsed extends TimeParsed {
     private RubyTimeParsed(
             final String originalString,
 
-            final int century,
             final int dayOfMonth,
             final int weekBasedYear,
             final int hour,
@@ -35,7 +34,6 @@ class RubyTimeParsed extends TimeParsed {
             final String leftover) {
         this.originalString = originalString;
 
-        this.century = century;
         this.dayOfMonth = dayOfMonth;
         this.weekBasedYear = weekBasedYear;
         this.hour = hour;
@@ -90,6 +88,28 @@ class RubyTimeParsed extends TimeParsed {
 
         @Override
         public TimeParsed build() {
+            // Merge week-based year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l676
+            final int weekBasedYearWithCentury;
+            if (this.century != Integer.MIN_VALUE && this.weekBasedYear != Integer.MIN_VALUE) {
+                // It is the right behavior in Ruby.
+                // Date._strptime('13 1234', '%C %G') => {:cwyear=>2534}
+                weekBasedYearWithCentury = this.century * 100 + this.weekBasedYear;
+            } else {
+                weekBasedYearWithCentury = this.weekBasedYear;
+            }
+
+            // Merge year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l679
+            final int yearWithCentury;
+            if (this.century != Integer.MIN_VALUE && this.year != Integer.MIN_VALUE) {
+                // It is the right behavior in Ruby.
+                // Date._strptime('13 1234', '%C %Y') => {:year=>2534}
+                yearWithCentury = this.century * 100 + this.year;
+            } else {
+                yearWithCentury = this.year;
+            }
+
             // Merge hour and ampmOfDay as MRI (Matz' Ruby Implementation) does before generating a hash.
             // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l685
             final int hourWithAmPm;
@@ -102,9 +122,8 @@ class RubyTimeParsed extends TimeParsed {
             return new RubyTimeParsed(
                 this.originalString,
 
-                this.century,
                 this.dayOfMonth,
-                this.weekBasedYear,
+                weekBasedYearWithCentury,
                 hourWithAmPm,
                 this.dayOfYear,
                 this.nanoOfSecond,
@@ -118,7 +137,7 @@ class RubyTimeParsed extends TimeParsed {
                 this.dayOfWeekStartingWithMonday1,
                 this.weekOfWeekBasedYear,
                 this.dayOfWeekStartingWithSunday0,
-                this.year,
+                yearWithCentury,
 
                 this.timeZoneName,
 
@@ -554,7 +573,7 @@ class RubyTimeParsed extends TimeParsed {
             // => 345000000
             nanoOfSecondSinceEpoch = this.nanoOfSecondSinceEpoch;
         } else {
-            final int year = (this.getYear() == Integer.MIN_VALUE ? defaultYear : this.getYear());
+            final int year = (this.year == Integer.MIN_VALUE ? defaultYear : this.year);
 
             // TODO: Calculate with java.time in Java 8.
             // set up with min this and then add to allow rolling over
@@ -620,7 +639,7 @@ class RubyTimeParsed extends TimeParsed {
         final HashMap<String, Object> hash = new HashMap<>();
 
         putIntIfValid(hash, "mday", this.dayOfMonth);
-        putIntIfValid(hash, "cwyear", this.getWeekBasedYear());
+        putIntIfValid(hash, "cwyear", this.weekBasedYear);
         putIntIfValid(hash, "hour", this.hour);
         putIntIfValid(hash, "yday", this.dayOfYear);
         putFractionIfValid(hash, "sec_fraction", this.getNanoOfSecond());
@@ -635,7 +654,7 @@ class RubyTimeParsed extends TimeParsed {
         putIntIfValid(hash, "cwday", this.dayOfWeekStartingWithMonday1);
         putIntIfValid(hash, "cweek", this.weekOfWeekBasedYear);
         putIntIfValid(hash, "wday", this.dayOfWeekStartingWithSunday0);
-        putIntIfValid(hash, "year", this.getYear());
+        putIntIfValid(hash, "year", this.year);
         putTimeZoneIfValid(hash, this.timeZoneName);
         putStringIfValid(hash, "leftover", this.leftover);
 
@@ -686,17 +705,6 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
-    private int getWeekBasedYear() {
-        // It is the right behavior in Ruby.
-        // Date._strptime('13 1234', '%C %G') => {:cwyear=>2534}
-        if (this.century != Integer.MIN_VALUE) {
-            if (this.weekBasedYear != Integer.MIN_VALUE) {
-                return this.century * 100 + this.weekBasedYear;
-            }
-        }
-        return this.weekBasedYear;
-    }
-
     private long getNanoOfSecond() {
         return this.nanoOfSecond;
     }
@@ -715,20 +723,8 @@ class RubyTimeParsed extends TimeParsed {
         return this.nanoOfSecondSinceEpoch;
     }
 
-    private int getYear() {
-        // It is the right behavior in Ruby.
-        // Date._strptime('13 1234', '%C %Y') => {:year=>2534}
-        if (this.century != Integer.MIN_VALUE) {
-            if (this.year != Integer.MIN_VALUE) {
-                return this.century * 100 + this.year;
-            }
-        }
-        return this.year;
-    }
-
     private final String originalString;
 
-    private final int century;
     private final int dayOfMonth;
     private final int weekBasedYear;
     private final int hour;
