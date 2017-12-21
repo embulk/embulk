@@ -119,6 +119,10 @@ enum RubyTimeFormatDirective {
         this(false, '\0');
     }
 
+    static boolean isSpecifier(final char conversionSpecifier) {
+        return FROM_CONVERSION_SPECIFIER.containsKey(conversionSpecifier);
+    }
+
     static RubyTimeFormatDirective of(final char conversionSpecifier) {
         return FROM_CONVERSION_SPECIFIER.get(conversionSpecifier);
     }
