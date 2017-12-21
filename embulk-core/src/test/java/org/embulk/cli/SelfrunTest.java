@@ -284,8 +284,8 @@ public class SelfrunTest {
 
     private static File findSelfrun() {
         File folder = new File(".");
-        if (new File(folder, "embulk-cli").exists()) {
-            folder = new File(folder, "embulk-cli");
+        if (new File(folder, "embulk-core").exists()) {
+            folder = new File(folder, "embulk-core");
         }
         if (System.getProperty("file.separator").equals("\\")) {
             return new File(new File(new File(new File(folder, "src"), "main"), "bat"), "selfrun.bat");

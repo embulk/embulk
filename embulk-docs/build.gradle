@@ -2,7 +2,7 @@ apply plugin: 'com.github.jruby-gradle.base'
 
 import com.github.jrubygradle.JRubyExec
 jruby {
-    execVersion = project.jrubyVersion
+    execVersion = rootProject.jrubyVersion
 }
 
 dependencies {

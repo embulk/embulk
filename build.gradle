@@ -1,54 +1,129 @@
 buildscript {
-    repositories { jcenter() }
+    repositories {
+        jcenter()
+    }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.3.1'
-        classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.5.0'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.11.3'
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.5.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.github.johnrengelman.shadow'
 
-def java_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-cli"), project(":embulk-test")]
-def release_projects = [project(":embulk-core"), project(":embulk-standards"), project(":embulk-test")]
-
-allprojects {
-    group = 'org.embulk'
-    version = '0.9.0-SNAPSHOT'
-    description = "Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control."
-
-    ext {
-        jrubyVersion = '9.1.13.0'
-        summary = "Embulk, a plugin-based parallel bulk data loader"
-    }
-
+allprojects {  // Applies all projects including the root project as well.
     apply plugin: 'java'
+
+    group = 'org.embulk'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    test {
+        maxHeapSize = '1536m'
+        forkEvery = 1  // test processes are forked by each test class (default is 0)
+    }
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.jfrog.bintray'
+
+version = '0.9.0-SNAPSHOT'
+
+description = 'Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control.'
+
+ext {
+    jrubyVersion = '9.1.13.0'
+    summary = 'Embulk, a plugin-based parallel bulk data loader'
+}
+
+configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+    apply plugin: 'findbugs'
+    apply plugin: 'jacoco'
+    apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
 
-    test {
-        maxHeapSize = "1536m"
-        forkEvery = 1 // test processes are forked by each test class (default is 0)
+    // The version needs to be declared here, not in each build.gradle, so that "bintray" can get the value.
+    version = "${rootProject.version}"
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
     }
 
-    //
-    // bintrayUpload task
-    //
-    bintray {
-        // write at your bintray user name and api key to ~/.gradle/gradle.properties file:
-        // bintray_user=frsyuki
-        // bintray_api_key=xxxxxxxxxxx
+    tasks.withType(Test) {
+        systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
+    }
+
+    tasks.withType(FindBugs) {
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
+    }
+
+    findbugs {
+        ignoreFailures = true
+    }
+
+    javadoc {
+        options {
+            locale = 'en_US'
+            encoding = 'UTF-8'
+        }
+    }
+
+    jar {
+        manifest {
+            attributes 'Implementation-Title': project.name,
+                       'Implementation-Version': project.version,
+                       'Implementation-Vendor-Id': project.group,
+                       'Specification-Title': project.name,
+                       'Specification-Version': project.version
+        }
+    }
+
+    task testsJar(type: Jar, dependsOn: classes) {
+        classifier = 'tests'
+        from sourceSets.test.output
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives jar
+        archives testsJar
+        archives sourcesJar
+        archives javadocJar
+    }
+
+    publishing {
+        publications {
+            bintrayMavenRelease(MavenPublication) {
+                artifact jar
+                artifact testsJar
+                artifact sourcesJar
+                artifact javadocJar
+            }
+        }
+    }
+
+    bintray {  // Defines "bintrayUpload" properties for Java subprojects.
+        // NOTE: Define Gradle properties "bintray_user" and "bintray_api_key" to upload the releases to Bintray.
+        // ~/.gradle/gradle.properties would help defining.
         user = project.hasProperty('bintray_user') ? bintray_user : ''
         key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
 
         publications = ['bintrayMavenRelease']
-
-        filesSpec {
-            // include embulk-<version>.jar built by 'cli' task
-            from "pkg/embulk-${project.version}.jar"
-            into "."
-        }
 
         dryRun = false
         publish = true
@@ -64,214 +139,113 @@ allprojects {
             licenses = ['Apache-2.0']
             labels = ['embulk', 'ruby', 'java']
             publicDownloadNumbers = true
-
             version {
                 name = project.version
-                // TODO
-                //mavenCentralSync {
-                //    sync = true
-                //    user = 'userToken'
-                //    password = 'paasword'
-                //    close = '1'
-                //}
             }
         }
     }
 }
 
-subprojects {
-    if (java_projects.contains(project)) {
-        apply plugin: 'maven'
-        apply plugin: 'findbugs'
-        apply plugin: 'jacoco'
-
-        repositories {
-            mavenCentral()
-            jcenter()
-        }
-
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
-
-        def defaultEncoding = 'UTF-8'
-        [compileJava, compileTestJava]*.options*.encoding = defaultEncoding
-        dependencies {
-            testCompile 'junit:junit:4.12'
-        }
-
-        tasks.withType(JavaCompile) {
-            options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
-        }
-        tasks.withType(Test) {
-            systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
-        }
-        tasks.withType(FindBugs) {
-            reports {
-                xml.enabled = false
-                html.enabled = true
-            }
-        }
-
-        findbugs {
-            ignoreFailures = true
-        }
-
-        javadoc {
-            options {
-                locale = 'en_US'
-                encoding = 'UTF-8'
-            }
-        }
-
-        jar {
-            manifest {
-                attributes 'Implementation-Title': project.name,
-                           'Implementation-Version': project.version,
-                           'Implementation-Vendor-Id': project.group,
-                           'Specification-Title': project.name,
-                           'Specification-Version': project.version
-            }
-        }
-
-        // add tests/javadoc/source jar tasks as artifacts to be released
-        task testsJar(type: Jar, dependsOn: classes) {
-            classifier = 'tests'
-            from sourceSets.test.output
-        }
-        task sourcesJar(type: Jar, dependsOn: classes) {
-            classifier = 'sources'
-            from sourceSets.main.allSource
-        }
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            classifier = 'javadoc'
-            from javadoc.destinationDir
-        }
-        artifacts {
-            archives testsJar, sourcesJar, javadocJar
-        }
-    }
-
-    publishing {
-        publications {
-            if (release_projects.contains(project)) {
-                bintrayMavenRelease(MavenPublication) {
-                    from components.java
-                    artifact testsJar
-                    artifact sourcesJar
-                    artifact javadocJar
-                }
-            }
-        }
-    }
+repositories {
+    mavenCentral()
+    jcenter()  // For org.embulk:guice-bootstrap:0.1.1
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.2.1'
+dependencies {
+    compile project(':embulk-core')
+    compile project(':embulk-standards')
 }
 
-import java.util.zip.ZipFile
-import java.util.zip.ZipEntry
-task updateResources(dependsOn: 'classpath') {
+shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':embulk-core' and ':embulk-standards'.
+    // 'org.apache.maven' is used in:
+    // - embulk-core: EmbulkMigrate and EmbulkSelfUpdate (from v0.8.17)
+    // - embulk-core: MavenPluginSource and the related (from v0.8.26)
+    relocate 'org.apache.maven', 'org.embulk.third_party.org.apache.maven'
+
+    // 'org.codehaus.plexus' is used from 'org.apache.maven'.
+    relocate 'org.codehaus.plexus', 'org.embulk.third_party.org.codehaus.plexus'
+
+    // 'org.eclipse.aether' is used in:
+    // - embulk-core: MavenPluginSource and the related (from v0.8.26)
+    relocate 'org.eclipse.aether', 'org.embulk.third_party.org.eclipse.aether'
+
+    // 'org.apache.commons.cli' is used in:
+    // - embulk-core: EmbulkCommandLineParser (from v0.8.28)
+    relocate 'org.apache.commons.cli', 'org.embulk.third_party.org.apache.commons.cli'
+
+    // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
+    // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
+    manifest {
+        attributes 'Implementation-Title': 'embulk',
+                   'Implementation-Version': project.version,
+                   'Implementation-Vendor-Id': project.group,
+                   'Specification-Title': 'embulk',
+                   'Specification-Version': project.version,
+                   'Main-Class': 'org.embulk.cli.Main'
+    }
+
+    append("${rootProject.projectDir}/COPYING")
+}
+
+task executableJar(dependsOn: 'shadowJar') {  // Builds an executable fat-JAR from "shadowJar".
+    ext.destinationDir = file("${buildDir}/executable")
     doFirst {
-        List<String> packages = []
-        List<String> dirs = []
-        file("classpath").listFiles().each { jarFile ->
-            List<String> names = new ZipFile(jarFile.toString()).entries().iterator().collect { it.getName() }
-            packages.addAll(names.findAll { it.endsWith(".class") }.collect { it.replaceFirst(/(?:^|\/)[^\/]*\.class$/, '').replaceAll(/\//, '.') }.unique())
-            dirs.addAll(names.findAll { !it.endsWith("/") && !it.endsWith(".class") }.collect { it.replaceFirst(/(?:^|\/)[^\/]*$/, '') }.unique())
-        }
-        packages = packages.unique()
-        dirs = dirs.unique()
-        List<String> uniquePackages = packages.clone()
-        List<String> uniqueDirs = dirs.clone()
-        packages.each { pk -> uniquePackages.removeAll { it.startsWith(pk + '.') } }
-        dirs.each { dir -> uniqueDirs.removeAll { it.startsWith(dir + '/') } }
-        uniquePackages.removeAll { it.isEmpty() }
-        uniqueDirs.removeAll { it.isEmpty() || it == "META-INF" }
-        String date = new Date().format('yyyy-MM-dd HH:mm:ss z', TimeZone.getTimeZone("UTC"))
-        file("embulk-core/src/main/resources/embulk/parent_first_packages.properties").withWriter { out ->
-            out.println("# generated by './gradlew updateResources' at $date")
-            uniquePackages.sort().each { out.println it }
-        }
-        file("embulk-core/src/main/resources/embulk/parent_first_resources.properties").withWriter { out ->
-            out.println("# generated by './gradlew updateResources' at $date")
-            uniqueDirs.sort().each { out.println it }
-        }
+        destinationDir.mkdirs()
     }
+    ext.destination = file("${destinationDir}/embulk-${project.version}.jar")
     doLast {
-        classpath.execute()
+        destination.write("")
+        destination.append("\n: <<END_OF_EMBULK_SELFRUN_BATCH_PART\r\n")
+        destination.append(file("embulk-core/src/main/bat/selfrun.bat").readBytes())
+        destination.append("\r\nEND_OF_EMBULK_SELFRUN_BATCH_PART\r\n\n")
+        destination.append(file("embulk-core/src/main/sh/selfrun.sh").readBytes())
+        destination.append(file("${buildDir}/libs/embulk-${project.version}-all.jar").readBytes())
+        destination.setExecutable(true)
     }
 }
 
-//
-// classpath task
-//
-task classpath(dependsOn: ['build', ':embulk-cli:classpath']) { doLast {} }
-
-clean { delete 'classpath' }
-
-//
-// cli task
-//
-task cli(dependsOn: ':embulk-cli:shadowJar') {
-    doLast {
+task cli(type: Copy, dependsOn: 'executableJar') {
+    doFirst {
         file('pkg').mkdirs()
-        File f = file("pkg/embulk-${project.version}.jar")
-        f.write("")
-        f.append("\n: <<END_OF_EMBULK_SELFRUN_BATCH_PART\r\n")
-        f.append(file("embulk-cli/src/main/bat/selfrun.bat").readBytes())
-        f.append("\r\nEND_OF_EMBULK_SELFRUN_BATCH_PART\r\n\n")
-        f.append(file("embulk-cli/src/main/sh/selfrun.sh").readBytes())
-        f.append(file("embulk-cli/build/libs/embulk-cli-${project.version}-all.jar").readBytes())
-        f.setExecutable(true)
     }
+    from executableJar.destination
+    into file('pkg')
 }
-bintrayUpload.dependsOn(['cli'])
 
-project(':embulk-cli') {
-    apply plugin: 'com.github.johnrengelman.shadow'
+bintray {  // Defines "bintrayUpload" properties for the root project's executable fat-JAR.
+    // NOTE: Define Gradle properties "bintray_user" and "bintray_api_key" to upload the releases to Bintray.
+    // ~/.gradle/gradle.properties would help defining.
+    user = project.hasProperty('bintray_user') ? bintray_user : ''
+    key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
 
-    shadowJar {
-        // 'org.apache.maven' is used in:
-        // - embulk-cli: EmbulkMigrate and EmbulkSelfUpdate (from v0.8.17)
-        // - embulk-core: MavenPluginSource and the related (from v0.8.26)
-        relocate 'org.apache.maven', 'org.embulk.third_party.org.apache.maven'
+    // No "publications". The executable embulk-${version}.jar (built by "executableJar") is uploaded by "filesSpec".
+    // The executable is uploaded into the root directory of the version at Bintray.
+    filesSpec {
+        from executableJar.destination
+        into "."
+    }
 
-        // 'org.codehaus.plexus' is used from 'org.apache.maven'.
-        relocate 'org.codehaus.plexus', 'org.embulk.third_party.org.codehaus.plexus'
+    dryRun = false
+    publish = true
 
-        // 'org.eclipse.aether' is used in:
-        // - embulk-core: MavenPluginSource and the related (from v0.8.26)
-        relocate 'org.eclipse.aether', 'org.embulk.third_party.org.eclipse.aether'
-
-        // 'org.apache.commons.cli' is used in:
-        // - embulk-cli: EmbulkCommandLineParser (from v0.8.28)
-        relocate 'org.apache.commons.cli', 'org.embulk.third_party.org.apache.commons.cli'
-
-        // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
-        // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
-        manifest {
-            attributes 'Implementation-Title': 'embulk',
-                       'Implementation-Version': project.version,
-                       'Implementation-Vendor-Id': project.group,
-                       'Specification-Title': 'embulk',
-                       'Specification-Version': project.version,
-                       'Main-Class': 'org.embulk.cli.Main'
+    pkg {
+        userOrg = 'embulk'
+        repo = 'maven'
+        name = 'embulk'
+        desc = "${project.summary}"
+        websiteUrl = 'https://github.com/embulk/embulk'
+        issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
+        vcsUrl = 'https://github.com/embulk/embulk.git'
+        licenses = ['Apache-2.0']
+        labels = ['embulk', 'ruby', 'java']
+        publicDownloadNumbers = true
+        version {
+            name = project.version
         }
-        append("${rootProject.projectDir}/COPYING")
-    }
-
-    task classpath(type: Copy, dependsOn: ['jar']) {
-        File dest = file("${rootProject.projectDir}/classpath")
-        doFirst { dest.deleteDir() }
-        from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
-        into dest
     }
 }
+bintrayUpload.dependsOn(['executableJar'])
 
-//
-// releaseCheck and release tasks
-//
 task releaseCheck {
     doLast {
         if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
@@ -289,7 +263,7 @@ task releaseCheck {
     }
 }
 
-task release(dependsOn: ["cli", "releaseCheck", "bintrayUpload"]) {
+task release(dependsOn: ["executableJar", "releaseCheck", "bintrayUpload"]) {
     doLast {
         println """
 Manual operations:
@@ -335,11 +309,11 @@ task updateJRuby {
         File gradle_ver = file('build.gradle')
         gradle_ver.write(gradle_ver.getText().replaceFirst("jrubyVersion = '(\\d+)(\\.\\d+){3}'", "jrubyVersion = '${to}'"))
 
-        File migrate_plugin_ver  = file('embulk-cli/src/main/java/org/embulk/cli/EmbulkMigrate.java')
+        File migrate_plugin_ver  = file('embulk-core/src/main/java/org/embulk/cli/EmbulkMigrate.java')
         migrate_plugin_ver.write(migrate_plugin_ver.getText().replaceFirst("\".ruby-version\", \"jruby-(\\d+)(\\.\\d+){3}\"", "\".ruby-version\", \"jruby-${to}\""))
 
         List<String> dot_ruby_vers = [
-            'embulk-cli/src/main/resources/new_bundle_templates/.ruby-version',
+            'embulk-core/src/main/resources/new_bundle_templates/.ruby-version',
             'embulk-core/src/main/resources/new_plugin_templates/ruby/.ruby-version',
         ]
         dot_ruby_vers.each() { path ->

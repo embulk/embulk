@@ -10,7 +10,7 @@ install:
 # To avoid call-selfrun.bat FileNotFound exception, it installs and uses handle.exe as workaround provided by AppVeyor support.
 # see http://help.appveyor.com/discussions/problems/5975-the-process-cannot-access-the-file-because-it-is-being-used-by-another-process
 build_script:
-  - C:\Users\appveyor\handle\handle.exe -a -u C:\projects\embulk\embulk-cli\build\classes\test\org\embulk\cli\call-selfrun.bat -nobanner
+  - C:\Users\appveyor\handle\handle.exe -a -u C:\projects\embulk\embulk-core\build\classes\test\org\embulk\cli\call-selfrun.bat -nobanner
   - gradlew.bat --info --no-daemon check
 
 cache:
