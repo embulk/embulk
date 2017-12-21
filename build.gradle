@@ -301,24 +301,7 @@ task setVersion {
 }
 
 task updateJRuby {
-    doLast {
-        if (!project.hasProperty("to")) {
-            throw new GradleException("Usage: ./gradlew updateJRuby -Pto=VERSION")
-        }
-
-        File gradle_ver = file('build.gradle')
-        gradle_ver.write(gradle_ver.getText().replaceFirst("jrubyVersion = '(\\d+)(\\.\\d+){3}'", "jrubyVersion = '${to}'"))
-
-        File migrate_plugin_ver  = file('embulk-core/src/main/java/org/embulk/cli/EmbulkMigrate.java')
-        migrate_plugin_ver.write(migrate_plugin_ver.getText().replaceFirst("\".ruby-version\", \"jruby-(\\d+)(\\.\\d+){3}\"", "\".ruby-version\", \"jruby-${to}\""))
-
-        List<String> dot_ruby_vers = [
-            'embulk-core/src/main/resources/new_bundle_templates/.ruby-version',
-            'embulk-core/src/main/resources/new_plugin_templates/ruby/.ruby-version',
-        ]
-        dot_ruby_vers.each() { path ->
-            File dot_ruby_ver = file(path)
-            dot_ruby_ver.write(dot_ruby_ver.getText().replaceAll('jruby-(\\d+)(\\.\\d+){3}', "jruby-${to}"))
-        }
+    doFirst {
+        throw new GradleException('Gradle task "updateJRuby" no longer exists. Edit "jrubyVersion" in build.gradle.')
     }
 }

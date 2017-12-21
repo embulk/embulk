@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
+import org.embulk.jruby.ScriptingContainerDelegate;
+
 public class EmbulkMigrate
 {
     public void migratePlugin(final String pathInString, final String thisEmbulkVersion)
@@ -197,7 +199,12 @@ public class EmbulkMigrate
                                    final String thisEmbulkVersion)
             throws IOException
     {
-        migrator.write(".ruby-version", "jruby-9.1.13.0");
+        final String jrubyVersion = ScriptingContainerDelegate.getJRubyVersion(EmbulkMigrate.class.getClassLoader());
+        if (jrubyVersion != null) {
+            migrator.write(".ruby-version", "jruby-" + jrubyVersion);
+        } else {
+            System.err.println("JRuby version not found. No .ruby-version is created nor migrated.");
+        }
 
         // Update |embulk| version depending.
         if (fromVersion.compareTo(new ComparableVersion("0.1.0")) <= 0) {
