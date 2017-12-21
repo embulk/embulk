@@ -1,35 +1,30 @@
 package org.embulk.jruby;
 
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.ILoggerFactory;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
 import com.google.inject.Binder;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.ProvisionException;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
-import org.embulk.plugin.PluginSource;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.exec.ForSystemConfig;
+import org.embulk.plugin.PluginSource;
 import org.embulk.spi.BufferAllocator;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
 
 public class JRubyScriptingModule
         implements Module
@@ -125,6 +120,7 @@ public class JRubyScriptingModule
                 systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null);
         }
 
+        @Override  // from |com.google.inject.Provider|
         public ScriptingContainerDelegate get() throws ProvisionException
         {
             final ScriptingContainerDelegate.LocalContextScope scope =
@@ -141,8 +137,7 @@ public class JRubyScriptingModule
                 return null;
             }
 
-            this.setGemVariables(jruby);
-
+            // JRuby runtime options are processed at first.
             for (final String jrubyOption : this.jrubyOptions) {
                 try {
                     jruby.processJRubyOption(jrubyOption);
@@ -158,8 +153,11 @@ public class JRubyScriptingModule
                 }
             }
 
-            setBundlerPluginSourceDirectory(jruby, this.jrubyBundlerPluginSourceDirectory);
+            // Gem paths and Bundler are configured earlier.
+            this.setGemVariables(jruby);
+            this.setBundlerPluginSourceDirectory(jruby, this.jrubyBundlerPluginSourceDirectory);
 
+            // $LOAD_PATH and $CLASSPATH are configured after Gem paths and Bundler.
             for (final String oneJRubyLoadPath : this.jrubyLoadPath) {
                 // ruby script directory (use unshift to make it highest priority)
                 jruby.put("__internal_load_path__", oneJRubyLoadPath);
@@ -167,7 +165,6 @@ public class JRubyScriptingModule
                 jruby.runScriptlet("$LOAD_PATH.unshift File.expand_path(__internal_load_path__)");
                 jruby.remove("__internal_load_path__");
             }
-
             for (final String oneJRubyClasspath : this.jrubyClasspath) {
                 jruby.put("__internal_classpath__", oneJRubyClasspath);
                 // $CLASSPATH object doesn't have concat method
@@ -176,56 +173,31 @@ public class JRubyScriptingModule
                 jruby.remove("__internal_classpath__");
             }
 
-            // Search embulk/java/bootstrap.rb from a $LOAD_PATH.
-            // $LOAD_PATH is set by lib/embulk/command/embulk_run.rb if Embulk starts
-            // using embulk-cli but it's not set if Embulk is embedded in an application.
-            // Here adds this jar's internal resources to $LOAD_PATH for those applciations.
-
-//            List<String> loadPaths = new ArrayList<String>(jruby.getLoadPaths());
-//            String coreJarPath = JRubyScriptingModule.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-//            if (!loadPaths.contains(coreJarPath)) {
-//                loadPaths.add(coreJarPath);
-//            }
-//            jruby.setLoadPaths(loadPaths);
-
-            // load embulk.rb
-            jruby.runScriptlet("require 'embulk'");
-
-            // jruby searches embulk/java/bootstrap.rb from the beginning of $LOAD_PATH.
+            // Embulk's base Ruby code is loaded at last.
+            jruby.runScriptlet("require 'embulk/logger'");
             jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
-            // TODO validate Embulk::Java::Injected::Injector doesn't exist? If it already exists,
-            //      Injector is created more than once in this JVM although use_global_ruby_runtime
-            //      is set to true.
+            final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
+            jruby.callMethod(injected, "const_set", "Injector", injector);
+            jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(ModelManager.class));
+            jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
 
-            // set some constants
-            jruby.callMethod(
-                    jruby.runScriptlet("Embulk::Java::Injected"),
-                    "const_set", "Injector", injector);
-            jruby.callMethod(
-                    jruby.runScriptlet("Embulk::Java::Injected"),
-                    "const_set", "ModelManager", injector.getInstance(ModelManager.class));
-            jruby.callMethod(
-                    jruby.runScriptlet("Embulk::Java::Injected"),
-                    "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
-
-            // initialize logger
-            jruby.callMethod(
-                    jruby.runScriptlet("Embulk"),
-                    "logger=",
-                        jruby.callMethod(
-                            jruby.runScriptlet("Embulk::Logger"),
-                            "new", injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
+            jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
+                                 jruby.runScriptlet("Embulk::Logger"),
+                                 "new",
+                                 injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
 
             return jruby;
         }
 
+        @Override  // from |com.google.inject.spi.HasDependencies|
         public Set<Dependency<?>> getDependencies()
         {
             // get() depends on other modules
-            return ImmutableSet.of(
-                Dependency.get(Key.get(ModelManager.class)),
-                Dependency.get(Key.get(BufferAllocator.class)));
+            final HashSet<Dependency<?>> built = new HashSet<>();
+            built.add(Dependency.get(Key.get(ModelManager.class)));
+            built.add(Dependency.get(Key.get(BufferAllocator.class)));
+            return Collections.unmodifiableSet(built);
         }
 
         private void setGemVariables(final ScriptingContainerDelegate jruby)
@@ -284,7 +256,6 @@ public class JRubyScriptingModule
         private void setBundlerPluginSourceDirectory(final ScriptingContainerDelegate jruby, final String directory)
         {
             if (directory != null) {
-                // bundler is included in embulk-core.jar
                 jruby.runScriptlet("require 'bundler'");
 
                 // TODO: Remove the monkey patch once the issue is fixed on Bundler or JRuby side.
@@ -309,20 +280,7 @@ public class JRubyScriptingModule
                     "end\n";
                 jruby.runScriptlet(monkeyPatchOnSharedHelpersCleanLoadPath);
 
-                // Bundler.load.setup_environment was called in Bundler 1.10.6.
-                jruby.runScriptlet("Bundler::SharedHelpers.set_bundle_environment");
-
                 jruby.runScriptlet("require 'bundler/setup'");
-                // since here, `require` may load files of different (newer) embulk versions
-                // especially following 'embulk/command/embulk_main'.
-
-                // NOTE: It is intentionally not done by building a Ruby statement string from |directory|.
-                // It can cause insecure injections.
-                //
-                // add bundle directory path to load local plugins at ./embulk
-                jruby.put("__internal_bundler_plugin_source_directory__", directory);
-                jruby.runScriptlet("$LOAD_PATH << File.expand_path(__internal_bundler_plugin_source_directory__)");
-                jruby.remove("__internal_bundler_plugin_source_directory__");
             }
         }
 
