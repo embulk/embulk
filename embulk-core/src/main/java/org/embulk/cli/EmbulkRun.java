@@ -75,7 +75,7 @@ public class EmbulkRun
         case EXEC:
         case GEM:
         case IRB:
-            return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
+            return runSubcommand(subcommand, subcommandArguments, null);
         default:
             final EmbulkCommandLineParser parser = buildCommandLineParser(subcommand);
             final EmbulkCommandLine commandLine;
@@ -93,7 +93,7 @@ public class EmbulkRun
                 parser.printHelp(System.err);
                 return 1;
             }
-            return runSubcommand(subcommand, subcommandArguments, commandLine, jrubyOptions);
+            return runSubcommand(subcommand, subcommandArguments, commandLine);
         }
     }
 
@@ -340,8 +340,7 @@ public class EmbulkRun
 
     private int runSubcommand(final EmbulkSubcommand subcommand,
                               final List<String> subcommandArguments,
-                              final EmbulkCommandLine commandLine,
-                              final List<String> jrubyOptions)
+                              final EmbulkCommandLine commandLine)
     {
         switch (subcommand) {
         case EXAMPLE:
