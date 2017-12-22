@@ -49,7 +49,7 @@ public class EmbulkCommandLine
         public EmbulkCommandLine build()
         {
             final HashMap<String, Object> systemConfigJRubyLoadPath = new HashMap<String, Object>(this.systemConfig);
-            // first $LOAD_PATH has highet priority. later load_paths should have highest priority.
+            // first $LOAD_PATH has highest priority. later load_paths should have highest priority.
             for (final String oneJRubyLoadPath : this.loadPath) {  // "-L"
                 addInHashMap(systemConfigJRubyLoadPath, "jruby_load_path", oneJRubyLoadPath);
             }
