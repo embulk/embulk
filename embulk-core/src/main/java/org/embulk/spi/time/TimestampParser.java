@@ -9,6 +9,7 @@ import java.util.Date;  // For default year/month/day if absent
 import java.util.List;
 import java.util.Locale;  // For default year/month/day if absent
 import java.util.TimeZone;  // For default year/month/day if absent
+import java.time.ZoneId;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;  // For default year/month/day if absent
@@ -24,6 +25,9 @@ public class TimestampParser
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
@@ -48,6 +52,9 @@ public class TimestampParser
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
@@ -66,7 +73,8 @@ public class TimestampParser
         public Optional<String> getDate();
     }
 
-    private final org.joda.time.DateTimeZone defaultTimeZone;
+    private final org.joda.time.DateTimeZone defaultJodaDateTimeZone;
+    private final ZoneId defaultZoneId;
     private final String formatString;
     private final RubyTimeParser parser;
     private final Calendar calendar;
@@ -82,24 +90,45 @@ public class TimestampParser
     {
         this(
                 columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-                columnOption.getTimeZone().or(task.getDefaultTimeZone()),
+                TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
+                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                TimeZoneIds.parseJodaDateTimeZone(
+                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
                 columnOption.getDate().or(task.getDefaultDate()));
     }
 
+    // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
     public TimestampParser(String formatString, org.joda.time.DateTimeZone defaultTimeZone)
     {
         this(formatString, defaultTimeZone, "1970-01-01");
     }
 
+    // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
     public TimestampParser(final String formatString,
-                           final org.joda.time.DateTimeZone defaultTimeZone,
+                           final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
                            final String defaultDate)
+    {
+        this(formatString,
+             TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
+             defaultJodaDateTimeZone,
+             defaultDate);
+    }
+
+    private TimestampParser(final String formatString,
+                            final ZoneId defaultZoneId,
+                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
+                            final String defaultDate)
     {
         // TODO get default current time from ExecTask.getExecTimestamp
         this.formatString = formatString;
         this.format = RubyTimeFormat.compile(formatString);
         this.parser = new RubyTimeParser(format);
-        this.defaultTimeZone = defaultTimeZone;
+        this.defaultJodaDateTimeZone = defaultJodaDateTimeZone;
+        this.defaultZoneId = defaultZoneId;
 
         // calculate default date
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
@@ -115,9 +144,22 @@ public class TimestampParser
         this.calendar.setTime(utc);
     }
 
+    public static TimestampParser create(final String formatString,
+                                         final String defaultTimeZoneId,
+                                         final String defaultDate)
+    {
+        return new TimestampParser(formatString,
+                                   TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultTimeZoneId),
+                                   TimeZoneIds.parseJodaDateTimeZone(defaultTimeZoneId),
+                                   defaultDate);
+    }
+
+    // Using Joda-Time is deprecated, but the method return org.joda.time.DateTimeZone for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
     public org.joda.time.DateTimeZone getDefaultTimeZone()
     {
-        return defaultTimeZone;
+        return defaultJodaDateTimeZone;
     }
 
     public Timestamp parse(String text) throws TimestampParseException
@@ -130,9 +172,9 @@ public class TimestampParser
         if (parseResult == null) {
             throw new TimestampParseException("Cannot parse '" + text + "' by '" + formatString + "'");
         }
-        return parseResult.toTimestamp(this.calendar.get(Calendar.YEAR),
-                                       this.calendar.get(Calendar.MONTH) + 1,
-                                       this.calendar.get(Calendar.DAY_OF_MONTH),
-                                       this.defaultTimeZone);
+        return parseResult.toTimestampLegacy(this.calendar.get(Calendar.YEAR),
+                                             this.calendar.get(Calendar.MONTH) + 1,
+                                             this.calendar.get(Calendar.DAY_OF_MONTH),
+                                             this.defaultZoneId);
     }
 }

@@ -18,6 +18,13 @@ class TimeZoneIds
     }
 
     /**
+     * Converts org.joda.time.DateTimeZone to its corresponding java.time.ZoneID.
+     */
+    public static ZoneId convertJodaDateTimeZoneToZoneId(final org.joda.time.DateTimeZone jodaDateTimeZone) {
+        return ZoneId.of(jodaDateTimeZone.getID(), ALIAS_ZONE_IDS_FOR_LEGACY);
+    }
+
+    /**
      * Parses time zone ID to java.time.ZoneId as compatible with the time zone parser of Embulk v0.8 as possible.
      *
      * It recognizes time zone IDs in the following priority.
@@ -30,12 +37,9 @@ class TimeZoneIds
      * <li>If none of the above does not recognize the zone ID, it returns null.
      * </ol>
      *
-     * It differs from the time zone parser as of Embulk v0.8 in terms of the following short time zone names:
-     * "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", and "PDT". They were recognized as fixed standard time
-     * (non-summer time) in v0.8. This parser's results are aware of summer time.
-     *
-     * Another difference is time offset transitions in each time zone, but the difference is from their base
-     * time zone database. The difference is ignorable as time zone database is continuously updated anyway.
+     * Its time offset transitions in each time zone may be different from the time zone parser of Embulk v0.8,
+     * but the difference is from their base time zone (tz) database. The difference is ignorable as time zone
+     * database is continuously updated anyway.
      */
     public static ZoneId parseZoneIdWithJodaAndRubyZoneTab(final String zoneId) {
         if (zoneId.equals("Z")) {
@@ -126,37 +130,42 @@ class TimeZoneIds
 
     static {
         final HashMap<String, String> aliasZoneIdsForLegacyParser = new HashMap<>();
-        // org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis() recognizes short time zone names
-        // "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", and "PDT" although they are not recognized by
-        // org.joda.time.DateTimeZone.forID(), and not listed in org.joda.time.DateTimeZone.getAvailableIDs().
+        // Embulk's legacy TimestampParser has recognized "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", and "PDT"
+        // with org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis(). They have not been recognized
+        // by org.joda.time.DateTimeZone.forID(), nor listed in org.joda.time.DateTimeZone.getAvailableIDs().
         //
-        // Default ZoneId.of() does not recognize these short time zone names although the time zone parser of
-        // Embulk v0.8 recognized them with org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis()
-        // in priority.
+        // These short time zone IDs have not been recognized in a "correct" way in Embulk's legacy TimestampParser,
+        // though. For example, "PDT" should be -07:00 as it is daylight saving time. But, "PDT" and "PST" are both
+        // recognized as -08:00 in Embulk's legacy TimestampParser.
         //
-        // See: http://www.joda.org/joda-time/apidocs/org/joda/time/DateTimeUtils.html#getDefaultTimeZoneNames--
-        aliasZoneIdsForLegacyParser.put("EST", "America/New_York");
-        aliasZoneIdsForLegacyParser.put("EDT", "America/New_York");
-        aliasZoneIdsForLegacyParser.put("CST", "America/Chicago");
-        aliasZoneIdsForLegacyParser.put("CDT", "America/Chicago");
-        aliasZoneIdsForLegacyParser.put("MST", "America/Denver");
-        aliasZoneIdsForLegacyParser.put("MDT", "America/Denver");
-        aliasZoneIdsForLegacyParser.put("PST", "America/Los_Angeles");
-        aliasZoneIdsForLegacyParser.put("PDT", "America/Los_Angeles");
+        // It has been because Embulk has used org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis().
+        // "PDT" is recognized as "America/Los_Angeles" in Joda-Time, which is a "not fixed" time zone.
+        // https://github.com/JodaOrg/joda-time/blob/v2.9.2/src/main/java/org/joda/time/DateTimeUtils.java#L446
+        // http://www.joda.org/joda-time/apidocs/org/joda/time/DateTimeUtils.html#getDefaultTimeZoneNames--
+        //
+        // "2017-02-20 America/Los_Angeles" is in -08:00 in Joda-Time. "2017-08-20 America/Los_Angeles" is in -7:00.
+        // org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis("America/Los_Angeles") is, however, always
+        // -08:00 since it does not have the date.
+        //
+        // This set of aliases emulates org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis() here
+        // for compatibility. Embulk has used it to parse time zones for a very long time since Embulk v0.1.
+        // https://github.com/embulk/embulk/commit/b97954a5c78397e1269bbb6979d6225dfceb4e05
+        // https://github.com/embulk/embulk/issues/860
+        aliasZoneIdsForLegacyParser.put("EST", "-05:00");
+        aliasZoneIdsForLegacyParser.put("EDT", "-05:00");
+        aliasZoneIdsForLegacyParser.put("CST", "-06:00");
+        aliasZoneIdsForLegacyParser.put("CDT", "-06:00");
+        aliasZoneIdsForLegacyParser.put("MST", "-07:00");
+        aliasZoneIdsForLegacyParser.put("MDT", "-07:00");
+        aliasZoneIdsForLegacyParser.put("PST", "-08:00");
+        aliasZoneIdsForLegacyParser.put("PDT", "-08:00");
 
-        // Short time zone names "HST" and "ROC" are listed in org.joda.time.DateTimeZone.getAvailableIDs(), and
-        // recognized by org.joda.time.DateTimeZone.forID() while they are not recognized by ZoneId.of().
-        //
-        // See: http://joda-time.sourceforge.net/timezones.html
+        // Short time zone IDs "EST", "HST", "MST", and "ROC" are recognized by org.joda.time.DateTimeZone.forID(),
+        // while they are not recognized by java.time.ZoneId.of(). "EST" and "MST" are covered by the aliaes above
+        // in higher priority. "HST" and "ROC" should be covered in addition.
+        // http://joda-time.sourceforge.net/timezones.html
         aliasZoneIdsForLegacyParser.put("HST", "-10:00");
         aliasZoneIdsForLegacyParser.put("ROC", "Asia/Taipei");
-
-        // Short time zone names "EST" and "MST" are listed in org.joda.time.DateTimeZone.getAvailableIDs(), and
-        // recognized by org.joda.time.DateTimeZone.forID(). But, the time zone parser of Embulk v0.8 recognized
-        // them with org.joda.time.format.DateTimeFormat.forPattern("z").parseMillis() in higher priority.
-
-        // "GMT+0" and "GMT-0" are recognized by ZoneId.of() while they are not in ZoneId.getAvailableZoneIds().
-        // They are listed in org.joda.time.DateTimeZone.getAvailableIDs().
 
         ALIAS_ZONE_IDS_FOR_LEGACY = Collections.unmodifiableMap(aliasZoneIdsForLegacyParser);
     }

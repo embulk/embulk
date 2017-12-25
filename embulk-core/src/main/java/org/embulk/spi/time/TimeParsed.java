@@ -1,5 +1,7 @@
 package org.embulk.spi.time;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Map;
 
 /**
@@ -15,12 +17,15 @@ abstract class TimeParsed {  // to extend java.time.temporal.TemporalAccessor in
         return new RubyTimeParsed.Builder(originalString);
     }
 
-    // TODO: Have java.time.Instant toInstant() in Java 8.
+    abstract Instant toInstantLegacy(final int defaultYear,
+                                     final int defaultMonthOfYear,
+                                     final int defaultDayOfMonth,
+                                     final ZoneId defaultZoneId);
 
-    abstract public Timestamp toTimestamp(final int defaultYear,
-                                          final int defaultMonthOfYear,
-                                          final int defaultDayOfMonth,
-                                          final org.joda.time.DateTimeZone defaultTimeZone);
+    abstract Timestamp toTimestampLegacy(final int defaultYear,
+                                         final int defaultMonthOfYear,
+                                         final int defaultDayOfMonth,
+                                         final ZoneId defaultZoneId);
 
     abstract public Map<String, Object> asMapLikeRubyHash();
 }
