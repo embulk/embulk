@@ -1,10 +1,6 @@
 package org.embulk.spi.util.dynamic;
 
-import org.embulk.spi.PageBuilder;
-import org.embulk.spi.Column;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampParser;
-import org.embulk.spi.time.TimestampParseException;
 import org.msgpack.value.Value;
 
 public class SkipColumnSetter

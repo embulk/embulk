@@ -86,17 +86,17 @@ public class TimestampParser
              defaultDate);
     }
 
-    public static TimestampParser create(final String formatString,
-                                         final String defaultTimeZoneId,
-                                         final String defaultDate) {
+    public static TimestampParser of(final String formatString,
+                                     final String defaultTimeZoneId,
+                                     final String defaultDate) {
         return new TimestampParser(formatString,
                                    TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultTimeZoneId),
                                    TimeZoneIds.parseJodaDateTimeZone(defaultTimeZoneId),
                                    defaultDate);
     }
 
-    public static TimestampParser create(final String formatString,
-                                         final String defaultTimeZoneId) {
+    public static TimestampParser of(final String formatString,
+                                     final String defaultTimeZoneId) {
         return new TimestampParser(formatString,
                                    TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultTimeZoneId),
                                    TimeZoneIds.parseJodaDateTimeZone(defaultTimeZoneId),

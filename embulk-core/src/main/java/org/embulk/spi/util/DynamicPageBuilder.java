@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.spi.Schema;
@@ -15,8 +14,6 @@ import org.embulk.spi.Column;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
-import org.embulk.spi.time.TimestampFormatter;
-import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
@@ -35,6 +32,9 @@ public class DynamicPageBuilder
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
@@ -62,6 +62,9 @@ public class DynamicPageBuilder
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));

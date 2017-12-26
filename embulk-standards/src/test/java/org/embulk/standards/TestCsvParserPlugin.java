@@ -1,13 +1,13 @@
 package org.embulk.standards;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Rule;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 import java.nio.charset.Charset;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTimeZone;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
@@ -36,7 +36,7 @@ public class TestCsvParserPlugin
         assertEquals(",", task.getDelimiter());
         assertEquals(Optional.of(new CsvParserPlugin.QuoteCharacter('\"')), task.getQuoteChar());
         assertEquals(false, task.getAllowOptionalColumns());
-        assertEquals(DateTimeZone.UTC, task.getDefaultTimeZone());
+        assertEquals("UTC", task.getDefaultTimeZoneId());
         assertEquals("%Y-%m-%d %H:%M:%S.%N %z", task.getDefaultTimestampFormat());
     }
 

@@ -226,7 +226,7 @@ public class TestTimestampParser {
     }
 
     private void testToParse(final String string, final String format, final long second, final int nanoOfSecond) {
-        final TimestampParser parser = TimestampParser.create(format, "UTC", "4567-01-23");
+        final TimestampParser parser = TimestampParser.of(format, "UTC", "4567-01-23");
         final Timestamp timestamp = parser.parse(string);
         assertEquals(second, timestamp.getEpochSecond());
         assertEquals(nanoOfSecond,timestamp.getNano());
@@ -237,7 +237,7 @@ public class TestTimestampParser {
     }
 
     private void failToParse(final String string, final String format) {
-        final TimestampParser parser = TimestampParser.create(format, "UTC", "4567-01-23");
+        final TimestampParser parser = TimestampParser.of(format, "UTC", "4567-01-23");
         try {
             parser.parse(string);
         } catch (TimestampParseException ex) {

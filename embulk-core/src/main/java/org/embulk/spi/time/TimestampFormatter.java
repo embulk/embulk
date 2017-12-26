@@ -4,7 +4,6 @@ import java.util.Locale;
 import com.google.common.base.Optional;
 import org.jruby.util.RubyDateFormat;
 import org.embulk.config.Config;
-import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.util.LineEncoder;
 
@@ -16,6 +15,9 @@ public class TimestampFormatter
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
@@ -36,6 +38,9 @@ public class TimestampFormatter
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
 
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
@@ -70,6 +75,9 @@ public class TimestampFormatter
         this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
     }
 
+    // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
     public org.joda.time.DateTimeZone getTimeZone()
     {
         return timeZone;
