@@ -1,6 +1,7 @@
 package org.embulk.spi.time;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,17 +13,14 @@ class RubyTimeParsed extends TimeParsed {
     private RubyTimeParsed(
             final String originalString,
 
-            final int century,
             final int dayOfMonth,
             final int weekBasedYear,
             final int hour,
             final int dayOfYear,
-            final long nanoOfSecond,
+            final int nanoOfSecond,
             final int minuteOfHour,
             final int monthOfYear,
-            final int ampmOfDay,
-            final long secondSinceEpoch,
-            final long nanoOfSecondSinceEpoch,
+            final Instant instantSeconds,
             final int secondOfMinute,
             final int weekOfYearStartingWithSunday,
             final int weekOfYearStartingWithMonday,
@@ -36,7 +34,6 @@ class RubyTimeParsed extends TimeParsed {
             final String leftover) {
         this.originalString = originalString;
 
-        this.century = century;
         this.dayOfMonth = dayOfMonth;
         this.weekBasedYear = weekBasedYear;
         this.hour = hour;
@@ -44,9 +41,7 @@ class RubyTimeParsed extends TimeParsed {
         this.nanoOfSecond = nanoOfSecond;
         this.minuteOfHour = minuteOfHour;
         this.monthOfYear = monthOfYear;
-        this.ampmOfDay = ampmOfDay;
-        this.secondSinceEpoch = secondSinceEpoch;
-        this.nanoOfSecondSinceEpoch = nanoOfSecondSinceEpoch;
+        this.instantSeconds = instantSeconds;
         this.secondOfMinute = secondOfMinute;
         this.weekOfYearStartingWithSunday = weekOfYearStartingWithSunday;
         this.weekOfYearStartingWithMonday = weekOfYearStartingWithMonday;
@@ -69,12 +64,11 @@ class RubyTimeParsed extends TimeParsed {
             this.weekBasedYear = Integer.MIN_VALUE;
             this.hour = Integer.MIN_VALUE;
             this.dayOfYear = Integer.MIN_VALUE;
-            this.nanoOfSecond = Long.MIN_VALUE;
+            this.nanoOfSecond = Integer.MIN_VALUE;
             this.minuteOfHour = Integer.MIN_VALUE;
             this.monthOfYear = Integer.MIN_VALUE;
             this.ampmOfDay = Integer.MIN_VALUE;
-            this.secondSinceEpoch = Long.MIN_VALUE;
-            this.nanoOfSecondSinceEpoch = Long.MIN_VALUE;
+            this.instantSeconds = null;
             this.secondOfMinute = Integer.MIN_VALUE;
             this.weekOfYearStartingWithSunday = Integer.MIN_VALUE;
             this.weekOfYearStartingWithMonday = Integer.MIN_VALUE;
@@ -92,27 +86,55 @@ class RubyTimeParsed extends TimeParsed {
 
         @Override
         public TimeParsed build() {
+            // Merge week-based year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l676
+            final int weekBasedYearWithCentury;
+            if (this.century != Integer.MIN_VALUE && this.weekBasedYear != Integer.MIN_VALUE) {
+                // It is the right behavior in Ruby.
+                // Date._strptime('13 1234', '%C %G') => {:cwyear=>2534}
+                weekBasedYearWithCentury = this.century * 100 + this.weekBasedYear;
+            } else {
+                weekBasedYearWithCentury = this.weekBasedYear;
+            }
+
+            // Merge year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l679
+            final int yearWithCentury;
+            if (this.century != Integer.MIN_VALUE && this.year != Integer.MIN_VALUE) {
+                // It is the right behavior in Ruby.
+                // Date._strptime('13 1234', '%C %Y') => {:year=>2534}
+                yearWithCentury = this.century * 100 + this.year;
+            } else {
+                yearWithCentury = this.year;
+            }
+
+            // Merge hour and ampmOfDay as MRI (Matz' Ruby Implementation) does before generating a hash.
+            // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l685
+            final int hourWithAmPm;
+            if (this.hour != Integer.MIN_VALUE && this.ampmOfDay != Integer.MIN_VALUE) {
+                hourWithAmPm = (this.hour % 12) + this.ampmOfDay;
+            } else {
+                hourWithAmPm = this.hour;
+            }
+
             return new RubyTimeParsed(
                 this.originalString,
 
-                this.century,
                 this.dayOfMonth,
-                this.weekBasedYear,
-                this.hour,
+                weekBasedYearWithCentury,
+                hourWithAmPm,
                 this.dayOfYear,
                 this.nanoOfSecond,
                 this.minuteOfHour,
                 this.monthOfYear,
-                this.ampmOfDay,
-                this.secondSinceEpoch,
-                this.nanoOfSecondSinceEpoch,
+                this.instantSeconds,
                 this.secondOfMinute,
                 this.weekOfYearStartingWithSunday,
                 this.weekOfYearStartingWithMonday,
                 this.dayOfWeekStartingWithMonday1,
                 this.weekOfWeekBasedYear,
                 this.dayOfWeekStartingWithSunday0,
-                this.year,
+                yearWithCentury,
 
                 this.timeZoneName,
 
@@ -257,7 +279,7 @@ class RubyTimeParsed extends TimeParsed {
          * <li> java.time.temporal:
          * </ul>
          */
-        Builder setNanoOfSecond(final long nanoOfSecond) {
+        Builder setNanoOfSecond(final int nanoOfSecond) {
             this.nanoOfSecond = nanoOfSecond;
             return this;
         }
@@ -313,10 +335,8 @@ class RubyTimeParsed extends TimeParsed {
          * <li> java.time.temporal: ChronoField.INSTANT_SECONDS
          * </ul>
          */
-        Builder setSecondSinceEpoch(
-                final long secondSinceEpoch, final long nanoOfSecondSinceEpoch) {
-            this.secondSinceEpoch = secondSinceEpoch;
-            this.nanoOfSecondSinceEpoch = nanoOfSecondSinceEpoch;
+        Builder setInstantSeconds(final Instant instantSeconds) {
+            this.instantSeconds = instantSeconds;
             return this;
         }
 
@@ -508,12 +528,11 @@ class RubyTimeParsed extends TimeParsed {
         private int weekBasedYear;
         private int hour;
         private int dayOfYear;
-        private long nanoOfSecond;
+        private int nanoOfSecond;
         private int minuteOfHour;
         private int monthOfYear;
         private int ampmOfDay;
-        private long secondSinceEpoch;
-        private long nanoOfSecondSinceEpoch;
+        private Instant instantSeconds;
         private int secondOfMinute;
         private int weekOfYearStartingWithSunday;
         private int weekOfYearStartingWithMonday;
@@ -535,10 +554,10 @@ class RubyTimeParsed extends TimeParsed {
                                  final int defaultDayOfMonth,
                                  final org.joda.time.DateTimeZone defaultTimeZone) {
         final long secondSinceEpoch;
-        final long nanoOfSecondSinceEpoch;
+        final int nanoOfSecondSinceEpoch;
 
-        if (this.secondSinceEpoch != Long.MIN_VALUE) {
-            secondSinceEpoch = this.secondSinceEpoch;
+        if (this.instantSeconds != null) {
+            secondSinceEpoch = this.instantSeconds.getEpochSecond();
             // Fractions by %Q are prioritized over fractions by %N.
             // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
             // => 789000000
@@ -546,9 +565,9 @@ class RubyTimeParsed extends TimeParsed {
             // => 789000000
             // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
             // => 345000000
-            nanoOfSecondSinceEpoch = this.nanoOfSecondSinceEpoch;
+            nanoOfSecondSinceEpoch = this.instantSeconds.getNano();
         } else {
-            final int year = (this.getYear() == Integer.MIN_VALUE ? defaultYear : this.getYear());
+            final int year = (this.year == Integer.MIN_VALUE ? defaultYear : this.year);
 
             // TODO: Calculate with java.time in Java 8.
             // set up with min this and then add to allow rolling over
@@ -571,7 +590,7 @@ class RubyTimeParsed extends TimeParsed {
                 }
             }
             if (this.hour != Integer.MIN_VALUE) {
-                datetime = datetime.plusHours(this.getHour());
+                datetime = datetime.plusHours(this.hour);
             }
             if (this.minuteOfHour != Integer.MIN_VALUE) {
                 datetime = datetime.plusMinutes(this.minuteOfHour);
@@ -586,7 +605,11 @@ class RubyTimeParsed extends TimeParsed {
                 }
             }
             secondSinceEpoch = datetime.getMillis() / 1000;
-            nanoOfSecondSinceEpoch = this.getNanoOfSecond(0);
+            if (this.nanoOfSecond != Integer.MIN_VALUE) {
+                nanoOfSecondSinceEpoch = this.nanoOfSecond;
+            } else {
+                nanoOfSecondSinceEpoch = 0;
+            }
         }
 
         final String zone = this.timeZoneName;
@@ -614,22 +637,20 @@ class RubyTimeParsed extends TimeParsed {
         final HashMap<String, Object> hash = new HashMap<>();
 
         putIntIfValid(hash, "mday", this.dayOfMonth);
-        putIntIfValid(hash, "cwyear", this.getWeekBasedYear());
-        putIntIfValid(hash, "hour", this.getHour());
+        putIntIfValid(hash, "cwyear", this.weekBasedYear);
+        putIntIfValid(hash, "hour", this.hour);
         putIntIfValid(hash, "yday", this.dayOfYear);
-        putFractionIfValid(hash, "sec_fraction", this.getNanoOfSecond());
+        putFractionIfValid(hash, "sec_fraction", this.nanoOfSecond);
         putIntIfValid(hash, "min", this.minuteOfHour);
         putIntIfValid(hash, "mon", this.monthOfYear);
-        putSecondWithFractionIfValid(hash, "seconds",
-                                     this.secondSinceEpoch,
-                                     this.getNanoOfSecondSinceEpoch());
+        putSecondWithFractionIfValid(hash, "seconds", this.instantSeconds);
         putIntIfValid(hash, "sec", this.secondOfMinute);
         putIntIfValid(hash, "wnum0", this.weekOfYearStartingWithSunday);
         putIntIfValid(hash, "wnum1", this.weekOfYearStartingWithMonday);
         putIntIfValid(hash, "cwday", this.dayOfWeekStartingWithMonday1);
         putIntIfValid(hash, "cweek", this.weekOfWeekBasedYear);
         putIntIfValid(hash, "wday", this.dayOfWeekStartingWithSunday0);
-        putIntIfValid(hash, "year", this.getYear());
+        putIntIfValid(hash, "year", this.year);
         putTimeZoneIfValid(hash, this.timeZoneName);
         putStringIfValid(hash, "leftover", this.leftover);
 
@@ -643,20 +664,20 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
-    private BigDecimal putFractionIfValid(final Map<String, Object> hash, final String key, final long value) {
-        if (value != Long.MIN_VALUE) {
+    private BigDecimal putFractionIfValid(final Map<String, Object> hash, final String key, final int value) {
+        if (value != Integer.MIN_VALUE) {
             return (BigDecimal) hash.put(key, BigDecimal.ZERO.add(BigDecimal.valueOf(value, 9)));
         }
         return null;
     }
 
-    private Object putSecondWithFractionIfValid(
-            final Map<String, Object> hash, final String key, final long second, final long fraction) {
-        if (second != Long.MIN_VALUE) {
-            if (fraction == Long.MIN_VALUE) {
-                return hash.put(key, second);
+    private Object putSecondWithFractionIfValid(final Map<String, Object> hash, final String key, final Instant value) {
+        if (value != null) {
+            if (value.getNano() == 0) {
+                return hash.put(key, value.getEpochSecond());
             } else {
-                return hash.put(key, BigDecimal.valueOf(second).add(BigDecimal.valueOf(fraction, 9)));
+                return hash.put(key,
+                                BigDecimal.valueOf(value.getEpochSecond()).add(BigDecimal.valueOf(value.getNano(), 9)));
             }
         }
         return null;
@@ -680,66 +701,16 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
-    private int getWeekBasedYear() {
-        // It is the right behavior in Ruby.
-        // Date._strptime('13 1234', '%C %G') => {:cwyear=>2534}
-        if (this.century != Integer.MIN_VALUE) {
-            if (this.weekBasedYear != Integer.MIN_VALUE) {
-                return this.century * 100 + this.weekBasedYear;
-            }
-        }
-        return this.weekBasedYear;
-    }
-
-    private int getHour() {
-        if (this.hour != Integer.MIN_VALUE && this.ampmOfDay != Integer.MIN_VALUE) {
-            return (this.hour % 12) + this.ampmOfDay;
-        }
-        return this.hour;
-    }
-
-    private long getNanoOfSecond() {
-        return this.nanoOfSecond;
-    }
-
-    private long getNanoOfSecond(final long defaultValue) {
-        if (this.nanoOfSecond == Long.MIN_VALUE) {
-            return defaultValue;
-        }
-        return this.nanoOfSecond;
-    }
-
-    private long getNanoOfSecondSinceEpoch() {
-        if (this.nanoOfSecondSinceEpoch == Long.MIN_VALUE) {
-            return 0;
-        }
-        return this.nanoOfSecondSinceEpoch;
-    }
-
-    private int getYear() {
-        // It is the right behavior in Ruby.
-        // Date._strptime('13 1234', '%C %Y') => {:year=>2534}
-        if (this.century != Integer.MIN_VALUE) {
-            if (this.year != Integer.MIN_VALUE) {
-                return this.century * 100 + this.year;
-            }
-        }
-        return this.year;
-    }
-
     private final String originalString;
 
-    private final int century;
     private final int dayOfMonth;
     private final int weekBasedYear;
     private final int hour;
     private final int dayOfYear;
-    private final long nanoOfSecond;
+    private final int nanoOfSecond;
     private final int minuteOfHour;
     private final int monthOfYear;
-    private final int ampmOfDay;
-    private final long secondSinceEpoch;
-    private final long nanoOfSecondSinceEpoch;
+    private final Instant instantSeconds;
     private final int secondOfMinute;
     private final int weekOfYearStartingWithSunday;
     private final int weekOfYearStartingWithMonday;

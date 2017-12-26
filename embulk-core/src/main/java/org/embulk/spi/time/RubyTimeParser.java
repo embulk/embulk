@@ -1,5 +1,6 @@
 package org.embulk.spi.time;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -237,7 +238,7 @@ class RubyTimeParser
                             v = readDigitsMax();
                         }
 
-                        builder.setNanoOfSecond((!negative ? v : -v) * (int) Math.pow(10, 9 - (pos - initPos)));
+                        builder.setNanoOfSecond((int)(!negative ? v : -v) * (int) Math.pow(10, 9 - (pos - initPos)));
                         break;
                     }
                     case MINUTE_OF_HOUR: { // %M, %OM - Minute of the hour (00..59)
@@ -277,7 +278,8 @@ class RubyTimeParser
 
                         final long sec = (negative ? -readDigitsMax() : readDigitsMax());
 
-                        builder.setSecondSinceEpoch(sec / 1000L, sec % 1000L * (long) Math.pow(10, 6));
+                        builder.setInstantSeconds(Instant.ofEpochSecond(
+                                                      sec / 1000L, sec % 1000L * (long) Math.pow(10, 6)));
                         break;
                     }
                     case SECOND_OF_MINUTE: { // %S - Second of the minute (00..59)
@@ -296,7 +298,7 @@ class RubyTimeParser
                         }
 
                         final long sec = readDigitsMax();
-                        builder.setSecondSinceEpoch(!negative ? sec : -sec, 0);
+                        builder.setInstantSeconds(Instant.ofEpochSecond(!negative ? sec : -sec, 0));
                         break;
                     }
                     case WEEK_OF_YEAR_STARTING_WITH_SUNDAY: // %U, %OU - Week number of the year.  The week starts with Sunday.  (00..53)
