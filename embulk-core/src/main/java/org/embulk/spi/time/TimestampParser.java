@@ -126,7 +126,7 @@ public class TimestampParser
             throw new TimestampParseException("text is null or empty string.");
         }
 
-        final TimeParseResult parseResult = parser.parse(text);
+        final TimeParsed parseResult = parser.parse(text);
         if (parseResult == null) {
             throw new TimestampParseException("Cannot parse '" + text + "' by '" + formatString + "'");
         }
