@@ -89,7 +89,7 @@ class RubyTimeParsed extends TimeParsed {
         }
 
         @Override
-        public TimeParsed build() {
+        TimeParsed build() {
             // Merge week-based year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
             // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l676
             final int weekBasedYearWithCentury;
@@ -637,7 +637,7 @@ class RubyTimeParsed extends TimeParsed {
     }
 
     @Override
-    public Map<String, Object> asMapLikeRubyHash() {
+    Map<String, Object> asMapLikeRubyHash() {
         final HashMap<String, Object> hash = new HashMap<>();
 
         putIntIfValid(hash, "mday", this.dayOfMonth);
