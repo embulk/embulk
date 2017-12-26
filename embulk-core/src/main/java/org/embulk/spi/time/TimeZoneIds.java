@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * TimeZoneIds is a utility class for operating with time zones.
  */
-class TimeZoneIds
+public class TimeZoneIds
 {
     private TimeZoneIds() {
         // No instantiation.

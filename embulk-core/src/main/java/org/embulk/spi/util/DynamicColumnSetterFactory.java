@@ -2,6 +2,7 @@ package org.embulk.spi.util;
 
 import org.joda.time.DateTimeZone;
 import org.embulk.config.ConfigSource;
+import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.LongType;
@@ -70,23 +71,22 @@ class DynamicColumnSetterFactory
             return new DoubleColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof StringType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column).getFormat(), getTimeZone(column));
+                    getTimestampFormatForFormatter(column).getFormat(), getJodaDateTimeZone(column));
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
             final TimestampParser parser;
             if (this.useColumnForTimestampMetadata) {
                 final TimestampType timestampType = (TimestampType) type;
-                parser = new TimestampParser(timestampType.getFormat(), getTimeZone(column));
+                parser = TimestampParser.of(timestampType.getFormat(), getTimeZoneId(column));
             }
             else {
-                parser = new TimestampParser(
-                        getTimestampFormatForParser(column).getFormat(), getTimeZone(column));
+                parser = TimestampParser.of(getTimestampFormatForParser(column).getFormat(), getTimeZoneId(column));
             }
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column).getFormat(), getTimeZone(column));
+                    getTimestampFormatForFormatter(column).getFormat(), getJodaDateTimeZone(column));
             return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
         throw new ConfigException("Unknown column type: "+type);
@@ -112,14 +112,19 @@ class DynamicColumnSetterFactory
         }
     }
 
-    private DateTimeZone getTimeZone(Column column)
+    private String getTimeZoneId(Column column)
     {
         DynamicPageBuilder.ColumnOption option = getColumnOption(column);
         if (option != null) {
-            return option.getTimeZone().or(task.getDefaultTimeZone());
+            return option.getTimeZoneId().or(task.getDefaultTimeZoneId());
         } else {
-            return task.getDefaultTimeZone();
+            return task.getDefaultTimeZoneId();
         }
+    }
+
+    private DateTimeZone getJodaDateTimeZone(Column column)
+    {
+        return TimeZoneIds.parseJodaDateTimeZone(this.getTimeZoneId(column));
     }
 
     private DynamicPageBuilder.ColumnOption getColumnOption(Column column)
