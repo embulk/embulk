@@ -8,7 +8,6 @@ import org.embulk.spi.FileInput;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
-import org.joda.time.DateTimeZone;
 
 public class Inputs
 {

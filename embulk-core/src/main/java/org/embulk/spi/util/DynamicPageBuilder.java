@@ -3,7 +3,6 @@ package org.embulk.spi.util;
 import java.util.List;
 import java.util.Map;
 import com.google.common.base.Optional;
-import org.joda.time.DateTimeZone;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.embulk.config.Config;
@@ -34,7 +33,16 @@ public class DynamicPageBuilder
     {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public DateTimeZone getDefaultTimeZone();
+        public String getDefaultTimeZoneId();
+
+        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+            if (getDefaultTimeZoneId() != null) {
+                return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
+            }
+            else {
+                return null;
+            }
+        }
 
         @Config("column_options")
         @ConfigDefault("{}")
@@ -52,7 +60,16 @@ public class DynamicPageBuilder
 
         @Config("timezone")
         @ConfigDefault("null")
-        public Optional<DateTimeZone> getTimeZone();
+        public Optional<String> getTimeZoneId();
+
+        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+            if (getTimeZoneId().isPresent()) {
+                return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
+            }
+            else {
+                return Optional.absent();
+            }
+        }
     }
 
     private DynamicPageBuilder(
