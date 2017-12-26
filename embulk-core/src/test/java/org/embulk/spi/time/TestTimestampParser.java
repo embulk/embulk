@@ -3,7 +3,6 @@ package org.embulk.spi.time;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 /**
@@ -227,7 +226,7 @@ public class TestTimestampParser {
     }
 
     private void testToParse(final String string, final String format, final long second, final int nanoOfSecond) {
-        final TimestampParser parser = new TimestampParser(format, DateTimeZone.UTC, "4567-01-23");
+        final TimestampParser parser = TimestampParser.create(format, "UTC", "4567-01-23");
         final Timestamp timestamp = parser.parse(string);
         assertEquals(second, timestamp.getEpochSecond());
         assertEquals(nanoOfSecond,timestamp.getNano());
@@ -238,7 +237,7 @@ public class TestTimestampParser {
     }
 
     private void failToParse(final String string, final String format) {
-        final TimestampParser parser = new TimestampParser(format, DateTimeZone.UTC, "4567-01-23");
+        final TimestampParser parser = TimestampParser.create(format, "UTC", "4567-01-23");
         try {
             parser.parse(string);
         } catch (TimestampParseException ex) {

@@ -2,6 +2,10 @@ package org.embulk.spi.time;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -548,16 +552,15 @@ class RubyTimeParsed extends TimeParsed {
         private boolean fail;
     }
 
+    /**
+     * Creates a java.time.Instant instance in a legacy Embulk's way from this RubyTimeParsed instance with ZoneId.
+     */
     @Override
-    public Timestamp toTimestamp(final int defaultYear,
-                                 final int defaultMonthOfYear,
-                                 final int defaultDayOfMonth,
-                                 final org.joda.time.DateTimeZone defaultTimeZone) {
-        final long secondSinceEpoch;
-        final int nanoOfSecondSinceEpoch;
-
+    Instant toInstantLegacy(final int defaultYear,
+                            final int defaultMonthOfYear,
+                            final int defaultDayOfMonth,
+                            final ZoneId defaultZoneId) {
         if (this.instantSeconds != null) {
-            secondSinceEpoch = this.instantSeconds.getEpochSecond();
             // Fractions by %Q are prioritized over fractions by %N.
             // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
             // => 789000000
@@ -565,71 +568,72 @@ class RubyTimeParsed extends TimeParsed {
             // => 789000000
             // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
             // => 345000000
-            nanoOfSecondSinceEpoch = this.instantSeconds.getNano();
-        } else {
-            final int year = (this.year == Integer.MIN_VALUE ? defaultYear : this.year);
-
-            // TODO: Calculate with java.time in Java 8.
-            // set up with min this and then add to allow rolling over
-            org.joda.time.DateTime datetime =
-                new org.joda.time.DateTime(year, 1, 1, 0, 0, 0, 0, org.joda.time.DateTimeZone.UTC);
-            if (this.dayOfYear != Integer.MIN_VALUE) {
-                // yday is more prioritized than mon/mday in Ruby's strptime.
-                datetime = datetime.plusDays(this.dayOfYear - 1);
+            if (!defaultZoneId.equals(ZoneOffset.UTC)) {
+                // TODO: Warn that a default time zone is specified for epoch seconds.
             }
-            else {
-                if (this.monthOfYear != Integer.MIN_VALUE) {
-                    datetime = datetime.plusMonths(this.monthOfYear - 1);
-                } else {
-                    datetime = datetime.plusMonths(defaultMonthOfYear - 1);
-                }
-                if (this.dayOfMonth != Integer.MIN_VALUE) {
-                    datetime = datetime.plusDays(this.dayOfMonth - 1);
-                } else {
-                    datetime = datetime.plusDays(defaultDayOfMonth - 1);
-                }
+            if (this.timeZoneName != null) {
+                // TODO: Warn that the epoch second has a time zone.
             }
-            if (this.hour != Integer.MIN_VALUE) {
-                datetime = datetime.plusHours(this.hour);
-            }
-            if (this.minuteOfHour != Integer.MIN_VALUE) {
-                datetime = datetime.plusMinutes(this.minuteOfHour);
-            }
-            if (this.secondOfMinute != Integer.MIN_VALUE) {
-                if (this.secondOfMinute == 60) {
-                    // Leap seconds are considered as 59 when Ruby converts them to epochs.
-                    datetime = datetime.plusSeconds(59);
-                }
-                else {
-                    datetime = datetime.plusSeconds(this.secondOfMinute);
-                }
-            }
-            secondSinceEpoch = datetime.getMillis() / 1000;
-            if (this.nanoOfSecond != Integer.MIN_VALUE) {
-                nanoOfSecondSinceEpoch = this.nanoOfSecond;
-            } else {
-                nanoOfSecondSinceEpoch = 0;
-            }
+            return this.instantSeconds;
         }
 
-        final String zone = this.timeZoneName;
-        final String text = this.originalString;
-
-        // TODO: Calculate with java.time in Java 8.
-        final org.joda.time.DateTimeZone timeZone;
-        if (zone != null) {
-            // TODO: Cache parsed zone?
-            // TODO: Use Ruby's timezone instead of Joda-Time's?  https://github.com/embulk/embulk/issues/833
-            timeZone = TimestampFormat.parseDateTimeZone(zone);
-            if (timeZone == null) {
-                throw new TimestampParseException("Invalid time zone name '" + zone + "' in '" + text + "'");
+        final ZoneId zoneId;
+        if (this.timeZoneName != null) {
+            zoneId = TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(this.timeZoneName);
+            if (zoneId == null) {
+                throw new TimestampParseException(
+                    "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
             }
         } else {
-            timeZone = defaultTimeZone;
+            zoneId = defaultZoneId;
         }
 
-        final long secondSinceEpochInUtc = timeZone.convertLocalToUTC(secondSinceEpoch * 1000, false) / 1000;
-        return Timestamp.ofEpochSecond(secondSinceEpochInUtc, nanoOfSecondSinceEpoch);
+        // Leap seconds are considered as 59 when Ruby converts them to epochs.
+        final int thisSecondOfMinute;
+        if (this.secondOfMinute == Integer.MIN_VALUE) {
+            thisSecondOfMinute = 0;
+        } else if (this.secondOfMinute == 60) {
+            thisSecondOfMinute = 59;
+        } else {
+            thisSecondOfMinute = this.secondOfMinute;
+        }
+
+        // TODO: Implement rolling over other than days if needed.
+        final int daysRollover = (this.hour == Integer.MIN_VALUE ? 0 : this.hour / 24);
+
+        final ZonedDateTime datetime;
+        // yday is more prioritized than mon/mday in Ruby's strptime.
+        if (this.dayOfYear != Integer.MIN_VALUE) {
+            datetime = ZonedDateTime.of(
+                (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
+                1,
+                1,
+                (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
+                (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+                thisSecondOfMinute,
+                (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+                zoneId).withDayOfYear(this.dayOfYear).plusDays(daysRollover);
+        } else {
+            datetime = ZonedDateTime.of(
+                (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
+                (this.monthOfYear == Integer.MIN_VALUE ? defaultMonthOfYear : this.monthOfYear),
+                (this.dayOfMonth == Integer.MIN_VALUE ? defaultDayOfMonth : this.dayOfMonth),
+                (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
+                (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+                thisSecondOfMinute,
+                (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+                zoneId).plusDays(daysRollover);
+        }
+        return datetime.toInstant();
+    }
+
+    @Override
+    Timestamp toTimestampLegacy(final int defaultYear,
+                                final int defaultMonthOfYear,
+                                final int defaultDayOfMonth,
+                                final ZoneId defaultZoneId) {
+        return Timestamp.ofInstant(this.toInstantLegacy(
+                                       defaultYear, defaultMonthOfYear, defaultDayOfMonth, defaultZoneId));
     }
 
     @Override
