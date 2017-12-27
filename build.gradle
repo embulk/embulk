@@ -29,7 +29,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.jfrog.bintray'
 
-version = '0.9.0-SNAPSHOT'
+version = '0.9.0-ALPHA'
 
 description = 'Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control.'
 
@@ -131,7 +131,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
         pkg {
             userOrg = 'embulk'
             repo = 'maven'
-            name = 'embulk'
+            name = 'embulk-unstable'
             desc = 'Embulk, a plugin-based parallel bulk data loader'
             websiteUrl = 'https://github.com/embulk/embulk'
             issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
@@ -231,7 +231,7 @@ bintray {  // Defines "bintrayUpload" properties for the root project's executab
     pkg {
         userOrg = 'embulk'
         repo = 'maven'
-        name = 'embulk'
+        name = 'embulk-unstable'
         desc = "${project.summary}"
         websiteUrl = 'https://github.com/embulk/embulk'
         issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
