@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Set;
 
+// org.embulk.spi.time.TimestampFormat is deprecated.
+// It won't be removed very soon at least until Embulk v0.10.
+@Deprecated
 public class TimestampFormat
 {
     @JsonCreator
