@@ -14,7 +14,8 @@ import java.util.Map;
  * RubyTimeParsed is TimeParsed from Ruby-style date/time formats.
  */
 class RubyTimeParsed extends TimeParsed {
-    private RubyTimeParsed(
+    // TODO: Make it private once LegacyRubyTimeParsed is removed.
+    RubyTimeParsed(
             final String originalString,
 
             final int dayOfMonth,
@@ -59,7 +60,7 @@ class RubyTimeParsed extends TimeParsed {
         this.leftover = leftover;
     }
 
-    static class Builder extends TimeParsed.Builder {
+    static class Builder {
         Builder(final String originalString) {
             this.originalString = originalString;
 
@@ -88,8 +89,7 @@ class RubyTimeParsed extends TimeParsed {
             this.fail = false;
         }
 
-        @Override
-        TimeParsed build() {
+        RubyTimeParsed build() {
             // Merge week-based year and century as MRI (Matz' Ruby Implementation) does before generating a hash.
             // See: https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/ext/date/date_strptime.c?view=markup#l676
             final int weekBasedYearWithCentury;
@@ -552,14 +552,31 @@ class RubyTimeParsed extends TimeParsed {
         private boolean fail;
     }
 
-    /**
-     * Creates a java.time.Instant instance in a legacy Embulk's way from this RubyTimeParsed instance with ZoneId.
-     */
     @Override
-    Instant toInstantLegacy(final int defaultYear,
-                            final int defaultMonthOfYear,
-                            final int defaultDayOfMonth,
-                            final ZoneId defaultZoneId) {
+    Instant toInstant(final ZoneOffset defaultZoneOffset) {
+        return this.toInstant(1970, 1, 1, (ZoneId)defaultZoneOffset);
+    }
+
+    @Override
+    Instant toInstant(final int defaultYear,
+                      final int defaultMonthOfYear,
+                      final int defaultDayOfMonth,
+                      final ZoneId defaultZoneId) {
+        // TODO: Implement it.
+        throw new UnsupportedOperationException("Non-legacy RubyTimeParsed is not implemented.");
+    }
+
+    /**
+     * Creates a java.time.Instant instance in legacy Embulk's way from this RubyTimeParsed instance with ZoneId.
+     *
+     * This method is to be called from LegacyRubyTimeParsed to access private fields.
+     *
+     * TODO: Remove this method once legacy Timestamp formats are removed.
+     */
+    final Instant toInstantLegacy(final int defaultYear,
+                                  final int defaultMonthOfYear,
+                                  final int defaultDayOfMonth,
+                                  final ZoneId defaultZoneId) {
         if (this.instantSeconds != null) {
             // Fractions by %Q are prioritized over fractions by %N.
             // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
@@ -627,17 +644,37 @@ class RubyTimeParsed extends TimeParsed {
         return datetime.toInstant();
     }
 
-    @Override
-    Timestamp toTimestampLegacy(final int defaultYear,
-                                final int defaultMonthOfYear,
-                                final int defaultDayOfMonth,
-                                final ZoneId defaultZoneId) {
-        return Timestamp.ofInstant(this.toInstantLegacy(
-                                       defaultYear, defaultMonthOfYear, defaultDayOfMonth, defaultZoneId));
+    /**
+     * Converts this RubyTimeParsed to LegacyRubyTimeParsed so that it can be converted to Instant in the legacy way.
+     *
+     * TODO: Remove this method once legacy Timestamp formats are removed.
+     */
+    final LegacyRubyTimeParsed toLegacy() {
+        return new LegacyRubyTimeParsed(
+            originalString,
+
+            dayOfMonth,
+            weekBasedYear,
+            hour,
+            dayOfYear,
+            nanoOfSecond,
+            minuteOfHour,
+            monthOfYear,
+            instantSeconds,
+            secondOfMinute,
+            weekOfYearStartingWithSunday,
+            weekOfYearStartingWithMonday,
+            dayOfWeekStartingWithMonday1,
+            weekOfWeekBasedYear,
+            dayOfWeekStartingWithSunday0,
+            year,
+
+            timeZoneName,
+
+            leftover);
     }
 
-    @Override
-    Map<String, Object> asMapLikeRubyHash() {
+    final Map<String, Object> asMapLikeRubyHash() {
         final HashMap<String, Object> hash = new HashMap<>();
 
         putIntIfValid(hash, "mday", this.dayOfMonth);
