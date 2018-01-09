@@ -19,7 +19,7 @@ Embulk documents: http://www.embulk.org/docs/
 
 ### Linux & Mac & BSD
 
-Embulk is a Java application. Please make sure that [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is installed.
+Embulk is a Java application. Please make sure that Java SE Runtime Environment (JRE) is installed. Embulk v0.8 series runs on Java 7, and Embulk v0.9 series runs on Java 8. Java 9 is not supported in any version for the time being.
 
 Following 4 commands install embulk to your home directory:
 
@@ -34,7 +34,7 @@ Next step: [Running example in 4 commands](#running-example)
 
 ### Windows
 
-Embulk is a Java application. Please make sure that [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is installed.
+Embulk is a Java application. Please make sure that Java SE Runtime Environment (JRE) is installed. Embulk v0.8 series runs on Java 7, and Embulk v0.9 series runs on Java 8. Java 9 is not supported in any version for the time being.
 
 You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe:
 
