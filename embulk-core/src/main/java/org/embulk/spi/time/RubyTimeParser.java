@@ -43,7 +43,7 @@ class RubyTimeParser
         this.format = format;
     }
 
-    public TimeParsed parse(final String text)
+    public RubyTimeParsed parse(final String text)
     {
         return new StringParser(text).parse(this.format);
     }
@@ -74,7 +74,7 @@ class RubyTimeParser
             this.fail = false;
         }
 
-        private TimeParsed parse(final RubyTimeFormat format)
+        private RubyTimeParsed parse(final RubyTimeFormat format)
         {
             final RubyTimeParsed.Builder builder = TimeParsed.rubyBuilder(this.text);
 

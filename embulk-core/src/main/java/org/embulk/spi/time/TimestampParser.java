@@ -1,64 +1,32 @@
 package org.embulk.spi.time;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.time.Instant;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;  // For default year/month/day if absent
 
-public class TimestampParser
-{
-    private TimestampParser(final String formatString,
-                            final ZoneId defaultZoneId,
-                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
-                            final int defaultYear,
-                            final int defaultMonthOfYear,
-                            final int defaultDayOfMonth) {
-        this.formatString = formatString;
-        this.parser = new RubyTimeParser(RubyTimeFormat.compile(formatString));
-        this.defaultJodaDateTimeZone = defaultJodaDateTimeZone;
-        this.defaultZoneId = defaultZoneId;
-        this.defaultYear = defaultYear;
-        this.defaultMonthOfYear = defaultMonthOfYear;
-        this.defaultDayOfMonth = defaultDayOfMonth;
+public class TimestampParser {
+    private TimestampParser(final TimestampParserLegacy delegate) {
+        this.delegate = delegate;
     }
 
-    private TimestampParser(final String formatString,
-                            final ZoneId defaultZoneId,
-                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
-                            final LocalDate defaultDate) {
-        this(formatString,
-             defaultZoneId,
-             defaultJodaDateTimeZone,
-             defaultDate.getYear(),
-             defaultDate.getMonthValue(),
-             defaultDate.getDayOfMonth());
+    TimestampParser() {
+        this(null);
     }
 
-    private TimestampParser(final String formatString,
-                            final ZoneId defaultZoneId,
-                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
-                            final String defaultDate) {
-        this(formatString,
-             defaultZoneId,
-             defaultJodaDateTimeZone,
-             parseDateForDefault(defaultDate));
-    }
-
+    // Calling the constructor directly is deprecated, but the constructor is kept for plugin compatibility.
+    // Use TimestampParser.of(Task, TimestampColumnOption) instead.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
     public TimestampParser(final Task task,
                            final TimestampColumnOption columnOption) {
-        this(columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-             TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                 columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-             TimeZoneIds.parseJodaDateTimeZone(
-                 columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-             columnOption.getDate().or(task.getDefaultDate()));
+        this(TimestampParserLegacy.of(
+                 columnOption.getFormat().or(task.getDefaultTimestampFormat()),
+                 TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
+                     columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                 TimeZoneIds.parseJodaDateTimeZone(
+                     columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                 columnOption.getDate().or(task.getDefaultDate())));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
@@ -66,12 +34,13 @@ public class TimestampParser
     @Deprecated
     public TimestampParser(final String formatString,
                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone) {
-        this(formatString,
-             TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
-             defaultJodaDateTimeZone,
-             1970,
-             1,
-             1);
+        this(TimestampParserLegacy.of(
+                 formatString,
+                 TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
+                 defaultJodaDateTimeZone,
+                 1970,
+                 1,
+                 1));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
@@ -80,34 +49,44 @@ public class TimestampParser
     public TimestampParser(final String formatString,
                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
                            final String defaultDate) {
-        this(formatString,
-             TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
-             defaultJodaDateTimeZone,
-             defaultDate);
+        this(TimestampParserLegacy.of(
+                 formatString,
+                 TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
+                 defaultJodaDateTimeZone,
+                 defaultDate));
     }
 
-    public static TimestampParser of(final String formatString,
-                                     final String defaultTimeZoneId,
-                                     final String defaultDate) {
-        return new TimestampParser(formatString,
-                                   TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultTimeZoneId),
-                                   TimeZoneIds.parseJodaDateTimeZone(defaultTimeZoneId),
-                                   defaultDate);
+    // "default_date" is deprecated, but the creator method is kept for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
+    public static TimestampParser of(final String pattern,
+                                     final String defaultZoneIdString,
+                                     final String defaultDateString) {
+        return TimestampParserLegacy.of(pattern,
+                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
+                                        TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
+                                        defaultDateString);
     }
 
-    public static TimestampParser of(final String formatString,
-                                     final String defaultTimeZoneId) {
-        return new TimestampParser(formatString,
-                                   TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultTimeZoneId),
-                                   TimeZoneIds.parseJodaDateTimeZone(defaultTimeZoneId),
-                                   1970,
-                                   1,
-                                   1);
+    public static TimestampParser of(final String pattern,
+                                     final String defaultZoneIdString) {
+        return TimestampParserLegacy.of(pattern,
+                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
+                                        TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
+                                        1970,
+                                        1,
+                                        1);
     }
 
-    @VisibleForTesting
-    static TimestampParser createTimestampParserForTesting(final Task task) {
-        return new TimestampParser(task.getDefaultTimestampFormat(), task.getDefaultTimeZone(), task.getDefaultDate());
+    public static TimestampParser of(final Task task,
+                                     final TimestampColumnOption columnOption) {
+        final String pattern = columnOption.getFormat().or(task.getDefaultTimestampFormat());
+        return TimestampParserLegacy.of(pattern,
+                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
+                                            columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                        TimeZoneIds.parseJodaDateTimeZone(
+                                            columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                        columnOption.getDate().or(task.getDefaultDate()));
     }
 
     public interface Task {
@@ -166,39 +145,22 @@ public class TimestampParser
     // It won't be removed very soon at least until Embulk v0.10.
     @Deprecated
     public org.joda.time.DateTimeZone getDefaultTimeZone() {
-        return defaultJodaDateTimeZone;
+        if (this.delegate == null) {
+            throw new RuntimeException("FATAL: Unexpected execution path of TimestampParser without delegate.");
+        }
+        return this.delegate.getDefaultTimeZone();
     }
 
-    public Timestamp parse(String text) throws TimestampParseException {
-        if (isNullOrEmpty(text)) {
-            throw new TimestampParseException("text is null or empty string.");
+    Instant parseInternal(final String text) throws TimestampParseException {
+        if (this.delegate == null) {
+            throw new TimestampParseException("FATAL: Unexpected execution path of TimestampParser without delegate.");
         }
-
-        final TimeParsed parseResult = parser.parse(text);
-        if (parseResult == null) {
-            throw new TimestampParseException("Cannot parse '" + text + "' by '" + formatString + "'");
-        }
-        return parseResult.toTimestampLegacy(this.defaultYear,
-                                             this.defaultMonthOfYear,
-                                             this.defaultDayOfMonth,
-                                             this.defaultZoneId);
+        return this.delegate.parseInternal(text);
     }
 
-    private static LocalDate parseDateForDefault(final String defaultDate) {
-        try {
-            return LocalDate.parse(defaultDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        } catch (DateTimeParseException ex) {
-            throw new ConfigException("Invalid date format. Expected yyyy-MM-dd: " + defaultDate, ex);
-        }
+    public final Timestamp parse(final String text) throws TimestampParseException {
+        return Timestamp.ofInstant(this.parseInternal(text));
     }
 
-    private final String formatString;
-    private final RubyTimeParser parser;
-
-    private final org.joda.time.DateTimeZone defaultJodaDateTimeZone;
-    private final ZoneId defaultZoneId;
-
-    private final int defaultYear;
-    private final int defaultMonthOfYear;
-    private final int defaultDayOfMonth;
+    private final TimestampParserLegacy delegate;
 }
