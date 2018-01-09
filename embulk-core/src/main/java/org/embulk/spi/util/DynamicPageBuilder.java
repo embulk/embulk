@@ -14,7 +14,7 @@ import org.embulk.spi.Column;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
-import org.embulk.spi.time.TimestampFormat;
+import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
 public class DynamicPageBuilder
@@ -37,7 +37,7 @@ public class DynamicPageBuilder
         @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
-                return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
+                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
             }
             else {
                 return null;
@@ -56,7 +56,14 @@ public class DynamicPageBuilder
         // Ruby's strptime does not accept numeric prefixes in specifiers such as "%6N".
         @Config("timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N\"")
-        public TimestampFormat getTimestampFormat();
+        public String getTimestampFormatString();
+
+        // org.embulk.spi.time.TimestampFormat is deprecated, but the getter returns TimestampFormat for compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
+        public default org.embulk.spi.time.TimestampFormat getTimestampFormat() {
+            return new org.embulk.spi.time.TimestampFormat(getTimestampFormatString());
+        }
 
         @Config("timezone")
         @ConfigDefault("null")
@@ -67,7 +74,7 @@ public class DynamicPageBuilder
         @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
+                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
             }
             else {
                 return Optional.absent();

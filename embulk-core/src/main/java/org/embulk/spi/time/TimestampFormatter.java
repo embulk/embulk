@@ -20,7 +20,7 @@ public class TimestampFormatter
         @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
-                return TimestampFormat.parseDateTimeZone(getDefaultTimeZoneId());
+                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
             }
             else {
                 return null;
@@ -43,7 +43,7 @@ public class TimestampFormatter
         @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimestampFormat.parseDateTimeZone(getTimeZoneId().get()));
+                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
             }
             else {
                 return Optional.absent();

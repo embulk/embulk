@@ -20,7 +20,6 @@ import org.embulk.spi.util.dynamic.DefaultValueSetter;
 import org.embulk.spi.util.dynamic.NullDefaultValueSetter;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampParser;
-import org.embulk.spi.time.TimestampFormat;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.config.ConfigException;
@@ -71,7 +70,7 @@ class DynamicColumnSetterFactory
             return new DoubleColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof StringType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column).getFormat(), getJodaDateTimeZone(column));
+                    getTimestampFormatForFormatter(column), getJodaDateTimeZone(column));
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
@@ -81,34 +80,34 @@ class DynamicColumnSetterFactory
                 parser = TimestampParser.of(timestampType.getFormat(), getTimeZoneId(column));
             }
             else {
-                parser = TimestampParser.of(getTimestampFormatForParser(column).getFormat(), getTimeZoneId(column));
+                parser = TimestampParser.of(getTimestampFormatForParser(column), getTimeZoneId(column));
             }
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
             TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column).getFormat(), getJodaDateTimeZone(column));
+                    getTimestampFormatForFormatter(column), getJodaDateTimeZone(column));
             return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
         throw new ConfigException("Unknown column type: "+type);
     }
 
-    private TimestampFormat getTimestampFormatForFormatter(Column column)
+    private String getTimestampFormatForFormatter(Column column)
     {
         DynamicPageBuilder.ColumnOption option = getColumnOption(column);
         if (option != null) {
-            return option.getTimestampFormat();
+            return option.getTimestampFormatString();
         } else {
-            return new TimestampFormat("%Y-%m-%d %H:%M:%S.%6N");
+            return "%Y-%m-%d %H:%M:%S.%6N";
         }
     }
 
-    private TimestampFormat getTimestampFormatForParser(Column column)
+    private String getTimestampFormatForParser(Column column)
     {
         DynamicPageBuilder.ColumnOption option = getColumnOption(column);
         if (option != null) {
-            return option.getTimestampFormat();
+            return option.getTimestampFormatString();
         } else {
-            return new TimestampFormat("%Y-%m-%d %H:%M:%S.%N");
+            return "%Y-%m-%d %H:%M:%S.%N";
         }
     }
 
