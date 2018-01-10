@@ -9,4 +9,14 @@ public class TimestampParseException
     {
         super(message);
     }
+
+    public TimestampParseException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
+
+    public TimestampParseException(Throwable cause)
+    {
+        super(cause);
+    }
 }
