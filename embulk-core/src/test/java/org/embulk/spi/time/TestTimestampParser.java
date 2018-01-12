@@ -39,6 +39,18 @@ public class TestTimestampParser {
     }
 
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__3_iso8601() {
+        // "Ruby" timestamp parser takes second = 60 as next second.
+
+        testRubyToParse("2001-02-03", "%Y-%m-%d", 981158400L);
+        testRubyToParse("2001-02-03T23:59:60", "%Y-%m-%dT%H:%M:%S", 981244800L);
+        testRubyToParse("2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 981212400L);
+        testRubyToParse("-2001-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -125309754000L);
+        testRubyToParse("+012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", 327406287600L);
+        testRubyToParse("-012345-02-03T23:59:60+09:00", "%Y-%m-%dT%H:%M:%S%Z", -451734829200L);
+    }
+
+    @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test__strptime__3_iso8601() {
         testToParse("2001-02-03", "%Y-%m-%d", 981158400L);
         testToParse("2001-02-03T23:59:60", "%Y-%m-%dT%H:%M:%S", 981244799L);
@@ -93,6 +105,33 @@ public class TestTimestampParser {
     }
 
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__3_date1() {
+        // The time zone ID "EST" is recognized in Ruby parser.
+        testRubyToParse("Thu Jul 29 16:39:41 EST 1999", "%a %b %d %H:%M:%S %Z %Y", 933284381L);
+
+        // The time zone IDs "MET", "AMT", "AST", and "DST" are not recognized, and handled as "UTC", in Ruby parser.
+        testRubyToParse("Thu Jul 29 16:39:41 MET DST 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 AMT 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 AMT -1999", "%a %b %d %H:%M:%S %Z %Y", -125231383219L);
+        testRubyToParse("Thu Jul 29 16:39:41 AST 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 AST -1999", "%a %b %d %H:%M:%S %Z %Y", -125231383219L);
+
+        // All "GMT", "GMT+..." and "GMT-..." are not recognized, and handled as "UTC", in Ruby parser.
+        testRubyToParse("Thu Jul 29 16:39:41 GMT+09 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT+0908 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT+090807 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT-09 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT-09:08 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT-09:08:07 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT-3.5 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 GMT-3,5 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+
+        // String-ish time zone IDs are not recognized, and handled as "UTC", in Ruby parser.
+        testRubyToParse("Thu Jul 29 16:39:41 Mountain Daylight Time 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+        testRubyToParse("Thu Jul 29 16:39:41 E. Australia Standard Time 1999", "%a %b %d %H:%M:%S %Z %Y", 933266381L);
+    }
+
+    @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test__strptime__3_date1() {
         testToParse("Thu Jul 29 16:39:41 EST 1999", "%a %b %d %H:%M:%S %Z %Y", 933284381L);
         testToParse("Thu Jul 29 16:39:41 MET DST 1999", "%a %b %d %H:%M:%S %Z %Y", 933259181L);
@@ -126,6 +165,21 @@ public class TestTimestampParser {
 
         // JFYI: Jul 29 -1999 is Sunday, not Thursday.
         testJavaToParse("Sun, 29 Jul -1999 09:54:21 -0430", "EEE, dd MMM uuuu HH:mm:ss ZZZ", -125231391339L);
+    }
+
+    @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__3_rfc822() {
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 UT", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 GMT", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
+
+        // "PDT" (Pacific Daylight Time) is correctly recognized as -07:00 in Ruby parser, not like the legacy parser.
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 PDT", "%a, %d %b %Y %H:%M:%S %Z", 933267261L);
+
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 z", "%a, %d %b %Y %H:%M:%S %Z", 933242061L);
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 +0900", "%a, %d %b %Y %H:%M:%S %Z", 933209661L);
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 +0430", "%a, %d %b %Y %H:%M:%S %Z", 933225861L);
+        testRubyToParse("Thu, 29 Jul 1999 09:54:21 -0430", "%a, %d %b %Y %H:%M:%S %Z", 933258261L);
+        testRubyToParse("Thu, 29 Jul -1999 09:54:21 -0430", "%a, %d %b %Y %H:%M:%S %Z", -125231391339L);
     }
 
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
@@ -200,6 +254,39 @@ public class TestTimestampParser {
         // Just "+5" is not acceptable as a time zone offset in Java parser.
         // JFYI: February 1, 2003 is Saturday, not Friday.
         testJavaToParse("sat1feb034pm+0500", "EEEdMMMuuhaX", 1044097200L);
+    }
+
+    @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__3_etc() {
+        testRubyToParse("06-DEC-99", "%d-%b-%y", 944438400L);
+        testRubyToParse("sUnDay oCtoBer 31 01", "%A %B %d %y", 1004486400L);
+        // Their "\u000b" are actually "\v" in Ruby v2.3.1's tests. "\v" is not recognized as a character in Java.
+        testRubyToParse("October\t\n\u000b\f\r 15,\t\n\u000b\f\r99", "%B %d, %y", 939945600L);
+        testRubyToParse("October\t\n\u000b\f\r 15,\t\n\u000b\f\r99", "%B%t%d,%n%y", 939945600L);
+
+        testRubyToParse("09:02:11 AM", "%I:%M:%S %p", 32531L);
+        testRubyToParse("09:02:11 A.M.", "%I:%M:%S %p", 32531L);
+        testRubyToParse("09:02:11 PM", "%I:%M:%S %p", 75731L);
+        testRubyToParse("09:02:11 P.M.", "%I:%M:%S %p", 75731L);
+
+        testRubyToParse("12:33:44 AM", "%r", 2024L);
+        testRubyToParse("01:33:44 AM", "%r", 5624L);
+        testRubyToParse("11:33:44 AM", "%r", 41624L);
+        testRubyToParse("12:33:44 PM", "%r", 45224L);
+        testRubyToParse("01:33:44 PM", "%r", 48824L);
+        testRubyToParse("11:33:44 PM", "%r", 84824L);
+
+        testRubyToParse("11:33:44 PM AMT", "%I:%M:%S %p %Z", 84824L);
+        testRubyToParse("11:33:44 P.M. AMT", "%I:%M:%S %p %Z", 84824L);
+        // Their time zones are "AMT" actually in Ruby v2.3.1's tests, but "-04:00" is used here instead.
+        // "AMT" is not recognized even by Ruby v2.3.1's zonetab.
+        testRubyToParse("11:33:44 PM -04:00", "%I:%M:%S %p %Z", 99224L);
+        testRubyToParse("11:33:44 P.M. -04:00", "%I:%M:%S %p %Z", 99224L);
+
+        testRubyToParse("fri1feb034pm+5", "%a%d%b%y%H%p%Z", 1044115200L);
+        // The time zone offset is just "+5" in Ruby v2.3.1's tests, but "+05" is used here instead.
+        // "+5" is not recognized, and handled as "UTC", in Ruby parser.
+        testRubyToParse("fri1feb034pm+05", "%a%d%b%y%H%p%Z", 1044097200L);
     }
 
     @Test  // Imported from test__strptime__3 in Ruby v2.3.1's test/date/test_date_strptime.rb.
@@ -280,6 +367,49 @@ public class TestTimestampParser {
     }
 
     @Test  // Imported from test__strptime__width in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__width() {
+        // Default dates are always 1970-01-01 in Ruby parser. If only the year is specified, the date is 01-01.
+        testRubyToParse("99", "%y", 915148800L);
+        testRubyToParse("01", "%y", 978307200L);
+        testRubyToParse("19 99", "%C %y", 915148800L);
+        testRubyToParse("20 01", "%C %y", 978307200L);
+        testRubyToParse("30 99", "%C %y", 35627817600L);
+        testRubyToParse("30 01", "%C %y", 32535216000L);
+        testRubyToParse("1999", "%C%y", 915148800L);
+        testRubyToParse("2001", "%C%y", 978307200L);
+        testRubyToParse("3099", "%C%y", 35627817600L);
+        testRubyToParse("3001", "%C%y", 32535216000L);
+
+        testRubyToParse("20060806", "%Y", 632995724851200L);
+        // Its " " is actually "\s" in Ruby v2.3.1's tests. "\s" is not recognized as a character in Java.
+        testRubyToParse("20060806", "%Y ", 632995724851200L);
+        testRubyToParse("20060806", "%Y%m%d", 1154822400L);
+        testRubyToParse("2006908906", "%Y9%m9%d", 1154822400L);
+        testRubyToParse("12006 08 06", "%Y %m %d", 316724342400L);
+        testRubyToParse("12006-08-06", "%Y-%m-%d", 316724342400L);
+        testRubyToParse("200608 6", "%Y%m%e", 1154822400L);
+
+        // Day of the year (yday; DAY_OF_YEAR) is not recognized, and handled as January 1, in Ruby parser.
+        testRubyToParse("2006333", "%Y%j", 1136073600L);
+        testRubyToParse("20069333", "%Y9%j", 1136073600L);
+        testRubyToParse("12006 333", "%Y %j", 316705593600L);
+        testRubyToParse("12006-333", "%Y-%j", 316705593600L);
+
+        testRubyToParse("232425", "%H%M%S", 84265L);
+        testRubyToParse("23924925", "%H9%M9%S", 84265L);
+        testRubyToParse("23 24 25", "%H %M %S", 84265L);
+        testRubyToParse("23:24:25", "%H:%M:%S", 84265L);
+        testRubyToParse(" 32425", "%k%M%S", 12265L);
+        testRubyToParse(" 32425", "%l%M%S", 12265L);
+
+        // They are intentionally skipped as a month and a day of week are not sufficient to build a timestamp.
+        // [['FriAug', '%a%b'], [nil,8,nil,nil,nil,nil,nil,nil,5], __LINE__],
+        // [['FriAug', '%A%B'], [nil,8,nil,nil,nil,nil,nil,nil,5], __LINE__],
+        // [['FridayAugust', '%A%B'], [nil,8,nil,nil,nil,nil,nil,nil,5], __LINE__],
+        // [['FridayAugust', '%a%b'], [nil,8,nil,nil,nil,nil,nil,nil,5], __LINE__],
+    }
+
+    @Test  // Imported from test__strptime__width in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test__strptime__width() {
         testToParse("99", "%y", 917049600L);
         testToParse("01", "%y", 980208000L);
@@ -321,6 +451,66 @@ public class TestTimestampParser {
     }
 
     // test__strptime__fail is skipped for Java parser.
+
+    @Test  // Imported from test__strptime__fail in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby__strptime__fail() {
+        testRubyToParse("2001.", "%Y.", 978307200L);
+        // Its " " is actually "\s" in Ruby v2.3.1's tests. "\s" is not recognized as a character in Java.
+        testRubyToParse("2001. ", "%Y.", 978307200L);
+        testRubyToParse("2001.", "%Y. ", 978307200L);
+        // Its " " is actually "\s" in Ruby v2.3.1's tests. "\s" is not recognized as a character in Java.
+        testRubyToParse("2001. ", "%Y. ", 978307200L);
+
+        failRubyToParse("2001", "%Y.");
+        // Its " " is actually "\s" in Ruby v2.3.1's tests. "\s" is not recognized as a character in Java.
+        failRubyToParse("2001 ", "%Y.");
+        failRubyToParse("2001", "%Y. ");
+        // Its " " is actually "\s" in Ruby v2.3.1's tests. "\s" is not recognized as a character in Java.
+        failRubyToParse("2001 ", "%Y. ");
+
+        failRubyToParse("2001-13-31", "%Y-%m-%d");
+        failRubyToParse("2001-12-00", "%Y-%m-%d");
+        failRubyToParse("2001-12-32", "%Y-%m-%d");
+        failRubyToParse("2001-12-00", "%Y-%m-%e");
+        failRubyToParse("2001-12-32", "%Y-%m-%e");
+        failRubyToParse("2001-12-31", "%y-%m-%d");
+
+        failRubyToParse("2004-000", "%Y-%j");
+        failRubyToParse("2004-367", "%Y-%j");
+        failRubyToParse("2004-366", "%y-%j");
+
+        testRubyToParse("24:59:59", "%H:%M:%S", 89999L);
+        testRubyToParse("24:59:59", "%k:%M:%S", 89999L);
+        testRubyToParse("24:59:60", "%H:%M:%S", 90000L);
+        testRubyToParse("24:59:60", "%k:%M:%S", 90000L);
+
+        failRubyToParse("24:60:59", "%H:%M:%S");
+        failRubyToParse("24:60:59", "%k:%M:%S");
+        failRubyToParse("24:59:61", "%H:%M:%S");
+        failRubyToParse("24:59:61", "%k:%M:%S");
+        failRubyToParse("00:59:59", "%I:%M:%S");
+        failRubyToParse("13:59:59", "%I:%M:%S");
+        failRubyToParse("00:59:59", "%l:%M:%S");
+        failRubyToParse("13:59:59", "%l:%M:%S");
+
+        testRubyToParse("0", "%U", 0L);
+        failRubyToParse("54", "%U");
+        testRubyToParse("0", "%W", 0L);
+        failRubyToParse("54", "%W");
+        failRubyToParse("0", "%V");
+        failRubyToParse("54", "%V");
+        failRubyToParse("0", "%u");
+        testRubyToParse("7", "%u", 0L);
+        testRubyToParse("0", "%w", 0L);
+        failRubyToParse("7", "%w");
+
+        failRubyToParse("Sanday", "%A");
+        failRubyToParse("Jenuary", "%B");
+        testRubyToParse("Sundai", "%A", 0L);
+        testRubyToParse("Januari", "%B", 0L);
+        failRubyToParse("Sundai,", "%A,");
+        failRubyToParse("Januari,", "%B,");
+    }
 
     @Test  // Imported from test__strptime__fail in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test__strptime__fail() {
@@ -395,6 +585,14 @@ public class TestTimestampParser {
     }
 
     @Test  // Imported partially from test_strptime in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby_strptime() {
+        testRubyToParse("2002-03-14T11:22:33Z", "%Y-%m-%dT%H:%M:%S%Z", 1016104953L);
+        testRubyToParse("2002-03-14T11:22:33+09:00", "%Y-%m-%dT%H:%M:%S%Z", 1016072553L);
+        testRubyToParse("2002-03-14T11:22:33-09:00", "%FT%T%Z", 1016137353L);
+        testRubyToParse("2002-03-14T11:22:33.123456789-09:00", "%FT%T.%N%Z", 1016137353L, 123456789);
+    }
+
+    @Test  // Imported partially from test_strptime in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test_strptime() {
         testToParse("2002-03-14T11:22:33Z", "%Y-%m-%dT%H:%M:%S%Z", 1016104953L);
         testToParse("2002-03-14T11:22:33+09:00", "%Y-%m-%dT%H:%M:%S%Z", 1016072553L);
@@ -403,6 +601,17 @@ public class TestTimestampParser {
     }
 
     // Epoch (nano) seconds are not accepted in Java parser.
+
+    @Test  // Imported from test_strptime__minus in Ruby v2.3.1's test/date/test_date_strptime.rb.
+    public void testRuby_strptime__minus() {
+        testRubyToParse("-1", "%s", -1L);
+        testRubyToParse("-86400", "%s", -86400L);
+
+        // In |java.time.Instant|, it is always 0 <= nanoAdjustment < 1,000,000,000.
+        // -0.9s is represented like -1s + 100ms.
+        testRubyToParse("-999", "%Q", -1L, 1000000);
+        testRubyToParse("-1000", "%Q", -1L);
+    }
 
     @Test  // Imported from test_strptime__minus in Ruby v2.3.1's test/date/test_date_strptime.rb.
     public void test_strptime__minus() {
@@ -428,6 +637,27 @@ public class TestTimestampParser {
 
     private void failJavaToParse(final String string, final String format) {
         final TimestampParser parser = TimestampParser.of("java:" + format, "UTC");
+        try {
+            parser.parse(string);
+        } catch (TimestampParseException ex) {
+            return;
+        }
+        fail();
+    }
+
+    private void testRubyToParse(final String string, final String format, final long second, final int nanoOfSecond) {
+        final TimestampParser parser = TimestampParser.of("ruby:" + format, "UTC");
+        final Timestamp timestamp = parser.parse(string);
+        assertEquals(second, timestamp.getEpochSecond());
+        assertEquals(nanoOfSecond,timestamp.getNano());
+    }
+
+    private void testRubyToParse(final String string, final String format, final long second) {
+        testRubyToParse(string, format, second, 0);
+    }
+
+    private void failRubyToParse(final String string, final String format) {
+        final TimestampParser parser = TimestampParser.of("ruby:" + format, "UTC");
         try {
             parser.parse(string);
         } catch (TimestampParseException ex) {
