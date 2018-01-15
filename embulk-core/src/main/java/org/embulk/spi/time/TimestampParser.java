@@ -73,6 +73,16 @@ public class TimestampParser {
             }
             return TimestampParserJava.of(pattern.substring(5),
                                           zoneOffset);
+        } else if (pattern.startsWith("ruby:")) {
+            // TODO: Warn if "default_date" is set, which is unavailable for "ruby:".
+            final ZoneOffset zoneOffset;
+            if (defaultZoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(defaultZoneIdString);
+            }
+            return TimestampParserRuby.of(pattern.substring(5),
+                                          zoneOffset);
         } else {
             return TimestampParserLegacy.of(pattern,
                                             TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
@@ -91,6 +101,15 @@ public class TimestampParser {
                 zoneOffset = ZoneOffset.of(defaultZoneIdString);
             }
             return TimestampParserJava.of(pattern.substring(5),
+                                          zoneOffset);
+        } else if (pattern.startsWith("ruby:")) {
+            final ZoneOffset zoneOffset;
+            if (defaultZoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(defaultZoneIdString);
+            }
+            return TimestampParserRuby.of(pattern.substring(5),
                                           zoneOffset);
         } else {
             return TimestampParserLegacy.of(pattern,
@@ -115,6 +134,17 @@ public class TimestampParser {
                 zoneOffset = ZoneOffset.of(zoneOffsetString);
             }
             return TimestampParserJava.of(pattern.substring(5),
+                                          zoneOffset);
+        } else if (pattern.startsWith("ruby:")) {
+            // TODO: Warn if "default_date" is set, which is unavailable for "ruby:".
+            final String zoneOffsetString = columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId());
+            final ZoneOffset zoneOffset;
+            if (zoneOffsetString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneOffsetString);
+            }
+            return TimestampParserRuby.of(pattern.substring(5),
                                           zoneOffset);
         } else {
             return TimestampParserLegacy.of(pattern,

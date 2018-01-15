@@ -1,8 +1,9 @@
 package org.embulk.spi.time;
 
 import java.math.BigDecimal;
+import java.time.DateTimeException;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -12,6 +13,16 @@ import java.util.Map;
 
 /**
  * RubyTimeParsed is TimeParsed from Ruby-style date/time formats.
+ *
+ * Embulk's timestamp formats are based on Ruby's formats for historical reasons, and kept for compatibility.
+ * Embulk maintains its own implementation of Ruby-compatible time parser to be independent from JRuby.
+ *
+ * This class is intentionally package-private so that plugins do not directly depend.
+ *
+ * A part of this class is reimplementation of Ruby v2.3.1's lib/time.rb. See its COPYING for license.
+ *
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup">lib/time.rb</a>
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/COPYING?view=markup">COPYING</a>
  */
 class RubyTimeParsed extends TimeParsed {
     // TODO: Make it private once LegacyRubyTimeParsed is removed.
@@ -552,9 +563,59 @@ class RubyTimeParsed extends TimeParsed {
         private boolean fail;
     }
 
+    /**
+     * Creates a java.time.Instant instance basically in the same way with Ruby v2.3.1's Time.strptime.
+     *
+     * The difference from Ruby v2.3.1's Time.strptime is that it does not consider "now" and local time zone.
+     * If the given zone is neither numerical nor predefined textual time zones, it returns defaultZoneOffset then.
+     *
+     * The method is reimplemented based on strptime from Ruby v2.3.1's lib/time.rb.
+     *
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l427">strptime</a>
+     */
     @Override
     Instant toInstant(final ZoneOffset defaultZoneOffset) {
-        return this.toInstant(1970, 1, 1, (ZoneId)defaultZoneOffset);
+        final ZoneOffset zoneOffset = TimeZoneIds.parseRubyTimeZoneOffset(this.timeZoneName, defaultZoneOffset);
+        if (zoneOffset == null) {
+            throw new TimestampParseException(
+                "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
+        }
+
+        if (this.instantSeconds != null) {
+            // Fractions by %Q are prioritized over fractions by %N.
+            // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
+            // => 789000000
+            // irb(main):003:0> Time.strptime("12.345 123456789", "%S.%N %Q").nsec
+            // => 789000000
+            // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
+            // => 345000000
+            if (!defaultZoneOffset.equals(ZoneOffset.UTC)) {
+                // TODO: Warn that a default time zone is specified for epoch seconds.
+            }
+            if (this.timeZoneName != null) {
+                // TODO: Warn that the epoch second has a time zone.
+            }
+            return this.instantSeconds;
+        }
+
+        // Day of the year (yday: DAY_OF_YEAR) is not considered in Time.strptime, not like DateTime.strptime.
+        //
+        // irb(main):002:0> Time.strptime("2001-128T23:59:59", "%Y-%jT%H:%M:%S")
+        // => 2001-01-01 23:59:59 +0900
+        // irb(main):004:0> DateTime.strptime("2001-128T23:59:59", "%Y-%jT%H:%M:%S")
+        // => #<DateTime: 2001-05-08T23:59:59+00:00 ((2452038j,86399s,0n),+0s,2299161j)>
+
+        final OffsetDateTime datetime = applyOffset(
+            (this.year == Integer.MIN_VALUE ? 1970 : this.year),
+            (this.monthOfYear == Integer.MIN_VALUE ? 1 : this.monthOfYear),
+            (this.dayOfMonth == Integer.MIN_VALUE ? 1 : this.dayOfMonth),
+            (this.hour == Integer.MIN_VALUE ? 0 : this.hour),
+            (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+            (this.secondOfMinute == Integer.MIN_VALUE ? 0 : this.secondOfMinute),
+            (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+            zoneOffset);
+
+        return datetime.toInstant();
     }
 
     @Override
@@ -742,6 +803,153 @@ class RubyTimeParsed extends TimeParsed {
         return value;
     }
 
+    /**
+     * Applies time zone offset to date/time information, and creates java.time.OffsetDateTime in UTC.
+     *
+     * The method is reimplemented based on apply_offset from Ruby v2.3.1's lib/time.rb.
+     *
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l208">apply_offset</a>
+     */
+    private static OffsetDateTime applyOffset(int year,
+                                              int monthOfYear,
+                                              int dayOfMonth,
+                                              int hourOfDay,
+                                              int minuteOfHour,
+                                              int secondOfMinute,
+                                              final int nanoOfSecond,
+                                              final ZoneOffset zoneOffset) throws TimestampParseException {
+        int offset = zoneOffset.getTotalSeconds();
+
+        // Processing leap seconds using time offsets in a bit tricky manner.
+        //
+        // Leap seconds are considered as the next second in Time.strptime.
+        // irb(main):002:0> Time.strptime("2001-02-03T23:59:60", "%Y-%m-%dT%H:%M:%S")
+        // => 2001-02-04 00:00:00 +0900
+        if (secondOfMinute == 60) {
+            secondOfMinute = 59;
+            offset -= 1;
+        }
+
+        // Processing 24h in clock hours using time offsets in a bit tricky manner.
+        //
+        // 24h is considered as 0h in the next day in Time.strptime (if non-UTC time zone is specified).
+        // irb(main):002:0> Time.strptime("24:59:59 PST", "%H:%M:%S %Z")
+        // => 2018-01-13 00:59:59 -0800
+        // irb(main):003:0> Time.strptime("24:59:59 UTC", "%H:%M:%S %Z")
+        // ArgumentError: min out of range
+        // ...
+        // irb(main):004:0> Time.strptime("24:59:59", "%H:%M:%S")
+        // ArgumentError: min out of range
+        // ...
+        //
+        // 24h is always handled as 0h in the next day in Embulk as if non-UTC time zone is specified.
+        if (hourOfDay == 24) {
+            offset -= 24 * 60 * 60;
+            hourOfDay = 0;
+        }
+
+        if (offset < 0) {
+            offset = -offset;
+
+            final int offsetSecond = offset % 60;
+            offset = offset / 60;
+            if (offsetSecond != 0) {
+                secondOfMinute += offsetSecond;
+                offset += secondOfMinute / 60;
+                secondOfMinute %= 60;
+            }
+
+            final int offsetMinute = offset % 60;
+            offset = offset / 60;
+            if (offsetMinute != 0) {
+                minuteOfHour += offsetMinute;
+                offset += minuteOfHour / 60;
+                minuteOfHour %= 60;
+            }
+
+            final int offsetHour = offset % 24;
+            offset = offset / 24;
+            if (offsetHour != 0) {
+                hourOfDay += offsetHour;
+                offset += hourOfDay / 24;
+                hourOfDay %= 24;
+            }
+
+            if (offset != 0) {
+                dayOfMonth += offset;
+                final int days = monthDays(year, monthOfYear);
+                if (days < dayOfMonth) {
+                    monthOfYear += 1;
+                    if (12 < monthOfYear) {
+                        monthOfYear = 1;
+                        year += 1;
+                    }
+                    dayOfMonth = 1;
+                }
+            }
+
+        } else if (0 < offset) {
+            final int offsetSecond = offset % 60;
+            offset /= 60;
+            if (offsetSecond != 0) {
+                secondOfMinute -= offsetSecond;
+                offset -= secondOfMinute / 60;
+                secondOfMinute %= 60;
+            }
+
+            final int offsetMinute = offset % 60;
+            offset /= 60;
+            if (offsetMinute != 0) {
+                minuteOfHour -= offsetMinute;
+                offset -= minuteOfHour / 60;
+                minuteOfHour %= 60;
+            }
+
+            final int offsetHour = offset % 24;
+            offset /= 24;
+            if (offsetHour != 0) {
+                hourOfDay -= offsetHour;
+                offset -= hourOfDay / 24;
+                hourOfDay %= 24;
+            }
+
+            if (offset != 0) {
+                dayOfMonth -= offset;
+                if (dayOfMonth < 1) {
+                    monthOfYear -= 1;
+                    if (monthOfYear < 1) {
+                        year -= 1;
+                        monthOfYear = 12;
+                    }
+                    dayOfMonth = monthDays(year, monthOfYear);
+                }
+            }
+        }
+
+        try {
+            return OffsetDateTime.of(year, monthOfYear, dayOfMonth,
+                                     hourOfDay, minuteOfHour, secondOfMinute, nanoOfSecond,
+                                     ZoneOffset.UTC);
+        } catch (DateTimeException ex) {
+            throw new TimestampParseException(ex);
+        }
+    }
+
+    /**
+     * Returns the number of days in the given month of the given year.
+     *
+     * The method is reimplemented based on month_days from Ruby v2.3.1's lib/time.rb.
+     *
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l199">month_days</a>
+     */
+    private static int monthDays(final int year, final int monthOfYear) {
+        if (((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0)) {
+            return leapYearMonthDays[monthOfYear - 1];
+        } else {
+            return commonYearMonthDays[monthOfYear - 1];
+        }
+    }
+
     private final String originalString;
 
     private final int dayOfMonth;
@@ -763,4 +971,15 @@ class RubyTimeParsed extends TimeParsed {
     private final String timeZoneName;
 
     private final String leftover;
+
+    /**
+     * Numbers of days per month and year.
+     *
+     * The constants are imported from LeapYearMonthDays and CommonYearMonthDays in Ruby v2.3.1's lib/time.rb.
+     *
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l197">LeapYearMonthDays</a>
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l198">CommonYearMonthDays</a>
+     */
+    private static final int[] leapYearMonthDays = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    private static final int[] commonYearMonthDays = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 }

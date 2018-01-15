@@ -5,11 +5,22 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TimeZoneIds is a utility class for operating with time zones.
+ *
+ * This class is public only to be called from DynamicColumnSetterFactory and DynamicPageBuilder.
+ * It is not guaranteed to use this class from plugins. This class may be moved, renamed, or removed.
+ *
+ * A part of this class is reimplementation of Ruby v2.3.1's lib/time.rb. See its COPYING for license.
+ *
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup">lib/time.rb</a>
+ * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/COPYING?view=markup">COPYING</a>
  */
 public class TimeZoneIds
 {
@@ -29,6 +40,36 @@ public class TimeZoneIds
      */
     public static org.joda.time.DateTimeZone convertZoneOffsetToJodaDateTimeZone(final ZoneOffset zoneOffset) {
         return org.joda.time.DateTimeZone.forOffsetMillis(zoneOffset.getTotalSeconds() * 1000);
+    }
+
+    /**
+     * Parses a time zone ID to java.time.ZoneOffset basically in the same rule with Ruby v2.3.1's Time.strptime.
+     *
+     * The only difference from Ruby v2.3.1's Time.strptime is that it does not consider local time zone.
+     * If the given zone is neither numerical nor predefined textual time zones, it returns defaultZoneOffset then.
+     *
+     * The method is reimplemented based on zone_offset from Ruby v2.3.1's lib/time.rb.
+     *
+     * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l134">zone_offset</a>
+     */
+    public static ZoneOffset parseRubyTimeZoneOffset(final String zoneId, final ZoneOffset defaultZoneOffset) {
+        if (zoneId == null) {
+            return defaultZoneOffset;
+        }
+
+        if (zoneId.charAt(0) == '+' || zoneId.charAt(0) == '-') {
+            if (RUBY_TIME_ZONE_OFFSET_PATTERN_HH_MM.matcher(zoneId).matches() ||
+                RUBY_TIME_ZONE_OFFSET_PATTERN_HH.matcher(zoneId).matches()) {
+                return ZoneOffset.of(zoneId);
+            }
+            return defaultZoneOffset;
+        }
+
+        final ZoneOffset zoneOffset = RUBY_TIME_ZONE_OFFSET_IDS.get(zoneId.toUpperCase(Locale.ENGLISH));
+        if (zoneOffset != null) {
+            return zoneOffset;
+        }
+        return defaultZoneOffset;
     }
 
     /**
@@ -175,10 +216,58 @@ public class TimeZoneIds
         aliasZoneIdsForLegacyParser.put("ROC", "Asia/Taipei");
 
         ALIAS_ZONE_IDS_FOR_LEGACY = Collections.unmodifiableMap(aliasZoneIdsForLegacyParser);
+
+        final HashMap<String, ZoneOffset> rubyTimeZoneOffsetIds = new HashMap<>();
+        rubyTimeZoneOffsetIds.put("UTC", ZoneOffset.UTC);
+        // ISO 8601
+        rubyTimeZoneOffsetIds.put("Z", ZoneOffset.UTC);
+        // RFC 822
+        rubyTimeZoneOffsetIds.put("UT", ZoneOffset.UTC);
+        rubyTimeZoneOffsetIds.put("GMT", ZoneOffset.UTC);
+        rubyTimeZoneOffsetIds.put("EST", ZoneOffset.ofHours(-5));
+        rubyTimeZoneOffsetIds.put("EDT", ZoneOffset.ofHours(-4));
+        rubyTimeZoneOffsetIds.put("CST", ZoneOffset.ofHours(-6));
+        rubyTimeZoneOffsetIds.put("CDT", ZoneOffset.ofHours(-5));
+        rubyTimeZoneOffsetIds.put("MST", ZoneOffset.ofHours(-7));
+        rubyTimeZoneOffsetIds.put("MDT", ZoneOffset.ofHours(-6));
+        rubyTimeZoneOffsetIds.put("PST", ZoneOffset.ofHours(-8));
+        rubyTimeZoneOffsetIds.put("PDT", ZoneOffset.ofHours(-7));
+        // Following definition of military zones is original one.
+        // See RFC 1123 and RFC 2822 for the error in RFC 822.
+        rubyTimeZoneOffsetIds.put("A", ZoneOffset.ofHours(+1));
+        rubyTimeZoneOffsetIds.put("B", ZoneOffset.ofHours(+2));
+        rubyTimeZoneOffsetIds.put("C", ZoneOffset.ofHours(+3));
+        rubyTimeZoneOffsetIds.put("D", ZoneOffset.ofHours(+4));
+        rubyTimeZoneOffsetIds.put("E", ZoneOffset.ofHours(+5));
+        rubyTimeZoneOffsetIds.put("F", ZoneOffset.ofHours(+6));
+        rubyTimeZoneOffsetIds.put("G", ZoneOffset.ofHours(+7));
+        rubyTimeZoneOffsetIds.put("H", ZoneOffset.ofHours(+8));
+        rubyTimeZoneOffsetIds.put("I", ZoneOffset.ofHours(+9));
+        rubyTimeZoneOffsetIds.put("K", ZoneOffset.ofHours(+10));
+        rubyTimeZoneOffsetIds.put("L", ZoneOffset.ofHours(+11));
+        rubyTimeZoneOffsetIds.put("M", ZoneOffset.ofHours(+12));
+        rubyTimeZoneOffsetIds.put("N", ZoneOffset.ofHours(-1));
+        rubyTimeZoneOffsetIds.put("O", ZoneOffset.ofHours(-2));
+        rubyTimeZoneOffsetIds.put("P", ZoneOffset.ofHours(-3));
+        rubyTimeZoneOffsetIds.put("Q", ZoneOffset.ofHours(-4));
+        rubyTimeZoneOffsetIds.put("R", ZoneOffset.ofHours(-5));
+        rubyTimeZoneOffsetIds.put("S", ZoneOffset.ofHours(-6));
+        rubyTimeZoneOffsetIds.put("T", ZoneOffset.ofHours(-7));
+        rubyTimeZoneOffsetIds.put("U", ZoneOffset.ofHours(-8));
+        rubyTimeZoneOffsetIds.put("V", ZoneOffset.ofHours(-9));
+        rubyTimeZoneOffsetIds.put("W", ZoneOffset.ofHours(-10));
+        rubyTimeZoneOffsetIds.put("X", ZoneOffset.ofHours(-11));
+        rubyTimeZoneOffsetIds.put("Y", ZoneOffset.ofHours(-12));
+        RUBY_TIME_ZONE_OFFSET_IDS = Collections.unmodifiableMap(rubyTimeZoneOffsetIds);
     }
 
     static final Map<String, String> ALIAS_ZONE_IDS_FOR_LEGACY;
 
     private static final Set<String> JODA_TIME_ZONES =
         Collections.unmodifiableSet(org.joda.time.DateTimeZone.getAvailableIDs());
+
+    private static final Pattern RUBY_TIME_ZONE_OFFSET_PATTERN_HH_MM = Pattern.compile("^[+-]\\d\\d:?\\d\\d$");
+    private static final Pattern RUBY_TIME_ZONE_OFFSET_PATTERN_HH = Pattern.compile("^[+-]\\d\\d$");
+
+    private static final Map<String, ZoneOffset> RUBY_TIME_ZONE_OFFSET_IDS;
 }
