@@ -44,7 +44,7 @@ public class Timestamps
         for (Column column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
                 Optional<TimestampFormatter.TimestampColumnOption> option = Optional.fromNullable(columnOptions.get(column.getName()));
-                formatters[i] = new TimestampFormatter(formatterTask, option);
+                formatters[i] = TimestampFormatter.of(formatterTask, option);
             }
             i++;
         }

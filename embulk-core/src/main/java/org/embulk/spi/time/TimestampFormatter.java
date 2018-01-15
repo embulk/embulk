@@ -1,16 +1,86 @@
 package org.embulk.spi.time;
 
-import java.util.Locale;
 import com.google.common.base.Optional;
-import org.jruby.util.RubyDateFormat;
+import java.time.ZoneOffset;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.util.LineEncoder;
 
-public class TimestampFormatter
-{
-    public interface Task
-    {
+public class TimestampFormatter {
+    private TimestampFormatter(final TimestampFormatterRuby delegate) {
+        this.delegate = delegate;
+    }
+
+    // Constructor to be called from subclasses such as TimestampFormatterRuby.
+    TimestampFormatter() {
+        this.delegate = null;
+    }
+
+    // Calling the constructor directly is deprecated, but the constructor is kept for plugin compatibility.
+    // Use TimestampFormatter.of(Task, TimestampColumnOption) instead.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
+    public TimestampFormatter(final Task task, final Optional<? extends TimestampColumnOption> columnOption) {
+        this(TimestampFormatterRuby.ofLegacy(
+                 columnOption.isPresent()
+                     ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
+                     : task.getDefaultTimestampFormat(),
+                 columnOption.isPresent()
+                     ? columnOption.get().getTimeZone().or(task.getDefaultTimeZone())
+                     : task.getDefaultTimeZone()));
+    }
+
+    // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
+    public TimestampFormatter(final String format, final org.joda.time.DateTimeZone timeZone) {
+        this(TimestampFormatterRuby.ofLegacy(format, timeZone));
+    }
+
+    public static TimestampFormatter of(final String pattern, final String zoneIdString) {
+        if (pattern.startsWith("ruby:")) {
+            final ZoneOffset zoneOffset;
+            if (zoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneIdString);
+            }
+            return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
+        } else {
+            return TimestampFormatterRuby.ofLegacy(pattern, TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+        }
+    }
+
+    public static TimestampFormatter of(final Task task, final Optional<? extends TimestampColumnOption> columnOption) {
+        final String pattern;
+        if (columnOption.isPresent()) {
+            pattern = columnOption.get().getFormat().or(task.getDefaultTimestampFormat());
+        } else {
+            pattern = task.getDefaultTimestampFormat();
+        }
+
+        final String zoneIdString;
+        if (columnOption.isPresent()) {
+            zoneIdString = columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId());
+        } else {
+            zoneIdString = task.getDefaultTimeZoneId();
+        }
+
+        if (pattern.startsWith("ruby:")) {
+            final ZoneOffset zoneOffset;
+            if (zoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneIdString);
+            }
+            return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
+        } else {
+            return TimestampFormatterRuby.ofLegacy(pattern,
+                                                   TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+        }
+    }
+
+    public interface Task {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
@@ -32,8 +102,7 @@ public class TimestampFormatter
         public String getDefaultTimestampFormat();
     }
 
-    public interface TimestampColumnOption
-    {
+    public interface TimestampColumnOption {
         @Config("timezone")
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
@@ -55,45 +124,30 @@ public class TimestampFormatter
         public Optional<String> getFormat();
     }
 
-    private final RubyDateFormat dateFormat;
-    private final org.joda.time.DateTimeZone timeZone;
-
-    public TimestampFormatter(Task task, Optional<? extends TimestampColumnOption> columnOption)
-    {
-        this(
-                columnOption.isPresent() ?
-                    columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
-                    : task.getDefaultTimestampFormat(),
-                columnOption.isPresent() ?
-                    columnOption.get().getTimeZone().or(task.getDefaultTimeZone())
-                    : task.getDefaultTimeZone());
-    }
-
-    public TimestampFormatter(final String format, final org.joda.time.DateTimeZone timeZone)
-    {
-        this.timeZone = timeZone;
-        this.dateFormat = new RubyDateFormat(format, Locale.ENGLISH, true);
-    }
-
     // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
     // It won't be removed very soon at least until Embulk v0.10.
     @Deprecated
-    public org.joda.time.DateTimeZone getTimeZone()
-    {
-        return timeZone;
+    public org.joda.time.DateTimeZone getTimeZone() {
+        if (this.delegate == null) {
+            throw new RuntimeException("FATAL: Unexpected execution path of TimestampFormatter without delegate.");
+        }
+        return this.delegate.getTimeZone();
     }
 
-    public void format(Timestamp value, LineEncoder encoder)
-    {
-        // TODO optimize by directly appending to internal buffer
-        encoder.addText(format(value));
+    public String format(final Timestamp value) {
+        if (this.delegate == null) {
+            throw new RuntimeException("FATAL: Unexpected execution path of TimestampFormatter without delegate.");
+        }
+        return this.delegate.format(value);
     }
 
-    public String format(Timestamp value)
-    {
-        // TODO optimize by using reused StringBuilder
-        dateFormat.setDateTime(new org.joda.time.DateTime(value.getEpochSecond()*1000, timeZone));
-        dateFormat.setNSec(value.getNano());
-        return dateFormat.format(null);
+    // Receiving LineEncoder as a parameter is deprecated. TimestampFormatter should have fewer dependencies inside.
+    // It won't be removed very soon at least until Embulk v0.10.
+    @Deprecated
+    public final void format(final Timestamp value, final LineEncoder encoder) {
+        // TODO: Optimize by directly appending to internal buffer
+        encoder.addText(this.format(value));
     }
+
+    private final TimestampFormatterRuby delegate;
 }
