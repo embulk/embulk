@@ -40,18 +40,6 @@ public class LocalFileSerDe
     private static class LocalFileDeserializer
             extends JsonDeserializer<LocalFile>
     {
-        private final File tempDir;
-
-        public LocalFileDeserializer()
-        {
-            this(new File(System.getProperty("java.io.tmpdir")));
-        }
-
-        public LocalFileDeserializer(File tempDir)
-        {
-            this.tempDir = tempDir;
-        }
-
         @Override
         public LocalFile deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
         {
