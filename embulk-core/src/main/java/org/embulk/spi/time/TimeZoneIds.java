@@ -25,6 +25,13 @@ public class TimeZoneIds
     }
 
     /**
+     * Converts java.time.ZoneOffset to its corresponding org.joda.time.DateTimeZone.
+     */
+    public static org.joda.time.DateTimeZone convertZoneOffsetToJodaDateTimeZone(final ZoneOffset zoneOffset) {
+        return org.joda.time.DateTimeZone.forOffsetMillis(zoneOffset.getTotalSeconds() * 1000);
+    }
+
+    /**
      * Parses time zone ID to java.time.ZoneId as compatible with the time zone parser of Embulk v0.8 as possible.
      *
      * It recognizes time zone IDs in the following priority.

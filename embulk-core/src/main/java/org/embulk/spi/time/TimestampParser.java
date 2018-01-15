@@ -2,6 +2,7 @@ package org.embulk.spi.time;
 
 import com.google.common.base.Optional;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 
@@ -62,31 +63,67 @@ public class TimestampParser {
     public static TimestampParser of(final String pattern,
                                      final String defaultZoneIdString,
                                      final String defaultDateString) {
-        return TimestampParserLegacy.of(pattern,
-                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
-                                        TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
-                                        defaultDateString);
+        if (pattern.startsWith("java:")) {
+            // TODO: Warn if "default_date" is set, which is unavailable for "java:".
+            final ZoneOffset zoneOffset;
+            if (defaultZoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(defaultZoneIdString);
+            }
+            return TimestampParserJava.of(pattern.substring(5),
+                                          zoneOffset);
+        } else {
+            return TimestampParserLegacy.of(pattern,
+                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
+                                            TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
+                                            defaultDateString);
+        }
     }
 
     public static TimestampParser of(final String pattern,
                                      final String defaultZoneIdString) {
-        return TimestampParserLegacy.of(pattern,
-                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
-                                        TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
-                                        1970,
-                                        1,
-                                        1);
+        if (pattern.startsWith("java:")) {
+            final ZoneOffset zoneOffset;
+            if (defaultZoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(defaultZoneIdString);
+            }
+            return TimestampParserJava.of(pattern.substring(5),
+                                          zoneOffset);
+        } else {
+            return TimestampParserLegacy.of(pattern,
+                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
+                                            TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
+                                            1970,
+                                            1,
+                                            1);
+        }
     }
 
     public static TimestampParser of(final Task task,
                                      final TimestampColumnOption columnOption) {
         final String pattern = columnOption.getFormat().or(task.getDefaultTimestampFormat());
-        return TimestampParserLegacy.of(pattern,
-                                        TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                                            columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                                        TimeZoneIds.parseJodaDateTimeZone(
-                                            columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                                        columnOption.getDate().or(task.getDefaultDate()));
+        if (pattern.startsWith("java:")) {
+            // TODO: Warn if "default_date" is set, which is unavailable for "java:".
+            final String zoneOffsetString = columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId());
+            final ZoneOffset zoneOffset;
+            if (zoneOffsetString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneOffsetString);
+            }
+            return TimestampParserJava.of(pattern.substring(5),
+                                          zoneOffset);
+        } else {
+            return TimestampParserLegacy.of(pattern,
+                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
+                                                columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                            TimeZoneIds.parseJodaDateTimeZone(
+                                                columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                            columnOption.getDate().or(task.getDefaultDate()));
+        }
     }
 
     public interface Task {
