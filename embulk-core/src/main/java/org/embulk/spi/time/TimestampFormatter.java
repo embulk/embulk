@@ -38,7 +38,15 @@ public class TimestampFormatter {
     }
 
     public static TimestampFormatter of(final String pattern, final String zoneIdString) {
-        if (pattern.startsWith("ruby:")) {
+        if (pattern.startsWith("java:")) {
+            final ZoneOffset zoneOffset;
+            if (zoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneIdString);
+            }
+            return TimestampFormatterJava.of(pattern.substring(5), zoneOffset);
+        } else if (pattern.startsWith("ruby:")) {
             final ZoneOffset zoneOffset;
             if (zoneIdString.equals("UTC")) {
                 zoneOffset = ZoneOffset.UTC;
@@ -66,7 +74,15 @@ public class TimestampFormatter {
             zoneIdString = task.getDefaultTimeZoneId();
         }
 
-        if (pattern.startsWith("ruby:")) {
+        if (pattern.startsWith("java:")) {
+            final ZoneOffset zoneOffset;
+            if (zoneIdString.equals("UTC")) {
+                zoneOffset = ZoneOffset.UTC;
+            } else {
+                zoneOffset = ZoneOffset.of(zoneIdString);
+            }
+            return TimestampFormatterJava.of(pattern.substring(5), zoneOffset);
+        } else if (pattern.startsWith("ruby:")) {
             final ZoneOffset zoneOffset;
             if (zoneIdString.equals("UTC")) {
                 zoneOffset = ZoneOffset.UTC;
