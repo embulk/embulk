@@ -277,26 +277,8 @@ Manual operations:
 bintrayUpload.mustRunAfter('releaseCheck')
 
 task setVersion {
-    doLast {
-        if (!project.hasProperty("to")) {
-            throw new GradleException("Usage: ./gradlew setVersion -Pto=VERSION")
-        }
-
-        File gradle_ver = file('build.gradle')
-        gradle_ver.write(gradle_ver.getText().replaceFirst("version = '(\\d+)(\\.\\d+){2}'", "version = '${to}'"))
-
-        List<String> docs = [
-            'README.md',
-        ]
-        docs.each() { path ->
-            File doc = file(path)
-            doc.write(doc.getText().replaceAll('embulk-(\\d+)(\\.\\d+){2}', "embulk-${to}"))
-        }
-
-        file("embulk-docs/src/release/release-${to}.rst").append("")
-        "git add embulk-docs/src/release/release-${to}.rst".execute().waitFor()
-
-        println "add 'release/release-${to}' line to embulk-docs/src/release.rst"
+    doFirst {
+        throw new GradleException('Gradle task "setVersion" no longer exists. Edit "version" in build.gradle.')
     }
 }
 
