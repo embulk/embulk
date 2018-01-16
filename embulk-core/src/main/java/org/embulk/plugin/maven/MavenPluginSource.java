@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.embulk.config.ConfigSource;
+import org.embulk.exec.ForSystemConfig;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
@@ -27,8 +29,9 @@ import org.embulk.spi.ParserPlugin;
 
 public class MavenPluginSource implements PluginSource {
     @Inject
-    public MavenPluginSource(Injector injector) {
+    public MavenPluginSource(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
         this.injector = injector;
+        this.systemConfig = systemConfig;
     }
 
     @Override
@@ -145,20 +148,26 @@ public class MavenPluginSource implements PluginSource {
     }
 
     private Path getLocalMavenRepository() throws PluginSourceNotMatchException {
-        String env;
+        final String m2RepoInSystemConfig = systemConfig.get(String.class, "m2_repo", null);
+
+        if (m2RepoInSystemConfig != null) {
+            return Paths.get(m2RepoInSystemConfig);
+        }
+
+        String m2RepoInEnv;
         try {
-            env = System.getenv("M2_REPO");
+            m2RepoInEnv = System.getenv("M2_REPO");
         } catch (NullPointerException | SecurityException ex) {
             // The Exceptions are just ignored, and the default local Maven repository is used.
             // TODO: Log?
-            env = null;
+            m2RepoInEnv = null;
         }
 
-        if (env == null) {
-            return getEmbulkHome().resolve("m2").resolve("repository");
+        if (m2RepoInEnv != null) {
+            return Paths.get(m2RepoInEnv);
         }
 
-        return Paths.get(env);
+        return getEmbulkHome().resolve("lib").resolve("m2").resolve("repository");
     }
 
     private Path getEmbulkHome() throws PluginSourceNotMatchException {
@@ -171,4 +180,5 @@ public class MavenPluginSource implements PluginSource {
     }
 
     private final Injector injector;
+    private final ConfigSource systemConfig;
 }
