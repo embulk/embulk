@@ -41,6 +41,7 @@ public class StandardPluginModule
 
         // formatter plugins
         registerPluginTo(binder, FormatterPlugin.class, "csv", CsvFormatterPlugin.class);
+        registerPluginTo(binder, FormatterPlugin.class, "json", JsonFormatterPlugin.class);
 
         // file encoder plugins
         registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
