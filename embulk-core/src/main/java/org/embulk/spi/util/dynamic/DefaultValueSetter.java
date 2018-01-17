@@ -1,11 +1,9 @@
 package org.embulk.spi.util.dynamic;
 
-import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
-import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.PageBuilder;
 
-public interface DefaultValueSetter
-{
+public interface DefaultValueSetter {
     void setBoolean(PageBuilder pageBuilder, Column c);
 
     void setLong(PageBuilder pageBuilder, Column c);

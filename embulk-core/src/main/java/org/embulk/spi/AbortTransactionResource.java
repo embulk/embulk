@@ -1,36 +1,28 @@
 package org.embulk.spi;
 
-public class AbortTransactionResource
-        implements AutoCloseable
-{
+public class AbortTransactionResource implements AutoCloseable {
     private Transactional tran;
 
-    public AbortTransactionResource()
-    {
+    public AbortTransactionResource() {
         this(null);
     }
 
-    public AbortTransactionResource(Transactional tran)
-    {
+    public AbortTransactionResource(Transactional tran) {
         this.tran = tran;
     }
 
-    public void abortThis(Transactional tran)
-    {
+    public void abortThis(Transactional tran) {
         this.tran = tran;
     }
 
-    public void dontAbort()
-    {
+    public void dontAbort() {
         this.tran = null;
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         if (tran != null) {
             tran.abort();
         }
     }
 }
-

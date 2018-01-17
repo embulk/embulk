@@ -21,7 +21,7 @@ abstract class RubyTimeFormatToken {
             if (!(otherObject instanceof Directive)) {
                 return false;
             }
-            final Directive other = (Directive)otherObject;
+            final Directive other = (Directive) otherObject;
             return this.formatDirective.equals(other.formatDirective);
         }
 
@@ -56,7 +56,7 @@ abstract class RubyTimeFormatToken {
             if (!(otherObject instanceof Immediate)) {
                 return false;
             }
-            final Immediate other = (Immediate)otherObject;
+            final Immediate other = (Immediate) otherObject;
             return this.string.equals(other.string);
         }
 

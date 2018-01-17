@@ -1,8 +1,6 @@
 package org.embulk.config;
 
-public interface ConfigDiff
-        extends DataSource
-{
+public interface ConfigDiff extends DataSource {
     @Override
     ConfigDiff getNested(String attrName);
 

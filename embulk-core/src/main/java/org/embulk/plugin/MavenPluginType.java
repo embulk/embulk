@@ -7,11 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public final class MavenPluginType
-        extends PluginType
-{
-    private MavenPluginType(final String name, final String group, final String classifier, final String version)
-    {
+public final class MavenPluginType extends PluginType {
+    private MavenPluginType(final String name, final String group, final String classifier, final String version) {
         super("maven", name);
         this.group = group;
         this.classifier = classifier;
@@ -39,8 +36,7 @@ public final class MavenPluginType
     }
 
     public static MavenPluginType create(
-            final String name, final String group, final String classifier, final String version)
-    {
+            final String name, final String group, final String classifier, final String version) {
         if (name == null || group == null || version == null) {
             throw new NullPointerException("\"name\", \"group\" and \"version\" must be present.");
         }
@@ -48,59 +44,51 @@ public final class MavenPluginType
     }
 
     @JsonValue
-    public final Map<String, String> getJsonValue()
-    {
+    public final Map<String, String> getJsonValue() {
         return this.fullMap;
     }
 
     @JsonProperty("group")
-    public final String getGroup()
-    {
+    public final String getGroup() {
         return this.group;
     }
 
     @JsonProperty("classifier")
-    public final String getClassifier()
-    {
+    public final String getClassifier() {
         return this.classifier;
     }
 
     @JsonProperty("version")
-    public final String getVersion()
-    {
+    public final String getVersion() {
         return this.version;
     }
 
-    public final String getFullName()
-    {
+    public final String getFullName() {
         return this.fullName;
     }
 
     @Override
-    public final int hashCode()
-    {
+    public final int hashCode() {
         return Objects.hash(getSourceType(), getName(), this.group, this.classifier, this.version);
     }
 
     @Override
-    public boolean equals(Object objectOther)
-    {
+    public boolean equals(Object objectOther) {
         if (!(objectOther instanceof MavenPluginType)) {
             return false;
         }
         MavenPluginType other = (MavenPluginType) objectOther;
-        return (this.getSourceType().equals(other.getSourceType()) &&
-                this.getName().equals(other.getName()) &&
-                this.getGroup().equals(other.getGroup()) &&
-                ((this.getClassifier() == null && other.getClassifier() == null) ||
-                 (this.getClassifier() != null && this.getClassifier().equals(other.getClassifier()))) &&
-                this.getVersion().equals(other.getVersion()));
+        return (this.getSourceType().equals(other.getSourceType())
+                && this.getName().equals(other.getName())
+                && this.getGroup().equals(other.getGroup())
+                && ((this.getClassifier() == null && other.getClassifier() == null)
+                        || (this.getClassifier() != null && this.getClassifier().equals(other.getClassifier())))
+                && this.getVersion().equals(other.getVersion()));
     }
 
     @JsonValue
     @Override
-    public String toString()
-    {
+    public String toString() {
         return this.fullName;
     }
 

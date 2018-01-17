@@ -1,24 +1,18 @@
 package org.embulk.spi.util;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileInput;
 
-public class ListFileInput
-        implements FileInput
-{
+public class ListFileInput implements FileInput {
     private Iterator<? extends Iterable<Buffer>> files;
     private Iterator<Buffer> currentBuffers;
 
-    public ListFileInput(Iterable<? extends Iterable<Buffer>> files)
-    {
+    public ListFileInput(Iterable<? extends Iterable<Buffer>> files) {
         this.files = files.iterator();
     }
 
-    public boolean nextFile()
-    {
+    public boolean nextFile() {
         if (!files.hasNext()) {
             return false;
         }
@@ -26,8 +20,7 @@ public class ListFileInput
         return true;
     }
 
-    public Buffer poll()
-    {
+    public Buffer poll() {
         if (currentBuffers == null) {
             throw new IllegalStateException("FileInput.nextFile is not called");
         }
@@ -37,8 +30,7 @@ public class ListFileInput
         return currentBuffers.next();
     }
 
-    public void close()
-    {
+    public void close() {
         do {
             while (true) {
                 Buffer b = poll();

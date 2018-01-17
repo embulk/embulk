@@ -2,25 +2,17 @@ package org.embulk.spi.util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
-import org.embulk.spi.Exec;
-import org.embulk.spi.FileInput;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
+import org.embulk.spi.FileInput;
 
-public class Inputs
-{
-    private static abstract class AbstractPollIterator <E>
-            implements Iterator<E>
-    {
+public class Inputs {
+    private abstract static class AbstractPollIterator<E> implements Iterator<E> {
         private E next;
 
         protected abstract E poll();
 
         @Override
-        public boolean hasNext()
-        {
+        public boolean hasNext() {
             if (next != null) {
                 return true;
             } else {
@@ -30,8 +22,7 @@ public class Inputs
         }
 
         @Override
-        public E next()
-        {
+        public E next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
@@ -41,20 +32,16 @@ public class Inputs
         }
 
         @Override
-        public void remove()
-        {
+        public void remove() {
             throw new UnsupportedOperationException();
         }
     }
 
-    public static Iterable<Buffer> each(final FileInput input)
-    {
+    public static Iterable<Buffer> each(final FileInput input) {
         return new Iterable<Buffer>() {
-            public Iterator<Buffer> iterator()
-            {
+            public Iterator<Buffer> iterator() {
                 return new AbstractPollIterator<Buffer>() {
-                    public Buffer poll()
-                    {
+                    public Buffer poll() {
                         return input.poll();
                     }
                 };

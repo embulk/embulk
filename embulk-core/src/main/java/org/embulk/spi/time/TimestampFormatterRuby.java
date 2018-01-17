@@ -1,6 +1,5 @@
 package org.embulk.spi.time;
 
-import com.google.common.base.Optional;
 import java.time.ZoneOffset;
 import java.util.Locale;
 import org.jruby.util.RubyDateFormat;

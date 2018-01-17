@@ -3,7 +3,6 @@ package org.embulk.spi.time;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.Map;
 
 /**
  * TimeParsed is a container of date/time information parsed from a string.

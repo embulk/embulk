@@ -8,17 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.zip.GZIPOutputStream;
 
-public class EmbulkExample
-{
-    public void createExample(final String basePathInString)
-            throws IOException
-    {
+public class EmbulkExample {
+    public void createExample(final String basePathInString) throws IOException {
         createExample(Paths.get(basePathInString));
     }
 
-    public void createExample(final Path basePath)
-            throws IOException
-    {
+    public void createExample(final Path basePath) throws IOException {
         // TODO(dmikurube): Log with a kind of loggers instead of |System.out|.
         System.out.printf("Creating %s directory...\n", basePath.toString());
 
@@ -44,9 +39,7 @@ public class EmbulkExample
         System.out.println("");
     }
 
-    private void outputSampleCsv(final Path csvSamplePath)
-            throws IOException
-    {
+    private void outputSampleCsv(final Path csvSamplePath) throws IOException {
         // TODO(dmikurube): Move the data into Java resources.
         StringBuilder csvBuilder = new StringBuilder();
         csvBuilder.append("id,account,time,purchase,comment\n");
@@ -62,9 +55,7 @@ public class EmbulkExample
         }
     }
 
-    private void outputSampleYml(final Path csvPath, final Path ymlSamplePath)
-            throws IOException
-    {
+    private void outputSampleYml(final Path csvPath, final Path ymlSamplePath) throws IOException {
         // TODO(dmikurube): Move the data into Java resources.
         StringBuilder ymlBuilder = new StringBuilder();
         ymlBuilder.append("in:\n");

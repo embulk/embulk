@@ -5,9 +5,7 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileOutput;
 
-public class FileOutputOutputStream
-        extends OutputStream
-{
+public class FileOutputOutputStream extends OutputStream {
     private final FileOutput out;
     private final BufferAllocator allocator;
     private final CloseMode closeMode;
@@ -21,28 +19,24 @@ public class FileOutputOutputStream
         CLOSE;
     }
 
-    public FileOutputOutputStream(FileOutput out, BufferAllocator allocator, CloseMode closeMode)
-    {
+    public FileOutputOutputStream(FileOutput out, BufferAllocator allocator, CloseMode closeMode) {
         this.out = out;
         this.allocator = allocator;
         this.buffer = allocator.allocate();
         this.closeMode = closeMode;
     }
 
-    public void nextFile()
-    {
+    public void nextFile() {
         out.nextFile();
     }
 
-    public void finish()
-    {
+    public void finish() {
         doFlush();
         out.finish();
     }
 
     @Override
-    public void write(int b)
-    {
+    public void write(int b) {
         buffer.array()[buffer.offset() + pos] = (byte) b;
         pos++;
         if (pos >= buffer.capacity()) {
@@ -51,8 +45,7 @@ public class FileOutputOutputStream
     }
 
     @Override
-    public void write(byte[] b, int off, int len)
-    {
+    public void write(byte[] b, int off, int len) {
         while (true) {
             int available = buffer.capacity() - pos;
             if (available < len) {
@@ -72,8 +65,7 @@ public class FileOutputOutputStream
         }
     }
 
-    private boolean doFlush()
-    {
+    private boolean doFlush() {
         if (pos > 0) {
             buffer.limit(pos);
             out.add(buffer);
@@ -85,32 +77,31 @@ public class FileOutputOutputStream
     }
 
     @Override
-    public void flush()
-    {
+    public void flush() {
         if (doFlush()) {
             buffer = allocator.allocate();
         }
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         switch (closeMode) {
-        case FLUSH:
-            doFlush();
-            break;
-        case FLUSH_FINISH:
-            doFlush();
-            out.finish();
-            break;
-        case FLUSH_FINISH_CLOSE:
-            doFlush();
-            out.finish();
-            out.close();
-            break;
-        case CLOSE:
-            out.close();
-            break;
+            case FLUSH:
+                doFlush();
+                break;
+            case FLUSH_FINISH:
+                doFlush();
+                out.finish();
+                break;
+            case FLUSH_FINISH_CLOSE:
+                doFlush();
+                out.finish();
+                out.close();
+                break;
+            case CLOSE:
+                out.close();
+                break;
+            default:  // Never default as all enums are listed.
         }
         buffer.release();
         buffer = Buffer.EMPTY;

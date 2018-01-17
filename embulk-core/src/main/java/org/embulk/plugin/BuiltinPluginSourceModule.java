@@ -1,18 +1,15 @@
 package org.embulk.plugin;
 
-import com.google.inject.Module;
 import com.google.inject.Binder;
+import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import org.embulk.exec.ForGuess;
 
-public class BuiltinPluginSourceModule
-        implements Module
-{
+public class BuiltinPluginSourceModule implements Module {
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
-        //multibinder.addBinding().to(LocalDirectoryPluginSource.class);  // TODO
+        // multibinder.addBinding().to(LocalDirectoryPluginSource.class);  // TODO
         multibinder.addBinding().to(InjectedPluginSource.class);
 
         // This workaround allows no any guess plugin registered. See also:

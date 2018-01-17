@@ -1,37 +1,30 @@
 package org.embulk.plugin;
 
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.google.inject.Provider;
+import com.google.inject.Scopes;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Properties;
-import java.net.URL;
-import java.io.InputStream;
-import java.io.IOException;
-import com.google.inject.Module;
-import com.google.inject.Binder;
-import com.google.inject.Scopes;
-import com.google.inject.Provider;
 import org.embulk.config.ConfigSource;
 
-public class PluginClassLoaderModule
-        implements Module
-{
-    public PluginClassLoaderModule(ConfigSource systemConfig)
-    { }
+public class PluginClassLoaderModule implements Module {
+    public PluginClassLoaderModule(ConfigSource systemConfig) {}
 
     @Override
-    public void configure(Binder binder)
-    {
-        binder.bind(PluginClassLoaderFactory.class).toProvider(new FactoryProvider()).in(Scopes.SINGLETON);;
+    public void configure(Binder binder) {
+        binder.bind(PluginClassLoaderFactory.class).toProvider(new FactoryProvider()).in(Scopes.SINGLETON);
     }
 
-    private static class FactoryProvider
-            implements Provider<PluginClassLoaderFactory>
-    {
+    private static class FactoryProvider implements Provider<PluginClassLoaderFactory> {
         private final Collection<String> parentFirstPackages;
         private final Collection<String> parentFirstResources;
         private final PluginClassLoaderFactory factory;
 
-        public FactoryProvider()
-        {
+        public FactoryProvider() {
             // TODO make these paths customizable using ConfigSource
             this.parentFirstPackages = readPropertyKeys("/embulk/parent_first_packages.properties");
             this.parentFirstResources = readPropertyKeys("/embulk/parent_first_resources.properties");
@@ -39,8 +32,7 @@ public class PluginClassLoaderModule
             this.factory = new Factory();
         }
 
-        private static Collection<String> readPropertyKeys(String name)
-        {
+        private static Collection<String> readPropertyKeys(String name) {
             try (InputStream in = PluginClassLoaderModule.class.getResourceAsStream(name)) {
                 if (in == null) {
                     throw new NullPointerException(String.format("Resource '%s' is not found in classpath. Jar file or classloader is broken.", name));
@@ -54,48 +46,43 @@ public class PluginClassLoaderModule
         }
 
         @Override
-        public PluginClassLoaderFactory get()
-        {
+        public PluginClassLoaderFactory get() {
             return factory;
         }
 
-        private class Factory implements PluginClassLoaderFactory
-        {
+        private class Factory implements PluginClassLoaderFactory {
             @Override
-            public PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader)
-            {
+            public PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader) {
                 return PluginClassLoader.createForFlatJars(
-                    parentClassLoader,
-                    urls,
-                    parentFirstPackages,
-                    parentFirstResources);
+                        parentClassLoader,
+                        urls,
+                        parentFirstPackages,
+                        parentFirstResources);
             }
 
             @Override
             public PluginClassLoader createForNestedJar(
                     final ClassLoader parentClassLoader,
-                    final URL oneNestedJarUrl)
-            {
+                    final URL oneNestedJarUrl) {
                 return PluginClassLoader.createForNestedJar(
-                    parentClassLoader,
-                    oneNestedJarUrl,
-                    null,
-                    parentFirstPackages,
-                    parentFirstResources);
+                        parentClassLoader,
+                        oneNestedJarUrl,
+                        null,
+                        parentFirstPackages,
+                        parentFirstResources);
             }
 
             @Override
             public PluginClassLoader createForNestedJar(
                     final ClassLoader parentClassLoader,
                     final URL oneNestedJarUrl,
-                    final Collection<String> embeddedJarPathsInNestedJar)
-            {
+                    final Collection<String> embeddedJarPathsInNestedJar) {
                 return PluginClassLoader.createForNestedJar(
-                    parentClassLoader,
-                    oneNestedJarUrl,
-                    embeddedJarPathsInNestedJar,
-                    parentFirstPackages,
-                    parentFirstResources);
+                        parentClassLoader,
+                        oneNestedJarUrl,
+                        embeddedJarPathsInNestedJar,
+                        parentFirstPackages,
+                        parentFirstResources);
             }
         }
     }

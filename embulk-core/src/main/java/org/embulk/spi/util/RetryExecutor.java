@@ -3,83 +3,66 @@ package org.embulk.spi.util;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
-public class RetryExecutor
-{
-    public static RetryExecutor retryExecutor()
-    {
+public class RetryExecutor {
+    public static RetryExecutor retryExecutor() {
         // TODO default configuration
-        return new RetryExecutor(3, 500, 30*60*1000);
+        return new RetryExecutor(3, 500, 30 * 60 * 1000);
     }
 
-    public static class RetryGiveupException
-            extends ExecutionException
-    {
-        public RetryGiveupException(String message, Exception cause)
-        {
+    public static class RetryGiveupException extends ExecutionException {
+        public RetryGiveupException(String message, Exception cause) {
             super(cause);
         }
 
-        public RetryGiveupException(Exception cause)
-        {
+        public RetryGiveupException(Exception cause) {
             super(cause);
         }
 
-        public Exception getCause()
-        {
+        public Exception getCause() {
             return (Exception) super.getCause();
         }
     }
 
-    public static interface Retryable<T>
-            extends Callable<T>
-    {
-        public T call()
-            throws Exception;
+    public static interface Retryable<T> extends Callable<T> {
+        public T call() throws Exception;
 
         public boolean isRetryableException(Exception exception);
 
         public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
-            throws RetryGiveupException;
+                throws RetryGiveupException;
 
         public void onGiveup(Exception firstException, Exception lastException)
-            throws RetryGiveupException;
+                throws RetryGiveupException;
     }
 
     private final int retryLimit;
     private final int initialRetryWait;
     private final int maxRetryWait;
 
-    private RetryExecutor(int retryLimit, int initialRetryWait, int maxRetryWait)
-    {
+    private RetryExecutor(int retryLimit, int initialRetryWait, int maxRetryWait) {
         this.retryLimit = retryLimit;
         this.initialRetryWait = initialRetryWait;
         this.maxRetryWait = maxRetryWait;
     }
 
-    public RetryExecutor withRetryLimit(int count)
-    {
+    public RetryExecutor withRetryLimit(int count) {
         return new RetryExecutor(count, initialRetryWait, maxRetryWait);
     }
 
-    public RetryExecutor withInitialRetryWait(int msec)
-    {
+    public RetryExecutor withInitialRetryWait(int msec) {
         return new RetryExecutor(retryLimit, msec, maxRetryWait);
     }
 
-    public RetryExecutor withMaxRetryWait(int msec)
-    {
+    public RetryExecutor withMaxRetryWait(int msec) {
         return new RetryExecutor(retryLimit, initialRetryWait, msec);
     }
 
     public <T> T runInterruptible(Retryable<T> op)
-            throws InterruptedException, RetryGiveupException
-    {
+            throws InterruptedException, RetryGiveupException {
         return run(op, true);
     }
 
-    public <T> T run(Retryable<T> op)
-            throws RetryGiveupException
-    {
+    public <T> T run(Retryable<T> op) throws RetryGiveupException {
         try {
             return run(op, false);
         } catch (InterruptedException ex) {
@@ -87,15 +70,13 @@ public class RetryExecutor
         }
     }
 
-    private <T> T run(Retryable<T> op, boolean interruptible)
-            throws InterruptedException, RetryGiveupException
-    {
+    private <T> T run(Retryable<T> op, boolean interruptible) throws InterruptedException, RetryGiveupException {
         int retryWait = initialRetryWait;
         int retryCount = 0;
 
         Exception firstException = null;
 
-        while(true) {
+        while (true) {
             try {
                 return op.call();
             } catch (Exception exception) {
@@ -127,4 +108,3 @@ public class RetryExecutor
         }
     }
 }
-

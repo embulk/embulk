@@ -1,29 +1,27 @@
 package org.embulk.exec;
 
-import org.slf4j.ILoggerFactory;
-import com.google.common.base.Preconditions;
-import com.google.inject.Module;
-import com.google.inject.Binder;
-import com.google.inject.Scopes;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
-import org.embulk.config.ModelManager;
-import org.embulk.spi.time.DateTimeZoneSerDe;
-import org.embulk.spi.time.TimestampSerDe;
-import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.ExecutorPlugin;
-import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.util.CharsetSerDe;
-import org.embulk.spi.unit.LocalFileSerDe;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
-public class ExecModule
-        implements Module
-{
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.fasterxml.jackson.module.guice.ObjectMapperModule;
+import com.google.common.base.Preconditions;
+import com.google.inject.Binder;
+import com.google.inject.Module;
+import com.google.inject.Scopes;
+import org.embulk.config.ModelManager;
+import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.time.DateTimeZoneSerDe;
+import org.embulk.spi.time.TimestampSerDe;
+import org.embulk.spi.unit.LocalFileSerDe;
+import org.embulk.spi.util.CharsetSerDe;
+import org.slf4j.ILoggerFactory;
+
+public class ExecModule implements Module {
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         Preconditions.checkNotNull(binder, "binder is null.");
 
         binder.bind(BulkLoader.class);

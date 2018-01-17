@@ -1,20 +1,18 @@
 package org.embulk.spi.util;
 
-import java.util.List;
 import com.google.common.collect.ImmutableList;
-import org.embulk.config.TaskSource;
+import java.util.List;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.FileOutput;
-import org.embulk.spi.EncoderPlugin;
 
-public abstract class Encoders
-{
-    private Encoders() { }
+public abstract class Encoders {
+    private Encoders() {}
 
-    public static List<EncoderPlugin> newEncoderPlugins(ExecSession exec, List<ConfigSource> configs)
-    {
+    public static List<EncoderPlugin> newEncoderPlugins(ExecSession exec, List<ConfigSource> configs) {
         ImmutableList.Builder<EncoderPlugin> builder = ImmutableList.builder();
         for (ConfigSource config : configs) {
             builder.add(exec.newPlugin(EncoderPlugin.class, config.get(PluginType.class, "type")));
@@ -22,20 +20,17 @@ public abstract class Encoders
         return builder.build();
     }
 
-    public interface Control
-    {
+    public interface Control {
         public void run(List<TaskSource> taskSources);
     }
 
     public static void transaction(List<EncoderPlugin> plugins, List<ConfigSource> configs,
-            Encoders.Control control)
-    {
+            Encoders.Control control) {
         new RecursiveControl(plugins, configs, control).transaction();
     }
 
     public static FileOutput open(List<EncoderPlugin> plugins, List<TaskSource> taskSources,
-            FileOutput output)
-    {
+            FileOutput output) {
         FileOutput out = output;
         int pos = 0;
         while (pos < plugins.size()) {
@@ -45,8 +40,7 @@ public abstract class Encoders
         return out;
     }
 
-    private static class RecursiveControl
-    {
+    private static class RecursiveControl {
         private final List<EncoderPlugin> plugins;
         private final List<ConfigSource> configs;
         private final Encoders.Control finalControl;
@@ -54,25 +48,22 @@ public abstract class Encoders
         private int pos;
 
         RecursiveControl(List<EncoderPlugin> plugins, List<ConfigSource> configs,
-                Encoders.Control finalControl)
-        {
+                Encoders.Control finalControl) {
             this.plugins = plugins;
             this.configs = configs;
             this.finalControl = finalControl;
             this.taskSources = ImmutableList.builder();
         }
 
-        public void transaction()
-        {
+        public void transaction() {
             if (pos < plugins.size()) {
                 plugins.get(pos).transaction(configs.get(pos), new EncoderPlugin.Control() {
-                    public void run(TaskSource taskSource)
-                    {
-                        taskSources.add(taskSource);
-                        pos++;
-                        transaction();
-                    }
-                });
+                        public void run(TaskSource taskSource) {
+                            taskSources.add(taskSource);
+                            pos++;
+                            transaction();
+                        }
+                    });
             } else {
                 finalControl.run(taskSources.build());
             }

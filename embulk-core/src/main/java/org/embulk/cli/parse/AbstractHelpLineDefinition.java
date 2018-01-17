@@ -8,8 +8,7 @@ import org.apache.commons.cli.Option;
  * It is visible only in {@code org.embulk.cli.parse} because its interface communicates commons-cli objects.
  * Dependencies on third-party libraries are to be encapsulated.
  */
-abstract class AbstractHelpLineDefinition
-{
+abstract class AbstractHelpLineDefinition {
     // Visible only in org.embulk.cli.parse to keep commons-cli segregated from other components.
     abstract Option getCliOption();
 }

@@ -1,11 +1,5 @@
 package org.embulk.spi.time;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -14,51 +8,46 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class TimestampSerDe
-{
-    public static void configure(ObjectMapperModule mapper)
-    {
+public class TimestampSerDe {
+    public static void configure(ObjectMapperModule mapper) {
         SimpleModule module = new SimpleModule();
         module.addSerializer(Timestamp.class, new DateTimeZoneSerializer());
         module.addDeserializer(Timestamp.class, new DateTimeZoneDeserializer());
         mapper.registerModule(module);
     }
 
-    public static class DateTimeZoneSerializer
-            extends JsonSerializer<Timestamp>
-    {
+    public static class DateTimeZoneSerializer extends JsonSerializer<Timestamp> {
         @Override
         public void serialize(Timestamp value, JsonGenerator jgen, SerializerProvider provider)
-                throws IOException
-        {
+                throws IOException {
             jgen.writeString(value.toString());
         }
     }
 
-    public static class DateTimeZoneDeserializer
-            extends FromStringDeserializer<Timestamp>
-    {
-        public DateTimeZoneDeserializer()
-        {
+    public static class DateTimeZoneDeserializer extends FromStringDeserializer<Timestamp> {
+        public DateTimeZoneDeserializer() {
             super(Timestamp.class);
         }
 
         @Override
         protected Timestamp _deserialize(String value, DeserializationContext context)
-                throws JsonMappingException
-        {
+                throws JsonMappingException {
             return createTimestampFromString(value);
         }
     }
 
-    static Timestamp createTimestampFromStringForTesting(final String string)
-    {
+    static Timestamp createTimestampFromStringForTesting(final String string) {
         return createTimestampFromString(string);
     }
 
-    private static Timestamp createTimestampFromString(final String string)
-    {
+    private static Timestamp createTimestampFromString(final String string) {
         // TODO: Handle exceptions.
         final Matcher matcher = TIMESTAMP_PATTERN.matcher(string);
         if (!matcher.matches()) {
@@ -79,7 +68,7 @@ public class TimestampSerDe
     }
 
     private static final DateTimeFormatter FORMATTER =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     private static final Pattern TIMESTAMP_PATTERN =
-        Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))? (?:UTC|\\+?00\\:?00)");
+            Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))? (?:UTC|\\+?00\\:?00)");
 }

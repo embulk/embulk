@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
-import java.util.List;
 import com.google.inject.Module;
+import java.util.List;
 import org.embulk.config.ConfigSource;
 
 /**
@@ -38,7 +38,6 @@ import org.embulk.config.ConfigSource;
  * }
  * </code>
  */
-public interface Extension
-{
+public interface Extension {
     List<Module> getModules(ConfigSource systemConfig);
 }

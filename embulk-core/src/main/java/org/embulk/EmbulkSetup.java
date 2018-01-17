@@ -2,9 +2,7 @@ package org.embulk;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.embulk.config.ConfigSource;
 
@@ -14,10 +12,8 @@ import org.embulk.config.ConfigSource;
  * NOTE: Developers should not depend on this EmbulkSetup class. This class is created tentatively, and may be
  * re-implemented again in a different style.
  */
-public class EmbulkSetup
-{
-    public static EmbulkRunner setup(final Map<String, Object> systemConfigGiven)
-    {
+public class EmbulkSetup {
+    public static EmbulkRunner setup(final Map<String, Object> systemConfigGiven) {
         final HashMap<String, Object> systemConfigModified = new HashMap<String, Object>(systemConfigGiven);
 
         // Calling ObjectMapper simply just as a formatter here so that it does not depend much on Jackson.
@@ -26,8 +22,7 @@ public class EmbulkSetup
         final String systemConfigJson;
         try {
             systemConfigJson = jacksonObjectMapper.writeValueAsString(systemConfigModified);
-        }
-        catch (JsonProcessingException ex) {
+        } catch (JsonProcessingException ex) {
             throw new RuntimeException(ex);
         }
 

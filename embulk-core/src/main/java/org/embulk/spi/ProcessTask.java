@@ -1,15 +1,14 @@
 package org.embulk.spi;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.embulk.plugin.PluginType;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import org.embulk.config.TaskSource;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.util.Executors;
 
-public class ProcessTask
-{
+public class ProcessTask {
     private final PluginType inputPluginType;
     private final PluginType outputPluginType;
     private final List<PluginType> filterPluginTypes;
@@ -30,8 +29,7 @@ public class ProcessTask
             @JsonProperty("filterTasks") List<TaskSource> filterTaskSources,
             @JsonProperty("schemas") List<Schema> schemas,
             @JsonProperty("executorSchema") Schema executorSchema,
-            @JsonProperty("executorTask") TaskSource executorTaskSource)
-    {
+            @JsonProperty("executorTask") TaskSource executorTaskSource) {
         this.inputPluginType = inputPluginType;
         this.outputPluginType = outputPluginType;
         this.filterPluginTypes = filterPluginTypes;
@@ -44,74 +42,62 @@ public class ProcessTask
     }
 
     @JsonProperty("inputType")
-    public PluginType getInputPluginType()
-    {
+    public PluginType getInputPluginType() {
         return inputPluginType;
     }
 
     @JsonProperty("outputType")
-    public PluginType getOutputPluginType()
-    {
+    public PluginType getOutputPluginType() {
         return outputPluginType;
     }
 
     @JsonProperty("filterTypes")
-    public List<PluginType> getFilterPluginTypes()
-    {
+    public List<PluginType> getFilterPluginTypes() {
         return filterPluginTypes;
     }
 
     @JsonProperty("inputTask")
-    public TaskSource getInputTaskSource()
-    {
+    public TaskSource getInputTaskSource() {
         return inputTaskSource;
     }
 
     @JsonProperty("outputTask")
-    public TaskSource getOutputTaskSource()
-    {
+    public TaskSource getOutputTaskSource() {
         return outputTaskSource;
     }
 
     @JsonProperty("filterTasks")
-    public List<TaskSource> getFilterTaskSources()
-    {
+    public List<TaskSource> getFilterTaskSources() {
         return filterTaskSources;
     }
 
     @JsonProperty("schemas")
-    public List<Schema> getFilterSchemas()
-    {
+    public List<Schema> getFilterSchemas() {
         return schemas;
     }
 
     @JsonProperty("executorSchema")
-    public Schema getExecutorSchema()
-    {
+    public Schema getExecutorSchema() {
         return executorSchema;
     }
 
     @JsonIgnore
-    public Schema getInputSchema()
-    {
+    public Schema getInputSchema() {
         return Executors.getInputSchema(schemas);
     }
 
     @JsonIgnore
-    public Schema getOutputSchema()
-    {
+    public Schema getOutputSchema() {
         return Executors.getOutputSchema(schemas);
     }
 
     @JsonIgnore
-    public void setExecutorTaskSource(TaskSource executorTaskSource)
-    {
+    public void setExecutorTaskSource(TaskSource executorTaskSource) {
         this.executorTaskSource = executorTaskSource;
     }
 
     @JsonProperty("executorTask")
-    public TaskSource getExecutorTaskSource()
-    {
+    public TaskSource getExecutorTaskSource() {
         return executorTaskSource;
     }
 }

@@ -1,45 +1,41 @@
 package org.embulk;
 
-import java.util.List;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import java.util.List;
 import org.embulk.config.ConfigSource;
-import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
-import org.embulk.plugin.PluginClassLoaderModule;
-import org.embulk.plugin.BuiltinPluginSourceModule;
-import org.embulk.plugin.maven.MavenPluginSourceModule;
+import org.embulk.exec.SystemConfigModule;
 import org.embulk.jruby.JRubyScriptingModule;
-import static com.google.common.base.Preconditions.checkState;
+import org.embulk.plugin.BuiltinPluginSourceModule;
+import org.embulk.plugin.PluginClassLoaderModule;
+import org.embulk.plugin.maven.MavenPluginSourceModule;
 
 @Deprecated
-public class EmbulkService
-{
+public class EmbulkService {
     private final ConfigSource systemConfig;
 
     protected Injector injector;
     private boolean initialized;
 
-    public EmbulkService(ConfigSource systemConfig)
-    {
+    public EmbulkService(ConfigSource systemConfig) {
         this.systemConfig = systemConfig;
     }
 
-    protected Iterable<? extends Module> getAdditionalModules(ConfigSource systemConfig)
-    {
+    protected Iterable<? extends Module> getAdditionalModules(ConfigSource systemConfig) {
         return ImmutableList.of();
     }
 
-    protected Iterable<? extends Module> overrideModules(Iterable<? extends Module> modules, ConfigSource systemConfig)
-    {
+    protected Iterable<? extends Module> overrideModules(Iterable<? extends Module> modules, ConfigSource systemConfig) {
         return modules;
     }
 
-    static List<Module> standardModuleList(ConfigSource systemConfig)
-    {
+    static List<Module> standardModuleList(ConfigSource systemConfig) {
         return ImmutableList.of(
                 new SystemConfigModule(systemConfig),
                 new ExecModule(),
@@ -50,8 +46,7 @@ public class EmbulkService
                 new JRubyScriptingModule(systemConfig));
     }
 
-    public Injector initialize()
-    {
+    public Injector initialize() {
         checkState(!initialized, "Already initialized");
 
         ImmutableList.Builder<Module> builder = ImmutableList.builder();
@@ -68,8 +63,7 @@ public class EmbulkService
     }
 
     @Deprecated
-    public synchronized Injector getInjector()
-    {
+    public synchronized Injector getInjector() {
         if (initialized) {
             return injector;
         }

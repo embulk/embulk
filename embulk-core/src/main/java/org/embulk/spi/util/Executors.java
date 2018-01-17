@@ -1,27 +1,24 @@
 package org.embulk.spi.util;
 
 import java.util.List;
-import org.embulk.config.TaskSource;
 import org.embulk.config.TaskReport;
-import org.embulk.spi.ExecSession;
-import org.embulk.spi.ProcessState;
-import org.embulk.spi.Schema;
-import org.embulk.spi.TransactionalPageOutput;
-import org.embulk.spi.PageOutput;
-import org.embulk.spi.InputPlugin;
-import org.embulk.spi.FilterPlugin;
-import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.ProcessTask;
+import org.embulk.config.TaskSource;
+import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.AbortTransactionResource;
 import org.embulk.spi.CloseResource;
-import org.embulk.plugin.compat.PluginWrappers;
+import org.embulk.spi.ExecSession;
+import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.InputPlugin;
+import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.ProcessTask;
+import org.embulk.spi.Schema;
+import org.embulk.spi.TransactionalPageOutput;
 
-public abstract class Executors
-{
-    private Executors() { }
+public abstract class Executors {
+    private Executors() {}
 
-    public interface ProcessStateCallback
-    {
+    public interface ProcessStateCallback {
         public void started();
 
         public void inputCommitted(TaskReport report);
@@ -31,8 +28,7 @@ public abstract class Executors
 
     public static void process(ExecSession exec,
             ProcessTask task, int taskIndex,
-            ProcessStateCallback callback)
-    {
+            ProcessStateCallback callback) {
         InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
         List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
         OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
@@ -50,10 +46,9 @@ public abstract class Executors
             InputPlugin inputPlugin, Schema inputSchema, TaskSource inputTaskSource,
             List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources,
             OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
-            ProcessStateCallback callback)
-    {
+            ProcessStateCallback callback) {
         TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-            outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
+                outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
 
         callback.started();
         // here needs to use try-with-resource to add exception happend at close() or abort()
@@ -81,13 +76,11 @@ public abstract class Executors
         }
     }
 
-    public static Schema getInputSchema(List<Schema> schemas)
-    {
+    public static Schema getInputSchema(List<Schema> schemas) {
         return schemas.get(0);
     }
 
-    public static Schema getOutputSchema(List<Schema> schemas)
-    {
+    public static Schema getOutputSchema(List<Schema> schemas) {
         return schemas.get(schemas.size() - 1);
     }
 }

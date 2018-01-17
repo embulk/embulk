@@ -1,8 +1,6 @@
 package org.embulk.config;
 
-public interface TaskSource
-        extends DataSource
-{
+public interface TaskSource extends DataSource {
     <T> T loadTask(Class<T> taskType);
 
     @Override

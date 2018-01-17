@@ -19,11 +19,8 @@ import org.apache.commons.cli.Options;
  * It is visible only in {@code org.embulk.cli.parse} because it is an extension of a commons-cli class.
  * Dependencies on third-party libraries are to be encapsulated.
  */
-final class CliHelpFormatterWithHelpMessages
-        extends HelpFormatter
-{
-    CliHelpFormatterWithHelpMessages(final String syntaxPrefix, final int prefixWidth)
-    {
+final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
+    CliHelpFormatterWithHelpMessages(final String syntaxPrefix, final int prefixWidth) {
         super();
         this.prefixWidth = prefixWidth;
         this.setSyntaxPrefix(syntaxPrefix);
@@ -39,17 +36,17 @@ final class CliHelpFormatterWithHelpMessages
             final int leftPaddingWidth,
             final int descriptionPaddingWidth,
             final String footer,
-            final boolean autoUsage)
-    {
-        super.printHelp(printWriter,
-                        width,
-                        commandLineSyntax,
-                        header,
-                        options,
-                        leftPaddingWidth,
-                        descriptionPaddingWidth,
-                        footer,
-                        autoUsage);
+            final boolean autoUsage) {
+        super.printHelp(
+                printWriter,
+                width,
+                commandLineSyntax,
+                header,
+                options,
+                leftPaddingWidth,
+                descriptionPaddingWidth,
+                footer,
+                autoUsage);
         printWriter.flush();
     }
 
@@ -59,8 +56,7 @@ final class CliHelpFormatterWithHelpMessages
             final int width,
             final Options options,
             final int leftPaddingWidth,
-            final int descriptionPaddingWidth)
-    {
+            final int descriptionPaddingWidth) {
         // If |options| is not the extended version, it is just delegated to the original HelpFormatter.
         if (!(options instanceof CliOptionsWithHelpMessages)) {
             return super.renderOptions(buffer, width, options, leftPaddingWidth, descriptionPaddingWidth);
@@ -81,8 +77,7 @@ final class CliHelpFormatterWithHelpMessages
                 optionLinePrefixBuilder.append(leftPadding);
                 if (option.getOpt() == null) {
                     optionLinePrefixBuilder.append("    ").append(getLongOptPrefix()).append(option.getLongOpt());
-                }
-                else {
+                } else {
                     optionLinePrefixBuilder.append(getOptPrefix()).append(option.getOpt());
                     if (option.hasLongOpt()) {
                         optionLinePrefixBuilder.append(", ").append(getLongOptPrefix()).append(option.getLongOpt());
@@ -93,8 +88,7 @@ final class CliHelpFormatterWithHelpMessages
                     final String argName = option.getArgName();
                     if (argName != null && argName.length() == 0) {
                         optionLinePrefixBuilder.append(' ');
-                    }
-                    else {
+                    } else {
                         optionLinePrefixBuilder.append(option.hasLongOpt() ? getLongOptSeparator() : " ");
                         optionLinePrefixBuilder.append(argName != null ? option.getArgName() : getArgName());
                     }
@@ -115,8 +109,7 @@ final class CliHelpFormatterWithHelpMessages
         for (final Option option : allOptions) {
             if (option instanceof HelpMessageAsCliOption) {
                 buffer.append(option.toString());
-            }
-            else {
+            } else {
                 final StringBuilder lineBuilder = new StringBuilder();
                 lineBuilder.append(optionLinePrefixes.get(option));
                 if (lineBuilder.length() < maxOptionLinePrefixLength) {

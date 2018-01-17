@@ -11,8 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class PluginType
-{
+public abstract class PluginType {
     public static final PluginType LOCAL = DefaultPluginType.create("local");
 
     /**
@@ -20,19 +19,16 @@ public abstract class PluginType
      *
      * The constructor is {@code protected} to be called from subclasses, e.g. {@code DefaultPluginType}.
      */
-    protected PluginType(final String source, final String name)
-    {
+    protected PluginType(final String source, final String name) {
         this.sourceType = PluginSource.Type.of(source);
         this.name = name;
     }
 
     @JsonCreator
-    private static PluginType create(final JsonNode typeJson)
-    {
+    private static PluginType create(final JsonNode typeJson) {
         if (typeJson.isTextual()) {
             return createFromString(((TextNode) typeJson).textValue());
-        }
-        else if (typeJson.isObject()) {
+        } else if (typeJson.isObject()) {
             final HashMap<String, String> stringMap = new HashMap<String, String>();
             final ObjectNode typeObject = (ObjectNode) typeJson;
             final Iterator<Map.Entry<String, JsonNode>> fieldIterator = typeObject.fields();
@@ -45,75 +41,64 @@ public abstract class PluginType
                 stringMap.put(field.getKey(), fieldValue.textValue());
             }
             return createFromStringMap(stringMap);
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
         }
     }
 
-    private static PluginType createFromString(String name)
-    {
+    private static PluginType createFromString(String name) {
         if (name == null) {
             throw new NullPointerException("name must not be null");
         }
         return DefaultPluginType.create(name);
     }
 
-    private static PluginType createFromStringMap(Map<String, String> stringMap)
-    {
+    private static PluginType createFromStringMap(Map<String, String> stringMap) {
         final PluginSource.Type sourceType;
         if (stringMap.containsKey("source")) {
             sourceType = PluginSource.Type.of(stringMap.get("source"));
-        }
-        else {
+        } else {
             sourceType = PluginSource.Type.DEFAULT;
         }
 
         switch (sourceType) {
-        case DEFAULT:
-            {
+            case DEFAULT: {
                 final String name = stringMap.get("name");
                 return createFromString(name);
             }
-        case MAVEN:
-            {
+            case MAVEN: {
                 final String name = stringMap.get("name");
                 final String group = stringMap.get("group");
                 final String classifier = stringMap.get("classifier");
                 final String version = stringMap.get("version");
                 return MavenPluginType.create(name, group, classifier, version);
             }
-        default:
-            throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");
+            default:
+                throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");
         }
     }
 
     @VisibleForTesting
-    static PluginType createFromStringForTesting(final String name)
-    {
+    static PluginType createFromStringForTesting(final String name) {
         return createFromString(name);
     }
 
     @VisibleForTesting
-    static PluginType createFromStringMapForTesting(final Map<String, String> stringMap)
-    {
+    static PluginType createFromStringMapForTesting(final Map<String, String> stringMap) {
         return createFromStringMap(stringMap);
     }
 
-    public final PluginSource.Type getSourceType()
-    {
+    public final PluginSource.Type getSourceType() {
         return sourceType;
     }
 
     @JsonProperty("source")
-    public final String getSourceName()
-    {
+    public final String getSourceName() {
         return sourceType.toString();
     }
 
     @JsonProperty("name")
-    public final String getName()
-    {
+    public final String getName() {
         return name;
     }
 

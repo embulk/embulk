@@ -6,16 +6,11 @@ import com.google.inject.multibindings.Multibinder;
 import org.embulk.config.ConfigSource;
 import org.embulk.plugin.PluginSource;
 
-public class MavenPluginSourceModule
-        implements Module
-{
-    public MavenPluginSourceModule(ConfigSource systemConfig)
-    {
-    }
+public class MavenPluginSourceModule implements Module {
+    public MavenPluginSourceModule(ConfigSource systemConfig) {}
 
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
         multibinder.addBinding().to(MavenPluginSource.class);
     }

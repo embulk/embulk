@@ -4,38 +4,31 @@ import java.io.InputStream;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileInput;
 
-public class FileInputInputStream
-        extends InputStream
-{
+public class FileInputInputStream extends InputStream {
     private final FileInput in;
     private int pos;
     private Buffer buffer = Buffer.EMPTY;
 
-    public FileInputInputStream(FileInput in)
-    {
+    public FileInputInputStream(FileInput in) {
         this.in = in;
     }
 
-    public boolean markSupported()
-    {
+    public boolean markSupported() {
         return false;
     }
 
-    public boolean nextFile()
-    {
+    public boolean nextFile() {
         releaseBuffer();
         return in.nextFile();
     }
 
     @Override
-    public int available()
-    {
+    public int available() {
         return buffer.limit() - pos;
     }
 
     @Override
-    public int read()
-    {
+    public int read() {
         while (pos >= buffer.limit()) {
             if (!nextBuffer()) {
                 return -1;
@@ -50,8 +43,7 @@ public class FileInputInputStream
     }
 
     @Override
-    public int read(byte[] b, int off, int len)
-    {
+    public int read(byte[] b, int off, int len) {
         while (pos >= buffer.limit()) {
             if (!nextBuffer()) {
                 return -1;
@@ -78,14 +70,12 @@ public class FileInputInputStream
     }
 
     @Override
-    public long skip(long len)
-    {
+    public long skip(long len) {
         int skipped = read(null, 0, (int) Math.min(len, Integer.MAX_VALUE));
         return skipped > 0 ? skipped : 0;
     }
 
-    private boolean nextBuffer()
-    {
+    private boolean nextBuffer() {
         releaseBuffer();
         Buffer b = in.poll();
         if (b == null) {
@@ -95,16 +85,14 @@ public class FileInputInputStream
         return true;
     }
 
-    private void releaseBuffer()
-    {
+    private void releaseBuffer() {
         buffer.release();
         buffer = Buffer.EMPTY;
         pos = 0;
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         releaseBuffer();
         in.close();
     }

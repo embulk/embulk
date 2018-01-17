@@ -17,8 +17,8 @@ public class TimestampFormatterJava extends TimestampFormatter {
 
     static TimestampFormatterJava of(final String pattern, final ZoneOffset zoneOffset) {
         return new TimestampFormatterJava(new DateTimeFormatterBuilder()
-                                              .appendPattern(pattern)
-                                              .toFormatter(Locale.ENGLISH),
+                                                  .appendPattern(pattern)
+                                                  .toFormatter(Locale.ENGLISH),
                                           zoneOffset,
                                           pattern);
     }

@@ -1,99 +1,87 @@
 package org.embulk.exec;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ExecutionException;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.slf4j.Logger;
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
 import org.embulk.config.TaskReport;
+import org.embulk.config.TaskSource;
+import org.embulk.plugin.compat.PluginWrappers;
+import org.embulk.spi.AbortTransactionResource;
+import org.embulk.spi.CloseResource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ExecutorPlugin;
-import org.embulk.spi.ProcessTask;
-import org.embulk.spi.ProcessState;
-import org.embulk.spi.Schema;
-import org.embulk.spi.InputPlugin;
 import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
-import org.embulk.spi.AbortTransactionResource;
-import org.embulk.spi.CloseResource;
+import org.embulk.spi.ProcessState;
+import org.embulk.spi.ProcessTask;
+import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
-import org.embulk.plugin.compat.PluginWrappers;
-import org.embulk.spi.util.Filters;
 import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;
+import org.embulk.spi.util.Filters;
+import org.slf4j.Logger;
 
-public class LocalExecutorPlugin
-        implements ExecutorPlugin
-{
+public class LocalExecutorPlugin implements ExecutorPlugin {
     private int defaultMaxThreads;
     private int defaultMinThreads;
 
     @Inject
-    public LocalExecutorPlugin(@ForSystemConfig ConfigSource systemConfig)
-    {
+    public LocalExecutorPlugin(@ForSystemConfig ConfigSource systemConfig) {
         int cores = Runtime.getRuntime().availableProcessors();
         this.defaultMaxThreads = systemConfig.get(Integer.class, "max_threads", cores * 2);
         this.defaultMinThreads = systemConfig.get(Integer.class, "min_output_tasks", cores);
     }
 
     @Override
-    public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount,
-            ExecutorPlugin.Control control)
-    {
+    public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount, ExecutorPlugin.Control control) {
         try (AbstractLocalExecutor exec = newExecutor(config, inputTaskCount)) {
             control.transaction(outputSchema, exec.getOutputTaskCount(), exec);
         }
     }
 
-    private AbstractLocalExecutor newExecutor(ConfigSource config, int inputTaskCount)
-    {
+    private AbstractLocalExecutor newExecutor(ConfigSource config, int inputTaskCount) {
         Logger log = Exec.getLogger(LocalExecutorPlugin.class);
         int maxThreads = config.get(Integer.class, "max_threads", defaultMaxThreads);
         int minThreads = config.get(Integer.class, "min_output_tasks", defaultMinThreads);
         if (inputTaskCount > 0 && inputTaskCount < minThreads) {
             int scatterCount = (minThreads + inputTaskCount - 1) / inputTaskCount;
             log.info("Using local thread executor with max_threads={} / output tasks {} = input tasks {} * {}",
-                    maxThreads, inputTaskCount * scatterCount, inputTaskCount, scatterCount);
+                     maxThreads, inputTaskCount * scatterCount, inputTaskCount, scatterCount);
             return new ScatterExecutor(maxThreads, inputTaskCount, scatterCount);
-        }
-        else {
+        } else {
             log.info("Using local thread executor with max_threads={} / tasks={}", maxThreads, inputTaskCount);
             return new DirectExecutor(maxThreads, inputTaskCount);
         }
     }
 
-    private static abstract class AbstractLocalExecutor
-            implements Executor, AutoCloseable
-    {
+    private abstract static class AbstractLocalExecutor implements Executor, AutoCloseable {
         protected final Logger log = Exec.getLogger(LocalExecutorPlugin.class);
 
         protected final int inputTaskCount;
         protected final int outputTaskCount;
 
-        public AbstractLocalExecutor(int inputTaskCount, int outputTaskCount)
-        {
+        public AbstractLocalExecutor(int inputTaskCount, int outputTaskCount) {
             this.inputTaskCount = inputTaskCount;
             this.outputTaskCount = outputTaskCount;
         }
 
-        public int getOutputTaskCount()
-        {
+        public int getOutputTaskCount() {
             return outputTaskCount;
         }
 
         @Override
-        public void execute(ProcessTask task, ProcessState state)
-        {
+        public void execute(ProcessTask task, ProcessState state) {
             state.initialize(inputTaskCount, outputTaskCount);
 
             List<Future<Throwable>> futures = new ArrayList<>(inputTaskCount);
@@ -109,18 +97,15 @@ public class LocalExecutorPlugin
                     }
                     try {
                         state.getInputTaskState(i).setException(futures.get(i).get());
-                    }
-                    catch (ExecutionException ex) {
+                    } catch (ExecutionException ex) {
                         state.getInputTaskState(i).setException(ex.getCause());
-                        //Throwables.propagate(ex.getCause());
-                    }
-                    catch (InterruptedException ex) {
+                        // Throwables.propagate(ex.getCause());
+                    } catch (InterruptedException ex) {
                         state.getInputTaskState(i).setException(new ExecutionInterruptedException(ex));
                     }
                     showProgress(state, inputTaskCount);
                 }
-            }
-            finally {
+            } finally {
                 for (Future<Throwable> future : futures) {
                     if (future != null && !future.isDone()) {
                         future.cancel(true);
@@ -133,13 +118,16 @@ public class LocalExecutorPlugin
         @Override
         public abstract void close();
 
-        private void showProgress(ProcessState state, int taskCount)
-        {
+        private void showProgress(ProcessState state, int taskCount) {
             int started = 0;
             int finished = 0;
             for (int i = 0; i < taskCount; i++) {
-                if (state.getOutputTaskState(i).isStarted()) { started++; }
-                if (state.getOutputTaskState(i).isFinished()) { finished++; }
+                if (state.getOutputTaskState(i).isStarted()) {
+                    started++;
+                }
+                if (state.getOutputTaskState(i).isFinished()) {
+                    finished++;
+                }
             }
 
             log.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
@@ -148,13 +136,10 @@ public class LocalExecutorPlugin
         protected abstract Future<Throwable> startInputTask(ProcessTask task, ProcessState state, int taskIndex);
     }
 
-    public static class DirectExecutor
-            extends AbstractLocalExecutor
-    {
+    public static class DirectExecutor extends AbstractLocalExecutor {
         protected final ExecutorService executor;
 
-        public DirectExecutor(int maxThreads, int taskCount)
-        {
+        public DirectExecutor(int maxThreads, int taskCount) {
             super(taskCount, taskCount);
             this.executor = java.util.concurrent.Executors.newFixedThreadPool(maxThreads,
                     new ThreadFactoryBuilder()
@@ -164,61 +149,51 @@ public class LocalExecutorPlugin
         }
 
         @Override
-        public void close()
-        {
+        public void close() {
             executor.shutdown();
         }
 
         @Override
-        protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex)
-        {
+        protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex) {
             if (state.getOutputTaskState(taskIndex).isCommitted()) {
                 log.warn("Skipped resumed task {}", taskIndex);
                 return null;  // resumed
             }
 
             return executor.submit(new Callable<Throwable>() {
-                public Throwable call()
-                {
-                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                        Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
-                            public void started()
-                            {
-                                state.getInputTaskState(taskIndex).start();
-                                state.getOutputTaskState(taskIndex).start();
-                            }
+                    public Throwable call() {
+                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
+                            Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
+                                    public void started() {
+                                        state.getInputTaskState(taskIndex).start();
+                                        state.getOutputTaskState(taskIndex).start();
+                                    }
 
-                            public void inputCommitted(TaskReport report)
-                            {
-                                state.getInputTaskState(taskIndex).setTaskReport(report);
-                            }
+                                    public void inputCommitted(TaskReport report) {
+                                        state.getInputTaskState(taskIndex).setTaskReport(report);
+                                    }
 
-                            public void outputCommitted(TaskReport report)
-                            {
-                                state.getOutputTaskState(taskIndex).setTaskReport(report);
-                            }
-                        });
-                        return null;
+                                    public void outputCommitted(TaskReport report) {
+                                        state.getOutputTaskState(taskIndex).setTaskReport(report);
+                                    }
+                                });
+                            return null;
+                        } finally {
+                            state.getInputTaskState(taskIndex).finish();
+                            state.getOutputTaskState(taskIndex).finish();
+                        }
                     }
-                    finally {
-                        state.getInputTaskState(taskIndex).finish();
-                        state.getOutputTaskState(taskIndex).finish();
-                    }
-                }
-            });
+                });
         }
     }
 
-    public static class ScatterExecutor
-            extends AbstractLocalExecutor
-    {
+    public static class ScatterExecutor extends AbstractLocalExecutor {
         private final int scatterCount;
         private final int inputTaskCount;
         private final ExecutorService inputExecutor;
         private final ExecutorService outputExecutor;
 
-        public ScatterExecutor(int maxThreads, int inputTaskCount, int scatterCount)
-        {
+        public ScatterExecutor(int maxThreads, int inputTaskCount, int scatterCount) {
             super(inputTaskCount, inputTaskCount * scatterCount);
             this.inputTaskCount = inputTaskCount;
             this.scatterCount = scatterCount;
@@ -236,29 +211,26 @@ public class LocalExecutorPlugin
         }
 
         @Override
-        public void close()
-        {
+        public void close() {
             inputExecutor.shutdown();
             outputExecutor.shutdown();
         }
 
         @Override
-        protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex)
-        {
-            if(isAllScatterOutputFinished(state, taskIndex)) {
+        protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex) {
+            if (isAllScatterOutputFinished(state, taskIndex)) {
                 log.warn("Skipped resumed input task {}", taskIndex);
                 return null;  // resumed
             }
 
             return inputExecutor.submit(new Callable<Throwable>() {
-                public Throwable call()
-                {
-                    try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                        runInputTask(Exec.session(), task, state, taskIndex);
-                        return null;
+                    public Throwable call() {
+                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
+                            runInputTask(Exec.session(), task, state, taskIndex);
+                            return null;
+                        }
                     }
-                }
-            });
+                });
         }
 
         private boolean isAllScatterOutputFinished(ProcessState state, int taskIndex) {
@@ -271,8 +243,7 @@ public class LocalExecutorPlugin
             return true;
         }
 
-        private void runInputTask(ExecSession exec, ProcessTask task, ProcessState state, int taskIndex)
-        {
+        private void runInputTask(ExecSession exec, ProcessTask task, ProcessState state, int taskIndex) {
             InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
             List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
             OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
@@ -303,53 +274,42 @@ public class LocalExecutorPlugin
                     tran.commit();
                     aborter.dontAbort();
                 }
-            }
-            finally {
+            } finally {
                 state.getInputTaskState(taskIndex).finish();
                 state.getOutputTaskState(taskIndex).finish();
             }
         }
     }
 
-    private static class ScatterTransactionalPageOutput
-            implements TransactionalPageOutput
-    {
+    private static class ScatterTransactionalPageOutput implements TransactionalPageOutput {
         private static final Page DONE_PAGE = Page.allocate(0);
 
-        private static class OutputWorker
-                implements Callable<Throwable>
-        {
+        private static class OutputWorker implements Callable<Throwable> {
             private final PageOutput output;
             private final Future<Throwable> future;
             private volatile int addWaiting;
             private volatile Page queued;
 
-            public OutputWorker(PageOutput output, ExecutorService executor)
-            {
+            public OutputWorker(PageOutput output, ExecutorService executor) {
                 this.output = output;
                 this.addWaiting = 0;
                 this.future = executor.submit(this);
             }
 
-            public synchronized void done()
-                    throws InterruptedException
-            {
+            public synchronized void done() throws InterruptedException {
                 while (true) {
                     if (queued == null && addWaiting == 0) {
                         queued = DONE_PAGE;
                         notifyAll();
                         return;
-                    }
-                    else if (queued == DONE_PAGE) {
+                    } else if (queued == DONE_PAGE) {
                         return;
                     }
                     wait();
                 }
             }
 
-            public synchronized void add(Page page)
-                    throws InterruptedException
-            {
+            public synchronized void add(Page page) throws InterruptedException {
                 addWaiting++;
                 try {
                     while (true) {
@@ -357,34 +317,27 @@ public class LocalExecutorPlugin
                             queued = page;
                             notifyAll();
                             return;
-                        }
-                        else if (queued == DONE_PAGE) {
+                        } else if (queued == DONE_PAGE) {
                             page.release();
                             return;
                         }
                         wait();
                     }
-                }
-                finally {
+                } finally {
                     addWaiting--;
                 }
             }
 
-            public Throwable join()
-                    throws InterruptedException
-            {
+            public Throwable join() throws InterruptedException {
                 try {
                     return future.get();
-                }
-                catch (ExecutionException ex) {
+                } catch (ExecutionException ex) {
                     return ex.getCause();
                 }
             }
 
             @Override
-            public synchronized Throwable call()
-                    throws InterruptedException
-            {
+            public synchronized Throwable call() throws InterruptedException {
                 try {
                     while (true) {
                         if (queued != null) {
@@ -397,15 +350,13 @@ public class LocalExecutorPlugin
                         }
                         wait();
                     }
-                }
-                finally {
+                } finally {
                     try {
                         if (queued != null && queued != DONE_PAGE) {
                             queued.release();
                             queued = null;
                         }
-                    }
-                    finally {
+                    } finally {
                         queued = DONE_PAGE;
                     }
                     notifyAll();
@@ -425,8 +376,7 @@ public class LocalExecutorPlugin
 
         private long pageCount;
 
-        public ScatterTransactionalPageOutput(ProcessState state, int taskIndex, int scatterCount)
-        {
+        public ScatterTransactionalPageOutput(ProcessState state, int taskIndex, int scatterCount) {
             this.state = state;
             this.taskIndex = taskIndex;
             this.scatterCount = scatterCount;
@@ -440,21 +390,19 @@ public class LocalExecutorPlugin
             this.outputWorkers = new OutputWorker[scatterCount];
         }
 
-        public void openOutputs(OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource)
-        {
+        public void openOutputs(OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource) {
             for (int i = 0; i < scatterCount; i++) {
                 int outputTaskIndex = taskIndex * scatterCount + i;
                 if (!state.getOutputTaskState(outputTaskIndex).isCommitted()) {
                     TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-                        outputPlugin.open(outputTaskSource, outputSchema, outputTaskIndex));
+                            outputPlugin.open(outputTaskSource, outputSchema, outputTaskIndex));
                     trans[i] = tran;
                     closeThese[i].closeThis(tran);
                 }
             }
         }
 
-        public void openFilters(List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources)
-        {
+        public void openFilters(List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources) {
             for (int i = 0; i < scatterCount; i++) {
                 TransactionalPageOutput tran = trans[i];
                 if (tran != null) {
@@ -465,8 +413,7 @@ public class LocalExecutorPlugin
             }
         }
 
-        public void startWorkers(ExecutorService outputExecutor)
-        {
+        public void startWorkers(ExecutorService outputExecutor) {
             for (int i = 0; i < scatterCount; i++) {
                 PageOutput filtered = filtereds[i];
                 if (filtered != null) {
@@ -475,22 +422,19 @@ public class LocalExecutorPlugin
             }
         }
 
-        public void add(Page page)
-        {
+        public void add(Page page) {
             OutputWorker worker = outputWorkers[(int) (pageCount % scatterCount)];
             if (worker != null) {
                 try {
                     worker.add(page);
-                }
-                catch (InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     throw Throwables.propagate(ex);
                 }
             }
             pageCount++;
         }
 
-        public void finish()
-        {
+        public void finish() {
             completeWorkers();
             for (int i = 0; i < scatterCount; i++) {
                 if (filtereds[i] != null) {
@@ -499,16 +443,14 @@ public class LocalExecutorPlugin
             }
         }
 
-        public void close()
-        {
+        public void close() {
             completeWorkers();
             for (int i = 0; i < scatterCount; i++) {
                 closeThese[i].close();
             }
         }
 
-        public void abort()
-        {
+        public void abort() {
             completeWorkers();
             for (int i = 0; i < scatterCount; i++) {
                 if (trans[i] != null) {
@@ -517,8 +459,7 @@ public class LocalExecutorPlugin
             }
         }
 
-        public TaskReport commit()
-        {
+        public TaskReport commit() {
             completeWorkers();
             for (int i = 0; i < scatterCount; i++) {
                 if (trans[i] != null) {
@@ -534,22 +475,19 @@ public class LocalExecutorPlugin
             return null;
         }
 
-        public void completeWorkers()
-        {
+        public void completeWorkers() {
             for (int i = 0; i < scatterCount; i++) {
                 OutputWorker worker = outputWorkers[i];
                 if (worker != null) {
                     try {
                         worker.done();
-                    }
-                    catch (InterruptedException ex) {
+                    } catch (InterruptedException ex) {
                         throw Throwables.propagate(ex);
                     }
                     Throwable error = null;
                     try {
                         error = worker.join();
-                    }
-                    catch (InterruptedException ex) {
+                    } catch (InterruptedException ex) {
                         error = ex;
                     }
                     outputWorkers[i] = null;

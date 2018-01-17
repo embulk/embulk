@@ -4,82 +4,67 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
-public class Timestamp
-        implements Comparable<Timestamp>
-{
-    private Timestamp(final Instant instant)
-    {
+public class Timestamp implements Comparable<Timestamp> {
+    private Timestamp(final Instant instant) {
         this.instant = instant;
     }
 
-    public static Timestamp ofInstant(final Instant instant)
-    {
+    public static Timestamp ofInstant(final Instant instant) {
         return new Timestamp(instant);
     }
 
-    public static Timestamp ofEpochSecond(final long epochSecond)
-    {
+    public static Timestamp ofEpochSecond(final long epochSecond) {
         return new Timestamp(Instant.ofEpochSecond(epochSecond));
     }
 
-    public static Timestamp ofEpochSecond(final long epochSecond, final long nanoAdjustment)
-    {
+    public static Timestamp ofEpochSecond(final long epochSecond, final long nanoAdjustment) {
         return new Timestamp(Instant.ofEpochSecond(epochSecond, nanoAdjustment));
     }
 
-    public static Timestamp ofEpochMilli(final long epochMilli)
-    {
+    public static Timestamp ofEpochMilli(final long epochMilli) {
         return new Timestamp(Instant.ofEpochMilli(epochMilli));
     }
 
-    public Instant getInstant()
-    {
+    public Instant getInstant() {
         return this.instant;
     }
 
-    public long getEpochSecond()
-    {
+    public long getEpochSecond() {
         return this.instant.getEpochSecond();
     }
 
-    public int getNano()
-    {
+    public int getNano() {
         return this.instant.getNano();
     }
 
-    public long toEpochMilli()
-    {
+    public long toEpochMilli() {
         return this.instant.toEpochMilli();
     }
 
     @Override
-    public boolean equals(final Object otherObject)
-    {
+    public boolean equals(final Object otherObject) {
         if (this == otherObject) {
             return true;
         }
         if (!(otherObject instanceof Timestamp)) {
             return false;
         }
-        final Timestamp other = (Timestamp)otherObject;
+        final Timestamp other = (Timestamp) otherObject;
         return this.instant.equals(other.instant);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return this.instant.hashCode() ^ 0x55555555;
     }
 
     @Override
-    public int compareTo(final Timestamp other)
-    {
+    public int compareTo(final Timestamp other) {
         return this.instant.compareTo(other.instant);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         final int nano = this.instant.getNano();
         if (nano == 0) {
             return FORMATTER_SECONDS.format(this.instant) + " UTC";
@@ -110,9 +95,9 @@ public class Timestamp
     }
 
     private static final DateTimeFormatter FORMATTER_SECONDS =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     private static final DateTimeFormatter FORMATTER_MILLISECONDS =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
     private final Instant instant;
 }

@@ -4,16 +4,13 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import org.embulk.cli.EmbulkCommandLine;
 
-public abstract class OptionBehavior
-{
-    public OptionBehavior()
-    {
+public abstract class OptionBehavior {
+    public OptionBehavior() {
         this.helpWriter = SYSTEM_HELP_WRITER;
         this.errorWriter = SYSTEM_ERROR_WRITER;
     }
 
-    public OptionBehavior(final OutputStream helpStream, final OutputStream errorStream)
-    {
+    public OptionBehavior(final OutputStream helpStream, final OutputStream errorStream) {
         this.helpWriter = new PrintWriter(helpStream, true);
         this.errorWriter = new PrintWriter(errorStream, true);
     }
@@ -21,13 +18,11 @@ public abstract class OptionBehavior
     public abstract void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
             throws EmbulkCommandLineParseException;
 
-    protected final PrintWriter helpWriter()
-    {
+    protected final PrintWriter helpWriter() {
         return this.helpWriter;
     }
 
-    protected final PrintWriter errorWriter()
-    {
+    protected final PrintWriter errorWriter() {
         return this.errorWriter;
     }
 
