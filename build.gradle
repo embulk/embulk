@@ -39,6 +39,7 @@ ext {
 }
 
 configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+    apply plugin: 'checkstyle'
     apply plugin: 'findbugs'
     apply plugin: 'jacoco'
     apply plugin: 'maven'
@@ -56,11 +57,27 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
         systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
     }
 
+    tasks.withType(Checkstyle) {
+        reports {
+            // Not to skip up-to-date checkstyles.
+            outputs.upToDateWhen { false }
+        }
+    }
+
     tasks.withType(FindBugs) {
         reports {
             xml.enabled = false
             html.enabled = true
         }
+    }
+
+    checkstyle {
+        toolVersion '8.7'
+        configFile = new File("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+        configProperties = [
+            'checkstyle.config.path': new File("${projectDir}/config/checkstyle")
+        ]
+        ignoreFailures = false
     }
 
     findbugs {
