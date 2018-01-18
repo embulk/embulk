@@ -78,6 +78,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
             'checkstyle.config.path': new File("${projectDir}/config/checkstyle")
         ]
         ignoreFailures = false
+        maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
     }
 
     findbugs {
