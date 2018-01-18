@@ -1,44 +1,36 @@
 package org.embulk.spi;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MockFileOutput
-        implements FileOutput
-{
+public class MockFileOutput implements FileOutput {
     private List<List<Buffer>> files = new ArrayList<List<Buffer>>();
     private List<Buffer> lastBuffers = null;
     private boolean finished = false;
     private boolean closed = false;
 
-    public List<List<Buffer>> getFiles()
-    {
+    public List<List<Buffer>> getFiles() {
         return files;
     }
 
-    public List<Buffer> getLastBuffers()
-    {
+    public List<Buffer> getLastBuffers() {
         return lastBuffers;
     }
 
-    public void nextFile()
-    {
+    public void nextFile() {
         lastBuffers = new ArrayList<Buffer>();
         files.add(lastBuffers);
     }
 
-    public boolean isFinished()
-    {
+    public boolean isFinished() {
         return finished;
     }
 
-    public boolean isClosed()
-    {
+    public boolean isClosed() {
         return closed;
     }
 
-    public void add(Buffer buffer)
-    {
+    public void add(Buffer buffer) {
         if (lastBuffers == null) {
             throw new IllegalStateException("FileOutput.nextFile is not called");
         }
@@ -51,13 +43,11 @@ public class MockFileOutput
         lastBuffers.add(buffer);
     }
 
-    public void finish()
-    {
+    public void finish() {
         finished = true;
     }
 
-    public void close()
-    {
+    public void close() {
         closed = true;
     }
 }

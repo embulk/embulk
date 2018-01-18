@@ -1,46 +1,38 @@
 package org.embulk.spi;
 
 import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.TaskReport;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.ConfigDiff;
-import org.embulk.config.Task;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.Schema;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.msgpack.value.ImmutableMapValue;
 import static org.msgpack.value.ValueFactory.newBoolean;
 import static org.msgpack.value.ValueFactory.newInteger;
 import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
 
-public class TestFileOutputRunner
-{
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.List;
+import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.time.Timestamp;
+import org.junit.Rule;
+import org.junit.Test;
+import org.msgpack.value.ImmutableMapValue;
+
+public class TestFileOutputRunner {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
-    public interface PluginTask extends Task
-    {
-    }
+    public interface PluginTask extends Task {}
 
-    private static class MockFileOutputPlugin implements FileOutputPlugin
-    {
+    private static class MockFileOutputPlugin implements FileOutputPlugin {
         Boolean transactionCompleted = null;
 
         @Override
         public ConfigDiff transaction(ConfigSource config, int taskCount,
-                FileOutputPlugin.Control control)
-        {
+                FileOutputPlugin.Control control) {
             PluginTask task = config.loadConfig(PluginTask.class);
             control.run(task.dump());
             return Exec.newConfigDiff();
@@ -49,54 +41,39 @@ public class TestFileOutputRunner
         @Override
         public ConfigDiff resume(TaskSource taskSource,
                 int taskCount,
-                FileOutputPlugin.Control control)
-        {
+                FileOutputPlugin.Control control) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public void cleanup(TaskSource taskSource,
                 int taskCount,
-                List<TaskReport> successTaskReports)
-        {
-        }
+                List<TaskReport> successTaskReports) {}
 
         @Override
         public TransactionalFileOutput open(TaskSource taskSource,
-                final int taskIndex)
-        {
-            return new TransactionalFileOutput()
-            {
+                final int taskIndex) {
+            return new TransactionalFileOutput() {
 
                 @Override
-                public void nextFile()
-                {
-                }
+                public void nextFile() {}
 
                 @Override
-                public void add(Buffer buffer)
-                {
-                }
+                public void add(Buffer buffer) {}
 
                 @Override
-                public void finish()
-                {
-                }
+                public void finish() {}
 
                 @Override
-                public void close()
-                {
-                }
+                public void close() {}
 
                 @Override
-                public void abort()
-                {
+                public void abort() {
                     transactionCompleted = false;
                 }
 
                 @Override
-                public TaskReport commit()
-                {
+                public TaskReport commit() {
                     transactionCompleted = true;
                     return Exec.newTaskReport();
                 }
@@ -105,8 +82,7 @@ public class TestFileOutputRunner
     }
 
     @Test
-    public void testMockFormatterIteration()
-    {
+    public void testMockFormatterIteration() {
         MockFileOutputPlugin fileOutputPlugin = new MockFileOutputPlugin();
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
@@ -126,10 +102,8 @@ public class TestFileOutputRunner
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
 
-        runner.transaction(config, schema, 1, new OutputPlugin.Control()
-        {
-            public List<TaskReport> run(final TaskSource outputTask)
-            {
+        runner.transaction(config, schema, 1, new OutputPlugin.Control() {
+            public List<TaskReport> run(final TaskSource outputTask) {
                 TransactionalPageOutput tran = runner.open(outputTask, schema,
                         1);
                 boolean committed = false;
@@ -171,8 +145,7 @@ public class TestFileOutputRunner
     }
 
     @Test
-    public void testTransactionAborted()
-    {
+    public void testTransactionAborted() {
         MockFileOutputPlugin fileOutputPlugin = new MockFileOutputPlugin();
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
@@ -193,10 +166,8 @@ public class TestFileOutputRunner
                 .getSchemaConfig().toSchema();
 
         try {
-            runner.transaction(config, schema, 1, new OutputPlugin.Control()
-            {
-                public List<TaskReport> run(final TaskSource outputTask)
-                {
+            runner.transaction(config, schema, 1, new OutputPlugin.Control() {
+                public List<TaskReport> run(final TaskSource outputTask) {
                     TransactionalPageOutput tran = runner.open(outputTask,
                             schema, 1);
                     boolean committed = false;
@@ -214,6 +185,7 @@ public class TestFileOutputRunner
                 }
             });
         } catch (NullPointerException npe) {
+            // Just passing through.
         }
 
         assertEquals(false, fileOutputPlugin.transactionCompleted);

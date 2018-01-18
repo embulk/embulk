@@ -11,8 +11,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class TestJarPluginLoader
-{
+public class TestJarPluginLoader {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -20,8 +19,7 @@ public class TestJarPluginLoader
     public EmbulkTestRuntime testRuntime = new EmbulkTestRuntime();
 
     @Test
-    public void test() throws Exception
-    {
+    public void test() throws Exception {
         final Path jarPath = createTemporaryJarFile();
 
         final JarBuilder jarBuilder = new JarBuilder();
@@ -42,16 +40,14 @@ public class TestJarPluginLoader
         assertEquals("foobar", instance.getTestString());
     }
 
-    private Path createTemporaryJarFile() throws Exception
-    {
+    private Path createTemporaryJarFile() throws Exception {
         final String temporaryDirectoryString =
-            System.getProperty("org.embulk.plugin.jar.TestJarPluginLoader.temporaryDirectory");
+                System.getProperty("org.embulk.plugin.jar.TestJarPluginLoader.temporaryDirectory");
 
         final Path temporaryDirectoryPath;
         if (temporaryDirectoryString == null) {
             temporaryDirectoryPath = temporaryFolder.getRoot().toPath();
-        }
-        else {
+        } else {
             temporaryDirectoryPath = Paths.get(temporaryDirectoryString);
         }
 

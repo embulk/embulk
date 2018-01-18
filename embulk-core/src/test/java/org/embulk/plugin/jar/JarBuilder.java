@@ -10,17 +10,13 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class JarBuilder
-{
-    public JarBuilder()
-    {
+public class JarBuilder {
+    public JarBuilder() {
         this.manifest = new Manifest();
         this.entries = new HashMap<String, Path>();
     }
 
-    public void build(final Path pathToExistingFile)
-            throws Exception
-    {
+    public void build(final Path pathToExistingFile) throws Exception {
         try (final JarOutputStream output = buildPluginJar(pathToExistingFile, this.manifest)) {
             for (String entryName : new TreeSet<String>(this.entries.keySet())) {
                 final Path pathToRealFile = this.entries.get(entryName);
@@ -31,8 +27,7 @@ public class JarBuilder
                     entry.setCrc(0);
                     output.putNextEntry(entry);
                     output.closeEntry();
-                }
-                else {
+                } else {
                     final JarEntry entry = new JarEntry(entryName);
                     output.putNextEntry(entry);
                     Files.copy(pathToRealFile, output);
@@ -42,9 +37,7 @@ public class JarBuilder
         }
     }
 
-    public void addClass(final Class<?> klass)
-            throws Exception
-    {
+    public void addClass(final Class<?> klass) throws Exception {
         final Path classFileRelativePath = getClassFileRelativePath(klass);
         final Path classFileFullPath = getClassFileFullPath(klass);
         this.addFile(classFileRelativePath.toString(), classFileFullPath);
@@ -56,40 +49,33 @@ public class JarBuilder
         }
     }
 
-    public void addManifestV0(final String embulkPluginMainClass)
-    {
+    public void addManifestV0(final String embulkPluginMainClass) {
         final Attributes attributes = this.manifest.getMainAttributes();
         attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
         attributes.putValue(MANIFEST_PLUGIN_SPI_VERSION, "0");
         attributes.putValue(MANIFEST_PLUGIN_MAIN_CLASS, embulkPluginMainClass);
     }
 
-    private void addDirectoryIfAbsent(final String name)
-    {
+    private void addDirectoryIfAbsent(final String name) {
         if (!(this.entries.containsKey(name))) {
             this.entries.put(name, null);
         }
     }
 
-    private void addFile(final String name, final Path pathToRealFile)
-    {
+    private void addFile(final String name, final Path pathToRealFile) {
         this.entries.put(name, pathToRealFile);
     }
 
     private JarOutputStream buildPluginJar(final Path pathToExistingFile, final Manifest embeddedManifest)
-            throws Exception
-    {
+            throws Exception {
         return new JarOutputStream(Files.newOutputStream(pathToExistingFile), embeddedManifest);
     }
 
-    private Path getClassFileRelativePath(final Class<?> klass)
-    {
+    private Path getClassFileRelativePath(final Class<?> klass) {
         return Paths.get(klass.getName().replace('.', '/') + ".class");
     }
 
-    private Path getClassFileFullPath(final Class<?> klass)
-            throws Exception
-    {
+    private Path getClassFileFullPath(final Class<?> klass) throws Exception {
         return Paths.get(klass.getClassLoader().getResource(klass.getName().replace('.', '/') + ".class").toURI());
     }
 

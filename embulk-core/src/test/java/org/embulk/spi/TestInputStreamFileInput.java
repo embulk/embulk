@@ -2,23 +2,22 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.junit.Rule;
-import org.junit.Test;
-import com.google.common.collect.ImmutableList;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.util.InputStreamFileInput;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class TestInputStreamFileInput
-{
+public class TestInputStreamFileInput {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     @Test
-    public void testSingleProvider() throws IOException
-    {
+    public void testSingleProvider() throws IOException {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
                 provider(new ByteArrayInputStream("abcdef".getBytes("UTF-8"))));
@@ -29,8 +28,7 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testMultipleProvider() throws IOException
-    {
+    public void testMultipleProvider() throws IOException {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(), provider(
                         new ByteArrayInputStream("abcdef".getBytes("UTF-8")),
@@ -46,8 +44,7 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testEmptyStream() throws IOException
-    {
+    public void testEmptyStream() throws IOException {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
                 provider(new ByteArrayInputStream(new byte[0])));
@@ -57,8 +54,7 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testPollFirstException() throws IOException
-    {
+    public void testPollFirstException() throws IOException {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
                 provider(new ByteArrayInputStream("abcdef".getBytes("UTF-8"))));
@@ -72,8 +68,7 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testEmptyProvider() throws IOException
-    {
+    public void testEmptyProvider() throws IOException {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(), provider(new InputStream[0]));
         assertEquals(false, subject.nextFile());
@@ -81,21 +76,17 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testProviderOpenNextException()
-    {
+    public void testProviderOpenNextException() {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
-                new InputStreamFileInput.Provider()
-                {
+                new InputStreamFileInput.Provider() {
                     @Override
-                    public InputStream openNext() throws IOException
-                    {
+                    public InputStream openNext() throws IOException {
                         throw new IOException("emulated exception");
                     }
 
                     @Override
-                    public void close() throws IOException
-                    {
+                    public void close() throws IOException {
                     }
                 });
 
@@ -109,21 +100,17 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testProviderCloseException()
-    {
+    public void testProviderCloseException() {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
-                new InputStreamFileInput.Provider()
-                {
+                new InputStreamFileInput.Provider() {
                     @Override
-                    public InputStream openNext() throws IOException
-                    {
+                    public InputStream openNext() throws IOException {
                         return new ByteArrayInputStream(new byte[0]);
                     }
 
                     @Override
-                    public void close() throws IOException
-                    {
+                    public void close() throws IOException {
                         throw new IOException("emulated exception");
                     }
                 });
@@ -137,28 +124,22 @@ public class TestInputStreamFileInput
     }
 
     @Test
-    public void testInputStreamReadException()
-    {
+    public void testInputStreamReadException() {
         InputStreamFileInput subject = new InputStreamFileInput(
                 runtime.getBufferAllocator(),
-                new InputStreamFileInput.Provider()
-                {
+                new InputStreamFileInput.Provider() {
                     @Override
-                    public InputStream openNext() throws IOException
-                    {
-                        return new InputStream()
-                        {
+                    public InputStream openNext() throws IOException {
+                        return new InputStream() {
                             @Override
-                            public int read() throws IOException
-                            {
+                            public int read() throws IOException {
                                 throw new IOException("emulated exception");
                             }
                         };
                     }
 
                     @Override
-                    public void close() throws IOException
-                    {
+                    public void close() throws IOException {
                     }
                 });
 
@@ -173,14 +154,12 @@ public class TestInputStreamFileInput
     }
 
     private InputStreamFileInput.IteratorProvider provider(
-            InputStream... inputStreams) throws IOException
-    {
+            InputStream... inputStreams) throws IOException {
         return new InputStreamFileInput.IteratorProvider(
                 ImmutableList.copyOf(inputStreams));
     }
 
-    private String bufferToString(Buffer buffer) throws IOException
-    {
+    private String bufferToString(Buffer buffer) throws IOException {
         byte[] buf = new byte[buffer.limit()];
         buffer.getBytes(0, buf, 0, buffer.limit());
         return new String(buf, "UTF-8");

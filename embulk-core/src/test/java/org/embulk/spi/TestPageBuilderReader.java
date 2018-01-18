@@ -9,52 +9,43 @@ import static org.embulk.spi.type.Types.TIMESTAMP;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import org.msgpack.value.ImmutableMapValue;
 import static org.msgpack.value.ValueFactory.newBoolean;
 import static org.msgpack.value.ValueFactory.newInteger;
 import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.Schema;
 import org.embulk.EmbulkTestRuntime;
-import org.msgpack.value.ImmutableMapValue;
-import org.msgpack.value.Value;
+import org.embulk.spi.time.Timestamp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.msgpack.value.ImmutableMapValue;
+import org.msgpack.value.Value;
 
-public class TestPageBuilderReader
-{
+public class TestPageBuilderReader {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
-    public static class MockPageOutput implements PageOutput
-    {
+    public static class MockPageOutput implements PageOutput {
         public List<Page> pages;
 
-        public MockPageOutput()
-        {
+        public MockPageOutput() {
             this.pages = new ArrayList<>();
         }
 
         @Override
-        public void add(Page page)
-        {
+        public void add(Page page) {
             pages.add(page);
         }
 
         @Override
-        public void finish()
-        {
-        }
+        public void finish() {}
 
         @Override
-        public void close()
-        {
-        }
+        public void close() {}
     }
 
     private BufferAllocator bufferAllocator;
@@ -62,14 +53,12 @@ public class TestPageBuilderReader
     private PageBuilder builder;
 
     @Before
-    public void setup()
-    {
+    public void setup() {
         this.bufferAllocator = runtime.getBufferAllocator();
     }
 
     @After
-    public void destroy()
-    {
+    public void destroy() {
         if (reader != null) {
             reader.close();
             reader = null;
@@ -81,43 +70,37 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testBoolean()
-    {
+    public void testBoolean() {
         check(Schema.builder().add("col1", BOOLEAN).build(),
                 false, true, true);
     }
 
     @Test
-    public void testLong()
-    {
+    public void testLong() {
         check(Schema.builder().add("col1", LONG).build(),
                 1L, Long.MIN_VALUE, Long.MAX_VALUE);
     }
 
     @Test
-    public void testDouble()
-    {
+    public void testDouble() {
         check(Schema.builder().add("col1", DOUBLE).build(),
                 8.1, 3.141592, 4.3);
     }
 
     @Test
-    public void testUniqueStrings()
-    {
+    public void testUniqueStrings() {
         check(Schema.builder().add("col1", STRING).build(),
                 "test1", "test2", "test0");
     }
 
     @Test
-    public void testDuplicateStrings()
-    {
+    public void testDuplicateStrings() {
         check(Schema.builder().add("col1", STRING).build(),
-            "test1", "test1", "test1");
+                "test1", "test1", "test1");
     }
 
     @Test
-    public void testDuplicateStringsMultiColumns()
-    {
+    public void testDuplicateStringsMultiColumns() {
         check(Schema.builder().add("col1", STRING).add("col1", STRING).build(),
                 "test2", "test1",
                 "test1", "test2",
@@ -126,21 +109,18 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testTimestamp()
-    {
+    public void testTimestamp() {
         check(Schema.builder().add("col1", TIMESTAMP).build(),
                 Timestamp.ofEpochMilli(0), Timestamp.ofEpochMilli(10));
     }
 
     @Test
-    public void testJson()
-    {
+    public void testJson() {
         check(Schema.builder().add("col1", JSON).build(), getJsonSampleData());
     }
 
     @Test
-    public void testNull()
-    {
+    public void testNull() {
         check(Schema.builder()
                     .add("col3", DOUBLE)
                     .add("col1", STRING)
@@ -154,8 +134,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testMixedTypes()
-    {
+    public void testMixedTypes() {
         check(Schema.builder()
                     .add("col3", DOUBLE)
                     .add("col1", STRING)
@@ -168,21 +147,18 @@ public class TestPageBuilderReader
                 140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10), getJsonSampleData());
     }
 
-    private void check(Schema schema, Object... objects)
-    {
+    private void check(Schema schema, Object... objects) {
         Page page = buildPage(schema, objects);
         checkPage(schema, page, objects);
     }
 
-    private Page buildPage(Schema schema, final Object... objects)
-    {
+    private Page buildPage(Schema schema, final Object... objects) {
         List<Page> pages = buildPages(schema, objects);
         assertEquals(1, pages.size());
         return pages.get(0);
     }
 
-    private List<Page> buildPages(Schema schema, final Object... objects)
-    {
+    private List<Page> buildPages(Schema schema, final Object... objects) {
         MockPageOutput output = new MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator, schema, output);
         int idx = 0;
@@ -216,8 +192,7 @@ public class TestPageBuilderReader
         return output.pages;
     }
 
-    private void checkPage(Schema schema, Page page, final Object... objects)
-    {
+    private void checkPage(Schema schema, Page page, final Object... objects) {
         this.reader = new PageReader(schema);
         reader.setPage(page);
         int idx = 0;
@@ -247,8 +222,7 @@ public class TestPageBuilderReader
         }
     }
 
-    private ImmutableMapValue getJsonSampleData()
-    {
+    private ImmutableMapValue getJsonSampleData() {
         return newMap(
                 newString("_c1"), newBoolean(true),
                 newString("_c2"), newInteger(10),
@@ -258,8 +232,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testEmptySchema()
-    {
+    public void testEmptySchema() {
         MockPageOutput output = new MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator, Schema.builder().build(), output);
         builder.addRecord();
@@ -275,42 +248,34 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testRenewPage()
-    {
-        this.bufferAllocator = new BufferAllocator()
-        {
+    public void testRenewPage() {
+        this.bufferAllocator = new BufferAllocator() {
             @Override
-            public Buffer allocate()
-            {
+            public Buffer allocate() {
                 return Buffer.allocate(1);
             }
 
             @Override
-            public Buffer allocate(int minimumCapacity)
-            {
+            public Buffer allocate(int minimumCapacity) {
                 return Buffer.allocate(minimumCapacity);
             }
         };
         assertEquals(
                 9,
                 buildPages(Schema.builder().add("col1", LONG).build(),
-                    0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L).size());
+                        0L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L).size());
     }
 
     @Test
-    public void testRenewPageWithStrings()
-    {
-        this.bufferAllocator = new BufferAllocator()
-        {
+    public void testRenewPageWithStrings() {
+        this.bufferAllocator = new BufferAllocator() {
             @Override
-            public Buffer allocate()
-            {
+            public Buffer allocate() {
                 return Buffer.allocate(1);
             }
 
             @Override
-            public Buffer allocate(int minimumCapacity)
-            {
+            public Buffer allocate(int minimumCapacity) {
                 return Buffer.allocate(minimumCapacity);
             }
         };
@@ -328,8 +293,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testDoubleWriteStringsToRow()
-    {
+    public void testDoubleWriteStringsToRow() {
         MockPageOutput output = new MockPageOutput();
         Schema schema = Schema.builder()
                 .add("col0", STRING)
@@ -359,8 +323,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testDoubleWriteJsonsToRow()
-    {
+    public void testDoubleWriteJsonsToRow() {
         MockPageOutput output = new MockPageOutput();
         Schema schema = Schema.builder()
                 .add("col0", JSON)
@@ -390,8 +353,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testRepeatableClose()
-    {
+    public void testRepeatableClose() {
         MockPageOutput output = new MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator,
                 Schema.builder().add("col1", STRING).build(), output);
@@ -400,8 +362,7 @@ public class TestPageBuilderReader
     }
 
     @Test
-    public void testRepeatableFlush()
-    {
+    public void testRepeatableFlush() {
         MockPageOutput output = new MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator,
                 Schema.builder().add("col1", STRING).build(), output);

@@ -2,17 +2,17 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
-import org.junit.Rule;
-import org.junit.Test;
-import org.embulk.spi.util.ListFileInput;
+import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.util.FileInputInputStream;
 import org.embulk.spi.util.FileOutputOutputStream;
-import org.embulk.EmbulkTestRuntime;
+import org.embulk.spi.util.ListFileInput;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class TestFileInputInputStream
-{
+public class TestFileInputInputStream {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
@@ -22,21 +22,18 @@ public class TestFileInputInputStream
     private FileInputInputStream in;
     private FileOutputOutputStream out;
 
-    private void newOutputStream()
-    {
+    private void newOutputStream() {
         fileOutput = new MockFileOutput();
         out = new FileOutputOutputStream(fileOutput, runtime.getBufferAllocator(), FileOutputOutputStream.CloseMode.CLOSE);
     }
 
-    private void newInputStream()
-    {
+    private void newInputStream() {
         fileInput = new ListFileInput(fileOutput.getFiles());
         in = new FileInputInputStream(fileInput);
     }
 
     @Test
-    public void testRandomReadWrite() throws Exception
-    {
+    public void testRandomReadWrite() throws Exception {
         newOutputStream();
         out.nextFile();
         ByteArrayOutputStream expectedOut = new ByteArrayOutputStream();
@@ -83,7 +80,6 @@ public class TestFileInputInputStream
         }
 
         @Override
-        public void close() {
-        }
+        public void close() {}
     }
 }

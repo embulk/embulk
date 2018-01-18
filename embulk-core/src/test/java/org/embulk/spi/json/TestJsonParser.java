@@ -1,19 +1,15 @@
 package org.embulk.spi.json;
 
-import org.junit.Test;
-import org.msgpack.value.Value;
-import org.msgpack.value.ValueType;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-public class TestJsonParser
-{
+import org.junit.Test;
+import org.msgpack.value.Value;
+
+public class TestJsonParser {
     @Test
-    public void testString() throws Exception
-    {
+    public void testString() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("\"foobar\"");
         assertFalse(msgpackValue.getValueType().isNumberType());
@@ -22,15 +18,13 @@ public class TestJsonParser
     }
 
     @Test(expected = JsonParseException.class)
-    public void testStringUnquoted() throws Exception
-    {
+    public void testStringUnquoted() throws Exception {
         final JsonParser parser = new JsonParser();
         parser.parse("foobar");
     }
 
     @Test
-    public void testOrdinaryInteger() throws Exception
-    {
+    public void testOrdinaryInteger() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("12345");
         assertTrue(msgpackValue.getValueType().isNumberType());
@@ -41,8 +35,7 @@ public class TestJsonParser
     }
 
     @Test
-    public void testExponentialInteger1() throws Exception
-    {
+    public void testExponentialInteger1() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("12345e3");
         assertTrue(msgpackValue.getValueType().isNumberType());
@@ -57,8 +50,7 @@ public class TestJsonParser
     }
 
     @Test
-    public void testExponentialInteger2() throws Exception
-    {
+    public void testExponentialInteger2() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("123e2");
         assertTrue(msgpackValue.getValueType().isNumberType());
@@ -73,8 +65,7 @@ public class TestJsonParser
     }
 
     @Test
-    public void testOrdinaryFloat() throws Exception
-    {
+    public void testOrdinaryFloat() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("12345.12");
         assertTrue(msgpackValue.getValueType().isNumberType());
@@ -87,8 +78,7 @@ public class TestJsonParser
     }
 
     @Test
-    public void testExponentialFloat() throws Exception
-    {
+    public void testExponentialFloat() throws Exception {
         final JsonParser parser = new JsonParser();
         final Value msgpackValue = parser.parse("1.234512E4");
         assertTrue(msgpackValue.getValueType().isNumberType());

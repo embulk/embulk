@@ -8,11 +8,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import org.junit.Test;
 
-public class TestPluginType
-{
+public class TestPluginType {
     @Test
-    public void testEquals()
-    {
+    public void testEquals() {
         PluginType type = PluginType.createFromStringForTesting("a");
         assertTrue(type instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
@@ -23,8 +21,7 @@ public class TestPluginType
     }
 
     @Test
-    public void testMapping1()
-    {
+    public void testMapping1() {
         HashMap<String, String> mapping = new HashMap<String, String>();
         mapping.put("source", "default");
         mapping.put("name", "c");
@@ -39,8 +36,7 @@ public class TestPluginType
     }
 
     @Test
-    public void testMapping2()
-    {
+    public void testMapping2() {
         HashMap<String, String> mapping = new HashMap<String, String>();
         mapping.put("source", "maven");
         mapping.put("name", "e");
@@ -60,8 +56,7 @@ public class TestPluginType
     }
 
     @Test
-    public void testMappingMavenWithClassifier()
-    {
+    public void testMappingMavenWithClassifier() {
         HashMap<String, String> mapping = new HashMap<String, String>();
         mapping.put("source", "maven");
         mapping.put("name", "e");

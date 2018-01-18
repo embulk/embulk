@@ -6,17 +6,16 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -29,18 +28,18 @@ public class SelfrunTest {
         final FileSystem fileSystem = FileSystems.getDefault();
 
         final File thisFolder = new File(
-            SelfrunTest.class.getResource("/org/embulk/cli/SelfrunTest.class").toURI()).getParentFile();
+                SelfrunTest.class.getResource("/org/embulk/cli/SelfrunTest.class").toURI()).getParentFile();
         testSelfrunFile = new File(
-            thisFolder, System.getProperty("file.separator").equals("\\") ? "selfrun.bat" : "selfrun.sh");
+                thisFolder, System.getProperty("file.separator").equals("\\") ? "selfrun.bat" : "selfrun.sh");
 
         final File classpath = thisFolder.getParentFile().getParentFile().getParentFile();
         final String line =
-            new String(Files.readAllBytes(fileSystem.getPath(originalSelfrunFile.getAbsolutePath())),
-                       Charset.defaultCharset())
-            .replaceAll("java ",
-                        "java -classpath "
-                        + classpath.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\")
-                        + " org.embulk.cli.DummyMain ");
+                new String(Files.readAllBytes(fileSystem.getPath(originalSelfrunFile.getAbsolutePath())),
+                           Charset.defaultCharset())
+                .replaceAll("java ",
+                            "java -classpath "
+                                    + classpath.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\")
+                                    + " org.embulk.cli.DummyMain ");
 
         // Modify selfrun so that arguments are written in 'args.txt' .
         Files.write(fileSystem.getPath(testSelfrunFile.getAbsolutePath()),
@@ -202,6 +201,7 @@ public class SelfrunTest {
                      args);
     }
 
+    @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testJR() throws Exception {
         List<String> args = execute("-Jj1", "-Rr1", "a1", "a2");

@@ -352,19 +352,16 @@ public class TestRubyTimeFormat {
         final List<RubyTimeFormatToken> expectedTokens = new ArrayList<>();
         for (final Object expectedElement : expectedTokensInArray) {
             if (expectedElement instanceof RubyTimeFormatToken) {
-                expectedTokens.add((RubyTimeFormatToken)expectedElement);
-            }
-            else if (expectedElement instanceof List) {
-                for (final Object expectedElement2 : (List)expectedElement) {
+                expectedTokens.add((RubyTimeFormatToken) expectedElement);
+            } else if (expectedElement instanceof List) {
+                for (final Object expectedElement2 : (List) expectedElement) {
                     if (expectedElement2 instanceof RubyTimeFormatToken) {
-                        expectedTokens.add((RubyTimeFormatToken)expectedElement2);
-                    }
-                    else {
+                        expectedTokens.add((RubyTimeFormatToken) expectedElement2);
+                    } else {
                         fail();
                     }
                 }
-            }
-            else {
+            } else {
                 fail();
             }
         }

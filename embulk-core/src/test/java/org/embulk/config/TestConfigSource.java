@@ -1,29 +1,25 @@
 package org.embulk.config;
 
-import org.junit.Rule;
-import org.junit.Before;
-import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import com.google.inject.Inject;
-import org.embulk.spi.Exec;
-import org.embulk.EmbulkTestRuntime;
 
-public class TestConfigSource
-{
+import org.embulk.EmbulkTestRuntime;
+import org.embulk.spi.Exec;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+public class TestConfigSource {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     private ConfigSource config;
 
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         config = Exec.newConfigSource();
     }
 
-    private static interface TypeFields
-            extends Task
-    {
+    private static interface TypeFields extends Task {
         @Config("boolean")
         public boolean getBoolean();
 
@@ -41,8 +37,7 @@ public class TestConfigSource
     }
 
     @Test
-    public void testSetGet()
-    {
+    public void testSetGet() {
         config.set("boolean", true);
         config.set("int", 3);
         config.set("double", 0.2);
@@ -57,8 +52,7 @@ public class TestConfigSource
     }
 
     @Test
-    public void testLoadConfig()
-    {
+    public void testLoadConfig() {
         config.set("boolean", true);
         config.set("int", 3);
         config.set("double", 0.2);
@@ -73,16 +67,13 @@ public class TestConfigSource
         assertEquals("sf", task.getString());
     }
 
-    private static interface ValidateFields
-            extends Task
-    {
+    private static interface ValidateFields extends Task {
         @Config("valid")
         public String getValid();
     }
 
     @Test
-    public void testValidatePasses()
-    {
+    public void testValidatePasses() {
         config.set("valid", "data");
         ValidateFields task = config.loadConfig(ValidateFields.class);
         task.validate();
@@ -90,24 +81,20 @@ public class TestConfigSource
     }
 
     @Test(expected = ConfigException.class)
-    public void testDefaultValueValidateFails()
-    {
+    public void testDefaultValueValidateFails() {
         ValidateFields task = config.loadConfig(ValidateFields.class);
         task.validate();
     }
 
     // TODO test Min, Max, and other validations
 
-    private static interface SimpleFields
-            extends Task
-    {
+    private static interface SimpleFields extends Task {
         @Config("type")
         public String getType();
     }
 
     @Test
-    public void testFromJson()
-    {
+    public void testFromJson() {
         String json = "{\"type\":\"test\"}";
         // TODO
     }

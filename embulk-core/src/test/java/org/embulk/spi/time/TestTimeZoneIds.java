@@ -2,15 +2,12 @@ package org.embulk.spi.time;
 
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.TreeSet;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestTimeZoneIds
-{
+public class TestTimeZoneIds {
     @Test
-    public void testParseZoneIdWithJodaAndRubyZoneTab()
-    {
+    public void testParseZoneIdWithJodaAndRubyZoneTab() {
         // TODO: Test more practical equality. (Such as "GMT" v.s. "UTC")
         Assert.assertEquals(ZoneOffset.UTC, TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab("Z"));
         Assert.assertEquals(ZoneId.of("Asia/Tokyo"), TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab("Asia/Tokyo"));
