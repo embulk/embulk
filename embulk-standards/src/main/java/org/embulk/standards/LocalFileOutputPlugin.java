@@ -5,29 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
-import java.util.IllegalFormatException;
 import org.embulk.config.Config;
-import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.TaskReport;
+import org.embulk.config.ConfigException;
+import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
-import org.embulk.spi.Exec;
 import org.slf4j.Logger;
 
-public class LocalFileOutputPlugin
-        implements FileOutputPlugin
-{
-    public interface PluginTask
-            extends Task
-    {
+public class LocalFileOutputPlugin implements FileOutputPlugin {
+    public interface PluginTask extends Task {
         @Config("path_prefix")
         String getPathPrefix();
 
@@ -43,8 +39,7 @@ public class LocalFileOutputPlugin
 
     @Override
     public ConfigDiff transaction(ConfigSource config, int taskCount,
-            FileOutputPlugin.Control control)
-    {
+            FileOutputPlugin.Control control) {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // validate sequence_format
@@ -60,8 +55,7 @@ public class LocalFileOutputPlugin
     @Override
     public ConfigDiff resume(TaskSource taskSource,
             int taskCount,
-            FileOutputPlugin.Control control)
-    {
+            FileOutputPlugin.Control control) {
         control.run(taskSource);
         return Exec.newConfigDiff();
     }
@@ -69,12 +63,10 @@ public class LocalFileOutputPlugin
     @Override
     public void cleanup(TaskSource taskSource,
             int taskCount,
-            List<TaskReport> successTaskReports)
-    { }
+            List<TaskReport> successTaskReports) {}
 
     @Override
-    public TransactionalFileOutput open(TaskSource taskSource, final int taskIndex)
-    {
+    public TransactionalFileOutput open(TaskSource taskSource, final int taskIndex) {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final String pathPrefix = task.getPathPrefix();
@@ -86,8 +78,7 @@ public class LocalFileOutputPlugin
             private int fileIndex = 0;
             private FileOutputStream output = null;
 
-            public void nextFile()
-            {
+            public void nextFile() {
                 closeFile();
                 String path = pathPrefix + String.format(sequenceFormat, taskIndex, fileIndex) + pathSuffix;
                 log.info("Writing local file '{}'", path);
@@ -100,8 +91,7 @@ public class LocalFileOutputPlugin
                 fileIndex++;
             }
 
-            private void closeFile()
-            {
+            private void closeFile() {
                 if (output != null) {
                     try {
                         output.close();
@@ -111,8 +101,7 @@ public class LocalFileOutputPlugin
                 }
             }
 
-            public void add(Buffer buffer)
-            {
+            public void add(Buffer buffer) {
                 try {
                     output.write(buffer.array(), buffer.offset(), buffer.limit());
                 } catch (IOException ex) {
@@ -122,21 +111,17 @@ public class LocalFileOutputPlugin
                 }
             }
 
-            public void finish()
-            {
+            public void finish() {
                 closeFile();
             }
 
-            public void close()
-            {
+            public void close() {
                 closeFile();
             }
 
-            public void abort()
-            { }
+            public void abort() {}
 
-            public TaskReport commit()
-            {
+            public TaskReport commit() {
                 TaskReport report = Exec.newTaskReport();
                 // TODO better setting for Report
                 // report.set("file_names", fileNames);

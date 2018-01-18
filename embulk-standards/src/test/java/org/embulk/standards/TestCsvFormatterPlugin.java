@@ -1,27 +1,26 @@
 package org.embulk.standards;
 
+import static org.junit.Assert.assertEquals;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTimeZone;
-import org.junit.Rule;
-import org.junit.Test;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import static org.junit.Assert.assertEquals;
 import java.nio.charset.Charset;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.util.Newline;
+import org.joda.time.DateTimeZone;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class TestCsvFormatterPlugin
-{
+public class TestCsvFormatterPlugin {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     @Test
-    public void checkDefaultValues()
-    {
+    public void checkDefaultValues() {
         ConfigSource config = Exec.newConfigSource();
 
         CsvFormatterPlugin.PluginTask task = config.loadConfig(CsvFormatterPlugin.PluginTask.class);
@@ -39,8 +38,7 @@ public class TestCsvFormatterPlugin
     }
 
     @Test
-    public void checkLoadConfig()
-    {
+    public void checkLoadConfig() {
         ConfigSource config = Exec.newConfigSource()
                 .set("charset", "utf-16")
                 .set("newline", "LF")
@@ -66,8 +64,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testQuoteValue()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setQuoteValue", String.class, char.class);
         method.setAccessible(true);
         CsvFormatterPlugin formatter = new CsvFormatterPlugin();
@@ -80,8 +77,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testEscapeQuote()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
@@ -97,8 +93,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testQuotePolicyAll()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
@@ -141,8 +136,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testQuotePolicyMinimal()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
@@ -185,8 +179,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testQuotePolicyNone()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
@@ -229,8 +222,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testNewlineInField()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);
@@ -257,7 +249,6 @@ public class TestCsvFormatterPlugin
             assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
 
-
         newline = Newline.CRLF.getString();
         testCases = ImmutableList.of(
                 ImmutableMap.of("expected", "\"ABC\r\nDEF\"", "actual", "ABC\r\nDEF"),
@@ -269,7 +260,6 @@ public class TestCsvFormatterPlugin
             String actual = (String) testCase.get("actual");
             assertEquals(expected, method.invoke(formatter, actual, delimiter, policy, quote, escape, newline, nullString));
         }
-
 
         newline = Newline.CR.getString();
         testCases = ImmutableList.of(
@@ -286,8 +276,7 @@ public class TestCsvFormatterPlugin
 
     @Test
     public void testNullString()
-            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Method method = CsvFormatterPlugin.class.getDeclaredMethod("setEscapeAndQuoteValue", String.class, char.class,
                 CsvFormatterPlugin.QuotePolicy.class, char.class, char.class, String.class, String.class);
         method.setAccessible(true);

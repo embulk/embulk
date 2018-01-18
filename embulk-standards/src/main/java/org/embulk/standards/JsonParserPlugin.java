@@ -5,6 +5,13 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
@@ -26,40 +33,25 @@ import org.msgpack.core.Preconditions;
 import org.msgpack.value.Value;
 import org.slf4j.Logger;
 
-import javax.annotation.Nullable;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
+public class JsonParserPlugin implements ParserPlugin {
 
-public class JsonParserPlugin
-        implements ParserPlugin
-{
-
-    public enum InvalidEscapeStringPolicy
-    {
+    public enum InvalidEscapeStringPolicy {
         PASSTHROUGH("PASSTHROUGH"),
         SKIP("SKIP"),
         UNESCAPE("UNESCAPE");
 
         private final String string;
 
-        private InvalidEscapeStringPolicy(String string)
-        {
+        private InvalidEscapeStringPolicy(String string) {
             this.string = string;
         }
 
-        public String getString()
-        {
+        public String getString() {
             return string;
         }
     }
 
-    public interface PluginTask
-            extends Task
-    {
+    public interface PluginTask extends Task {
         @Config("stop_on_invalid_record")
         @ConfigDefault("false")
         boolean getStopOnInvalidRecord();
@@ -71,27 +63,23 @@ public class JsonParserPlugin
 
     private final Logger log;
 
-    public JsonParserPlugin()
-    {
+    public JsonParserPlugin() {
         this.log = Exec.getLogger(JsonParserPlugin.class);
     }
 
     @Override
-    public void transaction(ConfigSource configSource, Control control)
-    {
+    public void transaction(ConfigSource configSource, Control control) {
         PluginTask task = configSource.loadConfig(PluginTask.class);
         control.run(task.dump(), newSchema());
     }
 
     @VisibleForTesting
-    Schema newSchema()
-    {
+    Schema newSchema() {
         return Schema.builder().add("record", Types.JSON).build(); // generate a schema
     }
 
     @Override
-    public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output)
-    {
+    public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output) {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
@@ -113,20 +101,18 @@ public class JsonParserPlugin
                             pageBuilder.setJson(column, value);
                             pageBuilder.addRecord();
                             evenOneJsonParsed = true;
-                        }
-                        catch (JsonRecordValidateException e) {
+                        } catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
                                 throw new DataException(String.format("Invalid record: %s", value.toJson()), e);
                             }
                             log.warn(String.format("Skipped record (%s): %s", e.getMessage(), value.toJson()));
                         }
                     }
-                }
-                catch (IOException | JsonParseException e) {
+                } catch (IOException | JsonParseException e) {
                     if (Exec.isPreview() && evenOneJsonParsed) {
-			// JsonParseException occurs when it cannot parse the last part of sampling buffer. Because
-			// the last part is sometimes invalid as JSON data. Therefore JsonParseException can be
-			// ignore in preview if at least one JSON is already parsed.
+                        // JsonParseException occurs when it cannot parse the last part of sampling buffer. Because
+                        // the last part is sometimes invalid as JSON data. Therefore JsonParseException can be
+                        // ignore in preview if at least one JSON is already parsed.
                         break;
                     }
                     throw new DataException(e);
@@ -137,14 +123,12 @@ public class JsonParserPlugin
         }
     }
 
-    private PageBuilder newPageBuilder(Schema schema, PageOutput output)
-    {
+    private PageBuilder newPageBuilder(Schema schema, PageOutput output) {
         return new PageBuilder(Exec.getBufferAllocator(), schema, output);
     }
 
     private JsonParser.Stream newJsonStream(FileInputInputStream in, PluginTask task)
-            throws IOException
-    {
+            throws IOException {
         InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
         switch (policy) {
             case SKIP:
@@ -158,15 +142,12 @@ public class JsonParserPlugin
         }
     }
 
-    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy)
-    {
-        return new Function<String, CharSource>()
-        {
+    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
+        return new Function<String, CharSource>() {
             final Pattern digitsPattern = Pattern.compile("\\p{XDigit}+");
 
             @Override
-            public CharSource apply(@Nullable String input)
-            {
+            public CharSource apply(@Nullable String input) {
                 Preconditions.checkNotNull(input);
                 if (policy == InvalidEscapeStringPolicy.PASSTHROUGH) {
                     return CharSource.wrap(input);
@@ -211,12 +192,12 @@ public class JsonParserPlugin
                                             break;
                                         case UNESCAPE:
                                             break;
+                                        default:  // Do nothing, and just pass through.
                                     }
                                     break;
                             }
                         }
-                    }
-                    else {
+                    } else {
                         builder.append(c);
                     }
                 }
@@ -225,11 +206,8 @@ public class JsonParserPlugin
         };
     }
 
-    static class JsonRecordValidateException
-            extends DataException
-    {
-        JsonRecordValidateException(String message)
-        {
+    static class JsonRecordValidateException extends DataException {
+        JsonRecordValidateException(String message) {
             super(message);
         }
     }

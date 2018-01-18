@@ -1,25 +1,23 @@
 package org.embulk.standards;
 
+import static org.embulk.exec.GuessExecutor.registerDefaultGuessPluginTo;
+import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
+
 import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import org.embulk.plugin.DefaultPluginType;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.DecoderPlugin;
-import org.embulk.spi.EncoderPlugin;
-import org.embulk.plugin.DefaultPluginType;
-import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
-import static org.embulk.exec.GuessExecutor.registerDefaultGuessPluginTo;
 
-public class StandardPluginModule
-        implements Module
-{
+public class StandardPluginModule implements Module {
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         Preconditions.checkNotNull(binder, "binder is null.");
 
         // input plugins
