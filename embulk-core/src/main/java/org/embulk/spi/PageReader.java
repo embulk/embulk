@@ -2,12 +2,10 @@ package org.embulk.spi;
 
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
-import org.msgpack.value.Value;
 import org.embulk.spi.time.Timestamp;
+import org.msgpack.value.Value;
 
-public class PageReader
-        implements AutoCloseable
-{
+public class PageReader implements AutoCloseable {
     private final Schema schema;
     private final int[] columnOffsets;
 
@@ -21,22 +19,19 @@ public class PageReader
 
     private static final Page SENTINEL = Page.wrap(Buffer.wrap(new byte[4]));  // buffer().release() does nothing
 
-    public PageReader(Schema schema)
-    {
+    public PageReader(Schema schema) {
         this.schema = schema;
         this.columnOffsets = PageFormat.columnOffsets(schema);
         this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
     }
 
-    public static int getRecordCount(Page page)
-    {
+    public static int getRecordCount(Page page) {
         Buffer pageBuffer = page.buffer();
         Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
         return pageSlice.getInt(0);  // see page format
     }
 
-    public void setPage(Page page)
-    {
+    public void setPage(Page page) {
         this.page.buffer().release();
         this.page = SENTINEL;
 
@@ -51,62 +46,51 @@ public class PageReader
         this.pageSlice = pageSlice;
     }
 
-    public Schema getSchema()
-    {
+    public Schema getSchema() {
         return schema;
     }
 
-    public boolean isNull(Column column)
-    {
+    public boolean isNull(Column column) {
         return isNull(column.getIndex());
     }
 
-    public boolean isNull(int columnIndex)
-    {
+    public boolean isNull(int columnIndex) {
         return (nullBitSet[columnIndex >>> 3] & (1 << (columnIndex & 7))) != 0;
     }
 
-    public boolean getBoolean(Column column)
-    {
+    public boolean getBoolean(Column column) {
         // TODO check type?
         return getBoolean(column.getIndex());
     }
 
-    public boolean getBoolean(int columnIndex)
-    {
+    public boolean getBoolean(int columnIndex) {
         return pageSlice.getByte(getOffset(columnIndex)) != (byte) 0;
     }
 
-    public long getLong(Column column)
-    {
+    public long getLong(Column column) {
         // TODO check type?
         return getLong(column.getIndex());
     }
 
-    public long getLong(int columnIndex)
-    {
+    public long getLong(int columnIndex) {
         return pageSlice.getLong(getOffset(columnIndex));
     }
 
-    public double getDouble(Column column)
-    {
+    public double getDouble(Column column) {
         // TODO check type?
         return getDouble(column.getIndex());
     }
 
-    public double getDouble(int columnIndex)
-    {
+    public double getDouble(int columnIndex) {
         return pageSlice.getDouble(getOffset(columnIndex));
     }
 
-    public String getString(Column column)
-    {
+    public String getString(Column column) {
         // TODO check type?
         return getString(column.getIndex());
     }
 
-    public String getString(int columnIndex)
-    {
+    public String getString(int columnIndex) {
         if (isNull(columnIndex)) {
             return null;
         }
@@ -114,14 +98,12 @@ public class PageReader
         return page.getStringReference(index);
     }
 
-    public Timestamp getTimestamp(Column column)
-    {
+    public Timestamp getTimestamp(Column column) {
         // TODO check type?
         return getTimestamp(column.getIndex());
     }
 
-    public Timestamp getTimestamp(int columnIndex)
-    {
+    public Timestamp getTimestamp(int columnIndex) {
         if (isNull(columnIndex)) {
             return null;
         }
@@ -131,14 +113,12 @@ public class PageReader
         return Timestamp.ofEpochSecond(sec, nsec);
     }
 
-    public Value getJson(Column column)
-    {
+    public Value getJson(Column column) {
         // TODO check type?
         return getJson(column.getIndex());
     }
 
-    public Value getJson(int columnIndex)
-    {
+    public Value getJson(int columnIndex) {
         if (isNull(columnIndex)) {
             return null;
         }
@@ -146,13 +126,11 @@ public class PageReader
         return page.getValueReference(index);
     }
 
-    private int getOffset(int columnIndex)
-    {
+    private int getOffset(int columnIndex) {
         return position + columnOffsets[columnIndex];
     }
 
-    public boolean nextRecord()
-    {
+    public boolean nextRecord() {
         if (pageRecordCount <= readCount) {
             return false;
         }
@@ -170,8 +148,7 @@ public class PageReader
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         page.buffer().release();
         page = SENTINEL;
     }

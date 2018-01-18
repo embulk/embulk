@@ -1,4 +1,3 @@
 package org.embulk.config;
 
-public interface UserDataException
-{ }
+public interface UserDataException {}

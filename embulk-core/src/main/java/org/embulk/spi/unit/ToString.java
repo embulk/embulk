@@ -1,24 +1,21 @@
 package org.embulk.spi.unit;
 
-import com.google.common.base.Optional;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.google.common.base.Optional;
 
-public class ToString
-{
+public class ToString {
     private final String string;
 
-    public ToString(String string)
-    {
+    public ToString(String string) {
         this.string = string;
     }
 
     @JsonCreator
-    public ToString(Optional<JsonNode> option) throws JsonMappingException
-    {
+    public ToString(Optional<JsonNode> option) throws JsonMappingException {
         JsonNode node = option.or(NullNode.getInstance());
         if (node.isTextual()) {
             this.string = node.textValue();
@@ -30,8 +27,7 @@ public class ToString
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (!(obj instanceof ToString)) {
             return false;
         }
@@ -40,15 +36,13 @@ public class ToString
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return string.hashCode();
     }
 
     @JsonValue
     @Override
-    public String toString()
-    {
+    public String toString() {
         return string;
     }
 }

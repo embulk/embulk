@@ -1,12 +1,11 @@
 package org.embulk.config;
 
-import java.util.List;
-import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
+import java.util.Map;
 
-public interface DataSource
-{
+public interface DataSource {
     List<String> getAttributeNames();
 
     Iterable<Map.Entry<String, JsonNode>> getAttributes();

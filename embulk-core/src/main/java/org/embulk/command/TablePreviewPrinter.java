@@ -1,16 +1,14 @@
 package org.embulk.command;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.io.PrintStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.Schema;
 
-public class TablePreviewPrinter
-        extends PreviewPrinter
-{
+public class TablePreviewPrinter extends PreviewPrinter {
     private static final int MAX_SAMPLE_SIZE = 32000;
 
     private List<String[]> samples;
@@ -18,20 +16,18 @@ public class TablePreviewPrinter
     private String format = null;
     private String border = null;
 
-    public TablePreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema)
-    {
+    public TablePreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema) {
         super(out, modelManager, schema);
         this.samples = new ArrayList<String[]>();
         String[] header = new String[schema.getColumnCount()];
-        for (int i=0; i < header.length; i++) {
+        for (int i = 0; i < header.length; i++) {
             header[i] = schema.getColumnName(i) + ":" + schema.getColumnType(i);
         }
         samples.add(header);
     }
 
     @Override
-    protected void printRecord(String[] values) throws IOException
-    {
+    protected void printRecord(String[] values) throws IOException {
         if (samples == null) {
             // header is already written
             out.format(format, Arrays.copyOf(values, values.length, Object[].class));
@@ -48,21 +44,20 @@ public class TablePreviewPrinter
         }
     }
 
-    private void flushSamples()
-    {
+    private void flushSamples() {
         StringBuilder borderBuilder = new StringBuilder();
 
         StringBuilder sb = new StringBuilder();
         sb.append("| ");
         borderBuilder.append("+-");
-        for (int i=0; i < schema.getColumnCount(); i++) {
+        for (int i = 0; i < schema.getColumnCount(); i++) {
             if (i != 0) {
                 sb.append(" | ");
                 borderBuilder.append("-+-");
             }
             int colLen = maxLengthInColumn(i);
-            sb.append("%"+colLen+"s");
-            for (int b=0; b < colLen; b++) {
+            sb.append("%" + colLen + "s");
+            for (int b = 0; b < colLen; b++) {
                 borderBuilder.append("-");
             }
         }
@@ -75,7 +70,7 @@ public class TablePreviewPrinter
 
         out.println(border);
 
-        for (int i=0; i < samples.size(); i++) {
+        for (int i = 0; i < samples.size(); i++) {
             String[] values = samples.get(i);
             out.format(format, Arrays.copyOf(values, values.length, Object[].class));
             if (i == 0) {
@@ -87,8 +82,7 @@ public class TablePreviewPrinter
         this.samples = null;
     }
 
-    private int maxLengthInColumn(int i)
-    {
+    private int maxLengthInColumn(int i) {
         int max = 0;
         for (String[] values : samples) {
             max = Math.max(max, values[i].length());
@@ -97,8 +91,7 @@ public class TablePreviewPrinter
     }
 
     @Override
-    public void finish() throws IOException
-    {
+    public void finish() throws IOException {
         if (samples != null) {
             flushSamples();
         }

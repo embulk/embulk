@@ -22,12 +22,12 @@ public class TimestampParser {
     public TimestampParser(final Task task,
                            final TimestampColumnOption columnOption) {
         this(TimestampParserLegacy.of(
-                 columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-                 TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                     columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                 TimeZoneIds.parseJodaDateTimeZone(
-                     columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                 columnOption.getDate().or(task.getDefaultDate())));
+                     columnOption.getFormat().or(task.getDefaultTimestampFormat()),
+                     TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
+                             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                     TimeZoneIds.parseJodaDateTimeZone(
+                             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                     columnOption.getDate().or(task.getDefaultDate())));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
@@ -36,12 +36,12 @@ public class TimestampParser {
     public TimestampParser(final String formatString,
                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone) {
         this(TimestampParserLegacy.of(
-                 formatString,
-                 TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
-                 defaultJodaDateTimeZone,
-                 1970,
-                 1,
-                 1));
+                     formatString,
+                     TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
+                     defaultJodaDateTimeZone,
+                     1970,
+                     1,
+                     1));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
@@ -149,9 +149,9 @@ public class TimestampParser {
         } else {
             return TimestampParserLegacy.of(pattern,
                                             TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                                                columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
                                             TimeZoneIds.parseJodaDateTimeZone(
-                                                columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
+                                                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
                                             columnOption.getDate().or(task.getDefaultDate()));
         }
     }
@@ -167,8 +167,7 @@ public class TimestampParser {
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
-            }
-            else {
+            } else {
                 return null;
             }
         }
@@ -193,8 +192,7 @@ public class TimestampParser {
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
-            }
-            else {
+            } else {
                 return Optional.absent();
             }
         }

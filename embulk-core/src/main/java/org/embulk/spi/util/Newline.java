@@ -1,7 +1,6 @@
 package org.embulk.spi.util;
 
-public enum Newline
-{
+public enum Newline {
     CRLF("\r\n"),
     LF("\n"),
     CR("\r");
@@ -10,8 +9,7 @@ public enum Newline
     private final char firstCharCode;
     private final char secondCharCode;
 
-    private Newline(String string)
-    {
+    private Newline(String string) {
         this.string = string;
         this.firstCharCode = string.charAt(0);
         if (string.length() > 1) {
@@ -21,18 +19,15 @@ public enum Newline
         }
     }
 
-    public String getString()
-    {
+    public String getString() {
         return string;
     }
 
-    public char getFirstCharCode()
-    {
+    public char getFirstCharCode() {
         return firstCharCode;
     }
 
-    public char getSecondCharCode()
-    {
+    public char getSecondCharCode() {
         return secondCharCode;
     }
 }

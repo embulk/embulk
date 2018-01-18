@@ -12,12 +12,14 @@ import java.util.List;
  * It calls methods of ScriptingContainer through reflection.
  *
  * This trick enables Embulk:
+ *
  * <ul>
  * <li>To load a JRuby runtime (jruby-complete-*.jar) specified at runtime out of embulk-*.jar.
  * <li>To switch versions of JRuby without releasing or repackaging.
  * <li>To distribute Embulk without JRuby runtimes embedded.
  * </ul>
  */
+@SuppressWarnings({"checkstyle:AbbreviationAsWordInName", "checkstyle:MemberName", "checkstyle:ParameterName"})
 public final class ScriptingContainerDelegate {
     private ScriptingContainerDelegate(final String jrubyVersion,
                                        final String rubyVersion,
@@ -117,7 +119,7 @@ public final class ScriptingContainerDelegate {
                                                     final LocalContextScope delegateLocalContextScope,
                                                     final LocalVariableBehavior delegateLocalVariableBehavior) {
         final Object scriptingContainer = createScriptingContainer(
-            classLoader, delegateLocalContextScope, delegateLocalVariableBehavior);
+                classLoader, delegateLocalContextScope, delegateLocalVariableBehavior);
 
         if (scriptingContainer == null) {
             return new ScriptingContainerDelegate();
@@ -165,14 +167,14 @@ public final class ScriptingContainerDelegate {
             // `org.jruby.runtime.Constants` is not implemented in the JRuby version -- unlikely.
             return new ScriptingContainerDelegate();  // TODO: Log.
         }
-        final String jrubyVersion = (String)getStaticField_Constants(class_Constants, "VERSION");
-        final String rubyVersion = (String)getStaticField_Constants(class_Constants, "RUBY_VERSION");
+        final String jrubyVersion = (String) getStaticField_Constants(class_Constants, "VERSION");
+        final String rubyVersion = (String) getStaticField_Constants(class_Constants, "RUBY_VERSION");
 
         final Method method_getRubyInstanceConfig;
         final Method method_getRuntime;
         try {
             final Class<?> class_LocalContextProvider =
-                classLoader.loadClass("org.jruby.embed.internal.LocalContextProvider");
+                    classLoader.loadClass("org.jruby.embed.internal.LocalContextProvider");
             method_getRubyInstanceConfig = class_LocalContextProvider.getMethod("getRubyInstanceConfig");
             method_getRuntime = class_LocalContextProvider.getMethod("getRuntime");
         } catch (ClassNotFoundException | NoSuchMethodException ex) {
@@ -199,32 +201,32 @@ public final class ScriptingContainerDelegate {
 
         final Object const_CompileMode_OFF = createCompileMode(classLoader, "OFF");
         final Method method_setCompileMode_LCompileMode = createMethod_setCompileMode_LCompileMode(
-            classLoader, const_CompileMode_OFF.getClass());
+                classLoader, const_CompileMode_OFF.getClass());
 
         return new ScriptingContainerDelegate(
-            jrubyVersion,
-            rubyVersion,
+                jrubyVersion,
+                rubyVersion,
 
-            scriptingContainer,
-            method_callMethod_ALObject,
-            method_callMethod_LClass,
-            method_callMethod_LObject_LClass,
-            method_getProvider,
-            method_put_LString_LObject,
-            method_remove_LString,
-            method_runScriptlet_LString,
+                scriptingContainer,
+                method_callMethod_ALObject,
+                method_callMethod_LClass,
+                method_callMethod_LObject_LClass,
+                method_getProvider,
+                method_put_LString_LObject,
+                method_remove_LString,
+                method_runScriptlet_LString,
 
-            class_RubyObject,
+                class_RubyObject,
 
-            method_getRubyInstanceConfig,
+                method_getRubyInstanceConfig,
 
-            field_COMPILE_INVOKEDYNAMIC,
-            method_force_LString,
+                field_COMPILE_INVOKEDYNAMIC,
+                method_force_LString,
 
-            const_CompileMode_OFF,
-            method_setCompileMode_LCompileMode,
+                const_CompileMode_OFF,
+                method_setCompileMode_LCompileMode,
 
-            method_getRuntime);
+                method_getRuntime);
     }
 
     private static Object createScriptingContainer(final ClassLoader classLoader,
@@ -299,7 +301,6 @@ public final class ScriptingContainerDelegate {
             valueOf = clazz.getMethod("valueOf", String.class);
         } catch (NoSuchMethodException ex) {
             return null;  // TODO: Log.
-
         }
 
         try {
@@ -409,9 +410,15 @@ public final class ScriptingContainerDelegate {
     }
 
     public static final class UnrecognizedJRubyOptionException extends Exception {}
+
     public static final class NotWorkingJRubyOptionException extends Exception {
-        public NotWorkingJRubyOptionException() { super(); }
-        public NotWorkingJRubyOptionException(final Throwable cause) { super(cause); }
+        public NotWorkingJRubyOptionException() {
+            super();
+        }
+
+        public NotWorkingJRubyOptionException(final Throwable cause) {
+            super(cause);
+        }
     }
 
     public static String getJRubyVersion(final ClassLoader classLoader) {
@@ -422,7 +429,7 @@ public final class ScriptingContainerDelegate {
             // `org.jruby.runtime.Constants` is not implemented in the JRuby version -- unlikely.
             return null;
         }
-        return (String)getStaticField_Constants(class_Constants, "VERSION");
+        return (String) getStaticField_Constants(class_Constants, "VERSION");
     }
 
     public String getJRubyVersion() {
@@ -445,7 +452,7 @@ public final class ScriptingContainerDelegate {
     }
 
     public void clearGemPaths() throws JRubyNotLoadedException {
-        this.callMethod(this.runScriptlet("Gem"), "use_paths", (Object)null, (Object)null);
+        this.callMethod(this.runScriptlet("Gem"), "use_paths", (Object) null, (Object) null);
     }
 
     public void setGemPaths(final String gemPath) throws JRubyNotLoadedException {
@@ -483,33 +490,30 @@ public final class ScriptingContainerDelegate {
 
         for (int index = 1; index < jrubyOption.length(); ++index) {
             switch (jrubyOption.charAt(index)) {
-            case '-':
-                if (jrubyOption.equals("--dev")) {
-                    // They are not all of "--dev", but they are most possible configurations after JVM boot.
-                    try {
-                        if (this.method_force_LString != null && this.field_COMPILE_INVOKEDYNAMIC != null) {
-                            // NOTE: Options is global.
-                            this.method_force_LString.invoke(this.field_COMPILE_INVOKEDYNAMIC.get(null), "false");
+                case '-':
+                    if (jrubyOption.equals("--dev")) {
+                        // They are not all of "--dev", but they are most possible configurations after JVM boot.
+                        try {
+                            if (this.method_force_LString != null && this.field_COMPILE_INVOKEDYNAMIC != null) {
+                                // NOTE: Options is global.
+                                this.method_force_LString.invoke(this.field_COMPILE_INVOKEDYNAMIC.get(null), "false");
+                            }
+                            if (this.method_setCompileMode_LCompileMode != null && this.const_CompileMode_OFF != null) {
+                                this.method_setCompileMode_LCompileMode.invoke(
+                                        rubyInstanceConfig, this.const_CompileMode_OFF);
+                            }
+                        } catch (IllegalAccessException | InvocationTargetException ex) {
+                            throw new NotWorkingJRubyOptionException(ex);
                         }
-                        if (this.method_setCompileMode_LCompileMode != null && this.const_CompileMode_OFF != null) {
-                            this.method_setCompileMode_LCompileMode.invoke(
-                                rubyInstanceConfig, this.const_CompileMode_OFF);
-                        }
+                        return;
+                    } else if (jrubyOption.equals("--client")) {
+                        throw new NotWorkingJRubyOptionException();
+                    } else if (jrubyOption.equals("--server")) {
+                        throw new NotWorkingJRubyOptionException();
                     }
-                    catch (IllegalAccessException | InvocationTargetException ex) {
-                        throw new NotWorkingJRubyOptionException(ex);
-                    }
-                    return;
-                }
-                else if (jrubyOption.equals("--client")) {
-                    throw new NotWorkingJRubyOptionException();
-                }
-                else if (jrubyOption.equals("--server")) {
-                    throw new NotWorkingJRubyOptionException();
-                }
-                throw new UnrecognizedJRubyOptionException();
-            default:
-                throw new UnrecognizedJRubyOptionException();
+                    throw new UnrecognizedJRubyOptionException();
+                default:
+                    throw new UnrecognizedJRubyOptionException();
             }
         }
     }
@@ -543,8 +547,8 @@ public final class ScriptingContainerDelegate {
         }
         try {
             @SuppressWarnings("unchecked")
-            final T returnValue = (T)(this.method_callMethod_LClass.invoke(
-                                          this.scriptingContainer, receiver, methodName, returnType));
+            final T returnValue = (T) (this.method_callMethod_LClass.invoke(
+                    this.scriptingContainer, receiver, methodName, returnType));
             return returnValue;
         } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
@@ -562,11 +566,10 @@ public final class ScriptingContainerDelegate {
         }
         try {
             @SuppressWarnings("unchecked")
-            final T returnValue = (T)(this.method_callMethod_LObject_LClass.invoke(
-                                          this.scriptingContainer, receiver, methodName, singleArg, returnType));
+            final T returnValue = (T) (this.method_callMethod_LObject_LClass.invoke(
+                    this.scriptingContainer, receiver, methodName, singleArg, returnType));
             return returnValue;
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -624,8 +627,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getProvider.invoke(this.scriptingContainer);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -638,8 +640,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_put_LString_LObject.invoke(this.scriptingContainer, key, value);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -652,8 +653,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_remove_LString.invoke(this.scriptingContainer, key);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -666,8 +666,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_runScriptlet_LString.invoke(this.scriptingContainer, script);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -682,8 +681,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getRubyInstanceConfig.invoke(provider);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);
@@ -698,8 +696,7 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getRuntime.invoke(provider);
-        }
-        catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException | InvocationTargetException ex) {
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
             throw wrapJRubyInvokeFailedException(ex);

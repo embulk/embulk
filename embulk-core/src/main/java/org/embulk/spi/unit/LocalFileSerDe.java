@@ -1,35 +1,28 @@
 package org.embulk.spi.unit;
 
-import java.io.File;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
-public class LocalFileSerDe
-{
-    public static void configure(ObjectMapperModule mapper)
-    {
+public class LocalFileSerDe {
+    public static void configure(ObjectMapperModule mapper) {
         SimpleModule module = new SimpleModule();
         module.addSerializer(LocalFile.class, new LocalFileSerializer());
         module.addDeserializer(LocalFile.class, new LocalFileDeserializer());
         mapper.registerModule(module);
     }
 
-    private static class LocalFileSerializer
-            extends JsonSerializer<LocalFile>
-    {
+    private static class LocalFileSerializer extends JsonSerializer<LocalFile> {
         @Override
-        public void serialize(LocalFile value, JsonGenerator jgen, SerializerProvider provider)
-                throws IOException
-        {
+        public void serialize(LocalFile value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStartObject();
             jgen.writeFieldName("base64");
             jgen.writeBinary(value.getContent());
@@ -37,23 +30,19 @@ public class LocalFileSerDe
         }
     }
 
-    private static class LocalFileDeserializer
-            extends JsonDeserializer<LocalFile>
-    {
+    private static class LocalFileDeserializer extends JsonDeserializer<LocalFile> {
         @Override
-        public LocalFile deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException
-        {
+        public LocalFile deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             JsonToken t = jp.getCurrentToken();
             if (t == JsonToken.START_OBJECT) {
                 t = jp.nextToken();
             }
 
-            switch(t) {
-            case VALUE_NULL:
-                return null;
+            switch (t) {
+                case VALUE_NULL:
+                    return null;
 
-            case FIELD_NAME:
-                {
+                case FIELD_NAME: {
                     LocalFile result;
 
                     String keyName = jp.getCurrentName();
@@ -66,7 +55,7 @@ public class LocalFileSerDe
                         jp.readBinaryValue(ctxt.getBase64Variant(), out);
                         result = LocalFile.ofContent(out.toByteArray());
                     } else {
-                        throw ctxt.mappingException("Unknown key '"+keyName+"' to deserialize LocalFile");
+                        throw ctxt.mappingException("Unknown key '" + keyName + "' to deserialize LocalFile");
                     }
 
                     t = jp.nextToken();
@@ -76,13 +65,12 @@ public class LocalFileSerDe
                     return result;
                 }
 
-            case END_OBJECT:
-            case START_ARRAY:
-            case END_ARRAY:
-                throw ctxt.mappingException("Attempted unexpected map or array to LocalFile");
+                case END_OBJECT:
+                case START_ARRAY:
+                case END_ARRAY:
+                    throw ctxt.mappingException("Attempted unexpected map or array to LocalFile");
 
-            case VALUE_EMBEDDED_OBJECT:
-                {
+                case VALUE_EMBEDDED_OBJECT: {
                     Object obj = jp.getEmbeddedObject();
                     if (obj == null) {
                         return null;
@@ -90,11 +78,11 @@ public class LocalFileSerDe
                     if (LocalFile.class.isAssignableFrom(obj.getClass())) {
                         return (LocalFile) obj;
                     }
-                    throw ctxt.mappingException("Don't know how to convert embedded Object of type "+obj.getClass().getName()+" into LocalFile");
+                    throw ctxt.mappingException("Don't know how to convert embedded Object of type " + obj.getClass().getName() + " into LocalFile");
                 }
 
-            default:
-                return LocalFile.of(jp.getValueAsString());
+                default:
+                    return LocalFile.of(jp.getValueAsString());
             }
         }
     }

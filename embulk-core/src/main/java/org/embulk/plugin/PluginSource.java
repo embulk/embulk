@@ -4,23 +4,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public interface PluginSource
-{
+public interface PluginSource {
     <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException;
 
-    public enum Type
-    {
+    public enum Type {
         DEFAULT("default"),  // DEFAULT includes InjectedPluginSource and JRubyPluginSource.
         MAVEN("maven"),
         ;
 
-        private Type(final String sourceTypeName)
-        {
+        private Type(final String sourceTypeName) {
             this.sourceTypeName = sourceTypeName;
         }
 
-        public static Type of(final String sourceTypeName)
-        {
+        public static Type of(final String sourceTypeName) {
             final Type found = MAP_FROM_STRING.get(sourceTypeName);
             if (found == null) {
                 throw new IllegalArgumentException("\"" + sourceTypeName + "\" is not a plugin source.");
@@ -29,13 +25,11 @@ public interface PluginSource
         }
 
         @Override
-        public final String toString()
-        {
+        public final String toString() {
             return this.sourceTypeName;
         }
 
-        static
-        {
+        static {
             final HashMap<String, Type> mapToBuild = new HashMap<String, Type>();
             for (Type type : values()) {
                 mapToBuild.put(type.sourceTypeName, type);

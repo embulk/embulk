@@ -1,8 +1,6 @@
 package org.embulk.spi;
 
-public interface FileInput
-        extends AutoCloseable
-{
+public interface FileInput extends AutoCloseable {
     boolean nextFile();
 
     Buffer poll();

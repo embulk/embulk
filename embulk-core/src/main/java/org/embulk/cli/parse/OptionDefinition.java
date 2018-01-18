@@ -3,9 +3,7 @@ package org.embulk.cli.parse;
 import org.apache.commons.cli.Option;
 import org.embulk.cli.EmbulkCommandLine;
 
-public class OptionDefinition
-        extends AbstractHelpLineDefinition
-{
+public class OptionDefinition extends AbstractHelpLineDefinition {
     private OptionDefinition(
             final String shortOption,
             final String longOption,
@@ -13,14 +11,12 @@ public class OptionDefinition
             final String argumentNameDisplayed,
             final String description,
             final boolean printsHelp,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         final Option.Builder builder;
 
         if (shortOption == null) {
             builder = Option.builder();
-        }
-        else {
+        } else {
             builder = Option.builder(shortOption);
         }
 
@@ -44,8 +40,7 @@ public class OptionDefinition
             final String longOption,
             final String argumentNameDisplayed,
             final String description,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         return new OptionDefinition(null, longOption, true, argumentNameDisplayed, description, false, behavior);
     }
 
@@ -53,16 +48,14 @@ public class OptionDefinition
             final String shortOption,
             final String argumentNameDisplayed,
             final String description,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         return new OptionDefinition(shortOption, null, true, argumentNameDisplayed, description, false, behavior);
     }
 
     public static OptionDefinition defineOnlyShortOptionWithoutArgument(
             final String shortOption,
             final String description,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         return new OptionDefinition(shortOption, null, false, null, description, false, behavior);
     }
 
@@ -70,8 +63,7 @@ public class OptionDefinition
             final String shortOption,
             final String longOption,
             final String description,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         return new OptionDefinition(shortOption, longOption, false, null, description, false, behavior);
     }
 
@@ -80,37 +72,31 @@ public class OptionDefinition
             final String longOption,
             final String argumentNameDisplayed,
             final String description,
-            final OptionBehavior behavior)
-    {
+            final OptionBehavior behavior) {
         return new OptionDefinition(shortOption, longOption, true, argumentNameDisplayed, description, false, behavior);
     }
 
     public static OptionDefinition defineHelpOption(
             final String shortOption,
             final String longOption,
-            final String description)
-    {
+            final String description) {
         return new OptionDefinition(shortOption, longOption, false, null, description, true, new OptionBehavior() {
-                public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
-                {
+                public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
                 }
             });
     }
 
     @Override
-    final Option getCliOption()
-    {
+    final Option getCliOption() {
         return this.cliOption;
     }
 
     final void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
-            throws EmbulkCommandLineParseException
-    {
+            throws EmbulkCommandLineParseException {
         this.behavior.behave(commandLineBuilder, argument);
     }
 
-    final boolean printsHelp()
-    {
+    final boolean printsHelp() {
         return this.printsHelp;
     }
 

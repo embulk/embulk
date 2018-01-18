@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -133,27 +133,27 @@ class RubyTimeParsed extends TimeParsed {
             }
 
             return new RubyTimeParsed(
-                this.originalString,
+                    this.originalString,
 
-                this.dayOfMonth,
-                weekBasedYearWithCentury,
-                hourWithAmPm,
-                this.dayOfYear,
-                this.nanoOfSecond,
-                this.minuteOfHour,
-                this.monthOfYear,
-                this.instantSeconds,
-                this.secondOfMinute,
-                this.weekOfYearStartingWithSunday,
-                this.weekOfYearStartingWithMonday,
-                this.dayOfWeekStartingWithMonday1,
-                this.weekOfWeekBasedYear,
-                this.dayOfWeekStartingWithSunday0,
-                yearWithCentury,
+                    this.dayOfMonth,
+                    weekBasedYearWithCentury,
+                    hourWithAmPm,
+                    this.dayOfYear,
+                    this.nanoOfSecond,
+                    this.minuteOfHour,
+                    this.monthOfYear,
+                    this.instantSeconds,
+                    this.secondOfMinute,
+                    this.weekOfYearStartingWithSunday,
+                    this.weekOfYearStartingWithMonday,
+                    this.dayOfWeekStartingWithMonday1,
+                    this.weekOfWeekBasedYear,
+                    this.dayOfWeekStartingWithSunday0,
+                    yearWithCentury,
 
-                this.timeZoneName,
+                    this.timeZoneName,
 
-                this.leftover);
+                    this.leftover);
         }
 
         /**
@@ -504,17 +504,21 @@ class RubyTimeParsed extends TimeParsed {
         private static final Map<String, Integer> MONTH_OF_YEAR_NAMES;
 
         private static final String[] DAY_OF_WEEK_FULL_NAMES = new String[] {
-            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+                "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        };
 
         private static final String[] DAY_OF_WEEK_ABBREVIATED_NAMES = new String[] {
-            "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+                "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+        };
 
         private static final String[] MONTH_OF_YEAR_FULL_NAMES = new String[] {
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December" };
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+        };
 
         private static final String[] MONTH_OF_YEAR_ABBREVIATED_NAMES = new String[] {
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        };
 
         static {
             final HashMap<String, Integer> dayOfWeekNamesBuilt = new HashMap<>();
@@ -578,7 +582,7 @@ class RubyTimeParsed extends TimeParsed {
         final ZoneOffset zoneOffset = TimeZoneIds.parseRubyTimeZoneOffset(this.timeZoneName, defaultZoneOffset);
         if (zoneOffset == null) {
             throw new TimestampParseException(
-                "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
+                    "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
         }
 
         if (this.instantSeconds != null) {
@@ -606,14 +610,14 @@ class RubyTimeParsed extends TimeParsed {
         // => #<DateTime: 2001-05-08T23:59:59+00:00 ((2452038j,86399s,0n),+0s,2299161j)>
 
         final OffsetDateTime datetime = applyOffset(
-            (this.year == Integer.MIN_VALUE ? 1970 : this.year),
-            (this.monthOfYear == Integer.MIN_VALUE ? 1 : this.monthOfYear),
-            (this.dayOfMonth == Integer.MIN_VALUE ? 1 : this.dayOfMonth),
-            (this.hour == Integer.MIN_VALUE ? 0 : this.hour),
-            (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
-            (this.secondOfMinute == Integer.MIN_VALUE ? 0 : this.secondOfMinute),
-            (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
-            zoneOffset);
+                (this.year == Integer.MIN_VALUE ? 1970 : this.year),
+                (this.monthOfYear == Integer.MIN_VALUE ? 1 : this.monthOfYear),
+                (this.dayOfMonth == Integer.MIN_VALUE ? 1 : this.dayOfMonth),
+                (this.hour == Integer.MIN_VALUE ? 0 : this.hour),
+                (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+                (this.secondOfMinute == Integer.MIN_VALUE ? 0 : this.secondOfMinute),
+                (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+                zoneOffset);
 
         return datetime.toInstant();
     }
@@ -660,7 +664,7 @@ class RubyTimeParsed extends TimeParsed {
             zoneId = TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(this.timeZoneName);
             if (zoneId == null) {
                 throw new TimestampParseException(
-                    "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
+                        "Invalid time zone ID '" + this.timeZoneName + "' in '" + this.originalString + "'");
             }
         } else {
             zoneId = defaultZoneId;
@@ -683,24 +687,24 @@ class RubyTimeParsed extends TimeParsed {
         // yday is more prioritized than mon/mday in Ruby's strptime.
         if (this.dayOfYear != Integer.MIN_VALUE) {
             datetime = ZonedDateTime.of(
-                (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
-                1,
-                1,
-                (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
-                (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
-                thisSecondOfMinute,
-                (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
-                zoneId).withDayOfYear(this.dayOfYear).plusDays(daysRollover);
+                    (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
+                    1,
+                    1,
+                    (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
+                    (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+                    thisSecondOfMinute,
+                    (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+                    zoneId).withDayOfYear(this.dayOfYear).plusDays(daysRollover);
         } else {
             datetime = ZonedDateTime.of(
-                (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
-                (this.monthOfYear == Integer.MIN_VALUE ? defaultMonthOfYear : this.monthOfYear),
-                (this.dayOfMonth == Integer.MIN_VALUE ? defaultDayOfMonth : this.dayOfMonth),
-                (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
-                (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
-                thisSecondOfMinute,
-                (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
-                zoneId).plusDays(daysRollover);
+                    (this.year == Integer.MIN_VALUE ? defaultYear : this.year),
+                    (this.monthOfYear == Integer.MIN_VALUE ? defaultMonthOfYear : this.monthOfYear),
+                    (this.dayOfMonth == Integer.MIN_VALUE ? defaultDayOfMonth : this.dayOfMonth),
+                    (this.hour == Integer.MIN_VALUE ? 0 : this.hour % 24),
+                    (this.minuteOfHour == Integer.MIN_VALUE ? 0 : this.minuteOfHour),
+                    thisSecondOfMinute,
+                    (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
+                    zoneId).plusDays(daysRollover);
         }
         return datetime.toInstant();
     }
@@ -712,27 +716,27 @@ class RubyTimeParsed extends TimeParsed {
      */
     final LegacyRubyTimeParsed toLegacy() {
         return new LegacyRubyTimeParsed(
-            originalString,
+                originalString,
 
-            dayOfMonth,
-            weekBasedYear,
-            hour,
-            dayOfYear,
-            nanoOfSecond,
-            minuteOfHour,
-            monthOfYear,
-            instantSeconds,
-            secondOfMinute,
-            weekOfYearStartingWithSunday,
-            weekOfYearStartingWithMonday,
-            dayOfWeekStartingWithMonday1,
-            weekOfWeekBasedYear,
-            dayOfWeekStartingWithSunday0,
-            year,
+                dayOfMonth,
+                weekBasedYear,
+                hour,
+                dayOfYear,
+                nanoOfSecond,
+                minuteOfHour,
+                monthOfYear,
+                instantSeconds,
+                secondOfMinute,
+                weekOfYearStartingWithSunday,
+                weekOfYearStartingWithMonday,
+                dayOfWeekStartingWithMonday1,
+                weekOfWeekBasedYear,
+                dayOfWeekStartingWithSunday0,
+                year,
 
-            timeZoneName,
+                timeZoneName,
 
-            leftover);
+                leftover);
     }
 
     final Map<String, Object> asMapLikeRubyHash() {

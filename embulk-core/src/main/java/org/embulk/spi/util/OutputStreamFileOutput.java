@@ -1,16 +1,13 @@
 package org.embulk.spi.util;
 
-import java.io.OutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStream;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileOutput;
 
-public class OutputStreamFileOutput
-        implements FileOutput
-{
-    public interface Provider extends Closeable
-    {
+public class OutputStreamFileOutput implements FileOutput {
+    public interface Provider extends Closeable {
         public OutputStream openNext() throws IOException;
 
         public void finish() throws IOException;
@@ -21,14 +18,12 @@ public class OutputStreamFileOutput
     private final Provider provider;
     private OutputStream current;
 
-    public OutputStreamFileOutput(Provider provider)
-    {
+    public OutputStreamFileOutput(Provider provider) {
         this.provider = provider;
         this.current = null;
     }
 
-    public void nextFile()
-    {
+    public void nextFile() {
         closeCurrent();
         try {
             current = provider.openNext();
@@ -37,8 +32,7 @@ public class OutputStreamFileOutput
         }
     }
 
-    public void add(Buffer buffer)
-    {
+    public void add(Buffer buffer) {
         if (current == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");
         }
@@ -51,8 +45,7 @@ public class OutputStreamFileOutput
         }
     }
 
-    public void finish()
-    {
+    public void finish() {
         closeCurrent();
         try {
             provider.finish();
@@ -61,8 +54,7 @@ public class OutputStreamFileOutput
         }
     }
 
-    public void close()
-    {
+    public void close() {
         try {
             closeCurrent();
         } finally {
@@ -74,8 +66,7 @@ public class OutputStreamFileOutput
         }
     }
 
-    private void closeCurrent()
-    {
+    private void closeCurrent() {
         try {
             if (current != null) {
                 current.close();

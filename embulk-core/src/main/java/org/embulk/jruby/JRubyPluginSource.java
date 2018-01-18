@@ -1,28 +1,25 @@
 package org.embulk.jruby;
 
 import com.google.inject.Inject;
-import org.embulk.plugin.PluginType;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
+import org.embulk.plugin.PluginType;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
+import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.FormatterPlugin;
-import org.embulk.spi.DecoderPlugin;
-import org.embulk.spi.EncoderPlugin;
-import org.embulk.spi.FilterPlugin;
-import org.embulk.spi.GuessPlugin;
-import org.embulk.spi.ExecutorPlugin;
 
-public class JRubyPluginSource
-        implements PluginSource
-{
+public class JRubyPluginSource implements PluginSource {
     private final ScriptingContainerDelegate jruby;
     private final Object rubyPluginManager;
 
     @Inject
-    public JRubyPluginSource(ScriptingContainerDelegate jruby)
-    {
+    public JRubyPluginSource(ScriptingContainerDelegate jruby) {
         this.jruby = jruby;
 
         // get Embulk::Plugin
@@ -32,8 +29,7 @@ public class JRubyPluginSource
         this.rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
     }
 
-    public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException
-    {
+    public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException {
         if (type.getSourceType() != PluginSource.Type.DEFAULT) {
             throw new PluginSourceNotMatchException();
         }
@@ -61,7 +57,7 @@ public class JRubyPluginSource
             category = "executor";
         } else {
             // unsupported plugin category
-            throw new PluginSourceNotMatchException("Plugin interface "+iface+" is not supported in JRuby");
+            throw new PluginSourceNotMatchException("Plugin interface " + iface + " is not supported in JRuby");
         }
 
         String methodName = "new_java_" + category;

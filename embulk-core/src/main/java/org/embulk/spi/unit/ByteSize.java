@@ -1,23 +1,20 @@
 package org.embulk.spi.unit;
 
-import java.util.Objects;
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class ByteSize
-        implements Comparable<ByteSize>
-{
+public class ByteSize implements Comparable<ByteSize> {
     private static final Pattern PATTERN = Pattern.compile("\\A(\\d+(?:\\.\\d+)?)\\s?([a-zA-Z]*)\\z");
 
     private final long bytes;
     private final Unit displayUnit;
 
-    public ByteSize(double size, Unit unit)
-    {
+    public ByteSize(double size, Unit unit) {
         Preconditions.checkArgument(!Double.isInfinite(size), "size is infinite");
         Preconditions.checkArgument(!Double.isNaN(size), "size is not a number");
         Preconditions.checkArgument(size >= 0, "size is negative");
@@ -28,39 +25,33 @@ public class ByteSize
     }
 
     @JsonCreator
-    public ByteSize(long bytes)
-    {
+    public ByteSize(long bytes) {
         Preconditions.checkArgument(bytes >= 0, "size is negative");
         this.bytes = bytes;
         this.displayUnit = Unit.BYTES;
     }
 
-    public long getBytes()
-    {
+    public long getBytes() {
         return bytes;
     }
 
-    public int getBytesInt()
-    {
+    public int getBytesInt() {
         if (bytes > Integer.MAX_VALUE) {
             throw new RuntimeException("Byte size is too large (must be smaller than 2GB)");
         }
         return (int) bytes;
     }
 
-    public long roundTo(Unit unit)
-    {
+    public long roundTo(Unit unit) {
         return (long) Math.floor(getValue(unit) + 0.5);
     }
 
-    public double getValue(Unit unit)
-    {
+    public double getValue(Unit unit) {
         return bytes / (double) unit.getFactor();
     }
 
     @JsonCreator
-    public static ByteSize parseByteSize(String size)
-    {
+    public static ByteSize parseByteSize(String size) {
         Preconditions.checkNotNull(size, "size is null");
         Preconditions.checkArgument(!size.isEmpty(), "size is empty");
 
@@ -88,8 +79,7 @@ public class ByteSize
 
     @JsonValue
     @Override
-    public String toString()
-    {
+    public String toString() {
         double value = getValue(displayUnit);
         String integer = String.format(Locale.ENGLISH, "%d", (long) value);
         String decimal = String.format(Locale.ENGLISH, "%.2f", value);
@@ -101,14 +91,12 @@ public class ByteSize
     }
 
     @Override
-    public int compareTo(ByteSize o)
-    {
+    public int compareTo(ByteSize o) {
         return Long.compare(bytes, o.bytes);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -120,13 +108,11 @@ public class ByteSize
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(bytes);
     }
 
-    public enum Unit
-    {
+    public enum Unit {
         BYTES(1L, "B"),
         KB(1L << 10, "KB"),
         MB(1L << 20, "MB"),
@@ -137,19 +123,16 @@ public class ByteSize
         private final long factor;
         private final String unitString;
 
-        Unit(long factor, String unitString)
-        {
+        Unit(long factor, String unitString) {
             this.factor = factor;
             this.unitString = unitString;
         }
 
-        long getFactor()
-        {
+        long getFactor() {
             return factor;
         }
 
-        String getUnitString()
-        {
+        String getUnitString() {
             return unitString;
         }
     }

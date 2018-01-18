@@ -8,8 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class EmbulkCommandLine
-{
+public class EmbulkCommandLine {
     private EmbulkCommandLine(
             final List<String> arguments,
             final Map<String, Object> systemConfig,
@@ -18,8 +17,7 @@ public class EmbulkCommandLine
             final boolean force,
             final String format,
             final String output,
-            final String resumeState)
-    {
+            final String resumeState) {
         this.arguments = Collections.unmodifiableList(arguments);
         this.systemConfig = Collections.unmodifiableMap(systemConfig);
         this.bundlePath = bundlePath;
@@ -30,10 +28,8 @@ public class EmbulkCommandLine
         this.resumeState = resumeState;
     }
 
-    public static final class Builder
-    {
-        public Builder()
-        {
+    public static final class Builder {
+        public Builder() {
             this.arguments = new ArrayList<String>();
             this.systemConfig = new HashMap<String, Object>();
             this.bundlePath = null;
@@ -46,8 +42,7 @@ public class EmbulkCommandLine
             this.resumeState = null;
         }
 
-        public EmbulkCommandLine build()
-        {
+        public EmbulkCommandLine build() {
             final HashMap<String, Object> systemConfigJRubyLoadPath = new HashMap<String, Object>(this.systemConfig);
             // first $LOAD_PATH has highest priority. later load_paths should have highest priority.
             for (final String oneJRubyLoadPath : this.loadPath) {  // "-L"
@@ -66,95 +61,81 @@ public class EmbulkCommandLine
                 systemConfigJRubyLoadPath.put("jruby_use_default_embulk_gem_home", "true");
             }
             return new EmbulkCommandLine(
-                this.arguments,
-                systemConfigJRubyLoadPath,
-                this.bundlePath,
-                this.configDiff,
-                this.force,
-                this.format,
-                this.output,
-                this.resumeState);
+                    this.arguments,
+                    systemConfigJRubyLoadPath,
+                    this.bundlePath,
+                    this.configDiff,
+                    this.force,
+                    this.format,
+                    this.output,
+                    this.resumeState);
         }
 
-        public Builder addArguments(final List<String> arguments)
-        {
+        public Builder addArguments(final List<String> arguments) {
             this.arguments.addAll(arguments);
             return this;
         }
 
-        public Builder setSystemConfig(final String key, final String value)
-        {
+        public Builder setSystemConfig(final String key, final String value) {
             this.systemConfig.put(key, value);
             return this;
         }
 
-        public Builder addSystemConfig(final String key, final String value)
-        {
+        public Builder addSystemConfig(final String key, final String value) {
             addInHashMap(this.systemConfig, key, value);
             return this;
         }
 
-        public Builder setBundlePath(final String bundlePath)
-        {
+        public Builder setBundlePath(final String bundlePath) {
             this.bundlePath = bundlePath;
             return this;
         }
 
-        public Builder setConfigDiff(final String configDiff)
-        {
+        public Builder setConfigDiff(final String configDiff) {
             this.configDiff = configDiff;
             return this;
         }
 
-        public Builder setForce(final boolean force)
-        {
+        public Builder setForce(final boolean force) {
             this.force = force;
             return this;
         }
 
-        public Builder setFormat(final String format)
-        {
+        public Builder setFormat(final String format) {
             this.format = format;
             return this;
         }
 
-        public Builder addLoad(final String load)
-        {
+        public Builder addLoad(final String load) {
             this.load.add(load);
             return this;
         }
 
-        public Builder addLoadPath(final String loadPath)
-        {
+        public Builder addLoadPath(final String loadPath) {
             this.loadPath.add(loadPath);
             return this;
         }
 
-        public Builder setOutput(final String output)
-        {
+        public Builder setOutput(final String output) {
             this.output = output;
             return this;
         }
 
-        public Builder setResumeState(final String resumeState)
-        {
+        public Builder setResumeState(final String resumeState) {
             this.resumeState = resumeState;
             return this;
         }
 
-        private static void addInHashMap(final HashMap<String, Object> map, final String key, final String value)
-        {
+        private static void addInHashMap(final HashMap<String, Object> map, final String key, final String value) {
             final Object existingValue = map.get(key);
             if (existingValue != null && existingValue instanceof String) {
                 map.put(key, Arrays.asList((String) existingValue, value));
-            }
-            else if (existingValue != null && existingValue instanceof List) {
+            } else if (existingValue != null && existingValue instanceof List) {
                 @SuppressWarnings("unchecked")
                 final ArrayList<String> newList = new ArrayList<String>((List<String>) existingValue);
                 newList.add(value);
                 map.put(key, Collections.unmodifiableList(newList));
-            }
-            else {
+            } else {
                 map.put(key, Arrays.asList(value));
             }
         }
@@ -171,48 +152,39 @@ public class EmbulkCommandLine
         private String resumeState;
     }
 
-    public static Builder builder()
-    {
+    public static Builder builder() {
         return new Builder();
     }
 
-    public final List<String> getArguments()
-    {
+    public final List<String> getArguments() {
         return this.arguments;
     }
 
-    public final Map<String, Object> getSystemConfig()
-    {
+    public final Map<String, Object> getSystemConfig() {
         return this.systemConfig;
     }
 
-    public final String getBundlePath()
-    {
+    public final String getBundlePath() {
         return this.bundlePath;
     }
 
-    public final String getConfigDiff()
-    {
+    public final String getConfigDiff() {
         return this.configDiff;
     }
 
-    public final boolean getForce()
-    {
+    public final boolean getForce() {
         return this.force;
     }
 
-    public final String getFormat()
-    {
+    public final String getFormat() {
         return this.format;
     }
 
-    public final String getOutput()
-    {
+    public final String getOutput() {
         return this.output;
     }
 
-    public final String getResumeState()
-    {
+    public final String getResumeState() {
         return this.resumeState;
     }
 

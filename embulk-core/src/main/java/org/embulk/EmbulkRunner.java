@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.embulk.command.PreviewPrinter;
@@ -33,12 +32,10 @@ import org.slf4j.LoggerFactory;
  * NOTE: Developers should not depend on this EmbulkRunner class. This class is created tentatively, and may be
  * re-implemented again in a different style.
  */
-public class EmbulkRunner
-{
+public class EmbulkRunner {
     // |EmbulkSetup.setup| initializes:
     // new EmbulkRunner(embed)
-    public EmbulkRunner(final EmbulkEmbed embed)
-    {
+    public EmbulkRunner(final EmbulkEmbed embed) {
         this.embed = embed;  // org.embulk.EmbulkEmbed
     }
 
@@ -47,23 +44,20 @@ public class EmbulkRunner
      *
      * It receives Java Paths to be called from org.embulk.cli.EmbulkRun.
      */
-    public void guess(final Path configFilePath, final Path outputPath)
-    {
+    public void guess(final Path configFilePath, final Path outputPath) {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
         // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
             configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
 
         try {
             guessInternal(configSource, outputPath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -73,8 +67,7 @@ public class EmbulkRunner
      *
      * It receives Strings as parameters to be called from Ruby (embulk/runner.rb).
      */
-    public void guess(final String configFilePathString, final String outputPathString)
-    {
+    public void guess(final String configFilePathString, final String outputPathString) {
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         guess(Paths.get(configFilePathString), outputPath);
     }
@@ -84,13 +77,11 @@ public class EmbulkRunner
      *
      * It receives a ConfigSource and a String as parameters to be called from Ruby (embulk/runner.rb).
      */
-    public void guess(final ConfigSource configSource, final String outputPathString)
-    {
+    public void guess(final ConfigSource configSource, final String outputPathString) {
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         try {
             guessInternal(configSource, outputPath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -100,23 +91,20 @@ public class EmbulkRunner
      *
      * It receives a Java Path and a String to be called from org.embulk.cli.EmbulkRun.
      */
-    public void preview(final Path configFilePath, final String format)
-    {
+    public void preview(final Path configFilePath, final String format) {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
         // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
             configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
 
         try {
             previewInternal(configSource, format);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -126,8 +114,7 @@ public class EmbulkRunner
      *
      * It receives Strings as parameters to be called from Ruby (embulk/runner.rb).
      */
-    public void preview(final String configFilePathString, final String format)
-    {
+    public void preview(final String configFilePathString, final String format) {
         preview(Paths.get(configFilePathString), format);
     }
 
@@ -136,12 +123,10 @@ public class EmbulkRunner
      *
      * It receives a ConfigSource and a String as parameters to be called from Ruby (embulk/runner.rb).
      */
-    public void preview(final ConfigSource configSource, final String format)
-    {
+    public void preview(final ConfigSource configSource, final String format) {
         try {
             previewInternal(configSource, format);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -155,23 +140,20 @@ public class EmbulkRunner
             final Path configFilePath,
             final Path configDiffPath,
             final Path outputPath,
-            final Path resumeStatePath)
-    {
+            final Path resumeStatePath) {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
         // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
             configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
 
         try {
             runInternal(configSource, configDiffPath, outputPath, resumeStatePath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -184,8 +166,7 @@ public class EmbulkRunner
     public void run(final String configFilePathString,
                     final String configDiffPathString,
                     final String outputPathString,
-                    final String resumeStatePathString)
-    {
+                    final String resumeStatePathString) {
         final Path configDiffPath = (configDiffPathString == null ? null : Paths.get(configDiffPathString));
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         final Path resumeStatePath = (resumeStatePathString == null ? null : Paths.get(resumeStatePathString));
@@ -200,26 +181,21 @@ public class EmbulkRunner
     public void run(final ConfigSource configSource,
                     final String configDiffPathString,
                     final String outputPathString,
-                    final String resumeStatePathString)
-    {
+                    final String resumeStatePathString) {
         final Path configDiffPath = (configDiffPathString == null ? null : Paths.get(configDiffPathString));
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         final Path resumeStatePath = (resumeStatePathString == null ? null : Paths.get(resumeStatePathString));
         try {
             runInternal(configSource, configDiffPath, outputPath, resumeStatePath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private void guessInternal(final ConfigSource configSource, final Path outputPath)
-            throws IOException
-    {
+    private void guessInternal(final ConfigSource configSource, final Path outputPath) throws IOException {
         try {
             checkFileWritable(outputPath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException("Not writable: " + outputPath.toString());
         }
 
@@ -229,29 +205,26 @@ public class EmbulkRunner
         System.err.println(yaml);
         if (outputPath != null) {
             System.out.println("Created '" + outputPath + "' file.");
-        }
-        else {
+        } else {
             System.out.println("Use -o PATH option to write the guessed config file to a file.");
         }
     }
 
-    private void previewInternal(final ConfigSource configSource, final String format)
-            throws IOException
-    {
+    private void previewInternal(final ConfigSource configSource, final String format) throws IOException {
         final PreviewResult previewResult = this.embed.preview(configSource);
         final ModelManager modelManager = this.embed.getModelManager();
 
         final PreviewPrinter printer;
         switch (format != null ? format : "table") {
-        case "table":
-            printer = new TablePreviewPrinter(System.out, modelManager, previewResult.getSchema());
-            break;
-        case "vertical":
-            printer = new VerticalPreviewPrinter(System.out, modelManager, previewResult.getSchema());
-            break;
-        default:
-            throw new IllegalArgumentException(
-                "Unknown preview output format '" + format + "'. Supported formats: table, vertical");
+            case "table":
+                printer = new TablePreviewPrinter(System.out, modelManager, previewResult.getSchema());
+                break;
+            case "vertical":
+                printer = new VerticalPreviewPrinter(System.out, modelManager, previewResult.getSchema());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown preview output format '" + format + "'. Supported formats: table, vertical");
         }
 
         printer.printAllPages(previewResult.getPages());
@@ -262,34 +235,28 @@ public class EmbulkRunner
             final ConfigSource originalConfigSource,
             final Path configDiffPath,
             final Path outputPath,  // deprecated
-            final Path resumeStatePath)
-            throws IOException
-    {
+            final Path resumeStatePath) throws IOException {
         try {
             checkFileWritable(outputPath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException("Not writable: " + outputPath.toString());
         }
         try {
             checkFileWritable(configDiffPath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException("Not writable: " + configDiffPath.toString());
         }
         try {
             checkFileWritable(resumeStatePath);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new RuntimeException("Not writable: " + resumeStatePath.toString());
         }
 
         final ConfigSource configSource;
         if (configDiffPath != null && Files.size(configDiffPath) > 0L) {
             configSource = originalConfigSource.merge(
-                readConfig(configDiffPath, Collections.<String, Object>emptyMap(), null));
-        }
-        else {
+                    readConfig(configDiffPath, Collections.<String, Object>emptyMap(), null));
+        } else {
             configSource = originalConfigSource;
         }
 
@@ -298,19 +265,16 @@ public class EmbulkRunner
             ConfigSource resumeConfigTemp = null;
             try {
                 resumeConfigTemp = readYamlConfigFile(resumeStatePath);
-            }
-            catch (Throwable ex) {
+            } catch (Throwable ex) {
                 // TODO log?
                 resumeConfigTemp = null;
             }
             if (resumeConfigTemp == null || resumeConfigTemp.isEmpty()) {
                 resumeConfig = null;
-            }
-            else {
+            } else {
                 resumeConfig = resumeConfigTemp;
             }
-        }
-        else {
+        } else {
             resumeConfig = null;
         }
 
@@ -319,12 +283,10 @@ public class EmbulkRunner
         if (resumeConfig != null) {
             resumableResult = this.embed.resumeState(configSource, resumeConfig).resume();
             executionResultTemp = null;
-        }
-        else if (resumeStatePath != null) {
+        } else if (resumeStatePath != null) {
             resumableResult = this.embed.runResumable(configSource);
             executionResultTemp = null;
-        }
-        else {
+        } else {
             resumableResult = null;
             executionResultTemp = this.embed.run(configSource);
         }
@@ -338,18 +300,15 @@ public class EmbulkRunner
                     if (resumeStatePath != null) {
                         try {
                             Files.deleteIfExists(resumeStatePath);
-                        }
-                        catch (Throwable ex) {
+                        } catch (Throwable ex) {
                             System.err.println("Failed to delete: " + resumeStatePath.toString());
                         }
                     }
-                }
-                else {
+                } else {
                     rootLogger.info("Writing resume state to '" + resumeStatePath.toString() + "'");
                     try {
                         writeResumeState(resumeStatePath, resumableResult.getResumeState());
-                    }
-                    catch (IOException ex) {
+                    } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
                     rootLogger.info("Resume state is written. Run the transaction again with -r option to resume or use \"cleanup\" subcommand to delete intermediate data.");
@@ -357,8 +316,7 @@ public class EmbulkRunner
                 throw new RuntimeException(resumableResult.getCause());
             }
             executionResult = resumableResult.getSuccessfulResult();
-        }
-        else {
+        } else {
             executionResult = executionResultTemp;
         }
 
@@ -366,8 +324,7 @@ public class EmbulkRunner
         if (resumeStatePath != null) {
             try {
                 Files.deleteIfExists(resumeStatePath);
-            }
-            catch (Throwable ex) {
+            } catch (Throwable ex) {
                 System.err.println("Failed to delete: " + resumeStatePath.toString());
             }
         }
@@ -388,47 +345,41 @@ public class EmbulkRunner
     private ConfigSource readConfig(
             final Path configFilePath,
             final Map<String, Object> templateParams,
-            final String templateIncludePath)
-            throws IOException
-    {
+            final String templateIncludePath) throws IOException {
         final String configString = configFilePath.toString();
         if (EXT_YAML_LIQUID.matcher(configFilePath.toString()).matches()) {
             return this.embed.newConfigLoader().fromYamlString(
-                runLiquid(new String(Files.readAllBytes(configFilePath), StandardCharsets.UTF_8),
-                          templateParams,
-                          (templateIncludePath == null
-                           ? configFilePath.toAbsolutePath().getParent().toString()
-                           : templateIncludePath)));
-        }
-        else if (EXT_YAML.matcher(configFilePath.toString()).matches()) {
+                    runLiquid(new String(Files.readAllBytes(configFilePath), StandardCharsets.UTF_8),
+                            templateParams,
+                            (templateIncludePath == null
+                                    ? configFilePath.toAbsolutePath().getParent().toString()
+                                    : templateIncludePath)));
+        } else if (EXT_YAML.matcher(configFilePath.toString()).matches()) {
             return this.embed.newConfigLoader().fromYamlString(
-                new String(Files.readAllBytes(configFilePath), StandardCharsets.UTF_8));
-        }
-        else {
+                    new String(Files.readAllBytes(configFilePath), StandardCharsets.UTF_8));
+        } else {
             throw new ConfigException(
-                "Unsupported file extension. Supported file extensions are .yml and .yml.liquid: " +
-                configFilePath.toString());
+                    "Unsupported file extension. Supported file extensions are .yml and .yml.liquid: "
+                    + configFilePath.toString());
         }
     }
 
-    private ConfigSource readYamlConfigFile(final Path path)
-            throws IOException
-    {
+    private ConfigSource readYamlConfigFile(final Path path) throws IOException {
         return this.embed.newConfigLoader().fromYamlString(
-            new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
+                new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
     }
 
+    @SuppressWarnings("checkstyle:LineLength")
     private String runLiquid(
             final String templateSource,
             final Map<String, Object> templateParams,
-            final String templateIncludePath)
-    {
+            final String templateIncludePath) {
         // TODO: Check if it is required to process JRuby options.
         // Not |ScriptingContainerDelegate.LocalContextScope.SINGLETON| to narrow down considerations.
         final ScriptingContainerDelegate localJRubyContainer = ScriptingContainerDelegate.create(
-            EmbulkRunner.class.getClassLoader(),
-            ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
-            ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
+                EmbulkRunner.class.getClassLoader(),
+                ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
+                ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
 
         localJRubyContainer.runScriptlet("require 'liquid'");
 
@@ -449,29 +400,24 @@ public class EmbulkRunner
         localJRubyContainer.remove("__internal_liquid_template_params__");
 
         final Object renderedObject =
-            localJRubyContainer.runScriptlet("template.render(__internal_liquid_template_data__)");
+                localJRubyContainer.runScriptlet("template.render(__internal_liquid_template_data__)");
         return renderedObject.toString();
     }
 
-    private boolean checkFileWritable(final Path path)
-            throws IOException
-    {
+    private boolean checkFileWritable(final Path path) throws IOException {
         if (path != null) {
             // Open file with append mode and do nothing.
             // If file is not writable, it throws an exception.
             // NOTE: |Files.isWritable| does not work for the purpose as it expects the file exists.
             // Using |Files.newOutputStream| for the binary mode.
-            try (final OutputStream output =
-                     Files.newOutputStream(path, StandardOpenOption.APPEND, StandardOpenOption.CREATE)) {
+            try (final OutputStream output = Files.newOutputStream(path, StandardOpenOption.APPEND, StandardOpenOption.CREATE)) {
                 ;
             }
         }
         return true;
     }
 
-    private String writeConfig(final Path path, final DataSource modelObject)
-            throws IOException
-    {
+    private String writeConfig(final Path path, final DataSource modelObject) throws IOException {
         final String yamlString = dumpDataSourceInYaml(modelObject);
         if (path != null) {
             Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -480,8 +426,7 @@ public class EmbulkRunner
     }
 
     private String writeResumeState(final Path path, final ResumeState modelObject)
-            throws IOException
-    {
+            throws IOException {
         final String yamlString = dumpResumeStateInYaml(modelObject);
         if (path != null) {
             Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
@@ -489,15 +434,13 @@ public class EmbulkRunner
         return yamlString;
     }
 
-    private String dumpDataSourceInYaml(final DataSource modelObject)
-    {
+    private String dumpDataSourceInYaml(final DataSource modelObject) {
         final ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
         return (new org.yaml.snakeyaml.Yaml()).dump(object);
     }
 
-    private String dumpResumeStateInYaml(final ResumeState modelObject)
-    {
+    private String dumpResumeStateInYaml(final ResumeState modelObject) {
         final ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
         return (new org.yaml.snakeyaml.Yaml()).dump(object);
@@ -524,8 +467,8 @@ public class EmbulkRunner
     // NOTE: The root logger directly from |LoggerFactory|, not from |Exec.getLogger| as it's outside of |Exec.doWith|.
     private static final Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
-    private final Pattern EXT_YAML = Pattern.compile(".*\\.ya?ml$");
-    private final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
+    private static final Pattern EXT_YAML = Pattern.compile(".*\\.ya?ml$");
+    private static final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
 
     private final EmbulkEmbed embed;
 }

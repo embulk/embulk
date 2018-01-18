@@ -1,8 +1,6 @@
 package org.embulk.config;
 
-public interface ConfigSource
-        extends DataSource
-{
+public interface ConfigSource extends DataSource {
     <T> T loadConfig(Class<T> taskType);
 
     @Override

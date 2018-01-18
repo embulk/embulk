@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -22,8 +21,7 @@ import java.util.regex.Pattern;
  * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup">lib/time.rb</a>
  * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/COPYING?view=markup">COPYING</a>
  */
-public class TimeZoneIds
-{
+public class TimeZoneIds {
     private TimeZoneIds() {
         // No instantiation.
     }
@@ -58,8 +56,8 @@ public class TimeZoneIds
         }
 
         if (zoneId.charAt(0) == '+' || zoneId.charAt(0) == '-') {
-            if (RUBY_TIME_ZONE_OFFSET_PATTERN_HH_MM.matcher(zoneId).matches() ||
-                RUBY_TIME_ZONE_OFFSET_PATTERN_HH.matcher(zoneId).matches()) {
+            if (RUBY_TIME_ZONE_OFFSET_PATTERN_HH_MM.matcher(zoneId).matches()
+                    || RUBY_TIME_ZONE_OFFSET_PATTERN_HH.matcher(zoneId).matches()) {
                 return ZoneOffset.of(zoneId);
             }
             return defaultZoneOffset;
@@ -111,8 +109,7 @@ public class TimeZoneIds
             // Use TimeZone#forID, not TimeZone#getTimeZone.
             // Because getTimeZone returns GMT even if given timezone id is not found.
             jodaDateTimeZoneTemporary = org.joda.time.DateTimeZone.forID(timeZoneName);
-        }
-        catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             jodaDateTimeZoneTemporary = null;
         }
         final org.joda.time.DateTimeZone jodaDateTimeZone = jodaDateTimeZoneTemporary;
@@ -264,7 +261,7 @@ public class TimeZoneIds
     static final Map<String, String> ALIAS_ZONE_IDS_FOR_LEGACY;
 
     private static final Set<String> JODA_TIME_ZONES =
-        Collections.unmodifiableSet(org.joda.time.DateTimeZone.getAvailableIDs());
+            Collections.unmodifiableSet(org.joda.time.DateTimeZone.getAvailableIDs());
 
     private static final Pattern RUBY_TIME_ZONE_OFFSET_PATTERN_HH_MM = Pattern.compile("^[+-]\\d\\d:?\\d\\d$");
     private static final Pattern RUBY_TIME_ZONE_OFFSET_PATTERN_HH = Pattern.compile("^[+-]\\d\\d$");

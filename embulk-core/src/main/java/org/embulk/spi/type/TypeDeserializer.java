@@ -1,16 +1,14 @@
 package org.embulk.spi.type;
 
-import java.util.Map;
-import java.io.IOException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import java.io.IOException;
+import java.util.Map;
 
-public class TypeDeserializer
-        extends FromStringDeserializer<Type>
-{
+public class TypeDeserializer extends FromStringDeserializer<Type> {
     private static final Map<String, Type> stringToTypeMap;
 
     static {
@@ -24,21 +22,18 @@ public class TypeDeserializer
         stringToTypeMap = builder.build();
     }
 
-    public TypeDeserializer()
-    {
+    public TypeDeserializer() {
         super(Type.class);
     }
 
     @Override
-    protected Type _deserialize(String value, DeserializationContext context)
-            throws IOException
-    {
+    protected Type _deserialize(String value, DeserializationContext context) throws IOException {
         Type t = stringToTypeMap.get(value);
         if (t == null) {
             throw new JsonMappingException(
                     String.format("Unknown type name '%s'. Supported types are: %s",
-                        value,
-                        Joiner.on(", ").join(stringToTypeMap.keySet())));
+                                  value,
+                                  Joiner.on(", ").join(stringToTypeMap.keySet())));
         }
         return t;
     }

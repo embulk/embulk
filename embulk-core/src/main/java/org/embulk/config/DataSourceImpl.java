@@ -1,86 +1,74 @@
 package org.embulk.config;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Iterator;
-import com.google.common.collect.ImmutableList;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class DataSourceImpl
-        implements ConfigSource, TaskSource, TaskReport, /* Deprecated */ CommitReport, ConfigDiff
-{
+        implements ConfigSource, TaskSource, TaskReport, /* Deprecated */ CommitReport, ConfigDiff {
     protected final ObjectNode data;
     protected final ModelManager model;
 
-    public DataSourceImpl(ModelManager model)
-    {
+    public DataSourceImpl(ModelManager model) {
         this(model, new ObjectNode(JsonNodeFactory.instance));
     }
 
     // visible for DataSourceSerDe, ConfigSourceLoader and TaskInvocationHandler.dump
-    public DataSourceImpl(ModelManager model, ObjectNode data)
-    {
+    public DataSourceImpl(ModelManager model, ObjectNode data) {
         this.data = data;
         this.model = model;
     }
 
-    protected DataSourceImpl newInstance(ModelManager model, ObjectNode data)
-    {
+    protected DataSourceImpl newInstance(ModelManager model, ObjectNode data) {
         return new DataSourceImpl(model, (ObjectNode) data);
     }
 
     // visible for DataSourceSerDe.DataSourceSerializer
     @Override
-    public ObjectNode getObjectNode()
-    {
+    public ObjectNode getObjectNode() {
         return data;
     }
 
     @Override
-    public List<String> getAttributeNames()
-    {
+    public List<String> getAttributeNames() {
         return ImmutableList.copyOf(data.fieldNames());
     }
 
     @Override
-    public Iterable<Map.Entry<String, JsonNode>> getAttributes()
-    {
-        return new Iterable<Map.Entry<String,JsonNode>>() {
-            public Iterator<Map.Entry<String, JsonNode>> iterator()
-            {
+    public Iterable<Map.Entry<String, JsonNode>> getAttributes() {
+        return new Iterable<Map.Entry<String, JsonNode>>() {
+            public Iterator<Map.Entry<String, JsonNode>> iterator() {
                 return data.fields();
             }
         };
     }
 
     @Override
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return !data.fieldNames().hasNext();
     }
 
     @Override
-    public boolean has(String attrName)
-    {
+    public boolean has(String attrName) {
         return data.has(attrName);
     }
 
     @Override
-    public <E> E get(Class<E> type, String attrName)
-    {
+    public <E> E get(Class<E> type, String attrName) {
         JsonNode json = data.get(attrName);
         if (json == null) {
-            throw new ConfigException("Attribute "+attrName+" is required but not set");
+            throw new ConfigException("Attribute " + attrName + " is required but not set");
         }
         return model.readObject(type, json.traverse());
     }
 
     @Override
-    public <E> E get(Class<E> type, String attrName, E defaultValue)
-    {
+    public <E> E get(Class<E> type, String attrName, E defaultValue) {
         JsonNode json = data.get(attrName);
         if (json == null) {
             return defaultValue;
@@ -89,46 +77,42 @@ public class DataSourceImpl
     }
 
     @Override
-    public DataSourceImpl getNested(String attrName)
-    {
+    public DataSourceImpl getNested(String attrName) {
         JsonNode json = data.get(attrName);
         if (json == null) {
-            throw new ConfigException("Attribute "+attrName+" is required but not set");
+            throw new ConfigException("Attribute " + attrName + " is required but not set");
         }
         if (!json.isObject()) {
-            throw new ConfigException("Attribute "+attrName+" must be an object");
+            throw new ConfigException("Attribute " + attrName + " must be an object");
         }
         return newInstance(model, (ObjectNode) json);
     }
 
     @Override
-    public DataSourceImpl getNestedOrSetEmpty(String attrName)
-    {
+    public DataSourceImpl getNestedOrSetEmpty(String attrName) {
         JsonNode json = data.get(attrName);
         if (json == null) {
             json = data.objectNode();
             data.set(attrName, json);
         } else if (!json.isObject()) {
-            throw new ConfigException("Attribute "+attrName+" must be an object");
+            throw new ConfigException("Attribute " + attrName + " must be an object");
         }
         return newInstance(model, (ObjectNode) json);
     }
 
     @Override
-    public DataSourceImpl getNestedOrGetEmpty(String attrName)
-    {
+    public DataSourceImpl getNestedOrGetEmpty(String attrName) {
         JsonNode json = data.get(attrName);
         if (json == null) {
             json = data.objectNode();
         } else if (!json.isObject()) {
-            throw new ConfigException("Attribute "+attrName+" must be an object");
+            throw new ConfigException("Attribute " + attrName + " must be an object");
         }
         return newInstance(model, (ObjectNode) json);
     }
 
     @Override
-    public DataSourceImpl set(String attrName, Object v)
-    {
+    public DataSourceImpl set(String attrName, Object v) {
         if (v == null) {
             remove(attrName);
         } else {
@@ -138,15 +122,13 @@ public class DataSourceImpl
     }
 
     @Override
-    public DataSourceImpl setNested(String attrName, DataSource v)
-    {
+    public DataSourceImpl setNested(String attrName, DataSource v) {
         data.set(attrName, v.getObjectNode());
         return this;
     }
 
     @Override
-    public DataSourceImpl setAll(DataSource other)
-    {
+    public DataSourceImpl setAll(DataSource other) {
         for (Map.Entry<String, JsonNode> field : other.getAttributes()) {
             data.set(field.getKey(), field.getValue());
         }
@@ -154,27 +136,23 @@ public class DataSourceImpl
     }
 
     @Override
-    public DataSourceImpl remove(String attrName)
-    {
+    public DataSourceImpl remove(String attrName) {
         data.remove(attrName);
         return this;
     }
 
     @Override
-    public DataSourceImpl deepCopy()
-    {
+    public DataSourceImpl deepCopy() {
         return newInstance(model, data.deepCopy());
     }
 
     @Override
-    public DataSourceImpl merge(DataSource other)
-    {
+    public DataSourceImpl merge(DataSource other) {
         mergeJsonObject(data, other.deepCopy().getObjectNode());
         return this;
     }
 
-    private static void mergeJsonObject(ObjectNode src, ObjectNode other)
-    {
+    private static void mergeJsonObject(ObjectNode src, ObjectNode other) {
         Iterator<Map.Entry<String, JsonNode>> ite = other.fields();
         while (ite.hasNext()) {
             Map.Entry<String, JsonNode> pair = ite.next();
@@ -190,9 +168,8 @@ public class DataSourceImpl
         }
     }
 
-    private static void mergeJsonArray(ArrayNode src, ArrayNode other)
-    {
-        for (int i=0; i < other.size(); i++) {
+    private static void mergeJsonArray(ArrayNode src, ArrayNode other) {
+        for (int i = 0; i < other.size(); i++) {
             JsonNode s = src.get(i);
             JsonNode v = other.get(i);
             if (s == null) {
@@ -209,26 +186,22 @@ public class DataSourceImpl
     }
 
     @Override
-    public <T> T loadTask(Class<T> taskType)
-    {
+    public <T> T loadTask(Class<T> taskType) {
         return model.readObject(taskType, data.traverse());
     }
 
     @Override
-    public <T> T loadConfig(Class<T> taskType)
-    {
+    public <T> T loadConfig(Class<T> taskType) {
         return model.readObjectWithConfigSerDe(taskType, data.traverse());
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return data.toString();
     }
 
     @Override
-    public boolean equals(Object other)
-    {
+    public boolean equals(Object other) {
         if (!(other instanceof DataSource)) {
             return false;
         }
@@ -236,8 +209,7 @@ public class DataSourceImpl
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return data.hashCode();
     }
 }

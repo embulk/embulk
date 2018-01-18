@@ -1,15 +1,13 @@
 package org.embulk.spi;
 
 import java.util.List;
-import org.embulk.config.TaskSource;
-import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
+import org.embulk.config.TaskSource;
 
-public interface FileOutputPlugin
-{
-    interface Control
-    {
+public interface FileOutputPlugin {
+    interface Control {
         List<TaskReport> run(TaskSource taskSource);
     }
 

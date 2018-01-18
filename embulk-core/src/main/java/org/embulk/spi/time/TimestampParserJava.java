@@ -31,10 +31,10 @@ class TimestampParserJava extends TimestampParser {
     static TimestampParserJava of(final String pattern, final ZoneOffset defaultZoneOffset) {
         // Default parsers from patterns accept strings case-insensitively.
         return new TimestampParserJava(new DateTimeFormatterBuilder()
-                                           .parseCaseInsensitive()
-                                           .appendPattern(pattern)
-                                           .toFormatter(Locale.ENGLISH)
-                                           .withResolverStyle(ResolverStyle.STRICT),
+                                               .parseCaseInsensitive()
+                                               .appendPattern(pattern)
+                                               .toFormatter(Locale.ENGLISH)
+                                               .withResolverStyle(ResolverStyle.STRICT),
                                        defaultZoneOffset,
                                        pattern);
     }

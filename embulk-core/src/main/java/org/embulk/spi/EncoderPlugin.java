@@ -1,12 +1,10 @@
 package org.embulk.spi;
 
-import org.embulk.config.TaskSource;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskSource;
 
-public interface EncoderPlugin
-{
-    interface Control
-    {
+public interface EncoderPlugin {
+    interface Control {
         void run(TaskSource taskSource);
     }
 

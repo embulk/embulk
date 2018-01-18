@@ -1,21 +1,18 @@
 package org.embulk.spi.util.dynamic;
 
-import org.embulk.spi.PageBuilder;
 import org.embulk.spi.Column;
-import org.embulk.spi.util.DynamicColumnSetter;
+import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.util.DynamicColumnSetter;
 import org.msgpack.value.Value;
 
-public abstract class AbstractDynamicColumnSetter
-        implements DynamicColumnSetter
-{
+public abstract class AbstractDynamicColumnSetter implements DynamicColumnSetter {
     protected final PageBuilder pageBuilder;
     protected final Column column;
     protected final DefaultValueSetter defaultValue;
 
     protected AbstractDynamicColumnSetter(PageBuilder pageBuilder, Column column,
-            DefaultValueSetter defaultValue)
-    {
+            DefaultValueSetter defaultValue) {
         this.pageBuilder = pageBuilder;
         this.column = column;
         this.defaultValue = defaultValue;

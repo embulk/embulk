@@ -17,11 +17,9 @@ package org.embulk.spi.time;
  *
  * @see <a href="https://github.com/jruby/jruby/pull/4635">Implement RubyDateParser in Java by muga - Pull Request #4635 - jruby/jruby</a>
  */
-class RubyTimeZoneTab
-{
+class RubyTimeZoneTab {
     // Ported zones_source in ext/date/date_parse.c
-    private static int getOffsetFromZonesSource(String z)
-    {
+    private static int getOffsetFromZonesSource(String z) {
         switch (z) {
             case "ut":
                 return 0 * 3600;
@@ -369,24 +367,20 @@ class RubyTimeZoneTab
     }
 
     // Ported date_zone_to_diff in ext/date/date_parse.c
-    public static int dateZoneToDiff(String zone)
-    {
+    public static int dateZoneToDiff(String zone) {
         String z = zone.toLowerCase();
 
         final boolean dst;
         if (z.endsWith(" daylight time")) {
             z = z.substring(0, z.length() - " daylight time".length());
             dst = true;
-        }
-        else if (z.endsWith(" standard time")) {
+        } else if (z.endsWith(" standard time")) {
             z = z.substring(0, z.length() - " standard time".length());
             dst = false;
-        }
-        else if (z.endsWith(" dst")) {
+        } else if (z.endsWith(" dst")) {
             z = z.substring(0, z.length() - " dst".length());
             dst = true;
-        }
-        else {
+        } else {
             dst = false;
         }
 
@@ -405,38 +399,35 @@ class RubyTimeZoneTab
         final boolean sign;
         if (z.charAt(0) == '+') {
             sign = true;
-        }
-        else if (z.charAt(0) == '-') {
+        } else if (z.charAt(0) == '-') {
             sign = false;
-        }
-        else {
+        } else {
             // if z doesn't start with "+" or "-", invalid
             return Integer.MIN_VALUE;
         }
         z = z.substring(1);
 
-        int hour = 0, min = 0, sec = 0;
+        int hour = 0;
+        int min = 0;
+        int sec = 0;
         if (z.contains(":")) {
             final String[] splited = z.split(":");
             if (splited.length == 2) {
                 hour = Integer.parseInt(splited[0]);
                 min = Integer.parseInt(splited[1]);
-            }
-            else {
+            } else {
                 hour = Integer.parseInt(splited[0]);
                 min = Integer.parseInt(splited[1]);
                 sec = Integer.parseInt(splited[2]);
             }
 
-        }
-        else if (z.contains(",") || z.contains(".")) {
+        } else if (z.contains(",") || z.contains(".")) {
             // TODO min = Rational(fr.to_i, 10**fr.size) * 60
             String[] splited = z.split("[\\.,]");
             hour = Integer.parseInt(splited[0]);
-            min = (int)(Integer.parseInt(splited[1]) * 60 / Math.pow(10, splited[1].length()));
+            min = (int) (Integer.parseInt(splited[1]) * 60 / Math.pow(10, splited[1].length()));
 
-        }
-        else {
+        } else {
             final int len = z.length();
             if (len % 2 != 0) {
                 if (len >= 1) {
@@ -448,8 +439,7 @@ class RubyTimeZoneTab
                 if (len >= 5) {
                     sec = Integer.parseInt(z.substring(3, 5));
                 }
-            }
-            else {
+            } else {
                 if (len >= 2) {
                     hour = Integer.parseInt(z.substring(0, 2));
                 }
@@ -466,7 +456,5 @@ class RubyTimeZoneTab
         return sign ? offset : -offset;
     }
 
-    private RubyTimeZoneTab()
-    {
-    }
+    private RubyTimeZoneTab() {}
 }

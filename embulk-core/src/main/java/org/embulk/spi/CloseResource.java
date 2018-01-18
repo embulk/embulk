@@ -2,41 +2,32 @@ package org.embulk.spi;
 
 import com.google.common.base.Throwables;
 
-public class CloseResource
-        implements AutoCloseable
-{
+public class CloseResource implements AutoCloseable {
     private AutoCloseable resource;
 
-    public CloseResource()
-    {
+    public CloseResource() {
         this(null);
     }
 
-    public CloseResource(AutoCloseable resource)
-    {
+    public CloseResource(AutoCloseable resource) {
         this.resource = resource;
     }
 
-    public void closeThis(AutoCloseable resource)
-    {
+    public void closeThis(AutoCloseable resource) {
         this.resource = resource;
     }
 
-    public void dontClose()
-    {
+    public void dontClose() {
         this.resource = null;
     }
 
-    public void close()
-    {
+    public void close() {
         if (resource != null) {
             try {
                 resource.close();
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 throw Throwables.propagate(ex);
             }
         }
     }
 }
-

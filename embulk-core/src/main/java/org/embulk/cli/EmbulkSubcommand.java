@@ -1,7 +1,6 @@
 package org.embulk.cli;
 
-public enum EmbulkSubcommand
-{
+public enum EmbulkSubcommand {
     BUNDLE("bundle"),
     CLEANUP("cleanup"),
     EXAMPLE("example"),
@@ -19,14 +18,11 @@ public enum EmbulkSubcommand
     VERSION_ERR("-version"),
     ;
 
-    private EmbulkSubcommand(final String subcommand)
-    {
+    private EmbulkSubcommand(final String subcommand) {
         this.subcommand = subcommand;
     }
 
-    public static EmbulkSubcommand of(final String subcommand)
-            throws EmbulkCommandLineException
-    {
+    public static EmbulkSubcommand of(final String subcommand) throws EmbulkCommandLineException {
         if (!(subcommand.equals("--version")) && !(subcommand.equals("-version"))) {
             for (final EmbulkSubcommand constant : values()) {
                 if (constant.toString().equals(subcommand)) {
@@ -38,8 +34,7 @@ public enum EmbulkSubcommand
     }
 
     @Override
-    public final String toString()
-    {
+    public final String toString() {
         return this.subcommand;
     }
 

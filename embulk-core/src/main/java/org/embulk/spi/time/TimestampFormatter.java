@@ -22,12 +22,12 @@ public class TimestampFormatter {
     @Deprecated
     public TimestampFormatter(final Task task, final Optional<? extends TimestampColumnOption> columnOption) {
         this(TimestampFormatterRuby.ofLegacy(
-                 columnOption.isPresent()
-                     ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
-                     : task.getDefaultTimestampFormat(),
-                 columnOption.isPresent()
-                     ? columnOption.get().getTimeZone().or(task.getDefaultTimeZone())
-                     : task.getDefaultTimeZone()));
+                     columnOption.isPresent()
+                             ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
+                             : task.getDefaultTimestampFormat(),
+                     columnOption.isPresent()
+                             ? columnOption.get().getTimeZone().or(task.getDefaultTimeZone())
+                             : task.getDefaultTimeZone()));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
@@ -107,8 +107,7 @@ public class TimestampFormatter {
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
-            }
-            else {
+            } else {
                 return null;
             }
         }
@@ -129,8 +128,7 @@ public class TimestampFormatter {
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
-            }
-            else {
+            } else {
                 return Optional.absent();
             }
         }

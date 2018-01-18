@@ -1,18 +1,17 @@
 package org.embulk.spi;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.embulk.spi.type.Type;
+import java.util.Objects;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
-import org.embulk.spi.type.LongType;
-import org.embulk.spi.type.TimestampType;
-import org.embulk.spi.type.StringType;
 import org.embulk.spi.type.JsonType;
+import org.embulk.spi.type.LongType;
+import org.embulk.spi.type.StringType;
+import org.embulk.spi.type.TimestampType;
+import org.embulk.spi.type.Type;
 
-public class Column
-{
+public class Column {
     private final int index;
     private final String name;
     private final Type type;
@@ -21,33 +20,28 @@ public class Column
     public Column(
             @JsonProperty("index") int index,
             @JsonProperty("name") String name,
-            @JsonProperty("type") Type type)
-    {
+            @JsonProperty("type") Type type) {
         this.index = index;
         this.name = name;
         this.type = type;
     }
 
     @JsonProperty("index")
-    public int getIndex()
-    {
+    public int getIndex() {
         return index;
     }
 
     @JsonProperty("name")
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     @JsonProperty("type")
-    public Type getType()
-    {
+    public Type getType() {
         return type;
     }
 
-    public void visit(ColumnVisitor visitor)
-    {
+    public void visit(ColumnVisitor visitor) {
         if (type instanceof BooleanType) {
             visitor.booleanColumn(this);
         } else if (type instanceof LongType) {
@@ -61,13 +55,12 @@ public class Column
         } else if (type instanceof JsonType) {
             visitor.jsonColumn(this);
         } else {
-            assert(false);
+            assert (false);
         }
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -75,20 +68,18 @@ public class Column
             return false;
         }
         Column other = (Column) obj;
-        return Objects.equals(index, other.index) &&
-            Objects.equals(name, other.name) &&
-            Objects.equals(type, other.type);
+        return Objects.equals(index, other.index)
+                && Objects.equals(name, other.name)
+                && Objects.equals(type, other.type);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(index, name, type);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return String.format("Column{index:%d, name:%s, type:%s}",
                 getIndex(), getName(), getType().getName());
     }

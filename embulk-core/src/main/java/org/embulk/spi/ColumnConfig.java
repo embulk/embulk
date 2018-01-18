@@ -1,21 +1,19 @@
 package org.embulk.spi;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Objects;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.type.Type;
 import org.embulk.spi.type.TimestampType;
+import org.embulk.spi.type.Type;
 
-public class ColumnConfig
-{
+public class ColumnConfig {
     private final String name;
     private final Type type;
     private final ConfigSource option;
 
     @Deprecated
-    public ColumnConfig(String name, Type type, String format)
-    {
+    public ColumnConfig(String name, Type type, String format) {
         this.name = name;
         this.type = type;
         this.option = Exec.newConfigSource();  // only for backward compatibility
@@ -24,16 +22,14 @@ public class ColumnConfig
         }
     }
 
-    public ColumnConfig(String name, Type type, ConfigSource option)
-    {
+    public ColumnConfig(String name, Type type, ConfigSource option) {
         this.name = name;
         this.type = type;
         this.option = option;
     }
 
     @JsonCreator
-    public ColumnConfig(ConfigSource conf)
-    {
+    public ColumnConfig(ConfigSource conf) {
         this.name = conf.get(String.class, "name");
         this.type = conf.get(Type.class, "type");
         this.option = conf.deepCopy();
@@ -41,24 +37,20 @@ public class ColumnConfig
         option.remove("type");
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public Type getType()
-    {
+    public Type getType() {
         return type;
     }
 
-    public ConfigSource getOption()
-    {
+    public ConfigSource getOption() {
         return option;
     }
 
     @JsonValue
-    public ConfigSource getConfigSource()
-    {
+    public ConfigSource getConfigSource() {
         ConfigSource conf = option.deepCopy();
         conf.set("name", name);
         conf.set("type", type);
@@ -66,13 +58,11 @@ public class ColumnConfig
     }
 
     @Deprecated
-    public String getFormat()
-    {
+    public String getFormat() {
         return option.get(String.class, "format", null);
     }
 
-    public Column toColumn(int index)
-    {
+    public Column toColumn(int index) {
         String format = option.get(String.class, "format", null);
         if (type instanceof TimestampType && format != null) {
             // this behavior is only for backward compatibility. TimestampType#getFormat is @Deprecated
@@ -83,8 +73,7 @@ public class ColumnConfig
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -92,20 +81,18 @@ public class ColumnConfig
             return false;
         }
         ColumnConfig other = (ColumnConfig) obj;
-        return Objects.equals(this.name, other.name) &&
-            Objects.equals(type, other.type) &&
-            Objects.equals(option, other.option);
+        return Objects.equals(this.name, other.name)
+                && Objects.equals(type, other.type)
+                && Objects.equals(option, other.option);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(name, type);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return String.format("ColumnConfig[%s, %s]",
                 getName(), getType());
     }

@@ -1,28 +1,24 @@
 package org.embulk.spi.util;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.io.Reader;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
-import org.embulk.config.Task;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.Task;
 import org.embulk.spi.FileInput;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class LineDecoder
-        implements AutoCloseable, Iterable<String>
-{
+public class LineDecoder implements AutoCloseable, Iterable<String> {
     // TODO optimize
 
-    public static interface DecoderTask
-            extends Task
-    {
+    public static interface DecoderTask extends Task {
         @Config("charset")
         @ConfigDefault("\"utf-8\"")
         public Charset getCharset();
@@ -36,19 +32,17 @@ public class LineDecoder
     private final BufferedReader reader;
     private final Charset charset;
 
-    public LineDecoder(FileInput in, DecoderTask task)
-    {
+    public LineDecoder(FileInput in, DecoderTask task) {
         this.charset = task.getCharset();
         CharsetDecoder decoder = charset
-            .newDecoder()
-            .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
-            .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
+                .newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.inputStream = new FileInputInputStream(in);
         this.reader = new BufferedReader(new InputStreamReader(inputStream, decoder));
     }
 
-    public boolean nextFile()
-    {
+    public boolean nextFile() {
         boolean has = inputStream.nextFile();
         if (has && charset.equals(UTF_8)) {
             skipBom();
@@ -56,8 +50,7 @@ public class LineDecoder
         return has;
     }
 
-    private void skipBom()
-    {
+    private void skipBom() {
         boolean skip = false;
         try {
             if (charset.equals(UTF_8)) {
@@ -68,19 +61,16 @@ public class LineDecoder
                     skip = true;
                 }
             }
-        }
-        catch (IOException ex) {
-        }
-        finally {
+        } catch (IOException ex) {
+            // Passing through intentionally.
+        } finally {
             if (skip) {
                 // firstChar is skipped
-            }
-            else {
+            } else {
                 // rollback to the marked position
                 try {
                     reader.reset();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     // unexpected
                     throw new RuntimeException(ex);
                 }
@@ -88,8 +78,7 @@ public class LineDecoder
         }
     }
 
-    public String poll()
-    {
+    public String poll() {
         try {
             return reader.readLine();
         } catch (IOException ex) {
@@ -98,8 +87,7 @@ public class LineDecoder
         }
     }
 
-    public void close()
-    {
+    public void close() {
         try {
             reader.close();
         } catch (IOException ex) {
@@ -108,27 +96,22 @@ public class LineDecoder
         }
     }
 
-    public Iterator<String> iterator()
-    {
+    public Iterator<String> iterator() {
         return new Ite(this);
     }
 
     private String nextLine;
 
-    private static class Ite
-            implements Iterator<String>
-    {
+    private static class Ite implements Iterator<String> {
         private LineDecoder self;
 
-        public Ite(LineDecoder self)
-        {
+        public Ite(LineDecoder self) {
             // TODO non-static inner class causes a problem with JRuby
             this.self = self;
         }
 
         @Override
-        public boolean hasNext()
-        {
+        public boolean hasNext() {
             if (self.nextLine != null) {
                 return true;
             } else {
@@ -138,8 +121,7 @@ public class LineDecoder
         }
 
         @Override
-        public String next()
-        {
+        public String next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
@@ -149,8 +131,7 @@ public class LineDecoder
         }
 
         @Override
-        public void remove()
-        {
+        public void remove() {
             throw new UnsupportedOperationException();
         }
     }

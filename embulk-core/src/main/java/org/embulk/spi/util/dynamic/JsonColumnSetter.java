@@ -7,58 +7,48 @@ import org.embulk.spi.time.TimestampFormatter;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
-public class JsonColumnSetter
-        extends AbstractDynamicColumnSetter
-{
+public class JsonColumnSetter extends AbstractDynamicColumnSetter {
     private final TimestampFormatter timestampFormatter;
 
     public JsonColumnSetter(PageBuilder pageBuilder, Column column,
                             DefaultValueSetter defaultValue,
-                            TimestampFormatter timestampFormatter)
-    {
+                            TimestampFormatter timestampFormatter) {
         super(pageBuilder, column, defaultValue);
         this.timestampFormatter = timestampFormatter;
     }
 
     @Override
-    public void setNull()
-    {
+    public void setNull() {
         pageBuilder.setNull(column);
     }
 
     @Override
-    public void set(boolean v)
-    {
+    public void set(boolean v) {
         pageBuilder.setJson(column, ValueFactory.newBoolean(v));
     }
 
     @Override
-    public void set(long v)
-    {
+    public void set(long v) {
         pageBuilder.setJson(column, ValueFactory.newInteger(v));
     }
 
     @Override
-    public void set(double v)
-    {
+    public void set(double v) {
         pageBuilder.setJson(column, ValueFactory.newFloat(v));
     }
 
     @Override
-    public void set(String v)
-    {
+    public void set(String v) {
         pageBuilder.setJson(column, ValueFactory.newString(v));
     }
 
     @Override
-    public void set(Timestamp v)
-    {
+    public void set(Timestamp v) {
         pageBuilder.setJson(column, ValueFactory.newString(timestampFormatter.format(v)));
     }
 
     @Override
-    public void set(Value v)
-    {
+    public void set(Value v) {
         pageBuilder.setJson(column, v);
     }
 }

@@ -5,8 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,17 +32,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-public class PluginClassLoader
-        extends URLClassLoader
-{
+public class PluginClassLoader extends URLClassLoader {
     private PluginClassLoader(
             final ClassLoader parentClassLoader,
             final URL oneNestedJarFileUrl,
             final Collection<String> embeddedJarPathsInNestedJar,
             final Collection<URL> flatJarUrls,
             final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources)
-    {
+            final Collection<String> parentFirstResources) {
         super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.<URL>emptyList() : flatJarUrls),
               parentClassLoader);
 
@@ -51,8 +48,7 @@ public class PluginClassLoader
         if (oneNestedJarFileUrl != null) {
             try {
                 oneNestedJarUrlBaseBuilt = new URL("jar", "", -1, oneNestedJarFileUrl + "!/");
-            }
-            catch (MalformedURLException ex) {
+            } catch (MalformedURLException ex) {
                 // TODO: Notify this to reporters as far as possible.
                 System.err.println("FATAL: Invalid JAR file URL: " + oneNestedJarFileUrl.toString());
                 ex.printStackTrace();
@@ -62,24 +58,21 @@ public class PluginClassLoader
 
         if (embeddedJarPathsInNestedJar == null) {
             this.embeddedJarPathsInNestedJar = Collections.<String>emptyList();
-        }
-        else {
+        } else {
             this.embeddedJarPathsInNestedJar = Collections.unmodifiableCollection(embeddedJarPathsInNestedJar);
         }
         this.parentFirstPackagePrefixes = ImmutableList.copyOf(
                 Iterables.transform(parentFirstPackages, new Function<String, String>() {
-                    public String apply(String pkg)
-                    {
-                        return pkg + ".";
-                    }
-                }));
+                        public String apply(String pkg) {
+                            return pkg + ".";
+                        }
+                    }));
         this.parentFirstResourcePrefixes = ImmutableList.copyOf(
                 Iterables.transform(parentFirstResources, new Function<String, String>() {
-                    public String apply(String pkg)
-                    {
-                        return pkg + "/";
-                    }
-                }));
+                        public String apply(String pkg) {
+                            return pkg + "/";
+                        }
+                    }));
         this.accessControlContext = AccessController.getContext();
     }
 
@@ -88,8 +81,7 @@ public class PluginClassLoader
             final Collection<URL> flatJarUrls,
             final ClassLoader parentClassLoader,
             final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources)
-    {
+            final Collection<String> parentFirstResources) {
         this(parentClassLoader, null, null, flatJarUrls, parentFirstPackages, parentFirstResources);
     }
 
@@ -100,15 +92,14 @@ public class PluginClassLoader
             final ClassLoader parentClassLoader,
             final Collection<URL> flatJarUrls,
             final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources)
-    {
+            final Collection<String> parentFirstResources) {
         return new PluginClassLoader(
-            parentClassLoader,
-            null,
-            null,
-            flatJarUrls,
-            parentFirstPackages,
-            parentFirstResources);
+                parentClassLoader,
+                null,
+                null,
+                flatJarUrls,
+                parentFirstPackages,
+                parentFirstResources);
     }
 
     /**
@@ -125,15 +116,14 @@ public class PluginClassLoader
             final URL oneNestedJarFileUrl,
             final Collection<String> embeddedJarPathsInNestedJar,
             final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources)
-    {
+            final Collection<String> parentFirstResources) {
         return new PluginClassLoader(
-            parentClassLoader,
-            oneNestedJarFileUrl,
-            embeddedJarPathsInNestedJar,
-            null,
-            parentFirstPackages,
-            parentFirstResources);
+                parentClassLoader,
+                oneNestedJarFileUrl,
+                embeddedJarPathsInNestedJar,
+                null,
+                parentFirstPackages,
+                parentFirstResources);
     }
 
     /**
@@ -145,8 +135,7 @@ public class PluginClassLoader
      *
      * @see <a href="https://github.com/embulk/embulk-input-jdbc/blob/ebfff0b249d507fc730c87e08b56e6aa492060ca/embulk-input-jdbc/src/main/java/org/embulk/input/jdbc/AbstractJdbcInputPlugin.java#L586-L595">embulk-input-jdbc</a>
      */
-    public void addPath(Path path)
-    {
+    public void addPath(Path path) {
         try {
             addUrl(path.toUri().toURL());
         } catch (MalformedURLException ex) {
@@ -154,8 +143,7 @@ public class PluginClassLoader
         }
     }
 
-    public void addUrl(URL url)
-    {
+    public void addUrl(URL url) {
         super.addURL(url);
     }
 
@@ -166,38 +154,31 @@ public class PluginClassLoader
      * directly in the given JAR, it tries to find the class in JARs in the given JAR.
      */
     @Override
-    protected Class<?> findClass(final String className)
-            throws ClassNotFoundException
-    {
+    protected Class<?> findClass(final String className) throws ClassNotFoundException {
         if (this.oneNestedJarUrlBase == null || this.embeddedJarPathsInNestedJar.isEmpty()) {
             // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
             return super.findClass(className);
-        }
-        else {
+        } else {
             // Single nested JAR -- JAR-based plugins
             try {
                 // Classes directly in the plugin JAR are always prioritized.
                 return super.findClass(className);
-            }
-            catch (ClassNotFoundException directClassNotFoundException) {
+            } catch (ClassNotFoundException directClassNotFoundException) {
                 try {
                     return AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<Class<?>>() {
-                            public Class<?> run()
-                                    throws ClassNotFoundException
-                            {
-                                try {
-                                    return defineClassFromEmbeddedJars(className);
+                            new PrivilegedExceptionAction<Class<?>>() {
+                                public Class<?> run() throws ClassNotFoundException {
+                                    try {
+                                        return defineClassFromEmbeddedJars(className);
+                                    } catch (ClassNotFoundException | LinkageError | ClassCastException ex) {
+                                        throw ex;
+                                    } catch (Throwable ex) {
+                                        // Resource found from JARs in the JAR, but failed to load it as a class.
+                                        throw new ClassNotFoundException(className, ex);
+                                    }
                                 }
-                                catch (ClassNotFoundException | LinkageError | ClassCastException ex) {
-                                    throw ex;
-                                }
-                                catch (Throwable ex) {
-                                    // Resource found from JARs in the JAR, but failed to load it as a class.
-                                    throw new ClassNotFoundException(className, ex);
-                                }
-                            }
-                        }, this.accessControlContext);
+                            },
+                            this.accessControlContext);
                 } catch (PrivilegedActionException ex) {
                     final Throwable internalException = ex.getException();
                     if (internalException instanceof ClassNotFoundException) {
@@ -238,9 +219,7 @@ public class PluginClassLoader
      * @see <a href="http://hg.openjdk.java.net/jdk7u/jdk7u/jdk/file/jdk7u141-b02/src/share/classes/java/lang/ClassLoader.java">OpenJDK7's ClassLoader</a>
      */
     @Override
-    protected Class<?> loadClass(String name, boolean resolve)
-            throws ClassNotFoundException
-    {
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
             // If the class has already been loaded by this {@code ClassLoader} or the parent's {@code ClassLoader},
             // find the loaded class and return it.
@@ -258,6 +237,7 @@ public class PluginClassLoader
                 try {
                     return resolveClass(findClass(name), resolve);
                 } catch (ClassNotFoundException ignored) {
+                    // Passing through intentionally.
                 }
             }
 
@@ -266,6 +246,7 @@ public class PluginClassLoader
             try {
                 return resolveClass(getParent().loadClass(name), resolve);
             } catch (ClassNotFoundException ignored) {
+                // Passing through intentionally.
             }
 
             // If the class is "parent-first" (to be loaded by the parent at first), this part runs after the above.
@@ -277,8 +258,7 @@ public class PluginClassLoader
         }
     }
 
-    private Class<?> resolveClass(Class<?> clazz, boolean resolve)
-    {
+    private Class<?> resolveClass(Class<?> clazz, boolean resolve) {
         if (resolve) {
             resolveClass(clazz);
         }
@@ -294,13 +274,11 @@ public class PluginClassLoader
      * Note that URLClassLoader#findResource is public while ClassLoader#findResource is protected.
      */
     @Override
-    public URL findResource(final String resourceName)
-    {
+    public URL findResource(final String resourceName) {
         if (this.oneNestedJarUrlBase == null || this.embeddedJarPathsInNestedJar.isEmpty()) {
             // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
             return super.findResource(resourceName);
-        }
-        else {
+        } else {
             // Single nested JAR -- JAR-based plugins
             // Classes directly in the plugin JAR are always prioritized.
             final URL rootUrl = super.findResource(resourceName);
@@ -310,13 +288,14 @@ public class PluginClassLoader
 
             try {
                 return AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<URL>() {
-                        public URL run()
-                        {
-                            return findResourceFromEmbeddedJars(resourceName);
-                        }
-                    }, this.accessControlContext);
+                        new PrivilegedExceptionAction<URL>() {
+                            public URL run() {
+                                return findResourceFromEmbeddedJars(resourceName);
+                            }
+                        },
+                        this.accessControlContext);
             } catch (PrivilegedActionException ignored) {
+                // Passing through intentionally.
             }
 
             return null;
@@ -332,14 +311,11 @@ public class PluginClassLoader
      * Note that URLClassLoader#findResources is public while ClassLoader#findResources is protected.
      */
     @Override
-    public Enumeration<URL> findResources(final String resourceName)
-            throws IOException
-    {
+    public Enumeration<URL> findResources(final String resourceName) throws IOException {
         if (this.oneNestedJarUrlBase == null || this.embeddedJarPathsInNestedJar.isEmpty()) {
             // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
             return super.findResources(resourceName);
-        }
-        else {
+        } else {
             // Single nested JAR -- JAR-based plugins
             final Vector<URL> urls = new Vector<URL>();
 
@@ -351,15 +327,15 @@ public class PluginClassLoader
 
             try {
                 final List<URL> childUrls = AccessController.doPrivileged(
-                    new PrivilegedExceptionAction<List<URL>>() {
-                        public List<URL> run()
-                                throws IOException
-                        {
-                            return findResourcesFromEmbeddedJars(resourceName);
-                        }
-                    }, this.accessControlContext);
+                        new PrivilegedExceptionAction<List<URL>>() {
+                            public List<URL> run() throws IOException {
+                                return findResourcesFromEmbeddedJars(resourceName);
+                            }
+                        },
+                        this.accessControlContext);
                 urls.addAll(childUrls);
             } catch (PrivilegedActionException ignored) {
+                // Passing through intentionally.
             }
 
             return urls.elements();
@@ -367,8 +343,7 @@ public class PluginClassLoader
     }
 
     @Override
-    public URL getResource(String name)
-    {
+    public URL getResource(String name) {
         boolean childFirst = isParentFirstPath(name);
 
         if (childFirst) {
@@ -394,8 +369,7 @@ public class PluginClassLoader
     }
 
     @Override
-    public InputStream getResourceAsStream(final String resourceName)
-    {
+    public InputStream getResourceAsStream(final String resourceName) {
         final boolean childFirst = isParentFirstPath(resourceName);
 
         if (childFirst) {
@@ -421,9 +395,7 @@ public class PluginClassLoader
     }
 
     @Override
-    public Enumeration<URL> getResources(String name)
-            throws IOException
-    {
+    public Enumeration<URL> getResources(String name) throws IOException {
         List<Iterator<URL>> resources = new ArrayList<>();
 
         boolean parentFirst = isParentFirstPath(name);
@@ -447,30 +419,21 @@ public class PluginClassLoader
     /**
      * URLStreamHandler to handle resources in embedded JARs in the plugin JAR.
      */
-    private static class PluginClassURLStreamHandler
-            extends URLStreamHandler
-    {
-        public PluginClassURLStreamHandler(final String protocol)
-        {
+    private static class PluginClassUrlStreamHandler extends URLStreamHandler {
+        public PluginClassUrlStreamHandler(final String protocol) {
             this.protocol = protocol;
         }
 
         @Override
-        protected URLConnection openConnection(final URL url)
-                throws IOException
-        {
+        protected URLConnection openConnection(final URL url) throws IOException {
             // Note that declaring variables here may cause unexpected behaviors.
             // https://stackoverflow.com/questions/9952815/s3-java-client-fails-a-lot-with-premature-end-of-content-length-delimited-messa
             return new URLConnection(url) {
                 @Override
-                public void connect()
-                {
-                }
+                public void connect() {}
 
                 @Override
-                public InputStream getInputStream()
-                        throws IOException
-                {
+                public InputStream getInputStream() throws IOException {
                     final URL embulkPluginJarUrl = getURL();
                     if (!embulkPluginJarUrl.getProtocol().equals(protocol)) {
                         return null;
@@ -482,17 +445,16 @@ public class PluginClassLoader
                     final URL embeddedJarUrl = new URL(embulkPluginJarUrlSeparate[0]);
                     final String embeddedResourceName = embulkPluginJarUrlSeparate[1];
 
-                    final JarURLConnection embeddedJarURLConnection;
+                    final JarURLConnection embeddedJarUrlConnection;
                     try {
                         final URLConnection urlConnection = embeddedJarUrl.openConnection();
-                        embeddedJarURLConnection = (JarURLConnection) urlConnection;
-                    }
-                    catch (ClassCastException ex) {
+                        embeddedJarUrlConnection = (JarURLConnection) urlConnection;
+                    } catch (ClassCastException ex) {
                         return null;
                     }
 
                     final JarInputStream embeddedJarInputStream =
-                        new JarInputStream(embeddedJarURLConnection.getInputStream());
+                            new JarInputStream(embeddedJarUrlConnection.getInputStream());
 
                     // Note that |JarInputStream.getNextJarEntry| may throw IOException.
                     JarEntry jarEntry = embeddedJarInputStream.getNextJarEntry();
@@ -511,15 +473,13 @@ public class PluginClassLoader
         public final String protocol;
     }
 
-    private static URL[] combineUrlsToArray(final URL oneNestedJarFileUrl, final Collection<URL> flatJarUrls)
-    {
+    private static URL[] combineUrlsToArray(final URL oneNestedJarFileUrl, final Collection<URL> flatJarUrls) {
         final int offset;
         final URL[] allDirectJarUrls;
         if (oneNestedJarFileUrl == null) {
             offset = 0;
             allDirectJarUrls = new URL[flatJarUrls.size()];
-        }
-        else {
+        } else {
             offset = 1;
             allDirectJarUrls = new URL[flatJarUrls.size() + 1];
             allDirectJarUrls[0] = oneNestedJarFileUrl;
@@ -539,8 +499,7 @@ public class PluginClassLoader
      * it can find the target class without affected from other unrelated JARs.
      */
     private Class<?> defineClassFromEmbeddedJars(final String className)
-            throws ClassNotFoundException
-    {
+            throws ClassNotFoundException {
         final String classResourceName = className.replace('.', '/').concat(".class");
 
         Throwable lastException = null;
@@ -551,10 +510,9 @@ public class PluginClassLoader
             final JarInputStream embeddedJarInputStream;
             try {
                 embeddedJarUrl = getEmbeddedJarUrl(embeddedJarPath);
-                embeddedJarUrlConnection = getEmbeddedJarURLConnection(embeddedJarUrl);
+                embeddedJarUrlConnection = getEmbeddedJarUrlConnection(embeddedJarUrl);
                 embeddedJarInputStream = getEmbeddedJarInputStream(embeddedJarUrlConnection);
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 lastException = ex;
                 continue;
             }
@@ -562,8 +520,7 @@ public class PluginClassLoader
             final Manifest manifest;
             try {
                 manifest = embeddedJarUrlConnection.getManifest();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
                 lastException = ex;
                 System.err.println("Failed to load manifest in embedded JAR: " + embeddedJarPath);
@@ -574,22 +531,21 @@ public class PluginClassLoader
             JarEntry jarEntry;
             try {
                 jarEntry = embeddedJarInputStream.getNextJarEntry();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
                 lastException = ex;
                 System.err.println("Failed to load entry in embedded JAR: " + embeddedJarPath);
                 ex.printStackTrace();
                 continue;
             }
-            jarEntries: while (jarEntry != null) {
+            jarEntries:
+            while (jarEntry != null) {
                 if (jarEntry.getName().equals(classResourceName)) {
                     final int lastDotIndexInClassName = className.lastIndexOf('.');
                     final String packageName;
                     if (lastDotIndexInClassName != -1) {
                         packageName = className.substring(0, lastDotIndexInClassName);
-                    }
-                    else {
+                    } else {
                         packageName = null;
                     }
 
@@ -606,29 +562,27 @@ public class PluginClassLoader
                                 if (manifest != null) {
                                     fileAttributes = manifest.getAttributes(classResourceName);
                                     mainAttributes = manifest.getMainAttributes();
-                                }
-                                else {
+                                } else {
                                     fileAttributes = null;
                                     mainAttributes = null;
                                 }
 
                                 this.definePackage(
-                                    packageName,
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.SPECIFICATION_TITLE),
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.SPECIFICATION_VERSION),
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.SPECIFICATION_VENDOR),
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.IMPLEMENTATION_TITLE),
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.IMPLEMENTATION_VERSION),
-                                    getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
-                                                               Attributes.Name.IMPLEMENTATION_VENDOR),
-                                    null);
-                            }
-                            catch (IllegalArgumentException ex) {
+                                        packageName,
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.SPECIFICATION_TITLE),
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.SPECIFICATION_VERSION),
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.SPECIFICATION_VENDOR),
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.IMPLEMENTATION_TITLE),
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.IMPLEMENTATION_VERSION),
+                                        getAttributeFromAttributes(mainAttributes, fileAttributes, classResourceName,
+                                                                   Attributes.Name.IMPLEMENTATION_VENDOR),
+                                        null);
+                            } catch (IllegalArgumentException ex) {
                                 // The package duplicates -- in parallel cases
                                 if (getPackage(packageName) == null) {
                                     // TODO: Notify this to reporters as far as possible.
@@ -649,8 +603,7 @@ public class PluginClassLoader
                         classResourceBytes = new byte[(int) classResourceSize];
                         try {
                             actualSize = embeddedJarInputStream.read(classResourceBytes, 0, (int) classResourceSize);
-                        }
-                        catch (IOException ex) {
+                        } catch (IOException ex) {
                             // TODO: Notify this to reporters as far as possible.
                             lastException = ex;
                             System.err.println("Failed to load entry in embedded JAR: " + classResourceName);
@@ -662,8 +615,7 @@ public class PluginClassLoader
                             System.err.println("Broken entry in embedded JAR: " + classResourceName);
                             break jarEntries;  // Breaking from loading since this JAR looks broken.
                         }
-                    }
-                    else {  // JAR entry size unavailable
+                    } else {  // JAR entry size unavailable
                         final ByteArrayOutputStream bytesStream = new ByteArrayOutputStream();
                         final byte[] buffer = new byte[1024];
                         long accumulatedSize = 0;
@@ -671,8 +623,7 @@ public class PluginClassLoader
                             final long readSize;
                             try {
                                 readSize = embeddedJarInputStream.read(buffer, 0, 1024);
-                            }
-                            catch (IOException ex) {
+                            } catch (IOException ex) {
                                 // TODO: Notify this to reporters as far as possible.
                                 lastException = ex;
                                 System.err.println("Failed to load entry in embedded JAR: " + classResourceName);
@@ -695,8 +646,7 @@ public class PluginClassLoader
                     final Class<?> definedClass;
                     try {
                         definedClass = defineClass(className, classResourceBytes, 0, (int) actualSize, codeSource);
-                    }
-                    catch (Throwable ex) {
+                    } catch (Throwable ex) {
                         // TODO: Notify this to reporters as far as possible.
                         lastException = ex;
                         System.err.println("Failed to load entry in embedded JAR: " + classResourceName);
@@ -707,8 +657,7 @@ public class PluginClassLoader
                 }
                 try {
                     jarEntry = embeddedJarInputStream.getNextJarEntry();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     // TODO: Notify this to reporters as far as possible.
                     lastException = ex;
                     System.err.println("Failed to load entry in embedded JAR: " + classResourceName);
@@ -719,49 +668,45 @@ public class PluginClassLoader
         }
         if (lastException != null) {
             throw new ClassNotFoundException(className, lastException);
-        }
-        else {
+        } else {
             throw new ClassNotFoundException(className);
         }
     }
 
-    private InputStream getResourceAsStreamFromChild(final String resourceName)
-    {
+    private InputStream getResourceAsStreamFromChild(final String resourceName) {
         if (this.oneNestedJarUrlBase == null || this.embeddedJarPathsInNestedJar.isEmpty()) {
             // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
             return super.getResourceAsStream(resourceName);
-        }
-        else {
+        } else {
             // Single nested JAR -- JAR-based plugins
             // Resources directly in the plugin JAR are prioritized.
             final InputStream inputStream = super.getResourceAsStream(resourceName);
             if (inputStream == null) {
                 try {
                     final InputStream childInputStream = AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<InputStream>() {
-                            public InputStream run()
-                            {
-                                return getResourceAsStreamFromEmbeddedJars(resourceName);
-                            }
-                        }, this.accessControlContext);
+                            new PrivilegedExceptionAction<InputStream>() {
+                                public InputStream run() {
+                                    return getResourceAsStreamFromEmbeddedJars(resourceName);
+                                }
+                            },
+                            this.accessControlContext);
                     if (childInputStream != null) {
                         return childInputStream;
                     }
                 } catch (PrivilegedActionException ignored) {
+                    // Passing through intentionally.
                 }
             }
         }
         return null;
     }
 
-    private InputStream getResourceAsStreamFromEmbeddedJars(final String resourceName)
-    {
+    private InputStream getResourceAsStreamFromEmbeddedJars(final String resourceName) {
         for (final String embeddedJarPath : this.embeddedJarPathsInNestedJar) {
             final JarInputStream embeddedJarInputStream;
             try {
                 embeddedJarInputStream = getEmbeddedJarInputStream(embeddedJarPath);
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
                 System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                 ex.printStackTrace();
@@ -771,8 +716,7 @@ public class PluginClassLoader
             JarEntry jarEntry;
             try {
                 jarEntry = embeddedJarInputStream.getNextJarEntry();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
                 System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                 ex.printStackTrace();
@@ -787,21 +731,18 @@ public class PluginClassLoader
         return null;
     }
 
-    private URL findResourceFromEmbeddedJars(final String resourceName)
-    {
+    private URL findResourceFromEmbeddedJars(final String resourceName) {
         for (final String embeddedJarPath : this.embeddedJarPathsInNestedJar) {
             final URL embeddedJarUrl;
             final JarURLConnection embeddedJarUrlConnection;
             final JarInputStream embeddedJarInputStream;
             try {
                 embeddedJarUrl = getEmbeddedJarUrl(embeddedJarPath);
-                embeddedJarUrlConnection = getEmbeddedJarURLConnection(embeddedJarUrl);
+                embeddedJarUrlConnection = getEmbeddedJarUrlConnection(embeddedJarUrl);
                 embeddedJarInputStream = getEmbeddedJarInputStream(embeddedJarUrlConnection);
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
-                System.err.println("Failed to load entry in embedded JAR: " +
-                                   resourceName + " / " + embeddedJarPath);
+                System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                 ex.printStackTrace();
                 continue;
             }
@@ -809,43 +750,38 @@ public class PluginClassLoader
             JarEntry jarEntry;
             try {
                 jarEntry = embeddedJarInputStream.getNextJarEntry();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 // TODO: Notify this to reporters as far as possible.
-                System.err.println("Failed to load entry in embedded JAR: " +
-                                   resourceName + " / " + embeddedJarPath);
+                System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                 ex.printStackTrace();
                 continue;
             }
-            jarEntries: while (jarEntry != null) {
+            jarEntries:
+            while (jarEntry != null) {
                 if (jarEntry.getName().equals(resourceName)) {
                     // For resources (not classes) in nested JARs, the schema and the URL should be like:
                     // "embulk-plugin-jar:jar:file://.../plugin.jar!/classpath/library.jar!!/org.library/resource.txt"
                     //
-                    // The "embulk-plugin-jar" URL is processed with |PluginClassURLStreamHandler|.
+                    // The "embulk-plugin-jar" URL is processed with |PluginClassUrlStreamHandler|.
                     // See also: https://www.ibm.com/developerworks/library/j-onejar/index.html
                     //
                     // The URL lives only in the JVM execution.
                     try {
                         // The URL lives only in the JVM execution.
                         return new URL("embulk-plugin-jar", "", -1, embeddedJarUrl + "!!/" + resourceName,
-                                       new PluginClassURLStreamHandler("embulk-plugin-jar"));
-                    }
-                    catch (MalformedURLException ex) {
+                                       new PluginClassUrlStreamHandler("embulk-plugin-jar"));
+                    } catch (MalformedURLException ex) {
                         // TODO: Notify this to reporters as far as possible.
-                        System.err.println("Failed to load entry in embedded JAR: " +
-                                           resourceName + " / " + embeddedJarPath);
+                        System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                         ex.printStackTrace();
                         break jarEntries;
                     }
                 }
                 try {
                     jarEntry = embeddedJarInputStream.getNextJarEntry();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     // TODO: Notify this to reporters as far as possible.
-                    System.err.println("Failed to load entry in embedded JAR: " +
-                                       resourceName + " / " + embeddedJarPath);
+                    System.err.println("Failed to load entry in embedded JAR: " + resourceName + " / " + embeddedJarPath);
                     ex.printStackTrace();
                     break jarEntries;
                 }
@@ -854,13 +790,11 @@ public class PluginClassLoader
         return null;
     }
 
-    private List<URL> findResourcesFromEmbeddedJars(final String resourceName)
-            throws IOException
-    {
+    private List<URL> findResourcesFromEmbeddedJars(final String resourceName) throws IOException {
         final ArrayList<URL> resourceUrls = new ArrayList<URL>();
         for (final String embeddedJarPath : this.embeddedJarPathsInNestedJar) {
             final URL embeddedJarUrl = getEmbeddedJarUrl(embeddedJarPath);
-            final JarURLConnection embeddedJarUrlConnection = getEmbeddedJarURLConnection(embeddedJarUrl);
+            final JarURLConnection embeddedJarUrlConnection = getEmbeddedJarUrlConnection(embeddedJarUrl);
             final JarInputStream embeddedJarInputStream = getEmbeddedJarInputStream(embeddedJarUrlConnection);
 
             // Note that |JarInputStream.getNextJarEntry| may throw IOException.
@@ -870,14 +804,14 @@ public class PluginClassLoader
                     // For resources (not classes) in nested JARs, the schema and the URL should be like:
                     // "embulk-plugin-jar:jar:file://.../plugin.jar!/classpath/library.jar!/org.library/resource.txt"
                     //
-                    // The "embulk-plugin-jar" URL is processed with |PluginClassURLStreamHandler|.
+                    // The "embulk-plugin-jar" URL is processed with |PluginClassUrlStreamHandler|.
                     // See also: https://www.ibm.com/developerworks/library/j-onejar/index.html
                     //
                     // The URL lives only in the JVM execution.
                     //
                     // Note that |new URL| may throw MalformedURLException (extending IOException).
                     resourceUrls.add(new URL("embulk-plugin-jar", "", -1, embeddedJarUrl + "!!/" + resourceName,
-                                             new PluginClassURLStreamHandler("embulk-plugin-jar")));
+                                             new PluginClassUrlStreamHandler("embulk-plugin-jar")));
                 }
                 // Note that |JarInputStream.getNextJarEntry| may throw IOException.
                 jarEntry = embeddedJarInputStream.getNextJarEntry();
@@ -886,14 +820,11 @@ public class PluginClassLoader
         return resourceUrls;
     }
 
-    private URL getEmbeddedJarUrl(final String embeddedJarPath)
-            throws MalformedURLException
-    {
+    private URL getEmbeddedJarUrl(final String embeddedJarPath) throws MalformedURLException {
         final URL embeddedJarUrl;
         try {
             embeddedJarUrl = new URL(this.oneNestedJarUrlBase, embeddedJarPath);
-        }
-        catch (MalformedURLException ex) {
+        } catch (MalformedURLException ex) {
             // TODO: Notify this to reporters as far as possible.
             System.err.println("Failed to load entry in embedded JAR: " + embeddedJarPath);
             ex.printStackTrace();
@@ -902,34 +833,28 @@ public class PluginClassLoader
         return embeddedJarUrl;
     }
 
-    private JarURLConnection getEmbeddedJarURLConnection(final URL embeddedJarUrl)
-            throws IOException
-    {
-        final JarURLConnection embeddedJarURLConnection;
+    private JarURLConnection getEmbeddedJarUrlConnection(final URL embeddedJarUrl) throws IOException {
+        final JarURLConnection embeddedJarUrlConnection;
         try {
             final URLConnection urlConnection = embeddedJarUrl.openConnection();
-            embeddedJarURLConnection = (JarURLConnection) urlConnection;
-        }
-        catch (IOException ex) {
+            embeddedJarUrlConnection = (JarURLConnection) urlConnection;
+        } catch (IOException ex) {
             // TODO: Notify this to reporters as far as possible.
             System.err.println("Failed to load entry in embedded JAR: " + embeddedJarUrl.toString());
             ex.printStackTrace();
             throw ex;
         }
-        return embeddedJarURLConnection;
+        return embeddedJarUrlConnection;
     }
 
-    private JarInputStream getEmbeddedJarInputStream(final JarURLConnection embeddedJarURLConnection)
-            throws IOException
-    {
+    private JarInputStream getEmbeddedJarInputStream(final JarURLConnection embeddedJarUrlConnection) throws IOException {
         final JarInputStream embeddedJarInputStream;
         try {
-            final InputStream inputStream = embeddedJarURLConnection.getInputStream();
+            final InputStream inputStream = embeddedJarUrlConnection.getInputStream();
             embeddedJarInputStream = new JarInputStream(inputStream);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             // TODO: Notify this to reporters as far as possible.
-            System.err.println("Failed to load entry in embedded JAR: " + embeddedJarURLConnection.toString());
+            System.err.println("Failed to load entry in embedded JAR: " + embeddedJarUrlConnection.toString());
             ex.printStackTrace();
             throw ex;
         }
@@ -937,10 +862,9 @@ public class PluginClassLoader
     }
 
     private JarInputStream getEmbeddedJarInputStream(final String embeddedJarPath)
-            throws IOException
-    {
+            throws IOException {
         final URL embeddedJarUrl = getEmbeddedJarUrl(embeddedJarPath);
-        final JarURLConnection embeddedJarUrlConnection = getEmbeddedJarURLConnection(embeddedJarUrl);
+        final JarURLConnection embeddedJarUrlConnection = getEmbeddedJarUrlConnection(embeddedJarUrl);
         return getEmbeddedJarInputStream(embeddedJarUrlConnection);
     }
 
@@ -948,8 +872,7 @@ public class PluginClassLoader
             final Attributes mainAttributes,
             final Attributes fileAttributes,
             final String classResourceName,
-            final Attributes.Name attributeName)
-    {
+            final Attributes.Name attributeName) {
         if (fileAttributes != null) {
             final String value = fileAttributes.getValue(attributeName);
             if (value != null) {
@@ -965,8 +888,7 @@ public class PluginClassLoader
         return null;
     }
 
-    private boolean isParentFirstPackage(String name)
-    {
+    private boolean isParentFirstPackage(String name) {
         for (String pkg : parentFirstPackagePrefixes) {
             if (name.startsWith(pkg)) {
                 return true;
@@ -975,8 +897,7 @@ public class PluginClassLoader
         return false;
     }
 
-    private boolean isParentFirstPath(String name)
-    {
+    private boolean isParentFirstPath(String name) {
         for (String path : parentFirstResourcePrefixes) {
             if (name.startsWith(path)) {
                 return true;

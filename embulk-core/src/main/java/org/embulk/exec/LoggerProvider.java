@@ -1,7 +1,5 @@
 package org.embulk.exec;
 
-import org.slf4j.ILoggerFactory;
-import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -10,23 +8,32 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.embulk.config.ConfigSource;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 
-public class LoggerProvider
-        implements Provider<ILoggerFactory>
-{
+public class LoggerProvider implements Provider<ILoggerFactory> {
     @Inject
-    public LoggerProvider(@ForSystemConfig ConfigSource systemConfig)
-    {
+    public LoggerProvider(@ForSystemConfig ConfigSource systemConfig) {
         final String level;
         String logLevel = systemConfig.get(String.class, "log_level", "info");  // here can't use loadConfig because ModelManager uses LoggerProvider
         switch (logLevel) {
-        case "error": level = "ERROR"; break;
-        case "warn":  level = "WARN";  break;
-        case "info":  level = "INFO";  break;
-        case "debug": level = "DEBUG"; break;
-        case "trace": level = "TRACE"; break;
-        default:
-            throw new IllegalArgumentException(String.format(
+            case "error":
+                level = "ERROR";
+                break;
+            case "warn":
+                level = "WARN";
+                break;
+            case "info":
+                level = "INFO";
+                break;
+            case "debug":
+                level = "DEBUG";
+                break;
+            case "trace":
+                level = "TRACE";
+                break;
+            default:
+                throw new IllegalArgumentException(String.format(
                         "System property embulk.logLevel=%s is invalid. Available levels are error, warn, info, debug and trace.", logLevel));
         }
 
@@ -61,8 +68,7 @@ public class LoggerProvider
         }
     }
 
-    public ILoggerFactory get()
-    {
+    public ILoggerFactory get() {
         return LoggerFactory.getILoggerFactory();
     }
 }

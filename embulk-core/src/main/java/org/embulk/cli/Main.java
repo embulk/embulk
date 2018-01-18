@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import org.embulk.EmbulkVersion;
 
-public class Main
-{
-    public static void main(final String[] args)
-    {
+public class Main {
+    public static void main(final String[] args) {
         final ArrayList<String> jrubyOptions = new ArrayList<String>();
 
         int i;

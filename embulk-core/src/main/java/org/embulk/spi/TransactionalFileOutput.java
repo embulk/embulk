@@ -2,9 +2,7 @@ package org.embulk.spi;
 
 import org.embulk.config.TaskReport;
 
-public interface TransactionalFileOutput
-        extends Transactional, FileOutput
-{
+public interface TransactionalFileOutput extends Transactional, FileOutput {
     void nextFile();
 
     void add(Buffer buffer);

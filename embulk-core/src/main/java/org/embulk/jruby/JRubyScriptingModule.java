@@ -26,16 +26,11 @@ import org.embulk.spi.BufferAllocator;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 
-public class JRubyScriptingModule
-        implements Module
-{
-    public JRubyScriptingModule(ConfigSource systemConfig)
-    {
-    }
+public class JRubyScriptingModule implements Module {
+    public JRubyScriptingModule(ConfigSource systemConfig) {}
 
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         binder.bind(ScriptingContainerDelegate.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
 
         Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
@@ -43,8 +38,7 @@ public class JRubyScriptingModule
     }
 
     private static class ScriptingContainerProvider
-            implements ProviderWithDependencies<ScriptingContainerDelegate>
-    {
+            implements ProviderWithDependencies<ScriptingContainerDelegate> {
         private final Injector injector;
         private final Logger logger;
         private final boolean useGlobalRubyRuntime;
@@ -56,8 +50,7 @@ public class JRubyScriptingModule
         private final String jrubyBundlerPluginSourceDirectory;
 
         @Inject
-        public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig)
-        {
+        public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
             this.injector = injector;
             this.logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
 
@@ -67,7 +60,7 @@ public class JRubyScriptingModule
 
             this.gemHome = systemConfig.get(String.class, "gem_home", null);
             this.useDefaultEmbulkGemHome =
-                systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true");
+                    systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true");
 
             // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
 
@@ -77,8 +70,7 @@ public class JRubyScriptingModule
                 for (final Object oneJRubyLoadPath : jrubyLoadPathNonGeneric) {
                     if (oneJRubyLoadPath instanceof String) {
                         jrubyLoadPathBuilt.add((String) oneJRubyLoadPath);
-                    }
-                    else {
+                    } else {
                         this.logger.warn("System config \"jruby_load_path\" contains non-String.");
                         jrubyLoadPathBuilt.add(oneJRubyLoadPath.toString());
                     }
@@ -92,8 +84,7 @@ public class JRubyScriptingModule
                 for (final Object oneJRubyClasspath : jrubyClasspathNonGeneric) {
                     if (oneJRubyClasspath instanceof String) {
                         jrubyClasspathBuilt.add((String) oneJRubyClasspath);
-                    }
-                    else {
+                    } else {
                         this.logger.warn("System config \"jruby_classpath\" contains non-String.");
                         jrubyClasspathBuilt.add(oneJRubyClasspath.toString());
                     }
@@ -107,8 +98,7 @@ public class JRubyScriptingModule
                 for (final Object oneJRubyOption : jrubyOptionsNonGeneric) {
                     if (oneJRubyOption instanceof String) {
                         jrubyOptionsBuilt.add((String) oneJRubyOption);
-                    }
-                    else {
+                    } else {
                         this.logger.warn("System config \"jruby_command_line_options\" contains non-String.");
                         jrubyOptionsBuilt.add(oneJRubyOption.toString());
                     }
@@ -117,22 +107,21 @@ public class JRubyScriptingModule
             this.jrubyOptions = Collections.unmodifiableList(jrubyOptionsBuilt);
 
             this.jrubyBundlerPluginSourceDirectory =
-                systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null);
+                    systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null);
         }
 
         @Override  // from |com.google.inject.Provider|
-        public ScriptingContainerDelegate get() throws ProvisionException
-        {
+        public ScriptingContainerDelegate get() throws ProvisionException {
             final ScriptingContainerDelegate.LocalContextScope scope =
-                (useGlobalRubyRuntime
-                 ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
-                 : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD);
+                    (useGlobalRubyRuntime
+                            ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
+                            : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD);
             final ScriptingContainerDelegate jruby;
             try {
                 jruby = ScriptingContainerDelegate.create(
-                    JRubyScriptingModule.class.getClassLoader(),
-                    scope,
-                    ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
+                        JRubyScriptingModule.class.getClassLoader(),
+                        scope,
+                        ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
             } catch (Exception ex) {
                 return null;
             }
@@ -141,14 +130,13 @@ public class JRubyScriptingModule
             for (final String jrubyOption : this.jrubyOptions) {
                 try {
                     jruby.processJRubyOption(jrubyOption);
-                }
-                catch (ScriptingContainerDelegate.UnrecognizedJRubyOptionException ex) {
-                    this.logger.error("The \"-R\" option(s) are not recognized in Embulk: -R" + jrubyOption +
-                                      ". Please add your requests at: https://github.com/embulk/embulk/issues/707", ex);
+                } catch (ScriptingContainerDelegate.UnrecognizedJRubyOptionException ex) {
+                    this.logger.error("The \"-R\" option(s) are not recognized in Embulk: -R" + jrubyOption
+                                      + ". Please add your requests at: https://github.com/embulk/embulk/issues/707",
+                                      ex);
                     throw new RuntimeException(ex);
 
-                }
-                catch (ScriptingContainerDelegate.NotWorkingJRubyOptionException ex) {
+                } catch (ScriptingContainerDelegate.NotWorkingJRubyOptionException ex) {
                     this.logger.warn("The \"-R\" option(s) do not work in Embulk: -R" + jrubyOption + ".", ex);
                 }
             }
@@ -191,8 +179,7 @@ public class JRubyScriptingModule
         }
 
         @Override  // from |com.google.inject.spi.HasDependencies|
-        public Set<Dependency<?>> getDependencies()
-        {
+        public Set<Dependency<?>> getDependencies() {
             // get() depends on other modules
             final HashSet<Dependency<?>> built = new HashSet<>();
             built.add(Dependency.get(Key.get(ModelManager.class)));
@@ -200,8 +187,7 @@ public class JRubyScriptingModule
             return Collections.unmodifiableSet(built);
         }
 
-        private void setGemVariables(final ScriptingContainerDelegate jruby)
-        {
+        private void setGemVariables(final ScriptingContainerDelegate jruby) {
             final boolean hasBundleGemfile = jruby.isBundleGemfileDefined();
             if (hasBundleGemfile) {
                 this.logger.warn("BUNDLE_GEMFILE has already been set: \"" + jruby.getBundleGemfile() + "\"");
@@ -253,31 +239,30 @@ public class JRubyScriptingModule
             }
         }
 
-        private void setBundlerPluginSourceDirectory(final ScriptingContainerDelegate jruby, final String directory)
-        {
+        private void setBundlerPluginSourceDirectory(final ScriptingContainerDelegate jruby, final String directory) {
             if (directory != null) {
                 jruby.runScriptlet("require 'bundler'");
 
                 // TODO: Remove the monkey patch once the issue is fixed on Bundler or JRuby side.
                 // @see <a href="https://github.com/bundler/bundler/issues/4565">Bundler::SharedHelpers.clean_load_path does cleanup the default load_path on jruby - Issue #4565 - bundler/bundler</a>
                 final String monkeyPatchOnSharedHelpersCleanLoadPath =
-                    "begin\n" +
-                    "  require 'bundler/shared_helpers'\n" +
-                    "  module Bundler\n" +
-                    "    module DisableCleanLoadPath\n" +
-                    "      def clean_load_path\n" +
-                    "        # Do nothing.\n" +
-                    "      end\n" +
-                    "    end\n" +
-                    "    module SharedHelpers\n" +
-                    "      def included(bundler)\n" +
-                    "        bundler.send :include, DisableCleanLoadPath\n" +
-                    "      end\n" +
-                    "    end\n" +
-                    "  end\n" +
-                    "rescue LoadError\n" +
-                    "  # Ignore LoadError.\n" +
-                    "end\n";
+                        "begin\n"
+                        + "  require 'bundler/shared_helpers'\n"
+                        + "  module Bundler\n"
+                        + "    module DisableCleanLoadPath\n"
+                        + "      def clean_load_path\n"
+                        + "        # Do nothing.\n"
+                        + "      end\n"
+                        + "    end\n"
+                        + "    module SharedHelpers\n"
+                        + "      def included(bundler)\n"
+                        + "        bundler.send :include, DisableCleanLoadPath\n"
+                        + "      end\n"
+                        + "    end\n"
+                        + "  end\n"
+                        + "rescue LoadError\n"
+                        + "  # Ignore LoadError.\n"
+                        + "end\n";
                 jruby.runScriptlet(monkeyPatchOnSharedHelpersCleanLoadPath);
 
                 jruby.runScriptlet("require 'bundler/setup'");

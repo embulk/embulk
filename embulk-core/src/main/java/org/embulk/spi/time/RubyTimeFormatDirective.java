@@ -3,9 +3,7 @@ package org.embulk.spi.time;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -150,7 +148,7 @@ enum RubyTimeFormatDirective {
         FROM_CONVERSION_SPECIFIER = Collections.unmodifiableMap(charDirectiveMapBuilt);
 
         final EnumMap<RubyTimeFormatDirective, List<RubyTimeFormatToken>> directiveTokensMapBuilt =
-            new EnumMap<>(RubyTimeFormatDirective.class);
+                new EnumMap<>(RubyTimeFormatDirective.class);
         for (final RubyTimeFormatDirective directive : values()) {
             // Non-recurred directives first so that recurred directives can use tokens of non-recurred directives.
             if (!directive.isRecurred) {
@@ -164,11 +162,10 @@ enum RubyTimeFormatDirective {
                 final ArrayList<RubyTimeFormatToken> tokensBuilt = new ArrayList<>();
                 for (int i = 0; i < directive.recurred.length(); ++i) {
                     final RubyTimeFormatDirective eachDirective =
-                        charDirectiveMapBuilt.get(directive.recurred.charAt(i));
+                            charDirectiveMapBuilt.get(directive.recurred.charAt(i));
                     if (eachDirective == null) {
                         tokensBuilt.add(new RubyTimeFormatToken.Immediate(directive.recurred.charAt(i)));
-                    }
-                    else {
+                    } else {
                         tokensBuilt.add(directiveTokensMapBuilt.get(eachDirective).get(0));
                     }
                 }
