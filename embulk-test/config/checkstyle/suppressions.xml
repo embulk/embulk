@@ -5,8 +5,6 @@
     "http://checkstyle.sourceforge.net/dtds/suppressions_1_2.dtd">
 
 <suppressions>
-  <suppress checks=".*" files="src[/\\]main[/\\]java[/\\].*" />
-  <suppress checks=".*" files="src[/\\]test[/\\]java[/\\].*" />
   <suppress checks="JavadocMethod" files=".*"/>
   <suppress checks="JavadocParagraph" files=".*"/>
   <suppress checks="JavadocTagContinuationIndentation" files=".*"/>

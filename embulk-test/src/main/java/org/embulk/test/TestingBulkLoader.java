@@ -1,5 +1,7 @@
 package org.embulk.test;
 
+import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
+
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -9,7 +11,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import java.util.List;
-
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
@@ -22,24 +23,17 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
 
-import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
-
-class TestingBulkLoader
-        extends BulkLoader
-{
-    static Function<List<Module>, List<Module>> override()
-    {
+class TestingBulkLoader extends BulkLoader {
+    static Function<List<Module>, List<Module>> override() {
         return new Function<List<Module>, List<Module>>() {
             @Override
-            public List<Module> apply(List<Module> modules)
-            {
+            public List<Module> apply(List<Module> modules) {
                 Module override = new Module() {
-                    public void configure(Binder binder)
-                    {
-                        binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
-                        registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
-                    }
-                };
+                        public void configure(Binder binder) {
+                            binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
+                            registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
+                        }
+                    };
                 return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));
             }
         };
@@ -47,45 +41,35 @@ class TestingBulkLoader
 
     @Inject
     public TestingBulkLoader(Injector injector,
-            @ForSystemConfig ConfigSource systemConfig)
-    {
+            @ForSystemConfig ConfigSource systemConfig) {
         super(injector, systemConfig);
     }
 
     @Override
-    protected LoaderState newLoaderState(Logger logger, ProcessPluginSet plugins)
-    {
+    protected LoaderState newLoaderState(Logger logger, ProcessPluginSet plugins) {
         return new TestingLoaderState(logger, plugins);
     }
 
-    protected static class TestingLoaderState
-            extends LoaderState
-    {
-        public TestingLoaderState(Logger logger, ProcessPluginSet plugins)
-        {
+    protected static class TestingLoaderState extends LoaderState {
+        public TestingLoaderState(Logger logger, ProcessPluginSet plugins) {
             super(logger, plugins);
         }
 
         @Override
-        public ExecutionResult buildExecuteResultWithWarningException(Throwable ex)
-        {
+        public ExecutionResult buildExecuteResultWithWarningException(Throwable ex) {
             ExecutionResult result = super.buildExecuteResultWithWarningException(ex);
             return new TestingExecutionResult(result, buildResumeState(Exec.session()), Exec.session());
         }
     }
 
-    static class TestingExecutionResult
-            extends ExecutionResult
-            implements TestingEmbulk.RunResult
-    {
+    static class TestingExecutionResult extends ExecutionResult implements TestingEmbulk.RunResult {
         private final Schema inputSchema;
         private final Schema outputSchema;
         private final List<TaskReport> inputTaskReports;
         private final List<TaskReport> outputTaskReports;
 
         public TestingExecutionResult(ExecutionResult orig,
-                ResumeState resumeState, ExecSession session)
-        {
+                ResumeState resumeState, ExecSession session) {
             super(orig.getConfigDiff(), orig.isSkipped(), orig.getIgnoredExceptions());
             this.inputSchema = resumeState.getInputSchema();
             this.outputSchema = resumeState.getOutputSchema();
@@ -93,8 +77,7 @@ class TestingBulkLoader
             this.outputTaskReports = buildReports(resumeState.getOutputTaskReports(), session);
         }
 
-        private static List<TaskReport> buildReports(List<Optional<TaskReport>> optionalReports, ExecSession session)
-        {
+        private static List<TaskReport> buildReports(List<Optional<TaskReport>> optionalReports, ExecSession session) {
             ImmutableList.Builder<TaskReport> reports = ImmutableList.builder();
             for (Optional<TaskReport> report : optionalReports) {
                 reports.add(report.or(session.newTaskReport()));
@@ -103,26 +86,22 @@ class TestingBulkLoader
         }
 
         @Override
-        public Schema getInputSchema()
-        {
+        public Schema getInputSchema() {
             return inputSchema;
         }
 
         @Override
-        public Schema getOutputSchema()
-        {
+        public Schema getOutputSchema() {
             return outputSchema;
         }
 
         @Override
-        public List<TaskReport> getInputTaskReports()
-        {
+        public List<TaskReport> getInputTaskReports() {
             return inputTaskReports;
         }
 
         @Override
-        public List<TaskReport> getOutputTaskReports()
-        {
+        public List<TaskReport> getOutputTaskReports() {
             return outputTaskReports;
         }
     }
