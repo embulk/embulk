@@ -73,9 +73,9 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
 
     checkstyle {
         toolVersion '8.7'
-        configFile = new File("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+        configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
         configProperties = [
-            'checkstyle.config.path': new File("${projectDir}/config/checkstyle")
+            'checkstyle.config.path': file("${projectDir}/config/checkstyle")
         ]
         ignoreFailures = false
         maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
