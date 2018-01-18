@@ -1,33 +1,34 @@
 package org.embulk.config;
 
-import org.junit.Rule;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import com.google.inject.Inject;
-import org.embulk.spi.Exec;
-import org.embulk.EmbulkTestRuntime;
+import static org.junit.Assert.assertTrue;
 
-public class TestTaskSource
-{
-    private static interface TypeFields
-            extends Task
-    {
+import org.embulk.EmbulkTestRuntime;
+import org.embulk.spi.Exec;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+public class TestTaskSource {
+    private static interface TypeFields extends Task {
         public boolean getBoolean();
+
         public void setBoolean(boolean v);
 
         public double getDouble();
+
         public void setDouble(double v);
 
         public int getInt();
+
         public void setInt(int v);
 
         public long getLong();
+
         public void setLong(long v);
 
         public String getString();
+
         public void setString(String v);
     }
 
@@ -37,8 +38,7 @@ public class TestTaskSource
     private TaskSource taskSource;
 
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws Exception {
         taskSource = Exec.newTaskSource();
         taskSource.set("Boolean", false);
         taskSource.set("Double", 0.5);
@@ -48,8 +48,7 @@ public class TestTaskSource
     }
 
     @Test
-    public void testEqualsOfLoadedTasks()
-    {
+    public void testEqualsOfLoadedTasks() {
         TypeFields task = taskSource.loadTask(TypeFields.class);
         task.setBoolean(true);
         task.setDouble(0.2);

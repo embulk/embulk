@@ -2,51 +2,45 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import org.embulk.EmbulkTestRuntime;
+import org.embulk.config.ConfigDiff;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
+import org.embulk.config.TaskSource;
+import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.util.Pages;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.TaskReport;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.ConfigDiff;
-import org.embulk.config.TaskSource;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
-import org.embulk.spi.Schema;
-import org.embulk.spi.util.Pages;
 
-public class TestFileInputRunner
-{
+public class TestFileInputRunner {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     @Before
-    public void tearDown()
-    {
+    public void tearDown() {
         MockParserPlugin.raiseException = false;
     }
 
-    private static class MockFileInputPlugin implements FileInputPlugin
-    {
+    private static class MockFileInputPlugin implements FileInputPlugin {
         Boolean transactionCompleted = null;
         Queue<Buffer> buffers;
 
-        public MockFileInputPlugin(Queue<Buffer> buffers)
-        {
+        public MockFileInputPlugin(Queue<Buffer> buffers) {
             this.buffers = buffers;
         }
 
         @Override
         public ConfigDiff transaction(ConfigSource config,
-                FileInputPlugin.Control control)
-        {
+                FileInputPlugin.Control control) {
             control.run(Exec.newTaskSource(), 1);
             return null;
         }
@@ -54,49 +48,38 @@ public class TestFileInputRunner
         @Override
         public ConfigDiff resume(TaskSource taskSource,
                 int taskCount,
-                FileInputPlugin.Control control)
-        {
+                FileInputPlugin.Control control) {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public void cleanup(TaskSource taskSource,
                 int taskCount,
-                List<TaskReport> successTaskReports)
-        {
-        }
+                List<TaskReport> successTaskReports) {}
 
         public TransactionalFileInput open(TaskSource taskSource,
-                int taskIndex)
-        {
-            return new TransactionalFileInput()
-            {
+                int taskIndex) {
+            return new TransactionalFileInput() {
                 @Override
-                public Buffer poll()
-                {
+                public Buffer poll() {
                     return buffers.poll();
                 }
 
                 @Override
-                public boolean nextFile()
-                {
+                public boolean nextFile() {
                     return !buffers.isEmpty();
                 }
 
                 @Override
-                public void close()
-                {
-                }
+                public void close() {}
 
                 @Override
-                public void abort()
-                {
+                public void abort() {
                     transactionCompleted = false;
                 }
 
                 @Override
-                public TaskReport commit()
-                {
+                public TaskReport commit() {
                     transactionCompleted = true;
                     return null;
                 }
@@ -105,8 +88,7 @@ public class TestFileInputRunner
     }
 
     @Test
-    public void testMockParserIteration()
-    {
+    public void testMockParserIteration() {
         Buffer[] buffers = new Buffer[] {
                 runtime.getBufferAllocator().allocate(),
                 runtime.getBufferAllocator().allocate() };
@@ -125,11 +107,9 @@ public class TestFileInputRunner
                         ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
-        runner.transaction(config, new InputPlugin.Control()
-        {
+        runner.transaction(config, new InputPlugin.Control() {
             public List<TaskReport> run(TaskSource inputTaskSource,
-                    Schema schema, int taskCount)
-            {
+                    Schema schema, int taskCount) {
                 List<TaskReport> reports = new ArrayList<>();
                 reports.add(runner.run(inputTaskSource, schema, 0, output));
                 return reports;
@@ -157,8 +137,7 @@ public class TestFileInputRunner
     }
 
     @Test
-    public void testTransactionAborted()
-    {
+    public void testTransactionAborted() {
         Buffer[] buffers = new Buffer[] {
                 runtime.getBufferAllocator().allocate(),
                 runtime.getBufferAllocator().allocate() };
@@ -181,17 +160,16 @@ public class TestFileInputRunner
         MockParserPlugin.raiseException = true;
 
         try {
-            runner.transaction(config, new InputPlugin.Control()
-            {
-                public List<TaskReport> run(TaskSource inputTaskSource,
-                        Schema schema, int taskCount)
-                {
-                    List<TaskReport> reports = new ArrayList<>();
-                    reports.add(runner.run(inputTaskSource, schema, 0, output));
-                    return reports;
-                }
-            });
+            runner.transaction(config, new InputPlugin.Control() {
+                    public List<TaskReport> run(TaskSource inputTaskSource,
+                            Schema schema, int taskCount) {
+                        List<TaskReport> reports = new ArrayList<>();
+                        reports.add(runner.run(inputTaskSource, schema, 0, output));
+                        return reports;
+                    }
+                });
         } catch (RuntimeException re) {
+            // Just passing through.
         }
         assertEquals(false, fileInputPlugin.transactionCompleted);
         assertEquals(0, output.pages.size());

@@ -2,34 +2,31 @@ package org.embulk.spi.unit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
-public class TestByteSize
-{
+public class TestByteSize {
     @Test
-    public void testUnitPatterns()
-    {
+    public void testUnitPatterns() {
         assertByteSize(42L, "42");
         assertByteSize(42L, "42B");
-        assertByteSize(42L*(1L << 10), "42KB");
-        assertByteSize(42L*(1L << 20), "42MB");
-        assertByteSize(42L*(1L << 30), "42GB");
-        assertByteSize(42L*(1L << 40), "42TB");
-        assertByteSize(42L*(1L << 50), "42PB");
+        assertByteSize(42L * (1L << 10), "42KB");
+        assertByteSize(42L * (1L << 20), "42MB");
+        assertByteSize(42L * (1L << 30), "42GB");
+        assertByteSize(42L * (1L << 40), "42TB");
+        assertByteSize(42L * (1L << 50), "42PB");
         assertByteSize(42L, "42 B");
-        assertByteSize(42L*(1L << 10), "42 KB");
+        assertByteSize(42L * (1L << 10), "42 KB");
     }
 
     @Test
-    public void testUnknownUnits()
-    {
+    public void testUnknownUnits() {
         assertInvalidByteSize("42XB");
         assertInvalidByteSize("42 XB");
     }
 
     @Test
-    public void testInvalidPatterns()
-    {
+    public void testInvalidPatterns() {
         assertInvalidByteSize(" 42");
         assertInvalidByteSize("42  B");
         assertInvalidByteSize("42 B ");
@@ -40,14 +37,12 @@ public class TestByteSize
     }
 
     @Test
-    public void testInvalidValues()
-    {
+    public void testInvalidValues() {
         assertInvalidByteSize("9223372036854775KB");
     }
 
     @Test
-    public void testToString()
-    {
+    public void testToString() {
         assertByteSizeString("42B", "42 B");
         assertByteSizeString("42KB", "42 KB");
         assertByteSizeString("42MB", "42 MB");
@@ -58,22 +53,20 @@ public class TestByteSize
         assertByteSizeString("42.33KB", "42.33KB");
     }
 
-    private static void assertByteSize(long bytes, String string)
-    {
+    private static void assertByteSize(long bytes, String string) {
         assertEquals(bytes, ByteSize.parseByteSize(string).getBytes());
     }
 
-    private static void assertByteSizeString(String expected, String string)
-    {
+    private static void assertByteSizeString(String expected, String string) {
         assertEquals(expected, ByteSize.parseByteSize(string).toString());
     }
 
-    private static void assertInvalidByteSize(String string)
-    {
+    private static void assertInvalidByteSize(String string) {
         try {
             ByteSize.parseByteSize(string);
             fail();
         } catch (IllegalArgumentException ex) {
+            // Just passing through.
         }
     }
 }

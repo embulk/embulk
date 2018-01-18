@@ -1,42 +1,29 @@
 package org.embulk.spi.util;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.UnsupportedCharsetException;
-import com.google.common.collect.ImmutableList;
-import org.junit.Rule;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
-import org.embulk.spi.MockFileOutput;
 import org.embulk.spi.FileOutput;
-import org.embulk.EmbulkTestRuntime;
+import org.embulk.spi.MockFileOutput;
+import org.junit.Rule;
+import org.junit.Test;
 
-public class TestLineEncoder
-{
+public class TestLineEncoder {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     private LineEncoder newEncoder(String charset, String newline,
-            FileOutput output) throws Exception
-    {
+            FileOutput output) throws Exception {
         ConfigSource config = Exec.newConfigSource()
-            .set("charset", charset)
-            .set("newline", newline);
+                .set("charset", charset)
+                .set("newline", newline);
         return new LineEncoder(output, config.loadConfig(LineEncoder.EncoderTask.class));
     }
 
     @Test
-    public void testAddLine() throws Exception
-    {
+    public void testAddLine() throws Exception {
         try (MockFileOutput output = new MockFileOutput()) {
             LineEncoder encoder = newEncoder("utf-8", "LF", output);
             encoder.nextFile();
@@ -55,8 +42,7 @@ public class TestLineEncoder
     }
 
     @Test
-    public void testAddTextAddNewLine() throws Exception
-    {
+    public void testAddTextAddNewLine() throws Exception {
         try (MockFileOutput output = new MockFileOutput()) {
             LineEncoder encoder = newEncoder("utf-8", "LF", output);
             encoder.nextFile();
@@ -76,8 +62,7 @@ public class TestLineEncoder
     }
 
     @Test
-    public void testNewLine() throws Exception
-    {
+    public void testNewLine() throws Exception {
         try (MockFileOutput output = new MockFileOutput()) {
             LineEncoder encoder = newEncoder("utf-8", "CRLF", output);
             encoder.nextFile();
@@ -96,8 +81,7 @@ public class TestLineEncoder
     }
 
     @Test
-    public void testCharset() throws Exception
-    {
+    public void testCharset() throws Exception {
         try (MockFileOutput output = new MockFileOutput()) {
             LineEncoder encoder = newEncoder("MS932", "CR", output);
             encoder.nextFile();
@@ -116,8 +100,7 @@ public class TestLineEncoder
     }
 
     private String bufferToString(Buffer buffer, String charset)
-            throws UnsupportedEncodingException
-    {
+            throws UnsupportedEncodingException {
         return new String(buffer.array(), buffer.offset(), buffer.limit(), charset);
     }
 }

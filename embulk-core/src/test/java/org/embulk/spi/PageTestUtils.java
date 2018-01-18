@@ -1,27 +1,15 @@
 package org.embulk.spi;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.Column;
-import org.embulk.spi.ColumnConfig;
-import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaConfig;
-import org.embulk.spi.ColumnVisitor;
-import org.embulk.spi.type.Type;
 import org.msgpack.value.Value;
-import com.google.common.collect.ImmutableList;
 
-public class PageTestUtils
-{
-    private PageTestUtils()
-    { }
+public class PageTestUtils {
+    private PageTestUtils() {}
 
     public static List<Page> buildPage(BufferAllocator bufferAllocator,
-            Schema schema, Object... values)
-    {
+            Schema schema, Object... values) {
         MockPageOutput output = new MockPageOutput();
         try (PageBuilder builder = new PageBuilder(bufferAllocator, schema,
                 output)) {
