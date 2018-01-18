@@ -1,48 +1,44 @@
 package org.embulk.standards;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.embulk.config.Task;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigSource;
 import org.embulk.config.ConfigException;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.time.TimestampParser;
-import org.embulk.spi.time.TimestampParseException;
-import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.Column;
-import org.embulk.spi.Schema;
-import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.ColumnVisitor;
-import org.embulk.spi.PageBuilder;
-import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
+import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
-import org.embulk.spi.DataException;
+import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
+import org.embulk.spi.json.JsonParseException;
+import org.embulk.spi.json.JsonParser;
+import org.embulk.spi.time.TimestampParseException;
+import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.util.LineDecoder;
 import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
 
-public class CsvParserPlugin
-        implements ParserPlugin
-{
+public class CsvParserPlugin implements ParserPlugin {
     private static final ImmutableSet<String> TRUE_STRINGS =
-        ImmutableSet.of(
-                "true", "True", "TRUE",
-                "yes", "Yes", "YES",
-                "t", "T", "y", "Y",
-                "on", "On", "ON",
-                "1");
+            ImmutableSet.of(
+                    "true", "True", "TRUE",
+                    "yes", "Yes", "YES",
+                    "t", "T", "y", "Y",
+                    "on", "On", "ON",
+                    "1");
 
-    public interface PluginTask
-            extends Task, LineDecoder.DecoderTask, TimestampParser.Task
-    {
+    public interface PluginTask extends Task, LineDecoder.DecoderTask, TimestampParser.Task {
         @Config("columns")
         SchemaConfig getSchemaConfig();
 
@@ -53,6 +49,7 @@ public class CsvParserPlugin
         @Config("skip_header_lines")
         @ConfigDefault("0")
         int getSkipHeaderLines();
+
         void setSkipHeaderLines(int n);
 
         @Config("delimiter")
@@ -102,15 +99,13 @@ public class CsvParserPlugin
         boolean getStopOnInvalidRecord();
     }
 
-    public enum QuotesInQuotedFields
-    {
+    public enum QuotesInQuotedFields {
         ACCEPT_ONLY_RFC4180_ESCAPED,
         ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS,
         ;
 
         @JsonCreator
-        public static QuotesInQuotedFields ofString(final String string)
-        {
+        public static QuotesInQuotedFields ofString(final String string) {
             for (final QuotesInQuotedFields value : values()) {
                 if (string.equals(value.toString())) {
                     return value;
@@ -120,23 +115,20 @@ public class CsvParserPlugin
         }
     }
 
-    public static class QuoteCharacter
-    {
+    public static class QuoteCharacter {
         private final char character;
 
-        public QuoteCharacter(char character)
-        {
+        public QuoteCharacter(char character) {
             this.character = character;
         }
 
-        public static QuoteCharacter noQuote()
-        {
+        public static QuoteCharacter noQuote() {
             return new QuoteCharacter(CsvTokenizer.NO_QUOTE);
         }
 
         @JsonCreator
-        public static QuoteCharacter ofString(String str)
-        {
+        @SuppressWarnings("checkstyle:LineLength")
+        public static QuoteCharacter ofString(String str) {
             if (str.length() >= 2) {
                 throw new ConfigException("\"quote\" option accepts only 1 character.");
             } else if (str.isEmpty()) {
@@ -148,20 +140,17 @@ public class CsvParserPlugin
         }
 
         @JsonIgnore
-        public char getCharacter()
-        {
+        public char getCharacter() {
             return character;
         }
 
         @JsonValue
-        public String getOptionalString()
-        {
-            return new String(new char[] { character });
+        public String getOptionalString() {
+            return new String(new char[] {character});
         }
 
         @Override
-        public boolean equals(Object obj)
-        {
+        public boolean equals(Object obj) {
             if (!(obj instanceof QuoteCharacter)) {
                 return false;
             }
@@ -170,23 +159,20 @@ public class CsvParserPlugin
         }
     }
 
-    public static class EscapeCharacter
-    {
+    public static class EscapeCharacter {
         private final char character;
 
-        public EscapeCharacter(char character)
-        {
+        public EscapeCharacter(char character) {
             this.character = character;
         }
 
-        public static EscapeCharacter noEscape()
-        {
+        public static EscapeCharacter noEscape() {
             return new EscapeCharacter(CsvTokenizer.NO_ESCAPE);
         }
 
         @JsonCreator
-        public static EscapeCharacter ofString(String str)
-        {
+        @SuppressWarnings("checkstyle:LineLength")
+        public static EscapeCharacter ofString(String str) {
             if (str.length() >= 2) {
                 throw new ConfigException("\"escape\" option accepts only 1 character.");
             } else if (str.isEmpty()) {
@@ -198,20 +184,17 @@ public class CsvParserPlugin
         }
 
         @JsonIgnore
-        public char getCharacter()
-        {
+        public char getCharacter() {
             return character;
         }
 
         @JsonValue
-        public String getOptionalString()
-        {
-            return new String(new char[] { character });
+        public String getOptionalString() {
+            return new String(new char[] {character});
         }
 
         @Override
-        public boolean equals(Object obj)
-        {
+        public boolean equals(Object obj) {
             if (!(obj instanceof EscapeCharacter)) {
                 return false;
             }
@@ -222,14 +205,12 @@ public class CsvParserPlugin
 
     private final Logger log;
 
-    public CsvParserPlugin()
-    {
+    public CsvParserPlugin() {
         log = Exec.getLogger(CsvParserPlugin.class);
     }
 
     @Override
-    public void transaction(ConfigSource config, ParserPlugin.Control control)
-    {
+    public void transaction(ConfigSource config, ParserPlugin.Control control) {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // backward compatibility
@@ -249,8 +230,7 @@ public class CsvParserPlugin
 
     @Override
     public void run(TaskSource taskSource, final Schema schema,
-            FileInput input, PageOutput output)
-    {
+            FileInput input, PageOutput output) {
         PluginTask task = taskSource.loadTask(PluginTask.class);
         final TimestampParser[] timestampParsers = Timestamps.newTimestampColumnParsers(task, task.getSchemaConfig());
         final JsonParser jsonParser = new JsonParser();
@@ -279,95 +259,88 @@ public class CsvParserPlugin
 
                     try {
                         schema.visitColumns(new ColumnVisitor() {
-                            public void booleanColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
-                                }
-                            }
-
-                            public void longColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setLong(column, Long.parseLong(v));
-                                    } catch (NumberFormatException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
+                                public void booleanColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        pageBuilder.setBoolean(column, TRUE_STRINGS.contains(v));
                                     }
                                 }
-                            }
 
-                            public void doubleColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setDouble(column, Double.parseDouble(v));
-                                    } catch (NumberFormatException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
+                                public void longColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        try {
+                                            pageBuilder.setLong(column, Long.parseLong(v));
+                                        } catch (NumberFormatException e) {
+                                            // TODO support default value
+                                            throw new CsvRecordValidateException(e);
+                                        }
                                     }
                                 }
-                            }
 
-                            public void stringColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    pageBuilder.setString(column, v);
-                                }
-                            }
-
-                            public void timestampColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setTimestamp(column, timestampParsers[column.getIndex()].parse(v));
-                                    } catch (TimestampParseException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
+                                public void doubleColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        try {
+                                            pageBuilder.setDouble(column, Double.parseDouble(v));
+                                        } catch (NumberFormatException e) {
+                                            // TODO support default value
+                                            throw new CsvRecordValidateException(e);
+                                        }
                                     }
                                 }
-                            }
 
-                            public void jsonColumn(Column column)
-                            {
-                                String v = nextColumn();
-                                if (v == null) {
-                                    pageBuilder.setNull(column);
-                                } else {
-                                    try {
-                                        pageBuilder.setJson(column, jsonParser.parse(v));
-                                    } catch (JsonParseException e) {
-                                        // TODO support default value
-                                        throw new CsvRecordValidateException(e);
+                                public void stringColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        pageBuilder.setString(column, v);
                                     }
                                 }
-                            }
 
-                            private String nextColumn()
-                            {
-                                if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
-                                    //TODO warning
-                                    return null;
+                                public void timestampColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        try {
+                                            pageBuilder.setTimestamp(column, timestampParsers[column.getIndex()].parse(v));
+                                        } catch (TimestampParseException e) {
+                                            // TODO support default value
+                                            throw new CsvRecordValidateException(e);
+                                        }
+                                    }
                                 }
-                                return tokenizer.nextColumnOrNull();
-                            }
-                        });
+
+                                public void jsonColumn(Column column) {
+                                    String v = nextColumn();
+                                    if (v == null) {
+                                        pageBuilder.setNull(column);
+                                    } else {
+                                        try {
+                                            pageBuilder.setJson(column, jsonParser.parse(v));
+                                        } catch (JsonParseException e) {
+                                            // TODO support default value
+                                            throw new CsvRecordValidateException(e);
+                                        }
+                                    }
+                                }
+
+                                private String nextColumn() {
+                                    if (allowOptionalColumns && !tokenizer.hasNextColumn()) {
+                                        // TODO warning
+                                        return null;
+                                    }
+                                    return tokenizer.nextColumnOrNull();
+                                }
+                            });
 
                         try {
                             hasNextRecord = tokenizer.nextRecord();
@@ -405,11 +378,8 @@ public class CsvParserPlugin
         }
     }
 
-    static class CsvRecordValidateException
-            extends DataException
-    {
-        CsvRecordValidateException(Throwable cause)
-        {
+    static class CsvRecordValidateException extends DataException {
+        CsvRecordValidateException(Throwable cause) {
             super(cause);
         }
     }

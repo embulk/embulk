@@ -1,24 +1,21 @@
 package org.embulk.standards;
 
 import com.google.common.base.Preconditions;
-import java.util.List;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.ArrayDeque;
+import java.util.List;
+import org.embulk.config.ConfigException;
 import org.embulk.spi.DataException;
 import org.embulk.spi.util.LineDecoder;
-import org.embulk.config.ConfigException;
 import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
 
-public class CsvTokenizer
-{
-    static enum RecordState
-    {
+public class CsvTokenizer {
+    static enum RecordState {
         NOT_END, END,
     }
 
-    static enum ColumnState
-    {
+    static enum ColumnState {
         BEGIN, VALUE, QUOTED_VALUE, AFTER_QUOTED_VALUE, FIRST_TRIM, LAST_TRIM_OR_VALUE,
     }
 
@@ -47,8 +44,7 @@ public class CsvTokenizer
     private List<String> quotedValueLines = new ArrayList<>();
     private Deque<String> unreadLines = new ArrayDeque<>();
 
-    public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task)
-    {
+    public CsvTokenizer(LineDecoder input, CsvParserPlugin.PluginTask task) {
         String delimiter = task.getDelimiter();
         if (delimiter.length() == 0) {
             throw new ConfigException("Empty delimiter is not allowed");
@@ -76,13 +72,11 @@ public class CsvTokenizer
         this.input = input;
     }
 
-    public long getCurrentLineNumber()
-    {
+    public long getCurrentLineNumber() {
         return lineNumber;
     }
 
-    public boolean skipHeaderLine()
-    {
+    public boolean skipHeaderLine() {
         boolean skipped = input.poll() != null;
         if (skipped) {
             lineNumber++;
@@ -91,8 +85,7 @@ public class CsvTokenizer
     }
 
     // returns skipped line
-    public String skipCurrentLine()
-    {
+    public String skipCurrentLine() {
         String skippedLine;
         if (quotedValueLines.isEmpty()) {
             skippedLine = line;
@@ -111,8 +104,7 @@ public class CsvTokenizer
         return skippedLine;
     }
 
-    public boolean nextFile()
-    {
+    public boolean nextFile() {
         boolean next = input.nextFile();
         if (next) {
             lineNumber = 0;
@@ -121,13 +113,11 @@ public class CsvTokenizer
     }
 
     // used by guess-csv
-    public boolean nextRecord()
-    {
+    public boolean nextRecord() {
         return nextRecord(true);
     }
 
-    public boolean nextRecord(boolean skipEmptyLine)
-    {
+    public boolean nextRecord(boolean skipEmptyLine) {
         // If at the end of record, read the next line and initialize the state
         if (recordState != RecordState.END) {
             throw new TooManyColumnsException("Too many columns");
@@ -142,8 +132,7 @@ public class CsvTokenizer
         }
     }
 
-    private boolean nextLine(boolean skipEmptyLine)
-    {
+    private boolean nextLine(boolean skipEmptyLine) {
         while (true) {
             if (!unreadLines.isEmpty()) {
                 line = unreadLines.removeFirst();
@@ -156,22 +145,18 @@ public class CsvTokenizer
             linePos = 0;
             lineNumber++;
 
-            boolean skip = skipEmptyLine && (
-                        line.isEmpty() ||
-                        (commentLineMarker != null && line.startsWith(commentLineMarker)));
+            boolean skip = skipEmptyLine && (line.isEmpty() || (commentLineMarker != null && line.startsWith(commentLineMarker)));
             if (!skip) {
                 return true;
             }
         }
     }
 
-    public boolean hasNextColumn()
-    {
+    public boolean hasNextColumn() {
         return recordState == RecordState.NOT_END;
     }
 
-    public String nextColumn()
-    {
+    public String nextColumn() {
         if (!hasNextColumn()) {
             throw new TooFewColumnsException("Too few columns");
         }
@@ -322,17 +307,17 @@ public class CsvTokenizer
                     } else if (isQuote(c)) {
                         char next = peekNextChar();
                         final char nextNext = peekNextNextChar();
-                        if (isQuote(next) &&
-                            (quotesInQuotedFields != QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS ||
-                             (!isDelimiter(nextNext) && !isEndOfLine(nextNext)))) {
+                        if (isQuote(next)
+                                && (quotesInQuotedFields != QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS
+                                        || (!isDelimiter(nextNext) && !isEndOfLine(nextNext)))) {
                             // Escaped by preceding it with another quote.
                             // A quote just before a delimiter or an end of line is recognized as a functional quote,
                             // not just as a non-escaped stray "quote character" included the field, even if
                             // ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS is specified.
                             quotedValue.append(line.substring(valueStartPos, linePos));
                             valueStartPos = ++linePos;
-                        } else if (quotesInQuotedFields == QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS &&
-                            !(isDelimiter(next) || isEndOfLine(next))) {
+                        } else if (quotesInQuotedFields == QuotesInQuotedFields.ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS
+                                && !(isDelimiter(next) || isEndOfLine(next))) {
                             // A non-escaped stray "quote character" in the field is processed as a regular character
                             // if ACCEPT_STRAY_QUOTES_ASSUMING_NO_DELIMITERS_IN_FIELDS is specified,
                             if ((linePos - valueStartPos) + quotedValue.length() > maxQuotedSizeLimit) {
@@ -362,7 +347,7 @@ public class CsvTokenizer
 
                     } else {
                         if ((linePos - valueStartPos) + quotedValue.length() > maxQuotedSizeLimit) {
-                            throw new QuotedSizeLimitExceededException("The size of the quoted value exceeds the limit size ("+maxQuotedSizeLimit+")");
+                            throw new QuotedSizeLimitExceededException("The size of the quoted value exceeds the limit size (" + maxQuotedSizeLimit + ")");
                         }
                         // keep QUOTED_VALUE state
                     }
@@ -396,39 +381,32 @@ public class CsvTokenizer
         }
     }
 
-    public String nextColumnOrNull()
-    {
+    public String nextColumnOrNull() {
         String v = nextColumn();
         if (nullStringOrNull == null) {
             if (v.isEmpty()) {
                 if (wasQuotedColumn) {
                     return "";
-                }
-                else {
+                } else {
                     return null;
                 }
-            }
-            else {
+            } else {
                 return v;
             }
-        }
-        else {
+        } else {
             if (v.equals(nullStringOrNull)) {
                 return null;
-            }
-            else {
+            } else {
                 return v;
             }
         }
     }
 
-    public boolean wasQuotedColumn()
-    {
+    public boolean wasQuotedColumn() {
         return wasQuotedColumn;
     }
 
-    private char nextChar()
-    {
+    private char nextChar() {
         Preconditions.checkState(line != null, "nextColumn is called after end of file");
 
         if (linePos >= line.length()) {
@@ -438,8 +416,7 @@ public class CsvTokenizer
         }
     }
 
-    private char peekNextChar()
-    {
+    private char peekNextChar() {
         Preconditions.checkState(line != null, "peekNextChar is called after end of file");
 
         if (linePos >= line.length()) {
@@ -449,8 +426,7 @@ public class CsvTokenizer
         }
     }
 
-    private char peekNextNextChar()
-    {
+    private char peekNextNextChar() {
         Preconditions.checkState(line != null, "peekNextNextChar is called after end of file");
 
         if (linePos + 1 >= line.length()) {
@@ -460,13 +436,11 @@ public class CsvTokenizer
         }
     }
 
-    private boolean isSpace(char c)
-    {
+    private boolean isSpace(char c) {
         return c == ' ';
     }
 
-    private boolean isDelimiterFollowingFrom(int pos)
-    {
+    private boolean isDelimiterFollowingFrom(int pos) {
         if (line.length() < pos + delimiterFollowingString.length()) {
             return false;
         }
@@ -478,67 +452,48 @@ public class CsvTokenizer
         return true;
     }
 
-    private boolean isDelimiter(char c)
-    {
+    private boolean isDelimiter(char c) {
         return c == delimiterChar;
     }
 
-    private boolean isEndOfLine(char c)
-    {
+    private boolean isEndOfLine(char c) {
         return c == END_OF_LINE;
     }
 
-    private boolean isQuote(char c)
-    {
+    private boolean isQuote(char c) {
         return quote != NO_QUOTE && c == quote;
     }
 
-    private boolean isEscape(char c)
-    {
+    private boolean isEscape(char c) {
         return escape != NO_ESCAPE && c == escape;
     }
 
-    public static class InvalidFormatException
-            extends DataException
-    {
-        public InvalidFormatException(String message)
-        {
+    public static class InvalidFormatException extends DataException {
+        public InvalidFormatException(String message) {
             super(message);
         }
     }
 
-    public static class InvalidValueException
-            extends DataException
-    {
-        public InvalidValueException(String message)
-        {
+    public static class InvalidValueException extends DataException {
+        public InvalidValueException(String message) {
             super(message);
         }
     }
 
-    public static class QuotedSizeLimitExceededException
-            extends InvalidValueException
-    {
-        public QuotedSizeLimitExceededException(String message)
-        {
+    public static class QuotedSizeLimitExceededException extends InvalidValueException {
+        public QuotedSizeLimitExceededException(String message) {
             super(message);
         }
     }
 
-    public class TooManyColumnsException
-            extends InvalidFormatException
-    {
-        public TooManyColumnsException(String message)
-        {
+    public class TooManyColumnsException extends InvalidFormatException {
+        public TooManyColumnsException(String message) {
             super(message);
         }
     }
 
-    public class TooFewColumnsException
-            extends InvalidFormatException
-    {
-        public TooFewColumnsException(String message)
-        {
+    public class TooFewColumnsException extends InvalidFormatException {
+        public TooFewColumnsException(String message) {
             super(message);
         }
     }

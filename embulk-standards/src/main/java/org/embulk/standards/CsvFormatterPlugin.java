@@ -1,52 +1,45 @@
 package org.embulk.standards;
 
 import com.google.common.base.Optional;
+import java.util.Map;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.spi.time.Timestamp;
-import org.embulk.spi.time.TimestampFormatter;
+import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
-import org.embulk.spi.Schema;
 import org.embulk.spi.ColumnVisitor;
+import org.embulk.spi.FileOutput;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;
-import org.embulk.spi.FileOutput;
+import org.embulk.spi.Schema;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.util.LineEncoder;
-import org.embulk.spi.util.Timestamps;
 import org.embulk.spi.util.Newline;
+import org.embulk.spi.util.Timestamps;
 import org.msgpack.value.Value;
-import java.util.Map;
 
-public class CsvFormatterPlugin
-        implements FormatterPlugin
-{
-    public enum QuotePolicy
-    {
+public class CsvFormatterPlugin implements FormatterPlugin {
+    public enum QuotePolicy {
         ALL("ALL"),
         MINIMAL("MINIMAL"),
         NONE("NONE");
 
         private final String string;
 
-        private QuotePolicy(String string)
-        {
+        private QuotePolicy(String string) {
             this.string = string;
         }
 
-        public String getString()
-        {
+        public String getString() {
             return string;
         }
     }
 
-    public interface PluginTask
-            extends Task, LineEncoder.EncoderTask, TimestampFormatter.Task
-    {
+    public interface PluginTask extends Task, LineEncoder.EncoderTask, TimestampFormatter.Task {
         @Config("header_line")
         @ConfigDefault("true")
         boolean getHeaderLine();
@@ -80,14 +73,10 @@ public class CsvFormatterPlugin
         Map<String, TimestampColumnOption> getColumnOptions();
     }
 
-    public interface TimestampColumnOption
-            extends Task, TimestampFormatter.TimestampColumnOption
-    { }
+    public interface TimestampColumnOption extends Task, TimestampFormatter.TimestampColumnOption {}
 
     @Override
-    public void transaction(ConfigSource config, Schema schema,
-            FormatterPlugin.Control control)
-    {
+    public void transaction(ConfigSource config, Schema schema, FormatterPlugin.Control control) {
         PluginTask task = config.loadConfig(PluginTask.class);
 
         // validate column_options
@@ -100,8 +89,7 @@ public class CsvFormatterPlugin
 
     @Override
     public PageOutput open(TaskSource taskSource, final Schema schema,
-            FileOutput output)
-    {
+            FileOutput output) {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
         final LineEncoder encoder = new LineEncoder(output, task);
         final TimestampFormatter[] timestampFormatters = Timestamps.newTimestampColumnFormatters(task, schema, task.getColumnOptions());
@@ -124,108 +112,95 @@ public class CsvFormatterPlugin
             private final PageReader pageReader = new PageReader(schema);
             private final String delimiterString = String.valueOf(delimiter);
 
-            public void add(Page page)
-            {
+            public void add(Page page) {
                 pageReader.setPage(page);
                 while (pageReader.nextRecord()) {
                     schema.visitColumns(new ColumnVisitor() {
-                        public void booleanColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Boolean.toString(pageReader.getBoolean(column)));
-                            } else {
-                                addNullString();
+                            public void booleanColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    addValue(Boolean.toString(pageReader.getBoolean(column)));
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        public void longColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Long.toString(pageReader.getLong(column)));
-                            } else {
-                                addNullString();
+                            public void longColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    addValue(Long.toString(pageReader.getLong(column)));
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        public void doubleColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(Double.toString(pageReader.getDouble(column)));
-                            } else {
-                                addNullString();
+                            public void doubleColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    addValue(Double.toString(pageReader.getDouble(column)));
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        public void stringColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                addValue(pageReader.getString(column));
-                            } else {
-                                addNullString();
+                            public void stringColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    addValue(pageReader.getString(column));
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        public void timestampColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                Timestamp value = pageReader.getTimestamp(column);
-                                addValue(timestampFormatters[column.getIndex()].format(value));
-                            } else {
-                                addNullString();
+                            public void timestampColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    Timestamp value = pageReader.getTimestamp(column);
+                                    addValue(timestampFormatters[column.getIndex()].format(value));
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        public void jsonColumn(Column column)
-                        {
-                            addDelimiter(column);
-                            if (!pageReader.isNull(column)) {
-                                Value value = pageReader.getJson(column);
-                                addValue(value.toJson());
-                            } else {
-                                addNullString();
+                            public void jsonColumn(Column column) {
+                                addDelimiter(column);
+                                if (!pageReader.isNull(column)) {
+                                    Value value = pageReader.getJson(column);
+                                    addValue(value.toJson());
+                                } else {
+                                    addNullString();
+                                }
                             }
-                        }
 
-                        private void addDelimiter(Column column)
-                        {
-                            if (column.getIndex() != 0) {
-                                encoder.addText(delimiterString);
+                            private void addDelimiter(Column column) {
+                                if (column.getIndex() != 0) {
+                                    encoder.addText(delimiterString);
+                                }
                             }
-                        }
 
-                        private void addValue(String v)
-                        {
-                            encoder.addText(setEscapeAndQuoteValue(v, delimiter, quotePolicy, quote, escape, newlineInField, nullString));
-                        }
+                            private void addValue(String v) {
+                                encoder.addText(setEscapeAndQuoteValue(v, delimiter, quotePolicy, quote, escape, newlineInField, nullString));
+                            }
 
-                        private void addNullString()
-                        {
-                            encoder.addText(nullString);
-                        }
-                    });
+                            private void addNullString() {
+                                encoder.addText(nullString);
+                            }
+                        });
                     encoder.addNewLine();
                 }
             }
 
-            public void finish()
-            {
+            public void finish() {
                 encoder.finish();
             }
 
-            public void close()
-            {
+            public void close() {
                 encoder.close();
             }
         };
     }
 
-    private void writeHeader(Schema schema, LineEncoder encoder, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString)
-    {
+    private void writeHeader(Schema schema, LineEncoder encoder, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString) {
         String delimiterString = String.valueOf(delimiter);
         for (Column column : schema.getColumns()) {
             if (column.getIndex() != 0) {
@@ -236,8 +211,7 @@ public class CsvFormatterPlugin
         encoder.addNewLine();
     }
 
-    private String setEscapeAndQuoteValue(String v, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString)
-    {
+    private String setEscapeAndQuoteValue(String v, char delimiter, QuotePolicy policy, char quote, char escape, String newline, String nullString) {
         StringBuilder escapedValue = new StringBuilder();
         char previousChar = ' ';
 
@@ -283,8 +257,7 @@ public class CsvFormatterPlugin
         }
     }
 
-    private String setQuoteValue(String v, char quote)
-    {
+    private String setQuoteValue(String v, char quote) {
         StringBuilder sb = new StringBuilder();
         sb.append(quote);
         sb.append(v);

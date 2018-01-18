@@ -1,22 +1,20 @@
 package org.embulk.standards.preview;
 
-import org.embulk.config.ConfigSource;
-import org.embulk.exec.PreviewResult;
-import org.embulk.test.TestingEmbulk;
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Path;
-
 import static org.embulk.test.EmbulkTests.copyResource;
 import static org.embulk.test.EmbulkTests.readFile;
 import static org.embulk.test.EmbulkTests.readResource;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class TestFilePreview
-{
+import java.io.IOException;
+import java.nio.file.Path;
+import org.embulk.config.ConfigSource;
+import org.embulk.exec.PreviewResult;
+import org.embulk.test.TestingEmbulk;
+import org.junit.Rule;
+import org.junit.Test;
+
+public class TestFilePreview {
     private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/preview/file/test/";
 
     @Rule
@@ -24,31 +22,25 @@ public class TestFilePreview
             .build();
 
     @Test
-    public void testSimple()
-            throws Exception
-    {
+    public void testSimple() throws Exception {
         assertPreviewedRecords(embulk, "test_simple_load.yml", "test_simple.csv", "test_simple_previewed.csv");
     }
 
     @Test
-    public void changePreviewSampleBufferBytes()
-            throws Exception
-    {
+    public void changePreviewSampleBufferBytes() throws Exception {
         assertPreviewedRecords(embulk, "test_sample_buffer_bytes_load.yml", "test_sample_buffer_bytes_exec.yml",
                 "test_sample_buffer_bytes.csv", "test_sample_buffer_bytes_previewed.csv");
     }
 
     private static void assertPreviewedRecords(TestingEmbulk embulk,
             String loadYamlResourceName, String sourceCsvResourceName, String resultCsvResourceName)
-            throws IOException
-    {
+            throws IOException {
         assertPreviewedRecords(embulk, loadYamlResourceName, null, sourceCsvResourceName, resultCsvResourceName);
     }
 
     private static void assertPreviewedRecords(TestingEmbulk embulk,
             String loadYamlResourceName, String execYamlResourceName, String sourceCsvResourceName, String resultCsvResourceName)
-            throws IOException
-    {
+            throws IOException {
         Path inputPath = embulk.createTempFile("csv");
         Path outputPath = embulk.createTempFile("csv");
 
@@ -70,4 +62,3 @@ public class TestFilePreview
         assertThat(readFile(outputPath), is(readResource(RESOURCE_NAME_PREFIX + resultCsvResourceName)));
     }
 }
-
