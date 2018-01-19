@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.net.URISyntaxException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -929,8 +930,10 @@ public class EmbulkRun {
             System.err.println("BUNDLE_GEMFILE is being unset.");
             jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
         }
-        jruby.runScriptlet(
-                "Gem.paths = { 'GEM_HOME' => File.join(File.expand_path(Java::java.lang.System.properties['user.home']), '.embulk', Gem.ruby_engine, RbConfig::CONFIG['ruby_version']), 'GEM_PATH' => nil }");
+
+        // `Gem.paths` does not work for "gem", "bundle", "exec", and "irb". The environment variables are required.
+        jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", this.buildDefaultGemPath());
+        jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
 
         return jruby;
     }
@@ -959,6 +962,29 @@ public class EmbulkRun {
         final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
         localJRubyContainer.runScriptlet("require 'irb'");
         localJRubyContainer.runScriptlet("IRB.start");
+    }
+
+    private String buildDefaultGemPath() {
+        return this.buildEmbulkHome().resolve("lib").resolve("gems").toString();
+    }
+
+    // TODO: Manage the "home directory" in one place in a configurable way.
+    // https://github.com/embulk/embulk/issues/910
+    private Path buildEmbulkHome() {
+        final String userHomeProperty = System.getProperty("user.home");
+
+        if (userHomeProperty == null) {
+            throw new RuntimeException("User home directory is not set in Java properties.");
+        }
+
+        final Path userHome;
+        try {
+            userHome = Paths.get(userHomeProperty);
+        } catch (InvalidPathException ex) {
+            throw new RuntimeException("User home directory is invalid: \"" + userHomeProperty + "\"", ex);
+        }
+
+        return userHome.toAbsolutePath().resolve(".embulk");
     }
 
     private final String embulkVersion;
