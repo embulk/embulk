@@ -898,7 +898,7 @@ public class EmbulkRun {
         out.println(
                 "********************************** INFORMATION **********************************");
         out.println(
-                "  Join us! Embulk-announce mailing list is up for IMPORTANT annoucement such as");
+                "  Join us! Embulk-announce mailing list is up for IMPORTANT announcement such as");
         out.println("    compatibility-breaking changes and key feature updates.");
         out.println("  https://groups.google.com/forum/#!forum/embulk-announce");
         out.println(
