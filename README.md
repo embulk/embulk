@@ -181,13 +181,7 @@ Task `dependencies` shows dependency tree of embulk-core project:
 
 ### Update JRuby
 
-Task `updateJRuby` updates JRuby version of embulk-core project.
-
-This is an example to update JRuby to `9.1.13.0`.
-
-```
-./gradlew updateJRuby -Pto=9.1.13.0
-```
+Modify `jrubyVersion` in `build.gradle` to update JRuby of Embulk.
 
 ### Documents
 
@@ -209,17 +203,15 @@ bintray_user=(bintray user name)
 bintray_api_key=(bintray api key)
 ```
 
-Run following commands and follow its instruction:
+Modify `version` in `build.gradle` at a detached commit to bump Embulk version up.
 
 ```
-./gradlew setVersion -Pto=$VERSION
-```
-
-```
-./gradlew releaseCheck
-./gradlew clean cli && ./gradlew release
-git commit -am v$VERSION
-git tag v$VERSION
+git checkout --detach master
+(Edit build.gradle)
+git commit -a
+./gradlew clean && ./gradlew release
+git tag <VERSION>
+git push -u origin <VERSION>
 ```
 
 See also:
