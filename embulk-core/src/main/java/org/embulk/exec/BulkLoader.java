@@ -113,15 +113,9 @@ public class BulkLoader {
 
         public ProcessTask buildProcessTask() {
             return new ProcessTask(
-                    plugins.getInputPluginType(),
-                    plugins.getOutputPluginType(),
-                    plugins.getFilterPluginTypes(),
-                    inputTaskSource,
-                    outputTaskSource,
-                    filterTaskSources,
-                    schemas,
-                    executorSchema,
-                    Exec.newTaskSource());
+                    plugins.getInputPluginType(), plugins.getOutputPluginType(), plugins.getFilterPluginTypes(),
+                    inputTaskSource, outputTaskSource, filterTaskSources,
+                    schemas, executorSchema, Exec.newTaskSource());
         }
 
         @Override
@@ -131,10 +125,7 @@ public class BulkLoader {
                 if (inputTaskStates.size() != inputTaskCount || outputTaskStates.size() != outputTaskCount) {
                     throw new ConfigException(String.format(
                             "input task count and output task (%d and %d) must be same with the first execution (%d and %d) whenre resumed",
-                            inputTaskCount,
-                            outputTaskCount,
-                            inputTaskStates.size(),
-                            outputTaskStates.size()));
+                            inputTaskCount, outputTaskCount, inputTaskStates.size(), outputTaskStates.size()));
                 }
             } else {
                 ImmutableList.Builder<TaskState> inputTaskStates = ImmutableList.builder();
@@ -340,12 +331,9 @@ public class BulkLoader {
             List<Optional<TaskReport>> outputTaskReports = (outputTaskStates == null) ? null : getOutputTaskReports();
             return new ResumeState(
                     exec.getSessionExecConfig(),
-                    inputTaskSource,
-                    outputTaskSource,
-                    inputSchema,
-                    executorSchema,
-                    inputTaskReports,
-                    outputTaskReports);
+                    inputTaskSource, outputTaskSource,
+                    inputSchema, executorSchema,
+                    inputTaskReports, outputTaskReports);
         }
 
         public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec) {
@@ -471,11 +459,8 @@ public class BulkLoader {
         } else {
             inputTaskSource = resume.getInputTaskSource();
         }
-        plugins.getInputPlugin().cleanup(
-                inputTaskSource,
-                resume.getInputSchema(),
-                resume.getInputTaskReports().size(),
-                successfulInputTaskReports.build());
+        plugins.getInputPlugin().cleanup(inputTaskSource, resume.getInputSchema(),
+                resume.getInputTaskReports().size(), successfulInputTaskReports.build());
 
         final TaskSource outputTaskSource;
         if (plugins.getOutputPlugin() instanceof FileOutputRunner) {
@@ -483,16 +468,13 @@ public class BulkLoader {
         } else {
             outputTaskSource = resume.getOutputTaskSource();
         }
-        plugins.getOutputPlugin().cleanup(
-                outputTaskSource,
-                resume.getOutputSchema(),
-                resume.getOutputTaskReports().size(),
-                successfulOutputTaskReports.build());
+        plugins.getOutputPlugin().cleanup(outputTaskSource, resume.getOutputSchema(),
+                resume.getOutputTaskReports().size(), successfulOutputTaskReports.build());
     }
 
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task) {
         return Exec.newPlugin(ExecutorPlugin.class,
-                              task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
+                task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
     private ExecutionResult doRun(ConfigSource config) {
