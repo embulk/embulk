@@ -22,11 +22,9 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
 // TODO(dmikurube): Support HTTP proxy. The original Ruby version did not support as well, though.
 public class EmbulkSelfUpdate {
     // TODO(dmikurube): Stop catching Exceptions here when embulk_run.rb is replaced to Java.
-    public void updateSelf(
-            final String runningVersionString,
-            final String specifiedVersionString,
-            final boolean isForced)
-            throws IOException, URISyntaxException {
+    public void updateSelf(final String runningVersionString,
+                           final String specifiedVersionString,
+                           final boolean isForced) throws IOException, URISyntaxException {
         try {
             updateSelfWithExceptions(runningVersionString, specifiedVersionString, isForced);
         } catch (Throwable ex) {
@@ -35,19 +33,11 @@ public class EmbulkSelfUpdate {
         }
     }
 
-    private void updateSelfWithExceptions(
-            final String runningVersionString,
-            final String specifiedVersionString,
-            final boolean isForced)
-            throws IOException, URISyntaxException {
-        final Path jarPathJava =
-                Paths.get(
-                        EmbulkSelfUpdate.class
-                                .getProtectionDomain()
-                                .getCodeSource()
-                                .getLocation()
-                                .toURI()
-                                .getPath());
+    private void updateSelfWithExceptions(final String runningVersionString,
+                                          final String specifiedVersionString,
+                                          final boolean isForced) throws IOException, URISyntaxException {
+        final Path jarPathJava = Paths.get(
+                EmbulkSelfUpdate.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 
         if ((!Files.exists(jarPathJava)) || (!Files.isRegularFile(jarPathJava))) {
             throw exceptionNoSingleJar();
@@ -58,9 +48,7 @@ public class EmbulkSelfUpdate {
             System.out.printf("Checking version %s...\n", specifiedVersionString);
             targetVersionString = checkTargetVersion(specifiedVersionString);
             if (targetVersionString == null) {
-                throw new RuntimeException(
-                        String.format(
-                                "Specified version does not exist: %s", specifiedVersionString));
+                throw new RuntimeException(String.format("Specified version does not exist: %s", specifiedVersionString));
             }
             System.out.printf("Found version %s.\n", specifiedVersionString);
         } else {
@@ -69,25 +57,19 @@ public class EmbulkSelfUpdate {
             targetVersionString = checkLatestVersion();
             final ComparableVersion targetVersion = new ComparableVersion(targetVersionString);
             if (targetVersion.compareTo(runningVersion) <= 0) {
-                System.out.printf(
-                        "Already up-to-date. %s is the latest version.\n", runningVersion);
+                System.out.printf("Already up-to-date. %s is the latest version.\n", runningVersion);
                 return;
             }
             System.out.printf("Found a newer version %s.\n", targetVersion);
         }
 
         if (!Files.isWritable(jarPathJava)) {
-            throw new RuntimeException(
-                    String.format(
-                            "The existing %s is not writable. May need to sudo?",
-                            jarPathJava.toString()));
+            throw new RuntimeException(String.format("The existing %s is not writable. May need to sudo?",
+                                                     jarPathJava.toString()));
         }
 
-        final URL downloadUrl =
-                new URL(
-                        String.format(
-                                "https://dl.bintray.com/embulk/maven/embulk-%s.jar",
-                                targetVersionString));
+        final URL downloadUrl = new URL(String.format("https://dl.bintray.com/embulk/maven/embulk-%s.jar",
+                                                      targetVersionString));
         System.out.printf("Downloading %s ...\n", downloadUrl.toString());
 
         Path jarPathTemp = Files.createTempFile("embulk-selfupdate", ".jar");
@@ -104,16 +86,14 @@ public class EmbulkSelfUpdate {
                             String.format("Unexpected HTTP status code: %d", statusCode));
                 }
                 InputStream input = connection.getInputStream();
-                // TODO(dmikurube): Confirm if it is okay to replace a temp file created by
-                // Files.createTempFile.
+                // TODO(dmikurube): Confirm if it is okay to replace a temp file created by Files.createTempFile.
                 Files.copy(input, jarPathTemp, StandardCopyOption.REPLACE_EXISTING);
-                Files.setPosixFilePermissions(
-                        jarPathTemp, Files.getPosixFilePermissions(jarPathJava));
+                Files.setPosixFilePermissions(jarPathTemp, Files.getPosixFilePermissions(jarPathJava));
             } finally {
                 connection.disconnect();
             }
 
-            if (!isForced) { // Check corruption
+            if (!isForced) {  // Check corruption
                 final String versionJarTemp;
                 try {
                     versionJarTemp = getJarVersion(jarPathTemp);
@@ -124,9 +104,9 @@ public class EmbulkSelfUpdate {
                 }
                 if (!versionJarTemp.equals(targetVersionString)) {
                     throw new RuntimeException(
-                            String.format(
-                                    "Downloaded version does not match: %s (downloaded) / %s (target)",
-                                    versionJarTemp, targetVersionString));
+                            String.format("Downloaded version does not match: %s (downloaded) / %s (target)",
+                                          versionJarTemp,
+                                          targetVersionString));
                 }
             }
             Files.move(jarPathTemp, jarPathJava, StandardCopyOption.REPLACE_EXISTING);
@@ -163,8 +143,7 @@ public class EmbulkSelfUpdate {
             final Matcher versionMatcher = VERSION_URL_PATTERN.matcher(location);
             if (!versionMatcher.matches()) {
                 throw new FileNotFoundException(
-                        String.format(
-                                "Invalid version number in \"Location\" header: %s", location));
+                        String.format("Invalid version number in \"Location\" header: %s", location));
             }
             return versionMatcher.group(1);
         } finally {
@@ -178,8 +157,7 @@ public class EmbulkSelfUpdate {
      * It passes all {@code IOException} and {@code RuntimeException} through out.
      */
     private String checkTargetVersion(String version) throws IOException {
-        final URL bintrayUrl =
-                new URL(String.format("https://bintray.com/embulk/maven/embulk/%s", version));
+        final URL bintrayUrl = new URL(String.format("https://bintray.com/embulk/maven/embulk/%s", version));
         final HttpURLConnection connection = (HttpURLConnection) bintrayUrl.openConnection();
         try {
             connection.setInstanceFollowRedirects(false);
@@ -215,14 +193,12 @@ public class EmbulkSelfUpdate {
                 manifestContents = "(Failed to read the contents of the manifest.)";
             }
             final Attributes mainAttributes = manifest.getMainAttributes();
-            final String implementationVersion =
-                    mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+            final String implementationVersion = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
             if (implementationVersion == null) {
-                throw new IOException(
-                        "Version not found. Failed to read \""
-                                + Attributes.Name.IMPLEMENTATION_VERSION
-                                + "\": "
-                                + manifestContents);
+                throw new IOException("Version not found. Failed to read \""
+                                      + Attributes.Name.IMPLEMENTATION_VERSION
+                                      + "\": "
+                                      + manifestContents);
             }
             return implementationVersion;
         } catch (IOException ex) {
@@ -230,12 +206,9 @@ public class EmbulkSelfUpdate {
         }
 
         // NOTE: Checking embulk/version.rb is no longer needed.
-        // The jar manifest with "Implementation-Version" has been included in Embulk jars from
-        // v0.4.0.
+        // The jar manifest with "Implementation-Version" has been included in Embulk jars from v0.4.0.
     }
 
-    private static final Pattern VERSION_URL_PATTERN =
-            Pattern.compile("^https?://.*/embulk/(\\d+\\.\\d+[^\\/]+).*$");
-    private static final Pattern VERSION_RUBY_PATTERN =
-            Pattern.compile("^\\s*VERSION\\s*\\=\\s*(\\p{Graph}+)\\s*$");
+    private static final Pattern VERSION_URL_PATTERN = Pattern.compile("^https?://.*/embulk/(\\d+\\.\\d+[^\\/]+).*$");
+    private static final Pattern VERSION_RUBY_PATTERN = Pattern.compile("^\\s*VERSION\\s*\\=\\s*(\\p{Graph}+)\\s*$");
 }

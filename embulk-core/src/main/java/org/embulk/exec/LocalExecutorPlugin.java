@@ -44,7 +44,8 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
     }
 
     @Override
-    public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount, ExecutorPlugin.Control control) {
+    public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount,
+            ExecutorPlugin.Control control) {
         try (AbstractLocalExecutor exec = newExecutor(config, inputTaskCount)) {
             control.transaction(outputSchema, exec.getOutputTaskCount(), exec);
         }
@@ -99,7 +100,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                         state.getInputTaskState(i).setException(futures.get(i).get());
                     } catch (ExecutionException ex) {
                         state.getInputTaskState(i).setException(ex.getCause());
-                        // Throwables.propagate(ex.getCause());
+                        //Throwables.propagate(ex.getCause());
                     } catch (InterruptedException ex) {
                         state.getInputTaskState(i).setException(new ExecutionInterruptedException(ex));
                     }
