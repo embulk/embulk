@@ -8,7 +8,6 @@ import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.type.TimestampType;
-import org.joda.time.DateTimeZone;
 
 public class PagePrinter {
     private final Schema schema;
@@ -18,7 +17,7 @@ public class PagePrinter {
     // To be removed by v0.10 or earlier.
     @Deprecated  // https://github.com/embulk/embulk/issues/937
     @SuppressWarnings("deprecation")
-    public PagePrinter(final Schema schema, final DateTimeZone timezone) {
+    public PagePrinter(final Schema schema, final org.joda.time.DateTimeZone timezone) {
         this.schema = schema;
         this.timestampFormatters = new TimestampFormatter[schema.getColumnCount()];
         for (int i = 0; i < timestampFormatters.length; i++) {

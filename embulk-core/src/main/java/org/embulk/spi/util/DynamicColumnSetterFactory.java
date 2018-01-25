@@ -22,7 +22,6 @@ import org.embulk.spi.util.dynamic.LongColumnSetter;
 import org.embulk.spi.util.dynamic.NullDefaultValueSetter;
 import org.embulk.spi.util.dynamic.StringColumnSetter;
 import org.embulk.spi.util.dynamic.TimestampColumnSetter;
-import org.joda.time.DateTimeZone;
 
 class DynamicColumnSetterFactory {
     private final DefaultValueSetter defaultValue;
@@ -111,10 +110,6 @@ class DynamicColumnSetterFactory {
         } else {
             return task.getDefaultTimeZoneId();
         }
-    }
-
-    private DateTimeZone getJodaDateTimeZone(Column column) {
-        return TimeZoneIds.parseJodaDateTimeZone(this.getTimeZoneId(column));
     }
 
     private DynamicPageBuilder.ColumnOption getColumnOption(Column column) {
