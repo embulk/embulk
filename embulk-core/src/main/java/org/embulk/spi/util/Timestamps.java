@@ -23,7 +23,7 @@ public class Timestamps {
         for (ColumnConfig column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
                 TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
-                parsers[i] = new TimestampParser(parserTask, option);
+                parsers[i] = TimestampParser.of(parserTask, option);
             }
             i++;
         }

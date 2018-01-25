@@ -15,13 +15,32 @@ public class PagePrinter {
     private final TimestampFormatter[] timestampFormatters;
     private final ArrayList<String> record;
 
+    @Deprecated  // To be removed by v0.10 or earlier.
+    @SuppressWarnings("deprecation")
     public PagePrinter(final Schema schema, final DateTimeZone timezone) {
         this.schema = schema;
         this.timestampFormatters = new TimestampFormatter[schema.getColumnCount()];
         for (int i = 0; i < timestampFormatters.length; i++) {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
+                // Constructor of TimestampFormatter is deprecated.
                 timestampFormatters[i] = new TimestampFormatter(type.getFormat(), timezone);
+            }
+        }
+
+        this.record = new ArrayList<String>(schema.getColumnCount());
+        for (int i = 0; i < schema.getColumnCount(); i++) {
+            record.add("");
+        }
+    }
+
+    public PagePrinter(final Schema schema, final String timeZoneId) {
+        this.schema = schema;
+        this.timestampFormatters = new TimestampFormatter[schema.getColumnCount()];
+        for (int i = 0; i < timestampFormatters.length; i++) {
+            if (schema.getColumnType(i) instanceof TimestampType) {
+                TimestampType type = (TimestampType) schema.getColumnType(i);
+                timestampFormatters[i] = TimestampFormatter.of(type.getFormat(), timeZoneId);
             }
         }
 

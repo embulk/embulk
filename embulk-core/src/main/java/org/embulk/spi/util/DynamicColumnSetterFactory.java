@@ -63,8 +63,8 @@ class DynamicColumnSetterFactory {
         } else if (type instanceof DoubleType) {
             return new DoubleColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof StringType) {
-            TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column), getJodaDateTimeZone(column));
+            TimestampFormatter formatter = TimestampFormatter.of(
+                    getTimestampFormatForFormatter(column), getTimeZoneId(column));
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
@@ -77,8 +77,8 @@ class DynamicColumnSetterFactory {
             }
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
-            TimestampFormatter formatter = new TimestampFormatter(
-                    getTimestampFormatForFormatter(column), getJodaDateTimeZone(column));
+            TimestampFormatter formatter = TimestampFormatter.of(
+                    getTimestampFormatForFormatter(column), getTimeZoneId(column));
             return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
         throw new ConfigException("Unknown column type: " + type);
