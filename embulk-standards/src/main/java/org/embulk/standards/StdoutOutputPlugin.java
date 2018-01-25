@@ -14,14 +14,25 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
+import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.PagePrinter;
-import org.joda.time.DateTimeZone;
 
 public class StdoutOutputPlugin implements OutputPlugin {
     public interface PluginTask extends Task {
         @Config("timezone")
         @ConfigDefault("\"UTC\"")
-        public DateTimeZone getTimeZone();
+        public String getTimeZoneId();
+
+        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
+        // It won't be removed very soon at least until Embulk v0.10.
+        @Deprecated
+        public default org.joda.time.DateTimeZone getTimeZone() {
+            if (getTimeZoneId() != null) {
+                return TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId());
+            } else {
+                return null;
+            }
+        }
     }
 
     @Override
@@ -51,7 +62,7 @@ public class StdoutOutputPlugin implements OutputPlugin {
 
         return new TransactionalPageOutput() {
             private final PageReader reader = new PageReader(schema);
-            private final PagePrinter printer = new PagePrinter(schema, task.getTimeZone());
+            private final PagePrinter printer = new PagePrinter(schema, task.getTimeZoneId());
 
             public void add(Page page) {
                 reader.setPage(page);
