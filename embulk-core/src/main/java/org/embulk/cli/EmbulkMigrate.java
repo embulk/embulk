@@ -86,11 +86,11 @@ public class EmbulkMigrate {
         // upgrade gradle version
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
             // gradle < 4.1
-            migrator.copy("new_plugin_templates/java/gradlew", "gradlew");
+            migrator.copy("org/embulk/plugin/template/java/gradlew", "gradlew");
             migrator.setExecutable("gradlew");
-            migrator.copy("new_plugin_templates/java/gradle/wrapper/gradle-wrapper.properties",
+            migrator.copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
-            migrator.copy("new_plugin_templates/java/gradle/wrapper/gradle-wrapper.jar",
+            migrator.copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.jar",
                           "gradle/wrapper/gradle-wrapper.jar");
         }
 
@@ -145,13 +145,13 @@ public class EmbulkMigrate {
                                              matcher.group(3));
                     }
                 });
-            migrator.copy("new_plugin_templates/java/config/checkstyle/checkstyle.xml",
+            migrator.copy("org/embulk/plugin/template/java/config/checkstyle/checkstyle.xml",
                           "config/checkstyle/checkstyle.xml");
         }
 
         // Add |checkstyle| settings before the |gem| task existing.
         if (!migrator.match("build.gradle", CHECKSTYLE_CONFIGURATION_IN_GRADLE)) {
-            migrator.copy("new_plugin_templates/java/config/checkstyle/default.xml",
+            migrator.copy("org/embulk/plugin/template/java/config/checkstyle/default.xml",
                           "config/checkstyle/default.xml");
             migrator.insertLine("build.gradle", GEM_TASK_IN_GRADLE, new StringUpsert() {
                     @Override

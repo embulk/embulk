@@ -479,12 +479,12 @@ public class EmbulkRun {
         boolean success = false;
         try {
             // copy embulk/data/bundle/ contents
-            copyResourceToFile("new_bundle_templates/Gemfile", path, "Gemfile");
+            copyResourceToFile("org/embulk/jruby/bundler/template/Gemfile", path, "Gemfile");
             // ".ruby-version" is no longer required since JRuby used is embedded in Embulk.
-            copyResourceToFile("new_bundle_templates/.bundle/config", path, ".bundle/config");
-            copyResourceToFile("new_bundle_templates/embulk/input/example.rb", path, "embulk/input/example.rb");
-            copyResourceToFile("new_bundle_templates/embulk/output/example.rb", path, "embulk/output/example.rb");
-            copyResourceToFile("new_bundle_templates/embulk/filter/example.rb", path, "embulk/filter/example.rb");
+            copyResourceToFile("org/embulk/jruby/bundler/template/.bundle/config", path, ".bundle/config");
+            copyResourceToFile("org/embulk/jruby/bundler/template/embulk/input/example.rb", path, "embulk/input/example.rb");
+            copyResourceToFile("org/embulk/jruby/bundler/template/embulk/output/example.rb", path, "embulk/output/example.rb");
+            copyResourceToFile("org/embulk/jruby/bundler/template/embulk/filter/example.rb", path, "embulk/filter/example.rb");
         } catch (IOException ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex);

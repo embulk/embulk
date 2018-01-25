@@ -96,12 +96,12 @@ public class EmbulkNew {
                     break;
                 case "parser":
                     description = String.format("Parses %s files read by other file input plugins.", displayName);
-                    extraGuesses.put("new_plugin_templates/ruby/parser_guess.rb.vm",
+                    extraGuesses.put("org/embulk/plugin/template/ruby/parser_guess.rb.vm",
                                      String.format("%s/guess/%s.rb", pluginDirectory, name));
                     break;
                 case "decoder":
                     description = String.format("Decodes %s-encoded files read by other file input plugins.", displayName);
-                    extraGuesses.put("new_plugin_templates/ruby/decoder_guess.rb.vm",
+                    extraGuesses.put("org/embulk/plugin/template/ruby/decoder_guess.rb.vm",
                                      String.format("%s/guess/%s.rb", pluginDirectory, name));
                     break;
                 case "output":
@@ -143,44 +143,44 @@ public class EmbulkNew {
                     language,
                     name,
                     rubyClassName);
-            copyTemplated("new_plugin_templates/README.md.vm", "README.md", velocityContext);
-            copy("new_plugin_templates/LICENSE.txt", "LICENSE.txt");
-            copyTemplated("new_plugin_templates/gitignore.vm", ".gitignore", velocityContext);
+            copyTemplated("org/embulk/plugin/template/README.md.vm", "README.md", velocityContext);
+            copy("org/embulk/plugin/template/LICENSE.txt", "LICENSE.txt");
+            copyTemplated("org/embulk/plugin/template/gitignore.vm", ".gitignore", velocityContext);
 
             switch (language) {
                 case "ruby":
-                    copy("new_plugin_templates/ruby/Rakefile", "Rakefile");
-                    copy("new_plugin_templates/ruby/Gemfile", "Gemfile");
-                    copyTemplated("new_plugin_templates/ruby/.ruby-version",
+                    copy("org/embulk/plugin/template/ruby/Rakefile", "Rakefile");
+                    copy("org/embulk/plugin/template/ruby/Gemfile", "Gemfile");
+                    copyTemplated("org/embulk/plugin/template/ruby/.ruby-version",
                                   ".ruby-version",
                                   velocityContext);
-                    copyTemplated("new_plugin_templates/ruby/gemspec.vm",
+                    copyTemplated("org/embulk/plugin/template/ruby/gemspec.vm",
                                   fullProjectName + ".gemspec",
                                   velocityContext);
-                    copyTemplated(String.format("new_plugin_templates/ruby/%s.rb.vm", category),
+                    copyTemplated(String.format("org/embulk/plugin/template/ruby/%s.rb.vm", category),
                                   this.pluginPath,
                                   velocityContext);
                     break;
                 case "java":
-                    copy("new_plugin_templates/java/gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.jar");
-                    copy("new_plugin_templates/java/gradle/wrapper/gradle-wrapper.properties", "gradle/wrapper/gradle-wrapper.properties");
-                    copy("new_plugin_templates/java/gradlew.bat", "gradlew.bat");
-                    copy("new_plugin_templates/java/gradlew", "gradlew");
+                    copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.jar");
+                    copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.properties", "gradle/wrapper/gradle-wrapper.properties");
+                    copy("org/embulk/plugin/template/java/gradlew.bat", "gradlew.bat");
+                    copy("org/embulk/plugin/template/java/gradlew", "gradlew");
                     setExecutable("gradlew");
-                    copy("new_plugin_templates/java/config/checkstyle/checkstyle.xml", "config/checkstyle/checkstyle.xml");
-                    copy("new_plugin_templates/java/config/checkstyle/default.xml", "config/checkstyle/default.xml");
-                    copyTemplated("new_plugin_templates/java/build.gradle.vm",
+                    copy("org/embulk/plugin/template/java/config/checkstyle/checkstyle.xml", "config/checkstyle/checkstyle.xml");
+                    copy("org/embulk/plugin/template/java/config/checkstyle/default.xml", "config/checkstyle/default.xml");
+                    copyTemplated("org/embulk/plugin/template/java/build.gradle.vm",
                                   "build.gradle",
                                   velocityContext);
-                    copyTemplated("new_plugin_templates/java/plugin_loader.rb.vm",
+                    copyTemplated("org/embulk/plugin/template/java/plugin_loader.rb.vm",
                                   this.pluginPath,
                                   velocityContext);
-                    copyTemplated(String.format("new_plugin_templates/java/%s.java.vm", category),
+                    copyTemplated(String.format("org/embulk/plugin/template/java/%s.java.vm", category),
                                   String.format("src/main/java/%s/%s.java",
                                                 javaPackageName.replaceAll("\\.", "/"),
                                                 javaClassName),
                                   velocityContext);
-                    copyTemplated("new_plugin_templates/java/test.java.vm",
+                    copyTemplated("org/embulk/plugin/template/java/test.java.vm",
                                   String.format("src/test/java/%s/Test%s.java",
                                                 javaPackageName.replaceAll("\\.", "/"),
                                                 javaClassName),
