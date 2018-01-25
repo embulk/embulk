@@ -104,13 +104,14 @@ public class EmbulkEmbed {
     }
 
     private final LifeCycleInjector injector;
+    private final org.slf4j.Logger logger;
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
     private final PreviewExecutor previewExecutor;
 
     EmbulkEmbed(ConfigSource systemConfig, LifeCycleInjector injector) {
         this.injector = injector;
-        injector.getInstance(org.slf4j.ILoggerFactory.class);
+        this.logger = injector.getInstance(org.slf4j.ILoggerFactory.class).getLogger(EmbulkEmbed.class.getName());
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = injector.getInstance(PreviewExecutor.class);
@@ -133,6 +134,7 @@ public class EmbulkEmbed {
     }
 
     public ConfigDiff guess(ConfigSource config) {
+        this.logger.info("Started Embulk v" + EmbulkVersion.VERSION);
         ExecSession exec = newExecSession(config);
         try {
             return guessExecutor.guess(exec, config);
@@ -142,6 +144,7 @@ public class EmbulkEmbed {
     }
 
     public PreviewResult preview(ConfigSource config) {
+        this.logger.info("Started Embulk v" + EmbulkVersion.VERSION);
         ExecSession exec = newExecSession(config);
         try {
             return previewExecutor.preview(exec, config);
@@ -151,6 +154,7 @@ public class EmbulkEmbed {
     }
 
     public ExecutionResult run(ConfigSource config) {
+        this.logger.info("Started Embulk v" + EmbulkVersion.VERSION);
         ExecSession exec = newExecSession(config);
         try {
             return bulkLoader.run(exec, config);
@@ -173,6 +177,7 @@ public class EmbulkEmbed {
     }
 
     public ResumableResult runResumable(ConfigSource config) {
+        this.logger.info("Started Embulk v" + EmbulkVersion.VERSION);
         ExecSession exec = newExecSession(config);
         try {
             ExecutionResult result;
@@ -199,6 +204,7 @@ public class EmbulkEmbed {
     }
 
     public ResumeStateAction resumeState(ConfigSource config, ConfigSource resumeStateConfig) {
+        this.logger.info("Started Embulk v" + EmbulkVersion.VERSION);
         ResumeState resumeState = resumeStateConfig.loadConfig(ResumeState.class);
         return new ResumeStateAction(config, resumeState);
     }
