@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import com.google.inject.Injector;
 import java.util.concurrent.ExecutionException;
-import org.embulk.config.CommitReport;  // Deprecated
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
@@ -68,8 +67,10 @@ public class Exec {
         return session().newTaskReport();
     }
 
-    @Deprecated
-    public static CommitReport newCommitReport() {
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/933
+    @SuppressWarnings("deprecation")
+    public static org.embulk.config.CommitReport newCommitReport() {
         return session().newCommitReport();
     }
 

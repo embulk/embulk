@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Stop implementing CommitReport by v0.10 or earlier.
+@SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/933
 public class DataSourceImpl
         implements ConfigSource, TaskSource, TaskReport, /* Deprecated */ CommitReport, ConfigDiff {
     protected final ObjectNode data;

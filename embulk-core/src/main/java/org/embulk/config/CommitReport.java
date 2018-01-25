@@ -1,7 +1,11 @@
 package org.embulk.config;
 
-/** Simply replaced by TaskReport. */
-@Deprecated
+/**
+ * Simply replaced by TaskReport.
+ *
+ * To be removed by v0.10 or earlier.
+ */
+@Deprecated  // https://github.com/embulk/embulk/issues/933
 public interface CommitReport extends TaskReport {
     @Override
     CommitReport getNested(String attrName);

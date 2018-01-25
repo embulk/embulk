@@ -78,7 +78,8 @@ public class ConfigLoader {
         }
     }
 
-    @Deprecated
+    // To be removed by v0.10. Not used from Embulk core.
+    @Deprecated  // https://github.com/embulk/embulk/issues/934
     @SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
     public ConfigSource fromJson(JsonParser parser) throws IOException {
         // TODO check parsed.isObject()

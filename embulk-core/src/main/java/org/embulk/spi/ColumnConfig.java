@@ -62,6 +62,8 @@ public class ColumnConfig {
         return option.get(String.class, "format", null);
     }
 
+    // TODO: Stop using TimestampType.withFormat.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/935
     public Column toColumn(int index) {
         String format = option.get(String.class, "format", null);
         if (type instanceof TimestampType && format != null) {

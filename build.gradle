@@ -50,7 +50,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
     version = "${rootProject.version}"
 
     tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:unchecked" //<< "-Xlint:deprecation"
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
     }
 
     tasks.withType(Test) {

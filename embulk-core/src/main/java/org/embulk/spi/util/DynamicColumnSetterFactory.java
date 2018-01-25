@@ -71,7 +71,9 @@ class DynamicColumnSetterFactory {
             final TimestampParser parser;
             if (this.useColumnForTimestampMetadata) {
                 final TimestampType timestampType = (TimestampType) type;
-                parser = TimestampParser.of(timestampType.getFormat(), getTimeZoneId(column));
+                // https://github.com/embulk/embulk/issues/935
+                parser = TimestampParser.of(getFormatFromTimestampTypeWithDepracationSuppressed(timestampType),
+                                            getTimeZoneId(column));
             } else {
                 parser = TimestampParser.of(getTimestampFormatForParser(column), getTimeZoneId(column));
             }
@@ -122,5 +124,11 @@ class DynamicColumnSetterFactory {
         } else {
             return null;
         }
+    }
+
+    // TODO: Stop using TimestampType.getFormat.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/935
+    private String getFormatFromTimestampTypeWithDepracationSuppressed(final TimestampType timestampType) {
+        return timestampType.getFormat();
     }
 }

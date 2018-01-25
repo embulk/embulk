@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import com.google.common.base.Optional;
 import com.google.inject.Injector;
-import org.embulk.config.CommitReport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -17,7 +16,6 @@ import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
-import org.joda.time.DateTimeZone;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 
@@ -153,8 +151,10 @@ public class ExecSession {
         return new DataSourceImpl(modelManager);
     }
 
-    @Deprecated
-    public CommitReport newCommitReport() {
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/933
+    @SuppressWarnings("deprecation")
+    public org.embulk.config.CommitReport newCommitReport() {
         return new DataSourceImpl(modelManager);
     }
 
@@ -170,7 +170,10 @@ public class ExecSession {
         return new DataSourceImpl(modelManager);
     }
 
-    public TimestampFormatter newTimestampFormatter(String format, DateTimeZone timezone) {
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/936
+    @SuppressWarnings("deprecation")
+    public TimestampFormatter newTimestampFormatter(String format, org.joda.time.DateTimeZone timezone) {
         return new TimestampFormatter(format, timezone);
     }
 

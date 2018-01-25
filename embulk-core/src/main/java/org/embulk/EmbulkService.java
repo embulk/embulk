@@ -16,7 +16,8 @@ import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.plugin.maven.MavenPluginSourceModule;
 
-@Deprecated
+// Use EmbulkEmbed instead. To be removed by v0.10 or earlier.
+@Deprecated  // https://github.com/embulk/embulk/issues/932
 public class EmbulkService {
     private final ConfigSource systemConfig;
 

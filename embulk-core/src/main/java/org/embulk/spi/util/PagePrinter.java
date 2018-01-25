@@ -15,7 +15,8 @@ public class PagePrinter {
     private final TimestampFormatter[] timestampFormatters;
     private final ArrayList<String> record;
 
-    @Deprecated  // To be removed by v0.10 or earlier.
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/937
     @SuppressWarnings("deprecation")
     public PagePrinter(final Schema schema, final DateTimeZone timezone) {
         this.schema = schema;
@@ -24,7 +25,8 @@ public class PagePrinter {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
                 // Constructor of TimestampFormatter is deprecated.
-                timestampFormatters[i] = new TimestampFormatter(type.getFormat(), timezone);
+                timestampFormatters[i] = new TimestampFormatter(
+                        getFormatFromTimestampTypeWithDeprecationSuppressed(type), timezone);
             }
         }
 
@@ -40,7 +42,8 @@ public class PagePrinter {
         for (int i = 0; i < timestampFormatters.length; i++) {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
-                timestampFormatters[i] = TimestampFormatter.of(type.getFormat(), timeZoneId);
+                timestampFormatters[i] = TimestampFormatter.of(
+                        getFormatFromTimestampTypeWithDeprecationSuppressed(type), timeZoneId);
             }
         }
 
@@ -108,5 +111,11 @@ public class PagePrinter {
         public void jsonColumn(Column column) {
             string = reader.getJson(column).toString();
         }
+    }
+
+    // TODO: Stop using TimestampType.getFormat.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/935
+    private String getFormatFromTimestampTypeWithDeprecationSuppressed(final TimestampType timestampType) {
+        return timestampType.getFormat();
     }
 }

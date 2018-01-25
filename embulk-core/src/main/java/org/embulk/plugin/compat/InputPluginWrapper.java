@@ -4,7 +4,6 @@ import com.google.common.base.Throwables;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
-import org.embulk.config.CommitReport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -22,10 +21,12 @@ public class InputPluginWrapper implements InputPlugin {
         return object;
     }
 
+    // TODO: Remove the CommitReport case by v0.10 or earlier.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/933
     private static Method wrapRunMethod(InputPlugin object) {
         try {
             Method m = object.getClass().getMethod("run", TaskSource.class, Schema.class, int.class, PageOutput.class);
-            if (m.getReturnType().equals(CommitReport.class)) {
+            if (m.getReturnType().equals(org.embulk.config.CommitReport.class)) {
                 return m;
             } else {
                 return null;

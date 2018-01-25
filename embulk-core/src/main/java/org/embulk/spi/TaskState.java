@@ -1,7 +1,6 @@
 package org.embulk.spi;
 
 import com.google.common.base.Optional;
-import org.embulk.config.CommitReport;
 import org.embulk.config.TaskReport;
 
 public class TaskState {
@@ -24,8 +23,10 @@ public class TaskState {
         this.taskReport = Optional.of(taskReport);
     }
 
-    @Deprecated
-    public void setCommitReport(CommitReport commitReport) {
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/933
+    @SuppressWarnings("deprecation")
+    public void setCommitReport(org.embulk.config.CommitReport commitReport) {
         this.started = true;
         this.taskReport = Optional.<TaskReport>of(commitReport);
     }
@@ -56,9 +57,10 @@ public class TaskState {
         return taskReport;
     }
 
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    public Optional<CommitReport> getCommitReport() {
+    // To be removed by v0.10 or earlier.
+    @Deprecated  // https://github.com/embulk/embulk/issues/933
+    @SuppressWarnings({"deprecation", "unchecked"})
+    public Optional<org.embulk.config.CommitReport> getCommitReport() {
         return (Optional) taskReport;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
     }
 
