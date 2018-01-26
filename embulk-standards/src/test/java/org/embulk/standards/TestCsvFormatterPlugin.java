@@ -11,7 +11,6 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.util.Newline;
-import org.joda.time.DateTimeZone;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -32,7 +31,7 @@ public class TestCsvFormatterPlugin {
         assertEquals(CsvFormatterPlugin.QuotePolicy.MINIMAL, task.getQuotePolicy());
         assertEquals(false, task.getEscapeChar().isPresent());
         assertEquals("", task.getNullString());
-        assertEquals(DateTimeZone.UTC, task.getDefaultTimeZone());
+        assertEquals(org.joda.time.DateTimeZone.UTC, task.getDefaultTimeZone());
         assertEquals("%Y-%m-%d %H:%M:%S.%6N %z", task.getDefaultTimestampFormat());
         assertEquals(Newline.LF, task.getNewlineInField());
     }

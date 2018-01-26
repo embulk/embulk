@@ -84,6 +84,8 @@ public class EmbulkEmbed {
         }
 
         private EmbulkEmbed build(boolean destroyOnShutdownHook) {
+            // TODO: Replace use of EmbulkService.
+            @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/932
             org.embulk.guice.Bootstrap bootstrap = new org.embulk.guice.Bootstrap()
                     .requireExplicitBindings(false)
                     .addModules(EmbulkService.standardModuleList(systemConfig));

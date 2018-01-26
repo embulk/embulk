@@ -3,7 +3,6 @@ package org.embulk.plugin.compat;
 import com.google.common.base.Throwables;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.embulk.config.CommitReport;
 import org.embulk.config.TaskReport;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.TransactionalFileOutput;
@@ -21,10 +20,12 @@ public class TransactionalFileOutputWrapper implements TransactionalFileOutput {
         return object;
     }
 
+    // TODO: Remove the CommitReport case by v0.10 or earlier.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/933
     private static Method wrapCommitMethod(TransactionalFileOutput object) {
         try {
             Method m = object.getClass().getMethod("commit");
-            if (m.getReturnType().equals(CommitReport.class)) {
+            if (m.getReturnType().equals(org.embulk.config.CommitReport.class)) {
                 return m;
             } else {
                 return null;

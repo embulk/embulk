@@ -2,10 +2,10 @@ package org.embulk.spi.time;
 
 import java.time.ZoneOffset;
 import java.util.Locale;
-import org.jruby.util.RubyDateFormat;
 
 public class TimestampFormatterRuby extends TimestampFormatter {
-    private TimestampFormatterRuby(final RubyDateFormat formatter,
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/830
+    private TimestampFormatterRuby(final org.jruby.util.RubyDateFormat formatter,
                                    final ZoneOffset zoneOffset,
                                    final org.joda.time.DateTimeZone jodaDateTimeZone,
                                    final String formatString) {
@@ -15,8 +15,9 @@ public class TimestampFormatterRuby extends TimestampFormatter {
         this.formatString = formatString;
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/830
     static TimestampFormatterRuby of(final String formatString, final ZoneOffset zoneOffset) {
-        return new TimestampFormatterRuby(new RubyDateFormat(formatString, Locale.ENGLISH, true),
+        return new TimestampFormatterRuby(new org.jruby.util.RubyDateFormat(formatString, Locale.ENGLISH, true),
                                           zoneOffset,
                                           TimeZoneIds.convertZoneOffsetToJodaDateTimeZone(zoneOffset),
                                           formatString);
@@ -24,10 +25,10 @@ public class TimestampFormatterRuby extends TimestampFormatter {
 
     // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
     // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/830
     static TimestampFormatterRuby ofLegacy(final String formatString,
                                            final org.joda.time.DateTimeZone jodaDateTimeZone) {
-        return new TimestampFormatterRuby(new RubyDateFormat(formatString, Locale.ENGLISH, true),
+        return new TimestampFormatterRuby(new org.jruby.util.RubyDateFormat(formatString, Locale.ENGLISH, true),
                                           null,
                                           jodaDateTimeZone,
                                           formatString);
@@ -48,7 +49,8 @@ public class TimestampFormatterRuby extends TimestampFormatter {
         return this.formatter.format(null);
     }
 
-    private final RubyDateFormat formatter;
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/830
+    private final org.jruby.util.RubyDateFormat formatter;
     private final ZoneOffset zoneOffset;  // Nullable
     private final org.joda.time.DateTimeZone jodaDateTimeZone;  // Not null
     private final String formatString;

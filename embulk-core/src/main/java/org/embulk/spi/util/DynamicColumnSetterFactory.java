@@ -22,7 +22,6 @@ import org.embulk.spi.util.dynamic.LongColumnSetter;
 import org.embulk.spi.util.dynamic.NullDefaultValueSetter;
 import org.embulk.spi.util.dynamic.StringColumnSetter;
 import org.embulk.spi.util.dynamic.TimestampColumnSetter;
-import org.joda.time.DateTimeZone;
 
 class DynamicColumnSetterFactory {
     private final DefaultValueSetter defaultValue;
@@ -71,7 +70,9 @@ class DynamicColumnSetterFactory {
             final TimestampParser parser;
             if (this.useColumnForTimestampMetadata) {
                 final TimestampType timestampType = (TimestampType) type;
-                parser = TimestampParser.of(timestampType.getFormat(), getTimeZoneId(column));
+                // https://github.com/embulk/embulk/issues/935
+                parser = TimestampParser.of(getFormatFromTimestampTypeWithDepracationSuppressed(timestampType),
+                                            getTimeZoneId(column));
             } else {
                 parser = TimestampParser.of(getTimestampFormatForParser(column), getTimeZoneId(column));
             }
@@ -111,10 +112,6 @@ class DynamicColumnSetterFactory {
         }
     }
 
-    private DateTimeZone getJodaDateTimeZone(Column column) {
-        return TimeZoneIds.parseJodaDateTimeZone(this.getTimeZoneId(column));
-    }
-
     private DynamicPageBuilder.ColumnOption getColumnOption(Column column) {
         ConfigSource option = task.getColumnOptions().get(column.getName());
         if (option != null) {
@@ -122,5 +119,11 @@ class DynamicColumnSetterFactory {
         } else {
             return null;
         }
+    }
+
+    // TODO: Stop using TimestampType.getFormat.
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/935
+    private String getFormatFromTimestampTypeWithDepracationSuppressed(final TimestampType timestampType) {
+        return timestampType.getFormat();
     }
 }
