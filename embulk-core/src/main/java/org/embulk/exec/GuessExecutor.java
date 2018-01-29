@@ -122,11 +122,12 @@ public class GuessExecutor {
         GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
         guessPlugins.addAll(task.getGuessPlugins());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
+        final int guessParserSampleBufferBytes = task.getSampleBufferBytes();
 
-        return guessParserConfig(sample, inputConfig, guessPlugins);
+        return guessParserConfig(sample, inputConfig, guessPlugins, guessParserSampleBufferBytes);
     }
 
-    private ConfigDiff guessParserConfig(Buffer sample, ConfigSource config, List<PluginType> guessPlugins) {
+    private ConfigDiff guessParserConfig(Buffer sample, ConfigSource config, List<PluginType> guessPlugins, final int guessParserSampleBufferBytes) {
         // repeat guessing upto 10 times
         ConfigDiff lastGuessed = Exec.newConfigDiff();
         for (int i = 0; i < 10; i++) {
@@ -136,7 +137,8 @@ public class GuessExecutor {
             guessInputConfig.getNestedOrSetEmpty("parser")
                     .set("type", "system_guess")  // override in.parser.type so that FileInputRunner.run uses GuessParserPlugin
                     .set("guess_plugins", guessPlugins)
-                    .set("orig_config", originalConfig);
+                    .set("orig_config", originalConfig)
+                    .set("guess_parser_sample_buffer_bytes", guessParserSampleBufferBytes);
 
             // run FileInputPlugin
             final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
@@ -187,6 +189,9 @@ public class GuessExecutor {
 
             @Config("orig_config")
             public ConfigSource getOriginalConfig();
+
+            @Config("guess_parser_sample_buffer_bytes")
+            public int getGuessParserSampleBufferBytes();
         }
 
         @Override
@@ -199,9 +204,10 @@ public class GuessExecutor {
         public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput pageOutput) {
             PluginTask task = taskSource.loadTask(PluginTask.class);
             final ConfigSource originalConfig = task.getOriginalConfig();
+            final int guessParserSampleBufferBytes = task.getGuessParserSampleBufferBytes();
 
             // get sample buffer
-            Buffer sample = readSample(input, 32 * 1024);  // TODO get sample size from system config. See also SamplingParserPlugin().
+            Buffer sample = readSample(input, guessParserSampleBufferBytes);
 
             // load guess plugins
             ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
