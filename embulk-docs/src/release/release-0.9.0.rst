@@ -86,6 +86,7 @@ General Changes
 * Guess plugins for standard plugins has been moved to ``embulk-standards``.
 * New ``ruby:`` prefixed timestamp format is added.
 * New ``java:`` prefixed timestamp format is added as experimental.
+* Fix ``guess_sample_buffer_bytes`` option so that it enables ``GuessParserPlugin`` to read sample buffer customized by users.
 
 
 Release Date
