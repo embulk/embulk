@@ -526,8 +526,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_callMethod_ALObject.invoke(this.scriptingContainer, receiver, methodName, args);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
             throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
+            throw new JRubyNotLoadedException(ex);
+        } catch (RuntimeException ex) {
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -550,10 +560,18 @@ public final class ScriptingContainerDelegate {
             final T returnValue = (T) (this.method_callMethod_LClass.invoke(
                     this.scriptingContainer, receiver, methodName, returnType));
             return returnValue;
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -569,10 +587,18 @@ public final class ScriptingContainerDelegate {
             final T returnValue = (T) (this.method_callMethod_LObject_LClass.invoke(
                     this.scriptingContainer, receiver, methodName, singleArg, returnType));
             return returnValue;
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -627,10 +653,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getProvider.invoke(this.scriptingContainer);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -640,10 +674,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_put_LString_LObject.invoke(this.scriptingContainer, key, value);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -653,10 +695,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_remove_LString.invoke(this.scriptingContainer, key);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -666,10 +716,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_runScriptlet_LString.invoke(this.scriptingContainer, script);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -681,10 +739,18 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getRubyInstanceConfig.invoke(provider);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
@@ -696,18 +762,33 @@ public final class ScriptingContainerDelegate {
         }
         try {
             return this.method_getRuntime.invoke(provider);
-        } catch (IllegalAccessException | InvocationTargetException ex) {
+        } catch (IllegalAccessException ex) {
+            throw new JRubyNotLoadedException(ex);
+        } catch (InvocationTargetException ex) {
+            if (isCausedByInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex.getCause());
+            }
             throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            throw wrapJRubyInvokeFailedException(ex);
+            if (isInvokeFailedException(ex)) {
+                throw new JRubyInvokeFailedException(ex);
+            }
+            throw ex;
         }
     }
 
-    private static RuntimeException wrapJRubyInvokeFailedException(final RuntimeException exception) {
-        if (exception.getClass().getName().equals("org.jruby.embed.InvokeFailedException")) {
-            return new JRubyInvokeFailedException(exception);
+    private static boolean isCausedByInvokeFailedException(final InvocationTargetException exception) {
+        if (exception == null) {
+            return false;
         }
-        return exception;
+        final Throwable cause = exception.getCause();
+        return cause != null && isInvokeFailedException(cause);
+    }
+
+    private static boolean isInvokeFailedException(final Throwable exception) {
+        return exception != null
+                       && exception instanceof RuntimeException
+                       && exception.getClass().getName().equals("org.jruby.embed.InvokeFailedException");
     }
 
     private final String jrubyVersion;
