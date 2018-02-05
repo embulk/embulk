@@ -4,7 +4,6 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.BooleanType;

@@ -237,5 +237,6 @@
         </module>
         <module name="CommentsIndentation"/>
         <module name="SuppressWarningsHolder" />
+        <module name="UnusedImports"/>
     </module>
 </module>
