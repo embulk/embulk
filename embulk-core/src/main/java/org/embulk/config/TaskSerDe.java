@@ -17,14 +17,16 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,7 +68,7 @@ class TaskSerDe {
         private final ObjectMapper nestedObjectMapper;
         private final ModelManager model;
         private final Class<?> iface;
-        private final Map<String, FieldEntry> mappings;
+        private final Multimap<String, FieldEntry> mappings;
         private final List<InjectEntry> injects;
 
         public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface) {
@@ -77,9 +79,9 @@ class TaskSerDe {
             this.injects = injectEntries(iface);
         }
 
-        protected Map<String, FieldEntry> getterMappings(Class<?> iface) {
-            ImmutableMap.Builder<String, FieldEntry> builder = ImmutableMap.builder();
-            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
+        protected Multimap<String, FieldEntry> getterMappings(Class<?> iface) {
+            ImmutableMultimap.Builder<String, FieldEntry> builder = ImmutableMultimap.builder();
+            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entries()) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
 
@@ -103,7 +105,7 @@ class TaskSerDe {
 
         protected List<InjectEntry> injectEntries(Class<?> iface) {
             ImmutableList.Builder<InjectEntry> builder = ImmutableList.builder();
-            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entrySet()) {
+            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entries()) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
                 ConfigInject inject = getterMethod.getAnnotation(ConfigInject.class);
@@ -127,7 +129,7 @@ class TaskSerDe {
         @SuppressWarnings("unchecked")
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
-            HashMap<String, FieldEntry> unusedMappings = new HashMap<>(mappings);
+            HashMultimap<String, FieldEntry> unusedMappings = HashMultimap.<String, FieldEntry>create(mappings);
 
             String key;
             JsonToken current = jp.getCurrentToken();
@@ -140,21 +142,23 @@ class TaskSerDe {
 
             for (; key != null; key = jp.nextFieldName()) {
                 JsonToken t = jp.nextToken(); // to get to value
-                FieldEntry field = mappings.get(key);
-                if (field == null) {
+                final Collection<FieldEntry> fields = mappings.get(key);
+                if (fields.isEmpty()) {
                     jp.skipChildren();
                 } else {
-                    Object value = nestedObjectMapper.readValue(jp, new GenericTypeReference(field.getType()));
-                    if (value == null) {
-                        throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
+                    for (final FieldEntry field : fields) {
+                        final Object value = nestedObjectMapper.readValue(jp, new GenericTypeReference(field.getType()));
+                        if (value == null) {
+                            throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
+                        }
+                        objects.put(field.getName(), value);
+                        unusedMappings.remove(key, field);
                     }
-                    objects.put(field.getName(), value);
-                    unusedMappings.remove(key);
                 }
             }
 
             // set default values
-            for (Map.Entry<String, FieldEntry> unused : unusedMappings.entrySet()) {
+            for (Map.Entry<String, FieldEntry> unused : unusedMappings.entries()) {
                 FieldEntry field = unused.getValue();
                 if (field.getDefaultJsonString().isPresent()) {
                     Object value = nestedObjectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
