@@ -9,3 +9,4 @@ Checkstyle for the Embulk project
     * To accept package names with underscores.
     * To indent with 4-column spaces.
     * To limit columns to 180 characters, which will be shortened later.
+    * To reject unused imports.
