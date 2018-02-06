@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.Exec;
+import org.embulk.spi.time.TimestampParser;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +37,28 @@ public class TestConfigSource {
         public String getString();
     }
 
+    private static interface DuplicationParent extends Task {
+        @Config("duplicated_number")
+        public int getInteger();
+    }
+
+    private static interface Duplicated extends DuplicationParent {
+        @Config("duplicated_number")
+        public String getString();
+
+        @Config("duplicated_number")
+        public double getDouble();
+    }
+
+    private static interface DuplicatedDateTimeZone extends Task, TimestampParser.Task {
+        @Config("default_timezone")
+        @ConfigDefault("\"America/Los_Angeles\"")
+        public org.joda.time.DateTimeZone getDefaultTimeZone();
+
+        @Config("dummy_value")
+        public String getDummyValue();
+    }
+
     @Test
     public void testSetGet() {
         config.set("boolean", true);
@@ -65,6 +88,43 @@ public class TestConfigSource {
         assertEquals(0.2, task.getDouble(), 0.001);
         assertEquals(Long.MAX_VALUE, task.getLong());
         assertEquals("sf", task.getString());
+    }
+
+    @Test
+    public void testDuplicatedConfigName() {
+        config.set("duplicated_number", "1034");
+
+        Duplicated task = config.loadConfig(Duplicated.class);
+        assertEquals(1034, task.getInteger());
+        assertEquals("1034", task.getString());
+        assertEquals(1034.0, task.getDouble(), 0.000001);
+    }
+
+    @Test
+    public void testDuplicatedDateTimeZone() {
+        config.set("default_timezone", "Asia/Tokyo");
+        config.set("default_timestamp_format", "%Y");
+        config.set("dummy_value", "foobar");
+
+        DuplicatedDateTimeZone task = config.loadConfig(DuplicatedDateTimeZone.class);
+        assertEquals("Asia/Tokyo", task.getDefaultTimeZoneId());
+        assertEquals(org.joda.time.DateTimeZone.forID("Asia/Tokyo"), task.getDefaultTimeZone());
+        assertEquals("%Y", task.getDefaultTimestampFormat());
+        assertEquals("1970-01-01", task.getDefaultDate());
+        assertEquals("foobar", task.getDummyValue());
+    }
+
+    @Test
+    public void testDuplicatedDateTimeZoneWithDefault() {
+        config.set("default_timestamp_format", "%Y");
+        config.set("dummy_value", "foobar");
+
+        DuplicatedDateTimeZone task = config.loadConfig(DuplicatedDateTimeZone.class);
+        assertEquals("UTC", task.getDefaultTimeZoneId());
+        assertEquals(org.joda.time.DateTimeZone.forID("America/Los_Angeles"), task.getDefaultTimeZone());
+        assertEquals("%Y", task.getDefaultTimestampFormat());
+        assertEquals("1970-01-01", task.getDefaultDate());
+        assertEquals("foobar", task.getDummyValue());
     }
 
     private static interface ValidateFields extends Task {

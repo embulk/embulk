@@ -1,6 +1,7 @@
 package org.embulk.config;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -24,10 +25,12 @@ class TaskInvocationHandler implements InvocationHandler {
     }
 
     /**
-     * fieldName = Method of the getter
+     * Returns a Multimap from fieldName Strings to their getter Methods.
+     *
+     * It expects to be called only from TaskSerDe. Multimap is used inside org.embulk.config.
      */
-    public static Map<String, Method> fieldGetters(Class<?> iface) {
-        ImmutableMap.Builder<String, Method> builder = ImmutableMap.builder();
+    static Multimap<String, Method> fieldGetters(Class<?> iface) {
+        ImmutableMultimap.Builder<String, Method> builder = ImmutableMultimap.builder();
         for (Method method : iface.getMethods()) {
             String methodName = method.getName();
             String fieldName = getterFieldNameOrNull(methodName);
