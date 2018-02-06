@@ -154,7 +154,14 @@ class TaskSerDe {
                             throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
                         }
                         objects.put(field.getName(), value);
-                        unusedMappings.remove(key, field);
+                        if (!unusedMappings.remove(key, field)) {
+                            throw new JsonMappingException(String.format(
+                                    "FATAL: Expected to be a bug in Embulk. Mapping \"%s: (%s) %s\" might have already been processed, or not in %s.",
+                                    key,
+                                    field.getType().toString(),
+                                    field.getName(),
+                                    this.iface.toString()));
+                        }
                     }
                 }
             }
