@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -146,8 +147,9 @@ class TaskSerDe {
                 if (fields.isEmpty()) {
                     jp.skipChildren();
                 } else {
+                    final JsonNode children = nestedObjectMapper.readValue(jp, JsonNode.class);
                     for (final FieldEntry field : fields) {
-                        final Object value = nestedObjectMapper.readValue(jp, new GenericTypeReference(field.getType()));
+                        final Object value = nestedObjectMapper.convertValue(children, new GenericTypeReference(field.getType()));
                         if (value == null) {
                             throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
                         }
