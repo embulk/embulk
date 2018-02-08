@@ -1,10 +1,20 @@
+// TODO: Remove this block once we re-upgrade jruby-gradle-jar-plugin..
+// See #1: https://github.com/embulk/embulk/issues/954
+// See #2: https://github.com/jruby-gradle/jruby-gradle-plugin/issues/297
+repositories {
+    mavenLocal()
+    maven { url 'http://rubygems-proxy.torquebox.org/releases' }
+}
+
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
-        classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.5.0'
+        // TODO: Re-upgrade jruby-gradle-jar-plugin.
+        // See: https://github.com/embulk/embulk/issues/954
+        classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.0.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
@@ -118,7 +128,6 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
     }
 
     artifacts {
-        archives jar
         archives testsJar
         archives sourcesJar
         archives javadocJar
@@ -127,7 +136,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
     publishing {
         publications {
             bintrayMavenRelease(MavenPublication) {
-                artifact jar
+                from components.java
                 artifact testsJar
                 artifact sourcesJar
                 artifact javadocJar
