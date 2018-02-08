@@ -2,8 +2,6 @@ package org.embulk.config;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -34,9 +32,7 @@ class TaskInvocationHandler implements InvocationHandler {
         for (Method method : iface.getMethods()) {
             String methodName = method.getName();
             String fieldName = getterFieldNameOrNull(methodName);
-            if (fieldName != null && hasExpectedArgumentLength(method, 0)
-                    && (!method.isDefault() || method.getAnnotation(Config.class) != null)) {
-                // If the method has default implementation, and @Config is not annotated there, the method is kept.
+            if (fieldName != null && hasExpectedArgumentLength(method, 0)) {
                 builder.put(fieldName, method);
             }
         }
@@ -126,52 +122,6 @@ class TaskInvocationHandler implements InvocationHandler {
                 String fieldName;
                 fieldName = getterFieldNameOrNull(methodName);
                 if (fieldName != null) {
-                    if (method.isDefault() && !this.objects.containsKey(fieldName)) {
-                        // If and only if the method has default implementation, and @Config is not annotated there,
-                        // it is tried to call the default implementation directly without proxying.
-                        //
-                        // methodWithDefaultImpl.invoke(proxy) without this hack would cause infinite recursive calls.
-                        //
-                        // See hints:
-                        // https://rmannibucau.wordpress.com/2014/03/27/java-8-default-interface-methods-and-jdk-dynamic-proxies/
-                        // https://stackoverflow.com/questions/22614746/how-do-i-invoke-java-8-default-methods-reflectively
-                        //
-                        // This hack is required to support `org.joda.time.DateTimeZone` in some Tasks, for example
-                        // TimestampParser.Task and TimestampParser.TimestampColumnOption.
-                        //
-                        // TODO: Remove the hack once a cleaner way is found, or Joda-Time is finally removed.
-                        // https://github.com/embulk/embulk/issues/890
-                        if (CONSTRUCTOR_MethodHandles_Lookup != null) {
-                            synchronized (CONSTRUCTOR_MethodHandles_Lookup) {
-                                boolean hasSetAccessible = false;
-                                try {
-                                    CONSTRUCTOR_MethodHandles_Lookup.setAccessible(true);
-                                    hasSetAccessible = true;
-                                } catch (SecurityException ex) {
-                                    // Skip handling default implementation in case of errors.
-                                }
-
-                                if (hasSetAccessible) {
-                                    try {
-                                        return CONSTRUCTOR_MethodHandles_Lookup
-                                                .newInstance(
-                                                        method.getDeclaringClass(),
-                                                        MethodHandles.Lookup.PUBLIC
-                                                                | MethodHandles.Lookup.PRIVATE
-                                                                | MethodHandles.Lookup.PROTECTED
-                                                                | MethodHandles.Lookup.PACKAGE)
-                                                .unreflectSpecial(method, method.getDeclaringClass())
-                                                .bindTo(proxy)
-                                                .invokeWithArguments();
-                                    } catch (Throwable ex) {
-                                        // Skip handling default implementation in case of errors.
-                                    } finally {
-                                        CONSTRUCTOR_MethodHandles_Lookup.setAccessible(false);
-                                    }
-                                }
-                            }
-                        }
-                    }
                     checkArgumentLength(method, 0, methodName);
                     return invokeGetter(method, fieldName);
                 }
@@ -211,18 +161,4 @@ class TaskInvocationHandler implements InvocationHandler {
                     String.format("Method '%s' expected %d argument but got %d arguments", methodName, expected, method.getParameterTypes().length));
         }
     }
-
-    static {
-        Constructor<MethodHandles.Lookup> constructorMethodHandlesLookupTemporary = null;
-        try {
-            constructorMethodHandlesLookupTemporary =
-                    MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-        } catch (NoSuchMethodException | SecurityException ex) {
-            constructorMethodHandlesLookupTemporary = null;
-        } finally {
-            CONSTRUCTOR_MethodHandles_Lookup = constructorMethodHandlesLookupTemporary;
-        }
-    }
-
-    private static final Constructor<MethodHandles.Lookup> CONSTRUCTOR_MethodHandles_Lookup;
 }
