@@ -14,7 +14,6 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
-import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.PagePrinter;
 
 public class StdoutOutputPlugin implements OutputPlugin {
