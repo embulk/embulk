@@ -14,7 +14,6 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
 public class DynamicPageBuilder implements AutoCloseable {
@@ -31,13 +30,9 @@ public class DynamicPageBuilder implements AutoCloseable {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
-            if (getDefaultTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
-            } else {
-                return null;
-            }
-        }
+        @Config("default_timezone")
+        @ConfigDefault("\"UTC\"")
+        public org.joda.time.DateTimeZone getDefaultTimeZone();
 
         @Config("column_options")
         @ConfigDefault("{}")
@@ -54,9 +49,9 @@ public class DynamicPageBuilder implements AutoCloseable {
         // org.embulk.spi.time.TimestampFormat is deprecated, but the getter returns TimestampFormat for compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.embulk.spi.time.TimestampFormat getTimestampFormat() {
-            return new org.embulk.spi.time.TimestampFormat(getTimestampFormatString());
-        }
+        @Config("timestamp_format")
+        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N\"")
+        public org.embulk.spi.time.TimestampFormat getTimestampFormat();
 
         @Config("timezone")
         @ConfigDefault("null")
@@ -65,13 +60,9 @@ public class DynamicPageBuilder implements AutoCloseable {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
-            if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
-            } else {
-                return Optional.absent();
-            }
-        }
+        @Config("timezone")
+        @ConfigDefault("null")
+        public Optional<org.joda.time.DateTimeZone> getTimeZone();
     }
 
     private DynamicPageBuilder(
