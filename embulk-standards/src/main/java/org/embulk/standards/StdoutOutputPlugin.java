@@ -26,13 +26,9 @@ public class StdoutOutputPlugin implements OutputPlugin {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.joda.time.DateTimeZone getTimeZone() {
-            if (getTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId());
-            } else {
-                return null;
-            }
-        }
+        @Config("timezone")
+        @ConfigDefault("\"UTC\"")
+        public org.joda.time.DateTimeZone getTimeZone();
     }
 
     @Override
