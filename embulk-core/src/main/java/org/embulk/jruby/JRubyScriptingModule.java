@@ -7,7 +7,6 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
 import java.util.ArrayList;
@@ -18,7 +17,6 @@ import java.util.Set;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.exec.ForSystemConfig;
-import org.embulk.plugin.PluginSource;
 import org.embulk.spi.BufferAllocator;
 import org.slf4j.ILoggerFactory;
 
@@ -28,9 +26,6 @@ public class JRubyScriptingModule implements Module {
     @Override
     public void configure(Binder binder) {
         binder.bind(ScriptingContainerDelegate.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
-
-        Multibinder<PluginSource> multibinder = Multibinder.newSetBinder(binder, PluginSource.class);
-        multibinder.addBinding().to(JRubyPluginSource.class);
     }
 
     private static class ScriptingContainerProvider

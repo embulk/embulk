@@ -1,6 +1,5 @@
 package org.embulk.jruby;
 
-import com.google.inject.Inject;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.plugin.PluginType;
@@ -16,17 +15,9 @@ import org.embulk.spi.ParserPlugin;
 
 public class JRubyPluginSource implements PluginSource {
     private final ScriptingContainerDelegate jruby;
-    private final Object rubyPluginManager;
 
-    @Inject
     public JRubyPluginSource(ScriptingContainerDelegate jruby) {
         this.jruby = jruby;
-
-        // get Embulk::Plugin
-        //this.rubyPluginManager = ((RubyModule) jruby.get("Embulk")).const_get(
-        //        RubySymbol.newSymbol(
-        //            jruby.getProvider().getRuntime(), "Plugin"));
-        this.rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException {
@@ -62,6 +53,11 @@ public class JRubyPluginSource implements PluginSource {
 
         String methodName = "new_java_" + category;
         try {
+            // get Embulk::Plugin
+            //this.rubyPluginManager = ((RubyModule) jruby.get("Embulk")).const_get(
+            //        RubySymbol.newSymbol(
+            //            jruby.getProvider().getRuntime(), "Plugin"));
+            final Object rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
             return jruby.callMethod(rubyPluginManager, methodName, name, iface);
         } catch (JRubyInvokeFailedException ex) {
             throw new PluginSourceNotMatchException(ex.getCause().getCause());
