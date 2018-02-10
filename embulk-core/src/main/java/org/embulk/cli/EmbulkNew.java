@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.embulk.jruby.ScriptingContainerDelegate;
+import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkNew {
     public EmbulkNew(final String categoryWithLanguage, final String nameGiven, final String embulkVersion)
@@ -139,7 +139,7 @@ public class EmbulkNew {
                     fullProjectName,
                     javaClassName,
                     javaPackageName,
-                    ScriptingContainerDelegate.getJRubyVersion(EmbulkNew.class.getClassLoader()),
+                    ScriptingContainerDelegateImpl.getJRubyVersion(EmbulkNew.class.getClassLoader()),
                     language,
                     name,
                     rubyClassName);

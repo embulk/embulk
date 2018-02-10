@@ -23,6 +23,7 @@ import org.embulk.cli.parse.EmbulkCommandLineParser;
 import org.embulk.cli.parse.OptionBehavior;
 import org.embulk.cli.parse.OptionDefinition;
 import org.embulk.jruby.ScriptingContainerDelegate;
+import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkRun {
     public EmbulkRun(final String embulkVersion) {
@@ -690,7 +691,7 @@ public class EmbulkRun {
     @SuppressWarnings("checkstyle:LineLength")
     private ScriptingContainerDelegate createLocalJRubyScriptingContainerDelegate() {
         // Not |LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainerDelegate jruby = ScriptingContainerDelegate.create(
+        final ScriptingContainerDelegate jruby = ScriptingContainerDelegateImpl.create(
                 EmbulkRun.class.getClassLoader(),
                 ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
                 ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);

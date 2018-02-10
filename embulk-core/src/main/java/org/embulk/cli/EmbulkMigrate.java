@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.maven.artifact.versioning.ComparableVersion;
-import org.embulk.jruby.ScriptingContainerDelegate;
+import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkMigrate {
     public void migratePlugin(final String pathInString, final String thisEmbulkVersion) throws IOException {
@@ -186,7 +186,7 @@ public class EmbulkMigrate {
     private void migrateRubyPlugin(final Migrator migrator,
                                    final ComparableVersion fromVersion,
                                    final String thisEmbulkVersion) throws IOException {
-        final String jrubyVersion = ScriptingContainerDelegate.getJRubyVersion(EmbulkMigrate.class.getClassLoader());
+        final String jrubyVersion = ScriptingContainerDelegateImpl.getJRubyVersion(EmbulkMigrate.class.getClassLoader());
         if (jrubyVersion != null) {
             migrator.write(".ruby-version", "jruby-" + jrubyVersion);
         } else {
