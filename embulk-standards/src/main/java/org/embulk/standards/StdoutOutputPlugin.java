@@ -14,6 +14,7 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
+import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.PagePrinter;
 
 public class StdoutOutputPlugin implements OutputPlugin {
@@ -25,9 +26,13 @@ public class StdoutOutputPlugin implements OutputPlugin {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        @Config("timezone")
-        @ConfigDefault("\"UTC\"")
-        public org.joda.time.DateTimeZone getTimeZone();
+        public default org.joda.time.DateTimeZone getTimeZone() {
+            if (getTimeZoneId() != null) {
+                return TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId());
+            } else {
+                return null;
+            }
+        }
     }
 
     @Override

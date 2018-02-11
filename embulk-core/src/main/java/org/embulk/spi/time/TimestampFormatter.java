@@ -104,9 +104,13 @@ public class TimestampFormatter {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        @Config("default_timezone")
-        @ConfigDefault("\"UTC\"")
-        public org.joda.time.DateTimeZone getDefaultTimeZone();
+        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+            if (getDefaultTimeZoneId() != null) {
+                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
+            } else {
+                return null;
+            }
+        }
 
         @Config("default_timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N %z\"")
@@ -121,9 +125,13 @@ public class TimestampFormatter {
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        @Config("timezone")
-        @ConfigDefault("null")
-        public Optional<org.joda.time.DateTimeZone> getTimeZone();
+        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+            if (getTimeZoneId().isPresent()) {
+                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
+            } else {
+                return Optional.absent();
+            }
+        }
 
         @Config("format")
         @ConfigDefault("null")
