@@ -23,6 +23,7 @@ import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.ScriptingContainerDelegate;
+import org.embulk.jruby.ScriptingContainerDelegateImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -376,7 +377,7 @@ public class EmbulkRunner {
             final String templateIncludePath) {
         // TODO: Check if it is required to process JRuby options.
         // Not |ScriptingContainerDelegate.LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainerDelegate localJRubyContainer = ScriptingContainerDelegate.create(
+        final ScriptingContainerDelegate localJRubyContainer = ScriptingContainerDelegateImpl.create(
                 EmbulkRunner.class.getClassLoader(),
                 ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
                 ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
