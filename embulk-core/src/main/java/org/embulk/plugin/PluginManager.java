@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import org.embulk.config.ConfigException;
+import org.embulk.jruby.JRubyPluginSource;
+import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.InputPlugin;
 
 public class PluginManager {
     private final List<PluginSource> sources;
+    private final JRubyPluginSource jrubySource;
     private final Injector injector;
 
     // Set<PluginSource> is injected by BuiltinPluginSourceModule or extensions
@@ -19,6 +22,7 @@ public class PluginManager {
     @Inject
     public PluginManager(Set<PluginSource> pluginSources, Injector injector) {
         this.sources = ImmutableList.copyOf(pluginSources);
+        this.jrubySource = new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class));
         this.injector = injector;
     }
 
@@ -49,6 +53,12 @@ public class PluginManager {
             } catch (PluginSourceNotMatchException e) {
                 exceptions.add(e);
             }
+        }
+
+        try {
+            return this.jrubySource.newPlugin(iface, type);
+        } catch (PluginSourceNotMatchException e) {
+            exceptions.add(e);
         }
 
         throw buildPluginNotFoundException(iface, type, exceptions);
