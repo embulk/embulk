@@ -33,10 +33,11 @@ module Embulk
           when :string
             "record << reader.getString(#{idx})"
           when :timestamp
-            # Constructor of `org.jruby.RubyTime` requires `org.joda.time.DateTime`.
-            # http://jruby.org/apidocs/org/jruby/RubyTime.html#RubyTime(org.jruby.Ruby,%20org.jruby.RubyClass,%20org.joda.time.DateTime)
-            # TODO: Replace `RubyTime.new` to `RubyTime.newTime`.
-            "record << (java_timestamp = reader.getTimestamp(#{idx}); ruby_time = Java::org.jruby.RubyTime.new(JRuby.runtime, JRuby.runtime.getClass('Time'), Java::org.joda.time.DateTime.new(java_timestamp.toEpochMilli())).gmtime().to_java(Java::org.jruby.RubyTime); ruby_time.setNSec(java_timestamp.getNano()); ruby_time)"
+            # Constructing through Java::org.jruby.RubyTime instead of constructing Ruby's Time directly
+            # as Ruby's Time cannot be constructed from nanoseconds as of Ruby 2.4.
+            # TODO: Replace to Ruby's Time.at(seconds, nanoseconds, :nsec) available from Ruby 2.5.0.
+            # http://ruby-doc.org/core-2.5.0/Time.html#method-c-at
+            "record << (java_timestamp = reader.getTimestamp(#{idx}); Java::org.jruby.RubyTime.newTime(JRuby.runtime, Java::org.joda.time.DateTime.new(java_timestamp.getEpochSecond() * 1000), java_timestamp.getNano()).gmtime())"
           when :json
             "record << MessagePack.unpack(String.from_java_bytes((::Java::org.msgpack.core.MessagePack.newDefaultBufferPacker()).packValue(reader.getJson(#{idx})).toMessageBuffer().toByteArray()))"
           else
