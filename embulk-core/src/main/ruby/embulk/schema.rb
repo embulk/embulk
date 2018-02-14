@@ -70,8 +70,7 @@ module Embulk
           when :string
             "builder.setString(#{idx}, record[#{idx}])"
           when :timestamp
-            # It was originally expecting that `record[#{idx}]` was a Ruby Time object. Does it really happen?
-            "(ruby_time = record[#{idx}].to_java(Java::org.jruby.RubyTime); msec = ruby_time.getDateTime().getMillis(); builder.setTimestamp(#{idx}, java_timestamp_class.ofEpochSecond(msec / 1000, ruby_time.getNSec() + (msec % 1000) * 1000000)))"
+            "builder.setTimestamp(#{idx}, case record[#{idx}] when Java::org.embulk.spi.time.Timestamp then record[#{idx}] when Java::java.time.Instant then Java::org.embulk.spi.time.Timestamp.ofInstant(record[#{idx}]) when Time then Java::org.embulk.spi.time.Timestamp.ofEpochSecond(record[#{idx}].to_i, record[#{idx}].nsec) end)"
           when :json
             "builder.setJson(#{idx}, ::Java::org.msgpack.core.MessagePack.newDefaultUnpacker(MessagePack.pack(record[#{idx}]).to_java_bytes).unpackValue())"
           else

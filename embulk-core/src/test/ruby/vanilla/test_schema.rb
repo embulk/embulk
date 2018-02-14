@@ -19,7 +19,9 @@ class SchemaTest < ::Test::Unit::TestCase
       Time.at(Rational(1492207583281939141, 1000000000)).gmtime(),
       Java::org.jruby.RubyTime.newTime(JRuby.runtime,
                                        Java::org.joda.time.DateTime.new(1592207583 * 1000),
-                                       181939141)
+                                       181939141),
+      Java::org.embulk.spi.time.Timestamp.ofEpochSecond(1292207583, 191939141),
+      Java::java.time.Instant.ofEpochSecond(1192207583, 171939141),
     ]
     schema.write_record(page_builder, record)
 
@@ -29,6 +31,12 @@ class SchemaTest < ::Test::Unit::TestCase
     assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][1].class)
     assert_equal(1592207583, page_builder.get_records[0][1].getEpochSecond())
     assert_equal(181939141, page_builder.get_records[0][1].getNano())
+    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][2].class)
+    assert_equal(1292207583, page_builder.get_records[0][2].getEpochSecond())
+    assert_equal(191939141, page_builder.get_records[0][2].getNano())
+    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][3].class)
+    assert_equal(1192207583, page_builder.get_records[0][3].getEpochSecond())
+    assert_equal(171939141, page_builder.get_records[0][3].getNano())
   end
 
   def create_schema_for_read
@@ -42,6 +50,8 @@ class SchemaTest < ::Test::Unit::TestCase
     builder = Java::org.embulk.spi.Schema.builder()
     builder.add('time1', Java::org.embulk.spi.type.Types::TIMESTAMP)
     builder.add('time2', Java::org.embulk.spi.type.Types::TIMESTAMP)
+    builder.add('time3', Java::org.embulk.spi.type.Types::TIMESTAMP)
+    builder.add('time4', Java::org.embulk.spi.type.Types::TIMESTAMP)
     builder.build()
   end
 end
