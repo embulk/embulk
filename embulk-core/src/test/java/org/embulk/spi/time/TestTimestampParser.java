@@ -666,6 +666,8 @@ public class TestTimestampParser {
         fail();
     }
 
+    // Legacy TimestampParser with a default date is deprecated, but intentionally tested.
+    @SuppressWarnings("deprecation")
     private void testToParse(final String string, final String format, final long second, final int nanoOfSecond) {
         final TimestampParser parser = TimestampParser.of(format, "UTC", "4567-01-23");
         final Timestamp timestamp = parser.parse(string);
@@ -677,6 +679,8 @@ public class TestTimestampParser {
         testToParse(string, format, second, 0);
     }
 
+    // Legacy TimestampParser with a default date is deprecated, but intentionally tested.
+    @SuppressWarnings("deprecation")
     private void failToParse(final String string, final String format) {
         final TimestampParser parser = TimestampParser.of(format, "UTC", "4567-01-23");
         try {

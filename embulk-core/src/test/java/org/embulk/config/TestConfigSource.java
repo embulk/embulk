@@ -50,6 +50,8 @@ public class TestConfigSource {
         public double getDouble();
     }
 
+    // getDefaultTimeZone() with org.joda.time.DateTimeZone is deprecated, but intentionally tested.
+    @SuppressWarnings("deprecation")
     private static interface DuplicatedDateTimeZone extends Task, TimestampParser.Task {
         @Config("default_timezone")
         @ConfigDefault("\"America/Los_Angeles\"")
