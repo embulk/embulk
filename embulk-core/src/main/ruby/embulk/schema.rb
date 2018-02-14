@@ -34,7 +34,9 @@ module Embulk
             "record << reader.getString(#{idx})"
           when :timestamp
             # Constructing through Java::org.jruby.RubyTime instead of constructing Ruby's Time directly
-            # as Ruby's Time cannot be constructed from nanoseconds as of Ruby 2.4.
+            # as Ruby's Time cannot be constructed from nanoseconds as of Ruby 2.4. Ruby's Time might be
+            # extended independently from Java::org.jruby.RubyTime, for example, to_msgpack.
+            # Java::org.jruby.RubyTime is converted to Ruby's Time by gmtime() as a result.
             # TODO: Replace to Ruby's Time.at(seconds, nanoseconds, :nsec) available from Ruby 2.5.0.
             # http://ruby-doc.org/core-2.5.0/Time.html#method-c-at
             "record << (java_timestamp = reader.getTimestamp(#{idx}); Java::org.jruby.RubyTime.newTime(JRuby.runtime, Java::org.joda.time.DateTime.new(java_timestamp.getEpochSecond() * 1000), java_timestamp.getNano()).gmtime())"
