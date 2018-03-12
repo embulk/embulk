@@ -59,8 +59,8 @@ public class JRubyPluginSource implements PluginSource {
             //            jruby.getProvider().getRuntime(), "Plugin"));
             final Object rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
             return jruby.callMethod(rubyPluginManager, methodName, name, iface);
-        } catch (JRubyInvokeFailedException ex) {
-            throw new PluginSourceNotMatchException(ex.getCause().getCause());
+        } catch (Throwable ex) {
+            throw new PluginSourceNotMatchException(ex);
         }
     }
 }
