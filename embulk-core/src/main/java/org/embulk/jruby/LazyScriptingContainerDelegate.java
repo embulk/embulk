@@ -30,55 +30,55 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
 
     // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
     @Override
-    String getGemHome() throws JRubyNotLoadedException {
+    String getGemHome() throws JRubyInvalidRuntimeException {
         return getInitialized().getGemHome();
     }
 
     // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
     @Override
-    String getGemPathInString() throws JRubyNotLoadedException {
+    String getGemPathInString() throws JRubyInvalidRuntimeException {
         return getInitialized().getGemPathInString();
     }
 
     @Override
-    public void clearGemPaths() throws JRubyNotLoadedException {
+    public void clearGemPaths() throws JRubyInvalidRuntimeException {
         getInitialized().clearGemPaths();
     }
 
     @Override
-    public void setGemPaths(final String gemPath) throws JRubyNotLoadedException {
+    public void setGemPaths(final String gemPath) throws JRubyInvalidRuntimeException {
         getInitialized().setGemPaths(gemPath);
     }
 
     @Override
-    public boolean isBundleGemfileDefined() throws JRubyNotLoadedException {
+    public boolean isBundleGemfileDefined() throws JRubyInvalidRuntimeException {
         return getInitialized().isBundleGemfileDefined();
     }
 
     @Override
-    public String getBundleGemfile() throws JRubyNotLoadedException {
+    public String getBundleGemfile() throws JRubyInvalidRuntimeException {
         return getInitialized().getBundleGemfile();
     }
 
     @Override
-    public void setBundleGemfile(final String gemfilePath) throws JRubyNotLoadedException {
+    public void setBundleGemfile(final String gemfilePath) throws JRubyInvalidRuntimeException {
         getInitialized().setBundleGemfile(gemfilePath);
     }
 
     @Override
-    public void unsetBundleGemfile() throws JRubyNotLoadedException {
+    public void unsetBundleGemfile() throws JRubyInvalidRuntimeException {
         getInitialized().unsetBundleGemfile();
     }
 
     // It is intentionally private. It should return RubyObject while it is Object in the signature.
     @Override
-    Object getGemPaths() throws JRubyNotLoadedException {
+    Object getGemPaths() throws JRubyInvalidRuntimeException {
         return getInitialized().getGemPaths();
     }
 
     @Override
     public void processJRubyOption(final String jrubyOption)
-            throws JRubyNotLoadedException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException {
+            throws JRubyInvalidRuntimeException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException {
         getInitialized().processJRubyOption(jrubyOption);
     }
 
@@ -86,7 +86,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     public Object callMethod(
             final Object receiver,
             final String methodName,
-            final Object... args) throws JRubyNotLoadedException {
+            final Object... args) throws JRubyInvalidRuntimeException {
         return getInitialized().callMethod(receiver, methodName, args);
     }
 
@@ -96,14 +96,14 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final Object receiver,
             final String methodName,
             final Block block,
-            final Object... args) throws JRubyNotLoadedException;
+            final Object... args) throws JRubyInvalidRuntimeException;
     */
 
     @Override
     public <T> T callMethod(
             final Object receiver,
             final String methodName,
-            final Class<T> returnType) throws JRubyNotLoadedException {
+            final Class<T> returnType) throws JRubyInvalidRuntimeException {
         return getInitialized().callMethod(receiver, methodName, returnType);
     }
 
@@ -112,7 +112,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final Object receiver,
             final String methodName,
             final Object singleArg,
-            final Class<T> returnType) throws JRubyNotLoadedException {
+            final Class<T> returnType) throws JRubyInvalidRuntimeException {
         return getInitialized().callMethod(receiver, methodName, singleArg, returnType);
     }
 
@@ -122,7 +122,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final Object receiver,
             final String methodName,
             final Object[] args,
-            final Class<T> returnType) throws JRubyNotLoadedException;
+            final Class<T> returnType) throws JRubyInvalidRuntimeException;
     */
 
     /*
@@ -132,7 +132,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final String methodName,
             final Object[] args,
             final Block block,
-            final Class<T> returnType) throws JRubyNotLoadedException;
+            final Class<T> returnType) throws JRubyInvalidRuntimeException;
     */
 
     /*
@@ -141,7 +141,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final Object receiver,
             final String methodName,
             final Class<T> returnType,
-            final EmbedEvalUnit unit) throws JRubyNotLoadedException;
+            final EmbedEvalUnit unit) throws JRubyInvalidRuntimeException;
     */
 
     /*
@@ -151,7 +151,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final String methodName,
             final Object[] args,
             final Class<T> returnType,
-            final EmbedEvalUnit unit) throws JRubyNotLoadedException;
+            final EmbedEvalUnit unit) throws JRubyInvalidRuntimeException;
     */
 
     /*
@@ -162,39 +162,39 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final Object[] args,
             final Block block,
             final Class<T> returnType,
-            final EmbedEvalUnit unit) throws JRubyNotLoadedException;
+            final EmbedEvalUnit unit) throws JRubyInvalidRuntimeException;
     */
 
     // It is intentionally private. It should return LocalContextProvider while it is Object in the signature.
     @Override
-    Object getProvider() throws JRubyNotLoadedException {
+    Object getProvider() throws JRubyInvalidRuntimeException {
         return getInitialized().getProvider();
     }
 
     @Override
-    public Object put(final String key, final Object value) throws JRubyNotLoadedException {
+    public Object put(final String key, final Object value) throws JRubyInvalidRuntimeException {
         return getInitialized().put(key, value);
     }
 
     @Override
-    public Object remove(final String key) throws JRubyNotLoadedException {
+    public Object remove(final String key) throws JRubyInvalidRuntimeException {
         return getInitialized().remove(key);
     }
 
     @Override
-    public Object runScriptlet(final String script) throws JRubyNotLoadedException {
+    public Object runScriptlet(final String script) throws JRubyInvalidRuntimeException {
         return getInitialized().runScriptlet(script);
     }
 
     // It is intentionally private. It should return RubyInstanceConfig while it is Object in the signature.
     @Override
-    Object getRubyInstanceConfig() throws JRubyNotLoadedException {
+    Object getRubyInstanceConfig() throws JRubyInvalidRuntimeException {
         return getInitialized().getRubyInstanceConfig();
     }
 
     // It is intentionally private. It should return Runtime while it is Object in the signature.
     @Override
-    Object getRuntime() throws JRubyNotLoadedException {
+    Object getRuntime() throws JRubyInvalidRuntimeException {
         return getInitialized().getRuntime();
     }
 

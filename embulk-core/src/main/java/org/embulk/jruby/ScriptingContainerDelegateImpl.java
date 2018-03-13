@@ -419,56 +419,56 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
 
     // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
     @Override
-    String getGemHome() throws JRubyNotLoadedException {
+    String getGemHome() throws JRubyInvalidRuntimeException {
         return this.callMethod(this.getGemPaths(), "home", String.class);
     }
 
     // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
     @Override
-    String getGemPathInString() throws JRubyNotLoadedException {
+    String getGemPathInString() throws JRubyInvalidRuntimeException {
         final List gemPath = this.callMethod(this.getGemPaths(), "path", List.class);
         return gemPath.toString();
     }
 
     @Override
-    public void clearGemPaths() throws JRubyNotLoadedException {
+    public void clearGemPaths() throws JRubyInvalidRuntimeException {
         this.callMethod(this.runScriptlet("Gem"), "use_paths", (Object) null, (Object) null);
     }
 
     @Override
-    public void setGemPaths(final String gemPath) throws JRubyNotLoadedException {
+    public void setGemPaths(final String gemPath) throws JRubyInvalidRuntimeException {
         this.callMethod(this.runScriptlet("Gem"), "use_paths", gemPath, gemPath);
     }
 
     @Override
-    public boolean isBundleGemfileDefined() throws JRubyNotLoadedException {
+    public boolean isBundleGemfileDefined() throws JRubyInvalidRuntimeException {
         return this.callMethod(this.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
     }
 
     @Override
-    public String getBundleGemfile() throws JRubyNotLoadedException {
+    public String getBundleGemfile() throws JRubyInvalidRuntimeException {
         return this.callMethod(this.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
     }
 
     @Override
-    public void setBundleGemfile(final String gemfilePath) throws JRubyNotLoadedException {
+    public void setBundleGemfile(final String gemfilePath) throws JRubyInvalidRuntimeException {
         this.callMethod(this.runScriptlet("ENV"), "store", "BUNDLE_GEMFILE", gemfilePath);
     }
 
     @Override
-    public void unsetBundleGemfile() throws JRubyNotLoadedException {
+    public void unsetBundleGemfile() throws JRubyInvalidRuntimeException {
         this.callMethod(this.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
     }
 
     // It is intentionally private. It should return RubyObject while it is Object in the signature.
     @Override
-    Object getGemPaths() throws JRubyNotLoadedException {
+    Object getGemPaths() throws JRubyInvalidRuntimeException {
         return this.callMethod(this.runScriptlet("Gem"), "paths", this.class_RubyObject);
     }
 
     @Override
     public void processJRubyOption(final String jrubyOption)
-            throws JRubyNotLoadedException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException {
+            throws JRubyInvalidRuntimeException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException {
         final Object rubyInstanceConfig = this.getRubyInstanceConfig();
 
         if (jrubyOption.charAt(0) != '-') {
@@ -508,24 +508,30 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     @Override
     public Object callMethod(final Object receiver,
                              final String methodName,
-                             final Object... args) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_callMethod_ALObject == null) {
+                             final Object... args) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
+        }
+        if (this.method_callMethod_ALObject == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Object...) is unavailable unexpectedly.");
         }
         try {
             return this.method_callMethod_ALObject.invoke(this.scriptingContainer, receiver, methodName, args);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Object...) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
@@ -541,27 +547,34 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     @Override
     public <T> T callMethod(final Object receiver,
                             final String methodName,
-                            final Class<T> returnType) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_callMethod_LClass == null) {
+                            final Class<T> returnType) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_callMethod_LClass == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Class) is unavailable unexpectedly.");
+        }
+
         try {
             @SuppressWarnings("unchecked")
             final T returnValue = (T) (this.method_callMethod_LClass.invoke(
                     this.scriptingContainer, receiver, methodName, returnType));
             return returnValue;
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Class) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
@@ -569,27 +582,34 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     public <T> T callMethod(final Object receiver,
                             final String methodName,
                             final Object singleArg,
-                            final Class<T> returnType) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_callMethod_LObject_LClass == null) {
+                            final Class<T> returnType) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_callMethod_LObject_LClass == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Object, Class) is unavailable unexpectedly.");
+        }
+
         try {
             @SuppressWarnings("unchecked")
             final T returnValue = (T) (this.method_callMethod_LObject_LClass.invoke(
                     this.scriptingContainer, receiver, methodName, singleArg, returnType));
             return returnValue;
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#callMethod(Object, String, Object, Class) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
@@ -644,153 +664,183 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
 
     // It is intentionally private. It should return LocalContextProvider while it is Object in the signature.
     @Override
-    Object getProvider() throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_getProvider == null) {
+    Object getProvider() throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_getProvider == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#getProvider() is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_getProvider.invoke(this.scriptingContainer);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#getProvider() is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
     @Override
-    public Object put(final String key, final Object value) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_put_LString_LObject == null) {
+    public Object put(final String key, final Object value) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_put_LString_LObject == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#put(String, Object) is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_put_LString_LObject.invoke(this.scriptingContainer, key, value);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#put(String, Object) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
     @Override
-    public Object remove(final String key) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_remove_LString == null) {
+    public Object remove(final String key) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_remove_LString == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#remove(String) is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_remove_LString.invoke(this.scriptingContainer, key);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#remove(String) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
     @Override
-    public Object runScriptlet(final String script) throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null || this.method_runScriptlet_LString == null) {
+    public Object runScriptlet(final String script) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
+        if (this.method_runScriptlet_LString == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#runScriptlet(String) is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_runScriptlet_LString.invoke(this.scriptingContainer, script);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#runScriptlet(String) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
-    // It is intentionally private. It should return RubyInstanceConfig while it is Object in the signature.
+    // It is intentionally package-private. It should return RubyInstanceConfig while it is Object in the signature.
     @Override
-    Object getRubyInstanceConfig() throws JRubyNotLoadedException {
+    Object getRubyInstanceConfig() throws JRubyInvalidRuntimeException {
         final Object provider = this.getProvider();
-        if (provider == null || this.method_runScriptlet_LString == null) {
-            throw new JRubyNotLoadedException();
+        if (provider == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#getProvider() returned invalid LocalContextProvider unexpectedly.");
         }
+        if (this.method_getRubyInstanceConfig == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "LocalContextProvider#getRubyInstanceConfig is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_getRubyInstanceConfig.invoke(provider);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "LocalContextProvider#getRubyInstanceConfig is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
     }
 
-    // It is intentionally private. It should return Runtime while it is Object in the signature.
+    // It is intentionally package-private. It should return Runtime while it is Object in the signature.
     @Override
-    Object getRuntime() throws JRubyNotLoadedException {
+    Object getRuntime() throws JRubyInvalidRuntimeException {
         final Object provider = this.getProvider();
-        if (provider == null || this.method_getRuntime == null) {
-            throw new JRubyNotLoadedException();
+        if (provider == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#getProvider() returned invalid LocalContextProvider unexpectedly.");
         }
+        if (this.method_getRuntime == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "LocalContextProvider#getRuntime is unavailable unexpectedly.");
+        }
+
         try {
             return this.method_getRuntime.invoke(provider);
-        } catch (IllegalAccessException ex) {
-            throw new JRubyNotLoadedException(ex);
-        } catch (InvocationTargetException ex) {
-            if (isCausedByInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex.getCause());
-            }
-            throw new JRubyNotLoadedException(ex);
         } catch (RuntimeException ex) {
-            if (isInvokeFailedException(ex)) {
-                throw new JRubyInvokeFailedException(ex);
-            }
             throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "LocalContextProvider#getRuntime is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
         }
-    }
-
-    private static boolean isCausedByInvokeFailedException(final InvocationTargetException exception) {
-        if (exception == null) {
-            return false;
-        }
-        final Throwable cause = exception.getCause();
-        return cause != null && isInvokeFailedException(cause);
-    }
-
-    private static boolean isInvokeFailedException(final Throwable exception) {
-        return exception != null
-                       && exception instanceof RuntimeException
-                       && exception.getClass().getName().equals("org.jruby.embed.InvokeFailedException");
     }
 
     /** Instance of org.jruby.embed.ScriptingContainer. It may be created lazily. */
