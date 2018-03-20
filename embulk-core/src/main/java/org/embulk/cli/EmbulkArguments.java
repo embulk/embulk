@@ -20,9 +20,9 @@ public class EmbulkArguments {
                 subcommand = EmbulkSubcommand.of(argument);
             } else if (subcommand == null && (argument.equals("-b") || argument.equals("--bundle"))) {
                 throw new EmbulkCommandLineException("\"-b\" or \"--bundle\" before a subcommand is not supported.");
-            } else if (argument.equals("-version")) {
+            } else if (subcommand == null && argument.equals("-version")) {
                 return new EmbulkArguments(EmbulkSubcommand.VERSION_ERR, new ArrayList<String>());
-            } else if (argument.equals("--version")) {
+            } else if (subcommand == null && argument.equals("--version")) {
                 return new EmbulkArguments(EmbulkSubcommand.VERSION_OUT, new ArrayList<String>());
             } else {
                 subcommandArguments.add(argument);
