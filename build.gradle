@@ -65,6 +65,10 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test
 
     tasks.withType(Test) {
         systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
+        testLogging {
+            outputs.upToDateWhen { false }
+            showStandardStreams = true
+        }
     }
 
     tasks.withType(Checkstyle) {
