@@ -51,6 +51,10 @@ public class Exec {
         return session().getLogger(name);
     }
 
+    public static Reporter getReporter(Reporter.Channel channel) {
+        return session().getReporter(channel);
+    }
+
     public static BufferAllocator getBufferAllocator() {
         return session().getBufferAllocator();
     }
