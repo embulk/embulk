@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import com.google.common.base.Optional;
 import com.google.inject.Injector;
+import java.util.Map;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -30,6 +31,8 @@ public class ExecSession {
     private final TempFileSpace tempFileSpace;
 
     private final boolean preview;
+
+    private Map<Reporter.Channel, Reporter> reporters;
 
     @Deprecated
     public interface SessionTask extends Task {
@@ -177,6 +180,14 @@ public class ExecSession {
         return new TimestampFormatter(format, timezone);
     }
 
+    public void setReporters(final Map<Reporter.Channel, Reporter> reporters) {
+        this.reporters = reporters;
+    }
+
+    public Reporter getReporter(Reporter.Channel channel) {
+        return this.reporters.get(channel); // getOrDefault?
+    }
+
     public TempFileSpace getTempFileSpace() {
         return tempFileSpace;
     }
@@ -186,6 +197,15 @@ public class ExecSession {
     }
 
     public void cleanup() {
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
+            try {
+                reporter.cleanup();
+            } catch (Exception ex) {
+                // ignore exception
+            }
+        }
+
         tempFileSpace.cleanup();
     }
 }

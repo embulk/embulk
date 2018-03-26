@@ -13,6 +13,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.time.DateTimeZoneSerDe;
 import org.embulk.spi.time.TimestampSerDe;
 import org.embulk.spi.unit.LocalFileSerDe;
@@ -37,6 +38,9 @@ public class ExecModule implements Module {
 
         // LocalExecutorPlugin
         registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
+
+        // stdout reporter plugins
+        registerPluginTo(binder, ReporterPlugin.class, "stdout", StdoutReporterPlugin.class);
 
         // serde
         ObjectMapperModule mapper = new ObjectMapperModule();

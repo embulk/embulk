@@ -3,9 +3,12 @@ package org.embulk.exec;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -16,6 +19,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.AbstractReporterImpl;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
@@ -27,6 +31,8 @@ import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TaskState;
 import org.embulk.spi.util.Filters;
@@ -50,6 +56,10 @@ public class BulkLoader {
         @Config("out")
         public ConfigSource getOutputConfig();
 
+        @Config("reporters")
+        @ConfigDefault("{}")
+        public ConfigSource getReporterConfigs();
+
         public TaskSource getOutputTask();
 
         public void setOutputTask(TaskSource taskSource);
@@ -64,10 +74,12 @@ public class BulkLoader {
         private final Logger logger;
 
         private final ProcessPluginSet plugins;
+        private volatile Map<Reporter.Channel, PluginType> reporterPluginTypes;
 
         private volatile TaskSource inputTaskSource;
         private volatile TaskSource outputTaskSource;
         private volatile List<TaskSource> filterTaskSources;
+        private volatile Map<Reporter.Channel, TaskSource> reporterTaskSources;
         private volatile List<Schema> schemas;
         private volatile Schema executorSchema;
         private volatile TransactionStage transactionStage;
@@ -85,6 +97,10 @@ public class BulkLoader {
 
         public Logger getLogger() {
             return logger;
+        }
+
+        public void setReporterPluginTypes(Map<Reporter.Channel, PluginType> reporterPluginTypes) {
+            this.reporterPluginTypes = reporterPluginTypes;
         }
 
         public void setSchemas(List<Schema> schemas) {
@@ -111,11 +127,23 @@ public class BulkLoader {
             this.filterTaskSources = filterTaskSources;
         }
 
+        public void setReporterTaskSources(Map<Reporter.Channel, TaskSource> reporterTaskSources) {
+            this.reporterTaskSources = reporterTaskSources;
+        }
+
         public ProcessTask buildProcessTask() {
             return new ProcessTask(
-                    plugins.getInputPluginType(), plugins.getOutputPluginType(), plugins.getFilterPluginTypes(),
-                    inputTaskSource, outputTaskSource, filterTaskSources,
-                    schemas, executorSchema, Exec.newTaskSource());
+                    plugins.getInputPluginType(),
+                    plugins.getOutputPluginType(),
+                    plugins.getFilterPluginTypes(),
+                    reporterPluginTypes,
+                    inputTaskSource,
+                    outputTaskSource,
+                    filterTaskSources,
+                    reporterTaskSources,
+                    schemas,
+                    executorSchema,
+                    Exec.newTaskSource());
         }
 
         @Override
@@ -397,18 +425,22 @@ public class BulkLoader {
         private final PluginType inputPluginType;
         private final PluginType outputPluginType;
         private final List<PluginType> filterPluginTypes;
+        private final Map<Reporter.Channel, PluginType> reporterPluginTypes;
 
         private final InputPlugin inputPlugin;
         private final OutputPlugin outputPlugin;
         private final List<FilterPlugin> filterPlugins;
+        private final Map<Reporter.Channel, ReporterPlugin> reporterPlugins;
 
         public ProcessPluginSet(BulkLoaderTask task) {
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
             this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
+            this.reporterPluginTypes = BulkLoader.getReporterPluginTypes(task.getReporterConfigs());
             this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
             this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
             this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
+            this.reporterPlugins = BulkLoader.createReporterPlugins(Exec.session(), reporterPluginTypes);
         }
 
         public PluginType getInputPluginType() {
@@ -423,6 +455,10 @@ public class BulkLoader {
             return filterPluginTypes;
         }
 
+        public Map<Reporter.Channel, PluginType> getReporterPluginTypes() {
+            return reporterPluginTypes;
+        }
+
         public InputPlugin getInputPlugin() {
             return inputPlugin;
         }
@@ -433,6 +469,10 @@ public class BulkLoader {
 
         public List<FilterPlugin> getFilterPlugins() {
             return filterPlugins;
+        }
+
+        public Map<Reporter.Channel, ReporterPlugin> getReporterPlugins() {
+            return reporterPlugins;
         }
     }
 
@@ -477,64 +517,152 @@ public class BulkLoader {
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
+    private static Map<Reporter.Channel, ConfigSource> extractReporterConfigs(final ConfigSource reporterConfigs) {
+        final ImmutableMap.Builder<Reporter.Channel, ConfigSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final String typeName = channel.toString();
+            final ConfigSource config = reporterConfigs.getNestedOrGetEmpty(typeName);
+            // even though the channel doesn't appear in reporter config, empty Json object is stored.
+            builder.put(channel, config);
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static Map<Reporter.Channel, PluginType> getReporterPluginTypes(final ConfigSource reporterConfigs) {
+        final Map<Reporter.Channel, ConfigSource> configs = extractReporterConfigs(reporterConfigs);
+        final ImmutableMap.Builder<Reporter.Channel, PluginType> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ConfigSource config = configs.get(channel);
+            // if 'type' attribute doesn't appear in reporter section, it returns 'stdout' plugin type.
+            final PluginType pluginType = config.get(PluginType.class, "type", PluginType.STDOUT);
+            builder.put(channel, pluginType);
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static Map<Reporter.Channel, ReporterPlugin> createReporterPlugins(
+            final ExecSession exec,
+            final Map<Reporter.Channel, PluginType> pluginTypes) {
+        final ImmutableMap.Builder<Reporter.Channel, ReporterPlugin> plugins = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final PluginType pluginType = pluginTypes.get(channel);
+            final ReporterPlugin reporterPlugin = exec.newPlugin(ReporterPlugin.class, pluginType);
+            plugins.put(channel, reporterPlugin);
+        }
+        return Maps.immutableEnumMap(plugins.build());
+    }
+
+    private static Map<Reporter.Channel, Reporter> createReporters(
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, TaskSource> tasks) {
+        final ImmutableMap.Builder<Reporter.Channel, Reporter> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ReporterPlugin plugin = plugins.get(channel);
+            final TaskSource task = tasks.get(channel);
+            builder.put(channel, plugin.open(task));
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static void reportersTransaction(
+            final Map<Reporter.Channel, ReporterPlugin> plugins,
+            final Map<Reporter.Channel, ConfigSource> configs,
+            final ReportersControl control) {
+        final ImmutableMap.Builder<Reporter.Channel, TaskSource> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final ConfigSource config = configs.get(channel);
+            final ReporterPlugin reporterPlugin = plugins.get(channel);
+            final TaskSource task = reporterPlugin.configureTaskSource(config);
+            builder.put(channel, task);
+        }
+        control.run(Maps.immutableEnumMap(builder.build()));
+    }
+
+    private static void closeReporters(final LoaderState state, final Map<Reporter.Channel, Reporter> reporters) {
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
+            try {
+                reporter.close();
+            } catch (Exception ex) {
+                state.getLogger().warn(String.format("'%s' channel reporter's close failed. Ignoring this exception.", channel.toString()), ex);
+            }
+        }
+    }
+
+    private interface ReportersControl {
+        void run(final Map<Reporter.Channel, TaskSource> reporterTasks);
+    }
+
     private ExecutionResult doRun(ConfigSource config) {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
-        final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
-        state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
-            ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
-                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount) {
-                    state.setInputTaskSource(inputTask);
-                    state.setTransactionStage(TransactionStage.FILTER_BEGIN);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
-                            state.setSchemas(schemas);
-                            state.setFilterTaskSources(filterTasks);
-                            state.setTransactionStage(TransactionStage.EXECUTOR_BEGIN);
-                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
-                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor) {
-                                    state.setExecutorSchema(executorSchema);
-                                    state.setTransactionStage(TransactionStage.OUTPUT_BEGIN);
-                                    @SuppressWarnings("checkstyle:LineLength")
-                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<TaskReport> run(final TaskSource outputTask) {
-                                            state.setOutputTaskSource(outputTask);
-                                            state.initialize(inputTaskCount, outputTaskCount);
-                                            state.setTransactionStage(TransactionStage.RUN);
+            reportersTransaction(plugins.getReporterPlugins(), extractReporterConfigs(task.getReporterConfigs()), new ReportersControl() {
+                public void run(final Map<Reporter.Channel, TaskSource> reporterTasks) {
+                    final ExecutorPlugin exec = newExecutorPlugin(task);
 
-                                            if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
-                                                execute(task, executor, state);
+                    final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
+                    try {
+                        state.setReporterTaskSources(reporterTasks);
+                        Exec.session().setReporters(reporters);
+
+                        state.setTransactionStage(TransactionStage.INPUT_BEGIN);
+                        ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
+                            public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount) {
+                                state.setInputTaskSource(inputTask);
+                                state.setTransactionStage(TransactionStage.FILTER_BEGIN);
+                                Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                                    public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
+                                        state.setSchemas(schemas);
+                                        state.setFilterTaskSources(filterTasks);
+                                        state.setTransactionStage(TransactionStage.EXECUTOR_BEGIN);
+                                        exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                            public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor) {
+                                                state.setExecutorSchema(executorSchema);
+                                                state.setTransactionStage(TransactionStage.OUTPUT_BEGIN);
+                                                ConfigDiff outputConfigDiff = plugins.getOutputPlugin().transaction(
+                                                        task.getOutputConfig(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                                            public List<TaskReport> run(final TaskSource outputTask) {
+                                                                state.setOutputTaskSource(outputTask);
+                                                                state.initialize(inputTaskCount, outputTaskCount);
+                                                                state.setTransactionStage(TransactionStage.RUN);
+
+                                                                if (!state.isAllTasksCommitted()) {  // inputTaskCount == 0
+                                                                    execute(task, executor, state);
+                                                                }
+
+                                                                if (!state.isAllTasksCommitted()) {
+                                                                    throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
+                                                                            state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
+                                                                }
+
+                                                                state.setTransactionStage(TransactionStage.OUTPUT_COMMIT);
+                                                                return state.getAllOutputTaskReports();
+                                                            }
+                                                        });
+                                                state.setOutputConfigDiff(outputConfigDiff);
+                                                state.setTransactionStage(TransactionStage.EXECUTOR_COMMIT);
                                             }
+                                        });
+                                        state.setTransactionStage(TransactionStage.FILTER_COMMIT);
+                                    }
+                                });
+                                state.setTransactionStage(TransactionStage.INPUT_COMMIT);
+                                return state.getAllInputTaskReports();
+                            }
+                        });
+                        state.setInputConfigDiff(inputConfigDiff);
+                        state.setTransactionStage(TransactionStage.CLEANUP);
 
-                                            if (!state.isAllTasksCommitted()) {
-                                                throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
-                                                            state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
-                                            }
-
-                                            state.setTransactionStage(TransactionStage.OUTPUT_COMMIT);
-                                            return state.getAllOutputTaskReports();
-                                        }
-                                    });
-                                    state.setOutputConfigDiff(outputConfigDiff);
-                                    state.setTransactionStage(TransactionStage.EXECUTOR_COMMIT);
-                                }
-                            });
-                            state.setTransactionStage(TransactionStage.FILTER_COMMIT);
-                        }
-                    });
-                    state.setTransactionStage(TransactionStage.INPUT_COMMIT);
-                    return state.getAllInputTaskReports();
+                        cleanupCommittedTransaction(config, state);
+                    } finally {
+                        closeReporters(state, reporters);
+                    }
                 }
             });
-            state.setInputConfigDiff(inputConfigDiff);
-            state.setTransactionStage(TransactionStage.CLEANUP);
-
-            cleanupCommittedTransaction(config, state);
-
             return state.buildExecuteResult();
 
         } catch (Throwable ex) {
@@ -549,68 +677,81 @@ public class BulkLoader {
         }
     }
 
-    private ExecutionResult doResume(ConfigSource config, final ResumeState resume) {
+    private ExecutionResult doResume(final ConfigSource config, final ResumeState resume) {
         final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
 
-        final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
         final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
-        state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
-            @SuppressWarnings("checkstyle:LineLength")
-            ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
-                public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount) {
-                    // TODO validate inputTask?
-                    // TODO validate inputSchema
-                    state.setInputTaskSource(inputTask);
-                    state.setTransactionStage(TransactionStage.FILTER_BEGIN);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                        public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
-                            state.setSchemas(schemas);
-                            state.setFilterTaskSources(filterTasks);
-                            state.setTransactionStage(TransactionStage.EXECUTOR_BEGIN);
-                            exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
-                                public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor) {
-                                    // TODO validate executorSchema
-                                    state.setExecutorSchema(executorSchema);
-                                    state.setTransactionStage(TransactionStage.OUTPUT_BEGIN);
-                                    @SuppressWarnings("checkstyle:LineLength")
-                                    ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
-                                        public List<TaskReport> run(final TaskSource outputTask) {
-                                            // TODO validate outputTask?
-                                            state.setOutputTaskSource(outputTask);
-                                            restoreResumedTaskReports(resume, state);
-                                            state.setTransactionStage(TransactionStage.RUN);
+            reportersTransaction(plugins.getReporterPlugins(), extractReporterConfigs(task.getReporterConfigs()), new ReportersControl() {
+                public void run(final Map<Reporter.Channel, TaskSource> reporterTasks) {
+                    final ExecutorPlugin exec = newExecutorPlugin(task);
+                    final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
+                    try {
+                        state.setReporterTaskSources(reporterTasks);
+                        Exec.session().setReporters(reporters);
 
-                                            if (!state.isAllTasksCommitted()) {
-                                                execute(task, executor, state);
+                        state.setTransactionStage(TransactionStage.INPUT_BEGIN);
+
+                        @SuppressWarnings("checkstyle:LineLength")
+                        ConfigDiff inputConfigDiff = plugins.getInputPlugin().resume(resume.getInputTaskSource(), resume.getInputSchema(), resume.getInputTaskReports().size(), new InputPlugin.Control() {
+                            public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount) {
+                                // TODO validate inputTask?
+                                // TODO validate inputSchema
+                                state.setInputTaskSource(inputTask);
+                                state.setTransactionStage(TransactionStage.FILTER_BEGIN);
+                                Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                                    public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
+                                        state.setSchemas(schemas);
+                                        state.setFilterTaskSources(filterTasks);
+                                        state.setTransactionStage(TransactionStage.EXECUTOR_BEGIN);
+                                        exec.transaction(task.getExecConfig(), last(schemas), inputTaskCount, new ExecutorPlugin.Control() {
+                                            public void transaction(final Schema executorSchema, final int outputTaskCount, final ExecutorPlugin.Executor executor) {
+                                                // TODO validate executorSchema
+                                                state.setExecutorSchema(executorSchema);
+                                                state.setTransactionStage(TransactionStage.OUTPUT_BEGIN);
+                                                @SuppressWarnings("checkstyle:LineLength")
+                                                ConfigDiff outputConfigDiff = plugins.getOutputPlugin().resume(resume.getOutputTaskSource(), executorSchema, outputTaskCount, new OutputPlugin.Control() {
+                                                    public List<TaskReport> run(final TaskSource outputTask) {
+                                                        // TODO validate outputTask?
+                                                        state.setOutputTaskSource(outputTask);
+                                                        restoreResumedTaskReports(resume, state);
+                                                        state.setTransactionStage(TransactionStage.RUN);
+
+                                                        if (!state.isAllTasksCommitted()) {
+                                                            execute(task, executor, state);
+                                                        }
+
+                                                        if (!state.isAllTasksCommitted()) {
+                                                            throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
+                                                                    state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
+                                                        }
+
+                                                        state.setTransactionStage(TransactionStage.OUTPUT_COMMIT);
+                                                        return state.getAllOutputTaskReports();
+                                                    }
+                                                });
+                                                state.setOutputConfigDiff(outputConfigDiff);
+                                                state.setTransactionStage(TransactionStage.EXECUTOR_COMMIT);
                                             }
+                                        });
+                                        state.setTransactionStage(TransactionStage.FILTER_COMMIT);
+                                    }
+                                });
+                                state.setTransactionStage(TransactionStage.INPUT_COMMIT);
+                                return state.getAllInputTaskReports();
+                            }
+                        });
+                        state.setInputConfigDiff(inputConfigDiff);
+                        state.setTransactionStage(TransactionStage.CLEANUP);
 
-                                            if (!state.isAllTasksCommitted()) {
-                                                throw new RuntimeException(String.format("%d input tasks and %d output tasks failed",
-                                                            state.countUncommittedInputTasks(), state.countUncommittedOutputTasks()));
-                                            }
-
-                                            state.setTransactionStage(TransactionStage.OUTPUT_COMMIT);
-                                            return state.getAllOutputTaskReports();
-                                        }
-                                    });
-                                    state.setOutputConfigDiff(outputConfigDiff);
-                                    state.setTransactionStage(TransactionStage.EXECUTOR_COMMIT);
-                                }
-                            });
-                            state.setTransactionStage(TransactionStage.FILTER_COMMIT);
-                        }
-                    });
-                    state.setTransactionStage(TransactionStage.INPUT_COMMIT);
-                    return state.getAllInputTaskReports();
+                        cleanupCommittedTransaction(config, state);
+                    } finally {
+                        closeReporters(state, reporters);
+                    }
                 }
             });
-            state.setInputConfigDiff(inputConfigDiff);
-            state.setTransactionStage(TransactionStage.CLEANUP);
-
-            cleanupCommittedTransaction(config, state);
 
             return state.buildExecuteResult();
 
@@ -625,6 +766,7 @@ public class BulkLoader {
             throw state.buildPartialExecuteException(ex, Exec.session());
         }
     }
+
 
     private static boolean isSkippedTransaction(Throwable ex) {
         return ex instanceof SkipTransactionException;

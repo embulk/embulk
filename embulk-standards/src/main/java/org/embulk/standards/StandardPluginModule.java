@@ -14,6 +14,7 @@ import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.ReporterPlugin;
 
 public class StandardPluginModule implements Module {
     @Override
@@ -47,6 +48,9 @@ public class StandardPluginModule implements Module {
         // filter plugins
         registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
         registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
+
+        // reporter plugins
+        registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));

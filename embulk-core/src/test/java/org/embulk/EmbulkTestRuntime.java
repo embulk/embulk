@@ -1,8 +1,12 @@
 package org.embulk;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+
+import java.util.Map;
 import java.util.Random;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSourceImpl;
@@ -14,10 +18,13 @@ import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderModule;
+import org.embulk.plugin.PluginType;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
+import org.embulk.spi.Reporter;
+import org.embulk.spi.ReporterPlugin;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -79,6 +86,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
                 try {
                     Exec.doWith(exec, new ExecAction<Void>() {
                             public Void run() {
+                                exec.setReporters(createReporters());
                                 try {
                                     superStatement.evaluate();
                                 } catch (Throwable ex) {
@@ -94,6 +102,19 @@ public class EmbulkTestRuntime extends GuiceBinder {
                 }
             }
         };
+    }
+
+    private static Map<Reporter.Channel, Reporter> createReporters() {
+        final ImmutableMap.Builder<Reporter.Channel, Reporter> builder = ImmutableMap.builder();
+        for (final Reporter.Channel channel : Reporter.Channel.values()) {
+            builder.put(channel, createStdoutReporter());
+        }
+        return Maps.immutableEnumMap(builder.build());
+    }
+
+    private static Reporter createStdoutReporter() {
+        final ReporterPlugin plugin = Exec.newPlugin(ReporterPlugin.class, PluginType.STDOUT);
+        return plugin.open(Exec.newTaskSource());
     }
 
     private static class RuntimeExecutionException extends RuntimeException {
