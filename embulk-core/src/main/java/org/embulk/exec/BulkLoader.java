@@ -607,7 +607,7 @@ public class BulkLoader {
                     final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
                     try {
                         state.setReporterTaskSources(reporterTasks);
-                        Exec.session().setReporters(reporters);
+                        Exec.session().setReportersUnsafe(reporters);
 
                         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
                         ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
@@ -690,7 +690,7 @@ public class BulkLoader {
                     final Map<Reporter.Channel, Reporter> reporters = createReporters(plugins.getReporterPlugins(), reporterTasks);
                     try {
                         state.setReporterTaskSources(reporterTasks);
-                        Exec.session().setReporters(reporters);
+                        Exec.session().setReportersUnsafe(reporters);
 
                         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
 

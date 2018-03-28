@@ -180,7 +180,7 @@ public class ExecSession {
         return new TimestampFormatter(format, timezone);
     }
 
-    public void setReporters(final Map<Reporter.Channel, Reporter> reporters) {
+    public void setReportersUnsafe(final Map<Reporter.Channel, Reporter> reporters) {
         this.reporters = reporters;
     }
 

@@ -86,7 +86,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
                 try {
                     Exec.doWith(exec, new ExecAction<Void>() {
                             public Void run() {
-                                exec.setReporters(createReporters());
+                                exec.setReportersUnsafe(createReporters());
                                 try {
                                     superStatement.evaluate();
                                 } catch (Throwable ex) {
