@@ -51,6 +51,7 @@ public class StandardPluginModule implements Module {
 
         // reporter plugins
         registerPluginTo(binder, ReporterPlugin.class, "null", NullReporterPlugin.class);
+        registerPluginTo(binder, ReporterPlugin.class, "fluentd", FluentdReporterPlugin.class);
 
         // default guess plugins
         registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));

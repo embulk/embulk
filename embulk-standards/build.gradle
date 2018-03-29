@@ -28,6 +28,7 @@ repositories {
 dependencies {
     compile project(':embulk-core')
     compile 'org.apache.commons:commons-compress:1.10'
+    compile ('org.komamitsu:fluency:1.7.0') { exclude module: 'msgpack-core' }
 
     testCompile 'junit:junit:4.12'
     testCompile project(':embulk-core').sourceSets.test.output
