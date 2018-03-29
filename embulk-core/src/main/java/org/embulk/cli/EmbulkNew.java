@@ -119,6 +119,9 @@ public class EmbulkNew {
                 case "filter":
                     description = String.format("%s", displayName);
                     break;
+                case "reporter":
+                    description = String.format("Store events and logs on external places using %s.", displayName);
+                    break;
                 default:
                     throw new RuntimeException("FATAL: Invalid plugin category.");
             }
@@ -243,6 +246,8 @@ public class EmbulkNew {
                     return new LanguageAndCategory("java", "output");
                 case "java-filter":
                     return new LanguageAndCategory("java", "filter");
+                case "java-reporter":
+                    return new LanguageAndCategory("java", "reporter");
                 case "java-file-input":
                     return new LanguageAndCategory("java", "file_input");
                 case "java-file-output":
@@ -261,6 +266,8 @@ public class EmbulkNew {
                     return new LanguageAndCategory("ruby", "output");
                 case "ruby-filter":
                     return new LanguageAndCategory("ruby", "filter");
+                case "ruby-reporter":
+                    throw new RuntimeException("ruby-reporter is not implemented yet.");
                 case "ruby-file-input":
                     throw new RuntimeException("ruby-file-input is not implemented yet. See #21 on github.");
                 case "ruby-file-output":
