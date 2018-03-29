@@ -1,44 +1,35 @@
 package org.embulk.standards;
 
+import java.util.Map;
+import javax.annotation.concurrent.ThreadSafe;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.AbstractReporterImpl;
 import org.embulk.spi.ReporterPlugin;
 
-import javax.annotation.concurrent.ThreadSafe;
-
-import java.util.Map;
-
 public class NullReporterPlugin
-        implements ReporterPlugin
-{
+        implements ReporterPlugin {
     @Override
-    public TaskSource configureTaskSource(final ConfigSource config)
-    {
+    public TaskSource configureTaskSource(final ConfigSource config) {
         return config.loadConfig(Task.class).dump();
     }
 
     @Override
-    public AbstractReporterImpl open(final TaskSource task)
-    {
+    public AbstractReporterImpl open(final TaskSource task) {
         return new NullReporterImpl();
     }
 
     @ThreadSafe
     public static class NullReporterImpl
-            extends AbstractReporterImpl
-    {
+            extends AbstractReporterImpl {
         @Override
-        public void report(Level level, Map<String, Object> event)
-        { }
+        public void report(Level level, Map<String, Object> event) { }
 
         @Override
-        public void close()
-        { }
+        public void close() { }
 
         @Override
-        public void cleanup()
-        { }
+        public void cleanup() { }
     }
 }

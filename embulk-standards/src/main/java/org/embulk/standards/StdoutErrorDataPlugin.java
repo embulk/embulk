@@ -5,27 +5,20 @@ import org.embulk.spi.ErrorDataPlugin;
 import org.embulk.spi.ErrorDataReporter;
 
 public class StdoutErrorDataPlugin
-        implements ErrorDataPlugin
-{
+        implements ErrorDataPlugin {
     @Override
-    public ErrorDataReporter open(ConfigSource configSource)
-    {
+    public ErrorDataReporter open(ConfigSource configSource) {
         return new StdoutErrorDataReporter();
     }
 
     private static class StdoutErrorDataReporter
-            implements ErrorDataReporter
-    {
-
+            implements ErrorDataReporter {
         @Override
-        public void skip(String errorData)
-        {
+        public void skip(String errorData) {
             System.out.println(errorData);
         }
 
         @Override
-        public void close()
-        {
-        }
+        public void close() {}
     }
 }
