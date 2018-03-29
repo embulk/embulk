@@ -184,8 +184,21 @@ public class ExecSession {
         this.reporters = reporters;
     }
 
+    public boolean hasReporter(Reporter.Channel channel) {
+        // TODO
+        return true;
+    }
+
     public Reporter getReporter(Reporter.Channel channel) {
         return this.reporters.get(channel); // getOrDefault?
+    }
+
+    public void report(Reporter.Channel channel, Reporter.Level level, Map<String, Object> event) {
+        getReporter(channel).report(level, event);
+    }
+
+    public void reportString(Reporter.Channel channel, Reporter.Level level, String event) {
+        getReporter(channel).reportString(level, event);
     }
 
     public TempFileSpace getTempFileSpace() {
