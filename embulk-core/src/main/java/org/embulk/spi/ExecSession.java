@@ -203,7 +203,7 @@ public class ExecSession {
             try {
                 reporter.cleanup();
             } catch (Exception ex) {
-                // ignore exception
+                getLogger(ExecSession.class).warn(ex.getMessage());
             }
         }
 
