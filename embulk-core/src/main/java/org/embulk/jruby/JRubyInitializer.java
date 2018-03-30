@@ -19,16 +19,16 @@ public final class JRubyInitializer {
             final Logger logger,
             final String gemHome,
             final boolean useDefaultEmbulkGemHome,
-            final List<String> jrubyClasspath,
             final List<String> jrubyLoadPath,
+            final List<String> jrubyClasspath,
             final List<String> jrubyOptions,
             final String jrubyBundlerPluginSourceDirectory) {
         this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
         this.useDefaultEmbulkGemHome = useDefaultEmbulkGemHome;
-        this.jrubyClasspath = jrubyClasspath;
         this.jrubyLoadPath = jrubyLoadPath;
+        this.jrubyClasspath = jrubyClasspath;
         this.jrubyOptions = jrubyOptions;
         this.jrubyBundlerPluginSourceDirectory = jrubyBundlerPluginSourceDirectory;
     }
@@ -137,6 +137,32 @@ public final class JRubyInitializer {
                              jruby.runScriptlet("Embulk::Logger"),
                              "new",
                              injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
+    }
+
+    // TODO: Remove these probing methods, and test through mocked ScriptingContainerDelegate.
+
+    String probeGemHomeForTesting() {
+        return this.gemHome;
+    }
+
+    boolean probeUseDefaultEmbulkGemHomeForTesting() {
+        return this.useDefaultEmbulkGemHome;
+    }
+
+    List<String> probeJRubyLoadPathForTesting() {
+        return this.jrubyLoadPath;
+    }
+
+    List<String> probeJRubyClasspathForTesting() {
+        return this.jrubyClasspath;
+    }
+
+    List<String> probeJRubyOptionsForTesting() {
+        return this.jrubyOptions;
+    }
+
+    String probeJRubyBundlerPluginSourceDirectoryForTesting() {
+        return this.jrubyBundlerPluginSourceDirectory;
     }
 
     private void setGemVariables(final ScriptingContainerDelegate jruby) {
@@ -256,8 +282,8 @@ public final class JRubyInitializer {
     private final Logger logger;
     private final String gemHome;
     private final boolean useDefaultEmbulkGemHome;
-    private final List<String> jrubyClasspath;
     private final List<String> jrubyLoadPath;
+    private final List<String> jrubyClasspath;
     private final List<String> jrubyOptions;
     private final String jrubyBundlerPluginSourceDirectory;
 }
