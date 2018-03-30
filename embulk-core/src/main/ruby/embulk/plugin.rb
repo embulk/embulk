@@ -8,6 +8,7 @@ module Embulk
   require 'embulk/output_plugin'
   require 'embulk/file_output_plugin'
   require 'embulk/filter_plugin'
+  require 'embulk/reporter_plugin'
   require 'embulk/parser_plugin'
   require 'embulk/formatter_plugin'
   require 'embulk/decoder_plugin'
@@ -20,7 +21,7 @@ module Embulk
   class PluginManager
     def initialize
       @registries = {}
-      %w[input output parser formatter decoder encoder line_filter filter guess executor].each do |category|
+      %w[input output parser formatter decoder encoder line_filter filter reporter guess executor].each do |category|
         @registries[category.to_sym] = PluginRegistry.new(category, "embulk/#{category}/")
       end
     end
@@ -37,6 +38,11 @@ module Embulk
     def register_filter(type, klass)
       register_plugin(:filter, type, klass, FilterPlugin)
     end
+
+    ## TODO ReporterPlugin JRuby API is not written by anyone yet
+    # def register_reporter(type, klass)
+    #   register_plugin(:reporter, type, klass, FilterPlugin)
+    # end
 
     def register_parser(type, klass)
       register_plugin(:parser, type, klass, ParserPlugin)
@@ -74,6 +80,11 @@ module Embulk
     # TODO FilterPlugin::RubyAdapter is not written by anyone yet
     #def get_filter(type)
     #  lookup(:filter, type)
+    #end
+
+    # TODO ReporterPlugin::RubyAdapter is not written by anyone yet
+    #def get_reporter(type)
+    #  lookup(:reporter, type)
     #end
 
     # TODO FilterPlugin::RubyAdapter is not written by anyone yet
@@ -121,6 +132,11 @@ module Embulk
                            "org.embulk.spi.FilterPlugin" => FilterPlugin)
     end
 
+    def register_java_reporter(type, klass)
+      register_java_plugin(:reporter, type, klass,
+                           "org.embulk.spi.ReporterPlugin" => ReporterPlugin)
+    end
+
     def register_java_parser(type, klass)
       register_java_plugin(:parser, type, klass,
                            "org.embulk.spi.ParserPlugin" => ParserPlugin)
@@ -161,6 +177,10 @@ module Embulk
 
     def new_java_filter(type)
       lookup(:filter, type).new_java
+    end
+
+    def new_java_reporter(type)
+      lookup(:reporter, type).new_java
     end
 
     def new_java_parser(type)
@@ -229,6 +249,7 @@ module Embulk
         :register_input, :get_input, :register_java_input, :new_java_input,
         :register_output, :get_output, :register_java_output, :new_java_output,
         :register_filter, :get_filter, :register_java_filter, :new_java_filter,
+        :register_reporter, :get_reporter, :register_java_reporter, :new_java_reporter,
         :register_parser, :get_parser, :register_java_parser, :new_java_parser,
         :register_formatter, :get_formatter, :register_java_formatter, :new_java_formatter,
         :register_decoder, :get_decoder, :register_java_decoder, :new_java_decoder,

@@ -26,6 +26,7 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.ReporterPlugin;
 
 public class MavenPluginSource implements PluginSource {
     @Inject
@@ -52,6 +53,8 @@ public class MavenPluginSource implements PluginSource {
             category = "encoder";
         } else if (FilterPlugin.class.isAssignableFrom(pluginInterface)) {
             category = "filter";
+        } else if (ReporterPlugin.class.isAssignableFrom(pluginInterface)) {
+            category = "reporter";
         } else if (GuessPlugin.class.isAssignableFrom(pluginInterface)) {
             category = "guess";
         } else if (ExecutorPlugin.class.isAssignableFrom(pluginInterface)) {

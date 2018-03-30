@@ -25,6 +25,11 @@ module Embulk
       Plugin.register_java_filter(name, java_class)
     end
 
+    def self.register_reporter(name, class_fqdn, jar_dir)
+      java_class = classloader(jar_dir).loadClass(class_fqdn)
+      Plugin.register_java_reporter(name, java_class)
+    end
+
     def self.register_parser(name, class_fqdn, jar_dir)
       java_class = classloader(jar_dir).loadClass(class_fqdn)
       Plugin.register_java_parser(name, java_class)

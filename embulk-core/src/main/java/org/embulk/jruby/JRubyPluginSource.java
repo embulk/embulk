@@ -12,6 +12,7 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.ReporterPlugin;
 
 public class JRubyPluginSource implements PluginSource {
     private final ScriptingContainerDelegate jruby;
@@ -42,6 +43,8 @@ public class JRubyPluginSource implements PluginSource {
             category = "encoder";
         } else if (FilterPlugin.class.isAssignableFrom(iface)) {
             category = "filter";
+        } else if (ReporterPlugin.class.isAssignableFrom(iface)) {
+            category = "reporter";
         } else if (GuessPlugin.class.isAssignableFrom(iface)) {
             category = "guess";
         } else if (ExecutorPlugin.class.isAssignableFrom(iface)) {

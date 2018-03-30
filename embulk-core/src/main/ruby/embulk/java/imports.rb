@@ -50,6 +50,7 @@ module Embulk::Java
   java_import 'org.embulk.spi.GuessPlugin'
   java_import 'org.embulk.spi.OutputPlugin'
   java_import 'org.embulk.spi.FilterPlugin'
+  java_import 'org.embulk.spi.ReporterPlugin'
   java_import 'org.embulk.spi.InputPlugin'
   java_import 'org.embulk.spi.ParserPlugin'
   java_import 'org.embulk.spi.FormatterPlugin'
