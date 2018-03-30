@@ -199,11 +199,13 @@ public class ExecSession {
 
     public void cleanup() {
         for (final Reporter.Channel channel : Reporter.Channel.values()) {
-            final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
-            try {
-                reporter.cleanup();
-            } catch (Exception ex) {
-                getLogger(ExecSession.class).warn(ex.getMessage());
+            if (reporters != null && reporters.containsKey(channel)) {
+                final AbstractReporterImpl reporter = (AbstractReporterImpl) reporters.get(channel);
+                try {
+                    reporter.cleanup();
+                } catch (Exception ex) {
+                    getLogger(ExecSession.class).warn(ex.getMessage());
+                }
             }
         }
 
