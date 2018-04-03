@@ -8,6 +8,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.Page;
@@ -19,6 +20,10 @@ import org.embulk.spi.util.PagePrinter;
 
 public class StdoutOutputPlugin implements OutputPlugin {
     public interface PluginTask extends Task {
+        @Config("prints_column_names")
+        @ConfigDefault("false")
+        public boolean getPrintsColumnNames();
+
         @Config("timezone")
         @ConfigDefault("\"UTC\"")
         public String getTimeZoneId();
@@ -40,6 +45,15 @@ public class StdoutOutputPlugin implements OutputPlugin {
             Schema schema, int taskCount,
             OutputPlugin.Control control) {
         final PluginTask task = config.loadConfig(PluginTask.class);
+        if (task.getPrintsColumnNames()) {
+            for (final Column column : schema.getColumns()) {
+                if (column.getIndex() > 0) {
+                    System.out.print(",");
+                }
+                System.out.print(column.getName());
+            }
+            System.out.println("");
+        }
         return resume(task.dump(), schema, taskCount, control);
     }
 
