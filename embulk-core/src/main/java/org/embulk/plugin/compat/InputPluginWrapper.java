@@ -1,6 +1,5 @@
 package org.embulk.plugin.compat;
 
-import com.google.common.base.Throwables;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -64,10 +63,18 @@ public class InputPluginWrapper implements InputPlugin {
         if (runMethod != null) {
             try {
                 return (TaskReport) runMethod.invoke(object, taskSource, schema, taskIndex, output);
-            } catch (IllegalAccessException | IllegalArgumentException ex) {
-                throw Throwables.propagate(ex);
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            } catch (IllegalArgumentException ex) {
+                throw ex;
             } catch (InvocationTargetException ex) {
-                throw Throwables.propagate(ex.getCause());
+                if (ex.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException) ex.getCause();
+                }
+                if (ex.getCause() instanceof Error) {
+                    throw (Error) ex.getCause();
+                }
+                throw new RuntimeException(ex.getCause());
             }
 
         } else {

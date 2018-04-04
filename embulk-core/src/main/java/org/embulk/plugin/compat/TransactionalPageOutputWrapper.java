@@ -1,6 +1,5 @@
 package org.embulk.plugin.compat;
 
-import com.google.common.base.Throwables;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import org.embulk.config.TaskReport;
@@ -70,10 +69,18 @@ public class TransactionalPageOutputWrapper implements TransactionalPageOutput {
         if (commitMethod != null) {
             try {
                 return (TaskReport) commitMethod.invoke(object);
-            } catch (IllegalAccessException | IllegalArgumentException ex) {
-                throw Throwables.propagate(ex);
+            } catch (IllegalAccessException ex) {
+                throw new RuntimeException(ex);
+            } catch (IllegalArgumentException ex) {
+                throw ex;
             } catch (InvocationTargetException ex) {
-                throw Throwables.propagate(ex.getCause());
+                if (ex.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException) ex.getCause();
+                }
+                if (ex.getCause() instanceof Error) {
+                    throw (Error) ex.getCause();
+                }
+                throw new RuntimeException(ex.getCause());
             }
 
         } else {

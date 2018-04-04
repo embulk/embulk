@@ -1,6 +1,5 @@
 package org.embulk.exec;
 
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.ArrayList;
@@ -76,7 +75,10 @@ public class PreviewExecutor {
                     }
                 });
         } catch (Exception ex) {
-            throw Throwables.propagate(ex.getCause());
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            }
+            throw new RuntimeException(ex.getCause());
         }
     }
 

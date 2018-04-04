@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import javax.validation.Validation;
@@ -36,7 +35,10 @@ public class ModelManager {
         try {
             return objectMapper.readValue(json, valueType);
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
+            throw new RuntimeException(ex);
         }
     }
 
@@ -44,7 +46,10 @@ public class ModelManager {
         try {
             return objectMapper.readValue(parser, valueType);
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
+            throw new RuntimeException(ex);
         }
     }
 
@@ -53,7 +58,9 @@ public class ModelManager {
         try {
             t = configObjectMapper.readValue(json, valueType);
         } catch (Exception ex) {
-            Throwables.propagateIfInstanceOf(ex, ConfigException.class);
+            if (ex instanceof ConfigException) {
+                throw (ConfigException) ex;
+            }
             throw new ConfigException(ex);
         }
         validate(t);
@@ -65,7 +72,9 @@ public class ModelManager {
         try {
             t = configObjectMapper.readValue(parser, valueType);
         } catch (Exception ex) {
-            Throwables.propagateIfInstanceOf(ex, ConfigException.class);
+            if (ex instanceof ConfigException) {
+                throw (ConfigException) ex;
+            }
             throw new ConfigException(ex);
         }
         validate(t);
@@ -76,7 +85,10 @@ public class ModelManager {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
+            throw new RuntimeException(ex);
         }
     }
 
@@ -90,7 +102,10 @@ public class ModelManager {
         try {
             return objectMapper.readValue(json, JsonNode.class);
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
+            throw new RuntimeException(ex);
         }
     }
 
@@ -100,7 +115,10 @@ public class ModelManager {
         try {
             return objectMapper.readValue(json, ObjectNode.class);
         } catch (Exception ex) {
-            throw Throwables.propagate(ex);
+            if (ex instanceof RuntimeException) {
+                throw (RuntimeException) ex;
+            }
+            throw new RuntimeException(ex);
         }
     }
 

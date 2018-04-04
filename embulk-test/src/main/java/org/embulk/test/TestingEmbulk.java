@@ -9,7 +9,6 @@ import static java.util.Locale.ENGLISH;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import static org.embulk.test.EmbulkTests.copyResource;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Binder;
@@ -472,7 +471,7 @@ public class TestingEmbulk implements TestRule {
                 }
                 return new SchemaConfig(schema.build());
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 
