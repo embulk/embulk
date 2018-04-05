@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import com.google.common.base.Throwables;
-
 public class CloseResource implements AutoCloseable {
     private AutoCloseable resource;
 
@@ -26,7 +24,10 @@ public class CloseResource implements AutoCloseable {
             try {
                 resource.close();
             } catch (Exception ex) {
-                throw Throwables.propagate(ex);
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                }
+                throw new RuntimeException(ex);
             }
         }
     }

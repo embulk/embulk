@@ -1,7 +1,6 @@
 package org.embulk.exec;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -355,7 +354,13 @@ public class BulkLoader {
                     }
                 });
         } catch (ExecutionException ex) {
-            throw Throwables.propagate(ex.getCause());
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            }
+            if (ex.getCause() instanceof Error) {
+                throw (Error) ex.getCause();
+            }
+            throw new RuntimeException(ex.getCause());
         }
     }
 
@@ -372,7 +377,13 @@ public class BulkLoader {
             exec.cleanup();
             return result;
         } catch (ExecutionException ex) {
-            throw Throwables.propagate(ex.getCause());
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            }
+            if (ex.getCause() instanceof Error) {
+                throw (Error) ex.getCause();
+            }
+            throw new RuntimeException(ex.getCause());
         }
     }
 
@@ -389,7 +400,13 @@ public class BulkLoader {
                 });
             exec.cleanup();
         } catch (ExecutionException ex) {
-            throw Throwables.propagate(ex.getCause());
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            }
+            if (ex.getCause() instanceof Error) {
+                throw (Error) ex.getCause();
+            }
+            throw new RuntimeException(ex.getCause());
         }
     }
 

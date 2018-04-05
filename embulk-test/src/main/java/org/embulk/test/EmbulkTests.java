@@ -6,7 +6,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
-import com.google.common.base.Throwables;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import java.io.File;
@@ -29,7 +28,7 @@ public class EmbulkTests {
         try {
             return EmbulkEmbed.newSystemConfigLoader().fromYamlFile(new File(path));
         } catch (IOException ex) {
-            throw Throwables.propagate(ex);
+            throw new RuntimeException(ex);
         }
     }
 

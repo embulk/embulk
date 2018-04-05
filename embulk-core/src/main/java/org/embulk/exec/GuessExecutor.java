@@ -1,6 +1,5 @@
 package org.embulk.exec;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
@@ -84,7 +83,13 @@ public class GuessExecutor {
                     }
                 });
         } catch (ExecutionException ex) {
-            throw Throwables.propagate(ex.getCause());
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            }
+            if (ex.getCause() instanceof Error) {
+                throw (Error) ex.getCause();
+            }
+            throw new RuntimeException(ex.getCause());
         }
     }
 

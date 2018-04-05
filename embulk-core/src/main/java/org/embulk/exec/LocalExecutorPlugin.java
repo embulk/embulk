@@ -1,6 +1,5 @@
 package org.embulk.exec;
 
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -100,7 +99,13 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                         state.getInputTaskState(i).setException(futures.get(i).get());
                     } catch (ExecutionException ex) {
                         state.getInputTaskState(i).setException(ex.getCause());
-                        //Throwables.propagate(ex.getCause());
+                        // if (ex.getCause() instanceof RuntimeException) {
+                        //     throw (RuntimeException) ex.getCause();
+                        // }
+                        // if (ex.getCause() instanceof Error) {
+                        //     throw (Error) ex.getCause();
+                        // }
+                        // new RuntimeException(ex.getCause());
                     } catch (InterruptedException ex) {
                         state.getInputTaskState(i).setException(new ExecutionInterruptedException(ex));
                     }
@@ -429,7 +434,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                 try {
                     worker.add(page);
                 } catch (InterruptedException ex) {
-                    throw Throwables.propagate(ex);
+                    throw new RuntimeException(ex);
                 }
             }
             pageCount++;
@@ -483,7 +488,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                     try {
                         worker.done();
                     } catch (InterruptedException ex) {
-                        throw Throwables.propagate(ex);
+                        throw new RuntimeException(ex);
                     }
                     Throwable error = null;
                     try {
@@ -493,7 +498,13 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                     }
                     outputWorkers[i] = null;
                     if (error != null) {
-                        throw Throwables.propagate(error);
+                        if (error instanceof RuntimeException) {
+                            throw (RuntimeException) error;
+                        }
+                        if (error instanceof Error) {
+                            throw (Error) error;
+                        }
+                        throw new RuntimeException(error);
                     }
                 }
             }
