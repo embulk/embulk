@@ -39,7 +39,7 @@ module Embulk
             # Java::org.jruby.RubyTime is converted to Ruby's Time by gmtime() as a result.
             # TODO: Replace to Ruby's Time.at(seconds, nanoseconds, :nsec) available from Ruby 2.5.0.
             # http://ruby-doc.org/core-2.5.0/Time.html#method-c-at
-            "record << (java_timestamp = reader.getTimestamp(#{idx}); Java::org.jruby.RubyTime.newTime(JRuby.runtime, Java::org.joda.time.DateTime.new(java_timestamp.getEpochSecond() * 1000), java_timestamp.getNano()).gmtime())"
+            "record << (java_timestamp = reader.getTimestamp(#{idx}); Java::org.jruby.RubyTime.newTime(JRuby.runtime, Java::org.joda.time.DateTime.new((java_timestamp.getEpochSecond() * 1000) + (java_timestamp.getNano() / 1000000)), (java_timestamp.getNano() % 1000000)).gmtime())"
           when :json
             "record << MessagePack.unpack(String.from_java_bytes((::Java::org.msgpack.core.MessagePack.newDefaultBufferPacker()).packValue(reader.getJson(#{idx})).toMessageBuffer().toByteArray()))"
           else
