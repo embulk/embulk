@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Optional;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -30,6 +29,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 class TaskSerDe {
@@ -93,12 +93,12 @@ class TaskSerDe {
 
                 Type fieldType = getterMethod.getGenericReturnType();
 
-                Optional<String> jsonKey = getJsonKey(getterMethod, fieldName);
+                final Optional<String> jsonKey = getJsonKey(getterMethod, fieldName);
                 if (!jsonKey.isPresent()) {
                     // skip this field
                     continue;
                 }
-                Optional<String> defaultJsonString = getDefaultJsonString(getterMethod);
+                final Optional<String> defaultJsonString = getDefaultJsonString(getterMethod);
                 builder.put(jsonKey.get(), new FieldEntry(fieldName, fieldType, defaultJsonString));
             }
             return builder.build();
@@ -118,12 +118,12 @@ class TaskSerDe {
             return builder.build();
         }
 
-        protected Optional<String> getJsonKey(Method getterMethod, String fieldName) {
+        protected Optional<String> getJsonKey(final Method getterMethod, final String fieldName) {
             return Optional.of(fieldName);
         }
 
-        protected Optional<String> getDefaultJsonString(Method getterMethod) {
-            return Optional.absent();
+        protected Optional<String> getDefaultJsonString(final Method getterMethod) {
+            return Optional.empty();
         }
 
         @Override
@@ -151,7 +151,7 @@ class TaskSerDe {
                     for (final FieldEntry field : fields) {
                         final Object value = nestedObjectMapper.convertValue(children, new GenericTypeReference(field.getType()));
                         if (value == null) {
-                            throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
+                            throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> to represent null.");
                         }
                         objects.put(field.getName(), value);
                         if (!unusedMappings.remove(key, field)) {
@@ -172,7 +172,7 @@ class TaskSerDe {
                 if (field.getDefaultJsonString().isPresent()) {
                     Object value = nestedObjectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
                     if (value == null) {
-                        throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> (com.google.common.base.Optional) to represent null.");
+                        throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> to represent null.");
                     }
                     objects.put(field.getName(), value);
                 } else {
@@ -249,18 +249,18 @@ class TaskSerDe {
         }
 
         @Override
-        protected Optional<String> getJsonKey(Method getterMethod, String fieldName) {
-            Config a = getterMethod.getAnnotation(Config.class);
+        protected Optional<String> getJsonKey(final Method getterMethod, final String fieldName) {
+            final Config a = getterMethod.getAnnotation(Config.class);
             if (a != null) {
                 return Optional.of(a.value());
             } else {
-                return Optional.absent();  // skip this field
+                return Optional.empty();  // skip this field
             }
         }
 
         @Override
-        public Optional<String> getDefaultJsonString(Method getterMethod) {
-            ConfigDefault a = getterMethod.getAnnotation(ConfigDefault.class);
+        protected Optional<String> getDefaultJsonString(final Method getterMethod) {
+            final ConfigDefault a = getterMethod.getAnnotation(ConfigDefault.class);
             if (a != null && !a.value().isEmpty()) {
                 return Optional.of(a.value());
             }

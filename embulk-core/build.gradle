@@ -44,6 +44,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.6.7'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.6.7'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7'
     compile 'com.fasterxml.jackson.module:jackson-module-guice:2.6.7'
     compile 'ch.qos.logback:logback-classic:1.1.3'

@@ -1,6 +1,8 @@
 package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.Exec;
@@ -35,6 +37,16 @@ public class TestConfigSource {
 
         @Config("string")
         public String getString();
+    }
+
+    private static interface OptionalFields extends Task {
+        @Config("guava_optional")
+        @ConfigDefault("null")
+        public com.google.common.base.Optional<String> getGuavaOptional();
+
+        @Config("java_util_optional")
+        @ConfigDefault("null")
+        public java.util.Optional<String> getJavaUtilOptional();
     }
 
     private static interface DuplicationParent extends Task {
@@ -74,6 +86,25 @@ public class TestConfigSource {
         assertEquals(0.2, (double) config.get(double.class, "double"), 0.001);
         assertEquals(Long.MAX_VALUE, (long) config.get(long.class, "long"));
         assertEquals("sf", config.get(String.class, "string"));
+    }
+
+    @Test
+    public void testOptionalPresent() {
+        config.set("guava_optional", "Guava");
+        config.set("java_util_optional", "JavaUtil");
+
+        final OptionalFields loaded = config.loadConfig(OptionalFields.class);
+        assertTrue(loaded.getGuavaOptional().isPresent());
+        assertEquals("Guava", loaded.getGuavaOptional().get());
+        assertTrue(loaded.getJavaUtilOptional().isPresent());
+        assertEquals("JavaUtil", loaded.getJavaUtilOptional().get());
+    }
+
+    @Test
+    public void testOptionalAbsent() {
+        final OptionalFields loaded = config.loadConfig(OptionalFields.class);
+        assertFalse(loaded.getGuavaOptional().isPresent());
+        assertFalse(loaded.getJavaUtilOptional().isPresent());
     }
 
     @Test

@@ -3,6 +3,7 @@ package org.embulk.exec;
 import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.google.common.base.Preconditions;
@@ -45,6 +46,7 @@ public class ExecModule implements Module {
         CharsetSerDe.configure(mapper);
         LocalFileSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
+        mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda
         mapper.configure(binder);
     }

@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
-import com.google.common.base.Optional;
 import com.google.inject.Injector;
+import java.util.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -33,9 +33,10 @@ public class ExecSession {
 
     @Deprecated
     public interface SessionTask extends Task {
+        // It is kept as Guava's Optional since already @Deprecated.
         @Config("transaction_time")
         @ConfigDefault("null")
-        Optional<Timestamp> getTransactionTime();
+        com.google.common.base.Optional<Timestamp> getTransactionTime();
     }
 
     public static class Builder {
@@ -66,7 +67,7 @@ public class ExecSession {
             if (transactionTime == null) {
                 transactionTime = Timestamp.ofEpochMilli(System.currentTimeMillis());  // TODO get nanoseconds for default
             }
-            return new ExecSession(injector, transactionTime, Optional.fromNullable(loggerFactory));
+            return new ExecSession(injector, transactionTime, Optional.ofNullable(loggerFactory));
         }
     }
 
@@ -84,7 +85,7 @@ public class ExecSession {
 
     private ExecSession(Injector injector, Timestamp transactionTime, Optional<ILoggerFactory> loggerFactory) {
         this.injector = injector;
-        this.loggerFactory = loggerFactory.or(injector.getInstance(ILoggerFactory.class));
+        this.loggerFactory = loggerFactory.orElse(injector.getInstance(ILoggerFactory.class));
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
