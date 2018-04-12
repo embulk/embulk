@@ -426,6 +426,28 @@ Example
       - {type: bzip2}
 
 
+Stdout output plugin
+--------------------
+
+The ``stdout`` output plugin writes records to standard output.
+
+Options
+~~~~~~~~
+
++-----------------------+----------+---------------------------------------------------------------------+----------------------+
+| name                  | type     | description                                                         | required?            |
++=======================+==========+=====================================================================+======================+
+| prints\_column\_names |  boolean | If true, write the header line with column name at the first line   | ``false`` by default |
++-----------------------+----------+---------------------------------------------------------------------+----------------------+
+
+Example
+~~~~~~~~
+
+.. code-block:: yaml
+
+    out:
+      type: stdout
+
 File output plugin
 -------------------
 
