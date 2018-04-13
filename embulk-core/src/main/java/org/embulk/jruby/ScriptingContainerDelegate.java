@@ -143,4 +143,7 @@ public abstract class ScriptingContainerDelegate {
 
     // It is intentionally private. It should return Runtime while it is Object in the signature.
     abstract Object getRuntime() throws JRubyNotLoadedException;
+
+    // TODO: Remove this method finally. https://github.com/embulk/embulk/issues/1007
+    abstract Object getScriptingContainer() throws JRubyNotLoadedException;
 }

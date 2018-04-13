@@ -198,6 +198,13 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
         return getInitialized().getRuntime();
     }
 
+    // TODO: Remove this method finally. https://github.com/embulk/embulk/issues/1007
+    // It is intentionally package-private. It should return ScriptingContainer while it is Object in the signature.
+    @Override
+    Object getScriptingContainer() throws JRubyNotLoadedException {
+        return getInitialized().getScriptingContainer();
+    }
+
     synchronized ScriptingContainerDelegateImpl getInitialized() {
         if (this.impl == null) {
             this.impl = ScriptingContainerDelegateImpl.create(
