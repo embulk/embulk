@@ -9,11 +9,19 @@ import org.junit.Test;
 
 public class TestMavenArtifactFinder {
     @Test
-    public void testArtifacts() throws Exception {
+    public void testArtifactWithDependencies() throws Exception {
         final Path basePath = getMavenPath();
         final MavenArtifactFinder finder = MavenArtifactFinder.create(basePath);
+        final MavenPluginPaths paths = finder.findMavenPluginJarsWithDirectDependencies(
+                "org.embulk.example", "embulk-example-maven-artifact", null, "0.1.2");
         assertEquals(buildExpectedPath(basePath, GROUP_DIRECTORY, "embulk-example-maven-artifact", "0.1.2"),
-                     finder.findMavenArtifactJar("org.embulk.example", "embulk-example-maven-artifact", null, "0.1.2"));
+                     paths.getPluginJarPath());
+
+        // Confirming that nested dependencies (embulk-example-dependency-one's dependency) are not contained.
+        assertEquals(1, paths.getPluginDependencyJarPaths().size());
+
+        assertEquals(buildExpectedPath(basePath, GROUP_DIRECTORY, "embulk-example-dependency-one", "0.1.1"),
+                     paths.getPluginDependencyJarPaths().get(0));
     }
 
     private Path getMavenPath() throws URISyntaxException {
