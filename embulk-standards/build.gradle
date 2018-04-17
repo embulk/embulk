@@ -22,7 +22,6 @@ import com.github.jrubygradle.JRubyExec
 
 repositories {
     mavenCentral()
-    jcenter()  // For org.embulk:guice-bootstrap:0.1.1
 }
 
 dependencies {
