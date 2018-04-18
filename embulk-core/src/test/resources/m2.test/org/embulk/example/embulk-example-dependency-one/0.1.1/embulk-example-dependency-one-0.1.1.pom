@@ -2,15 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.embulk.example</groupId>
-  <artifactId>embulk-example-maven-artifact</artifactId>
-  <version>0.1.2</version>
+  <artifactId>embulk-example-dependency-one</artifactId>
+  <version>0.1.1</version>
   <packaging>jar</packaging>
-  <name>embulk-example-maven-artifact</name>
+  <name>embulk-example-dependency-one</name>
   <dependencies>
     <dependency>
       <groupId>org.embulk.example</groupId>
-      <artifactId>embulk-example-dependency-one</artifactId>
-      <version>0.1.1</version>
+      <artifactId>embulk-example-dependency-two</artifactId>
+      <version>0.2.0</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
