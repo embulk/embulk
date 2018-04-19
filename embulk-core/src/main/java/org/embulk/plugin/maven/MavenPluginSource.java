@@ -77,20 +77,21 @@ public class MavenPluginSource implements PluginSource {
         }
 
         final MavenPluginPaths pluginPaths;
-        final Path jarPath;
         try {
             pluginPaths = mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(
                     mavenPluginType.getGroup(),
                     "embulk-" + category + "-" + mavenPluginType.getName(),
                     mavenPluginType.getClassifier(),
                     mavenPluginType.getVersion());
-            jarPath = pluginPaths.getPluginJarPath();
         } catch (MavenArtifactNotFoundException ex) {
             throw new PluginSourceNotMatchException(ex);
         }
 
         final Class<?> pluginMainClass;
-        try (JarPluginLoader loader = JarPluginLoader.load(jarPath, pluginClassLoaderFactory)) {
+        try (JarPluginLoader loader = JarPluginLoader.load(
+                 pluginPaths.getPluginJarPath(),
+                 pluginPaths.getPluginDependencyJarPaths(),
+                 pluginClassLoaderFactory)) {
             pluginMainClass = loader.getPluginMainClass();
         } catch (InvalidJarPluginException ex) {
             throw new PluginSourceNotMatchException(ex);

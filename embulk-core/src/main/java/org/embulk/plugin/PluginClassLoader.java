@@ -127,6 +127,32 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     /**
+     * Creates PluginClassLoader for plugins with dependency JARs embedded in the plugin JAR itself, and even external.
+     *
+     * @param parentClassLoader  the parent ClassLoader of this PluginClassLoader instance
+     * @param oneNestedJarFileUrl  "file:" URL of the plugin JAR file
+     * @param embeddedJarPathsInNestedJar  collection of resource names of embedded dependency JARs in the plugin JAR
+     * @param dependencyJarUrls  collection of "file:" URLs of dependency JARs out of the plugin JAR
+     * @param parentFirstPackages  collection of package names that are to be loaded first before the plugin's
+     * @param parentFirstResources  collection of resource names that are to be loaded first before the plugin's
+     */
+    public static PluginClassLoader createForNestedJar(
+            final ClassLoader parentClassLoader,
+            final URL oneNestedJarFileUrl,
+            final Collection<String> embeddedJarPathsInNestedJar,
+            final Collection<URL> dependencyJarUrls,
+            final Collection<String> parentFirstPackages,
+            final Collection<String> parentFirstResources) {
+        return new PluginClassLoader(
+                parentClassLoader,
+                oneNestedJarFileUrl,
+                embeddedJarPathsInNestedJar,
+                dependencyJarUrls,
+                parentFirstPackages,
+                parentFirstResources);
+    }
+
+    /**
      * Adds the specified path to the list of URLs (for {@code URLClassLoader}) to search for classes and resources.
      *
      * It internally calls {@code URLClassLoader#addURL}.

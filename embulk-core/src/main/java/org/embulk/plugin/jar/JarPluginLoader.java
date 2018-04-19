@@ -34,7 +34,10 @@ public class JarPluginLoader implements AutoCloseable {
         this.pluginMainClass = pluginMainClass;
     }
 
-    public static JarPluginLoader load(final Path jarPath, final PluginClassLoaderFactory classLoaderFactory)
+    public static JarPluginLoader load(
+            final Path jarPath,
+            final List<Path> dependencyJarPaths,
+            final PluginClassLoaderFactory classLoaderFactory)
             throws InvalidJarPluginException {
         final JarURLConnection connection = openJarUrlConnection(jarPath);
         final Manifest manifest = loadJarPluginManifest(connection, jarPath);
@@ -44,7 +47,8 @@ public class JarPluginLoader implements AutoCloseable {
         if (spiVersion == 0) {
             final String mainClassName = getPluginMainClassNameFromManifest(manifestAttributes);
             final List<String> pluginClassPath = getPluginClassPathFromManifest(manifestAttributes);
-            final Class mainClass = loadJarPluginMainClass(jarPath, mainClassName, pluginClassPath, classLoaderFactory);
+            final Class mainClass = loadJarPluginMainClass(
+                    jarPath, dependencyJarPaths, mainClassName, pluginClassPath, classLoaderFactory);
             return new JarPluginLoader(manifest, manifestAttributes, mainClass);
         }
 
@@ -94,6 +98,7 @@ public class JarPluginLoader implements AutoCloseable {
     }
 
     private static Class loadJarPluginMainClass(final Path jarPath,
+                                                final List<Path> dependencyJarPaths,
                                                 final String pluginMainClassName,
                                                 final List<String> pluginClassPath,
                                                 final PluginClassLoaderFactory pluginClassLoaderFactory)
@@ -121,8 +126,36 @@ public class JarPluginLoader implements AutoCloseable {
             throw new InvalidJarPluginException("JAR plugin path specified is invalid: " + jarPath.toString(), ex);
         }
 
+        final List<URL> dependencyJarUrls = new ArrayList<>();
+        for (final Path dependencyJarPath : dependencyJarPaths) {
+            final URI dependencyJarUri;
+            try {
+                dependencyJarUri = dependencyJarPath.toUri();
+            } catch (IOError ex) {
+                throw new InvalidJarPluginException(
+                        "[FATAL] Path of dependency specified is invalid: " + dependencyJarPath.toString(), ex);
+            } catch (SecurityException ex) {
+                throw new InvalidJarPluginException("Security manager prohibits getting the working directory.", ex);
+            }
+
+            try {
+                dependencyJarUrls.add(dependencyJarUri.toURL());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidJarPluginException("[FATAL/INTERNAL] Path of dependency is not absolute.", ex);
+            } catch (MalformedURLException ex) {
+                throw new InvalidJarPluginException(
+                        "Path of dependency specified is invalid: " + dependencyJarUri.toString(), ex);
+            }
+        }
+
         final PluginClassLoader pluginClassLoader;
-        if (pluginClassPath.isEmpty()) {
+        if (!dependencyJarPaths.isEmpty()) {
+            pluginClassLoader = pluginClassLoaderFactory.createForNestedJarWithDependencies(
+                    JarPluginLoader.class.getClassLoader(),
+                    fileUrlJar,
+                    pluginClassPath,
+                    dependencyJarUrls);
+        } else if (pluginClassPath.isEmpty()) {
             pluginClassLoader = pluginClassLoaderFactory.createForNestedJar(
                     JarPluginLoader.class.getClassLoader(), fileUrlJar);
         } else {
