@@ -1,0 +1,12 @@
+description = "Bridge of embulk-core and its dependency libraries to hide the dependencies from Embulk plugins."
+ext {
+    summary = "Embulk core's dependency bridge"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Should have no any external dependency in the bridge interface.
+}

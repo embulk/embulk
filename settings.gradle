@@ -1,6 +1,16 @@
 rootProject.name = 'embulk'
 
 include 'embulk-core'
+
+include 'embulk-deps-classloaders'
+project(':embulk-deps-classloaders').projectDir = new File(settingsDir, 'embulk-deps/classloaders')
+
+include 'embulk-deps-bridge'
+project(':embulk-deps-bridge').projectDir = new File(settingsDir, 'embulk-deps/bridge')
+
+include 'embulk-deps-impl'
+project(':embulk-deps-impl').projectDir = new File(settingsDir, 'embulk-deps/impl')
+
 include 'embulk-standards'
 include 'embulk-test'
 include 'embulk-docs'

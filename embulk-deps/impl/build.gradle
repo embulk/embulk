@@ -1,0 +1,20 @@
+description = "Bridge of embulk-core and its dependency libraries to hide the dependencies from Embulk plugins."
+ext {
+    summary = "Embulk core's dependency handler"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile project(":embulk-deps-bridge")
+    compile "org.eclipse.aether:aether-api:1.1.0"
+    compile "org.eclipse.aether:aether-spi:1.1.0"
+    compile "org.eclipse.aether:aether-util:1.1.0"
+    compile "org.eclipse.aether:aether-impl:1.1.0"
+    compile "org.eclipse.aether:aether-connector-basic:1.1.0"
+    compile "org.eclipse.aether:aether-transport-file:1.1.0"
+    compile "org.eclipse.aether:aether-transport-http:1.1.0"
+    compile "org.apache.maven:maven-aether-provider:3.3.9"
+}

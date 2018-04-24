@@ -1,0 +1,10 @@
+description = "ClassLoaders for Embulk core's dependency libraries."
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Should have no any external "compile" and "provided" dependency for the ClassLoaders.
+    testCompile "junit:junit:4.12"
+}

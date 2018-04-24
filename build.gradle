@@ -48,7 +48,7 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-configure(subprojects.findAll { ['embulk-core', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+configure(subprojects.findAll { [ 'embulk-deps-bridge', 'embulk-deps-classloaders', 'embulk-core', 'embulk-deps-impl', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'findbugs'
     apply plugin: 'jacoco'
