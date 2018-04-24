@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
 import org.embulk.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,15 +22,27 @@ public class TestJarPluginLoader {
 
     @Test
     public void test() throws Exception {
-        final Path jarPath = createTemporaryJarFile();
+        final Path temporaryDirectory = createTemporaryJarDirectory();
 
-        final JarBuilder jarBuilder = new JarBuilder();
-        jarBuilder.addManifestV0(ExampleJarSpiV0.class.getName());
-        jarBuilder.addClass(ExampleJarSpiV0.class);
-        jarBuilder.build(jarPath);
+        final Path pluginJarPath = createTemporaryPluginJarFile(temporaryDirectory);
+        final JarBuilder pluginJarBuilder = new JarBuilder();
+        pluginJarBuilder.addManifestV0(ExampleJarSpiV0.class.getName());
+        pluginJarBuilder.addClass(ExampleJarSpiV0.class);
+        pluginJarBuilder.build(pluginJarPath);
+
+        final Path dependencyJarPath = createTemporaryDependencyJarFile(temporaryDirectory);
+        final JarBuilder dependencyJarBuilder = new JarBuilder();
+        pluginJarBuilder.addClass(ExampleDependencyJar.class);
+        pluginJarBuilder.build(dependencyJarPath);
+
+        final ArrayList<Path> dependencyJarPaths = new ArrayList<>();
+        dependencyJarPaths.add(dependencyJarPath);
 
         final Class<?> loadedClass;
-        try (final JarPluginLoader loader = JarPluginLoader.load(jarPath, testRuntime.getPluginClassLoaderFactory())) {
+        try (final JarPluginLoader loader = JarPluginLoader.load(
+                 pluginJarPath,
+                 Collections.unmodifiableList(dependencyJarPaths),
+                 testRuntime.getPluginClassLoaderFactory())) {
             assertEquals(0, loader.getPluginSpiVersion());
             loadedClass = loader.getPluginMainClass();
         }
@@ -38,19 +52,27 @@ public class TestJarPluginLoader {
 
         final ExampleJarSpiV0 instance = (ExampleJarSpiV0) instanceObject;
         assertEquals("foobar", instance.getTestString());
+
+        final ExampleDependencyJar dependencyInstance = instance.getDependencyObject();
+        assertEquals("hoge", dependencyInstance.getTestDependencyString());
     }
 
-    private Path createTemporaryJarFile() throws Exception {
+    private Path createTemporaryPluginJarFile(final Path temporaryDirectoryPath) throws Exception {
+        return Files.createTempFile(temporaryDirectoryPath, "testplugin", ".jar");
+    }
+
+    private Path createTemporaryDependencyJarFile(final Path temporaryDirectoryPath) throws Exception {
+        return Files.createTempFile(temporaryDirectoryPath, "dependency", ".jar");
+    }
+
+    private Path createTemporaryJarDirectory() throws Exception {
         final String temporaryDirectoryString =
                 System.getProperty("org.embulk.plugin.jar.TestJarPluginLoader.temporaryDirectory");
 
-        final Path temporaryDirectoryPath;
         if (temporaryDirectoryString == null) {
-            temporaryDirectoryPath = temporaryFolder.getRoot().toPath();
+            return temporaryFolder.getRoot().toPath();
         } else {
-            temporaryDirectoryPath = Paths.get(temporaryDirectoryString);
+            return Paths.get(temporaryDirectoryString);
         }
-
-        return Files.createTempFile(temporaryDirectoryPath, "testplugin", ".jar");
     }
 }
