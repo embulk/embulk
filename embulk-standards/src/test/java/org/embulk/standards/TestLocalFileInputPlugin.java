@@ -44,10 +44,13 @@ public class TestLocalFileInputPlugin {
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
-            assertEquals(3, files.size());
+            assertEquals(6, files.size());
             assertTrue(files.contains(buildPath("foofoo1")));
+            assertTrue(files.contains(buildPath("FooFoo2")));
             assertTrue(files.contains(buildPath("foofoo4\\foo")));
             assertTrue(files.contains(buildPath("foofoo4\\bar")));
+            assertTrue(files.contains(buildPath("fooFoo6\\foo")));
+            assertTrue(files.contains(buildPath("fooFoo6\\bar")));
         } else if (System.getProperty("os.name").contains("Mac OS")) {
             assertEquals(3, files.size());
             assertTrue(files.contains(buildPath("foofoo1")));
@@ -75,6 +78,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFile("directory1/foo1");
         this.workdir.newFile("directory1/foo2");
         this.workdir.newFile("directory1/Foo3");
+        this.workdir.newFile("directory1/bar");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
         final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
@@ -82,9 +86,10 @@ public class TestLocalFileInputPlugin {
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
-            assertEquals(2, files.size());
+            assertEquals(3, files.size());
             assertTrue(files.contains(buildPath("directory1\\foo1")));
             assertTrue(files.contains(buildPath("directory1\\foo2")));
+            assertTrue(files.contains(buildPath("directory1\\Foo3")));
         } else if (System.getProperty("os.name").contains("Mac OS")) {
             assertEquals(2, files.size());
             assertTrue(files.contains(buildPath("directory1/foo1")));
@@ -114,6 +119,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFile("directory1/foo1");
         this.workdir.newFile("directory1/foo2");
         this.workdir.newFile("directory1/Foo3");
+        this.workdir.newFile("directory1/bar");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
         final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
@@ -121,9 +127,10 @@ public class TestLocalFileInputPlugin {
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
-            assertEquals(2, files.size());
+            assertEquals(3, files.size());
             assertTrue(files.contains(buildPath("Directory1\\foo1")));
             assertTrue(files.contains(buildPath("Directory1\\foo2")));
+            assertTrue(files.contains(buildPath("Directory1\\Foo3")));
         } else if (System.getProperty("os.name").contains("Mac OS")) {
             assertEquals(2, files.size());
             assertTrue(files.contains(buildPath("Directory1/foo1")));
