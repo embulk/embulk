@@ -74,6 +74,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFolder("directory1");
         this.workdir.newFile("directory1/foo1");
         this.workdir.newFile("directory1/foo2");
+        this.workdir.newFile("directory1/Foo3");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
         final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
@@ -112,6 +113,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFolder("directory1");
         this.workdir.newFile("directory1/foo1");
         this.workdir.newFile("directory1/foo2");
+        this.workdir.newFile("directory1/Foo3");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
         final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
