@@ -946,7 +946,7 @@ Example
 Guess executor
 ---------------
 
-The guess executor is called by ``guess`` command. It executes default guess plugins in a sequential order and suggests Embulk config by appropriate guess plugin. The default guess plugins and the order are ``gzip``, ``'bzip2``, ``json`` and ``csv``.
+The guess executor is called by ``guess`` command. It executes default guess plugins in a sequential order and suggests Embulk config by appropriate guess plugin. The default guess plugins and the order are ``gzip``, ``bzip2``, ``json`` and ``csv``.
 
 Options
 ~~~~~~~~
