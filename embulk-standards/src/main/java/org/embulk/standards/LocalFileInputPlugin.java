@@ -6,10 +6,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -107,13 +109,17 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         Path pathPrefix = Paths.get(task.getPathPrefix()).normalize();
         final Path directory;
         final String fileNamePrefix;
+        final PathMatcher fileNamePrefixMatcher;
         if (Files.isDirectory(pathPrefix)) {
             directory = pathPrefix;
             fileNamePrefix = "";
+            fileNamePrefixMatcher = null;
         } else {
             fileNamePrefix = pathPrefix.getFileName().toString();
             Path d = pathPrefix.getParent();
             directory = (d == null ? CURRENT_DIR : d);
+
+            fileNamePrefixMatcher = buildPathMatcherForFileNamePrefix(fileNamePrefix);
         }
 
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
@@ -143,7 +149,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                                 parent = CURRENT_DIR;
                             }
                             if (parent.equals(directory)) {
-                                if (path.getFileName().toString().startsWith(fileNamePrefix)) {
+                                if (fileNamePrefixMatcher == null || fileNamePrefixMatcher.matches(path.getFileName())) {
                                     return FileVisitResult.CONTINUE;
                                 } else {
                                     return FileVisitResult.SKIP_SUBTREE;
@@ -175,7 +181,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                                 parent = CURRENT_DIR;
                             }
                             if (parent.equals(directory)) {
-                                if (path.getFileName().toString().startsWith(fileNamePrefix)) {
+                                if (fileNamePrefixMatcher == null || fileNamePrefixMatcher.matches(path.getFileName())) {
                                     builder.add(path.toString());
                                     return FileVisitResult.CONTINUE;
                                 }
@@ -213,5 +219,30 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                 return Exec.newTaskReport();
             }
         };
+    }
+
+    private PathMatcher buildPathMatcherForFileNamePrefix(String fileNamePrefix) {
+        StringBuilder sb = new StringBuilder();
+        final int len = fileNamePrefix.length();
+        for (int i = 0; i < len; i++) {
+            // Escape the special characters for the FileSystem#getPathMatcher().
+            // See https://docs.oracle.com/javase/8/docs/api/java/nio/file/FileSystem.html#getPathMatcher-java.lang.String-
+            char c = fileNamePrefix.charAt(i);
+            switch (c) {
+                case '*':
+                case '?':
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case '\\':
+                    sb.append('\\');
+                    break;
+                default:
+                    break;
+            }
+            sb.append(c);
+        }
+        return FileSystems.getDefault().getPathMatcher("glob:" + sb.toString() + "*");
     }
 }
