@@ -7,7 +7,7 @@ We love your contributions! Before making a Pull Request, please read and follow
 Issue before Pull Request
 --------------------------
 
-Consider [filing an Issue at first|https://github.com/embulk/embulk/issues/new] before creating a Pull Request, even for small fixes, unless you are named a primary contributor.
+Consider [filing an Issue at first](https://github.com/embulk/embulk/issues/new) before creating a Pull Request, even for small fixes, unless you are named a primary contributor.
 
 
 License
