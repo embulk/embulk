@@ -39,7 +39,7 @@ Embulk is a Java application. Please make sure that Java SE Runtime Environment 
 You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe:
 
 ```
-PowerShell -Command "& {Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
+PowerShell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
 ```
 
 Next step: [Running example in 4 commands](#running-example)
