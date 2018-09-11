@@ -609,7 +609,11 @@ class RubyTimeParsed extends TimeParsed {
             // irb(main):004:0> Time.at(Rational(1500000000789, 1000), 100123).nsec
             // => 889123000
             if (this.nanoOfSecond != Integer.MIN_VALUE) {
-                return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                if (this.instantSeconds.getEpochSecond() >= 0) {
+                    return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                } else {
+                    return this.instantSeconds.minusNanos(this.nanoOfSecond);
+                }
             } else {
                 return this.instantSeconds;
             }
@@ -679,7 +683,11 @@ class RubyTimeParsed extends TimeParsed {
             // irb(main):004:0> Time.at(Rational(1500000000789, 1000), 100123).nsec
             // => 889123000
             if (this.nanoOfSecond != Integer.MIN_VALUE) {
-                return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                if (this.instantSeconds.getEpochSecond() >= 0) {
+                    return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                } else {
+                    return this.instantSeconds.minusNanos(this.nanoOfSecond);
+                }
             } else {
                 return this.instantSeconds;
             }
