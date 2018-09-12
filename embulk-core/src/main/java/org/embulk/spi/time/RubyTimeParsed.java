@@ -586,20 +586,37 @@ class RubyTimeParsed extends TimeParsed {
         }
 
         if (this.instantSeconds != null) {
-            // Fractions by %Q are prioritized over fractions by %N.
-            // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
-            // => 789000000
-            // irb(main):003:0> Time.strptime("12.345 123456789", "%S.%N %Q").nsec
-            // => 789000000
-            // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
-            // => 345000000
             if (!defaultZoneOffset.equals(ZoneOffset.UTC)) {
                 // TODO: Warn that a default time zone is specified for epoch seconds.
             }
             if (this.timeZoneName != null) {
                 // TODO: Warn that the epoch second has a time zone.
             }
-            return this.instantSeconds;
+
+            // The fraction part is "added" to the epoch second in case both are specified.
+            // irb(main):002:0> Time.strptime("1500000000.123456789", "%s.%N").nsec
+            // => 123456789
+            // irb(main):003:0> Time.strptime("1500000000456.111111111", "%Q.%N").nsec
+            // => 567111111
+            //
+            // If "sec_fraction" is specified, the value is used like |Time.at(seconds, sec_fraction * 1000000)|.
+            // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l427
+            //
+            // |Time.at| adds "seconds" (the epoch) and "sec_fraction" (the fraction part) with scaling.
+            // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/time.c?view=markup#l2528
+            //
+            // It behaves the same even if "seconds" is specified as a Rational, not an Integer.
+            // irb(main):004:0> Time.at(Rational(1500000000789, 1000), 100123).nsec
+            // => 889123000
+            if (this.nanoOfSecond != Integer.MIN_VALUE) {
+                if (this.instantSeconds.getEpochSecond() >= 0) {
+                    return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                } else {
+                    return this.instantSeconds.minusNanos(this.nanoOfSecond);
+                }
+            } else {
+                return this.instantSeconds;
+            }
         }
 
         // Day of the year (yday: DAY_OF_YEAR) is not considered in Time.strptime, not like DateTime.strptime.
@@ -643,20 +660,37 @@ class RubyTimeParsed extends TimeParsed {
                                   final int defaultDayOfMonth,
                                   final ZoneId defaultZoneId) {
         if (this.instantSeconds != null) {
-            // Fractions by %Q are prioritized over fractions by %N.
-            // irb(main):002:0> Time.strptime("123456789 12.345", "%Q %S.%N").nsec
-            // => 789000000
-            // irb(main):003:0> Time.strptime("12.345 123456789", "%S.%N %Q").nsec
-            // => 789000000
-            // irb(main):004:0> Time.strptime("12.345", "%S.%N").nsec
-            // => 345000000
             if (!defaultZoneId.equals(ZoneOffset.UTC)) {
                 // TODO: Warn that a default time zone is specified for epoch seconds.
             }
             if (this.timeZoneName != null) {
                 // TODO: Warn that the epoch second has a time zone.
             }
-            return this.instantSeconds;
+
+            // The fraction part is "added" to the epoch second in case both are specified.
+            // irb(main):002:0> Time.strptime("1500000000.123456789", "%s.%N").nsec
+            // => 123456789
+            // irb(main):003:0> Time.strptime("1500000000456.111111111", "%Q.%N").nsec
+            // => 567111111
+            //
+            // If "sec_fraction" is specified, the value is used like |Time.at(seconds, sec_fraction * 1000000)|.
+            // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup#l427
+            //
+            // |Time.at| adds "seconds" (the epoch) and "sec_fraction" (the fraction part) with scaling.
+            // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/time.c?view=markup#l2528
+            //
+            // It behaves the same even if "seconds" is specified as a Rational, not an Integer.
+            // irb(main):004:0> Time.at(Rational(1500000000789, 1000), 100123).nsec
+            // => 889123000
+            if (this.nanoOfSecond != Integer.MIN_VALUE) {
+                if (this.instantSeconds.getEpochSecond() >= 0) {
+                    return this.instantSeconds.plusNanos(this.nanoOfSecond);
+                } else {
+                    return this.instantSeconds.minusNanos(this.nanoOfSecond);
+                }
+            } else {
+                return this.instantSeconds;
+            }
         }
 
         final ZoneId zoneId;

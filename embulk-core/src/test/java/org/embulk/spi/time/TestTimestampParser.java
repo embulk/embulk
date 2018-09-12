@@ -624,6 +624,32 @@ public class TestTimestampParser {
         testToParse("-1000", "%Q", -1L);
     }
 
+    @Test
+    public void testEpochWithFraction() {
+        testToParse("1500000000.123456789", "%s.%N", 1500000000L, 123456789);
+        testToParse("1500000000456.111111111", "%Q.%N", 1500000000L, 567111111);
+        testToParse("1500000000.123", "%s.%L", 1500000000L, 123000000);
+        testToParse("1500000000456.111", "%Q.%L", 1500000000L, 567000000);
+
+        testToParse("1.5", "%s.%N", 1L, 500000000);
+        testToParse("-1.5", "%s.%N", -2L, 500000000);
+        testToParse("1.000000001", "%s.%N", 1L, 1);
+        testToParse("-1.000000001", "%s.%N", -2L, 999999999);
+    }
+
+    @Test
+    public void testRubyEpochWithFraction() {
+        testRubyToParse("1500000000.123456789", "%s.%N", 1500000000L, 123456789);
+        testRubyToParse("1500000000456.111111111", "%Q.%N", 1500000000L, 567111111);
+        testRubyToParse("1500000000.123", "%s.%L", 1500000000L, 123000000);
+        testRubyToParse("1500000000456.111", "%Q.%L", 1500000000L, 567000000);
+
+        testRubyToParse("1.5", "%s.%N", 1L, 500000000);
+        testRubyToParse("-1.5", "%s.%N", -2L, 500000000);
+        testRubyToParse("1.000000001", "%s.%N", 1L, 1);
+        testRubyToParse("-1.000000001", "%s.%N", -2L, 999999999);
+    }
+
     private void testJavaToParse(final String string, final String format, final long second, final int nanoOfSecond) {
         final TimestampParser parser = TimestampParser.of("java:" + format, "UTC");
         final Timestamp timestamp = parser.parse(string);
