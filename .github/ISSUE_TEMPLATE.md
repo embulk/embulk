@@ -23,5 +23,5 @@ Issue Type: Bug Report
   * Embulk version
   * Your Embulk configuration (YAML)
   * Plugin versions
-* Write all what you did, e.g. your commends executed
+* Write all what you did, e.g. your commands executed
 * Write what you expected and observed actually
