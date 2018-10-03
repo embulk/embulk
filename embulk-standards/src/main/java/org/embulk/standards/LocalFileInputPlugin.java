@@ -1,6 +1,5 @@
 package org.embulk.standards;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -58,7 +58,11 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
     private final Logger log = Exec.getLogger(getClass());
 
-    private static final Path CURRENT_DIR = Paths.get(".").normalize();
+    // Java expects the working directory does not change during an execution.
+    // @see <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688">Bug ID: JDK-4045688 Add chdir or equivalent notion of changing working directory</a>
+    private static final Path CURRENT_DIR = Paths.get("").normalize();
+
+    private static final Path PARENT = Paths.get("..");
 
     @Override
     public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control) {
@@ -106,26 +110,40 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             List<TaskReport> successTaskReports) {}
 
     public List<String> listFiles(PluginTask task) {
-        Path pathPrefix = Paths.get(task.getPathPrefix()).normalize();
-        final Path directory;
-        final String fileNamePrefix;
-        final PathMatcher fileNamePrefixMatcher;
-        if (Files.isDirectory(pathPrefix)) {
-            directory = pathPrefix;
-            fileNamePrefix = "";
-            fileNamePrefixMatcher = null;
-        } else {
-            fileNamePrefix = pathPrefix.getFileName().toString();
-            Path d = pathPrefix.getParent();
-            directory = (d == null ? CURRENT_DIR : d);
+        // This |pathPrefixResolved| can still be a relative path from the working directory.
+        // Path#normalize eliminates redundant name elements (e.g. "." and "..") without access to the real file system.
+        final Path pathPrefixResolved = CURRENT_DIR.resolve(Paths.get(task.getPathPrefix())).normalize();
 
-            fileNamePrefixMatcher = buildPathMatcherForFileNamePrefix(fileNamePrefix);
+        final Path dirToStartWalking;
+        final String baseFileNamePrefix;
+        if (Files.isDirectory(pathPrefixResolved)) {
+            // If |pathPrefixResolved| is actually an existing directory in the real file system.
+
+            // Walking the tree starts from the specified directory.
+            dirToStartWalking = pathPrefixResolved;
+
+            // Matching with any file ("*") in the directory.
+            baseFileNamePrefix = "";
+        } else {
+            // If |pathPrefixResolved| is NOT a directory in the real file system.
+            // A file that is exactly |pathPrefixResolved| may not exist, not just "NOT a directory".
+            // Files and directories whose prefixes match |pathPrefixResolved| are expected.
+
+            // Walking the tree starts from the directory which contains the specified path.
+            dirToStartWalking = Optional.ofNullable(pathPrefixResolved.getParent()).orElse(CURRENT_DIR);
+
+            // Matching "{baseFileNamePrefix}*".
+            baseFileNamePrefix = pathPrefixResolved.getFileName().toString();
         }
+        final PathMatcher baseFileNameMatcher = buildPathMatcherForBaseFileNamePrefix(baseFileNamePrefix);
+        final PathMatcher dirNameMatcher = buildPathMatcherForDirectory(dirToStartWalking);
 
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
-        final String lastPath = task.getLastPath().orNull();
+        final String lastPath = task.getLastPath().orElse(null);
         try {
-            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'", directory.equals(CURRENT_DIR) ? "." : directory.toString(), fileNamePrefix);
+            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'",
+                     dirToStartWalking.equals(CURRENT_DIR) ? "." : dirToStartWalking.toString(),
+                     baseFileNamePrefix);
 
             int maxDepth = Integer.MAX_VALUE;
             Set<FileVisitOption> opts;
@@ -136,20 +154,37 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                 log.info("\"follow_symlinks\" is set false. Note that symbolic links to directories are skipped.");
             }
 
-            Files.walkFileTree(directory, opts, maxDepth, new SimpleFileVisitor<Path>() {
+            // |SimpleFileVisitor| visits files under a directory which matches |dirToStartWalking| in the following manners.
+            //
+            // * Linux: Case sensitive. It does not walk from "/FOO" when |dirToStartWalking| == "/foo".
+            // * MacOSX: Case insensitive. It walks from "/FOO" when |dirToStartWalking| == "/foo".
+            // * Windows: Case insensitive. It walks from "/FOO" when |dirToStartWalking| == "/foo".
+            Files.walkFileTree(dirToStartWalking, opts, maxDepth, new SimpleFileVisitor<Path>() {
                     @Override
-                    public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) {
-                        if (path.equals(directory)) {
+                    public FileVisitResult preVisitDirectory(final Path dirOnVisit, final BasicFileAttributes attrs) {
+                        // NOTE: This |dirOnVisit| contains the path elements of |dirToStartWalking|.
+                        if (dirOnVisit.equals(dirToStartWalking)) {
                             return FileVisitResult.CONTINUE;
-                        } else if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
+                        } else if (lastPath != null && dirOnVisit.toString().compareTo(lastPath) <= 0) {
+                            // TODO(dmikurube): Consider |Path#compareTo| instead of |String#compareTo|.
+                            return FileVisitResult.SKIP_SUBTREE;
+                        } else if (!dirNameMatcher.matches(dirOnVisit)) {
+                            // |PathMatcher| (|dirNameMatcher|) matches paths in the following manners.
+                            //
+                            // * Linux: Case sensitive. It does not match "/FOO" when |dirNameMatcher| is with "/foo".
+                            // * MacOSX: Case sensitive. It does not match "/FOO" when |dirNameMatcher| is with "/foo".
+                            // * Windows: Case insensitive. It matches "/FOO" when |dirNameMatcher| is with "/foo".
+                            //
+                            // The case-sensitivity is different between |SimpleFileVisitor| and |PathMatcher| on OSX.
+                            //
+                            // To be consistent on OSX, it rejects case-unmatching paths by case-sensitive |PathMatcher|
+                            // against paths visited by walking the tree with case-insensitive |SimpleFileVisitor|.
+                            // It does not affect Linux (both are case-sensitive) nor Windows (both are case-insensitive).
                             return FileVisitResult.SKIP_SUBTREE;
                         } else {
-                            Path parent = path.getParent();
-                            if (parent == null) {
-                                parent = CURRENT_DIR;
-                            }
-                            if (parent.equals(directory)) {
-                                if (fileNamePrefixMatcher == null || fileNamePrefixMatcher.matches(path.getFileName())) {
+                            final Path parent = Optional.ofNullable(dirOnVisit.getParent()).orElse(CURRENT_DIR);
+                            if (parent.equals(dirToStartWalking)) {
+                                if (baseFileNameMatcher.matches(dirOnVisit.getFileName())) {
                                     return FileVisitResult.CONTINUE;
                                 } else {
                                     return FileVisitResult.SKIP_SUBTREE;
@@ -161,39 +196,41 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                     }
 
                     @Override
-                    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+                    public FileVisitResult visitFile(final Path fileOnVisit, final BasicFileAttributes attrs) {
+                        // NOTE: This |fileOnVisit| contains the path elements of |dirToStartWalking|.
                         try {
                             // Avoid directories from listing.
                             // Directories are normally unvisited with |FileVisitor#visitFile|, but symbolic links to
                             // directories are visited like files unless |FOLLOW_LINKS| is set in |Files#walkFileTree|.
                             // Symbolic links to directories are explicitly skipped here by checking with |Path#toReadlPath|.
-                            if (Files.isDirectory(path.toRealPath())) {
+                            if (Files.isDirectory(fileOnVisit.toRealPath())) {
                                 return FileVisitResult.CONTINUE;
                             }
                         } catch (IOException ex) {
                             throw new RuntimeException("Can't resolve symbolic link", ex);
                         }
-                        if (lastPath != null && path.toString().compareTo(lastPath) <= 0) {
+                        if (lastPath != null && fileOnVisit.toString().compareTo(lastPath) <= 0) {
+                            // TODO(dmikurube): Consider |Path#compareTo| instead of |String#compareTo|.
+                            return FileVisitResult.CONTINUE;
+                        } else if (!dirNameMatcher.matches(fileOnVisit)) {
+                            // Rejecting case-unmatching paths on OSX in the same way with |preVisitDirectory| above.
                             return FileVisitResult.CONTINUE;
                         } else {
-                            Path parent = path.getParent();
-                            if (parent == null) {
-                                parent = CURRENT_DIR;
-                            }
-                            if (parent.equals(directory)) {
-                                if (fileNamePrefixMatcher == null || fileNamePrefixMatcher.matches(path.getFileName())) {
-                                    builder.add(path.toString());
+                            final Path parent = Optional.ofNullable(fileOnVisit.getParent()).orElse(CURRENT_DIR);
+                            if (parent.equals(dirToStartWalking)) {
+                                if (baseFileNameMatcher.matches(fileOnVisit.getFileName())) {
+                                    builder.add(fileOnVisit.toString());
                                     return FileVisitResult.CONTINUE;
                                 }
                             } else {
-                                builder.add(path.toString());
+                                builder.add(fileOnVisit.toString());
                             }
                             return FileVisitResult.CONTINUE;
                         }
                     }
                 });
         } catch (IOException ex) {
-            throw new RuntimeException(String.format("Failed get a list of local files at '%s'", directory), ex);
+            throw new RuntimeException(String.format("Failed get a list of local files at '%s'", dirToStartWalking), ex);
         }
         return builder.build();
     }
@@ -221,13 +258,13 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         };
     }
 
-    private PathMatcher buildPathMatcherForFileNamePrefix(String fileNamePrefix) {
+    private static StringBuilder buildGlobPatternStringBuilder(final String pathString) {
         StringBuilder sb = new StringBuilder();
-        final int len = fileNamePrefix.length();
+        final int len = pathString.length();
         for (int i = 0; i < len; i++) {
             // Escape the special characters for the FileSystem#getPathMatcher().
             // See https://docs.oracle.com/javase/8/docs/api/java/nio/file/FileSystem.html#getPathMatcher-java.lang.String-
-            char c = fileNamePrefix.charAt(i);
+            final char c = pathString.charAt(i);
             switch (c) {
                 case '*':
                 case '?':
@@ -243,6 +280,23 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             }
             sb.append(c);
         }
-        return FileSystems.getDefault().getPathMatcher("glob:" + sb.toString() + "*");
+        return sb;
+    }
+
+    private static PathMatcher buildPathMatcherForDirectory(final Path dir) {
+        final StringBuilder builder = buildGlobPatternStringBuilder(dir.toString());
+
+        if (builder.charAt(builder.length() - 1) != File.separatorChar) {
+            if (File.separatorChar == '\\') {
+                builder.append('\\');
+            }
+            builder.append(File.separator);
+        }
+        return FileSystems.getDefault().getPathMatcher("glob:" + builder.toString() + "**");
+    }
+
+    private static PathMatcher buildPathMatcherForBaseFileNamePrefix(final String baseFileNamePrefix) {
+        final StringBuilder builder = buildGlobPatternStringBuilder(baseFileNamePrefix);
+        return FileSystems.getDefault().getPathMatcher("glob:" + builder.toString() + "*");
     }
 }
