@@ -319,7 +319,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     private static Path getRealCasePathOfDirectoryNoFollowLinks(final Path dirNormalized) {
         Path built;
         if (dirNormalized.isAbsolute()) {
-            built = Paths.get("/");
+            built = dirNormalized.getRoot();
         } else {
             built = Paths.get("");
         }
