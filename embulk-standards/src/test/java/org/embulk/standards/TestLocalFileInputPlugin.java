@@ -132,9 +132,7 @@ public class TestLocalFileInputPlugin {
             assertTrue(files.contains(buildPath("Directory1\\foo2")));
             assertTrue(files.contains(buildPath("Directory1\\Foo3")));
         } else if (System.getProperty("os.name").contains("Mac OS")) {
-            assertEquals(2, files.size());
-            assertTrue(files.contains(buildPath("Directory1/foo1")));
-            assertTrue(files.contains(buildPath("Directory1/foo2")));
+            assertEquals(0, files.size());
         } else {
             assertEquals(0, files.size());
         }

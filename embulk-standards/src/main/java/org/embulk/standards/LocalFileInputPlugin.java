@@ -3,8 +3,10 @@ package org.embulk.standards;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -114,13 +116,16 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         // Path#normalize eliminates redundant name elements (e.g. "." and "..") without access to the real file system.
         final Path pathPrefixResolved = CURRENT_DIR.resolve(Paths.get(task.getPathPrefix())).normalize();
 
-        final Path dirToStartWalking;
+        final Path dirToMatch;  // Directory part of "path_prefix" with character cases as specified.
+        final Path dirToStartWalking;  //  Directory part of "path_prefix" with character cases as the real file system.
         final String baseFileNamePrefix;
         if (Files.isDirectory(pathPrefixResolved)) {
             // If |pathPrefixResolved| is actually an existing directory in the real file system.
 
+            // Found paths are matched with the specified directory.
+            dirToMatch = pathPrefixResolved;
             // Walking the tree starts from the specified directory.
-            dirToStartWalking = pathPrefixResolved;
+            dirToStartWalking = getRealCasePathOfDirectoryNoFollowLinks(pathPrefixResolved);
 
             // Matching with any file ("*") in the directory.
             baseFileNamePrefix = "";
@@ -129,20 +134,24 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             // A file that is exactly |pathPrefixResolved| may not exist, not just "NOT a directory".
             // Files and directories whose prefixes match |pathPrefixResolved| are expected.
 
+            // Found paths are matched with the directory which contains the specified path.
+            dirToMatch = Optional.ofNullable(pathPrefixResolved.getParent()).orElse(CURRENT_DIR);
             // Walking the tree starts from the directory which contains the specified path.
-            dirToStartWalking = Optional.ofNullable(pathPrefixResolved.getParent()).orElse(CURRENT_DIR);
+            dirToStartWalking = (dirToMatch == CURRENT_DIR
+                                         ? CURRENT_DIR
+                                         : getRealCasePathOfDirectoryNoFollowLinks(dirToMatch));
 
             // Matching "{baseFileNamePrefix}*".
             baseFileNamePrefix = pathPrefixResolved.getFileName().toString();
         }
         final PathMatcher baseFileNameMatcher = buildPathMatcherForBaseFileNamePrefix(baseFileNamePrefix);
-        final PathMatcher dirNameMatcher = buildPathMatcherForDirectory(dirToStartWalking);
+        final PathMatcher dirNameMatcher = buildPathMatcherForDirectory(dirToMatch);
 
         final ImmutableList.Builder<String> builder = ImmutableList.builder();
         final String lastPath = task.getLastPath().orElse(null);
         try {
             log.info("Listing local files at directory '{}' filtering filename by prefix '{}'",
-                     dirToStartWalking.equals(CURRENT_DIR) ? "." : dirToStartWalking.toString(),
+                     dirToMatch.equals(CURRENT_DIR) ? "." : dirToMatch.toString(),
                      baseFileNamePrefix);
 
             int maxDepth = Integer.MAX_VALUE;
@@ -230,7 +239,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                     }
                 });
         } catch (IOException ex) {
-            throw new RuntimeException(String.format("Failed get a list of local files at '%s'", dirToStartWalking), ex);
+            throw new RuntimeException(String.format("Failed get a list of local files at '%s'", dirToMatch), ex);
         }
         return builder.build();
     }
@@ -298,5 +307,85 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     private static PathMatcher buildPathMatcherForBaseFileNamePrefix(final String baseFileNamePrefix) {
         final StringBuilder builder = buildGlobPatternStringBuilder(baseFileNamePrefix);
         return FileSystems.getDefault().getPathMatcher("glob:" + builder.toString() + "*");
+    }
+
+    /**
+     * Returns a case-sensitive real path of a directory without resolving symbolic links.
+     *
+     * <p>{@code Path.toRealPath} looks to work to get a case-sensitive real path, but it may unintentionally resolve
+     * symbolic links when resolving a case-sensitivity difference. To keep the option "follow_symlinks" working as
+     * intended, a method to resolve cases without resolving symbolic links is required.
+     */
+    private static Path getRealCasePathOfDirectoryNoFollowLinks(final Path dirNormalized) {
+        Path built;
+        if (dirNormalized.isAbsolute()) {
+            built = Paths.get("/");
+        } else {
+            built = Paths.get("");
+        }
+        for (final Path pathElement : dirNormalized) {
+            if (pathElement.equals(PARENT)) {
+                built = built.resolve(PARENT);
+                continue;
+            }
+
+            final Path startPath = built;
+            final String pathElementString = pathElement.toString();
+            final ArrayList<Path> found = new ArrayList<>();
+
+            // FOLLOW_LINKS is intentionally set here. Imagine files on the file system are as below:
+            //
+            //   /Foo@ ( -> symbolic link to /bar)
+            //   /bar/
+            //   /bar/file1.txt
+            //   /bar/dir/
+            //   /bar/dir/file2.txt
+            //
+            // For this case, getRealCasePathOfDirectoryNoFollowLinks("/foo/dir") is expected to return "/Foo/dir",
+            // neither "/foo/dir" nor /bar/dir". If FOLLOW_LINKS is not set here, "/Foo" is skipped unfortunately.
+            //
+            try {
+                Files.walkFileTree(built, EnumSet.of(FileVisitOption.FOLLOW_LINKS), 2,  new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) {
+                            if (dir.equals(startPath)) {
+                                return FileVisitResult.CONTINUE;
+                            }
+                            final Path lastElement = dir.getFileName();
+                            if (lastElement == null) {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
+                            if (pathElementString.equalsIgnoreCase(lastElement.toString())) {
+                                found.add(dir);
+                            }
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(final Path file, final IOException ex) throws IOException {
+                            if (pathElementString.equalsIgnoreCase(file.getFileName().toString())) {
+                                // It actually fails only when the failed file/directory is in interest.
+                                throw ex;
+                            } else {
+                                return FileVisitResult.SKIP_SUBTREE;
+                            }
+                        }
+                    });
+            } catch (final IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+
+            if (found.size() == 1) {
+                built = found.get(0);
+            } else if (found.size() > 1) {
+                // If multiple paths are found, take the original. It means that the file system is case sensitive.
+                built = built.resolve(pathElement);
+            } else {
+                throw new UncheckedIOException(new FileNotFoundException(
+                        "Directory not found: \"" + built.resolve(pathElement).toString() + "\" for \""
+                        + dirNormalized.toString() + "\""));
+            }
+        }
+        return built;
     }
 }
