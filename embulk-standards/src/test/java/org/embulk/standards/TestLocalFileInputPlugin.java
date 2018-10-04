@@ -128,9 +128,9 @@ public class TestLocalFileInputPlugin {
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
             assertEquals(3, files.size());
-            assertTrue(files.contains(buildPath("Directory1\\foo1")));
-            assertTrue(files.contains(buildPath("Directory1\\foo2")));
-            assertTrue(files.contains(buildPath("Directory1\\Foo3")));
+            assertTrue(files.contains(buildPath("directory1\\foo1")));
+            assertTrue(files.contains(buildPath("directory1\\foo2")));
+            assertTrue(files.contains(buildPath("directory1\\Foo3")));
         } else if (System.getProperty("os.name").contains("Mac OS")) {
             assertEquals(0, files.size());
         } else {
