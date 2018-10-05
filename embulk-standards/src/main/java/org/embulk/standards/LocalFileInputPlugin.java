@@ -64,7 +64,12 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     // @see <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688">Bug ID: JDK-4045688 Add chdir or equivalent notion of changing working directory</a>
     private static final Path CURRENT_DIR = Paths.get("").normalize();
 
-    private static final Path PARENT = Paths.get("..");
+    // http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html
+    // "The special filename dot shall refer to the directory specified by its predecessor.
+    //  The special filename dot-dot shall refer to the parent directory of its predecessor directory.
+    //  As a special case, in the root directory, dot-dot may refer to the root directory itself."
+    private static final Path DOT = Paths.get(".");
+    private static final Path DOT_DOT = Paths.get("..");
 
     @Override
     public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control) {
@@ -113,8 +118,8 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
     public List<String> listFiles(PluginTask task) {
         // This |pathPrefixResolved| can still be a relative path from the working directory.
-        // Path#normalize eliminates redundant name elements (e.g. "." and "..") without access to the real file system.
-        final Path pathPrefixResolved = CURRENT_DIR.resolve(Paths.get(task.getPathPrefix())).normalize();
+        // The path should not be normalized by Path#normalize to eliminate redundant name elements like "." and "..".
+        final Path pathPrefixResolved = CURRENT_DIR.resolve(Paths.get(task.getPathPrefix()));
 
         final Path dirToMatch;  // Directory part of "path_prefix" with character cases as specified.
         final Path dirToStartWalking;  //  Directory part of "path_prefix" with character cases as the real file system.
@@ -293,9 +298,14 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     }
 
     private static PathMatcher buildPathMatcherForDirectory(final Path dir) {
-        final StringBuilder builder = buildGlobPatternStringBuilder(dir.toString());
+        final String dirString = dir.toString();
+        final int dirLength = dirString.length();
+        final StringBuilder builder = buildGlobPatternStringBuilder(dirString);
 
-        if (builder.charAt(builder.length() - 1) != File.separatorChar) {
+        // |dir| can be empty when just a file/directory name directly on the working directory is given. For example,
+        //
+        //   path_prefix: file.txt
+        if (dirLength > 1 && builder.charAt(dirLength - 1) != File.separatorChar) {
             if (File.separatorChar == '\\') {
                 builder.append('\\');
             }
@@ -324,8 +334,11 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             built = Paths.get("");
         }
         for (final Path pathElement : dirNormalized) {
-            if (pathElement.equals(PARENT)) {
-                built = built.resolve(PARENT);
+            if (pathElement.equals(DOT_DOT)) {
+                built = built.resolve(DOT_DOT);
+                continue;
+            } else if (pathElement.equals(DOT)) {
+                built = built.resolve(DOT);
                 continue;
             }
 
