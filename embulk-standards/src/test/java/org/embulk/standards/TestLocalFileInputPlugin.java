@@ -15,6 +15,8 @@ import org.embulk.spi.Exec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tests LocalFileInputPlugin.
@@ -41,8 +43,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFolder("fooFoo6");
         this.workdir.newFile("fooFoo6/foo");
         this.workdir.newFile("fooFoo6/bar");
-        final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
-        final List<String> files = plugin.listFiles(task);
+        final List<String> files = listFiles(task);
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
@@ -69,7 +70,6 @@ public class TestLocalFileInputPlugin {
     @Test
     public void testListFilesDots() throws IOException {
         // TODO: Mock the current directory.
-        final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
         try {
             Files.createFile(Paths.get("file1"));
             Files.createFile(Paths.get("file2"));
@@ -81,41 +81,41 @@ public class TestLocalFileInputPlugin {
             Files.createFile(Paths.get("dirB", "file6"));
 
             final LocalFileInputPlugin.PluginTask file1Task = buildRawTask("file1");
-            final List<String> file1Files = plugin.listFiles(file1Task);
+            final List<String> file1Files = listFiles(file1Task);
             assertEquals(1, file1Files.size());
             assertTrue(file1Files.contains("file1"));
 
             final LocalFileInputPlugin.PluginTask dotSlashFile1Task = buildRawTask("." + File.separator + "file1");
-            final List<String> dotSlashFile1Files = plugin.listFiles(dotSlashFile1Task);
+            final List<String> dotSlashFile1Files = listFiles(dotSlashFile1Task);
             assertEquals(1, dotSlashFile1Files.size());
             assertTrue(dotSlashFile1Files.contains("." + File.separator + "file1"));
 
             final LocalFileInputPlugin.PluginTask fileTask = buildRawTask("file");
-            final List<String> fileFiles = plugin.listFiles(fileTask);
+            final List<String> fileFiles = listFiles(fileTask);
             assertEquals(2, fileFiles.size());
             assertTrue(fileFiles.contains("file1"));
             assertTrue(fileFiles.contains("file2"));
 
             final LocalFileInputPlugin.PluginTask dotSlashFileTask = buildRawTask("." + File.separator + "file");
-            final List<String> dotSlashFileFiles = plugin.listFiles(dotSlashFileTask);
+            final List<String> dotSlashFileFiles = listFiles(dotSlashFileTask);
             assertEquals(2, dotSlashFileFiles.size());
             assertTrue(dotSlashFileFiles.contains("." + File.separator + "file1"));
             assertTrue(dotSlashFileFiles.contains("." + File.separator + "file2"));
 
             final LocalFileInputPlugin.PluginTask dirATask = buildRawTask("dirA");
-            final List<String> dirAFiles = plugin.listFiles(dirATask);
+            final List<String> dirAFiles = listFiles(dirATask);
             assertEquals(2, dirAFiles.size());
             assertTrue(dirAFiles.contains("dirA" + File.separator + "file3"));
             assertTrue(dirAFiles.contains("dirA" + File.separator + "file4"));
 
             final LocalFileInputPlugin.PluginTask dotSlashDirATask = buildRawTask("." + File.separator + "dirA");
-            final List<String> dotSlashDirAFiles = plugin.listFiles(dotSlashDirATask);
+            final List<String> dotSlashDirAFiles = listFiles(dotSlashDirATask);
             assertEquals(2, dotSlashDirAFiles.size());
             assertTrue(dotSlashDirAFiles.contains("." + File.separator + "dirA" + File.separator + "file3"));
             assertTrue(dotSlashDirAFiles.contains("." + File.separator + "dirA" + File.separator + "file4"));
 
             final LocalFileInputPlugin.PluginTask dirTask = buildRawTask("dir");
-            final List<String> dirFiles = plugin.listFiles(dirTask);
+            final List<String> dirFiles = listFiles(dirTask);
             assertEquals(4, dirFiles.size());
             assertTrue(dirFiles.contains("dirA" + File.separator + "file3"));
             assertTrue(dirFiles.contains("dirA" + File.separator + "file4"));
@@ -123,7 +123,7 @@ public class TestLocalFileInputPlugin {
             assertTrue(dirFiles.contains("dirB" + File.separator + "file6"));
 
             final LocalFileInputPlugin.PluginTask dotSlashDirTask = buildRawTask("." + File.separator + "dir");
-            final List<String> dotSlashDirFiles = plugin.listFiles(dotSlashDirTask);
+            final List<String> dotSlashDirFiles = listFiles(dotSlashDirTask);
             assertEquals(4, dotSlashDirFiles.size());
             assertTrue(dotSlashDirFiles.contains("." + File.separator + "dirA" + File.separator + "file3"));
             assertTrue(dotSlashDirFiles.contains("." + File.separator + "dirA" + File.separator + "file4"));
@@ -131,7 +131,7 @@ public class TestLocalFileInputPlugin {
             assertTrue(dotSlashDirFiles.contains("." + File.separator + "dirB" + File.separator + "file6"));
 
             final LocalFileInputPlugin.PluginTask dotSlashTask = buildRawTask("." + File.separator + "");
-            final List<String> dotSlashFiles = plugin.listFiles(dotSlashTask);
+            final List<String> dotSlashFiles = listFiles(dotSlashTask);
             assertTrue(6 <= dotSlashFiles.size());  // Other files and directories exist.
             assertTrue(dotSlashFiles.contains("." + File.separator + "file1"));
             assertTrue(dotSlashFiles.contains("." + File.separator + "file2"));
@@ -141,7 +141,7 @@ public class TestLocalFileInputPlugin {
             assertTrue(dotSlashFiles.contains("." + File.separator + "dirB" + File.separator + "file6"));
 
             final LocalFileInputPlugin.PluginTask dotTask = buildRawTask(".");
-            final List<String> dotFiles = plugin.listFiles(dotTask);
+            final List<String> dotFiles = listFiles(dotTask);
             assertTrue(6 <= dotFiles.size());  // Other files and directories exist.
             assertTrue(dotFiles.contains("." + File.separator + "file1"));
             assertTrue(dotFiles.contains("." + File.separator + "file2"));
@@ -178,8 +178,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFile("directory1/bar");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
-        final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
-        final List<String> files = plugin.listFiles(task);
+        final List<String> files = listFiles(task);
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
@@ -219,8 +218,7 @@ public class TestLocalFileInputPlugin {
         this.workdir.newFile("directory1/bar");
         this.workdir.newFolder("directory2");
         this.workdir.newFile("directory2/bar");
-        final LocalFileInputPlugin plugin = new LocalFileInputPlugin();
-        final List<String> files = plugin.listFiles(task);
+        final List<String> files = listFiles(task);
 
         // It intentionally tests in the platform-aware way, not in the platform-oblivious way.
         if (System.getProperty("os.name").contains("Windows")) {
@@ -233,6 +231,10 @@ public class TestLocalFileInputPlugin {
         } else {
             assertEquals(0, files.size());
         }
+    }
+
+    private static List<String> listFiles(final LocalFileInputPlugin.PluginTask task) {
+        return LocalFileInputPlugin.listFilesForTesting(task, logger);
     }
 
     private LocalFileInputPlugin.PluginTask buildRawTask(
@@ -285,4 +287,6 @@ public class TestLocalFileInputPlugin {
         pathPrefixBuilder.append(subPath);
         return pathPrefixBuilder.toString();
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(TestLocalFileInputPlugin.class);
 }
