@@ -1,6 +1,5 @@
 package org.embulk.standards;
 
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -58,43 +57,28 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         BufferAllocator getBufferAllocator();
     }
 
-    private final Logger log = Exec.getLogger(getClass());
-
-    // Java expects the working directory does not change during an execution.
-    // @see <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688">Bug ID: JDK-4045688 Add chdir or equivalent notion of changing working directory</a>
-    private static final Path CURRENT_DIR = Paths.get("").normalize();
-
-    // http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html
-    // "The special filename dot shall refer to the directory specified by its predecessor.
-    //  The special filename dot-dot shall refer to the parent directory of its predecessor directory.
-    //  As a special case, in the root directory, dot-dot may refer to the root directory itself."
-    private static final Path DOT = Paths.get(".");
-    private static final Path DOT_DOT = Paths.get("..");
-
     @Override
-    public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control) {
-        PluginTask task = config.loadConfig(PluginTask.class);
+    public ConfigDiff transaction(final ConfigSource config, final FileInputPlugin.Control control) {
+        final PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
-        List<String> files = listFiles(task);
-        log.info("Loading files {}", files);
+        final List<String> files = listFiles(task, this.instanceLogger);
+        this.instanceLogger.info("Loading files {}", files);
         task.setFiles(files);
 
         // number of processors is same with number of files
-        int taskCount = task.getFiles().size();
+        final int taskCount = task.getFiles().size();
         return resume(task.dump(), taskCount, control);
     }
 
     @Override
-    public ConfigDiff resume(TaskSource taskSource,
-            int taskCount,
-            FileInputPlugin.Control control) {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+    public ConfigDiff resume(final TaskSource taskSource, final int taskCount, final FileInputPlugin.Control control) {
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         control.run(taskSource, taskCount);
 
         // build next config
-        ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = Exec.newConfigDiff();
 
         // last_path
         if (task.getFiles().isEmpty()) {
@@ -103,7 +87,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                 configDiff.set("last_path", task.getLastPath().get());
             }
         } else {
-            List<String> files = new ArrayList<String>(task.getFiles());
+            final List<String> files = new ArrayList<String>(task.getFiles());
             Collections.sort(files);
             configDiff.set("last_path", files.get(files.size() - 1));
         }
@@ -112,14 +96,40 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     }
 
     @Override
-    public void cleanup(TaskSource taskSource,
-            int taskCount,
-            List<TaskReport> successTaskReports) {}
+    public void cleanup(final TaskSource taskSource, final int taskCount, final List<TaskReport> successTaskReports) {
+    }
 
-    public List<String> listFiles(PluginTask task) {
+    @Override
+    public TransactionalFileInput open(final TaskSource taskSource, final int taskIndex) {
+        final PluginTask task = taskSource.loadTask(PluginTask.class);
+
+        final File file = new File(task.getFiles().get(taskIndex));
+
+        return new InputStreamTransactionalFileInput(
+                task.getBufferAllocator(),
+                new InputStreamTransactionalFileInput.Opener() {
+                    public InputStream open() throws IOException {
+                        return new FileInputStream(file);
+                    }
+                }) {
+            @Override
+            public void abort() {}
+
+            @Override
+            public TaskReport commit() {
+                return Exec.newTaskReport();
+            }
+        };
+    }
+
+    static List<String> listFilesForTesting(final PluginTask task, final Logger logger) {
+        return listFiles(task, logger);
+    }
+
+    private static List<String> listFiles(final PluginTask task, final Logger logger) {
         // This |pathPrefixResolved| can still be a relative path from the working directory.
         // The path should not be normalized by Path#normalize to eliminate redundant name elements like "." and "..".
-        final Path pathPrefixResolved = CURRENT_DIR.resolve(Paths.get(task.getPathPrefix()));
+        final Path pathPrefixResolved = WORKING_DIRECTORY.resolve(Paths.get(task.getPathPrefix()));
 
         final Path dirToMatch;  // Directory part of "path_prefix" with character cases as specified.
         final Path dirToStartWalking;  //  Directory part of "path_prefix" with character cases as the real file system.
@@ -140,10 +150,10 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             // Files and directories whose prefixes match |pathPrefixResolved| are expected.
 
             // Found paths are matched with the directory which contains the specified path.
-            dirToMatch = Optional.ofNullable(pathPrefixResolved.getParent()).orElse(CURRENT_DIR);
+            dirToMatch = Optional.ofNullable(pathPrefixResolved.getParent()).orElse(WORKING_DIRECTORY);
             // Walking the tree starts from the directory which contains the specified path.
-            dirToStartWalking = (dirToMatch == CURRENT_DIR
-                                         ? CURRENT_DIR
+            dirToStartWalking = (dirToMatch == WORKING_DIRECTORY
+                                         ? WORKING_DIRECTORY
                                          : getRealCasePathOfDirectoryNoFollowLinks(dirToMatch));
 
             // Matching "{baseFileNamePrefix}*".
@@ -152,20 +162,19 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         final PathMatcher baseFileNameMatcher = buildPathMatcherForBaseFileNamePrefix(baseFileNamePrefix);
         final PathMatcher dirNameMatcher = buildPathMatcherForDirectory(dirToMatch);
 
-        final ImmutableList.Builder<String> builder = ImmutableList.builder();
+        final ArrayList<String> filesFound = new ArrayList<>();
         final String lastPath = task.getLastPath().orElse(null);
         try {
-            log.info("Listing local files at directory '{}' filtering filename by prefix '{}'",
-                     dirToMatch.equals(CURRENT_DIR) ? "." : dirToMatch.toString(),
-                     baseFileNamePrefix);
+            logger.info("Listing local files at directory '{}' filtering filename by prefix '{}'",
+                        dirToMatch.equals(WORKING_DIRECTORY) ? "." : dirToMatch.toString(),
+                        baseFileNamePrefix);
 
-            int maxDepth = Integer.MAX_VALUE;
-            Set<FileVisitOption> opts;
+            final Set<FileVisitOption> visitOptions;
             if (task.getFollowSymlinks()) {
-                opts = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
+                visitOptions = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
             } else {
-                opts = EnumSet.noneOf(FileVisitOption.class);
-                log.info("\"follow_symlinks\" is set false. Note that symbolic links to directories are skipped.");
+                visitOptions = EnumSet.noneOf(FileVisitOption.class);
+                logger.info("\"follow_symlinks\" is set false. Note that symbolic links to directories are skipped.");
             }
 
             // |SimpleFileVisitor| visits files under a directory which matches |dirToStartWalking| in the following manners.
@@ -173,7 +182,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             // * Linux: Case sensitive. It does not walk from "/FOO" when |dirToStartWalking| == "/foo".
             // * MacOSX: Case insensitive. It walks from "/FOO" when |dirToStartWalking| == "/foo".
             // * Windows: Case insensitive. It walks from "/FOO" when |dirToStartWalking| == "/foo".
-            Files.walkFileTree(dirToStartWalking, opts, maxDepth, new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(dirToStartWalking, visitOptions, Integer.MAX_VALUE, new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult preVisitDirectory(final Path dirOnVisit, final BasicFileAttributes attrs) {
                         // NOTE: This |dirOnVisit| contains the path elements of |dirToStartWalking|.
@@ -196,7 +205,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                             // It does not affect Linux (both are case-sensitive) nor Windows (both are case-insensitive).
                             return FileVisitResult.SKIP_SUBTREE;
                         } else {
-                            final Path parent = Optional.ofNullable(dirOnVisit.getParent()).orElse(CURRENT_DIR);
+                            final Path parent = Optional.ofNullable(dirOnVisit.getParent()).orElse(WORKING_DIRECTORY);
                             if (parent.equals(dirToStartWalking)) {
                                 if (baseFileNameMatcher.matches(dirOnVisit.getFileName())) {
                                     return FileVisitResult.CONTINUE;
@@ -230,14 +239,14 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                             // Rejecting case-unmatching paths on OSX in the same way with |preVisitDirectory| above.
                             return FileVisitResult.CONTINUE;
                         } else {
-                            final Path parent = Optional.ofNullable(fileOnVisit.getParent()).orElse(CURRENT_DIR);
+                            final Path parent = Optional.ofNullable(fileOnVisit.getParent()).orElse(WORKING_DIRECTORY);
                             if (parent.equals(dirToStartWalking)) {
                                 if (baseFileNameMatcher.matches(fileOnVisit.getFileName())) {
-                                    builder.add(fileOnVisit.toString());
+                                    filesFound.add(fileOnVisit.toString());
                                     return FileVisitResult.CONTINUE;
                                 }
                             } else {
-                                builder.add(fileOnVisit.toString());
+                                filesFound.add(fileOnVisit.toString());
                             }
                             return FileVisitResult.CONTINUE;
                         }
@@ -246,40 +255,15 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         } catch (IOException ex) {
             throw new RuntimeException(String.format("Failed get a list of local files at '%s'", dirToMatch), ex);
         }
-        return builder.build();
-    }
-
-    @Override
-    public TransactionalFileInput open(TaskSource taskSource, int taskIndex) {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
-
-        final File file = new File(task.getFiles().get(taskIndex));
-
-        return new InputStreamTransactionalFileInput(
-                task.getBufferAllocator(),
-                new InputStreamTransactionalFileInput.Opener() {
-                    public InputStream open() throws IOException {
-                        return new FileInputStream(file);
-                    }
-                }) {
-            @Override
-            public void abort() {}
-
-            @Override
-            public TaskReport commit() {
-                return Exec.newTaskReport();
-            }
-        };
+        return Collections.unmodifiableList(filesFound);
     }
 
     private static StringBuilder buildGlobPatternStringBuilder(final String pathString) {
-        StringBuilder sb = new StringBuilder();
-        final int len = pathString.length();
-        for (int i = 0; i < len; i++) {
-            // Escape the special characters for the FileSystem#getPathMatcher().
-            // See https://docs.oracle.com/javase/8/docs/api/java/nio/file/FileSystem.html#getPathMatcher-java.lang.String-
-            final char c = pathString.charAt(i);
-            switch (c) {
+        final StringBuilder globPatternBuilder = new StringBuilder();
+        // Escape the special characters for the FileSystem#getPathMatcher().
+        // See https://docs.oracle.com/javase/8/docs/api/java/nio/file/FileSystem.html#getPathMatcher-java.lang.String-
+        pathString.chars().forEach(c -> {
+            switch ((char) c) {
                 case '*':
                 case '?':
                 case '{':
@@ -287,14 +271,14 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                 case '[':
                 case ']':
                 case '\\':
-                    sb.append('\\');
+                    globPatternBuilder.append('\\');
                     break;
                 default:
                     break;
             }
-            sb.append(c);
-        }
-        return sb;
+            globPatternBuilder.append((char) c);
+        });
+        return globPatternBuilder;
     }
 
     private static PathMatcher buildPathMatcherForDirectory(final Path dir) {
@@ -401,4 +385,17 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         }
         return built;
     }
+
+    // Java expects the working directory does not change during an execution.
+    // @see <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688">Bug ID: JDK-4045688 Add chdir or equivalent notion of changing working directory</a>
+    private static final Path WORKING_DIRECTORY = Paths.get("").normalize();
+
+    // http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html
+    // "The special filename dot shall refer to the directory specified by its predecessor.
+    //  The special filename dot-dot shall refer to the parent directory of its predecessor directory.
+    //  As a special case, in the root directory, dot-dot may refer to the root directory itself."
+    private static final Path DOT = Paths.get(".");
+    private static final Path DOT_DOT = Paths.get("..");
+
+    private final Logger instanceLogger = Exec.getLogger(getClass());
 }
