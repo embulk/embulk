@@ -34,7 +34,7 @@ repositories {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
-    compile 'org.embulk:guice-bootstrap:0.3.0'
+    compile 'org.embulk:guice-bootstrap:0.3.2'
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-multibindings:4.0'
