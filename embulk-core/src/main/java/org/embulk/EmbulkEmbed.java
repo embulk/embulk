@@ -2,10 +2,13 @@ package org.embulk;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
@@ -33,12 +36,57 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecSession;
 
 public class EmbulkEmbed {
-    private EmbulkEmbed(final ConfigSource systemConfig, final LifeCycleInjector injector) {
+    private EmbulkEmbed(final ConfigSource systemConfig, final Injector injector) {
         this.injector = injector;
         this.logger = injector.getInstance(org.slf4j.ILoggerFactory.class).getLogger(EmbulkEmbed.class.getName());
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = injector.getInstance(PreviewExecutor.class);
+    }
+
+    /**
+     * Bootstrap without Life Cycle Management (guice-bootstrap).
+     *
+     * <p>For external EmbulkEmbed users: DO NOT USE (depend on) THIS YET! Its interface still may change.
+     */
+    public static class SimpleBootstrap {
+        public SimpleBootstrap(final ConfigSource systemConfig) {
+            this.systemConfig = systemConfig;
+            this.additionalModules = new ArrayList<>();
+            this.overridingModules = new ArrayList<>();
+        }
+
+        public SimpleBootstrap addModules(final Module... additionalModules) {
+            return this.addModules(Arrays.asList(additionalModules));
+        }
+
+        public SimpleBootstrap addModules(final Collection<? extends Module> additionalModules) {
+            this.additionalModules.addAll(additionalModules);
+            return this;
+        }
+
+        public SimpleBootstrap overrideModules(final Module... overridingModules) {
+            return this.overrideModules(Arrays.asList(overridingModules));
+        }
+
+        public SimpleBootstrap overrideModules(final Collection<? extends Module> overridingModules) {
+            this.overridingModules.addAll(overridingModules);
+            return this;
+        }
+
+        public EmbulkEmbed build() {
+            final ArrayList<Module> initialModules = new ArrayList<>();
+            initialModules.addAll(standardModuleList(this.systemConfig));
+            initialModules.addAll(this.additionalModules);
+
+            final Module overriddenModule = Modules.override(initialModules).with(this.overridingModules);
+
+            return new EmbulkEmbed(this.systemConfig, Guice.createInjector(overriddenModule));
+        }
+
+        private final List<Module> additionalModules;
+        private final List<Module> overridingModules;
+        private final ConfigSource systemConfig;
     }
 
     public static class Bootstrap {
@@ -276,13 +324,16 @@ public class EmbulkEmbed {
     }
 
     public void destroy() {
-        try {
-            this.injector.destroy();
-        } catch (final Exception ex) {
-            if (ex instanceof RuntimeException) {
-                throw (RuntimeException) ex;
+        if (this.injector instanceof LifeCycleInjector) {
+            final LifeCycleInjector lifeCycleInjector = (LifeCycleInjector) this.injector;
+            try {
+                lifeCycleInjector.destroy();
+            } catch (final Exception ex) {
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                }
+                throw new RuntimeException(ex);
             }
-            throw new RuntimeException(ex);
         }
     }
 
@@ -303,7 +354,7 @@ public class EmbulkEmbed {
         return ExecSession.builder(this.injector).fromExecConfig(execConfig).build();
     }
 
-    private final LifeCycleInjector injector;
+    private final Injector injector;
     private final org.slf4j.Logger logger;
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
