@@ -24,7 +24,6 @@ import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
-import org.embulk.guice.Bootstrap;
 import org.embulk.guice.LifeCycleInjector;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.BuiltinPluginSourceModule;
@@ -68,11 +67,7 @@ public class EmbulkEmbed {
                 copyMutable.add(module);
             }
             final List<Module> copy = Collections.unmodifiableList(copyMutable);
-            return overrideModules(new com.google.common.base.Function<List<Module>, Iterable<Module>>() {
-                    public Iterable<Module> apply(List<Module> modules) {
-                        return Iterables.concat(modules, copy);
-                    }
-                });
+            return this.overrideModules(modules -> Iterables.concat(modules, copy));
         }
 
         @Deprecated
