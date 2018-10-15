@@ -1,5 +1,8 @@
 @echo off
 
+rem NOTE: Do not use backquotes in this bat file because backquotes are unintentionally recognized by sh.
+rem NOTE: Just quotes are available for [ for /f "delims=" %%w ('...') ].
+
 setlocal
 
 rem Do not use %0 to identify the JAR (bat) file.
@@ -33,7 +36,7 @@ if "%overwrite_optimize%" == "true" (
     )
 )
 
-for /f "usebackq delims=" %%w in (`java -fullversion 2^>^&1`) do set java_fullversion=%%w
+for /f "delims=" %%w in ('java -fullversion 2^>^&1') do set java_fullversion=%%w
 echo %java_fullversion% | find "java full version ""1.7" > NUL
 if not ERRORLEVEL 1 (set java_version=7)
 echo %java_fullversion% | find "java full version ""1.8" > NUL
