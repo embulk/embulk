@@ -1,10 +1,10 @@
 package org.embulk.spi;
 
-import io.airlift.slice.Slice;
-import io.airlift.slice.Slices;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.embulk.deps.airlift.Slice;
+import org.embulk.deps.airlift.Slices;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
@@ -17,6 +17,7 @@ public class PageBuilder implements AutoCloseable {
     private final Schema schema;
     private final int[] columnOffsets;
     private final int fixedRecordSize;
+    private final Slices slices;
 
     private Buffer buffer;
     private Slice bufferSlice;
@@ -39,13 +40,14 @@ public class PageBuilder implements AutoCloseable {
         Arrays.fill(nullBitSet, (byte) -1);
         this.row = Row.newRow(schema);
         this.fixedRecordSize = PageFormat.recordHeaderSize(schema) + PageFormat.totalColumnSize(schema);
+        this.slices = Slices.get();
         this.nextVariableLengthDataOffset = fixedRecordSize;
         newBuffer();
     }
 
     private void newBuffer() {
         this.buffer = allocator.allocate(PageFormat.PAGE_HEADER_SIZE + fixedRecordSize);
-        this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
+        this.bufferSlice = this.slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences = new ArrayList<>();
