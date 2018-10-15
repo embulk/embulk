@@ -50,33 +50,33 @@ if not ERRORLEVEL 1 (set java_version=11)
 if not defined java_version (set java_version=0)
 
 if %java_version% EQU 7 (
-    echo "[ERROR] Embulk no longer supports Java 1.7." 1>&2
+    echo [ERROR] Embulk no longer supports Java 1.7. 1>&2
     exit 1
 
 ) else if %java_version% EQU 8 (
     rem Do nothing for Java 8
 
 ) else if %java_version% EQU 9 (
-    echo "[WARN] Embulk does not guarantee running with Java 9." 1>&2
-    echo "[WARN] Executing Java with: \"--add-modules java.xml.bind --add-modules=java.se.ee\"" 1>&2
-    echo "" 1>&2
+    echo [WARN] Embulk does not guarantee running with Java 9. 1>&2
+    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
+    echo. 1>&2
     set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
 
 ) else if %java_version% EQU 10 (
-    echo "[WARN] Embulk does not guarantee running with Java 10." 1>&2
-    echo "[WARN] Executing Java with: \"--add-modules java.xml.bind --add-modules=java.se.ee\"" 1>&2
-    echo "" 1>&2
+    echo [WARN] Embulk does not guarantee running with Java 10. 1>&2
+    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
+    echo. 1>&2
     set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
 
 ) else if %java_version% EQU 11 (
-    echo "[WARN] Embulk does not guarantee running with Java 11." 1>&2
-    echo "[WARN] Executing Java with: \"--add-modules java.xml.bind --add-modules=java.se.ee\"" 1>&2
-    echo "" 1>&2
+    echo [WARN] Embulk does not guarantee running with Java 11. 1>&2
+    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
+    echo. 1>&2
     set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
 
 ) else (
-    echo "[WARN] Unrecognized Java version: %java_fullversion%" 1>&2
-    echo "" 1>&2
+    echo [WARN] Unrecognized Java version: %java_fullversion% 1>&2
+    echo. 1>&2
 
 )
 
