@@ -36,10 +36,10 @@ public class SelfrunTest {
         final String line =
                 new String(Files.readAllBytes(fileSystem.getPath(originalSelfrunFile.getAbsolutePath())),
                            Charset.defaultCharset())
-                .replaceAll("java ",
+                .replaceAll("java (.java_args)",
                             "java -classpath "
                                     + classpath.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\")
-                                    + " org.embulk.cli.DummyMain ");
+                                    + " org.embulk.cli.DummyMain $1");
 
         // Modify selfrun so that arguments are written in 'args.txt' .
         Files.write(fileSystem.getPath(testSelfrunFile.getAbsolutePath()),
