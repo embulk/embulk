@@ -3,7 +3,6 @@ package org.embulk.spi.time;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -652,7 +651,6 @@ public class TestTimestampParser {
     }
 
     @Test
-    @Ignore
     public void testInvalidDate() {
         failToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
     }
@@ -663,7 +661,6 @@ public class TestTimestampParser {
     }
 
     @Test
-    @Ignore
     public void testJavaInvalidDate() {
         failJavaToParse("2018-02-31T12:34:56", "yyyy-MM-dd'T'HH:mm:ss");
     }
