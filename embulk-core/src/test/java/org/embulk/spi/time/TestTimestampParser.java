@@ -3,6 +3,7 @@ package org.embulk.spi.time;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -648,6 +649,23 @@ public class TestTimestampParser {
         testRubyToParse("-1.5", "%s.%N", -2L, 500000000);
         testRubyToParse("1.000000001", "%s.%N", 1L, 1);
         testRubyToParse("-1.000000001", "%s.%N", -2L, 999999999);
+    }
+
+    @Test
+    @Ignore
+    public void testInvalidDate() {
+        failToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    }
+
+    @Test
+    public void testRubyInvalidDate() {
+        failRubyToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    }
+
+    @Test
+    @Ignore
+    public void testJavaInvalidDate() {
+        failJavaToParse("2018-02-31T12:34:56", "yyyy-MM-dd'T'HH:mm:ss");
     }
 
     private void testJavaToParse(final String string, final String format, final long second, final int nanoOfSecond) {
