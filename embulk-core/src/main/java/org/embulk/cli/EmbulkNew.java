@@ -385,13 +385,18 @@ public class EmbulkNew {
     }
 
     private void setExecutable(String targetFileName) throws IOException {
-        final Path targetPath = this.pluginBasePath.resolve(targetFileName);
-        final Set<PosixFilePermission> permissions =
-                new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
-        permissions.add(PosixFilePermission.OWNER_EXECUTE);
-        permissions.add(PosixFilePermission.GROUP_EXECUTE);
-        permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-        Files.setPosixFilePermissions(targetPath, permissions);
+        try {
+            final Path targetPath = this.pluginBasePath.resolve(targetFileName);
+            final Set<PosixFilePermission> permissions =
+                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+            permissions.add(PosixFilePermission.OWNER_EXECUTE);
+            permissions.add(PosixFilePermission.GROUP_EXECUTE);
+            permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+            Files.setPosixFilePermissions(targetPath, permissions);
+        } catch (UnsupportedOperationException ex) {
+            System.err.println("Warning: Skip setting executable permission to `gradlew`, "
+                    + "because POSIX permission is not supported by this filesystem.");
+        }
     }
 
     private final Path basePath;
