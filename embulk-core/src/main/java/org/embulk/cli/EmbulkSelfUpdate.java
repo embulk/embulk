@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,7 +89,10 @@ public class EmbulkSelfUpdate {
                 InputStream input = connection.getInputStream();
                 // TODO(dmikurube): Confirm if it is okay to replace a temp file created by Files.createTempFile.
                 Files.copy(input, jarPathTemp, StandardCopyOption.REPLACE_EXISTING);
-                Files.setPosixFilePermissions(jarPathTemp, Files.getPosixFilePermissions(jarPathJava));
+                final FileSystem fileSystem = jarPathTemp.getFileSystem();
+                if (fileSystem.supportedFileAttributeViews().contains("posix")) {
+                    Files.setPosixFilePermissions(jarPathTemp, Files.getPosixFilePermissions(jarPathJava));
+                }
             } finally {
                 connection.disconnect();
             }

@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -87,7 +88,7 @@ public class EmbulkMigrate {
         if (migrator.match("gradle/wrapper/gradle-wrapper.properties", GRADLE_VERSION_IN_WRAPPER)) {
             // gradle < 4.1
             migrator.copy("org/embulk/plugin/template/java/gradlew", "gradlew");
-            migrator.setExecutable("gradlew");
+            migrator.setExecutableIfAvailable("gradlew");
             migrator.copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.properties",
                           "gradle/wrapper/gradle-wrapper.properties");
             migrator.copy("org/embulk/plugin/template/java/gradle/wrapper/gradle-wrapper.jar",
@@ -381,14 +382,18 @@ public class EmbulkMigrate {
             }
         }
 
-        private void setExecutable(String targetFileName) throws IOException {
+        private void setExecutableIfAvailable(final String targetFileName) throws IOException {
             final Path targetPath = this.basePath.resolve(targetFileName);
-            final Set<PosixFilePermission> permissions =
-                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
-            permissions.add(PosixFilePermission.OWNER_EXECUTE);
-            permissions.add(PosixFilePermission.GROUP_EXECUTE);
-            permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-            Files.setPosixFilePermissions(targetPath, permissions);
+            final FileSystem fileSystem = targetPath.getFileSystem();
+            if (fileSystem.supportedFileAttributeViews().contains("posix")) {
+                // NTFS does not support PosixFilePermissions, for example.
+                final Set<PosixFilePermission> permissions =
+                        new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+                permissions.add(PosixFilePermission.OWNER_EXECUTE);
+                permissions.add(PosixFilePermission.GROUP_EXECUTE);
+                permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+                Files.setPosixFilePermissions(targetPath, permissions);
+            }
         }
 
         private final Path basePath;
