@@ -1,6 +1,7 @@
 package org.embulk.spi.time;
 
 import com.google.common.base.Optional;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.embulk.config.Config;
@@ -224,7 +225,11 @@ public class TimestampParser {
     }
 
     public final Timestamp parse(final String text) throws TimestampParseException {
-        return Timestamp.ofInstant(this.parseInternal(text));
+        try {
+            return Timestamp.ofInstant(this.parseInternal(text));
+        } catch (final DateTimeException ex) {
+            throw new TimestampParseException(ex);
+        }
     }
 
     private final TimestampParserLegacy delegate;

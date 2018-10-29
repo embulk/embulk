@@ -650,6 +650,21 @@ public class TestTimestampParser {
         testRubyToParse("-1.000000001", "%s.%N", -2L, 999999999);
     }
 
+    @Test
+    public void testInvalidDate() {
+        failToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    }
+
+    @Test
+    public void testRubyInvalidDate() {
+        failRubyToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    }
+
+    @Test
+    public void testJavaInvalidDate() {
+        failJavaToParse("2018-02-31T12:34:56", "yyyy-MM-dd'T'HH:mm:ss");
+    }
+
     private void testJavaToParse(final String string, final String format, final long second, final int nanoOfSecond) {
         final TimestampParser parser = TimestampParser.of("java:" + format, "UTC");
         final Timestamp timestamp = parser.parse(string);
