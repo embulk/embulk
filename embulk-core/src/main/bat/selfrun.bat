@@ -37,15 +37,15 @@ if "%overwrite_optimize%" == "true" (
 )
 
 for /f "delims=" %%w in ('java -fullversion 2^>^&1') do set java_fullversion=%%w
-echo %java_fullversion% | find "java full version ""1.7" > NUL
+echo %java_fullversion% | find " full version ""1.7" > NUL
 if not ERRORLEVEL 1 (set java_version=7)
-echo %java_fullversion% | find "java full version ""1.8" > NUL
+echo %java_fullversion% | find " full version ""1.8" > NUL
 if not ERRORLEVEL 1 (set java_version=8)
-echo %java_fullversion% | find "java full version ""9" > NUL
+echo %java_fullversion% | find " full version ""9" > NUL
 if not ERRORLEVEL 1 (set java_version=9)
-echo %java_fullversion% | find "java full version ""10" > NUL
+echo %java_fullversion% | find " full version ""10" > NUL
 if not ERRORLEVEL 1 (set java_version=10)
-echo %java_fullversion% | find "java full version ""11" > NUL
+echo %java_fullversion% | find " full version ""11" > NUL
 if not ERRORLEVEL 1 (set java_version=11)
 if not defined java_version (set java_version=0)
 
