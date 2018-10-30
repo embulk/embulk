@@ -72,7 +72,7 @@ case "$java_fullversion" in
         java_args="--add-modules java.xml.bind --add-modules=java.se.ee $java_args"
         ;;
     [a-z]*\ full\ version\ \"11*\")
-        echo "[ERROR] Embulk does not support support Java 11 yet." 1>&2
+        echo "[ERROR] Embulk does not support Java 11 yet." 1>&2
         exit 1
         ;;
     *)

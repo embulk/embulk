@@ -69,7 +69,7 @@ if %java_version% EQU 7 (
     set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
 
 ) else if %java_version% EQU 11 (
-    echo [ERROR] Embulk does not support support Java 11 yet. 1>&2
+    echo [ERROR] Embulk does not support Java 11 yet. 1>&2
     exit 1
 
 ) else (
