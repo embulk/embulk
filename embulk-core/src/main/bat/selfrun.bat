@@ -37,15 +37,15 @@ if "%overwrite_optimize%" == "true" (
 )
 
 for /f "delims=" %%w in ('java -fullversion 2^>^&1') do set java_fullversion=%%w
-echo %java_fullversion% | find "java full version ""1.7" > NUL
+echo %java_fullversion% | find " full version ""1.7" > NUL
 if not ERRORLEVEL 1 (set java_version=7)
-echo %java_fullversion% | find "java full version ""1.8" > NUL
+echo %java_fullversion% | find " full version ""1.8" > NUL
 if not ERRORLEVEL 1 (set java_version=8)
-echo %java_fullversion% | find "java full version ""9" > NUL
+echo %java_fullversion% | find " full version ""9" > NUL
 if not ERRORLEVEL 1 (set java_version=9)
-echo %java_fullversion% | find "java full version ""10" > NUL
+echo %java_fullversion% | find " full version ""10" > NUL
 if not ERRORLEVEL 1 (set java_version=10)
-echo %java_fullversion% | find "java full version ""11" > NUL
+echo %java_fullversion% | find " full version ""11" > NUL
 if not ERRORLEVEL 1 (set java_version=11)
 if not defined java_version (set java_version=0)
 
@@ -69,10 +69,8 @@ if %java_version% EQU 7 (
     set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
 
 ) else if %java_version% EQU 11 (
-    echo [WARN] Embulk does not guarantee running with Java 11. 1>&2
-    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
-    echo. 1>&2
-    set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
+    echo [ERROR] Embulk does not support Java 11 yet. 1>&2
+    exit 1
 
 ) else (
     echo [WARN] Unrecognized Java version: %java_fullversion% 1>&2
