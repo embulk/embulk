@@ -5,7 +5,7 @@ General Changes
 ----------------
 
 * Add an experimental new EmbulkEmbulk.SimpleBootstrap, instead of EmbulkEmbed.Bootstrap [#1038] [#1048]
-* Make selfrun scripts startable in Java 9, 10, 11 [#1020] [#1049]
+* Make selfrun scripts startable in Java 9, 10, 11 [#1020] [#1049] [#1056] [#1057]
 
 Bug Fixes
 ----------
