@@ -14,6 +14,7 @@
 
 import sys
 import os
+from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -46,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Embulk'
-copyright = u'2015-2018, Embulk Project'
+copyright = u'2015-' + datetime.now().strftime("%Y") + ', Embulk Project'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
