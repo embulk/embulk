@@ -38,7 +38,7 @@ public class EmbulkSelfUpdate {
                                           final String specifiedVersionString,
                                           final boolean isForced) throws IOException, URISyntaxException {
         final Path jarPathJava = Paths.get(
-                EmbulkSelfUpdate.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+                EmbulkSelfUpdate.class.getProtectionDomain().getCodeSource().getLocation().toURI());
 
         if ((!Files.exists(jarPathJava)) || (!Files.isRegularFile(jarPathJava))) {
             throw exceptionNoSingleJar();
@@ -89,8 +89,11 @@ public class EmbulkSelfUpdate {
                 InputStream input = connection.getInputStream();
                 // TODO(dmikurube): Confirm if it is okay to replace a temp file created by Files.createTempFile.
                 Files.copy(input, jarPathTemp, StandardCopyOption.REPLACE_EXISTING);
-                final FileSystem fileSystem = jarPathTemp.getFileSystem();
-                if (fileSystem.supportedFileAttributeViews().contains("posix")) {
+                final FileSystem jarPathJavaFileSystem = jarPathJava.getFileSystem();
+                final FileSystem jarPathTempFileSystem = jarPathTemp.getFileSystem();
+                if (jarPathJavaFileSystem.supportedFileAttributeViews().contains("posix")
+                        && jarPathTempFileSystem.supportedFileAttributeViews().contains("posix")) {
+                    // NTFS does not support PosixFilePermissions, for example.
                     Files.setPosixFilePermissions(jarPathTemp, Files.getPosixFilePermissions(jarPathJava));
                 }
             } finally {
