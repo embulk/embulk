@@ -36,10 +36,12 @@ Next step: [Running example in 4 commands](#running-example)
 
 Embulk is a Java application. Please make sure that Java SE Runtime Environment (JRE) is installed. Embulk v0.8 series runs on Java 7, and Embulk v0.9 series runs on Java 8. Java 9 is not supported in any version for the time being.
 
-You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe:
+You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe.
+
+[Bintray no longer supports TLS 1.1 since June, 2018](https://jfrog.com/knowledge-base/why-am-i-failing-to-work-with-jfrog-saas-service-with-tls-1-0-1-1/) although [PowerShell's `Invoke-WebRequest` uses only SSL 3.0 and TLS 1.1 by default](https://social.technet.microsoft.com/Forums/en-US/00b78ac4-cadb-4566-b175-beb9d34a9093/how-to-use-tls-11-or-12-for-invokewebrequest). You'll need a tweak for PowerShell to use TLS 1.2, such as:
 
 ```
-PowerShell -Command "& {Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
+PowerShell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
 ```
 
 Next step: [Running example in 4 commands](#running-example)
