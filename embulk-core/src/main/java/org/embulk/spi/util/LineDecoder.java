@@ -2,8 +2,6 @@ package org.embulk.spi.util;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Optional;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,7 +11,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
+import java.util.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
@@ -48,7 +46,7 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.inputStream = new FileInputInputStream(in);
         this.reader = new LineReader(
-                new InputStreamReader(inputStream, decoder), task.getLineDelimiter().orNull(), 256
+                new InputStreamReader(inputStream, decoder), task.getLineDelimiter().orElse(null), 256
         );
     }
 
