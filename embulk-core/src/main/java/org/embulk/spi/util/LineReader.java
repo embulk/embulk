@@ -48,11 +48,11 @@ class LineReader extends BufferedReader {
                 boolean isEol = false;
                 switch (lineDelimiter) {
                     case CR:
-                        if (prevChar == '\r' && c != '\n') {
-                            // Delete unnecessary CR and move offset back
-                            line.deleteCharAt(line.length() - 1);
-                            offset--;
-                            isEol = true;
+                        if (c == '\r') {
+                            Character next = readNext();
+                            if (next == null || next != '\n') {
+                                isEol = true;
+                            }
                         }
                         break;
                     case LF:
@@ -85,5 +85,21 @@ class LineReader extends BufferedReader {
             return line.toString();
         }
         return null;
+    }
+
+    private Character readNext() throws IOException {
+        if (offset < charsRead - 1) {
+            // From buffer
+            return buffer[offset + 1];
+        }
+        // From reader
+        this.mark(1);
+        char[] tmp = new char[1];
+        final int read = this.read(tmp);
+        this.reset();
+        if (read == -1) {
+            return null;
+        }
+        return tmp[0];
     }
 }
