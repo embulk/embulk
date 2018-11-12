@@ -29,7 +29,7 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
 
         @Config("line_delimiter")
         @ConfigDefault("null")
-        public Optional<Newline> getLineDelimiter();
+        public Optional<LineDelimiter> getLineDelimiter();
     }
 
     private final FileInputInputStream inputStream;

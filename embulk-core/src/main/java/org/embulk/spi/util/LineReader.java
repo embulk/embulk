@@ -12,12 +12,12 @@ import java.io.Reader;
  */
 class LineReader extends BufferedReader {
     private static final int UNREAD = -1;
-    private final Newline lineDelimiter;   // TODO: create another enum for the option
+    private final LineDelimiter lineDelimiter;
     private final char[] buffer;
     private int offset;
     private int charsRead;
 
-    LineReader(Reader reader, Newline lineDelimiter, int bufferSize) {
+    LineReader(Reader reader, LineDelimiter lineDelimiter, int bufferSize) {
         super(reader);
         this.lineDelimiter = lineDelimiter;
         this.buffer = new char[bufferSize];

@@ -37,7 +37,7 @@ public class TestLineDecoder {
         LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
         assertEquals(StandardCharsets.UTF_16, task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
-        assertEquals(Newline.LF, task.getLineDelimiter().get());
+        assertEquals(LineDelimiter.LF, task.getLineDelimiter().get());
     }
 
     private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline, Newline lineDelimiter) {

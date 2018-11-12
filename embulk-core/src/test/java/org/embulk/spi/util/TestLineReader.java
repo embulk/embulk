@@ -21,49 +21,49 @@ public class TestLineReader {
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterCR() throws IOException {
-        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", Newline.CR, 256);
+        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", LineDelimiter.CR, 256);
         assertEquals(Arrays.asList("test1", "test2\ntest3\r\ntest4"), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterLF() throws IOException {
-        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", Newline.LF, 256);
+        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", LineDelimiter.LF, 256);
         assertEquals(Arrays.asList("test1\rtest2", "test3\r\ntest4"), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterCRLF() throws IOException {
-        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", Newline.CRLF, 256);
+        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", LineDelimiter.CRLF, 256);
         assertEquals(Arrays.asList("test1\rtest2\ntest3", "test4"), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterAndSmallBuffer() throws IOException {
-        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", Newline.CR, 1);
+        List<String> lines = readLines("test1\rtest2\ntest3\r\ntest4", LineDelimiter.CR, 1);
         assertEquals(Arrays.asList("test1", "test2\ntest3\r\ntest4"), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterCRWithEmptyLine() throws IOException {
-        List<String> lines = readLines("test1\r\rtest2\r", Newline.CR, 256);
+        List<String> lines = readLines("test1\r\rtest2\r", LineDelimiter.CR, 256);
         assertEquals(Arrays.asList("test1", "", "test2", ""), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterLFWithEmptyLine() throws IOException {
-        List<String> lines = readLines("test1\n\ntest2\n", Newline.LF, 256);
+        List<String> lines = readLines("test1\n\ntest2\n", LineDelimiter.LF, 256);
         assertEquals(Arrays.asList("test1", "", "test2", ""), lines);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterCRLFWithEmptyLine() throws IOException {
-        List<String> lines = readLines("test1\r\n\r\ntest2\r\n", Newline.CRLF, 256);
+        List<String> lines = readLines("test1\r\n\r\ntest2\r\n", LineDelimiter.CRLF, 256);
         assertEquals(Arrays.asList("test1", "", "test2", ""), lines);
     }
 
@@ -77,11 +77,11 @@ public class TestLineReader {
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
     public void testReadLineWithDelimiterAndEmptyString() throws IOException {
-        List<String> lines = readLines("", Newline.CR, 256);
+        List<String> lines = readLines("", LineDelimiter.CR, 256);
         assertEquals(Collections.emptyList(), lines);
     }
 
-    private static List<String> readLines(String text, Newline lineDelimiter, int bufferSize) throws IOException {
+    private static List<String> readLines(String text, LineDelimiter lineDelimiter, int bufferSize) throws IOException {
         LineReader reader = new LineReader(new StringReader(text), lineDelimiter, bufferSize);
         List<String> result = new ArrayList<>();
         String line;
