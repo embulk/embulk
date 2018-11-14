@@ -2,6 +2,7 @@ package org.embulk.spi.util;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -33,7 +34,7 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
     }
 
     private final FileInputInputStream inputStream;
-    private final LineReader reader;
+    private final BufferedReader reader;
     private final Charset charset;
 
     public LineDecoder(FileInput in, DecoderTask task) {
@@ -43,7 +44,7 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
                 .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.inputStream = new FileInputInputStream(in);
-        this.reader = new LineReader(
+        this.reader = LineReader.of(
                 new InputStreamReader(inputStream, decoder), task.getLineDelimiter().orElse(null), 256
         );
     }

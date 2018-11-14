@@ -6,7 +6,7 @@ import java.io.Reader;
 
 /**
  * A {@link BufferedReader} that can specify line delimiter character from any one of CR, LF and CRLF.
- * If not specified, follow the original {@link BufferedReader}'s behavior.
+ * If not specified, use original {@link BufferedReader}.
  *
  * This class is not thread-safe.
  */
@@ -17,7 +17,14 @@ class LineReader extends BufferedReader {
     private int offset;
     private int charsRead;
 
-    LineReader(Reader reader, LineDelimiter lineDelimiter, int bufferSize) {
+    static BufferedReader of(Reader reader, LineDelimiter lineDelimiter, int bufferSize) {
+        if (lineDelimiter == null) {
+            return new BufferedReader(reader);
+        }
+        return new LineReader(reader, lineDelimiter, bufferSize);
+    }
+
+    private LineReader(Reader reader, LineDelimiter lineDelimiter, int bufferSize) {
         super(reader);
         this.lineDelimiter = lineDelimiter;
         this.buffer = new char[bufferSize];
@@ -27,10 +34,6 @@ class LineReader extends BufferedReader {
 
     @Override
     public String readLine() throws IOException {
-        if (lineDelimiter == null) {
-            return super.readLine();
-        }
-
         StringBuilder line = null;
         char prevChar = Character.MIN_VALUE;
         bufferLoop:

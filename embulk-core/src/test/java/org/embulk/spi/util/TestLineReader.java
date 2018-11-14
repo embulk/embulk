@@ -2,6 +2,7 @@ package org.embulk.spi.util;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public class TestLineReader {
     }
 
     private static List<String> readLines(String text, LineDelimiter lineDelimiter, int bufferSize) throws IOException {
-        LineReader reader = new LineReader(new StringReader(text), lineDelimiter, bufferSize);
+        BufferedReader reader = LineReader.of(new StringReader(text), lineDelimiter, bufferSize);
         List<String> result = new ArrayList<>();
         String line;
         while ((line = reader.readLine()) != null) {
