@@ -40,7 +40,7 @@ public class TestLineDecoder {
         assertEquals(LineDelimiter.LF, task.getLineDelimiter().get());
     }
 
-    private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline, Newline lineDelimiter) {
+    private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline, LineDelimiter lineDelimiter) {
         ConfigSource config = Exec.newConfigSource()
                 .set("charset", charset)
                 .set("newline", newline);
@@ -54,7 +54,7 @@ public class TestLineDecoder {
         return newDecoder(charset, newline, null, buffers);
     }
 
-    private static LineDecoder newDecoder(Charset charset, Newline newline, Newline lineDelimiter, List<Buffer> buffers) {
+    private static LineDecoder newDecoder(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
         ListFileInput input = new ListFileInput(ImmutableList.of(buffers));
         return new LineDecoder(input, getExampleConfig(charset, newline, lineDelimiter));
     }
@@ -63,7 +63,7 @@ public class TestLineDecoder {
         return doDecode(charset, newline, null, buffers);
     }
 
-    private static List<String> doDecode(Charset charset, Newline newline, Newline lineDelimiter, List<Buffer> buffers) {
+    private static List<String> doDecode(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
         LineDecoder decoder = newDecoder(charset, newline, lineDelimiter, buffers);
         decoder.nextFile();
@@ -243,7 +243,7 @@ public class TestLineDecoder {
     public void testDecodeWithLineDelimiterCR() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
-                Newline.CR,
+                LineDelimiter.CR,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
         assertEquals(ImmutableList.of("test1\r\ntest2", "test3\ntest4"), decoded);
     }
@@ -253,7 +253,7 @@ public class TestLineDecoder {
     public void testDecodeWithLineDelimiterLF() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
-                Newline.LF,
+                LineDelimiter.LF,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
         assertEquals(ImmutableList.of("test1\r\ntest2\rtest3", "test4"), decoded);
     }
@@ -263,7 +263,7 @@ public class TestLineDecoder {
     public void testDecodeWithLineDelimiterCRLF() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
-                Newline.CRLF,
+                LineDelimiter.CRLF,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
         assertEquals(ImmutableList.of("test1", "test2\rtest3\ntest4"), decoded);
     }
