@@ -33,11 +33,11 @@ public class TestLineDecoder {
         ConfigSource config = Exec.newConfigSource()
                 .set("charset", "utf-16")
                 .set("newline", "CRLF")
-                .set("line_delimiter", "LF");
+                .set("line_delimiter_recognized", "LF");
         LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
         assertEquals(StandardCharsets.UTF_16, task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
-        assertEquals(LineDelimiter.LF, task.getLineDelimiter().get());
+        assertEquals(LineDelimiter.LF, task.getLineDelimiterRecognized().get());
     }
 
     private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline, LineDelimiter lineDelimiter) {
@@ -45,7 +45,7 @@ public class TestLineDecoder {
                 .set("charset", charset)
                 .set("newline", newline);
         if (lineDelimiter != null) {
-            config.set("line_delimiter", lineDelimiter);
+            config.set("line_delimiter_recognized", lineDelimiter);
         }
         return config.loadConfig(LineDecoder.DecoderTask.class);
     }
@@ -240,7 +240,7 @@ public class TestLineDecoder {
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
-    public void testDecodeWithLineDelimiterCR() throws Exception {
+    public void testDecodeWithLineDelimiterRecognizedCR() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.CR,
@@ -250,7 +250,7 @@ public class TestLineDecoder {
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
-    public void testDecodeWithLineDelimiterLF() throws Exception {
+    public void testDecodeWithLineDelimiterRecognizedLF() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.LF,
@@ -260,7 +260,7 @@ public class TestLineDecoder {
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
     @Test
-    public void testDecodeWithLineDelimiterCRLF() throws Exception {
+    public void testDecodeWithLineDelimiterRecognizedCRLF() throws Exception {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.CRLF,

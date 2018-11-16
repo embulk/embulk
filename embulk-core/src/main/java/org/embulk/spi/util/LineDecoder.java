@@ -28,9 +28,9 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
         @ConfigDefault("\"CRLF\"")
         public Newline getNewline();
 
-        @Config("line_delimiter")
+        @Config("line_delimiter_recognized")
         @ConfigDefault("null")
-        public Optional<LineDelimiter> getLineDelimiter();
+        public Optional<LineDelimiter> getLineDelimiterRecognized();
     }
 
     private final FileInputInputStream inputStream;
@@ -45,7 +45,7 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.inputStream = new FileInputInputStream(in);
         this.reader = LineReader.of(
-                new InputStreamReader(inputStream, decoder), task.getLineDelimiter().orElse(null), 256
+                new InputStreamReader(inputStream, decoder), task.getLineDelimiterRecognized().orElse(null), 256
         );
     }
 
