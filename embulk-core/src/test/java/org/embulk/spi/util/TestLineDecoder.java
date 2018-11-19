@@ -32,27 +32,40 @@ public class TestLineDecoder {
     public void testLoadConfig() {
         ConfigSource config = Exec.newConfigSource()
                 .set("charset", "utf-16")
-                .set("newline", "CRLF");
+                .set("newline", "CRLF")
+                .set("line_delimiter_recognized", "LF");
         LineDecoder.DecoderTask task = config.loadConfig(LineDecoder.DecoderTask.class);
         assertEquals(StandardCharsets.UTF_16, task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
+        assertEquals(LineDelimiter.LF, task.getLineDelimiterRecognized().get());
     }
 
-    private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline) {
+    private static LineDecoder.DecoderTask getExampleConfig(Charset charset, Newline newline, LineDelimiter lineDelimiter) {
         ConfigSource config = Exec.newConfigSource()
                 .set("charset", charset)
                 .set("newline", newline);
+        if (lineDelimiter != null) {
+            config.set("line_delimiter_recognized", lineDelimiter);
+        }
         return config.loadConfig(LineDecoder.DecoderTask.class);
     }
 
     private static LineDecoder newDecoder(Charset charset, Newline newline, List<Buffer> buffers) {
+        return newDecoder(charset, newline, null, buffers);
+    }
+
+    private static LineDecoder newDecoder(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
         ListFileInput input = new ListFileInput(ImmutableList.of(buffers));
-        return new LineDecoder(input, getExampleConfig(charset, newline));
+        return new LineDecoder(input, getExampleConfig(charset, newline, lineDelimiter));
     }
 
     private static List<String> doDecode(Charset charset, Newline newline, List<Buffer> buffers) {
+        return doDecode(charset, newline, null, buffers);
+    }
+
+    private static List<String> doDecode(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-        LineDecoder decoder = newDecoder(charset, newline, buffers);
+        LineDecoder decoder = newDecoder(charset, newline, lineDelimiter, buffers);
         decoder.nextFile();
         while (true) {
             String line = decoder.poll();
@@ -223,5 +236,35 @@ public class TestLineDecoder {
                 Charset.forName("ms932"), Newline.CRLF,
                 bufferList(Charset.forName("ms932"), "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
         assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+    }
+
+    @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+    @Test
+    public void testDecodeWithLineDelimiterRecognizedCR() throws Exception {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_8, Newline.CRLF,
+                LineDelimiter.CR,
+                bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
+        assertEquals(ImmutableList.of("test1\r\ntest2", "test3\ntest4"), decoded);
+    }
+
+    @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+    @Test
+    public void testDecodeWithLineDelimiterRecognizedLF() throws Exception {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_8, Newline.CRLF,
+                LineDelimiter.LF,
+                bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
+        assertEquals(ImmutableList.of("test1\r\ntest2\rtest3", "test4"), decoded);
+    }
+
+    @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+    @Test
+    public void testDecodeWithLineDelimiterRecognizedCRLF() throws Exception {
+        List<String> decoded = doDecode(
+                StandardCharsets.UTF_8, Newline.CRLF,
+                LineDelimiter.CRLF,
+                bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
+        assertEquals(ImmutableList.of("test1", "test2\rtest3\ntest4"), decoded);
     }
 }

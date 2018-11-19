@@ -10,6 +10,7 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
@@ -26,6 +27,10 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
         @Config("newline")
         @ConfigDefault("\"CRLF\"")
         public Newline getNewline();
+
+        @Config("line_delimiter_recognized")
+        @ConfigDefault("null")
+        public Optional<LineDelimiter> getLineDelimiterRecognized();
     }
 
     private final FileInputInputStream inputStream;
@@ -39,7 +44,9 @@ public class LineDecoder implements AutoCloseable, Iterable<String> {
                 .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
                 .onUnmappableCharacter(CodingErrorAction.REPLACE);  // TODO configurable?
         this.inputStream = new FileInputInputStream(in);
-        this.reader = new BufferedReader(new InputStreamReader(inputStream, decoder));
+        this.reader = LineReader.of(
+                new InputStreamReader(inputStream, decoder), task.getLineDelimiterRecognized().orElse(null), 256
+        );
     }
 
     public boolean nextFile() {
