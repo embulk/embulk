@@ -138,6 +138,11 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
                 FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);
                 closer.closeThis(fileInput);
                 parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
+                if (fileInputPlugin.fileName(taskIndex).isPresent()) {
+                    String expectedSize = fileInputPlugin.expectedSize(taskIndex).isPresent() ? fileInputPlugin.expectedSize(taskIndex).get().toString() : "-";
+                    Exec.getLogger(FileInputRunner.class).info(
+                            "Loading file [{}], with size [{}] bytes", fileInputPlugin.fileName(taskIndex).get(), expectedSize);
+                }
 
                 TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
                 aborter.dontAbort();
