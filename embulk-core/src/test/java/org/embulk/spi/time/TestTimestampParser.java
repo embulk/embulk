@@ -651,18 +651,42 @@ public class TestTimestampParser {
     }
 
     @Test
-    public void testInvalidDate() {
-        failToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    public void testExcessDate() {
+        testToParse("2018-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1520035200L);  // 2018-03-03
+        testToParse("2016-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1456876800L);  // 2016-03-02
+        testToParse("2018-11-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1543622400L);  // 2018-12-01
+
+        failToParse("2018-10-32T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failToParse("2018-13-01T00:00:00", "%Y-%m-%dT%H:%M:%S");
+
+        failToParse("2018-00-01T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failToParse("2018-01-00T00:00:00", "%Y-%m-%dT%H:%M:%S");
     }
 
     @Test
-    public void testRubyInvalidDate() {
-        failRubyToParse("2018-02-31T12:34:56", "%Y-%m-%dT%H:%M:%S");
+    public void testRubyExcessDate() {
+        testRubyToParse("2018-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1520035200L);  // 2018-03-03
+        testRubyToParse("2016-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1456876800L);  // 2016-03-02
+        testRubyToParse("2018-11-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1543622400L);  // 2018-12-01
+
+        failRubyToParse("2018-10-32T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failRubyToParse("2018-13-01T00:00:00", "%Y-%m-%dT%H:%M:%S");
+
+        failRubyToParse("2018-00-01T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failRubyToParse("2018-01-00T00:00:00", "%Y-%m-%dT%H:%M:%S");
     }
 
     @Test
-    public void testJavaInvalidDate() {
-        failJavaToParse("2018-02-31T12:34:56", "yyyy-MM-dd'T'HH:mm:ss");
+    public void testJavaExcessDate() {
+        failJavaToParse("2018-02-31T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+        failJavaToParse("2016-02-31T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+        failJavaToParse("2018-11-31T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+
+        failJavaToParse("2018-10-32T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+        failJavaToParse("2018-13-01T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+
+        failJavaToParse("2018-00-01T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
+        failJavaToParse("2018-01-00T00:00:00", "yyyy-MM-dd'T'HH:mm:ss");
     }
 
     private void testJavaToParse(final String string, final String format, final long second, final int nanoOfSecond) {
