@@ -104,6 +104,8 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final File file = new File(task.getFiles().get(taskIndex));
+        setFileName(taskIndex, file.getAbsolutePath());
+        setExpectedSize(taskIndex, file.length());
 
         return new InputStreamTransactionalFileInput(
                 task.getBufferAllocator(),
