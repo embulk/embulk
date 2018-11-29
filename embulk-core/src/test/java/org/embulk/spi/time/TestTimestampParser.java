@@ -665,9 +665,9 @@ public class TestTimestampParser {
 
     @Test
     public void testRubyExcessDate() {
-        testRubyToParse("2018-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1520035200L);  // 2018-03-03
-        testRubyToParse("2016-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1456876800L);  // 2016-03-02
-        testRubyToParse("2018-11-31T00:00:00", "%Y-%m-%dT%H:%M:%S", 1543622400L);  // 2018-12-01
+        failRubyToParse("2018-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failRubyToParse("2016-02-31T00:00:00", "%Y-%m-%dT%H:%M:%S");
+        failRubyToParse("2018-11-31T00:00:00", "%Y-%m-%dT%H:%M:%S");
 
         failRubyToParse("2018-10-32T00:00:00", "%Y-%m-%dT%H:%M:%S");
         failRubyToParse("2018-13-01T00:00:00", "%Y-%m-%dT%H:%M:%S");
