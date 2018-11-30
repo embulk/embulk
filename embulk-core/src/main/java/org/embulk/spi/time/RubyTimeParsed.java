@@ -730,6 +730,34 @@ class RubyTimeParsed extends TimeParsed {
                     (this.nanoOfSecond == Integer.MIN_VALUE ? 0 : this.nanoOfSecond),
                     zoneId).withDayOfYear(this.dayOfYear).plusDays(daysRollover);
         } else {
+            // Ruby parses some invalid "dayOfMonth" that exceeds the largest day of the month, such as 2018-02-31.
+            //
+            // Embulk's legacy timestamp parser follows this Ruby's behavior for a while in v0.9 for compatibility.
+            // Note that it will start rejecting exceeding dates even in v0.9 after a certain interval.
+            //
+            // TODO: Start to reject exceeding dates such as 2018-02-31.
+            //
+            // irb(main):002:0> Time.strptime("2018-02-31 00:00:00", "%Y-%m-%d %H:%M:%S")
+            // => 2018-03-03 00:00:00 -0800
+            //
+            // irb(main):003:0> Time.strptime("2016-02-31 00:00:00", "%Y-%m-%d %H:%M:%S")
+            // => 2016-03-02 00:00:00 -0800
+            //
+            // irb(main):004:0> Time.strptime("2018-11-31 00:00:00", "%Y-%m-%d %H:%M:%S")
+            // => 2018-12-01 00:00:00 -0800
+            //
+            // irb(main):005:0> Time.strptime("2018-02-32 00:00:00", "%Y-%m-%d %H:%M:%S")
+            // ArgumentError: invalid strptime format - `%Y-%m-%d %H:%M:%S'
+            //         from /usr/local/Cellar/ruby/2.4.1_1/lib/ruby/2.4.0/time.rb:433:in `strptime'
+            //         from (irb):2
+            //         from /usr/local/bin/irb:11:in `<main>'
+            //
+            // irb(main):006:0> Time.strptime("2018-02-00 00:00:00", "%Y-%m-%d %H:%M:%S")
+            // ArgumentError: invalid strptime format - `%Y-%m-%d %H:%M:%S'
+            //         from /usr/local/Cellar/ruby/2.4.1_1/lib/ruby/2.4.0/time.rb:433:in `strptime'
+            //         from (irb):4
+            //         from /usr/local/bin/irb:11:in `<main>'
+
             int updatedYear = (this.year == Integer.MIN_VALUE ? defaultYear : this.year);
             int updatedMonthOfYear = (this.monthOfYear == Integer.MIN_VALUE ? defaultMonthOfYear : this.monthOfYear);
             int updatedDayOfMonth = (this.dayOfMonth == Integer.MIN_VALUE ? defaultDayOfMonth : this.dayOfMonth);
@@ -929,6 +957,15 @@ class RubyTimeParsed extends TimeParsed {
 
             if (offset != 0) {
                 dayOfMonth += offset;
+                final int days = monthDays(year, monthOfYear);
+                if (days < dayOfMonth) {
+                    monthOfYear += 1;
+                    if (12 < monthOfYear) {
+                        monthOfYear = 1;
+                        year += 1;
+                    }
+                    dayOfMonth = 1;
+                }
             }
 
         } else if (0 < offset) {
@@ -964,42 +1001,9 @@ class RubyTimeParsed extends TimeParsed {
                         year -= 1;
                         monthOfYear = 12;
                     }
-                    dayOfMonth = monthDays(year, monthOfYear) + dayOfMonth;
+                    dayOfMonth = monthDays(year, monthOfYear);
                 }
             }
-        }
-
-        // Ruby parses some invalid "dayOfMonth" that exceeds the largest day of the month, such as 2018-02-31.
-        //
-        // irb(main):002:0> Time.strptime("2018-02-31 00:00:00", "%Y-%m-%d %H:%M:%S")
-        // => 2018-03-03 00:00:00 -0800
-        //
-        // irb(main):003:0> Time.strptime("2016-02-31 00:00:00", "%Y-%m-%d %H:%M:%S")
-        // => 2016-03-02 00:00:00 -0800
-        //
-        // irb(main):004:0> Time.strptime("2018-11-31 00:00:00", "%Y-%m-%d %H:%M:%S")
-        // => 2018-12-01 00:00:00 -0800
-        //
-        // irb(main):005:0> Time.strptime("2018-02-32 00:00:00", "%Y-%m-%d %H:%M:%S")
-        // ArgumentError: invalid strptime format - `%Y-%m-%d %H:%M:%S'
-        //         from /usr/local/Cellar/ruby/2.4.1_1/lib/ruby/2.4.0/time.rb:433:in `strptime'
-        //         from (irb):2
-        //         from /usr/local/bin/irb:11:in `<main>'
-        //
-        // irb(main):006:0> Time.strptime("2018-02-00 00:00:00", "%Y-%m-%d %H:%M:%S")
-        // ArgumentError: invalid strptime format - `%Y-%m-%d %H:%M:%S'
-        //         from /usr/local/Cellar/ruby/2.4.1_1/lib/ruby/2.4.0/time.rb:433:in `strptime'
-        //         from (irb):4
-        //         from /usr/local/bin/irb:11:in `<main>'
-
-        final int days = monthDays(year, monthOfYear);
-        if (days < dayOfMonth) {
-            monthOfYear += 1;
-            if (12 < monthOfYear) {
-                monthOfYear = 1;
-                year += 1;
-            }
-            dayOfMonth = dayOfMonth - days;
         }
 
         try {
