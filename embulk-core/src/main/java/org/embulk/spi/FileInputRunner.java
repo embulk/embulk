@@ -131,18 +131,18 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
-                fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
+        final TransactionalFileInput fromFileInputPlugin = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
+        TransactionalFileInput tran = PluginWrappers.transactionalFileInput(fromFileInputPlugin);
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
                 FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);
                 closer.closeThis(fileInput);
                 parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
-
-                String expectedSize = fileInputPlugin.expectedSize(taskIndex).isPresent() ? fileInputPlugin.expectedSize(taskIndex).get().toString() : "-";
                 Exec.getLogger(FileInputRunner.class).info(
-                        "Loading file [{}], with size [{}] bytes", fileInputPlugin.fileName(taskIndex).orElse("-"), expectedSize);
-
+                        "Loading file [{}] with size [{}] bytes",
+                        fromFileInputPlugin.hintOfInputFileNameForLogging().orElse("-"),
+                        fromFileInputPlugin.hintOfInputFileExpectedSize().orElse(new Integer(0).longValue())
+                );
                 TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
                 aborter.dontAbort();
                 return report;

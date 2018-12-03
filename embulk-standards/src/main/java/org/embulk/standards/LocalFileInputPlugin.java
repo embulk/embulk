@@ -104,8 +104,6 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         final PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final File file = new File(task.getFiles().get(taskIndex));
-        setFileName(taskIndex, file.getAbsolutePath());
-        setExpectedSize(taskIndex, file.length());
 
         return new InputStreamTransactionalFileInput(
                 task.getBufferAllocator(),
@@ -120,6 +118,16 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             @Override
             public TaskReport commit() {
                 return Exec.newTaskReport();
+            }
+
+            @Override
+            public Optional<String> hintOfInputFileNameForLogging() {
+                return Optional.ofNullable(file.getAbsolutePath());
+            }
+
+            @Override
+            public Optional<Long> hintOfInputFileExpectedSize() {
+                return Optional.ofNullable(file.length());
             }
         };
     }
