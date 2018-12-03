@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Optional;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileInput;
@@ -13,6 +14,24 @@ public class InputStreamFileInput implements FileInput {
         public InputStream openNext() throws IOException;
 
         public void close() throws IOException;
+
+        default Optional<String> hintOfInputFileNameForLogging() {
+            return Optional.empty();
+        }
+
+        default Optional<Long> hintOfInputFileExpectedSize() {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public Optional<String> hintOfInputFileNameForLogging() {
+        return provider.hintOfInputFileNameForLogging();
+    }
+
+    @Override
+    public Optional<Long> hintOfInputFileExpectedSize() {
+        return provider.hintOfInputFileExpectedSize();
     }
 
     public interface Opener {
