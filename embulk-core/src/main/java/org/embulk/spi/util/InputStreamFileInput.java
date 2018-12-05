@@ -18,20 +18,11 @@ public class InputStreamFileInput implements FileInput {
         default Optional<String> hintOfInputFileNameForLogging() {
             return Optional.empty();
         }
-
-        default Optional<Long> hintOfInputFileExpectedSize() {
-            return Optional.empty();
-        }
     }
 
     @Override
     public Optional<String> hintOfInputFileNameForLogging() {
         return provider.hintOfInputFileNameForLogging();
-    }
-
-    @Override
-    public Optional<Long> hintOfInputFileExpectedSize() {
-        return provider.hintOfInputFileExpectedSize();
     }
 
     public interface Opener {

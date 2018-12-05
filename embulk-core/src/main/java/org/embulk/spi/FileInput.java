@@ -12,8 +12,4 @@ public interface FileInput extends AutoCloseable {
     default Optional<String> hintOfInputFileNameForLogging() {
         return Optional.empty();
     }
-
-    default Optional<Long> hintOfInputFileExpectedSize() {
-        return Optional.empty();
-    }
 }

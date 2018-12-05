@@ -124,11 +124,6 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             public Optional<String> hintOfInputFileNameForLogging() {
                 return Optional.ofNullable(file.getAbsolutePath());
             }
-
-            @Override
-            public Optional<Long> hintOfInputFileExpectedSize() {
-                return Optional.ofNullable(file.length());
-            }
         };
     }
 
