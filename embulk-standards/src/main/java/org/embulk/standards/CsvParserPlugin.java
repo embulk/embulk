@@ -242,6 +242,8 @@ public class CsvParserPlugin implements ParserPlugin {
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (tokenizer.nextFile()) {
+                Exec.getLogger(CsvParserPlugin.class).info("Loading file [{}]", input.hintOfInputFileNameForLogging().orElse("-"));
+
                 // skip the header lines for each file
                 for (int skipHeaderLineNumber = skipHeaderLines; skipHeaderLineNumber > 0; skipHeaderLineNumber--) {
                     if (!tokenizer.skipHeaderLine()) {
