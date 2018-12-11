@@ -242,7 +242,7 @@ public class CsvParserPlugin implements ParserPlugin {
 
         try (final PageBuilder pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)) {
             while (tokenizer.nextFile()) {
-                Exec.getLogger(CsvParserPlugin.class).info("Loading file [{}]", input.hintOfCurrentInputFileNameForLogging().orElse("-"));
+                final String fileName = input.hintOfCurrentInputFileNameForLogging().orElse("-");
 
                 // skip the header lines for each file
                 for (int skipHeaderLineNumber = skipHeaderLines; skipHeaderLineNumber > 0; skipHeaderLineNumber--) {
@@ -362,9 +362,9 @@ public class CsvParserPlugin implements ParserPlugin {
                         String skippedLine = tokenizer.skipCurrentLine();
                         long lineNumber = tokenizer.getCurrentLineNumber();
                         if (stopOnInvalidRecord) {
-                            throw new DataException(String.format("Invalid record at line %d: %s", lineNumber, skippedLine), e);
+                            throw new DataException(String.format("Invalid record at %s:%d: %s", fileName, lineNumber, skippedLine), e);
                         }
-                        log.warn(String.format("Skipped line %d (%s): %s", lineNumber, e.getMessage(), skippedLine));
+                        log.warn(String.format("Skipped line %s:%d (%s): %s", fileName, lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
 
                         hasNextRecord = tokenizer.nextRecord();

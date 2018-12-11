@@ -88,7 +88,7 @@ public class JsonParserPlugin implements ParserPlugin {
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
-                Exec.getLogger(JsonParserPlugin.class).info("Loading file [{}]", input.hintOfCurrentInputFileNameForLogging().orElse("-"));
+                final String fileName = input.hintOfCurrentInputFileNameForLogging().orElse("-");
 
                 boolean evenOneJsonParsed = false;
                 try (JsonParser.Stream stream = newJsonStream(in, task)) {
@@ -105,9 +105,9 @@ public class JsonParserPlugin implements ParserPlugin {
                             evenOneJsonParsed = true;
                         } catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
-                                throw new DataException(String.format("Invalid record: %s", value.toJson()), e);
+                                throw new DataException(String.format("Invalid record in %s: %s", fileName, value.toJson()), e);
                             }
-                            log.warn(String.format("Skipped record (%s): %s", e.getMessage(), value.toJson()));
+                            log.warn(String.format("Skipped record in %s (%s): %s", fileName, e.getMessage(), value.toJson()));
                         }
                     }
                 } catch (IOException | JsonParseException e) {
@@ -117,7 +117,7 @@ public class JsonParserPlugin implements ParserPlugin {
                         // ignore in preview if at least one JSON is already parsed.
                         break;
                     }
-                    throw new DataException(e);
+                    throw new DataException(String.format("Failed to parse JSON: %s", fileName), e);
                 }
             }
 
