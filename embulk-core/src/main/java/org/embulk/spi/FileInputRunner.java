@@ -131,13 +131,14 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        final TransactionalFileInput fromFileInputPlugin = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
-        TransactionalFileInput tran = PluginWrappers.transactionalFileInput(fromFileInputPlugin);
+        final TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
+                fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
                 FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);
                 closer.closeThis(fileInput);
                 parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
+
                 TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
                 aborter.dontAbort();
                 return report;
