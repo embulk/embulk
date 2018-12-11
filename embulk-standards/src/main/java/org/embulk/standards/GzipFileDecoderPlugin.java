@@ -41,7 +41,7 @@ public class GzipFileDecoderPlugin implements DecoderPlugin {
                         }
                         return new InputStreamWithHints(
                                 new GZIPInputStream(files, 8 * 1024),
-                                fileInput.hintOfInputFileNameForLogging().orElse(null)
+                                fileInput.hintOfCurrentInputFileNameForLogging().orElse(null)
                         );
                     }
 

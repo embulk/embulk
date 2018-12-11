@@ -88,7 +88,7 @@ public class JsonParserPlugin implements ParserPlugin {
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
             while (in.nextFile()) {
-                Exec.getLogger(JsonParserPlugin.class).info("Loading file [{}]", input.hintOfInputFileNameForLogging().orElse("-"));
+                Exec.getLogger(JsonParserPlugin.class).info("Loading file [{}]", input.hintOfCurrentInputFileNameForLogging().orElse("-"));
 
                 boolean evenOneJsonParsed = false;
                 try (JsonParser.Stream stream = newJsonStream(in, task)) {

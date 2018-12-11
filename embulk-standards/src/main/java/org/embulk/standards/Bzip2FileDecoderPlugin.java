@@ -41,7 +41,7 @@ public class Bzip2FileDecoderPlugin implements DecoderPlugin {
                         }
                         return new InputStreamWithHints(
                                 new BZip2CompressorInputStream(files, true),
-                                fileInput.hintOfInputFileNameForLogging().orElse(null)
+                                fileInput.hintOfCurrentInputFileNameForLogging().orElse(null)
                         );
                     }
 

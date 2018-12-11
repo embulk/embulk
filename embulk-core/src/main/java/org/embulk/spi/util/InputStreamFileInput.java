@@ -11,26 +11,26 @@ import org.embulk.spi.FileInput;
 
 public class InputStreamFileInput implements FileInput {
     public static class InputStreamWithHints {
-        public InputStreamWithHints(final InputStream inputStream, final String hintOfInputFileNameForLogging) {
+        public InputStreamWithHints(final InputStream inputStream, final String hintOfCurrentInputFileNameForLogging) {
             this.inputStream = inputStream;
-            this.hintOfInputFileNameForLogging = Optional.ofNullable(hintOfInputFileNameForLogging);
+            this.hintOfCurrentInputFileNameForLogging = Optional.ofNullable(hintOfCurrentInputFileNameForLogging);
         }
 
         public InputStreamWithHints(final InputStream inputStream) {
             this.inputStream = inputStream;
-            this.hintOfInputFileNameForLogging = Optional.empty();
+            this.hintOfCurrentInputFileNameForLogging = Optional.empty();
         }
 
         public InputStream getInputStream() {
             return this.inputStream;
         }
 
-        public Optional<String> getHintOfInputFileNameForLogging() {
-            return this.hintOfInputFileNameForLogging;
+        public Optional<String> getHintOfCurrentInputFileNameForLogging() {
+            return this.hintOfCurrentInputFileNameForLogging;
         }
 
         private final InputStream inputStream;
-        private final Optional<String> hintOfInputFileNameForLogging;
+        private final Optional<String> hintOfCurrentInputFileNameForLogging;
     }
 
     public interface Provider extends Closeable {
@@ -195,13 +195,13 @@ public class InputStreamFileInput implements FileInput {
     }
 
     @Override
-    public Optional<String> hintOfInputFileNameForLogging() {
+    public Optional<String> hintOfCurrentInputFileNameForLogging() {
         return this.getHintOfCurrentInputFileNameForLogging();
     }
 
     protected final Optional<String> getHintOfCurrentInputFileNameForLogging() {
         if (current != null) {
-            return current.getHintOfInputFileNameForLogging();
+            return current.getHintOfCurrentInputFileNameForLogging();
         } else {
             return Optional.empty();
         }

@@ -9,7 +9,7 @@ public interface FileInput extends AutoCloseable {
 
     void close();
 
-    default Optional<String> hintOfInputFileNameForLogging() {
+    default Optional<String> hintOfCurrentInputFileNameForLogging() {
         return Optional.empty();
     }
 }
