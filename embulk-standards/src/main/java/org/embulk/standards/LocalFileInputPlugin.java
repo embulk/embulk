@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitOption;
@@ -107,11 +106,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
         return new InputStreamTransactionalFileInput(
                 task.getBufferAllocator(),
-                new InputStreamTransactionalFileInput.Opener() {
-                    public InputStream open() throws IOException {
-                        return new FileInputStream(file);
-                    }
-                }) {
+                () -> new FileInputStream(file)) {
             @Override
             public void abort() {}
 

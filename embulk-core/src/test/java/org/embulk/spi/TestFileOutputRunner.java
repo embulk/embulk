@@ -102,34 +102,32 @@ public class TestFileOutputRunner {
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
 
-        runner.transaction(config, schema, 1, new OutputPlugin.Control() {
-            public List<TaskReport> run(final TaskSource outputTask) {
-                TransactionalPageOutput tran = runner.open(outputTask, schema,
-                        1);
-                boolean committed = false;
-                try {
-                    ImmutableMapValue jsonValue = newMap(
-                            newString("_c1"), newBoolean(true),
-                            newString("_c2"), newInteger(10),
-                            newString("_c3"), newString("embulk"),
-                            newString("_c4"), newMap(newString("k"), newString("v"))
-                    );
-                    for (Page page : PageTestUtils.buildPage(
-                            runtime.getBufferAllocator(), schema, true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue, true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue)) {
-                        tran.add(page);
-                    }
-                    tran.commit();
-                    committed = true;
-                } finally {
-                    if (!committed) {
-                        tran.abort();
-                    }
-                    tran.close();
+        runner.transaction(config, schema, 1, outputTask -> {
+            TransactionalPageOutput tran = runner.open(outputTask, schema,
+                    1);
+            boolean committed = false;
+            try {
+                ImmutableMapValue jsonValue = newMap(
+                        newString("_c1"), newBoolean(true),
+                        newString("_c2"), newInteger(10),
+                        newString("_c3"), newString("embulk"),
+                        newString("_c4"), newMap(newString("k"), newString("v"))
+                );
+                for (Page page : PageTestUtils.buildPage(
+                        runtime.getBufferAllocator(), schema, true, 2L,
+                        3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue, true, 2L,
+                        3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue)) {
+                    tran.add(page);
                 }
-                return new ArrayList<TaskReport>();
+                tran.commit();
+                committed = true;
+            } finally {
+                if (!committed) {
+                    tran.abort();
+                }
+                tran.close();
             }
+            return new ArrayList<TaskReport>();
         });
 
         assertEquals(true, fileOutputPlugin.transactionCompleted);
@@ -166,23 +164,21 @@ public class TestFileOutputRunner {
                 .getSchemaConfig().toSchema();
 
         try {
-            runner.transaction(config, schema, 1, new OutputPlugin.Control() {
-                public List<TaskReport> run(final TaskSource outputTask) {
-                    TransactionalPageOutput tran = runner.open(outputTask,
-                            schema, 1);
-                    boolean committed = false;
-                    try {
-                        tran.add(null);
-                        tran.commit();
-                        committed = true;
-                    } finally {
-                        if (!committed) {
-                            tran.abort();
-                        }
-                        tran.close();
+            runner.transaction(config, schema, 1, outputTask -> {
+                TransactionalPageOutput tran = runner.open(outputTask,
+                        schema, 1);
+                boolean committed = false;
+                try {
+                    tran.add(null);
+                    tran.commit();
+                    committed = true;
+                } finally {
+                    if (!committed) {
+                        tran.abort();
                     }
-                    return new ArrayList<TaskReport>();
+                    tran.close();
                 }
+                return new ArrayList<TaskReport>();
             });
         } catch (NullPointerException npe) {
             // Just passing through.

@@ -166,30 +166,28 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                 return null;  // resumed
             }
 
-            return executor.submit(new Callable<Throwable>() {
-                    public Throwable call() {
-                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                            Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
-                                    public void started() {
-                                        state.getInputTaskState(taskIndex).start();
-                                        state.getOutputTaskState(taskIndex).start();
-                                    }
+            return executor.submit(() -> {
+                try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
+                    Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
+                            public void started() {
+                                state.getInputTaskState(taskIndex).start();
+                                state.getOutputTaskState(taskIndex).start();
+                            }
 
-                                    public void inputCommitted(TaskReport report) {
-                                        state.getInputTaskState(taskIndex).setTaskReport(report);
-                                    }
+                            public void inputCommitted(TaskReport report) {
+                                state.getInputTaskState(taskIndex).setTaskReport(report);
+                            }
 
-                                    public void outputCommitted(TaskReport report) {
-                                        state.getOutputTaskState(taskIndex).setTaskReport(report);
-                                    }
-                                });
-                            return null;
-                        } finally {
-                            state.getInputTaskState(taskIndex).finish();
-                            state.getOutputTaskState(taskIndex).finish();
-                        }
-                    }
-                });
+                            public void outputCommitted(TaskReport report) {
+                                state.getOutputTaskState(taskIndex).setTaskReport(report);
+                            }
+                        });
+                    return null;
+                } finally {
+                    state.getInputTaskState(taskIndex).finish();
+                    state.getOutputTaskState(taskIndex).finish();
+                }
+            });
         }
     }
 
@@ -229,14 +227,12 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                 return null;  // resumed
             }
 
-            return inputExecutor.submit(new Callable<Throwable>() {
-                    public Throwable call() {
-                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                            runInputTask(Exec.session(), task, state, taskIndex);
-                            return null;
-                        }
-                    }
-                });
+            return inputExecutor.submit(() -> {
+                try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
+                    runInputTask(Exec.session(), task, state, taskIndex);
+                    return null;
+                }
+            });
         }
 
         private boolean isAllScatterOutputFinished(ProcessState state, int taskIndex) {

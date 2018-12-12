@@ -58,28 +58,25 @@ public class InjectedPluginSource implements PluginSource {
         PluginFactory<T> factory;
         if (FileInputPlugin.class.isAssignableFrom(impl)) {
             Preconditions.checkArgument(InputPlugin.class.equals(iface));
-            factory = new PluginFactory<T>() {
-                    @SuppressWarnings("unchecked")
-                    public T newPlugin(Injector injector) {
-                        return (T) new FileInputRunner((FileInputPlugin) injector.getInstance(impl));
-                    }
-                };
+            factory = injector -> {
+                @SuppressWarnings("unchecked")
+                T result = (T) new FileInputRunner((FileInputPlugin) injector.getInstance(impl));
+                return result;
+            };
         } else if (FileOutputPlugin.class.isAssignableFrom(impl)) {
             Preconditions.checkArgument(OutputPlugin.class.equals(iface));
-            factory = new PluginFactory<T>() {
-                    @SuppressWarnings("unchecked")
-                    public T newPlugin(Injector injector) {
-                        return (T) new FileOutputRunner((FileOutputPlugin) injector.getInstance(impl));
-                    }
-                };
+            factory = injector -> {
+                @SuppressWarnings("unchecked")
+                T result = (T) new FileOutputRunner((FileOutputPlugin) injector.getInstance(impl));
+                return result;
+            };
         } else {
             Preconditions.checkArgument(iface.isAssignableFrom(impl));
-            factory = new PluginFactory<T>() {
-                    @SuppressWarnings("unchecked")
-                    public T newPlugin(Injector injector) {
-                        return (T) injector.getInstance(impl);
-                    }
-                };
+            factory = injector -> {
+                @SuppressWarnings("unchecked")
+                T result = (T) injector.getInstance(impl);
+                return result;
+            };
         }
         binder.bind(PluginFactory.class).annotatedWith(pluginFactoryName(iface, name)).toInstance(factory);
     }

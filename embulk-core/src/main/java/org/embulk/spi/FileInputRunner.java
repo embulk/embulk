@@ -102,18 +102,16 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         @Override
         public List<TaskReport> run(final TaskSource fileInputTaskSource, final int taskCount) {
             final List<TaskReport> taskReports = new ArrayList<TaskReport>();
-            Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
-                    public void run(final List<TaskSource> decoderTaskSources) {
-                        parserPlugin.transaction(task.getParserConfig(), new ParserPlugin.Control() {
-                                public void run(final TaskSource parserTaskSource, final Schema schema) {
-                                    task.setFileInputTaskSource(fileInputTaskSource);
-                                    task.setDecoderTaskSources(decoderTaskSources);
-                                    task.setParserTaskSource(parserTaskSource);
-                                    taskReports.addAll(nextControl.run(task.dump(), schema, taskCount));
-                                }
-                            });
-                    }
-                });
+            Decoders.transaction(
+                    decoderPlugins,
+                    task.getDecoderConfigs(),
+                    decoderTaskSources -> parserPlugin.transaction(task.getParserConfig(), (parserTaskSource, schema) -> {
+                        task.setFileInputTaskSource(fileInputTaskSource);
+                        task.setDecoderTaskSources(decoderTaskSources);
+                        task.setParserTaskSource(parserTaskSource);
+                        taskReports.addAll(nextControl.run(task.dump(), schema, taskCount));
+                    })
+            );
             return taskReports;
         }
     }

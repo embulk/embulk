@@ -15,11 +15,9 @@ import java.util.HashMap;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
 import org.embulk.config.TaskValidationException;
 import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
-import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfigException;
 import org.embulk.standards.RenameFilterPlugin.PluginTask;
@@ -70,9 +68,7 @@ public class TestRenameFilterPlugin {
                 .set("columns", ImmutableMap.of("not_found", "any_name"));
 
         try {
-            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
-                    public void run(TaskSource task, Schema schema) {}
-            });
+            filter.transaction(pluginConfig, SCHEMA, (task, schema) -> { });
             fail();
         } catch (Throwable t) {
             assertTrue(t instanceof SchemaConfigException);
@@ -84,22 +80,19 @@ public class TestRenameFilterPlugin {
         ConfigSource pluginConfig = Exec.newConfigSource()
                 .set("columns", ImmutableMap.of("_c0", "_c0_new"));
 
-        filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource task, Schema newSchema) {
-                    // _c0 -> _c0_new
-                    Column old0 = SCHEMA.getColumn(0);
-                    Column new0 = newSchema.getColumn(0);
-                    assertEquals("_c0_new", new0.getName());
-                    assertEquals(old0.getType(), new0.getType());
+        filter.transaction(pluginConfig, SCHEMA, (task, newSchema) -> {
+            // _c0 -> _c0_new
+            Column old0 = SCHEMA.getColumn(0);
+            Column new0 = newSchema.getColumn(0);
+            assertEquals("_c0_new", new0.getName());
+            assertEquals(old0.getType(), new0.getType());
 
-                    // _c1 is not changed
-                    Column old1 = SCHEMA.getColumn(1);
-                    Column new1 = newSchema.getColumn(1);
-                    assertEquals("_c1", new1.getName());
-                    assertEquals(old1.getType(), new1.getType());
-                }
-            });
+            // _c1 is not changed
+            Column old1 = SCHEMA.getColumn(1);
+            Column new1 = newSchema.getColumn(1);
+            assertEquals("_c1", new1.getName());
+            assertEquals(old1.getType(), new1.getType());
+        });
     }
 
     @Test
@@ -109,9 +102,7 @@ public class TestRenameFilterPlugin {
                 .set("rules", ImmutableList.of("string_rule"));
 
         try {
-            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
-                    public void run(TaskSource task, Schema schema) {}
-                });
+            filter.transaction(pluginConfig, SCHEMA, (task, schema) -> { });
             fail();
         } catch (Throwable t) {
             assertTrue(t instanceof ConfigException);
@@ -125,9 +116,7 @@ public class TestRenameFilterPlugin {
                 .set("rules", ImmutableList.of(ImmutableList.of("listed_operator1", "listed_operator2")));
 
         try {
-            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
-                    public void run(TaskSource task, Schema schema) {}
-                });
+            filter.transaction(pluginConfig, SCHEMA, (task, schema) -> { });
             fail();
         } catch (Throwable t) {
             assertTrue(t instanceof ConfigException);
@@ -140,9 +129,7 @@ public class TestRenameFilterPlugin {
                 .set("rules", ImmutableList.of(ImmutableMap.of("rule", "some_unknown_renaming_operator")));
 
         try {
-            filter.transaction(pluginConfig, SCHEMA, new FilterPlugin.Control() {
-                    public void run(TaskSource task, Schema schema) {}
-                });
+            filter.transaction(pluginConfig, SCHEMA, (task, schema) -> { });
             fail();
         } catch (Throwable t) {
             assertTrue(t instanceof ConfigException);
@@ -888,22 +875,19 @@ public class TestRenameFilterPlugin {
         ConfigSource pluginConfig = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.copyOf(parameters)));
 
-        filter.transaction(pluginConfig, originalSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource task, Schema newSchema) {
-                    ArrayList<String> resolvedColumnNamesList = new ArrayList<>(newSchema.size());
-                    for (Column resolvedColumn : newSchema.getColumns()) {
-                        resolvedColumnNamesList.add(resolvedColumn.getName());
-                    }
-                    String[] resolvedColumnNames = Iterables.toArray(resolvedColumnNamesList, String.class);
-                    assertEquals(expectedColumnNames, resolvedColumnNames);
-                    for (int i = 0; i < expectedColumnNames.length; ++i) {
-                        Column original = originalSchema.getColumn(i);
-                        Column resolved = newSchema.getColumn(i);
-                        assertEquals(original.getType(), resolved.getType());
-                    }
-                }
-            });
+        filter.transaction(pluginConfig, originalSchema, (task, newSchema) -> {
+            ArrayList<String> resolvedColumnNamesList = new ArrayList<>(newSchema.size());
+            for (Column resolvedColumn : newSchema.getColumns()) {
+                resolvedColumnNamesList.add(resolvedColumn.getName());
+            }
+            String[] resolvedColumnNames = Iterables.toArray(resolvedColumnNamesList, String.class);
+            assertEquals(expectedColumnNames, resolvedColumnNames);
+            for (int i = 0; i < expectedColumnNames.length; ++i) {
+                Column original = originalSchema.getColumn(i);
+                Column resolved = newSchema.getColumn(i);
+                assertEquals(original.getType(), resolved.getType());
+            }
+        });
     }
 
     private Schema makeSchema(final String[] columnNames) {
@@ -918,16 +902,13 @@ public class TestRenameFilterPlugin {
                                       final String[] original,
                                       final String[] expected) {
         final Schema originalSchema = makeSchema(original);
-        filter.transaction(config, originalSchema, new FilterPlugin.Control() {
-                @Override
-                public void run(TaskSource task, Schema renamedSchema) {
-                    assertEquals(originalSchema.getColumnCount(), renamedSchema.getColumnCount());
-                    assertEquals(expected.length, renamedSchema.getColumnCount());
-                    for (int i = 0; i < renamedSchema.getColumnCount(); ++i) {
-                        assertEquals(originalSchema.getColumnType(i), renamedSchema.getColumnType(i));
-                        assertEquals(expected[i], renamedSchema.getColumnName(i));
-                    }
-                }
-            });
+        filter.transaction(config, originalSchema, (task, renamedSchema) -> {
+            assertEquals(originalSchema.getColumnCount(), renamedSchema.getColumnCount());
+            assertEquals(expected.length, renamedSchema.getColumnCount());
+            for (int i = 0; i < renamedSchema.getColumnCount(); ++i) {
+                assertEquals(originalSchema.getColumnType(i), renamedSchema.getColumnType(i));
+                assertEquals(expected[i], renamedSchema.getColumnName(i));
+            }
+        });
     }
 }

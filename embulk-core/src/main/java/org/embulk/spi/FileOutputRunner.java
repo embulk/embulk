@@ -86,18 +86,16 @@ public class FileOutputRunner implements OutputPlugin {
         @Override
         public List<TaskReport> run(final TaskSource fileOutputTaskSource) {
             final List<TaskReport> taskReports = new ArrayList<TaskReport>();
-            Encoders.transaction(encoderPlugins, task.getEncoderConfigs(), new Encoders.Control() {
-                    public void run(final List<TaskSource> encoderTaskSources) {
-                        formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
-                                public void run(final TaskSource formatterTaskSource) {
-                                    task.setFileOutputTaskSource(fileOutputTaskSource);
-                                    task.setEncoderTaskSources(encoderTaskSources);
-                                    task.setFormatterTaskSource(formatterTaskSource);
-                                    taskReports.addAll(nextControl.run(task.dump()));
-                                }
-                            });
-                    }
-                });
+            Encoders.transaction(
+                    encoderPlugins,
+                    task.getEncoderConfigs(),
+                    encoderTaskSources -> formatterPlugin.transaction(task.getFormatterConfig(), schema, formatterTaskSource -> {
+                        task.setFileOutputTaskSource(fileOutputTaskSource);
+                        task.setEncoderTaskSources(encoderTaskSources);
+                        task.setFormatterTaskSource(formatterTaskSource);
+                        taskReports.addAll(nextControl.run(task.dump()));
+                    })
+            );
             return taskReports;
         }
     }

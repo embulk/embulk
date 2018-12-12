@@ -16,7 +16,6 @@ import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderModule;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
-import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -77,16 +76,14 @@ public class EmbulkTestRuntime extends GuiceBinder {
         return new Statement() {
             public void evaluate() throws Throwable {
                 try {
-                    Exec.doWith(exec, new ExecAction<Void>() {
-                            public Void run() {
-                                try {
-                                    superStatement.evaluate();
-                                } catch (Throwable ex) {
-                                    throw new RuntimeExecutionException(ex);
-                                }
-                                return null;
-                            }
-                        });
+                    Exec.doWith(exec, () -> {
+                        try {
+                            superStatement.evaluate();
+                        } catch (Throwable ex) {
+                            throw new RuntimeExecutionException(ex);
+                        }
+                        return null;
+                    });
                 } catch (RuntimeException ex) {
                     throw ex.getCause();
                 } finally {

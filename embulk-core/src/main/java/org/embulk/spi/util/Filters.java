@@ -73,13 +73,11 @@ public abstract class Filters {
         public void transaction(Schema inputSchema) {
             filterSchemas.add(inputSchema);
             if (pos < plugins.size()) {
-                plugins.get(pos).transaction(configs.get(pos), inputSchema, new FilterPlugin.Control() {
-                        public void run(TaskSource taskSource, Schema outputSchema) {
-                            taskSources.add(taskSource);
-                            pos++;
-                            transaction(outputSchema);
-                        }
-                    });
+                plugins.get(pos).transaction(configs.get(pos), inputSchema, (taskSource, outputSchema) -> {
+                    taskSources.add(taskSource);
+                    pos++;
+                    transaction(outputSchema);
+                });
             } else {
                 finalControl.run(taskSources.build(), filterSchemas.build());
             }

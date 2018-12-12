@@ -21,12 +21,9 @@ import java.util.List;
 import java.util.Map;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
 import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
-import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.Schema;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.embulk.spi.util.Pages;
@@ -291,12 +288,7 @@ public class TestJsonParserPlugin {
     }
 
     private void transaction(ConfigSource config, final FileInput input) {
-        plugin.transaction(config, new ParserPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema schema) {
-                    plugin.run(taskSource, schema, input, output);
-                }
-            });
+        plugin.transaction(config, (taskSource, schema) -> plugin.run(taskSource, schema, input, output));
     }
 
     private FileInput fileInput(String... lines) throws Exception {

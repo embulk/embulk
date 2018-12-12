@@ -11,7 +11,6 @@ import static org.embulk.test.EmbulkTests.copyResource;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import java.io.BufferedReader;
@@ -47,11 +46,7 @@ public class TestingEmbulk implements TestRule {
         Builder() {}
 
         public <T> Builder registerPlugin(final Class<T> iface, final String name, final Class<?> impl) {
-            modules.add(new Module() {
-                    public void configure(Binder binder) {
-                        registerPluginTo(binder, iface, name, impl);
-                    }
-                });
+            modules.add(binder -> registerPluginTo(binder, iface, name, impl));
             return this;
         }
 

@@ -57,13 +57,11 @@ public abstract class Decoders {
 
         public void transaction() {
             if (pos < plugins.size()) {
-                plugins.get(pos).transaction(configs.get(pos), new DecoderPlugin.Control() {
-                        public void run(TaskSource taskSource) {
-                            taskSources.add(taskSource);
-                            pos++;
-                            transaction();
-                        }
-                    });
+                plugins.get(pos).transaction(configs.get(pos), taskSource -> {
+                    taskSources.add(taskSource);
+                    pos++;
+                    transaction();
+                });
             } else {
                 finalControl.run(taskSources.build());
             }

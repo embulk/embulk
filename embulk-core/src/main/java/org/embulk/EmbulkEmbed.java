@@ -62,11 +62,7 @@ public class EmbulkEmbed {
 
         public Bootstrap addModules(Iterable<? extends Module> additionalModules) {
             final List<Module> copy = ImmutableList.copyOf(additionalModules);
-            return overrideModules(new Function<List<Module>, Iterable<Module>>() {
-                    public Iterable<Module> apply(List<Module> modules) {
-                        return Iterables.concat(modules, copy);
-                    }
-                });
+            return overrideModules((Function<List<Module>, Iterable<Module>>) modules -> Iterables.concat(modules, copy));
         }
 
         public Bootstrap overrideModules(Function<? super List<Module>, ? extends Iterable<? extends Module>> function) {

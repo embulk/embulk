@@ -107,13 +107,10 @@ public class TestFileInputRunner {
                         ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
 
         final MockPageOutput output = new MockPageOutput();
-        runner.transaction(config, new InputPlugin.Control() {
-            public List<TaskReport> run(TaskSource inputTaskSource,
-                    Schema schema, int taskCount) {
-                List<TaskReport> reports = new ArrayList<>();
-                reports.add(runner.run(inputTaskSource, schema, 0, output));
-                return reports;
-            }
+        runner.transaction(config, (inputTaskSource, schema, taskCount) -> {
+            List<TaskReport> reports = new ArrayList<>();
+            reports.add(runner.run(inputTaskSource, schema, 0, output));
+            return reports;
         });
 
         assertEquals(true, fileInputPlugin.transactionCompleted);
@@ -160,14 +157,11 @@ public class TestFileInputRunner {
         MockParserPlugin.raiseException = true;
 
         try {
-            runner.transaction(config, new InputPlugin.Control() {
-                    public List<TaskReport> run(TaskSource inputTaskSource,
-                            Schema schema, int taskCount) {
-                        List<TaskReport> reports = new ArrayList<>();
-                        reports.add(runner.run(inputTaskSource, schema, 0, output));
-                        return reports;
-                    }
-                });
+            runner.transaction(config, (inputTaskSource, schema, taskCount) -> {
+                List<TaskReport> reports = new ArrayList<>();
+                reports.add(runner.run(inputTaskSource, schema, 0, output));
+                return reports;
+            });
         } catch (RuntimeException re) {
             // Just passing through.
         }

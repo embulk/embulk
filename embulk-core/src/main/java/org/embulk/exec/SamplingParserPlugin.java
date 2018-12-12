@@ -6,18 +6,15 @@ import static org.embulk.spi.util.Inputs.each;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.text.NumberFormat;
-import java.util.List;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
-import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
-import org.embulk.spi.InputPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.ParserPlugin;
@@ -43,54 +40,52 @@ public class SamplingParserPlugin implements ParserPlugin {
         samplingInputConfig.set("decoders", null);
 
         try {
-            runner.transaction(samplingInputConfig, new InputPlugin.Control() {
-                    public List<TaskReport> run(TaskSource taskSource, Schema schema, int taskCount) {
-                        if (taskCount == 0) {
-                            throw new NoSampleException("No input files to read sample data");
-                        }
-                        int maxSize = -1;
-                        int maxSizeTaskIndex = -1;
-                        for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                            try {
-                                runner.run(taskSource, schema, taskIndex, new PageOutput() {
-                                        @Override
-                                        public void add(Page page) {
-                                            throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
-                                        }
-
-                                        public void finish() {}
-
-                                        public void close() {}
-                                    });
-                            } catch (NotEnoughSampleError ex) {
-                                if (maxSize < ex.getSize()) {
-                                    maxSize = ex.getSize();
-                                    maxSizeTaskIndex = taskIndex;
+            runner.transaction(samplingInputConfig, (taskSource, schema, taskCount) -> {
+                if (taskCount == 0) {
+                    throw new NoSampleException("No input files to read sample data");
+                }
+                int maxSize = -1;
+                int maxSizeTaskIndex = -1;
+                for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
+                    try {
+                        runner.run(taskSource, schema, taskIndex, new PageOutput() {
+                                @Override
+                                public void add(Page page) {
+                                    throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
                                 }
-                                continue;
-                            }
-                        }
-                        if (maxSize <= 0) {
-                            throw new NoSampleException("All input files are empty");
-                        }
-                        taskSource.getNested("ParserTaskSource").set("force", true);
-                        try {
-                            runner.run(taskSource, schema, maxSizeTaskIndex, new PageOutput() {
-                                    @Override
-                                    public void add(Page page) {
-                                        throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
-                                    }
 
-                                    public void finish() {}
+                                public void finish() {}
 
-                                    public void close() {}
-                                });
-                        } catch (NotEnoughSampleError ex) {
-                            throw new NoSampleException("All input files are smaller than minimum sampling size");
+                                public void close() {}
+                            });
+                    } catch (NotEnoughSampleError ex) {
+                        if (maxSize < ex.getSize()) {
+                            maxSize = ex.getSize();
+                            maxSizeTaskIndex = taskIndex;
                         }
-                        throw new NoSampleException("All input files are smaller than minimum sampling size");
+                        continue;
                     }
-                });
+                }
+                if (maxSize <= 0) {
+                    throw new NoSampleException("All input files are empty");
+                }
+                taskSource.getNested("ParserTaskSource").set("force", true);
+                try {
+                    runner.run(taskSource, schema, maxSizeTaskIndex, new PageOutput() {
+                            @Override
+                            public void add(Page page) {
+                                throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
+                            }
+
+                            public void finish() {}
+
+                            public void close() {}
+                        });
+                } catch (NotEnoughSampleError ex) {
+                    throw new NoSampleException("All input files are smaller than minimum sampling size");
+                }
+                throw new NoSampleException("All input files are smaller than minimum sampling size");
+            });
             throw new AssertionError("SamplingParserPlugin must throw SampledNoticeError");
         } catch (SampledNoticeError error) {
             return error.getSample();

@@ -13,12 +13,10 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
-import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
-import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
@@ -75,13 +73,11 @@ public class GuessExecutor {
 
     public ConfigDiff guess(ExecSession exec, final ConfigSource config) {
         try {
-            return Exec.doWith(exec, new ExecAction<ConfigDiff>() {
-                    public ConfigDiff run() {
-                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName("guess")) {
-                            return doGuess(config);
-                        }
-                    }
-                });
+            return Exec.doWith(exec, () -> {
+                try (SetCurrentThreadName dontCare = new SetCurrentThreadName("guess")) {
+                    return doGuess(config);
+                }
+            });
         } catch (ExecutionException ex) {
             if (ex.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) ex.getCause();
@@ -149,26 +145,24 @@ public class GuessExecutor {
             final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
             ConfigDiff guessed;
             try {
-                input.transaction(guessInputConfig, new InputPlugin.Control() {
-                        public List<TaskReport> run(TaskSource inputTaskSource, Schema schema, int taskCount) {
-                            if (taskCount == 0) {
-                                throw new NoSampleException("No input files to guess");
+                input.transaction(guessInputConfig, (inputTaskSource, schema, taskCount) -> {
+                    if (taskCount == 0) {
+                        throw new NoSampleException("No input files to guess");
+                    }
+                    input.run(inputTaskSource, null, 0, new PageOutput() {
+                            @Override
+                            public void add(Page page) {
+                                throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
                             }
-                            input.run(inputTaskSource, null, 0, new PageOutput() {
-                                    @Override
-                                    public void add(Page page) {
-                                        throw new RuntimeException("Input plugin must be a FileInputPlugin to guess parser configuration");  // TODO exception class
-                                    }
 
-                                    @Override
-                                    public void finish() {}
+                            @Override
+                            public void finish() {}
 
-                                    @Override
-                                    public void close() {}
-                                });
-                            throw new AssertionError("Guess executor must throw GuessedNoticeError");
-                        }
-                    });
+                            @Override
+                            public void close() {}
+                        });
+                    throw new AssertionError("Guess executor must throw GuessedNoticeError");
+                });
 
                 throw new AssertionError("Guess executor must throw GuessedNoticeError");
 

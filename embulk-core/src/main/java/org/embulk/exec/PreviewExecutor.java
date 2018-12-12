@@ -9,12 +9,10 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
-import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
-import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FilterPlugin;
@@ -67,13 +65,11 @@ public class PreviewExecutor {
 
     public PreviewResult preview(ExecSession exec, final ConfigSource config) {
         try {
-            return Exec.doWith(exec.forPreview(), new ExecAction<PreviewResult>() {
-                    public PreviewResult run() {
-                        try (SetCurrentThreadName dontCare = new SetCurrentThreadName("preview")) {
-                            return doPreview(config);
-                        }
-                    }
-                });
+            return Exec.doWith(exec.forPreview(), () -> {
+                try (SetCurrentThreadName dontCare = new SetCurrentThreadName("preview")) {
+                    return doPreview(config);
+                }
+            });
         } catch (Exception ex) {
             if (ex.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) ex.getCause();
@@ -115,34 +111,30 @@ public class PreviewExecutor {
     @SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
     private PreviewResult doPreview(final PreviewTask task, final InputPlugin input, final List<FilterPlugin> filterPlugins) {
         try {
-            input.transaction(task.getInputConfig(), new InputPlugin.Control() {
-                    public List<TaskReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount) {
-                        Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
-                                public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas) {
-                                    Schema inputSchema = filterSchemas.get(0);
-                                    Schema outputSchema = filterSchemas.get(filterSchemas.size() - 1);
+            input.transaction(task.getInputConfig(), (inputTask, inputSchema, taskCount) -> {
+                Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, (filterTasks, filterSchemas) -> {
+                    Schema inputSchema1 = filterSchemas.get(0);
+                    Schema outputSchema = filterSchemas.get(filterSchemas.size() - 1);
 
-                                    PageOutput out = new SamplingPageOutput(task.getSampleRows(), outputSchema);
-                                    try {
-                                        for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
-                                            try {
-                                                out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
-                                                input.run(inputTask, inputSchema, taskIndex, out);
-                                            } catch (NoSampleException ex) {
-                                                if (taskIndex == taskCount - 1) {
-                                                    throw ex;
-                                                }
-                                            }
-                                        }
-                                    } finally {
-                                        out.close();
-                                    }
+                    PageOutput out = new SamplingPageOutput(task.getSampleRows(), outputSchema);
+                    try {
+                        for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
+                            try {
+                                out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
+                                input.run(inputTask, inputSchema1, taskIndex, out);
+                            } catch (NoSampleException ex) {
+                                if (taskIndex == taskCount - 1) {
+                                    throw ex;
                                 }
-                            });
-                        // program never reaches here because SamplingPageOutput.finish throws an error.
-                        throw new NoSampleException("No input records to preview");
+                            }
+                        }
+                    } finally {
+                        out.close();
                     }
                 });
+                // program never reaches here because SamplingPageOutput.finish throws an error.
+                throw new NoSampleException("No input records to preview");
+            });
             throw new AssertionError("PreviewExecutor executor must throw PreviewedNoticeError");
         } catch (PreviewedNoticeError previewed) {
             return previewed.getPreviewResult();

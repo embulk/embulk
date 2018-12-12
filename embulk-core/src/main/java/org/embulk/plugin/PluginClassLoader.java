@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -62,17 +61,9 @@ public class PluginClassLoader extends URLClassLoader {
             this.embeddedJarPathsInNestedJar = Collections.unmodifiableCollection(embeddedJarPathsInNestedJar);
         }
         this.parentFirstPackagePrefixes = ImmutableList.copyOf(
-                Iterables.transform(parentFirstPackages, new Function<String, String>() {
-                        public String apply(String pkg) {
-                            return pkg + ".";
-                        }
-                    }));
+                Iterables.transform(parentFirstPackages, pkg -> pkg + "."));
         this.parentFirstResourcePrefixes = ImmutableList.copyOf(
-                Iterables.transform(parentFirstResources, new Function<String, String>() {
-                        public String apply(String pkg) {
-                            return pkg + "/";
-                        }
-                    }));
+                Iterables.transform(parentFirstResources, pkg -> pkg + "/"));
         this.accessControlContext = AccessController.getContext();
     }
 
@@ -192,16 +183,14 @@ public class PluginClassLoader extends URLClassLoader {
             } catch (ClassNotFoundException directClassNotFoundException) {
                 try {
                     return AccessController.doPrivileged(
-                            new PrivilegedExceptionAction<Class<?>>() {
-                                public Class<?> run() throws ClassNotFoundException {
-                                    try {
-                                        return defineClassFromEmbeddedJars(className);
-                                    } catch (ClassNotFoundException | LinkageError | ClassCastException ex) {
-                                        throw ex;
-                                    } catch (Throwable ex) {
-                                        // Resource found from JARs in the JAR, but failed to load it as a class.
-                                        throw new ClassNotFoundException(className, ex);
-                                    }
+                            (PrivilegedExceptionAction<Class<?>>) () -> {
+                                try {
+                                    return defineClassFromEmbeddedJars(className);
+                                } catch (ClassNotFoundException | LinkageError | ClassCastException ex) {
+                                    throw ex;
+                                } catch (Throwable ex) {
+                                    // Resource found from JARs in the JAR, but failed to load it as a class.
+                                    throw new ClassNotFoundException(className, ex);
                                 }
                             },
                             this.accessControlContext);
@@ -314,11 +303,7 @@ public class PluginClassLoader extends URLClassLoader {
 
             try {
                 return AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<URL>() {
-                            public URL run() {
-                                return findResourceFromEmbeddedJars(resourceName);
-                            }
-                        },
+                        (PrivilegedExceptionAction<URL>) () -> findResourceFromEmbeddedJars(resourceName),
                         this.accessControlContext);
             } catch (PrivilegedActionException ignored) {
                 // Passing through intentionally.
@@ -353,11 +338,7 @@ public class PluginClassLoader extends URLClassLoader {
 
             try {
                 final List<URL> childUrls = AccessController.doPrivileged(
-                        new PrivilegedExceptionAction<List<URL>>() {
-                            public List<URL> run() throws IOException {
-                                return findResourcesFromEmbeddedJars(resourceName);
-                            }
-                        },
+                        (PrivilegedExceptionAction<List<URL>>) () -> findResourcesFromEmbeddedJars(resourceName),
                         this.accessControlContext);
                 urls.addAll(childUrls);
             } catch (PrivilegedActionException ignored) {
@@ -710,11 +691,7 @@ public class PluginClassLoader extends URLClassLoader {
             if (inputStream == null) {
                 try {
                     final InputStream childInputStream = AccessController.doPrivileged(
-                            new PrivilegedExceptionAction<InputStream>() {
-                                public InputStream run() {
-                                    return getResourceAsStreamFromEmbeddedJars(resourceName);
-                                }
-                            },
+                            (PrivilegedExceptionAction<InputStream>) () -> getResourceAsStreamFromEmbeddedJars(resourceName),
                             this.accessControlContext);
                     if (childInputStream != null) {
                         return childInputStream;

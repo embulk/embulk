@@ -38,13 +38,9 @@ public class Inputs {
     }
 
     public static Iterable<Buffer> each(final FileInput input) {
-        return new Iterable<Buffer>() {
-            public Iterator<Buffer> iterator() {
-                return new AbstractPollIterator<Buffer>() {
-                    public Buffer poll() {
-                        return input.poll();
-                    }
-                };
+        return () -> new AbstractPollIterator<Buffer>() {
+            public Buffer poll() {
+                return input.poll();
             }
         };
     }

@@ -5,7 +5,6 @@ import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -25,17 +24,12 @@ import org.slf4j.Logger;
 
 class TestingBulkLoader extends BulkLoader {
     static Function<List<Module>, List<Module>> override() {
-        return new Function<List<Module>, List<Module>>() {
-            @Override
-            public List<Module> apply(List<Module> modules) {
-                Module override = new Module() {
-                        public void configure(Binder binder) {
-                            binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
-                            registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
-                        }
-                    };
-                return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));
-            }
+        return modules -> {
+            Module override = binder -> {
+                binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
+                registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
+            };
+            return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));
         };
     }
 

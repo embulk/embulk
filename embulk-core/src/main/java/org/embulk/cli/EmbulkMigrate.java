@@ -118,34 +118,17 @@ public class EmbulkMigrate {
 
         // Add |sourceCompatibility| and |targetCompatibility| in build.gradle before |dependencies| existing.
         if (!migrator.match("build.gradle", TARGET_COMPATIBILITY_IN_GRADLE)) {
-            migrator.insertLine("build.gradle", DEPENDENCIES_IN_GRADLE, new StringUpsert() {
-                    @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return String.format("%stargetCompatibility = 1.8\n", matcher.group(1));
-                    }
-                });
+            migrator.insertLine("build.gradle", DEPENDENCIES_IN_GRADLE, matcher -> String.format("%stargetCompatibility = 1.8\n", matcher.group(1)));
         }
         if (!migrator.match("build.gradle", SOURCE_COMPATIBILITY_IN_GRADLE)) {
-            migrator.insertLine("build.gradle", TARGET_COMPATIBILITY_IN_GRADLE_WITH_INDENT, new StringUpsert() {
-                    @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return String.format("%ssourceCompatibility = 1.8\n", matcher.group(1));
-                    }
-                });
+            migrator.insertLine("build.gradle", TARGET_COMPATIBILITY_IN_GRADLE_WITH_INDENT, matcher -> String.format("%ssourceCompatibility = 1.8\n", matcher.group(1)));
         }
 
         // Add the |checkstyle| Gradle plugin before the |java| plugin.
         if (!migrator.match("build.gradle", CHECKSTYLE_PLUGIN_IN_GRADLE)) {
-            migrator.insertLine("build.gradle", JAVA_PLUGIN_IN_GRADLE, new StringUpsert() {
-                    @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return String.format("%sid%s%scheckstyle%s",
-                                             matcher.group(1),
-                                             matcher.group(2),
-                                             matcher.group(3),
-                                             matcher.group(3));
-                    }
-                });
+            migrator.insertLine("build.gradle", JAVA_PLUGIN_IN_GRADLE, matcher -> String.format("%sid%s%scheckstyle%s",
+                    matcher.group(1), matcher.group(2), matcher.group(3), matcher.group(3)
+            ));
             migrator.copy("org/embulk/plugin/template/java/config/checkstyle/checkstyle.xml",
                           "config/checkstyle/checkstyle.xml");
         }
@@ -154,30 +137,27 @@ public class EmbulkMigrate {
         if (!migrator.match("build.gradle", CHECKSTYLE_CONFIGURATION_IN_GRADLE)) {
             migrator.copy("org/embulk/plugin/template/java/config/checkstyle/default.xml",
                           "config/checkstyle/default.xml");
-            migrator.insertLine("build.gradle", GEM_TASK_IN_GRADLE, new StringUpsert() {
-                    @Override
-                    public String getUpsertd(Matcher matcher) {
-                        final Joiner joiner = Joiner.on("\n");
-                        final String indent = matcher.group(1);
-                        return joiner.join(
-                            indent + "checkstyle {",
-                            indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/checkstyle.xml\")",
-                            indent + "    toolVersion = '6.14.1'",
-                            indent + "}",
-                            indent + "checkstyleMain {",
-                            indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/default.xml\")",
-                            indent + "    ignoreFailures = true",
-                            indent + "}",
-                            indent + "checkstyleTest {",
-                            indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/default.xml\")",
-                            indent + "    ignoreFailures = true",
-                            indent + "}",
-                            indent + "task checkstyle(type: Checkstyle) {",
-                            indent + "    classpath = sourceSets.main.output + sourceSets.test.output",
-                            indent + "    source = sourceSets.main.allJava + sourceSets.test.allJava",
-                            indent + "}");
-                    }
-                });
+            migrator.insertLine("build.gradle", GEM_TASK_IN_GRADLE, matcher -> {
+                final Joiner joiner = Joiner.on("\n");
+                final String indent = matcher.group(1);
+                return joiner.join(
+                    indent + "checkstyle {",
+                    indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/checkstyle.xml\")",
+                    indent + "    toolVersion = '6.14.1'",
+                    indent + "}",
+                    indent + "checkstyleMain {",
+                    indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/default.xml\")",
+                    indent + "    ignoreFailures = true",
+                    indent + "}",
+                    indent + "checkstyleTest {",
+                    indent + "    configFile = file(\"${project.rootDir}/config/checkstyle/default.xml\")",
+                    indent + "    ignoreFailures = true",
+                    indent + "}",
+                    indent + "task checkstyle(type: Checkstyle) {",
+                    indent + "    classpath = sourceSets.main.output + sourceSets.test.output",
+                    indent + "    source = sourceSets.main.allJava + sourceSets.test.allJava",
+                    indent + "}");
+            });
         }
 
         // Update |embulk-core| and |embulk-standards| versions depending.
@@ -197,14 +177,10 @@ public class EmbulkMigrate {
         // Update |embulk| version depending.
         if (fromVersion.compareTo(new ComparableVersion("0.1.0")) <= 0) {
             // Add add_development_dependency.
-            migrator.insertLineRecursive("*.gemspec", DEVELOPMENT_DEPENDENCY_IN_GEMSPEC, new StringUpsert() {
-                    @Override
-                    public String getUpsertd(Matcher matcher) {
-                        return String.format("%s.add_development_dependency 'embulk', ['>= %s']",
-                                             matcher.group(1),
-                                             thisEmbulkVersion);
-                    }
-                });
+            migrator.insertLineRecursive("*.gemspec", DEVELOPMENT_DEPENDENCY_IN_GEMSPEC, matcher -> String.format("%s.add_development_dependency 'embulk', ['>= %s']",
+                    matcher.group(1),
+                    thisEmbulkVersion
+            ));
         } else {
             if (migrator.replaceRecursive("*.gemspec", EMBULK_DEPENDENCY_PRERELEASE_IN_GEMSPEC, 1,
                                  ">= " + thisEmbulkVersion).isEmpty()) {
