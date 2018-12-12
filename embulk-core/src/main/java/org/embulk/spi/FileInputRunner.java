@@ -131,7 +131,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
+        final TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
                 fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {

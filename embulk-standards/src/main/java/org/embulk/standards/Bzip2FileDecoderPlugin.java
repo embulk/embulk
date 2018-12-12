@@ -1,7 +1,6 @@
 package org.embulk.standards;
 
 import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
@@ -12,6 +11,7 @@ import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.util.FileInputInputStream;
 import org.embulk.spi.util.InputStreamFileInput;
+import org.embulk.spi.util.InputStreamFileInput.InputStreamWithHints;
 
 public class Bzip2FileDecoderPlugin implements DecoderPlugin {
     public interface PluginTask extends Task {
@@ -32,13 +32,20 @@ public class Bzip2FileDecoderPlugin implements DecoderPlugin {
         return new InputStreamFileInput(
                 task.getBufferAllocator(),
                 new InputStreamFileInput.Provider() {
-                    public InputStream openNext() throws IOException {
+                    // Implement openNextWithHints() instead of openNext() to show file name at parser plugin loaded by FileInputPlugin
+                    // Because when using decoder, parser plugin can't get file name.
+                    @Override
+                    public InputStreamWithHints openNextWithHints() throws IOException {
                         if (!files.nextFile()) {
                             return null;
                         }
-                        return new BZip2CompressorInputStream(files, true);
+                        return new InputStreamWithHints(
+                                new BZip2CompressorInputStream(files, true),
+                                fileInput.hintOfCurrentInputFileNameForLogging().orElse(null)
+                        );
                     }
 
+                    @Override
                     public void close() throws IOException {
                         files.close();
                     }

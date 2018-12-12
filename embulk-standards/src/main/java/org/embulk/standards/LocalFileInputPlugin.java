@@ -119,6 +119,11 @@ public class LocalFileInputPlugin implements FileInputPlugin {
             public TaskReport commit() {
                 return Exec.newTaskReport();
             }
+
+            @Override
+            public Optional<String> hintOfCurrentInputFileNameForLogging() {
+                return Optional.ofNullable(file.getAbsolutePath());
+            }
         };
     }
 
