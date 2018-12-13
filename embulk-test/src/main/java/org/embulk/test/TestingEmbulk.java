@@ -91,7 +91,8 @@ public class TestingEmbulk implements TestRule {
 
     public void destroy() {
         if (embed != null) {
-            embed.destroy();
+            // EmbulkEmbed#destroy had been called here.
+            // It was removed as JSR-250 lifecycle support is to be unsupported.
             embed = null;
         }
         if (tempFiles != null) {
@@ -111,10 +112,8 @@ public class TestingEmbulk implements TestRule {
             reset();
         }
 
-        @Override
-        protected void finished(Description description) {
-            destroy();
-        }
+        // EmbulkEmbed#destroy had been called in TestWatcher#finished.
+        // It was removed as JSR-250 lifecycle support is to be unsupported.
     }
 
     public Path createTempFile(String suffix) {

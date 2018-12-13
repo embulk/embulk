@@ -316,6 +316,11 @@ public class EmbulkEmbed {
     }
 
     public void destroy() {
+        // TODO: Throw this exception in reality. It may be UnsupportedOperationException finally.
+        new RuntimeException(
+                "EmbulkEmbed#destroy() is planned to be unsupported as JSR-250 lifecycle annotations are unsupported. "
+                + "See https://github.com/embulk/embulk/issues/1047 for the details.")
+                .printStackTrace();
         try {
             injector.destroy();
         } catch (Exception ex) {
