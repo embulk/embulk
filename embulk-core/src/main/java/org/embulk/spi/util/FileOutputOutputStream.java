@@ -12,7 +12,7 @@ public class FileOutputOutputStream extends OutputStream {
     private int pos;
     private Buffer buffer;
 
-    public static enum CloseMode {
+    public enum CloseMode {
         FLUSH,
         FLUSH_FINISH,
         FLUSH_FINISH_CLOSE,

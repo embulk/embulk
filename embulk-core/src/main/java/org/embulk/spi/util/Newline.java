@@ -9,7 +9,7 @@ public enum Newline {
     private final char firstCharCode;
     private final char secondCharCode;
 
-    private Newline(String string) {
+    Newline(String string) {
         this.string = string;
         this.firstCharCode = string.charAt(0);
         if (string.length() > 1) {

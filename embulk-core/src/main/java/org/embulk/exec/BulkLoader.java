@@ -36,21 +36,21 @@ public class BulkLoader {
     public interface BulkLoaderTask extends Task {
         @Config("exec")
         @ConfigDefault("{}")
-        public ConfigSource getExecConfig();
+        ConfigSource getExecConfig();
 
         @Config("in")
-        public ConfigSource getInputConfig();
+        ConfigSource getInputConfig();
 
         @Config("filters")
         @ConfigDefault("[]")
-        public List<ConfigSource> getFilterConfigs();
+        List<ConfigSource> getFilterConfigs();
 
         @Config("out")
-        public ConfigSource getOutputConfig();
+        ConfigSource getOutputConfig();
 
-        public TaskSource getOutputTask();
+        TaskSource getOutputTask();
 
-        public void setOutputTask(TaskSource taskSource);
+        void setOutputTask(TaskSource taskSource);
     }
 
     @Inject

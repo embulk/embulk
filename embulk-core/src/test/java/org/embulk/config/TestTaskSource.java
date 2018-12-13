@@ -10,26 +10,26 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class TestTaskSource {
-    private static interface TypeFields extends Task {
-        public boolean getBoolean();
+    private interface TypeFields extends Task {
+        boolean getBoolean();
 
-        public void setBoolean(boolean v);
+        void setBoolean(boolean v);
 
-        public double getDouble();
+        double getDouble();
 
-        public void setDouble(double v);
+        void setDouble(double v);
 
-        public int getInt();
+        int getInt();
 
-        public void setInt(int v);
+        void setInt(int v);
 
-        public long getLong();
+        long getLong();
 
-        public void setLong(long v);
+        void setLong(long v);
 
-        public String getString();
+        String getString();
 
-        public void setString(String v);
+        void setString(String v);
     }
 
     @Rule

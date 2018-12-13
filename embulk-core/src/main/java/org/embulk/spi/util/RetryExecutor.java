@@ -23,15 +23,15 @@ public class RetryExecutor {
         }
     }
 
-    public static interface Retryable<T> extends Callable<T> {
-        public T call() throws Exception;
+    public interface Retryable<T> extends Callable<T> {
+        T call() throws Exception;
 
-        public boolean isRetryableException(Exception exception);
+        boolean isRetryableException(Exception exception);
 
-        public void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
+        void onRetry(Exception exception, int retryCount, int retryLimit, int retryWait)
                 throws RetryGiveupException;
 
-        public void onGiveup(Exception firstException, Exception lastException)
+        void onGiveup(Exception firstException, Exception lastException)
                 throws RetryGiveupException;
     }
 

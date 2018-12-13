@@ -43,11 +43,11 @@ public class InputStreamFileInput implements FileInput {
                     "Provider#openNext must be implemented unless Provider#openNextWithHints is implemented.");
         }
 
-        public void close() throws IOException;
+        void close() throws IOException;
     }
 
     public interface Opener {
-        public InputStream open() throws IOException;
+        InputStream open() throws IOException;
     }
 
     public static class IteratorProvider implements Provider {

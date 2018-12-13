@@ -14,7 +14,7 @@ public enum TransactionStage {
 
     private final int index;
 
-    private TransactionStage(int index) {
+    TransactionStage(int index) {
         this.index = index;
     }
 

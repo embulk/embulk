@@ -19,18 +19,18 @@ import org.embulk.spi.FileInput;
 public class LineDecoder implements AutoCloseable, Iterable<String> {
     // TODO optimize
 
-    public static interface DecoderTask extends Task {
+    public interface DecoderTask extends Task {
         @Config("charset")
         @ConfigDefault("\"utf-8\"")
-        public Charset getCharset();
+        Charset getCharset();
 
         @Config("newline")
         @ConfigDefault("\"CRLF\"")
-        public Newline getNewline();
+        Newline getNewline();
 
         @Config("line_delimiter_recognized")
         @ConfigDefault("null")
-        public Optional<LineDelimiter> getLineDelimiterRecognized();
+        Optional<LineDelimiter> getLineDelimiterRecognized();
     }
 
     private final FileInputInputStream inputStream;

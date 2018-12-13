@@ -8,11 +8,11 @@ import org.embulk.spi.FileOutput;
 
 public class OutputStreamFileOutput implements FileOutput {
     public interface Provider extends Closeable {
-        public OutputStream openNext() throws IOException;
+        OutputStream openNext() throws IOException;
 
-        public void finish() throws IOException;
+        void finish() throws IOException;
 
-        public void close() throws IOException;
+        void close() throws IOException;
     }
 
     private final Provider provider;

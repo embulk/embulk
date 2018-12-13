@@ -137,7 +137,7 @@ public class TestingEmbulk implements TestRule {
             "boolean", "long", "double", "string", "timestamp", "json"
     );
 
-    public static interface RunResult {
+    public interface RunResult {
         ConfigDiff getConfigDiff();
 
         List<Throwable> getIgnoredExceptions();

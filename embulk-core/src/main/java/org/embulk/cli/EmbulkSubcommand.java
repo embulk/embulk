@@ -18,7 +18,7 @@ public enum EmbulkSubcommand {
     VERSION_ERR("-version"),
     ;
 
-    private EmbulkSubcommand(final String subcommand) {
+    EmbulkSubcommand(final String subcommand) {
         this.subcommand = subcommand;
     }
 

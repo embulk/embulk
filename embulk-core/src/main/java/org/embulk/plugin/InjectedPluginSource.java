@@ -34,8 +34,8 @@ public class InjectedPluginSource implements PluginSource {
         this.injector = injector;
     }
 
-    private static interface PluginFactory<T> {
-        public T newPlugin(Injector injector);
+    private interface PluginFactory<T> {
+        T newPlugin(Injector injector);
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException {

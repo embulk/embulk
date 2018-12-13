@@ -34,7 +34,7 @@ public abstract class Filters {
     }
 
     public interface Control {
-        public void run(List<TaskSource> taskSources, List<Schema> filterSchemas);
+        void run(List<TaskSource> taskSources, List<Schema> filterSchemas);
     }
 
     public static void transaction(List<FilterPlugin> plugins, List<ConfigSource> configs,

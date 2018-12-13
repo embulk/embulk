@@ -30,22 +30,22 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
 
         @Config("decoders")
         @ConfigDefault("[]")
-        public List<ConfigSource> getDecoderConfigs();
+        List<ConfigSource> getDecoderConfigs();
 
         @Config("parser")
-        public ConfigSource getParserConfig();
+        ConfigSource getParserConfig();
 
-        public void setFileInputTaskSource(TaskSource v);
+        void setFileInputTaskSource(TaskSource v);
 
-        public TaskSource getFileInputTaskSource();
+        TaskSource getFileInputTaskSource();
 
-        public void setDecoderTaskSources(List<TaskSource> v);
+        void setDecoderTaskSources(List<TaskSource> v);
 
-        public List<TaskSource> getDecoderTaskSources();
+        List<TaskSource> getDecoderTaskSources();
 
-        public void setParserTaskSource(TaskSource v);
+        void setParserTaskSource(TaskSource v);
 
-        public TaskSource getParserTaskSource();
+        TaskSource getParserTaskSource();
     }
 
     protected List<DecoderPlugin> newDecoderPlugins(RunnerTask task) {

@@ -23,15 +23,15 @@ public class DynamicPageBuilder implements AutoCloseable {
     private final DynamicColumnSetter[] setters;
     private final Map<String, DynamicColumnSetter> columnLookup;
 
-    public static interface BuilderTask extends Task {
+    public interface BuilderTask extends Task {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public String getDefaultTimeZoneId();
+        String getDefaultTimeZoneId();
 
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+        default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
             } else {
@@ -41,31 +41,31 @@ public class DynamicPageBuilder implements AutoCloseable {
 
         @Config("column_options")
         @ConfigDefault("{}")
-        public Map<String, ConfigSource> getColumnOptions();
+        Map<String, ConfigSource> getColumnOptions();
     }
 
-    public static interface ColumnOption extends Task {
+    public interface ColumnOption extends Task {
         // DynamicPageBuilder is used for inputs, then datetime parsing.
         // Ruby's strptime does not accept numeric prefixes in specifiers such as "%6N".
         @Config("timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N\"")
-        public String getTimestampFormatString();
+        String getTimestampFormatString();
 
         // org.embulk.spi.time.TimestampFormat is deprecated, but the getter returns TimestampFormat for compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.embulk.spi.time.TimestampFormat getTimestampFormat() {
+        default org.embulk.spi.time.TimestampFormat getTimestampFormat() {
             return new org.embulk.spi.time.TimestampFormat(getTimestampFormatString());
         }
 
         @Config("timezone")
         @ConfigDefault("null")
-        public Optional<String> getTimeZoneId();
+        Optional<String> getTimeZoneId();
 
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+        default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
             } else {

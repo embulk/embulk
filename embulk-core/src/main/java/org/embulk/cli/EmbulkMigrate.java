@@ -377,7 +377,7 @@ public class EmbulkMigrate {
     }
 
     private interface StringUpsert {
-        public String getUpsertd(Matcher matcher);
+        String getUpsertd(Matcher matcher);
     }
 
     private enum Language {

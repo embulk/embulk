@@ -22,16 +22,16 @@ public class StdoutOutputPlugin implements OutputPlugin {
     public interface PluginTask extends Task {
         @Config("prints_column_names")
         @ConfigDefault("false")
-        public boolean getPrintsColumnNames();
+        boolean getPrintsColumnNames();
 
         @Config("timezone")
         @ConfigDefault("\"UTC\"")
-        public String getTimeZoneId();
+        String getTimeZoneId();
 
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.joda.time.DateTimeZone getTimeZone() {
+        default org.joda.time.DateTimeZone getTimeZone() {
             if (getTimeZoneId() != null) {
                 return TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId());
             } else {

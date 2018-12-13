@@ -22,55 +22,55 @@ public class TestConfigSource {
         config = Exec.newConfigSource();
     }
 
-    private static interface TypeFields extends Task {
+    private interface TypeFields extends Task {
         @Config("boolean")
-        public boolean getBoolean();
+        boolean getBoolean();
 
         @Config("double")
-        public double getDouble();
+        double getDouble();
 
         @Config("int")
-        public int getInt();
+        int getInt();
 
         @Config("long")
-        public long getLong();
+        long getLong();
 
         @Config("string")
-        public String getString();
+        String getString();
     }
 
-    private static interface OptionalFields extends Task {
+    private interface OptionalFields extends Task {
         @Config("guava_optional")
         @ConfigDefault("null")
-        public com.google.common.base.Optional<String> getGuavaOptional();
+        com.google.common.base.Optional<String> getGuavaOptional();
 
         @Config("java_util_optional")
         @ConfigDefault("null")
-        public java.util.Optional<String> getJavaUtilOptional();
+        java.util.Optional<String> getJavaUtilOptional();
     }
 
-    private static interface DuplicationParent extends Task {
+    private interface DuplicationParent extends Task {
         @Config("duplicated_number")
-        public int getInteger();
+        int getInteger();
     }
 
-    private static interface Duplicated extends DuplicationParent {
+    private interface Duplicated extends DuplicationParent {
         @Config("duplicated_number")
-        public String getString();
+        String getString();
 
         @Config("duplicated_number")
-        public double getDouble();
+        double getDouble();
     }
 
     // getDefaultTimeZone() with org.joda.time.DateTimeZone is deprecated, but intentionally tested.
     @SuppressWarnings("deprecation")
-    private static interface DuplicatedDateTimeZone extends Task, TimestampParser.Task {
+    private interface DuplicatedDateTimeZone extends Task, TimestampParser.Task {
         @Config("default_timezone")
         @ConfigDefault("\"America/Los_Angeles\"")
-        public org.joda.time.DateTimeZone getDefaultTimeZone();
+        org.joda.time.DateTimeZone getDefaultTimeZone();
 
         @Config("dummy_value")
-        public String getDummyValue();
+        String getDummyValue();
     }
 
     @Test
@@ -160,9 +160,9 @@ public class TestConfigSource {
         assertEquals("foobar", task.getDummyValue());
     }
 
-    private static interface ValidateFields extends Task {
+    private interface ValidateFields extends Task {
         @Config("valid")
-        public String getValid();
+        String getValid();
     }
 
     @Test
@@ -181,9 +181,9 @@ public class TestConfigSource {
 
     // TODO test Min, Max, and other validations
 
-    private static interface SimpleFields extends Task {
+    private interface SimpleFields extends Task {
         @Config("type")
-        public String getType();
+        String getType();
     }
 
     @Test

@@ -7,12 +7,12 @@ import java.util.Map;
 public interface PluginSource {
     <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException;
 
-    public enum Type {
+    enum Type {
         DEFAULT("default"),  // DEFAULT includes InjectedPluginSource and JRubyPluginSource.
         MAVEN("maven"),
         ;
 
-        private Type(final String sourceTypeName) {
+        Type(final String sourceTypeName) {
             this.sourceTypeName = sourceTypeName;
         }
 

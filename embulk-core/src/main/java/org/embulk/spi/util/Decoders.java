@@ -21,7 +21,7 @@ public abstract class Decoders {
     }
 
     public interface Control {
-        public void run(List<TaskSource> taskSources);
+        void run(List<TaskSource> taskSources);
     }
 
     public static void transaction(List<DecoderPlugin> plugins, List<ConfigSource> configs,

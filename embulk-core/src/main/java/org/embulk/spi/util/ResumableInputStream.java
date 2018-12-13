@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 public class ResumableInputStream extends InputStream {
     public interface Reopener {
-        public InputStream reopen(long offset, Exception closedCause) throws IOException;
+        InputStream reopen(long offset, Exception closedCause) throws IOException;
     }
 
     private final Reopener reopener;

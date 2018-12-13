@@ -19,11 +19,11 @@ public abstract class Executors {
     private Executors() {}
 
     public interface ProcessStateCallback {
-        public void started();
+        void started();
 
-        public void inputCommitted(TaskReport report);
+        void inputCommitted(TaskReport report);
 
-        public void outputCommitted(TaskReport report);
+        void outputCommitted(TaskReport report);
     }
 
     public static void process(ExecSession exec,

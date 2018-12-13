@@ -160,12 +160,12 @@ public class TimestampParser {
     public interface Task {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
-        public String getDefaultTimeZoneId();
+        String getDefaultTimeZoneId();
 
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
+        default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
                 return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
             } else {
@@ -175,22 +175,22 @@ public class TimestampParser {
 
         @Config("default_timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N %z\"")
-        public String getDefaultTimestampFormat();
+        String getDefaultTimestampFormat();
 
         @Config("default_date")
         @ConfigDefault("\"1970-01-01\"")
-        public String getDefaultDate();
+        String getDefaultDate();
     }
 
     public interface TimestampColumnOption {
         @Config("timezone")
         @ConfigDefault("null")
-        public Optional<String> getTimeZoneId();
+        Optional<String> getTimeZoneId();
 
         // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
         // It won't be removed very soon at least until Embulk v0.10.
         @Deprecated
-        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
+        default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
                 return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
             } else {
@@ -200,11 +200,11 @@ public class TimestampParser {
 
         @Config("format")
         @ConfigDefault("null")
-        public Optional<String> getFormat();
+        Optional<String> getFormat();
 
         @Config("date")
         @ConfigDefault("null")
-        public Optional<String> getDate();
+        Optional<String> getDate();
     }
 
     // Using Joda-Time is deprecated, but the method return org.joda.time.DateTimeZone for plugin compatibility.

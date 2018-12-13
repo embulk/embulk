@@ -31,30 +31,30 @@ public class PreviewExecutor {
     public interface PreviewTask extends Task {
         @Config("exec")
         @ConfigDefault("{}")
-        public ConfigSource getExecConfig();
+        ConfigSource getExecConfig();
 
         @Config("in")
         @NotNull
-        public ConfigSource getInputConfig();
+        ConfigSource getInputConfig();
 
         @Config("filters")
         @ConfigDefault("[]")
-        public List<ConfigSource> getFilterConfigs();
+        List<ConfigSource> getFilterConfigs();
 
         // TODO take preview_sample_rows from exec: config
         @Config("preview_sample_rows")
         @ConfigDefault("15")
-        public int getSampleRows();
+        int getSampleRows();
 
-        public TaskSource getInputTask();
+        TaskSource getInputTask();
 
-        public void setInputTask(TaskSource taskSource);
+        void setInputTask(TaskSource taskSource);
     }
 
     public interface PreviewExecutorTask extends Task {
         @Config("preview_sample_buffer_bytes")
         @ConfigDefault("32768") // 32 * 1024
-        public int getSampleBufferBytes();
+        int getSampleBufferBytes();
     }
 
     @Inject

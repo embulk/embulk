@@ -125,7 +125,7 @@ public class SamplingParserPlugin implements ParserPlugin {
     public interface SampleBufferTask extends Task {
         @Config("sample_buffer_bytes")
         @ConfigDefault("32768") // 32 * 1024
-        public int getSampleBufferBytes();
+        int getSampleBufferBytes();
     }
 
     @Inject

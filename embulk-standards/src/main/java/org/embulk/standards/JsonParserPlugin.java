@@ -42,7 +42,7 @@ public class JsonParserPlugin implements ParserPlugin {
 
         private final String string;
 
-        private InvalidEscapeStringPolicy(String string) {
+        InvalidEscapeStringPolicy(String string) {
             this.string = string;
         }
 

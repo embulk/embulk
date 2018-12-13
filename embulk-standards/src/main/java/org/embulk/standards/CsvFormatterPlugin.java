@@ -30,7 +30,7 @@ public class CsvFormatterPlugin implements FormatterPlugin {
 
         private final String string;
 
-        private QuotePolicy(String string) {
+        QuotePolicy(String string) {
             this.string = string;
         }
 

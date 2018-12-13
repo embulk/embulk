@@ -33,21 +33,21 @@ public class GuessExecutor {
     private interface GuessExecutorSystemTask extends Task {
         @Config("guess_plugins")
         @ConfigDefault("[]")
-        public List<PluginType> getGuessPlugins();
+        List<PluginType> getGuessPlugins();
     }
 
     private interface GuessExecutorTask extends Task {
         @Config("guess_plugins")
         @ConfigDefault("[]")
-        public List<PluginType> getGuessPlugins();
+        List<PluginType> getGuessPlugins();
 
         @Config("exclude_guess_plugins")
         @ConfigDefault("[]")
-        public List<PluginType> getExcludeGuessPlugins();
+        List<PluginType> getExcludeGuessPlugins();
 
         @Config("guess_sample_buffer_bytes")
         @ConfigDefault("32768") // 32 * 1024
-        public int getSampleBufferBytes();
+        int getSampleBufferBytes();
     }
 
     public static void registerDefaultGuessPluginTo(Binder binder, PluginType type) {

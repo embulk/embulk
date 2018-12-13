@@ -31,23 +31,23 @@ public class RemoveColumnsFilterPlugin implements FilterPlugin {
     public interface PluginTask extends Task {
         @Config("remove")
         @ConfigDefault("null")
-        public Optional<List<String>> getRemove();
+        Optional<List<String>> getRemove();
 
         // TODO remove_pattern option
 
         @Config("keep")
         @ConfigDefault("null")
-        public Optional<List<String>> getKeep();
+        Optional<List<String>> getKeep();
 
         // TODO keep_pattern option
 
         @Config("accept_unmatched_columns")
         @ConfigDefault("false")
-        public boolean getAcceptUnmatchedColumns();
+        boolean getAcceptUnmatchedColumns();
 
-        public void setIndexMapping(int[] mapping);
+        void setIndexMapping(int[] mapping);
 
-        public int[] getIndexMapping();
+        int[] getIndexMapping();
     }
 
     private final Logger logger;

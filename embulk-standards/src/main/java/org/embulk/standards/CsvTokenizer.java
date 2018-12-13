@@ -11,11 +11,11 @@ import org.embulk.spi.util.LineDecoder;
 import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
 
 public class CsvTokenizer {
-    static enum RecordState {
+    enum RecordState {
         NOT_END, END,
     }
 
-    static enum ColumnState {
+    enum ColumnState {
         BEGIN, VALUE, QUOTED_VALUE, AFTER_QUOTED_VALUE, FIRST_TRIM, LAST_TRIM_OR_VALUE,
     }
 

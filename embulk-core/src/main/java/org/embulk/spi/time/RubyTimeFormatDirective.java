@@ -99,21 +99,21 @@ enum RubyTimeFormatDirective {
     RECURRED_PLUS('+', "a b e H:M:S Z Y"),
     ;
 
-    private RubyTimeFormatDirective(final boolean isNumeric, final char conversionSpecifier) {
+    RubyTimeFormatDirective(final boolean isNumeric, final char conversionSpecifier) {
         this.conversionSpecifier = conversionSpecifier;
         this.isNumeric = isNumeric;
         this.isRecurred = false;
         this.recurred = null;
     }
 
-    private RubyTimeFormatDirective(final char conversionSpecifier, final String recurred) {
+    RubyTimeFormatDirective(final char conversionSpecifier, final String recurred) {
         this.conversionSpecifier = conversionSpecifier;
         this.isNumeric = false;
         this.isRecurred = true;
         this.recurred = recurred;
     }
 
-    private RubyTimeFormatDirective() {
+    RubyTimeFormatDirective() {
         this(false, '\0');
     }
 

@@ -22,26 +22,26 @@ public class FileOutputRunner implements OutputPlugin {
 
     private interface RunnerTask extends Task {
         @Config("type")
-        public PluginType getType();
+        PluginType getType();
 
         @Config("encoders")
         @ConfigDefault("[]")
-        public List<ConfigSource> getEncoderConfigs();
+        List<ConfigSource> getEncoderConfigs();
 
         @Config("formatter")
-        public ConfigSource getFormatterConfig();
+        ConfigSource getFormatterConfig();
 
-        public void setFileOutputTaskSource(TaskSource v);
+        void setFileOutputTaskSource(TaskSource v);
 
-        public TaskSource getFileOutputTaskSource();
+        TaskSource getFileOutputTaskSource();
 
-        public void setEncoderTaskSources(List<TaskSource> v);
+        void setEncoderTaskSources(List<TaskSource> v);
 
-        public List<TaskSource> getEncoderTaskSources();
+        List<TaskSource> getEncoderTaskSources();
 
-        public void setFormatterTaskSource(TaskSource v);
+        void setFormatterTaskSource(TaskSource v);
 
-        public TaskSource getFormatterTaskSource();
+        TaskSource getFormatterTaskSource();
     }
 
     protected List<EncoderPlugin> newEncoderPlugins(RunnerTask task) {

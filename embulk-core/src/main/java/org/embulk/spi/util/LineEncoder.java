@@ -20,14 +20,14 @@ public class LineEncoder implements AutoCloseable {
     public interface EncoderTask extends Task {
         @Config("charset")
         @ConfigDefault("\"utf-8\"")
-        public Charset getCharset();
+        Charset getCharset();
 
         @Config("newline")
         @ConfigDefault("\"CRLF\"")
-        public Newline getNewline();
+        Newline getNewline();
 
         @ConfigInject
-        public BufferAllocator getBufferAllocator();
+        BufferAllocator getBufferAllocator();
     }
 
     private final String newline;

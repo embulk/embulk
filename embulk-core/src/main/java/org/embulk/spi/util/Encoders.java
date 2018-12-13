@@ -21,7 +21,7 @@ public abstract class Encoders {
     }
 
     public interface Control {
-        public void run(List<TaskSource> taskSources);
+        void run(List<TaskSource> taskSources);
     }
 
     public static void transaction(List<EncoderPlugin> plugins, List<ConfigSource> configs,
