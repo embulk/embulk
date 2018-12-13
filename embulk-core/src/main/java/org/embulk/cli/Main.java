@@ -6,7 +6,7 @@ import org.embulk.EmbulkVersion;
 
 public class Main {
     public static void main(final String[] args) {
-        final ArrayList<String> jrubyOptions = new ArrayList<String>();
+        final ArrayList<String> jrubyOptions = new ArrayList<>();
 
         int i;
         for (i = 0; i < args.length; ++i) {
@@ -17,7 +17,7 @@ public class Main {
             }
         }
 
-        final ArrayList<String> embulkArgs = new ArrayList<String>();
+        final ArrayList<String> embulkArgs = new ArrayList<>();
         for (; i < args.length; ++i) {
             embulkArgs.add(args[i]);
         }

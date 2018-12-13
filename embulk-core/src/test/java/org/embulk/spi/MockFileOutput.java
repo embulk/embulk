@@ -18,7 +18,7 @@ public class MockFileOutput implements FileOutput {
     }
 
     public void nextFile() {
-        lastBuffers = new ArrayList<Buffer>();
+        lastBuffers = new ArrayList<>();
         files.add(lastBuffers);
     }
 

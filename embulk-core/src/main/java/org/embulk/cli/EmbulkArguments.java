@@ -12,7 +12,7 @@ public class EmbulkArguments {
 
     public static EmbulkArguments extract(final List<String> arguments)
             throws EmbulkCommandLineException {
-        final ArrayList<String> subcommandArguments = new ArrayList<String>();
+        final ArrayList<String> subcommandArguments = new ArrayList<>();
 
         EmbulkSubcommand subcommand = null;
         for (final String argument : arguments) {
@@ -21,9 +21,9 @@ public class EmbulkArguments {
             } else if (subcommand == null && (argument.equals("-b") || argument.equals("--bundle"))) {
                 throw new EmbulkCommandLineException("\"-b\" or \"--bundle\" before a subcommand is not supported.");
             } else if (subcommand == null && argument.equals("-version")) {
-                return new EmbulkArguments(EmbulkSubcommand.VERSION_ERR, new ArrayList<String>());
+                return new EmbulkArguments(EmbulkSubcommand.VERSION_ERR, new ArrayList<>());
             } else if (subcommand == null && argument.equals("--version")) {
-                return new EmbulkArguments(EmbulkSubcommand.VERSION_OUT, new ArrayList<String>());
+                return new EmbulkArguments(EmbulkSubcommand.VERSION_OUT, new ArrayList<>());
             } else {
                 subcommandArguments.add(argument);
             }

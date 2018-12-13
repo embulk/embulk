@@ -101,7 +101,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
 
         @Override
         public List<TaskReport> run(final TaskSource fileInputTaskSource, final int taskCount) {
-            final List<TaskReport> taskReports = new ArrayList<TaskReport>();
+            final List<TaskReport> taskReports = new ArrayList<>();
             Decoders.transaction(
                     decoderPlugins,
                     task.getDecoderConfigs(),

@@ -93,7 +93,7 @@ public class TestFileInputRunner {
                 runtime.getBufferAllocator().allocate(),
                 runtime.getBufferAllocator().allocate() };
         MockFileInputPlugin fileInputPlugin = new MockFileInputPlugin(
-                new LinkedList<Buffer>(Arrays.asList(buffers)));
+                new LinkedList<>(Arrays.asList(buffers)));
         final FileInputRunner runner = new FileInputRunner(fileInputPlugin);
 
         ConfigSource config = Exec.newConfigSource().set(
@@ -139,7 +139,7 @@ public class TestFileInputRunner {
                 runtime.getBufferAllocator().allocate(),
                 runtime.getBufferAllocator().allocate() };
         MockFileInputPlugin fileInputPlugin = new MockFileInputPlugin(
-                new LinkedList<Buffer>(Arrays.asList(buffers)));
+                new LinkedList<>(Arrays.asList(buffers)));
         final FileInputRunner runner = new FileInputRunner(fileInputPlugin);
 
         ConfigSource config = Exec.newConfigSource().set(

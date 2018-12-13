@@ -85,7 +85,7 @@ public class FileOutputRunner implements OutputPlugin {
 
         @Override
         public List<TaskReport> run(final TaskSource fileOutputTaskSource) {
-            final List<TaskReport> taskReports = new ArrayList<TaskReport>();
+            final List<TaskReport> taskReports = new ArrayList<>();
             Encoders.transaction(
                     encoderPlugins,
                     task.getEncoderConfigs(),

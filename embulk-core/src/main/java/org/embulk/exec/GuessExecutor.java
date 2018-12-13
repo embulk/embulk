@@ -118,7 +118,7 @@ public class GuessExecutor {
 
     // called by FileInputRunner
     public ConfigDiff guessParserConfig(Buffer sample, ConfigSource inputConfig, ConfigSource execConfig) {
-        List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
+        List<PluginType> guessPlugins = new ArrayList<>(defaultGuessPlugins);
 
         GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
         guessPlugins.addAll(task.getGuessPlugins());

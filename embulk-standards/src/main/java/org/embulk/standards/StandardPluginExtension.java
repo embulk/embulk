@@ -8,6 +8,6 @@ import org.embulk.spi.Extension;
 
 public class StandardPluginExtension implements Extension {
     public List<Module> getModules(ConfigSource systemConfig) {
-        return ImmutableList.<Module>of(new StandardPluginModule());
+        return ImmutableList.of(new StandardPluginModule());
     }
 }

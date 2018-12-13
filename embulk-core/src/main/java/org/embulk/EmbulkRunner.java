@@ -51,7 +51,7 @@ public class EmbulkRunner {
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
+            configSource = readConfig(configFilePath, Collections.emptyMap(), null);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -98,7 +98,7 @@ public class EmbulkRunner {
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
+            configSource = readConfig(configFilePath, Collections.emptyMap(), null);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -147,7 +147,7 @@ public class EmbulkRunner {
         // in Ruby Embulk::EmbulkRunner.
         final ConfigSource configSource;
         try {
-            configSource = readConfig(configFilePath, Collections.<String, Object>emptyMap(), null);
+            configSource = readConfig(configFilePath, Collections.emptyMap(), null);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -256,7 +256,7 @@ public class EmbulkRunner {
         final ConfigSource configSource;
         if (configDiffPath != null && Files.size(configDiffPath) > 0L) {
             configSource = originalConfigSource.merge(
-                    readConfig(configDiffPath, Collections.<String, Object>emptyMap(), null));
+                    readConfig(configDiffPath, Collections.emptyMap(), null));
         } else {
             configSource = originalConfigSource;
         }

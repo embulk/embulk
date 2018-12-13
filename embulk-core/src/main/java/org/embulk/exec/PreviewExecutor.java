@@ -152,7 +152,7 @@ public class PreviewExecutor {
         public SamplingPageOutput(int sampleRows, Schema schema) {
             this.sampleRows = sampleRows;
             this.schema = schema;
-            this.pages = new ArrayList<Page>();
+            this.pages = new ArrayList<>();
             this.res = null;
         }
 

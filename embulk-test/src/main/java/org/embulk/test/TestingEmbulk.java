@@ -500,7 +500,7 @@ public class TestingEmbulk implements TestRule {
     private void copyToPath(Path outputDir, Path outputPath)
             throws IOException {
         try (OutputStream out = Files.newOutputStream(outputPath)) {
-            List<Path> fragments = new ArrayList<Path>();
+            List<Path> fragments = new ArrayList<>();
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(outputDir, "fragments_*.csv")) {
                 for (Path fragment : stream) {
                     fragments.add(fragment);

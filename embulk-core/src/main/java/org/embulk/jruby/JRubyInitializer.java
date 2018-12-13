@@ -42,7 +42,7 @@ public final class JRubyInitializer {
             final List jrubyClasspathNonGeneric,
             final List jrubyOptionsNonGeneric,
             final String jrubyBundlerPluginSourceDirectory) {
-        final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<String>();
+        final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<>();
         if (jrubyLoadPathNonGeneric != null) {
             for (final Object oneJRubyLoadPath : jrubyLoadPathNonGeneric) {
                 if (oneJRubyLoadPath instanceof String) {
@@ -54,7 +54,7 @@ public final class JRubyInitializer {
             }
         }
 
-        final ArrayList<String> jrubyClasspathBuilt = new ArrayList<String>();
+        final ArrayList<String> jrubyClasspathBuilt = new ArrayList<>();
         if (jrubyClasspathNonGeneric != null) {
             for (final Object oneJRubyClasspath : jrubyClasspathNonGeneric) {
                 if (oneJRubyClasspath instanceof String) {
@@ -66,7 +66,7 @@ public final class JRubyInitializer {
             }
         }
 
-        final ArrayList<String> jrubyOptionsBuilt = new ArrayList<String>();
+        final ArrayList<String> jrubyOptionsBuilt = new ArrayList<>();
         if (jrubyOptionsNonGeneric != null) {
             for (final Object oneJRubyOption : jrubyOptionsNonGeneric) {
                 if (oneJRubyOption instanceof String) {

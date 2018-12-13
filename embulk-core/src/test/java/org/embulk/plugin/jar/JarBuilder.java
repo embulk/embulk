@@ -18,7 +18,7 @@ public class JarBuilder {
 
     public void build(final Path pathToExistingFile) throws Exception {
         try (final JarOutputStream output = buildPluginJar(pathToExistingFile, this.manifest)) {
-            for (String entryName : new TreeSet<String>(this.entries.keySet())) {
+            for (String entryName : new TreeSet<>(this.entries.keySet())) {
                 final Path pathToRealFile = this.entries.get(entryName);
                 if (pathToRealFile == null) {
                     final JarEntry entry = new JarEntry(entryName + "/");

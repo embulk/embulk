@@ -129,8 +129,8 @@ class TaskSerDe {
         @Override
         @SuppressWarnings("unchecked")
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-            Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
-            HashMultimap<String, FieldEntry> unusedMappings = HashMultimap.<String, FieldEntry>create(mappings);
+            Map<String, Object> objects = new ConcurrentHashMap<>();
+            HashMultimap<String, FieldEntry> unusedMappings = HashMultimap.create(mappings);
 
             String key;
             JsonToken current = jp.getCurrentToken();

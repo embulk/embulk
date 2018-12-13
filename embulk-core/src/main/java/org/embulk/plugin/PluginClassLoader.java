@@ -39,7 +39,7 @@ public class PluginClassLoader extends URLClassLoader {
             final Collection<URL> flatJarUrls,
             final Collection<String> parentFirstPackages,
             final Collection<String> parentFirstResources) {
-        super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.<URL>emptyList() : flatJarUrls),
+        super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.emptyList() : flatJarUrls),
               parentClassLoader);
 
         // Given |oneNestedJarFileUrl| should be "file:...". |this.oneNestedJarUrlBase| should be "jar:file:...".
@@ -56,7 +56,7 @@ public class PluginClassLoader extends URLClassLoader {
         this.oneNestedJarUrlBase = oneNestedJarUrlBaseBuilt;
 
         if (embeddedJarPathsInNestedJar == null) {
-            this.embeddedJarPathsInNestedJar = Collections.<String>emptyList();
+            this.embeddedJarPathsInNestedJar = Collections.emptyList();
         } else {
             this.embeddedJarPathsInNestedJar = Collections.unmodifiableCollection(embeddedJarPathsInNestedJar);
         }
@@ -328,7 +328,7 @@ public class PluginClassLoader extends URLClassLoader {
             return super.findResources(resourceName);
         } else {
             // Single nested JAR -- JAR-based plugins
-            final Vector<URL> urls = new Vector<URL>();
+            final Vector<URL> urls = new Vector<>();
 
             // Classes directly in the plugin JAR are always prioritized.
             // Note that |super.findResources| may throw IOException.
@@ -794,7 +794,7 @@ public class PluginClassLoader extends URLClassLoader {
     }
 
     private List<URL> findResourcesFromEmbeddedJars(final String resourceName) throws IOException {
-        final ArrayList<URL> resourceUrls = new ArrayList<URL>();
+        final ArrayList<URL> resourceUrls = new ArrayList<>();
         for (final String embeddedJarPath : this.embeddedJarPathsInNestedJar) {
             final URL embeddedJarUrl = getEmbeddedJarUrl(embeddedJarPath);
             final JarURLConnection embeddedJarUrlConnection = getEmbeddedJarUrlConnection(embeddedJarUrl);

@@ -318,7 +318,7 @@ public class EmbulkNew {
 
     private String getDisplayName(final String name) {
         final String[] nameSplit = name.split("_");
-        final ArrayList<String> nameComposition = new ArrayList<String>();
+        final ArrayList<String> nameComposition = new ArrayList<>();
         for (String namePart : nameSplit) {
             nameComposition.add(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, namePart));
         }
@@ -391,7 +391,7 @@ public class EmbulkNew {
         if (fileSystem.supportedFileAttributeViews().contains("posix")) {
             // NTFS does not support PosixFilePermissions, for example.
             final Set<PosixFilePermission> permissions =
-                    new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+                    new HashSet<>(Files.getPosixFilePermissions(targetPath));
             permissions.add(PosixFilePermission.OWNER_EXECUTE);
             permissions.add(PosixFilePermission.GROUP_EXECUTE);
             permissions.add(PosixFilePermission.OTHERS_EXECUTE);

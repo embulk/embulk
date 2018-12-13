@@ -87,12 +87,12 @@ public class TestFileOutputRunner {
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
         ImmutableList<ImmutableMap<String, Object>> columns = ImmutableList.of(
-                ImmutableMap.<String,Object>of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
+                ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")
@@ -127,7 +127,7 @@ public class TestFileOutputRunner {
                 }
                 tran.close();
             }
-            return new ArrayList<TaskReport>();
+            return new ArrayList<>();
         });
 
         assertEquals(true, fileOutputPlugin.transactionCompleted);
@@ -148,12 +148,12 @@ public class TestFileOutputRunner {
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
         ImmutableList<ImmutableMap<String, Object>> columns = ImmutableList.of(
-                ImmutableMap.<String,Object>of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
+                ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
+                ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")

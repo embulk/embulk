@@ -18,30 +18,30 @@ public class DataSourceSerDe {
         @SuppressWarnings("deprecation")
         public SerDeModule(final ModelManager model) {
             // DataSourceImpl
-            addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>());
-            addDeserializer(DataSourceImpl.class, new DataSourceDeserializer<DataSourceImpl>(model));
+            addSerializer(DataSourceImpl.class, new DataSourceSerializer<>());
+            addDeserializer(DataSourceImpl.class, new DataSourceDeserializer<>(model));
 
             // ConfigSource
-            addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
-            addDeserializer(ConfigSource.class, new DataSourceDeserializer<ConfigSource>(model));
+            addSerializer(ConfigSource.class, new DataSourceSerializer<>());
+            addDeserializer(ConfigSource.class, new DataSourceDeserializer<>(model));
 
             // TaskSource
-            addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
-            addDeserializer(TaskSource.class, new DataSourceDeserializer<TaskSource>(model));
+            addSerializer(TaskSource.class, new DataSourceSerializer<>());
+            addDeserializer(TaskSource.class, new DataSourceDeserializer<>(model));
 
             // TaskReport
-            addSerializer(TaskReport.class, new DataSourceSerializer<TaskReport>());
-            addDeserializer(TaskReport.class, new DataSourceDeserializer<TaskReport>(model));
+            addSerializer(TaskReport.class, new DataSourceSerializer<>());
+            addDeserializer(TaskReport.class, new DataSourceDeserializer<>(model));
 
             // TODO: Remove this registration by v0.10 or earlier.
             // https://github.com/embulk/embulk/issues/933
             // CommitReport (Deprecated)
-            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
-            addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
+            addSerializer(CommitReport.class, new DataSourceSerializer<>());
+            addDeserializer(CommitReport.class, new DataSourceDeserializer<>(model));
 
             // ConfigDiff
-            addSerializer(ConfigDiff.class, new DataSourceSerializer<ConfigDiff>());
-            addDeserializer(ConfigDiff.class, new DataSourceDeserializer<ConfigDiff>(model));
+            addSerializer(ConfigDiff.class, new DataSourceSerializer<>());
+            addDeserializer(ConfigDiff.class, new DataSourceDeserializer<>(model));
         }
     }
 

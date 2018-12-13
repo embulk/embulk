@@ -22,7 +22,7 @@ public class GuiceBinder implements TestRule {
     }
 
     private void reset() {
-        extraModules = new ArrayList<Module>();
+        extraModules = new ArrayList<>();
         injector = null;
     }
 

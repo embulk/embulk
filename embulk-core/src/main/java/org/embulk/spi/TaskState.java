@@ -28,7 +28,7 @@ public class TaskState {
     @SuppressWarnings("deprecation")
     public void setCommitReport(org.embulk.config.CommitReport commitReport) {
         this.started = true;
-        this.taskReport = Optional.<TaskReport>of(commitReport);
+        this.taskReport = Optional.of(commitReport);
     }
 
     public void setException(Throwable exception) {

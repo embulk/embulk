@@ -86,7 +86,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
                 configDiff.set("last_path", task.getLastPath().get());
             }
         } else {
-            final List<String> files = new ArrayList<String>(task.getFiles());
+            final List<String> files = new ArrayList<>(task.getFiles());
             Collections.sort(files);
             configDiff.set("last_path", files.get(files.size() - 1));
         }

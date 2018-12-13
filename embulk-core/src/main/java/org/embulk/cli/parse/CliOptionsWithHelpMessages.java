@@ -17,7 +17,7 @@ import org.apache.commons.cli.Options;
  */
 final class CliOptionsWithHelpMessages extends Options {
     CliOptionsWithHelpMessages() {
-        this.allOptions = new ArrayList<Option>();
+        this.allOptions = new ArrayList<>();
     }
 
     /** Adds commons-cli's {@code org.apache.commons.cli.Option}. */

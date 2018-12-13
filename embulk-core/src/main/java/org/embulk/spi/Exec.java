@@ -12,7 +12,7 @@ import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 
 public class Exec {
-    private static final InheritableThreadLocal<ExecSession> session = new InheritableThreadLocal<ExecSession>();
+    private static final InheritableThreadLocal<ExecSession> session = new InheritableThreadLocal<>();
 
     private Exec() {}
 

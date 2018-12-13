@@ -78,7 +78,7 @@ public class TestLineDecoder {
     }
 
     private static List<Buffer> bufferList(Charset charset, String... sources) throws UnsupportedCharsetException {
-        List<Buffer> buffers = new ArrayList<Buffer>();
+        List<Buffer> buffers = new ArrayList<>();
         for (String source : sources) {
             ByteBuffer buffer = charset.encode(source);
             buffers.add(Buffer.wrap(buffer.array(), 0, buffer.limit()));

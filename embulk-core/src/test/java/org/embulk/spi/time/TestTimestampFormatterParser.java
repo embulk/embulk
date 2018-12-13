@@ -24,7 +24,7 @@ public class TestTimestampFormatterParser {
                 .set("default_timestamp_format", "%Y-%m-%d %H:%M:%S.%9N %z");  // %Z is OS-dependent
         FormatterTestTask task = config.loadConfig(FormatterTestTask.class);
 
-        TimestampFormatter formatter = TimestampFormatter.of(task, Optional.<TimestampFormatter.TimestampColumnOption>absent());
+        TimestampFormatter formatter = TimestampFormatter.of(task, Optional.absent());
         assertEquals("2014-11-19 02:46:29.123456000 +0000", formatter.format(Timestamp.ofEpochSecond(1416365189, 123456 * 1000)));
     }
 
@@ -44,7 +44,7 @@ public class TestTimestampFormatterParser {
                 .set("default_timestamp_format", "%s");
 
         FormatterTestTask ftask = config.loadConfig(FormatterTestTask.class);
-        TimestampFormatter formatter = TimestampFormatter.of(ftask, Optional.<TimestampFormatter.TimestampColumnOption>absent());
+        TimestampFormatter formatter = TimestampFormatter.of(ftask, Optional.absent());
         assertEquals("1416365189", formatter.format(Timestamp.ofEpochSecond(1416365189)));
 
         ParserTestTask ptask = config.loadConfig(ParserTestTask.class);

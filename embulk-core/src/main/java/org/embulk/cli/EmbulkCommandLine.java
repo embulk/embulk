@@ -30,14 +30,14 @@ public class EmbulkCommandLine {
 
     public static final class Builder {
         public Builder() {
-            this.arguments = new ArrayList<String>();
-            this.systemConfig = new HashMap<String, Object>();
+            this.arguments = new ArrayList<>();
+            this.systemConfig = new HashMap<>();
             this.bundlePath = null;
             this.configDiff = null;
             this.force = false;
             this.format = null;
-            this.load = new ArrayList<String>();
-            this.loadPath = new ArrayList<String>();
+            this.load = new ArrayList<>();
+            this.loadPath = new ArrayList<>();
             this.output = null;
             this.resumeState = null;
         }
@@ -132,7 +132,7 @@ public class EmbulkCommandLine {
                 map.put(key, Arrays.asList((String) existingValue, value));
             } else if (existingValue != null && existingValue instanceof List) {
                 @SuppressWarnings("unchecked")
-                final ArrayList<String> newList = new ArrayList<String>((List<String>) existingValue);
+                final ArrayList<String> newList = new ArrayList<>((List<String>) existingValue);
                 newList.add(value);
                 map.put(key, Collections.unmodifiableList(newList));
             } else {

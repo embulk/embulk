@@ -41,7 +41,7 @@ public class EmbulkCommandLineParser {
         private Builder() {
             this.mainUsage = null;
             this.additionalUsage = new StringBuilder();
-            this.helpLineDefinitions = new ArrayList<AbstractHelpLineDefinition>();
+            this.helpLineDefinitions = new ArrayList<>();
             this.minArgs = 0;
             this.maxArgs = Integer.MAX_VALUE;
             this.width = 74;

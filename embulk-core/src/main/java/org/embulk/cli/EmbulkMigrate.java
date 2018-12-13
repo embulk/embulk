@@ -192,7 +192,7 @@ public class EmbulkMigrate {
     private class Migrator {
         private Migrator(Path basePath) {
             this.basePath = basePath;
-            this.modifiedFiles = new HashSet<Path>();
+            this.modifiedFiles = new HashSet<>();
         }
 
         public Path getBasePath() {
@@ -222,7 +222,7 @@ public class EmbulkMigrate {
 
         public List<Matcher> matchersRecursive(final String baseFileNameGlob, final Pattern pattern)
                 throws IOException {
-            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.builder();
             final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
             Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
                     @Override
@@ -243,7 +243,7 @@ public class EmbulkMigrate {
                                               final Pattern pattern,
                                               final int index,
                                               final String immediate) throws IOException {
-            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.builder();
             final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
             Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
                     @Override
@@ -294,7 +294,7 @@ public class EmbulkMigrate {
                 final String preMatch = originalData.substring(0, matcher.start());
                 final int lineNumber = preMatch.split("\n").length;
                 final String replacingString = stringUpsert.getUpsertd(matcher);
-                List<String> lines = new ArrayList<String>(Arrays.asList(originalData.split("\n")));
+                List<String> lines = new ArrayList<>(Arrays.asList(originalData.split("\n")));
                 lines.add(lineNumber + 1, replacingString);
                 final String modifiedData = Joiner.on("\n").join(lines);
                 modify(filePath, modifiedData);
@@ -311,7 +311,7 @@ public class EmbulkMigrate {
         public void insertLineRecursive(final String baseFileNameGlob,
                                         final Pattern pattern,
                                         final StringUpsert stringUpsert) throws IOException {
-            final ImmutableList.Builder<Matcher> matchers = ImmutableList.<Matcher>builder();
+            final ImmutableList.Builder<Matcher> matchers = ImmutableList.builder();
             final PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + baseFileNameGlob);
             Files.walkFileTree(this.basePath, new SimpleFileVisitor<Path>() {
                     @Override
@@ -364,7 +364,7 @@ public class EmbulkMigrate {
             if (fileSystem.supportedFileAttributeViews().contains("posix")) {
                 // NTFS does not support PosixFilePermissions, for example.
                 final Set<PosixFilePermission> permissions =
-                        new HashSet<PosixFilePermission>(Files.getPosixFilePermissions(targetPath));
+                        new HashSet<>(Files.getPosixFilePermissions(targetPath));
                 permissions.add(PosixFilePermission.OWNER_EXECUTE);
                 permissions.add(PosixFilePermission.GROUP_EXECUTE);
                 permissions.add(PosixFilePermission.OTHERS_EXECUTE);

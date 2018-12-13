@@ -89,7 +89,7 @@ public class TestCsvTokenizer {
         List<String> columns = null;
         for (int i = 0; i < values.length; i++) {
             if (i % columnCount == 0) {
-                columns = new ArrayList<String>();
+                columns = new ArrayList<>();
                 records.add(columns);
             }
             columns.add(values[i]);

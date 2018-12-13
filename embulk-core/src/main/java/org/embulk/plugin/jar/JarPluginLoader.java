@@ -207,10 +207,10 @@ public class JarPluginLoader implements AutoCloseable {
         final String pluginClassPathJoined = getAttributeFromManifest(manifestAttributes, MANIFEST_PLUGIN_CLASS_PATH);
 
         if (pluginClassPathJoined == null) {
-            return Collections.<String>emptyList();
+            return Collections.emptyList();
         }
 
-        final List<String> pluginClassPath = new ArrayList<String>();
+        final List<String> pluginClassPath = new ArrayList<>();
         for (final String splitPluginClassPath : pluginClassPathJoined.split(" +", 0)) {
             pluginClassPath.add(splitPluginClassPath);
         }
