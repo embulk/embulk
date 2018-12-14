@@ -26,6 +26,7 @@ import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
 import org.embulk.guice.Bootstrap;
 import org.embulk.guice.LifeCycleInjector;
+import org.embulk.guice.LifeCycleListener;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecSession;
 
@@ -87,6 +88,7 @@ public class EmbulkEmbed {
             @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/932
             org.embulk.guice.Bootstrap bootstrap = new org.embulk.guice.Bootstrap()
                     .requireExplicitBindings(false)
+                    .addLifeCycleListeners(new WarningInUseOfLifeCycleListener())
                     .addModules(EmbulkService.standardModuleList(systemConfig));
 
             for (Function<? super List<Module>, ? extends Iterable<? extends Module>> override : moduleOverrides) {
@@ -270,6 +272,47 @@ public class EmbulkEmbed {
         public void cleanup() {
             bulkLoader.cleanup(config, resumeState);
         }
+    }
+
+    private static class WarningInUseOfLifeCycleListener implements LifeCycleListener {
+        @Override
+        public void startingLifeCycle() {
+            new RuntimeException(
+                    "LifeCycleManager is in use. It is planned to be removed. "
+                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
+                    .printStackTrace();
+        }
+
+        @Override
+        public void startedLifeCycle() {
+            new RuntimeException(
+                    "LifeCycleManager is in use. It is planned to be removed. "
+                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
+                    .printStackTrace();
+        }
+
+        @Override
+        public void stoppingLifeCycle() {}
+
+        @Override
+        public void stoppedLifeCycle() {}
+
+        @Override
+        public void startingInstance(final Object object) {
+            new RuntimeException(
+                    "LifeCycleManager is in use for " + object.toString() + ". It is planned to be removed. "
+                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
+                    .printStackTrace();
+        }
+
+        @Override
+        public void postConstructingInstance(final Object object, final java.lang.reflect.Method postConstruct) {}
+
+        @Override
+        public void stoppingInstance(final Object object) {}
+
+        @Override
+        public void preDestroyingInstance(final Object obj, final java.lang.reflect.Method preDestroy) {}
     }
 
     public void destroy() {
