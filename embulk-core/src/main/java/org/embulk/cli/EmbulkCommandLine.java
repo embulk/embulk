@@ -12,6 +12,8 @@ public class EmbulkCommandLine {
     private EmbulkCommandLine(
             final List<String> arguments,
             final Map<String, Object> systemConfig,
+            final String logPath,
+            final String logLevel,
             final String bundlePath,
             final String configDiff,
             final boolean force,
@@ -20,6 +22,8 @@ public class EmbulkCommandLine {
             final String resumeState) {
         this.arguments = Collections.unmodifiableList(arguments);
         this.systemConfig = Collections.unmodifiableMap(systemConfig);
+        this.logPath = logPath;
+        this.logLevel = logLevel;
         this.bundlePath = bundlePath;
         this.configDiff = configDiff;
         this.force = force;
@@ -32,6 +36,8 @@ public class EmbulkCommandLine {
         public Builder() {
             this.arguments = new ArrayList<String>();
             this.systemConfig = new HashMap<String, Object>();
+            this.logPath = null;
+            this.logLevel = null;
             this.bundlePath = null;
             this.configDiff = null;
             this.force = false;
@@ -63,6 +69,8 @@ public class EmbulkCommandLine {
             return new EmbulkCommandLine(
                     this.arguments,
                     systemConfigJRubyLoadPath,
+                    this.logPath,
+                    this.logLevel,
                     this.bundlePath,
                     this.configDiff,
                     this.force,
@@ -83,6 +91,18 @@ public class EmbulkCommandLine {
 
         public Builder addSystemConfig(final String key, final String value) {
             addInHashMap(this.systemConfig, key, value);
+            return this;
+        }
+
+        public Builder setLogPath(final String logPath) {
+            this.logPath = logPath;
+            addInHashMap(this.systemConfig, "log_path", logPath);
+            return this;
+        }
+
+        public Builder setLogLevel(final String logLevel) {
+            this.logLevel = logLevel;
+            addInHashMap(this.systemConfig, "log_level", logLevel);
             return this;
         }
 
@@ -142,6 +162,8 @@ public class EmbulkCommandLine {
 
         private ArrayList<String> arguments;
         private HashMap<String, Object> systemConfig;
+        private String logPath;
+        private String logLevel;
         private String bundlePath;
         private String configDiff;
         private boolean force;
@@ -162,6 +184,14 @@ public class EmbulkCommandLine {
 
     public final Map<String, Object> getSystemConfig() {
         return this.systemConfig;
+    }
+
+    public final String getLogPath() {
+        return this.logPath;
+    }
+
+    public final String getLogLevel() {
+        return this.logLevel;
     }
 
     public final String getBundlePath() {
@@ -190,6 +220,8 @@ public class EmbulkCommandLine {
 
     private final List<String> arguments;
     private final Map<String, Object> systemConfig;
+    private final String logPath;
+    private final String logLevel;
     private final String bundlePath;
     private final String configDiff;
     private final boolean force;

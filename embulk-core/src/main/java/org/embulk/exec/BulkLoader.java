@@ -30,6 +30,7 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.TaskState;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BulkLoader {
     private final Injector injector;
@@ -500,7 +501,7 @@ public class BulkLoader {
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
+        final LoaderState state = newLoaderState(logger, plugins);
         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
             ConfigDiff inputConfigDiff = plugins.getInputPlugin().transaction(task.getInputConfig(), new InputPlugin.Control() {
@@ -572,7 +573,7 @@ public class BulkLoader {
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
 
-        final LoaderState state = newLoaderState(Exec.getLogger(BulkLoader.class), plugins);
+        final LoaderState state = newLoaderState(logger, plugins);
         state.setTransactionStage(TransactionStage.INPUT_BEGIN);
         try {
             @SuppressWarnings("checkstyle:LineLength")
@@ -699,4 +700,6 @@ public class BulkLoader {
     private static Schema last(List<Schema> schemas) {
         return schemas.get(schemas.size() - 1);
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(BulkLoader.class);
 }

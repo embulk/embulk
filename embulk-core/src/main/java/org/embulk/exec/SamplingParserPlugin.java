@@ -23,6 +23,7 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Used by FileInputRunner.guess
@@ -121,8 +122,9 @@ public class SamplingParserPlugin implements ParserPlugin {
         }
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(SamplingParserPlugin.class);
+
     private final NumberFormat numberFormat = NumberFormat.getNumberInstance(ENGLISH);
-    private final Logger log = Exec.getLogger(this.getClass());
     private final int minSampleBufferBytes;
 
     public interface PluginTask extends Task, SampleBufferTask {}
@@ -143,7 +145,7 @@ public class SamplingParserPlugin implements ParserPlugin {
         PluginTask task = config.loadConfig(PluginTask.class);
         Preconditions.checkArgument(minSampleBufferBytes < task.getSampleBufferBytes(), "minSampleBufferBytes must be smaller than sample_buffer_bytes");
 
-        log.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
+        logger.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
         control.run(task.dump(), null);
     }
 

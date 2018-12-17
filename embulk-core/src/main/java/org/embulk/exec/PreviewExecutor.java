@@ -25,6 +25,7 @@ import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PreviewExecutor {
     private final Injector injector;
@@ -150,7 +151,6 @@ public class PreviewExecutor {
     }
 
     private static class SamplingPageOutput implements PageOutput {
-        private final Logger log = Exec.getLogger(this.getClass());
         private final int sampleRows;
         private final Schema schema;
         private List<Page> pages;
@@ -180,7 +180,7 @@ public class PreviewExecutor {
         @Override
         public void finish() {
             if (res != null) {
-                log.error("PreviewResult recreation will cause a bug. The plugin must call PageOutput#finish() only once.");
+                logger.error("PreviewResult recreation will cause a bug. The plugin must call PageOutput#finish() only once.");
             }
 
             if (recordCount == 0) {
@@ -201,4 +201,6 @@ public class PreviewExecutor {
             }
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(PreviewExecutor.class);
 }

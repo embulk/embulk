@@ -43,10 +43,14 @@ public class Exec {
         return session().getTransactionTime();
     }
 
+    @Deprecated  // @see docs/design/slf4j.md
+    @SuppressWarnings("deprecation")
     public static Logger getLogger(String name) {
         return session().getLogger(name);
     }
 
+    @Deprecated  // @see docs/design/slf4j.md
+    @SuppressWarnings("deprecation")
     public static Logger getLogger(Class<?> name) {
         return session().getLogger(name);
     }

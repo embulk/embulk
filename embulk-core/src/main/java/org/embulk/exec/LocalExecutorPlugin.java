@@ -30,6 +30,7 @@ import org.embulk.spi.util.Executors;
 import org.embulk.spi.util.Executors.ProcessStateCallback;
 import org.embulk.spi.util.Filters;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalExecutorPlugin implements ExecutorPlugin {
     private int defaultMaxThreads;
@@ -51,23 +52,20 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
     }
 
     private AbstractLocalExecutor newExecutor(ConfigSource config, int inputTaskCount) {
-        Logger log = Exec.getLogger(LocalExecutorPlugin.class);
         int maxThreads = config.get(Integer.class, "max_threads", defaultMaxThreads);
         int minThreads = config.get(Integer.class, "min_output_tasks", defaultMinThreads);
         if (inputTaskCount > 0 && inputTaskCount < minThreads) {
             int scatterCount = (minThreads + inputTaskCount - 1) / inputTaskCount;
-            log.info("Using local thread executor with max_threads={} / output tasks {} = input tasks {} * {}",
-                     maxThreads, inputTaskCount * scatterCount, inputTaskCount, scatterCount);
+            logger.info("Using local thread executor with max_threads={} / output tasks {} = input tasks {} * {}",
+                        maxThreads, inputTaskCount * scatterCount, inputTaskCount, scatterCount);
             return new ScatterExecutor(maxThreads, inputTaskCount, scatterCount);
         } else {
-            log.info("Using local thread executor with max_threads={} / tasks={}", maxThreads, inputTaskCount);
+            logger.info("Using local thread executor with max_threads={} / tasks={}", maxThreads, inputTaskCount);
             return new DirectExecutor(maxThreads, inputTaskCount);
         }
     }
 
     private abstract static class AbstractLocalExecutor implements Executor, AutoCloseable {
-        protected final Logger log = Exec.getLogger(LocalExecutorPlugin.class);
-
         protected final int inputTaskCount;
         protected final int outputTaskCount;
 
@@ -136,7 +134,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
                 }
             }
 
-            log.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
+            logger.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
         }
 
         protected abstract Future<Throwable> startInputTask(ProcessTask task, ProcessState state, int taskIndex);
@@ -162,7 +160,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
         @Override
         protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex) {
             if (state.getOutputTaskState(taskIndex).isCommitted()) {
-                log.warn("Skipped resumed task {}", taskIndex);
+                logger.warn("Skipped resumed task {}", taskIndex);
                 return null;  // resumed
             }
 
@@ -225,7 +223,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
         @Override
         protected Future<Throwable> startInputTask(final ProcessTask task, final ProcessState state, final int taskIndex) {
             if (isAllScatterOutputFinished(state, taskIndex)) {
-                log.warn("Skipped resumed input task {}", taskIndex);
+                logger.warn("Skipped resumed input task {}", taskIndex);
                 return null;  // resumed
             }
 
@@ -510,4 +508,6 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             }
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(LocalExecutorPlugin.class);
 }

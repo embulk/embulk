@@ -28,6 +28,7 @@ import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.util.LineDecoder;
 import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CsvParserPlugin implements ParserPlugin {
     private static final ImmutableSet<String> TRUE_STRINGS =
@@ -132,7 +133,7 @@ public class CsvParserPlugin implements ParserPlugin {
             if (str.length() >= 2) {
                 throw new ConfigException("\"quote\" option accepts only 1 character.");
             } else if (str.isEmpty()) {
-                Exec.getLogger(CsvParserPlugin.class).warn("Setting '' (empty string) to \"quote\" option is obsoleted. Currently it becomes '\"' automatically but this behavior will be removed. Please set '\"' explicitly.");
+                logger.warn("Setting '' (empty string) to \"quote\" option is obsoleted. Currently it becomes '\"' automatically but this behavior will be removed. Please set '\"' explicitly.");
                 return new QuoteCharacter('"');
             } else {
                 return new QuoteCharacter(str.charAt(0));
@@ -176,7 +177,7 @@ public class CsvParserPlugin implements ParserPlugin {
             if (str.length() >= 2) {
                 throw new ConfigException("\"escape\" option accepts only 1 character.");
             } else if (str.isEmpty()) {
-                Exec.getLogger(CsvParserPlugin.class).warn("Setting '' (empty string) to \"escape\" option is obsoleted. Currently it becomes null automatically but this behavior will be removed. Please set \"escape: null\" explicitly.");
+                logger.warn("Setting '' (empty string) to \"escape\" option is obsoleted. Currently it becomes null automatically but this behavior will be removed. Please set \"escape: null\" explicitly.");
                 return noEscape();
             } else {
                 return new EscapeCharacter(str.charAt(0));
@@ -203,10 +204,7 @@ public class CsvParserPlugin implements ParserPlugin {
         }
     }
 
-    private final Logger log;
-
     public CsvParserPlugin() {
-        log = Exec.getLogger(CsvParserPlugin.class);
     }
 
     @Override
@@ -364,7 +362,7 @@ public class CsvParserPlugin implements ParserPlugin {
                         if (stopOnInvalidRecord) {
                             throw new DataException(String.format("Invalid record at %s:%d: %s", fileName, lineNumber, skippedLine), e);
                         }
-                        log.warn(String.format("Skipped line %s:%d (%s): %s", fileName, lineNumber, e.getMessage(), skippedLine));
+                        logger.warn(String.format("Skipped line %s:%d (%s): %s", fileName, lineNumber, e.getMessage(), skippedLine));
                         //exec.notice().skippedLine(skippedLine);
 
                         hasNextRecord = tokenizer.nextRecord();
@@ -385,4 +383,6 @@ public class CsvParserPlugin implements ParserPlugin {
             super(cause);
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(CsvParserPlugin.class);
 }

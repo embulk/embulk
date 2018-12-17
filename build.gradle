@@ -184,6 +184,9 @@ repositories {
 dependencies {
     compile project(':embulk-core')
     compile project(':embulk-standards')
+
+    // Logback is included only in the executable package.
+    compile 'ch.qos.logback:logback-classic:1.1.3'
 }
 
 shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':embulk-core' and ':embulk-standards'.
