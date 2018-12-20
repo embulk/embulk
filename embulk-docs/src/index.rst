@@ -55,23 +55,23 @@ Documents
 
    recipe
 
-* `List of Plugins by Category <http://www.embulk.org/plugins/>`_
+* `List of Plugins by Category <http://plugins.embulk.org/>`_
 
-  * `Input plugins <http://www.embulk.org/plugins/#input>`_
+  * `Input plugins <http://plugins.embulk.org/#input>`_
 
-  * `Output plugins <http://www.embulk.org/plugins/#output>`_
+  * `Output plugins <http://plugins.embulk.org/#output>`_
 
-  * `File parser plugins <http://www.embulk.org/plugins/#file-parser>`_
+  * `File parser plugins <http://plugins.embulk.org/#file-parser>`_
 
-  * `File decoder plugins <http://www.embulk.org/plugins/#file-decoder>`_
+  * `File decoder plugins <http://plugins.embulk.org/#file-decoder>`_
 
-  * `File formatter plugins <http://www.embulk.org/plugins/#file-formatter>`_
+  * `File formatter plugins <http://plugins.embulk.org/#file-formatter>`_
 
-  * `Filter plugins <http://www.embulk.org/plugins/#filter>`_
+  * `Filter plugins <http://plugins.embulk.org/#filter>`_
 
-  * `File encoder plugins <http://www.embulk.org/plugins/#file-encoder>`_
+  * `File encoder plugins <http://plugins.embulk.org/#file-encoder>`_
 
-  * `Executor plugins <http://www.embulk.org/plugins/#executor>`_
+  * `Executor plugins <http://plugins.embulk.org/#executor>`_
 
 .. toctree::
    :maxdepth: 3
@@ -93,6 +93,8 @@ For developers
 * `JavaDoc <javadoc/index.html>`_
 
 * `RDoc <rdoc/_index.html>`_
+
+* `Embulk Input Plugin Development Guide <https://docs.google.com/document/d/1oKpvgstKlgmgUUja8hYqTqWxtwsgIbONoUaEj8lO0FE/edit?usp=sharing>`_
 
 * `Other resources for developers <developers/index.html>`_
 
