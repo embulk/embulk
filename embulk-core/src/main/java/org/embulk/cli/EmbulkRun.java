@@ -15,7 +15,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSetup;
 import org.embulk.cli.parse.EmbulkCommandLineHelpRequired;
@@ -89,9 +88,6 @@ public class EmbulkRun {
                     parser.printHelp(System.err);
                     return 1;
                 }
-                CliLogbackConfigurator.configure(
-                        Optional.ofNullable(commandLine.getLogPath()),
-                        Optional.ofNullable(commandLine.getLogLevel()));
                 return runSubcommand(subcommand, subcommandArguments, commandLine, jrubyOptions);
         }
     }
@@ -614,7 +610,7 @@ public class EmbulkRun {
                 "log", "PATH", "Output log messages to a file (default: -)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setLogPath(argument);
+                        commandLineBuilder.setSystemConfig("log_path", argument);
                     }
                 }));
         // op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do
@@ -625,7 +621,7 @@ public class EmbulkRun {
                 "l", "log-level", "LEVEL", "Log level (error, warn, info, debug or trace)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setLogLevel(argument);
+                        commandLineBuilder.setSystemConfig("log_level", argument);
                     }
                 }));
         // op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|

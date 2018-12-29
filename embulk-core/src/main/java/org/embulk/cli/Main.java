@@ -2,6 +2,7 @@ package org.embulk.cli;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import org.embulk.EmbulkVersion;
 
 public class Main {
@@ -18,12 +19,52 @@ public class Main {
         }
 
         final ArrayList<String> embulkArgs = new ArrayList<String>();
+
+        // Process only logging-related options early so that Logback can be configured at the earliest.
+        Expect expect = Expect.NONE;
+        String logPath = null;
+        String logLevel = null;
         for (; i < args.length; ++i) {
+            switch (expect) {
+                case NONE:
+                    if (args[i].startsWith("-l")) {
+                        if (args[i].equals("-l")) {
+                            expect = Expect.LOG_LEVEL;
+                        } else {
+                            logLevel = args[i].substring(2);
+                            expect = Expect.NONE;
+                        }
+                    } else if (args[i].equals("--log-level")) {
+                        expect = Expect.LOG_LEVEL;
+                    } else if (args[i].equals("--log")) {
+                        expect = Expect.LOG_PATH;
+                    }
+                    break;
+                case LOG_LEVEL:
+                    logLevel = args[i];
+                    expect = Expect.NONE;
+                    break;
+                case LOG_PATH:
+                    logPath = args[i];
+                    expect = Expect.NONE;
+                    break;
+                default:
+                    break;
+            }
             embulkArgs.add(args[i]);
         }
+
+        CliLogbackConfigurator.configure(Optional.ofNullable(logPath), Optional.ofNullable(logLevel));
 
         final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
         final int error = run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
         System.exit(error);
+    }
+
+    private enum Expect {
+        NONE,
+        LOG_LEVEL,
+        LOG_PATH,
+        ;
     }
 }
