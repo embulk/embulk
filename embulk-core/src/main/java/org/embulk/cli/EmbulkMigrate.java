@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.embulk.deps.maven.ComparableVersion;
 import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkMigrate {
@@ -43,15 +43,15 @@ public class EmbulkMigrate {
         final ComparableVersion fromVersion;
         if (!matchedEmbulkCoreInGradle.isEmpty()) {
             language = Language.JAVA;
-            fromVersion = new ComparableVersion(matchedEmbulkCoreInGradle.get(0).group(1).replace("+", "0"));
+            fromVersion = ComparableVersion.of(matchedEmbulkCoreInGradle.get(0).group(1).replace("+", "0"));
             System.out.printf("Detected Java plugin for Embulk %s...\n", fromVersion.toString());
         } else if (!matchedNewEmbulkInGemspec.isEmpty()) {
             language = Language.RUBY;
-            fromVersion = new ComparableVersion(matchedNewEmbulkInGemspec.get(0).group(1));
+            fromVersion = ComparableVersion.of(matchedNewEmbulkInGemspec.get(0).group(1));
             System.out.printf("Detected Ruby plugin for Embulk %s...\n", fromVersion.toString());
         } else if (!matchedOldEmbulkInGemspec.isEmpty()) {
             language = Language.RUBY;
-            fromVersion = new ComparableVersion("0.1.0");
+            fromVersion = ComparableVersion.of("0.1.0");
             System.out.println("Detected Ruby plugin for unknown Embulk version...");
         } else {
             throw new RuntimeException("Failed to detect plugin language and dependency version");
@@ -78,7 +78,7 @@ public class EmbulkMigrate {
     private void migrateJavaPlugin(final Migrator migrator,
                                    final ComparableVersion fromVersion,
                                    final String thisEmbulkVersion) throws IOException {
-        if (fromVersion.compareTo(new ComparableVersion("0.7.0")) < 0) {
+        if (fromVersion.compareTo(ComparableVersion.of("0.7.0")) < 0) {
             // rename CommitReport to TaskReport
             migrator.replaceRecursive("*.java", Pattern.compile("(CommitReport)"), 1, "TaskReport");
             migrator.replaceRecursive("*.java", Pattern.compile("(commitReport)"), 1, "taskReport");
@@ -195,7 +195,7 @@ public class EmbulkMigrate {
         }
 
         // Update |embulk| version depending.
-        if (fromVersion.compareTo(new ComparableVersion("0.1.0")) <= 0) {
+        if (fromVersion.compareTo(ComparableVersion.of("0.1.0")) <= 0) {
             // Add add_development_dependency.
             migrator.insertLineRecursive("*.gemspec", DEVELOPMENT_DEPENDENCY_IN_GEMSPEC, new StringUpsert() {
                     @Override

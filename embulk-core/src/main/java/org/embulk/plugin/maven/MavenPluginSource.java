@@ -2,9 +2,12 @@ package org.embulk.plugin.maven;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.embulk.config.ConfigSource;
+import org.embulk.deps.maven.MavenArtifactFinder;
+import org.embulk.deps.maven.MavenPluginPaths;
 import org.embulk.exec.ForSystemConfig;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
@@ -72,7 +75,7 @@ public class MavenPluginSource implements PluginSource {
         final MavenArtifactFinder mavenArtifactFinder;
         try {
             mavenArtifactFinder = MavenArtifactFinder.create(getLocalMavenRepository());
-        } catch (MavenRepositoryNotFoundException ex) {
+        } catch (final FileNotFoundException ex) {
             throw new PluginSourceNotMatchException(ex);
         }
 
@@ -83,7 +86,7 @@ public class MavenPluginSource implements PluginSource {
                     "embulk-" + category + "-" + mavenPluginType.getName(),
                     mavenPluginType.getClassifier(),
                     mavenPluginType.getVersion());
-        } catch (MavenArtifactNotFoundException ex) {
+        } catch (final FileNotFoundException ex) {
             throw new PluginSourceNotMatchException(ex);
         }
 

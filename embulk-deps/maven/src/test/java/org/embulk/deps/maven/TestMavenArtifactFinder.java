@@ -1,4 +1,4 @@
-package org.embulk.plugin.maven;
+package org.embulk.deps.maven;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ public class TestMavenArtifactFinder {
     @Test
     public void testArtifactWithDependencies() throws Exception {
         final Path basePath = getMavenPath();
-        final MavenArtifactFinder finder = MavenArtifactFinder.create(basePath);
+        final MavenArtifactFinderImpl finder = new MavenArtifactFinderImpl(basePath);
         final MavenPluginPaths paths = finder.findMavenPluginJarsWithDirectDependencies(
                 "org.embulk.example", "embulk-example-maven-artifact", null, "0.1.2");
         assertEquals(buildExpectedPath(basePath, GROUP_DIRECTORY, "embulk-example-maven-artifact", "0.1.2"),
