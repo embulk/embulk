@@ -55,7 +55,6 @@ dependencies {
     compile 'io.airlift:slice:0.9'
     compile 'joda-time:joda-time:2.9.2'
     compile 'io.netty:netty-buffer:4.0.44.Final'
-    compile 'org.fusesource.jansi:jansi:1.11'
     compile 'org.msgpack:msgpack-core:0.8.11'
 
     // For embulk/guess/charset.rb. See also embulk.gemspec
