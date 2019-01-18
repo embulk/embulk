@@ -7,8 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.inject.Binder;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Stage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,9 +27,6 @@ import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
-import org.embulk.guice.Bootstrap;
-import org.embulk.guice.LifeCycleInjector;
-import org.embulk.guice.LifeCycleListener;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecSession;
 
@@ -42,10 +42,13 @@ public class EmbulkEmbed {
 
         private final List<Function<? super List<Module>, ? extends Iterable<? extends Module>>> moduleOverrides;
 
+        private boolean started;
+
         public Bootstrap() {
             this.systemConfigLoader = newSystemConfigLoader();
             this.systemConfig = systemConfigLoader.newConfigSource();
             this.moduleOverrides = new ArrayList<>();
+            this.started = false;
         }
 
         public ConfigLoader getSystemConfigLoader() {
@@ -70,49 +73,61 @@ public class EmbulkEmbed {
                 });
         }
 
+        /**
+         * Add a module overrider function.
+         *
+         * <p>Caution: this method is not working as intended. It is kept just for binary compatibility.
+         *
+         * @param function  the module overrider function
+         * @return this
+         */
+        @Deprecated
         public Bootstrap overrideModules(Function<? super List<Module>, ? extends Iterable<? extends Module>> function) {
             moduleOverrides.add(function);
             return this;
         }
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/932
         public EmbulkEmbed initialize() {
-            return build(true);
-        }
-
-        public EmbulkEmbed initializeCloseable() {
-            return build(false);
-        }
-
-        private EmbulkEmbed build(boolean destroyOnShutdownHook) {
             // TODO: Replace use of EmbulkService.
-            @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/932
-            org.embulk.guice.Bootstrap bootstrap = new org.embulk.guice.Bootstrap()
-                    .requireExplicitBindings(false)
-                    .addLifeCycleListeners(new WarningInUseOfLifeCycleListener())
-                    .addModules(EmbulkService.standardModuleList(systemConfig));
-
+            List<Module> userModules = ImmutableList.copyOf(EmbulkService.standardModuleList(systemConfig));
             for (Function<? super List<Module>, ? extends Iterable<? extends Module>> override : moduleOverrides) {
-                bootstrap = bootstrap.overrideModules(override);
+                userModules = ImmutableList.copyOf(override.apply(userModules));
             }
 
-            LifeCycleInjector injector;
-            if (destroyOnShutdownHook) {
-                injector = bootstrap.initialize();
-            } else {
-                injector = bootstrap.initializeCloseable();
+            if (started) {
+                throw new IllegalStateException("System already initialized");
             }
+            started = true;
 
+            ImmutableList.Builder<Module> builder = ImmutableList.builder();
+
+            builder.addAll(userModules);
+
+            builder.add(new Module() {
+                    @Override
+                    public void configure(Binder binder) {
+                        binder.disableCircularProxies();
+                    }
+                });
+
+            final Injector injector = Guice.createInjector(Stage.PRODUCTION, builder.build());
             return new EmbulkEmbed(systemConfig, injector);
+        }
+
+        @Deprecated
+        public EmbulkEmbed initializeCloseable() {
+            return this.initialize();
         }
     }
 
-    private final LifeCycleInjector injector;
+    private final Injector injector;
     private final org.slf4j.Logger logger;
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
     private final PreviewExecutor previewExecutor;
 
-    EmbulkEmbed(ConfigSource systemConfig, LifeCycleInjector injector) {
+    private EmbulkEmbed(ConfigSource systemConfig, Injector injector) {
         this.injector = injector;
         this.logger = injector.getInstance(org.slf4j.ILoggerFactory.class).getLogger(EmbulkEmbed.class.getName());
         this.bulkLoader = injector.getInstance(BulkLoader.class);
@@ -274,60 +289,9 @@ public class EmbulkEmbed {
         }
     }
 
-    private static class WarningInUseOfLifeCycleListener implements LifeCycleListener {
-        @Override
-        public void startingLifeCycle() {
-            new RuntimeException(
-                    "LifeCycleManager is in use. It is planned to be removed. "
-                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
-                    .printStackTrace();
-        }
-
-        @Override
-        public void startedLifeCycle() {
-            new RuntimeException(
-                    "LifeCycleManager is in use. It is planned to be removed. "
-                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
-                    .printStackTrace();
-        }
-
-        @Override
-        public void stoppingLifeCycle() {}
-
-        @Override
-        public void stoppedLifeCycle() {}
-
-        @Override
-        public void startingInstance(final Object object) {
-            new RuntimeException(
-                    "LifeCycleManager is in use for " + object.toString() + ". It is planned to be removed. "
-                    + "Please leave a report in https://github.com/embulk/embulk/issues/1047 if you see this message.")
-                    .printStackTrace();
-        }
-
-        @Override
-        public void postConstructingInstance(final Object object, final java.lang.reflect.Method postConstruct) {}
-
-        @Override
-        public void stoppingInstance(final Object object) {}
-
-        @Override
-        public void preDestroyingInstance(final Object obj, final java.lang.reflect.Method preDestroy) {}
-    }
-
     public void destroy() {
-        // TODO: Throw this exception in reality. It may be UnsupportedOperationException finally.
-        new RuntimeException(
+        throw new UnsupportedOperationException(
                 "EmbulkEmbed#destroy() is planned to be unsupported as JSR-250 lifecycle annotations are unsupported. "
-                + "See https://github.com/embulk/embulk/issues/1047 for the details.")
-                .printStackTrace();
-        try {
-            injector.destroy();
-        } catch (Exception ex) {
-            if (ex instanceof RuntimeException) {
-                throw (RuntimeException) ex;
-            }
-            throw new RuntimeException(ex);
-        }
+                + "See https://github.com/embulk/embulk/issues/1047 for the details.");
     }
 }
