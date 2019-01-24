@@ -1,8 +1,1 @@
-Release 0.1.0
-==================================
-
-The first release.
-
-Release Date
----------------
-2015-01-26
+Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.1.0>`

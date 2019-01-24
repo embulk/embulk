@@ -1,11 +1,1 @@
-Release 0.3.1
-==================================
-
-CLI
-------------------
-
-* Added ``-C, --classpath option`` to add java classpath
-
-Release Date
-------------------
-2015-02-04
+Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.3.1>`

@@ -78,11 +78,6 @@ Documents
 
    built-in
 
-.. toctree::
-   :maxdepth: 2
-
-   release
-
    logo
 
 For developers
@@ -102,3 +97,8 @@ For developers
    :maxdepth: 3
 
    customization
+
+Change Logs
+------------
+
+Change Logs / Release Notes are in Git annotated tags. Find them from `GitHub Releases <https://github.com/embulk/embulk/releases>`.

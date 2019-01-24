@@ -1,12 +1,1 @@
-Release 0.8.38
-==================================
-
-General Changes
-----------------
-
-* Remove any global JRuby instance from the bootstrap [#773]
-
-
-Release Date
-------------------
-2017-11-22
+Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.8.38>`
