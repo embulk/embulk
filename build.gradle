@@ -278,31 +278,13 @@ bintrayUpload.dependsOn(['executableJar'])
 
 task releaseCheck {
     doLast {
-        if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains("${project.version}")) {
-            throw new GradleException("Release note for ${project.version} doesn't exist")
-        }
-        if (!file("embulk-docs/src/release.rst").getText().contains("release-${project.version}")) {
-            throw new GradleException("embulk-docs/src/release.rst doesn't include release-${project.version}")
-        }
-        String date = new Date().format("yyyy-MM-dd")
-        if (!file("embulk-docs/src/release/release-${project.version}.rst").getText().contains(date)) {
-            throw new GradleException("embulk-docs/src/release/release-${project.version}.rst doesn't include today's release date")
-        }
-        // TODO check git-ls-files includes release-<version>.rst file
+        // TODO: Check HEAD is tagged with an annotation.
+        println "Don't forget to run 'git tag -a v${project.version}' to tag with an annotation."
         println "Ready. Run 'release' task."
     }
 }
 
 task release(dependsOn: ["executableJar", "releaseCheck", "bintrayUpload"]) {
-    doLast {
-        println """
-Manual operations:
-
-  git commit -am v${project.version}
-  git tag v${project.version}
-
-"""
-    }
 }
 bintrayUpload.mustRunAfter('releaseCheck')
 

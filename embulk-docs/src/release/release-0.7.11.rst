@@ -1,12 +1,1 @@
-Release 0.7.11
-==================================
-
-General Changes
-------------------
-
-* Added a workaround for https://github.com/jruby/jruby/issues/3652
-
-
-Release Date
-------------------
-2016-02-08
+Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.7.11>`
