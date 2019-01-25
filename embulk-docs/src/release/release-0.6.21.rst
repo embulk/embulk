@@ -1,1 +1,1 @@
-Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.6.21>`
+Find the release note at: `GitHub Releases <https://github.com/embulk/embulk/releases/v0.6.21>`_
