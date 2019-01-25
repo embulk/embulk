@@ -32,6 +32,7 @@ import org.embulk.spi.util.FileInputInputStream;
 import org.msgpack.core.Preconditions;
 import org.msgpack.value.Value;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JsonParserPlugin implements ParserPlugin {
 
@@ -59,12 +60,6 @@ public class JsonParserPlugin implements ParserPlugin {
         @Config("invalid_string_escapes")
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
-    }
-
-    private final Logger log;
-
-    public JsonParserPlugin() {
-        this.log = Exec.getLogger(JsonParserPlugin.class);
     }
 
     @Override
@@ -107,7 +102,7 @@ public class JsonParserPlugin implements ParserPlugin {
                             if (stopOnInvalidRecord) {
                                 throw new DataException(String.format("Invalid record in %s: %s", fileName, value.toJson()), e);
                             }
-                            log.warn(String.format("Skipped record in %s (%s): %s", fileName, e.getMessage(), value.toJson()));
+                            logger.warn(String.format("Skipped record in %s (%s): %s", fileName, e.getMessage(), value.toJson()));
                         }
                     }
                 } catch (IOException | JsonParseException e) {
@@ -213,4 +208,6 @@ public class JsonParserPlugin implements ParserPlugin {
             super(message);
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(JsonParserPlugin.class);
 }

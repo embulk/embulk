@@ -15,8 +15,6 @@ import org.embulk.spi.Exec;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests LocalFileInputPlugin.
@@ -234,7 +232,7 @@ public class TestLocalFileInputPlugin {
     }
 
     private static List<String> listFiles(final LocalFileInputPlugin.PluginTask task) {
-        return LocalFileInputPlugin.listFilesForTesting(task, logger);
+        return LocalFileInputPlugin.listFilesForTesting(task);
     }
 
     private LocalFileInputPlugin.PluginTask buildRawTask(
@@ -287,6 +285,4 @@ public class TestLocalFileInputPlugin {
         pathPrefixBuilder.append(subPath);
         return pathPrefixBuilder.toString();
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(TestLocalFileInputPlugin.class);
 }

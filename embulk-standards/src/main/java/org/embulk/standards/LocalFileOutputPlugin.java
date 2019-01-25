@@ -21,6 +21,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalFileOutputPlugin implements FileOutputPlugin {
     public interface PluginTask extends Task {
@@ -34,8 +35,6 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
         @ConfigDefault("\"%03d.%02d.\"")
         String getSequenceFormat();
     }
-
-    private final Logger log = Exec.getLogger(getClass());
 
     @Override
     public ConfigDiff transaction(ConfigSource config, int taskCount,
@@ -81,7 +80,7 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
             public void nextFile() {
                 closeFile();
                 String path = pathPrefix + String.format(sequenceFormat, taskIndex, fileIndex) + pathSuffix;
-                log.info("Writing local file '{}'", path);
+                logger.info("Writing local file '{}'", path);
                 fileNames.add(path);
                 try {
                     output = new FileOutputStream(new File(path));
@@ -130,4 +129,6 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
             }
         };
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(LocalFileOutputPlugin.class);
 }

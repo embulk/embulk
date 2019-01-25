@@ -35,6 +35,7 @@ import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalFileInputPlugin implements FileInputPlugin {
     public interface PluginTask extends Task {
@@ -62,8 +63,8 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         final PluginTask task = config.loadConfig(PluginTask.class);
 
         // list files recursively
-        final List<String> files = listFiles(task, this.instanceLogger);
-        this.instanceLogger.info("Loading files {}", files);
+        final List<String> files = listFiles(task);
+        logger.info("Loading files {}", files);
         task.setFiles(files);
 
         // number of processors is same with number of files
@@ -127,11 +128,11 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         };
     }
 
-    static List<String> listFilesForTesting(final PluginTask task, final Logger logger) {
-        return listFiles(task, logger);
+    static List<String> listFilesForTesting(final PluginTask task) {
+        return listFiles(task);
     }
 
-    private static List<String> listFiles(final PluginTask task, final Logger logger) {
+    private static List<String> listFiles(final PluginTask task) {
         // This |pathPrefixResolved| can still be a relative path from the working directory.
         // The path should not be normalized by Path#normalize to eliminate redundant name elements like "." and "..".
         final Path pathPrefixResolved = WORKING_DIRECTORY.resolve(Paths.get(task.getPathPrefix()));
@@ -402,5 +403,5 @@ public class LocalFileInputPlugin implements FileInputPlugin {
     private static final Path DOT = Paths.get(".");
     private static final Path DOT_DOT = Paths.get("..");
 
-    private final Logger instanceLogger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(LocalFileInputPlugin.class);
 }

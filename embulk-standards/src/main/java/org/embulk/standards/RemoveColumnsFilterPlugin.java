@@ -17,7 +17,6 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
-import org.embulk.spi.Exec;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Page;
 import org.embulk.spi.PageBuilder;
@@ -25,7 +24,6 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfigException;
-import org.slf4j.Logger;
 
 public class RemoveColumnsFilterPlugin implements FilterPlugin {
     public interface PluginTask extends Task {
@@ -50,12 +48,9 @@ public class RemoveColumnsFilterPlugin implements FilterPlugin {
         public int[] getIndexMapping();
     }
 
-    private final Logger logger;
-
+    // TODO: Remove this?
     @Inject
-    public RemoveColumnsFilterPlugin() {
-        logger = Exec.getLogger(getClass());
-    }
+    public RemoveColumnsFilterPlugin() {}
 
     @Override
     public void transaction(ConfigSource config, Schema inputSchema, FilterPlugin.Control control) {

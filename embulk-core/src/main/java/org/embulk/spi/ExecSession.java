@@ -21,7 +21,10 @@ import org.slf4j.Logger;
 
 public class ExecSession {
     private final Injector injector;
+
+    // TODO: Remove it.
     private final ILoggerFactory loggerFactory;
+
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
@@ -53,7 +56,9 @@ public class ExecSession {
             return this;
         }
 
+        @Deprecated  // @see docs/design/slf4j.md
         public Builder setLoggerFactory(ILoggerFactory loggerFactory) {
+            // TODO: Make it ineffective.
             this.loggerFactory = loggerFactory;
             return this;
         }
@@ -128,11 +133,15 @@ public class ExecSession {
         return transactionTime;
     }
 
+    @Deprecated  // @see docs/design/slf4j.md
     public Logger getLogger(String name) {
+        // TODO: Make it always return org.slf4j.LoggerFactory.getLogger(...).
         return loggerFactory.getLogger(name);
     }
 
+    @Deprecated  // @see docs/design/slf4j.md
     public Logger getLogger(Class<?> name) {
+        // TODO: Make it always return org.slf4j.LoggerFactory.getLogger(...).
         return loggerFactory.getLogger(name.getName());
     }
 

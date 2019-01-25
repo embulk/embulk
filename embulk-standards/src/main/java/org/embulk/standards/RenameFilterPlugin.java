@@ -18,11 +18,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
-import org.embulk.spi.Exec;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * |RenameFilterPlugin| renames column names.
@@ -452,5 +452,5 @@ public class RenameFilterPlugin implements FilterPlugin {
     // It should be practically acceptable to assume any output accepts column names with 8 characters at least...
     private static final int minimumMaxLengthInUniqueNumberSuffix = 8;
 
-    private final Logger logger = Exec.getLogger(getClass());
+    private static final Logger logger = LoggerFactory.getLogger(RenameFilterPlugin.class);
 }
