@@ -209,11 +209,13 @@ Modify `version` in `build.gradle` at a detached commit to bump Embulk version u
 
 ```
 git checkout --detach master
-(Edit build.gradle)
-git commit -a
+(Remove "-SNAPSHOT" in "version" in build.gradle.)
+git add build.gradle
+git commit -m "Release vX.Y.Z"
+git tag -a vX.Y.Z
+(Write the release note for vX.Y.Z in the tag annotation.)
 ./gradlew clean && ./gradlew release
-git tag <VERSION>
-git push -u origin <VERSION>
+git push -u origin vX.Y.Z
 ```
 
 See also:
