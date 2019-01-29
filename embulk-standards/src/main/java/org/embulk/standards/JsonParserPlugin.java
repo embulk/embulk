@@ -1,17 +1,14 @@
 package org.embulk.standards;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharSource;
-import com.google.common.io.CharStreams;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigSource;
@@ -130,76 +127,74 @@ public class JsonParserPlugin implements ParserPlugin {
         switch (policy) {
             case SKIP:
             case UNESCAPE:
-                Iterable<CharSource> lines = Lists.transform(CharStreams.readLines(new BufferedReader(new InputStreamReader(in))),
-                        invalidEscapeStringFunction(policy));
-                return new JsonParser().open(new ByteArrayInputStream(CharStreams.toString(CharSource.concat(lines).openStream()).getBytes(StandardCharsets.UTF_8)));
+                byte[] lines = new BufferedReader(new InputStreamReader(in))
+                        .lines()
+                        .map(invalidEscapeStringFunction(policy))
+                        .collect(Collectors.joining())
+                        .getBytes(StandardCharsets.UTF_8);
+                return new JsonParser().open(new ByteArrayInputStream(lines));
             case PASSTHROUGH:
             default:
                 return new JsonParser().open(in);
         }
     }
 
-    Function<String, CharSource> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
-        return new Function<String, CharSource>() {
-            final Pattern digitsPattern = Pattern.compile("\\p{XDigit}+");
-
-            @Override
-            public CharSource apply(@Nullable String input) {
-                Preconditions.checkNotNull(input);
-                if (policy == InvalidEscapeStringPolicy.PASSTHROUGH) {
-                    return CharSource.wrap(input);
-                }
-                StringBuilder builder = new StringBuilder();
-                char[] charArray = input.toCharArray();
-                for (int characterIndex = 0; characterIndex < charArray.length; characterIndex++) {
-                    char c = charArray[characterIndex];
-                    if (c == '\\') {
-                        if (charArray.length > characterIndex + 1) {
-                            char next = charArray[characterIndex + 1];
-                            switch (next) {
-                                case 'b':
-                                case 'f':
-                                case 'n':
-                                case 'r':
-                                case 't':
-                                case '"':
-                                case '\\':
-                                case '/':
-                                    builder.append(c);
-                                    break;
-                                case 'u': // hexstring such as \u0001
-                                    if (charArray.length > characterIndex + 5) {
-                                        char[] hexChars = {charArray[characterIndex + 2], charArray[characterIndex + 3], charArray[characterIndex + 4],
-                                                           charArray[characterIndex + 5]};
-                                        String hexString = new String(hexChars);
-                                        if (digitsPattern.matcher(hexString).matches()) {
-                                            builder.append(c);
-                                        } else {
-                                            if (policy == InvalidEscapeStringPolicy.SKIP) {
-                                                // remove \\u
-                                                characterIndex++;
-                                            }
+    static Function<String, String> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
+        return input -> {
+            Preconditions.checkNotNull(input);
+            if (policy == InvalidEscapeStringPolicy.PASSTHROUGH) {
+                return input;
+            }
+            StringBuilder builder = new StringBuilder();
+            char[] charArray = input.toCharArray();
+            for (int characterIndex = 0; characterIndex < charArray.length; characterIndex++) {
+                char c = charArray[characterIndex];
+                if (c == '\\') {
+                    if (charArray.length > characterIndex + 1) {
+                        char next = charArray[characterIndex + 1];
+                        switch (next) {
+                            case 'b':
+                            case 'f':
+                            case 'n':
+                            case 'r':
+                            case 't':
+                            case '"':
+                            case '\\':
+                            case '/':
+                                builder.append(c);
+                                break;
+                            case 'u': // hexstring such as \u0001
+                                if (charArray.length > characterIndex + 5) {
+                                    char[] hexChars = {charArray[characterIndex + 2], charArray[characterIndex + 3], charArray[characterIndex + 4],
+                                                       charArray[characterIndex + 5]};
+                                    String hexString = new String(hexChars);
+                                    if (DIGITS_PATTERN.matcher(hexString).matches()) {
+                                        builder.append(c);
+                                    } else {
+                                        if (policy == InvalidEscapeStringPolicy.SKIP) {
+                                            // remove \\u
+                                            characterIndex++;
                                         }
                                     }
-                                    break;
-                                default:
-                                    switch (policy) {
-                                        case SKIP:
-                                            characterIndex++;
-                                            break;
-                                        case UNESCAPE:
-                                            break;
-                                        default:  // Do nothing, and just pass through.
-                                    }
-                                    break;
-                            }
+                                }
+                                break;
+                            default:
+                                switch (policy) {
+                                    case SKIP:
+                                        characterIndex++;
+                                        break;
+                                    case UNESCAPE:
+                                        break;
+                                    default:  // Do nothing, and just pass through.
+                                }
+                                break;
                         }
-                    } else {
-                        builder.append(c);
                     }
+                } else {
+                    builder.append(c);
                 }
-                return CharSource.wrap(builder.toString());
             }
+            return builder.toString();
         };
     }
 
@@ -210,4 +205,6 @@ public class JsonParserPlugin implements ParserPlugin {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(JsonParserPlugin.class);
+
+    private static final Pattern DIGITS_PATTERN = Pattern.compile("\\p{XDigit}+");
 }
