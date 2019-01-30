@@ -16,6 +16,7 @@ buildscript {
         // See: https://github.com/embulk/embulk/issues/954
         classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.0.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+        classpath 'org.ajoberstar.grgit:grgit-gradle:3.0.0'
     }
 }
 
@@ -38,6 +39,7 @@ allprojects {  // Applies all projects including the root project as well.
 apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'org.ajoberstar.grgit'
 
 version = '0.9.15-SNAPSHOT'
 
@@ -281,9 +283,25 @@ bintray {  // Defines "bintrayUpload" properties for the root project's executab
 bintrayUpload.dependsOn(['executableJar'])
 
 task releaseCheck {
+    doFirst {
+        if (rootProject.version.endsWith("-SNAPSHOT")) {
+            throw new GradleException("Not for release. The version in build.gradle is SNAPSHOT: ${rootProject.version}")
+        }
+        def grgit = org.ajoberstar.grgit.Grgit.open(dir: "${rootProject.projectDir}")
+        if (!grgit.status().clean) {
+            throw new GradleException("Not for release. The working tree is dirty.")
+        }
+        def described = grgit.describe(commit: "HEAD").toString().trim()
+        if (described != "v${rootProject.version}") {
+            throw new GradleException("Not for release. git-describe returned a name different from the version in build.gradle: ${described} v.s. v${rootProject.version}")
+        }
+        if (described.contains("-")) {
+            // HEAD may not be tagged with annotation properly.
+            throw new GradleException("Not for release. git-describe returned a name with a hyphen: ${described}")
+        }
+        // TODO: Revisit if we would check the format of tag annotation.
+    }
     doLast {
-        // TODO: Check HEAD is tagged with an annotation.
-        println "Don't forget to run 'git tag -a v${project.version}' to tag with an annotation."
         println "Ready. Run 'release' task."
     }
 }
