@@ -60,8 +60,7 @@ public class JsonParser {
         }
 
         private static com.fasterxml.jackson.core.JsonParser createParser(
-                JsonFactory factory, InputStream in, String pointer
-        ) throws IOException {
+                JsonFactory factory, InputStream in, String pointer) throws IOException {
             try {
                 final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(in);
                 if (pointer == null || pointer.isEmpty()) {
@@ -95,8 +94,7 @@ public class JsonParser {
         }
 
         private static com.fasterxml.jackson.core.JsonParser createParser(
-                JsonFactory factory, String json, String pointer
-        ) {
+                JsonFactory factory, String json, String pointer) {
             try {
                 final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(json);
                 if (pointer == null || pointer.isEmpty()) {
