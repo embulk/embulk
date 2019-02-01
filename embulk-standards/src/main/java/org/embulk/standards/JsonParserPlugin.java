@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -17,6 +19,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
+import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
@@ -24,12 +27,18 @@ import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.json.JsonParser;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.Types;
 import org.embulk.spi.util.FileInputInputStream;
+import org.embulk.spi.util.Timestamps;
 import org.msgpack.core.Preconditions;
+import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
+import org.msgpack.value.ValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +64,7 @@ public class JsonParserPlugin implements ParserPlugin {
         }
     }
 
-    public interface PluginTask extends Task {
+    public interface PluginTask extends Task, TimestampParser.Task {
         @Config("stop_on_invalid_record")
         @ConfigDefault("false")
         boolean getStopOnInvalidRecord();
@@ -64,21 +73,29 @@ public class JsonParserPlugin implements ParserPlugin {
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
 
-        // TODO: rename it's determined
+        // TODO: Rename following experimental configs after they'er determined
         @Config("__experimental__json_pointer_to_root")
         @ConfigDefault("null")
         Optional<String> getJsonPointerToRoot();
+
+        @Config("__experimental__columns")
+        @ConfigDefault("null")
+        Optional<SchemaConfig> getSchemaConfig();
     }
 
     @Override
     public void transaction(ConfigSource configSource, Control control) {
         PluginTask task = configSource.loadConfig(PluginTask.class);
-        control.run(task.dump(), newSchema());
+        control.run(task.dump(), newSchema(task));
     }
 
     @VisibleForTesting
-    Schema newSchema() {
-        return Schema.builder().add("record", Types.JSON).build(); // generate a schema
+    Schema newSchema(PluginTask task) {
+        if (isUseCustomSchema(task)) {
+            return task.getSchemaConfig().get().toSchema();
+        } else {
+            return Schema.builder().add("record", Types.JSON).build(); // generate a schema
+        }
     }
 
     @Override
@@ -86,7 +103,10 @@ public class JsonParserPlugin implements ParserPlugin {
         PluginTask task = taskSource.loadTask(PluginTask.class);
 
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
-        final Column column = schema.getColumn(0); // record column
+        final Map<Column, TimestampParser> timestampParsers = new HashMap<>();
+        if (isUseCustomSchema(task)) {
+            timestampParsers.putAll(Timestamps.newTimestampColumnParsersAsMap(task, task.getSchemaConfig().get()));
+        }
 
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
                 FileInputInputStream in = new FileInputInputStream(input)) {
@@ -103,7 +123,11 @@ public class JsonParserPlugin implements ParserPlugin {
                                         String.format("A Json record must not represent map value but it's %s", value.getValueType().name()));
                             }
 
-                            pageBuilder.setJson(column, value);
+                            if (isUseCustomSchema(task)) {
+                                setValueWithCustomSchema(pageBuilder, schema, timestampParsers, value.asMapValue());
+                            } else {
+                                setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
+                            }
                             pageBuilder.addRecord();
                             evenOneJsonParsed = true;
                         } catch (JsonRecordValidateException e) {
@@ -125,6 +149,78 @@ public class JsonParserPlugin implements ParserPlugin {
             }
 
             pageBuilder.finish();
+        }
+    }
+
+    private static boolean isUseCustomSchema(PluginTask task) {
+        return task.getSchemaConfig().isPresent();
+    }
+
+    private static void setValueWithSingleJsonColumn(PageBuilder pageBuilder, Schema schema, MapValue value) {
+        final Column column = schema.getColumn(0); // record column
+        pageBuilder.setJson(column, value);
+    }
+
+    private static void setValueWithCustomSchema(
+            PageBuilder pageBuilder, Schema schema, Map<Column, TimestampParser> timestampParsers, MapValue value) {
+        final Map<Value, Value> map = value.map();
+        for (Column column : schema.getColumns()) {
+            final Value columnValue = map.get(ValueFactory.newString(column.getName()));
+            if (columnValue == null || columnValue.isNilValue()) {
+                pageBuilder.setNull(column);
+                continue;
+            }
+
+            column.visit(new ColumnVisitor() {
+                @Override
+                public void booleanColumn(Column column) {
+                    final boolean booleanValue;
+                    if (columnValue.isBooleanValue()) {
+                        booleanValue = columnValue.asBooleanValue().getBoolean();
+                    } else {
+                        booleanValue = Boolean.parseBoolean(columnValue.toString());
+                    }
+                    pageBuilder.setBoolean(column, booleanValue);
+                }
+
+                @Override
+                public void longColumn(Column column) {
+                    final long longValue;
+                    if (columnValue.isIntegerValue()) {
+                        longValue = columnValue.asIntegerValue().toLong();
+                    } else {
+                        longValue = Long.parseLong(columnValue.toString());
+                    }
+                    pageBuilder.setLong(column, longValue);
+                }
+
+                @Override
+                public void doubleColumn(Column column) {
+                    final double doubleValue;
+                    if (columnValue.isFloatValue()) {
+                        doubleValue = columnValue.asFloatValue().toDouble();
+                    } else {
+                        doubleValue = Double.parseDouble(columnValue.toString());
+                    }
+                    pageBuilder.setDouble(column, doubleValue);
+                }
+
+                @Override
+                public void stringColumn(Column column) {
+                    pageBuilder.setString(column, columnValue.toString());
+                }
+
+                @Override
+                public void timestampColumn(Column column) {
+                    final Timestamp timestampValue = timestampParsers.get(column).parse(columnValue.toString());
+                    pageBuilder.setTimestamp(column, timestampValue);
+                }
+
+                @Override
+                public void jsonColumn(Column column) {
+                    pageBuilder.setJson(column, columnValue);
+                }
+            });
         }
     }
 
