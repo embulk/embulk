@@ -35,6 +35,10 @@ import org.slf4j.LoggerFactory;
 
 public class JsonParserPlugin implements ParserPlugin {
 
+    public JsonParserPlugin() {
+        this.jsonParser = new JsonParser();
+    }
+
     public enum InvalidEscapeStringPolicy {
         PASSTHROUGH("PASSTHROUGH"),
         SKIP("SKIP"),
@@ -147,9 +151,9 @@ public class JsonParserPlugin implements ParserPlugin {
         }
 
         if (task.getJsonPointerToRoot().isPresent()) {
-            return JSON_PARSER.openWithOffsetInJsonPointer(inputStream, task.getJsonPointerToRoot().get());
+            return jsonParser.openWithOffsetInJsonPointer(inputStream, task.getJsonPointerToRoot().get());
         } else {
-            return JSON_PARSER.open(inputStream);
+            return jsonParser.open(inputStream);
         }
     }
 
@@ -222,5 +226,5 @@ public class JsonParserPlugin implements ParserPlugin {
 
     private static final Pattern DIGITS_PATTERN = Pattern.compile("\\p{XDigit}+");
 
-    private static final JsonParser JSON_PARSER = new JsonParser();
+    private final JsonParser jsonParser;
 }
