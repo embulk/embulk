@@ -284,7 +284,7 @@ public class TestJsonParserPlugin {
 
     @Test
     public void useJsonPointerToRoot() throws Exception {
-        ConfigSource config = this.config.deepCopy().set("json_pointer_to_root", "/_c0");
+        ConfigSource config = this.config.deepCopy().set("__experimental__json_pointer_to_root", "/_c0");
         transaction(config, fileInput(
                 "{\"_c0\":{\"b\": 1}, \"_c1\": true}",
                 "{}",            // should be skipped because it doesn't have "_c0"

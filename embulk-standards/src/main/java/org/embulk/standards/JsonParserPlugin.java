@@ -64,7 +64,8 @@ public class JsonParserPlugin implements ParserPlugin {
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
 
-        @Config("json_pointer_to_root")
+        // TODO: rename it's determined
+        @Config("__experimental__json_pointer_to_root")
         @ConfigDefault("null")
         Optional<String> getJsonPointerToRoot();
     }
