@@ -4,8 +4,10 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -57,6 +59,10 @@ public class JsonParserPlugin implements ParserPlugin {
         @Config("invalid_string_escapes")
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
+
+        @Config("json_pointer_to_root")
+        @ConfigDefault("null")
+        Optional<String> getJsonPointerToRoot();
     }
 
     @Override
@@ -123,7 +129,8 @@ public class JsonParserPlugin implements ParserPlugin {
 
     private JsonParser.Stream newJsonStream(FileInputInputStream in, PluginTask task)
             throws IOException {
-        InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
+        final InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
+        final InputStream inputStream;
         switch (policy) {
             case SKIP:
             case UNESCAPE:
@@ -132,10 +139,17 @@ public class JsonParserPlugin implements ParserPlugin {
                         .map(invalidEscapeStringFunction(policy))
                         .collect(Collectors.joining())
                         .getBytes(StandardCharsets.UTF_8);
-                return new JsonParser().open(new ByteArrayInputStream(lines));
+                inputStream = new ByteArrayInputStream(lines);
+                break;
             case PASSTHROUGH:
             default:
-                return new JsonParser().open(in);
+                inputStream = in;
+        }
+
+        if (task.getJsonPointerToRoot().isPresent()) {
+            return JSON_PARSER.openWithOffsetInJsonPointer(inputStream, task.getJsonPointerToRoot().get());
+        } else {
+            return JSON_PARSER.open(inputStream);
         }
     }
 
@@ -207,4 +221,6 @@ public class JsonParserPlugin implements ParserPlugin {
     private static final Logger logger = LoggerFactory.getLogger(JsonParserPlugin.class);
 
     private static final Pattern DIGITS_PATTERN = Pattern.compile("\\p{XDigit}+");
+
+    private static final JsonParser JSON_PARSER = new JsonParser();
 }

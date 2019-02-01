@@ -20,12 +20,9 @@ import java.util.List;
 import java.util.Map;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.TaskSource;
 import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
-import org.embulk.spi.ParserPlugin;
-import org.embulk.spi.Schema;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.embulk.spi.util.Pages;
@@ -285,17 +282,34 @@ public class TestJsonParserPlugin {
         }
     }
 
+    @Test
+    public void useJsonPointerToRoot() throws Exception {
+        ConfigSource config = this.config.deepCopy().set("json_pointer_to_root", "/_c0");
+        transaction(config, fileInput(
+                "{\"_c0\":{\"b\": 1}, \"_c1\": true}",
+                "{}",            // should be skipped because it doesn't have "_c0"
+                "{\"_c0\": 1}",  // should be skipped because the value doesn't map value
+                "{\"_c0\":{\"b\": 2}, \"_c1\": false}"
+        ));
+
+        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        assertEquals(2, records.size());
+
+        Object[] record = records.get(0);
+        Map<Value, Value> map = ((Value) record[0]).asMapValue().map();
+        assertEquals(newInteger(1), map.get(newString("b")));
+
+        record = records.get(1);
+        map = ((Value) record[0]).asMapValue().map();
+        assertEquals(newInteger(2), map.get(newString("b")));
+    }
+
     private ConfigSource config() {
         return runtime.getExec().newConfigSource();
     }
 
     private void transaction(ConfigSource config, final FileInput input) {
-        plugin.transaction(config, new ParserPlugin.Control() {
-                @Override
-                public void run(TaskSource taskSource, Schema schema) {
-                    plugin.run(taskSource, schema, input, output);
-                }
-            });
+        plugin.transaction(config, (taskSource, schema) -> plugin.run(taskSource, schema, input, output));
     }
 
     private FileInput fileInput(String... lines) throws Exception {
