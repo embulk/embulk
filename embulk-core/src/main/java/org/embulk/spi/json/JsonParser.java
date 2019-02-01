@@ -3,6 +3,8 @@ package org.embulk.spi.json;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.filter.FilteringParserDelegate;
+import com.fasterxml.jackson.core.filter.JsonPointerBasedFilter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
@@ -29,11 +32,19 @@ public class JsonParser {
     }
 
     public Stream open(InputStream in) throws IOException {
-        return new StreamParseContext(factory, in);
+        return openWithOffsetInJsonPointer(in, null);
+    }
+
+    public Stream openWithOffsetInJsonPointer(InputStream in, String offsetInJsonPointer) throws IOException {
+        return new StreamParseContext(factory, in, offsetInJsonPointer);
     }
 
     public Value parse(String json) {
-        return new SingleParseContext(factory, json).parse();
+        return parseWithOffsetInJsonPointer(json, null);
+    }
+
+    public Value parseWithOffsetInJsonPointer(String json, String offsetInJsonPointer) {
+        return new SingleParseContext(factory, json, offsetInJsonPointer).parse();
     }
 
     private static String sampleJsonString(String json) {
@@ -44,15 +55,21 @@ public class JsonParser {
         }
     }
 
+    private static com.fasterxml.jackson.core.JsonParser wrapWithPointerFilter(
+            com.fasterxml.jackson.core.JsonParser baseParser, String offsetInJsonPointer) {
+        return new FilteringParserDelegate(baseParser, new JsonPointerBasedFilter(offsetInJsonPointer), false, false);
+    }
+
     private static class StreamParseContext extends AbstractParseContext implements Stream {
-        public StreamParseContext(JsonFactory factory, InputStream in) throws IOException, JsonParseException {
-            super(createParser(factory, in));
+        public StreamParseContext(JsonFactory factory, InputStream in, String offsetInJsonPointer) throws IOException {
+            super(createParser(factory, in, Optional.ofNullable(offsetInJsonPointer)));
         }
 
-        private static com.fasterxml.jackson.core.JsonParser createParser(JsonFactory factory, InputStream in)
-                throws IOException {
+        private static com.fasterxml.jackson.core.JsonParser createParser(
+                JsonFactory factory, InputStream in, Optional<String> offsetInJsonPointer) throws IOException {
             try {
-                return factory.createParser(in);
+                final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(in);
+                return offsetInJsonPointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
             } catch (IOException ex) {
                 throw ex;
             } catch (Exception ex) {
@@ -74,14 +91,16 @@ public class JsonParser {
     private static class SingleParseContext extends AbstractParseContext {
         private final String json;
 
-        public SingleParseContext(JsonFactory factory, String json) {
-            super(createParser(factory, json));
+        public SingleParseContext(JsonFactory factory, String json, String offsetInJsonPointer) {
+            super(createParser(factory, json, Optional.ofNullable(offsetInJsonPointer)));
             this.json = json;
         }
 
-        private static com.fasterxml.jackson.core.JsonParser createParser(JsonFactory factory, String json) {
+        private static com.fasterxml.jackson.core.JsonParser createParser(
+                JsonFactory factory, String json, Optional<String> offsetInJsonPointer) {
             try {
-                return factory.createParser(json);
+                final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(json);
+                return offsetInJsonPointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
             } catch (Exception ex) {
                 throw new JsonParseException("Failed to parse JSON: " + JsonParser.sampleJsonString(json), ex);
             }
