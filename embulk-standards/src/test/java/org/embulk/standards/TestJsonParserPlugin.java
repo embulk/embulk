@@ -13,7 +13,6 @@ import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.CharSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -190,52 +189,52 @@ public class TestJsonParserPlugin {
     }
 
     @Test
-    public void checkInvalidEscapeStringFunction() throws Exception {
+    public void checkInvalidEscapeStringFunction() {
         //PASSTHROUGH
         {
             String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
-            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
-            assertEquals(json, actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
+            assertEquals(json, actual);
         }
 
         {
             String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
-            assertEquals(json, actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
+            assertEquals(json, actual);
         }
 
         {
             String json = "{\"\\a\":\"b\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
-            assertEquals(json, actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(PASSTHROUGH).apply(json);
+            assertEquals(json, actual);
         }
 
         //SKIP
         {
             String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
-            assertEquals(json, actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals(json, actual);
         }
 
         {
             // valid charset u0001
             String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
-            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}", actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}", actual);
         }
 
         {
             // invalid charset \\u12xY remove forwarding backslash and u
             String json = "{\"\\u12xY\":\"efg\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
-            assertEquals("{\"12xY\":\"efg\"}", actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
+            assertEquals("{\"12xY\":\"efg\"}", actual);
         }
 
         {
             String json = "{\"\\a\":\"b\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
             // backslash and `a` will removed.
-            assertEquals("{\"\":\"b\"}", actual.read());
+            assertEquals("{\"\":\"b\"}", actual);
         }
 
         {
@@ -243,36 +242,36 @@ public class TestJsonParserPlugin {
             String json = "{\"\\a\":\"b\"}"
                     + "\n"
                     + "\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
             // backslash and `a` will removed.
-            assertEquals("{\"\":\"b\"}\n", actual.read());
+            assertEquals("{\"\":\"b\"}\n", actual);
         }
 
         //UNESCAPE
         {
             String json = "{\\\"_c0\\\":true,\\\"_c1\\\":10,\\\"_c2\\\":\\\"embulk\\\",\\\"_c3\\\":{\\\"k\\\":\\\"v\\\"}}";
-            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
-            assertEquals(json, actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals(json, actual);
         }
 
         {
             String json = "{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
-            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}", actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals("{\"abc\b\f\n\r\t\\\\u0001\":\"efg\"}", actual);
         }
 
         {
             // invalid charset u000x remove forwarding backslash
             String json = "{\"\\u000x\":\"efg\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
-            assertEquals("{\"u000x\":\"efg\"}", actual.read());
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            assertEquals("{\"u000x\":\"efg\"}", actual);
         }
 
         {
             String json = "{\"\\a\":\"b\"}\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(UNESCAPE).apply(json);
             // backslash will removed.
-            assertEquals("{\"a\":\"b\"}", actual.read());
+            assertEquals("{\"a\":\"b\"}", actual);
         }
 
         {
@@ -280,9 +279,9 @@ public class TestJsonParserPlugin {
             String json = "{\"\\a\":\"b\"}"
                     + "\n"
                     + "\\";
-            CharSource actual = plugin.invalidEscapeStringFunction(SKIP).apply(json);
+            String actual = JsonParserPlugin.invalidEscapeStringFunction(SKIP).apply(json);
             // backslash and `a` will removed.
-            assertEquals("{\"\":\"b\"}\n", actual.read());
+            assertEquals("{\"\":\"b\"}\n", actual);
         }
     }
 
