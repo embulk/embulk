@@ -32,18 +32,18 @@ public class JsonParser {
     }
 
     public Stream open(InputStream in) throws IOException {
-        return open(in, null);
+        return openWithOffsetInJsonPointer(in, null);
     }
 
-    public Stream open(InputStream in, String offsetInJsonPointer) throws IOException {
+    public Stream openWithOffsetInJsonPointer(InputStream in, String offsetInJsonPointer) throws IOException {
         return new StreamParseContext(factory, in, offsetInJsonPointer);
     }
 
     public Value parse(String json) {
-        return parse(json, null);
+        return parseWithOffsetInJsonPointer(json, null);
     }
 
-    public Value parse(String json, String offsetInJsonPointer) {
+    public Value parseWithOffsetInJsonPointer(String json, String offsetInJsonPointer) {
         return new SingleParseContext(factory, json, offsetInJsonPointer).parse();
     }
 

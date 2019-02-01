@@ -136,14 +136,14 @@ public class TestJsonParser {
     @Test
     public void testParseWithPointer1() throws Exception {
         final JsonParser parser = new JsonParser();
-        final Value msgpackValue = parser.parse("{\"a\": {\"b\": 1}}", "/a/b");
+        final Value msgpackValue = parser.parseWithOffsetInJsonPointer("{\"a\": {\"b\": 1}}", "/a/b");
         assertEquals(1, msgpackValue.asIntegerValue().asInt());
     }
 
     @Test
     public void testParseWithPointer2() throws Exception {
         final JsonParser parser = new JsonParser();
-        final Value msgpackValue = parser.parse("{\"a\": [{\"b\": 1}, {\"b\": 2}]}", "/a/1/b");
+        final Value msgpackValue = parser.parseWithOffsetInJsonPointer("{\"a\": [{\"b\": 1}, {\"b\": 2}]}", "/a/1/b");
         assertEquals(2, msgpackValue.asIntegerValue().asInt());
     }
 
@@ -151,7 +151,7 @@ public class TestJsonParser {
     public void testParseMultipleJsonsWithPointer() throws Exception {
         final JsonParser parser = new JsonParser();
         final String multipleJsons = "{\"a\": {\"b\": 1}}{\"a\": {\"b\": 2}}";
-        try (JsonParser.Stream stream = parser.open(toInputStream(multipleJsons), "/a/b")) {
+        try (JsonParser.Stream stream = parser.openWithOffsetInJsonPointer(toInputStream(multipleJsons), "/a/b")) {
             assertEquals(1, stream.next().asIntegerValue().asInt());
             assertEquals(2, stream.next().asIntegerValue().asInt());
             assertNull(stream.next());
