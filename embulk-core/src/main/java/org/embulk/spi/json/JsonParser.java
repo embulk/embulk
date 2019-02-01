@@ -35,16 +35,16 @@ public class JsonParser {
         return open(in, null);
     }
 
-    public Stream open(InputStream in, String pointer) throws IOException {
-        return new StreamParseContext(factory, in, pointer);
+    public Stream open(InputStream in, String offsetInJsonPointer) throws IOException {
+        return new StreamParseContext(factory, in, offsetInJsonPointer);
     }
 
     public Value parse(String json) {
         return parse(json, null);
     }
 
-    public Value parse(String json, String pointer) {
-        return new SingleParseContext(factory, json, pointer).parse();
+    public Value parse(String json, String offsetInJsonPointer) {
+        return new SingleParseContext(factory, json, offsetInJsonPointer).parse();
     }
 
     private static String sampleJsonString(String json) {
@@ -56,20 +56,20 @@ public class JsonParser {
     }
 
     private static com.fasterxml.jackson.core.JsonParser wrapWithPointerFilter(
-            com.fasterxml.jackson.core.JsonParser baseParser, String pointer) {
-        return new FilteringParserDelegate(baseParser, new JsonPointerBasedFilter(pointer), false, false);
+            com.fasterxml.jackson.core.JsonParser baseParser, String offsetInJsonPointer) {
+        return new FilteringParserDelegate(baseParser, new JsonPointerBasedFilter(offsetInJsonPointer), false, false);
     }
 
     private static class StreamParseContext extends AbstractParseContext implements Stream {
-        public StreamParseContext(JsonFactory factory, InputStream in, String pointer) throws IOException {
-            super(createParser(factory, in, Optional.ofNullable(pointer)));
+        public StreamParseContext(JsonFactory factory, InputStream in, String offsetInJsonPointer) throws IOException {
+            super(createParser(factory, in, Optional.ofNullable(offsetInJsonPointer)));
         }
 
         private static com.fasterxml.jackson.core.JsonParser createParser(
-                JsonFactory factory, InputStream in, Optional<String> pointer) throws IOException {
+                JsonFactory factory, InputStream in, Optional<String> offsetInJsonPointer) throws IOException {
             try {
                 final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(in);
-                return pointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
+                return offsetInJsonPointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
             } catch (IOException ex) {
                 throw ex;
             } catch (Exception ex) {
@@ -91,16 +91,16 @@ public class JsonParser {
     private static class SingleParseContext extends AbstractParseContext {
         private final String json;
 
-        public SingleParseContext(JsonFactory factory, String json, String pointer) {
-            super(createParser(factory, json, Optional.ofNullable(pointer)));
+        public SingleParseContext(JsonFactory factory, String json, String offsetInJsonPointer) {
+            super(createParser(factory, json, Optional.ofNullable(offsetInJsonPointer)));
             this.json = json;
         }
 
         private static com.fasterxml.jackson.core.JsonParser createParser(
-                JsonFactory factory, String json, Optional<String> pointer) {
+                JsonFactory factory, String json, Optional<String> offsetInJsonPointer) {
             try {
                 final com.fasterxml.jackson.core.JsonParser baseParser = factory.createParser(json);
-                return pointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
+                return offsetInJsonPointer.map(p -> wrapWithPointerFilter(baseParser, p)).orElse(baseParser);
             } catch (Exception ex) {
                 throw new JsonParseException("Failed to parse JSON: " + JsonParser.sampleJsonString(json), ex);
             }
