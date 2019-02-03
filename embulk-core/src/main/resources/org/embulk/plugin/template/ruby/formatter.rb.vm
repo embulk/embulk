@@ -22,7 +22,7 @@ module Embulk
         @option3 = task["option3"]
 
         # your data
-        @current_file == nil
+        @current_file = nil
         @current_file_size = 0
       end
 
