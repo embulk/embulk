@@ -334,6 +334,30 @@ public class TestJsonParserPlugin {
         assertArrayEquals(record, new Object[]{1L, 1.234D, "a", true, toTimestamp("2019-01-02 03:04:56"), toJson("{\"a\": 1}"), null});
     }
 
+    @Test
+    public void useSchemaConfigWithJsonPointer() throws Exception {
+        // Check parsing all types and inexistent column
+        final List<Object> schemaConfig = new ArrayList<>();
+        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("json_pointer", "/a/0"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("json_pointer", "/a/1"));
+        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("json_pointer", "/a/2"));
+        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("json_pointer", "/a/3/b/0"));
+        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("json_pointer", "/a/3/b/1"));
+        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("json_pointer", "/c"));
+        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("json_pointer", "/d"));
+
+        ConfigSource config = this.config.set("__experimental__columns", schemaConfig);
+        transaction(config, fileInput(
+                "{\"a\": [1, 1.234, \"foo\", {\"b\": [true, \"2019-01-02 03:04:56\"]}], \"c\": {\"a\": 1}}"
+        ));
+
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
+        assertEquals(1, records.size());
+
+        Object[] record = records.get(0);
+        assertArrayEquals(record, new Object[]{1L, 1.234D, "foo", true, toTimestamp("2019-01-02 03:04:56"), toJson("{\"a\": 1}"), null});
+    }
+
     private ConfigSource config() {
         return runtime.getExec().newConfigSource();
     }
