@@ -4,8 +4,10 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,6 +35,10 @@ import org.slf4j.LoggerFactory;
 
 public class JsonParserPlugin implements ParserPlugin {
 
+    public JsonParserPlugin() {
+        this.jsonParser = new JsonParser();
+    }
+
     public enum InvalidEscapeStringPolicy {
         PASSTHROUGH("PASSTHROUGH"),
         SKIP("SKIP"),
@@ -57,6 +63,11 @@ public class JsonParserPlugin implements ParserPlugin {
         @Config("invalid_string_escapes")
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
+
+        // TODO: rename it's determined
+        @Config("__experimental__json_pointer_to_root")
+        @ConfigDefault("null")
+        Optional<String> getJsonPointerToRoot();
     }
 
     @Override
@@ -123,7 +134,8 @@ public class JsonParserPlugin implements ParserPlugin {
 
     private JsonParser.Stream newJsonStream(FileInputInputStream in, PluginTask task)
             throws IOException {
-        InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
+        final InvalidEscapeStringPolicy policy = task.getInvalidEscapeStringPolicy();
+        final InputStream inputStream;
         switch (policy) {
             case SKIP:
             case UNESCAPE:
@@ -132,10 +144,17 @@ public class JsonParserPlugin implements ParserPlugin {
                         .map(invalidEscapeStringFunction(policy))
                         .collect(Collectors.joining())
                         .getBytes(StandardCharsets.UTF_8);
-                return new JsonParser().open(new ByteArrayInputStream(lines));
+                inputStream = new ByteArrayInputStream(lines);
+                break;
             case PASSTHROUGH:
             default:
-                return new JsonParser().open(in);
+                inputStream = in;
+        }
+
+        if (task.getJsonPointerToRoot().isPresent()) {
+            return jsonParser.openWithOffsetInJsonPointer(inputStream, task.getJsonPointerToRoot().get());
+        } else {
+            return jsonParser.open(inputStream);
         }
     }
 
@@ -207,4 +226,6 @@ public class JsonParserPlugin implements ParserPlugin {
     private static final Logger logger = LoggerFactory.getLogger(JsonParserPlugin.class);
 
     private static final Pattern DIGITS_PATTERN = Pattern.compile("\\p{XDigit}+");
+
+    private final JsonParser jsonParser;
 }
