@@ -1,7 +1,6 @@
 package org.embulk.spi.util;
 
 import com.google.common.base.Optional;
-import java.util.HashMap;
 import java.util.Map;
 import org.embulk.config.Task;
 import org.embulk.spi.Column;
@@ -25,20 +24,6 @@ public class Timestamps {
             if (column.getType() instanceof TimestampType) {
                 TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
                 parsers[i] = TimestampParser.of(parserTask, option);
-            }
-            i++;
-        }
-        return parsers;
-    }
-
-    public static Map<Column, TimestampParser> newTimestampColumnParsersAsMap(
-            TimestampParser.Task parserTask, SchemaConfig schema) {
-        Map<Column, TimestampParser> parsers = new HashMap<>();
-        int i = 0;
-        for (ColumnConfig column : schema.getColumns()) {
-            if (column.getType() instanceof TimestampType) {
-                TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
-                parsers.put(column.toColumn(i), TimestampParser.of(parserTask, option));
             }
             i++;
         }

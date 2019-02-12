@@ -19,6 +19,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
+import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
@@ -32,9 +33,9 @@ import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampParser;
+import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.type.Types;
 import org.embulk.spi.util.FileInputInputStream;
-import org.embulk.spi.util.Timestamps;
 import org.msgpack.core.Preconditions;
 import org.msgpack.value.MapValue;
 import org.msgpack.value.Value;
@@ -83,6 +84,8 @@ public class JsonParserPlugin implements ParserPlugin {
         Optional<SchemaConfig> getSchemaConfig();
     }
 
+    interface TimestampColumnOption extends Task, TimestampParser.TimestampColumnOption { }
+
     @Override
     public void transaction(ConfigSource configSource, Control control) {
         PluginTask task = configSource.loadConfig(PluginTask.class);
@@ -105,7 +108,7 @@ public class JsonParserPlugin implements ParserPlugin {
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
         final Map<Column, TimestampParser> timestampParsers = new HashMap<>();
         if (isUseCustomSchema(task)) {
-            timestampParsers.putAll(Timestamps.newTimestampColumnParsersAsMap(task, task.getSchemaConfig().get()));
+            timestampParsers.putAll(newTimestampColumnParsersAsMap(task, task.getSchemaConfig().get()));
         }
 
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
@@ -311,6 +314,20 @@ public class JsonParserPlugin implements ParserPlugin {
             }
             return builder.toString();
         };
+    }
+
+    private static Map<Column, TimestampParser> newTimestampColumnParsersAsMap(
+            TimestampParser.Task parserTask, SchemaConfig schema) {
+        Map<Column, TimestampParser> parsers = new HashMap<>();
+        int i = 0;
+        for (ColumnConfig column : schema.getColumns()) {
+            if (column.getType() instanceof TimestampType) {
+                TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
+                parsers.put(column.toColumn(i), TimestampParser.of(parserTask, option));
+            }
+            i++;
+        }
+        return parsers;
     }
 
     static class JsonRecordValidateException extends DataException {
