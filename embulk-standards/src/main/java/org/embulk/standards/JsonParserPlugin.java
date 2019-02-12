@@ -94,7 +94,7 @@ public class JsonParserPlugin implements ParserPlugin {
 
     @VisibleForTesting
     Schema newSchema(PluginTask task) {
-        if (isUseCustomSchema(task)) {
+        if (isUsingCustomSchema(task)) {
             return task.getSchemaConfig().get().toSchema();
         } else {
             return Schema.builder().add("record", Types.JSON).build(); // generate a schema
@@ -107,7 +107,7 @@ public class JsonParserPlugin implements ParserPlugin {
 
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
         final Map<Column, TimestampParser> timestampParsers = new HashMap<>();
-        if (isUseCustomSchema(task)) {
+        if (isUsingCustomSchema(task)) {
             timestampParsers.putAll(newTimestampColumnParsersAsMap(task, task.getSchemaConfig().get()));
         }
 
@@ -126,7 +126,7 @@ public class JsonParserPlugin implements ParserPlugin {
                                         String.format("A Json record must not represent map value but it's %s", value.getValueType().name()));
                             }
 
-                            if (isUseCustomSchema(task)) {
+                            if (isUsingCustomSchema(task)) {
                                 setValueWithCustomSchema(pageBuilder, schema, timestampParsers, value.asMapValue());
                             } else {
                                 setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
@@ -155,7 +155,7 @@ public class JsonParserPlugin implements ParserPlugin {
         }
     }
 
-    private static boolean isUseCustomSchema(PluginTask task) {
+    private static boolean isUsingCustomSchema(PluginTask task) {
         return task.getSchemaConfig().isPresent();
     }
 
