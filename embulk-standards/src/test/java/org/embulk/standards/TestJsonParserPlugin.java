@@ -3,6 +3,7 @@ package org.embulk.standards;
 import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.PASSTHROUGH;
 import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.SKIP;
 import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.UNESCAPE;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -16,6 +17,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.embulk.EmbulkTestRuntime;
@@ -23,7 +25,11 @@ import org.embulk.config.ConfigSource;
 import org.embulk.spi.DataException;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
+import org.embulk.spi.Schema;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
+import org.embulk.spi.json.JsonParser;
+import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.embulk.spi.util.Pages;
 import org.junit.Before;
@@ -74,7 +80,7 @@ public class TestJsonParserPlugin {
                 "null" // this line should be skipped.
         ));
 
-        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
         assertEquals(3, records.size());
 
         Object[] record;
@@ -164,7 +170,7 @@ public class TestJsonParserPlugin {
                 "{\"\\a\":\"b\"}\\"
         ));
 
-        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
         assertEquals(1, records.size());
         Object[] record = records.get(0);
         Map<Value, Value> map = ((Value) record[0]).asMapValue().map();
@@ -178,7 +184,7 @@ public class TestJsonParserPlugin {
                 "{\"\\a\":\"b\"}\\"
         ));
 
-        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
         assertEquals(1, records.size());
         Object[] record = records.get(0);
         Map<Value, Value> map = ((Value) record[0]).asMapValue().map();
@@ -292,7 +298,7 @@ public class TestJsonParserPlugin {
                 "{\"_c0\":{\"b\": 2}, \"_c1\": false}"
         ));
 
-        List<Object[]> records = Pages.toObjects(plugin.newSchema(), output.pages);
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
         assertEquals(2, records.size());
 
         Object[] record = records.get(0);
@@ -302,6 +308,30 @@ public class TestJsonParserPlugin {
         record = records.get(1);
         map = ((Value) record[0]).asMapValue().map();
         assertEquals(newInteger(2), map.get(newString("b")));
+    }
+
+    @Test
+    public void useSchemaConfig() throws Exception {
+        // Check parsing all types and inexistent column
+        final List<Object> schemaConfig = new ArrayList<>();
+        schemaConfig.add(config().set("name", "_c0").set("type", "long"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "double"));
+        schemaConfig.add(config().set("name", "_c2").set("type", "string"));
+        schemaConfig.add(config().set("name", "_c3").set("type", "boolean"));
+        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S"));
+        schemaConfig.add(config().set("name", "_c5").set("type", "json"));
+        schemaConfig.add(config().set("name", "_c99").set("type", "string"));
+
+        ConfigSource config = this.config.set("__experimental__columns", schemaConfig);
+        transaction(config, fileInput(
+                "{\"_c0\": 1, \"_c1\": 1.234, \"_c2\": \"a\", \"_c3\": true, \"_c4\": \"2019-01-02 03:04:56\", \"_c5\":{\"a\": 1}}"
+        ));
+
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
+        assertEquals(1, records.size());
+
+        Object[] record = records.get(0);
+        assertArrayEquals(record, new Object[]{1L, 1.234D, "a", true, toTimestamp("2019-01-02 03:04:56"), toJson("{\"a\": 1}"), null});
     }
 
     private ConfigSource config() {
@@ -326,4 +356,20 @@ public class TestJsonParserPlugin {
         return new InputStreamFileInput.IteratorProvider(
                 ImmutableList.copyOf(inputStreams));
     }
+
+    private Schema newSchema() {
+        return plugin.newSchema(config.loadConfig(JsonParserPlugin.PluginTask.class));
+    }
+
+    private static Timestamp toTimestamp(String dateTimeString) {
+        return TIMESTAMP_PARSER.parse(dateTimeString);
+    }
+
+    private static Value toJson(String json) {
+        return JSON_PARSER.parse(json);
+    }
+
+    private static final TimestampParser TIMESTAMP_PARSER = TimestampParser.of("java:yyyy-MM-dd HH:mm:ss", "UTC");
+
+    private static final JsonParser JSON_PARSER = new JsonParser();
 }
