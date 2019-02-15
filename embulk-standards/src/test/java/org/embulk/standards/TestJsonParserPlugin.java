@@ -338,13 +338,13 @@ public class TestJsonParserPlugin {
     public void useSchemaConfigWithJsonPointer() throws Exception {
         // Check parsing all types and inexistent column
         final List<Object> schemaConfig = new ArrayList<>();
-        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("json_pointer", "/a/0"));
-        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("json_pointer", "/a/1"));
-        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("json_pointer", "/a/2"));
-        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("json_pointer", "/a/3/b/0"));
-        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("json_pointer", "/a/3/b/1"));
-        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("json_pointer", "/c"));
-        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("json_pointer", "/d"));
+        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("relative_json_pointer_from_root", "/a/0"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("relative_json_pointer_from_root", "/a/1"));
+        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("relative_json_pointer_from_root", "/a/2"));
+        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("relative_json_pointer_from_root", "/a/3/b/0"));
+        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("relative_json_pointer_from_root", "/a/3/b/1"));
+        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("relative_json_pointer_from_root", "/c"));
+        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("relative_json_pointer_from_root", "/d"));
 
         ConfigSource config = this.config.set("__experimental__columns", schemaConfig);
         transaction(config, fileInput(

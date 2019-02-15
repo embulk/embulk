@@ -86,7 +86,7 @@ public class JsonParserPlugin implements ParserPlugin {
     }
 
     public interface OptionalColumnConfig extends Task, TimestampParser.TimestampColumnOption {
-        @Config("json_pointer")
+        @Config("relative_json_pointer_from_root")
         @ConfigDefault("null")
         Optional<String> getJsonPointer();
     }
