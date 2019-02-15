@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -84,7 +85,11 @@ public class JsonParserPlugin implements ParserPlugin {
         Optional<SchemaConfig> getSchemaConfig();
     }
 
-    interface TimestampColumnOption extends Task, TimestampParser.TimestampColumnOption { }
+    public interface OptionalColumnConfig extends Task, TimestampParser.TimestampColumnOption {
+        @Config("relative_json_pointer_from_root")
+        @ConfigDefault("null")
+        Optional<String> getJsonPointer();
+    }
 
     @Override
     public void transaction(ConfigSource configSource, Control control) {
@@ -107,8 +112,11 @@ public class JsonParserPlugin implements ParserPlugin {
 
         final boolean stopOnInvalidRecord = task.getStopOnInvalidRecord();
         final Map<Column, TimestampParser> timestampParsers = new HashMap<>();
+        final Map<Column, String> jsonPointers = new HashMap<>();
         if (isUsingCustomSchema(task)) {
+            final SchemaConfig schemaConfig = task.getSchemaConfig().get();
             timestampParsers.putAll(newTimestampColumnParsersAsMap(task, task.getSchemaConfig().get()));
+            jsonPointers.putAll(createJsonPointerMap(schema, schemaConfig));
         }
 
         try (PageBuilder pageBuilder = newPageBuilder(schema, output);
@@ -127,7 +135,7 @@ public class JsonParserPlugin implements ParserPlugin {
                             }
 
                             if (isUsingCustomSchema(task)) {
-                                setValueWithCustomSchema(pageBuilder, schema, timestampParsers, value.asMapValue());
+                                setValueWithCustomSchema(pageBuilder, schema, timestampParsers, jsonPointers, value.asMapValue());
                             } else {
                                 setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
                             }
@@ -164,11 +172,27 @@ public class JsonParserPlugin implements ParserPlugin {
         pageBuilder.setJson(column, value);
     }
 
-    private static void setValueWithCustomSchema(
-            PageBuilder pageBuilder, Schema schema, Map<Column, TimestampParser> timestampParsers, MapValue value) {
+    private void setValueWithCustomSchema(
+            PageBuilder pageBuilder,
+            Schema schema,
+            Map<Column, TimestampParser> timestampParsers,
+            Map<Column, String> jsonPointers,
+            MapValue value) {
         final Map<Value, Value> map = value.map();
+        String valueAsJsonString = null;
+        if (!jsonPointers.isEmpty()) {
+            // Convert to string in order to re-parse with given JSON pointer
+            valueAsJsonString = value.toJson();
+        }
         for (Column column : schema.getColumns()) {
-            final Value columnValue = map.get(ValueFactory.newString(column.getName()));
+            final String jsonPointer = jsonPointers.get(column);
+            final Value columnValue;
+            if (jsonPointer != null) {
+                columnValue = parseColumnValueWithOffsetInJsonPointer(valueAsJsonString, jsonPointer);
+            } else {
+                columnValue = map.get(ValueFactory.newString(column.getName()));
+            }
+
             if (columnValue == null || columnValue.isNilValue()) {
                 pageBuilder.setNull(column);
                 continue;
@@ -229,6 +253,20 @@ public class JsonParserPlugin implements ParserPlugin {
 
     private PageBuilder newPageBuilder(Schema schema, PageOutput output) {
         return new PageBuilder(Exec.getBufferAllocator(), schema, output);
+    }
+
+    private Value parseColumnValueWithOffsetInJsonPointer(String valueAsJsonString, String jsonPointer) {
+        try {
+            return jsonParser.parseWithOffsetInJsonPointer(valueAsJsonString, jsonPointer);
+        } catch (JsonParseException e) {
+            /*
+             * When JsonParseException is thrown, it would be an error that the given JSON pointer doesn't match with the JSON object.
+             * We would return NULL when the pointer doesn't match, not throw Exception.
+             *
+             * NOTE: We may change the behavior (ref: https://github.com/embulk/embulk/pull/1103#discussion_r255807991)
+             */
+            return ValueFactory.newNil();
+        }
     }
 
     private JsonParser.Stream newJsonStream(FileInputInputStream in, PluginTask task)
@@ -316,13 +354,27 @@ public class JsonParserPlugin implements ParserPlugin {
         };
     }
 
+    private static Map<Column, String> createJsonPointerMap(Schema schema, SchemaConfig config) {
+        Map<Column, String> result = new HashMap<>();
+        final List<Column> columns = schema.getColumns();
+        for (int i = 0; i < columns.size(); i++) {
+            final Column column = columns.get(i);
+            final ColumnConfig columnConfig = config.getColumn(i);
+            final OptionalColumnConfig options = columnConfig.getOption().loadConfig(OptionalColumnConfig.class);
+            if (options.getJsonPointer().isPresent()) {
+                result.put(column, options.getJsonPointer().get());
+            }
+        }
+        return result;
+    }
+
     private static Map<Column, TimestampParser> newTimestampColumnParsersAsMap(
             TimestampParser.Task parserTask, SchemaConfig schema) {
         Map<Column, TimestampParser> parsers = new HashMap<>();
         int i = 0;
         for (ColumnConfig column : schema.getColumns()) {
             if (column.getType() instanceof TimestampType) {
-                TimestampColumnOption option = column.getOption().loadConfig(TimestampColumnOption.class);
+                OptionalColumnConfig option = column.getOption().loadConfig(OptionalColumnConfig.class);
                 parsers.put(column.toColumn(i), TimestampParser.of(parserTask, option));
             }
             i++;
