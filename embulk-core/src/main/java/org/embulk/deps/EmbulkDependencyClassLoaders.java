@@ -62,7 +62,7 @@ public final class EmbulkDependencyClassLoaders {
         public static final DependencyClassLoader MAVEN_DEPENDENCY_CLASS_LOADER;
 
         static {
-            if (MAVEN_DEPENDENCIES.isEmpty()) {
+            if (MAVEN_DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
                 logger.warn(messageUninitialized("Maven"));
             }
             MAVEN_DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(
