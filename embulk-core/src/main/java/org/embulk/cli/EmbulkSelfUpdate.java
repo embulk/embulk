@@ -17,7 +17,7 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.embulk.deps.maven.ComparableVersion;
 
 // It uses |java.net.HttpURLConnection| so that the CLI classes do not need additional dependedcies.
 // TODO(dmikurube): Support HTTP proxy. The original Ruby version did not support as well, though.
@@ -54,9 +54,9 @@ public class EmbulkSelfUpdate {
             System.out.printf("Found version %s.\n", specifiedVersionString);
         } else {
             System.out.println("Checking the latest version...");
-            final ComparableVersion runningVersion = new ComparableVersion(runningVersionString);
+            final ComparableVersion runningVersion = ComparableVersion.of(runningVersionString);
             targetVersionString = checkLatestVersion();
-            final ComparableVersion targetVersion = new ComparableVersion(targetVersionString);
+            final ComparableVersion targetVersion = ComparableVersion.of(targetVersionString);
             if (targetVersion.compareTo(runningVersion) <= 0) {
                 System.out.printf("Already up-to-date. %s is the latest version.\n", runningVersion);
                 return;

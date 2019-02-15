@@ -1,9 +1,10 @@
-package org.embulk.plugin.maven;
+package org.embulk.deps.maven;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import org.eclipse.aether.artifact.Artifact;
 
-public class MavenArtifactNotFoundException extends Exception {
+public class MavenArtifactNotFoundException extends FileNotFoundException {
     public MavenArtifactNotFoundException(final String groupId,
                                           final String artifactId,
                                           final String classifier,
@@ -13,8 +14,8 @@ public class MavenArtifactNotFoundException extends Exception {
                                           final Throwable cause) {
         super("Maven artifact \"" + groupId + ":" + artifactId + ":" + version
                       + (classifier != null ? (":" + classifier) : "") + "\" is not found: at \""
-                      + givenRepositoryPath.toString() + "\" (\"" + absoluteRepositoryPath.toString() + "\").",
-              cause);
+                      + givenRepositoryPath.toString() + "\" (\"" + absoluteRepositoryPath.toString() + "\").");
+        this.initCause(cause);
     }
 
     public MavenArtifactNotFoundException(final Artifact artifact,
@@ -22,7 +23,7 @@ public class MavenArtifactNotFoundException extends Exception {
                                           final Path absoluteRepositoryPath,
                                           final Throwable cause) {
         super("Maven artifact \"" + artifact.toString() + "\" is not found: at \""
-                      + givenRepositoryPath.toString() + "\" (\"" + absoluteRepositoryPath.toString() + "\").",
-              cause);
+                      + givenRepositoryPath.toString() + "\" (\"" + absoluteRepositoryPath.toString() + "\").");
+        this.initCause(cause);
     }
 }

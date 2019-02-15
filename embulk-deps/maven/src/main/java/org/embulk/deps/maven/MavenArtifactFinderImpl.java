@@ -1,5 +1,6 @@
-package org.embulk.plugin.maven;
+package org.embulk.deps.maven;
 
+import java.io.FileNotFoundException;
 import java.io.IOError;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -22,19 +23,8 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
-public class MavenArtifactFinder {
-    private MavenArtifactFinder(final Path givenLocalMavenRepositoryPath,
-                                final Path absoluteLocalMavenRepositoryPath,
-                                final RepositorySystem repositorySystem,
-                                final RepositorySystemSession repositorySystemSession) {
-        this.givenLocalMavenRepositoryPath = givenLocalMavenRepositoryPath;
-        this.absoluteLocalMavenRepositoryPath = absoluteLocalMavenRepositoryPath;
-        this.repositorySystem = repositorySystem;
-        this.repositorySystemSession = repositorySystemSession;
-    }
-
-    public static MavenArtifactFinder create(final Path localMavenRepositoryPath)
-            throws MavenRepositoryNotFoundException {
+public class MavenArtifactFinderImpl extends MavenArtifactFinder {
+    public MavenArtifactFinderImpl(final Path localMavenRepositoryPath) throws FileNotFoundException {
         final Path absolutePath;
         try {
             absolutePath = localMavenRepositoryPath.normalize().toAbsolutePath();
@@ -57,23 +47,19 @@ public class MavenArtifactFinder {
 
         final RepositorySystem repositorySystem = createRepositorySystem();
 
-        return new MavenArtifactFinder(localMavenRepositoryPath,
-                                       absolutePath,
-                                       repositorySystem,
-                                       createRepositorySystemSession(repositorySystem, absolutePath));
+        this.givenLocalMavenRepositoryPath = localMavenRepositoryPath;
+        this.absoluteLocalMavenRepositoryPath = absolutePath;
+        this.repositorySystem = repositorySystem;
+        this.repositorySystemSession = createRepositorySystemSession(repositorySystem, absolutePath);
     }
 
-    /**
-     * Finds a Maven-based plugin JAR with its "direct" dependencies.
-     *
-     * @see <a href="https://github.com/eclipse/aether-demo/blob/322fa556494335faaf3ad3b7dbe8f89aaaf6222d/aether-demo-snippets/src/main/java/org/eclipse/aether/examples/GetDirectDependencies.java">aether-demo's GetDirectDependencies.java</a>
-     */
+    @Override
     public final MavenPluginPaths findMavenPluginJarsWithDirectDependencies(
             final String groupId,
             final String artifactId,
             final String classifier,
             final String version)
-            throws MavenArtifactNotFoundException {
+            throws FileNotFoundException {
         final ArtifactDescriptorResult result;
         try {
             result = this.describeMavenArtifact(groupId, artifactId, classifier, "jar", version);
@@ -92,8 +78,7 @@ public class MavenArtifactFinder {
         return MavenPluginPaths.of(artifactPath, dependencyPaths);
     }
 
-    public Path findMavenArtifact(
-            final Artifact artifact) throws MavenArtifactNotFoundException {
+    private Path findMavenArtifact(final Artifact artifact) throws MavenArtifactNotFoundException {
         final ArtifactResult result;
         try {
             result = this.repositorySystem.resolveArtifact(

@@ -1,0 +1,23 @@
+description = "Wrapper of Apache Maven-related dependency libraries in Embulk core"
+ext {
+    summary = "Embulk's dependency wrapper for Maven"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(':embulk-core')
+
+    // For MavenPluginSource / MavenArtifactFinder.
+    compile 'org.apache.maven:maven-artifact:3.3.9'
+    compile 'org.eclipse.aether:aether-api:1.1.0'
+    compile 'org.eclipse.aether:aether-spi:1.1.0'
+    compile 'org.eclipse.aether:aether-util:1.1.0'
+    compile 'org.eclipse.aether:aether-impl:1.1.0'
+    compile 'org.apache.maven:maven-aether-provider:3.3.9'
+
+    testCompile project(':embulk-core')
+    testCompile 'junit:junit:4.12'
+}

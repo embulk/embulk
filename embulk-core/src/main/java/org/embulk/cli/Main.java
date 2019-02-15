@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 import org.embulk.EmbulkVersion;
+import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.deps.EmbulkSelfContainedJarFiles;
 
 public class Main {
     public static void main(final String[] args) {
@@ -55,6 +57,8 @@ public class Main {
         }
 
         CliLogbackConfigurator.configure(Optional.ofNullable(logPath), Optional.ofNullable(logLevel));
+        EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(CliManifest.getManifest()).initialize();
+        EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
 
         final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
         final int error = run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
