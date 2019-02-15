@@ -262,6 +262,8 @@ public class JsonParserPlugin implements ParserPlugin {
             /*
              * When JsonParseException is thrown, it would be an error that the given JSON pointer doesn't match with the JSON object.
              * We would return NULL when the pointer doesn't match, not throw Exception.
+             *
+             * NOTE: We may change the behavior (ref: https://github.com/embulk/embulk/pull/1103#discussion_r255807991)
              */
             return ValueFactory.newNil();
         }
