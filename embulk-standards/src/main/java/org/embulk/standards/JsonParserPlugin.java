@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,10 @@ public class JsonParserPlugin implements ParserPlugin {
         @ConfigDefault("null")
         Optional<String> getJsonPointerToRoot();
 
+        @Config("__experimental__flatten_json_array")
+        @ConfigDefault("false")
+        boolean getFlattenJsonArray();
+
         @Config("__experimental__columns")
         @ConfigDefault("null")
         Optional<SchemaConfig> getSchemaConfig();
@@ -129,18 +134,23 @@ public class JsonParserPlugin implements ParserPlugin {
                     Value value;
                     while ((value = stream.next()) != null) {
                         try {
-                            if (!value.isMapValue()) {
-                                throw new JsonRecordValidateException(
-                                        String.format("A Json record must not represent map value but it's %s", value.getValueType().name()));
+                            final Iterable<Value> recordValues;
+                            if (task.getFlattenJsonArray()) {
+                                if (!value.isArrayValue()) {
+                                    throw new JsonRecordValidateException(
+                                            String.format(
+                                                    "A Json record must represent array value with '__experimental__flatten_json_array' option, but it's %s",
+                                                    value.getValueType().name()));
+                                }
+                                recordValues = value.asArrayValue();
+                            } else {
+                                recordValues = Collections.singletonList(value);
                             }
 
-                            if (isUsingCustomSchema(task)) {
-                                setValueWithCustomSchema(pageBuilder, schema, timestampParsers, jsonPointers, value.asMapValue());
-                            } else {
-                                setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
+                            for (Value recordValue : recordValues) {
+                                addRecord(task, pageBuilder, schema, timestampParsers, jsonPointers, recordValue);
+                                evenOneJsonParsed = true;
                             }
-                            pageBuilder.addRecord();
-                            evenOneJsonParsed = true;
                         } catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
                                 throw new DataException(String.format("Invalid record in %s: %s", fileName, value.toJson()), e);
@@ -161,6 +171,26 @@ public class JsonParserPlugin implements ParserPlugin {
 
             pageBuilder.finish();
         }
+    }
+
+    private void addRecord(
+            PluginTask task,
+            PageBuilder pageBuilder,
+            Schema schema,
+            Map<Column, TimestampParser> timestampParsers,
+            Map<Column, String> jsonPointers,
+            Value value) {
+        if (!value.isMapValue()) {
+            throw new JsonRecordValidateException(
+                    String.format("A Json record must represent map value but it's %s", value.getValueType().name()));
+        }
+
+        if (isUsingCustomSchema(task)) {
+            setValueWithCustomSchema(pageBuilder, schema, timestampParsers, jsonPointers, value.asMapValue());
+        } else {
+            setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
+        }
+        pageBuilder.addRecord();
     }
 
     private static boolean isUsingCustomSchema(PluginTask task) {
