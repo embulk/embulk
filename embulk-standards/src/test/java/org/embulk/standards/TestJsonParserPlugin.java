@@ -358,6 +358,45 @@ public class TestJsonParserPlugin {
         assertArrayEquals(record, new Object[]{1L, 1.234D, "foo", true, toTimestamp("2019-01-02 03:04:56"), toJson("{\"a\": 1}"), null});
     }
 
+    @Test
+    public void useFlattenJsonArray() throws Exception {
+        ConfigSource config = this.config.set("__experimental__flatten_json_array", true);
+        transaction(config, fileInput(
+                "[{\"_c0\": 1},{\"_c0\": 2}]"
+        ));
+
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
+        assertEquals(2, records.size());
+        assertArrayEquals(records.get(0), new Object[]{toJson("{\"_c0\": 1}")});
+        assertArrayEquals(records.get(1), new Object[]{toJson("{\"_c0\": 2}")});
+    }
+
+    @Test(expected = DataException.class)
+    public void useFlattenJsonArrayWithNonArrayJson() throws Exception {
+        ConfigSource config = this.config
+                .set("__experimental__flatten_json_array", true)
+                .set("stop_on_invalid_record", true);
+
+        transaction(config, fileInput(
+                "{\"_c0\": 1}"
+        ));
+    }
+
+    @Test
+    public void useFlattenJsonArrayWithRootPointer() throws Exception {
+        ConfigSource config = this.config
+                .set("__experimental__flatten_json_array", true)
+                .set("__experimental__json_pointer_to_root", "/a");
+        transaction(config, fileInput(
+                "{\"a\": [{\"_c0\": 1},{\"_c0\": 2}]}"
+        ));
+
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
+        assertEquals(2, records.size());
+        assertArrayEquals(records.get(0), new Object[]{toJson("{\"_c0\": 1}")});
+        assertArrayEquals(records.get(1), new Object[]{toJson("{\"_c0\": 2}")});
+    }
+
     private ConfigSource config() {
         return runtime.getExec().newConfigSource();
     }
