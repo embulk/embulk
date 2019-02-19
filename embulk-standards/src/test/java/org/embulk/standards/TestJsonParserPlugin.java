@@ -310,6 +310,19 @@ public class TestJsonParserPlugin {
         assertEquals(newInteger(2), map.get(newString("b")));
     }
 
+    @Test(expected = DataException.class)
+    public void useJsonPointerToRootWithStopOnInvalidRecord() throws Exception {
+        ConfigSource config = this.config.deepCopy()
+                .set("__experimental__json_pointer_to_root", "/_c0")
+                .set("stop_on_invalid_record", true);
+
+        transaction(config, fileInput(
+                "{\"_c0\":{\"b\": 1}, \"_c1\": true}",
+                "{}",            // Stop with the record
+                "{\"_c0\":{\"b\": 2}, \"_c1\": false}"
+        ));
+    }
+
     @Test
     public void useSchemaConfig() throws Exception {
         // Check parsing all types and inexistent column
