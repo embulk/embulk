@@ -293,8 +293,8 @@ public class TestJsonParserPlugin {
         ConfigSource config = this.config.deepCopy().set("__experimental__json_pointer_to_root", "/_c0");
         transaction(config, fileInput(
                 "{\"_c0\":{\"b\": 1}, \"_c1\": true}",
-                "{}",            // should be skipped because it doesn't have "_c0"
-                "{\"_c0\": 1}",  // should be skipped because the value doesn't map value
+                "{}",            // should be skipped because it doesn't have "_c0" and stop_on_invalid_record is false
+                "{\"_c0\": 1}",  // should be skipped because the "_c0"'s value isn't map value and stop_on_invalid_record is false
                 "{\"_c0\":{\"b\": 2}, \"_c1\": false}"
         ));
 
