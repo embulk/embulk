@@ -131,9 +131,18 @@ public class JsonParserPlugin implements ParserPlugin {
 
                 boolean evenOneJsonParsed = false;
                 try (JsonParser.Stream stream = newJsonStream(in, task)) {
-                    Value value;
-                    while ((value = stream.next()) != null) {
+                    Value originalValue;
+                    while ((originalValue = stream.next()) != null) {
                         try {
+                            Value value = originalValue;
+                            if (task.getJsonPointerToRoot().isPresent()) {
+                                try {
+                                    value = jsonParser.parseWithOffsetInJsonPointer(originalValue.toJson(), task.getJsonPointerToRoot().get());
+                                } catch (JsonParseException e) {
+                                    throw new JsonRecordValidateException("A Json record doesn't have given 'JSON pointer to root'.");
+                                }
+                            }
+
                             final Iterable<Value> recordValues;
                             if (task.getFlattenJsonArray()) {
                                 if (!value.isArrayValue()) {
@@ -153,9 +162,9 @@ public class JsonParserPlugin implements ParserPlugin {
                             }
                         } catch (JsonRecordValidateException e) {
                             if (stopOnInvalidRecord) {
-                                throw new DataException(String.format("Invalid record in %s: %s", fileName, value.toJson()), e);
+                                throw new DataException(String.format("Invalid record in %s: %s", fileName, originalValue.toJson()), e);
                             }
-                            logger.warn(String.format("Skipped record in %s (%s): %s", fileName, e.getMessage(), value.toJson()));
+                            logger.warn(String.format("Skipped record in %s (%s): %s", fileName, e.getMessage(), originalValue.toJson()));
                         }
                     }
                 } catch (IOException | JsonParseException e) {
@@ -318,11 +327,7 @@ public class JsonParserPlugin implements ParserPlugin {
                 inputStream = in;
         }
 
-        if (task.getJsonPointerToRoot().isPresent()) {
-            return jsonParser.openWithOffsetInJsonPointer(inputStream, task.getJsonPointerToRoot().get());
-        } else {
-            return jsonParser.open(inputStream);
-        }
+        return jsonParser.open(inputStream);
     }
 
     static Function<String, String> invalidEscapeStringFunction(final InvalidEscapeStringPolicy policy) {
