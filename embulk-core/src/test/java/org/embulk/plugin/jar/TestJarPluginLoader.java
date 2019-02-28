@@ -1,7 +1,6 @@
 package org.embulk.plugin.jar;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
@@ -55,30 +54,6 @@ public class TestJarPluginLoader {
 
         assertEquals("Hello", readResource(classLoader, "embulk-test-maven-plugin/main.txt"));
         assertEquals("World", readResource(classLoader, "embulk-test-maven-plugin/deps.txt"));
-    }
-
-    // TODO: Remove the feature soon (see: https://github.com/embulk/embulk/issues/1110)
-    @Test
-    public void testLoadPluginClassForNestedJar() throws Exception {
-        final Path pluginJarPath = BUILT_JARS_DIR.resolve("embulk-test-maven-plugin-nested.jar");
-
-        final Class<?> loadedClass;
-        try (final JarPluginLoader loader = JarPluginLoader.load(
-                pluginJarPath,
-                Collections.emptyList(),
-                testRuntime.getPluginClassLoaderFactory())) {
-            assertEquals(0, loader.getPluginSpiVersion());
-            loadedClass = loader.getPluginMainClass();
-        }
-
-        final ClassLoader classLoader = loadedClass.getClassLoader();
-        assertTrue(classLoader instanceof PluginClassLoader);
-
-        verifyMainClass(loadedClass);
-
-        // Probably a bug of ClassLoader, but as the nested style will be removed soon, so keep the behavior as-is.
-        assertNull(classLoader.getResourceAsStream("embulk-test-maven-plugin/main.txt"));
-        assertNull(classLoader.getResourceAsStream("embulk-test-maven-plugin/deps.txt"));
     }
 
     private static void verifyMainClass(Class<?> mainClass) throws Exception {

@@ -73,28 +73,13 @@ public class PluginClassLoaderModule implements Module {
             }
 
             @Override
-            public PluginClassLoader createForNestedJar(
-                    final ClassLoader parentClassLoader,
-                    final URL oneNestedJarUrl,
-                    final Collection<String> embeddedJarPathsInNestedJar) {
-                return PluginClassLoader.createForNestedJar(
-                        parentClassLoader,
-                        oneNestedJarUrl,
-                        embeddedJarPathsInNestedJar,
-                        parentFirstPackages,
-                        parentFirstResources);
-            }
-
-            @Override
             public PluginClassLoader createForNestedJarWithDependencies(
                     final ClassLoader parentClassLoader,
                     final URL oneNestedJarUrl,
-                    final Collection<String> embeddedJarPathsInNestedJar,
                     final Collection<URL> dependencyJarUrls) {
                 return PluginClassLoader.createForNestedJar(
                         parentClassLoader,
                         oneNestedJarUrl,
-                        embeddedJarPathsInNestedJar,
                         dependencyJarUrls,
                         parentFirstPackages,
                         parentFirstResources);
