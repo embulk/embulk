@@ -88,7 +88,7 @@ task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars"
 task rubyTestMonkeyStrptime(type: JRubyExec) {
     jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/monkey_strptime/run-test.rb'
 }
-test.dependsOn(['rubyTestVanilla', 'rubyTestMonkeyStrptime'])
+test.dependsOn(['rubyTestVanilla', 'rubyTestMonkeyStrptime', ":test-helpers:deploy"])
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains('-')) {
