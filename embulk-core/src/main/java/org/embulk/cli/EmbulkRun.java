@@ -667,7 +667,7 @@ public class EmbulkRun {
         out.println("   -J-O                             Disable JVM optimizations to speed up startup time (enabled by default if command is 'run')");
         out.println("   -J+O                             Enable JVM optimizations to speed up throughput");
         out.println("   -J...                            Set JVM options (use -J-help to see available options)");
-        out.println("   -R...                            Set JRuby options (use -R--help to see available options)");
+        out.println("   -R--dev                          Set JRuby to be in development mode");
     }
 
     private void printEmbulkVersionHeader(final PrintStream out) {
