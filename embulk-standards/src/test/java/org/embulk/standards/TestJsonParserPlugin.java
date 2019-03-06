@@ -289,8 +289,8 @@ public class TestJsonParserPlugin {
     }
 
     @Test
-    public void useJsonPointerToRoot() throws Exception {
-        ConfigSource config = this.config.deepCopy().set("__experimental__json_pointer_to_root", "/_c0");
+    public void useRoot() throws Exception {
+        ConfigSource config = this.config.deepCopy().set("root", "/_c0");
         transaction(config, fileInput(
                 "{\"_c0\":{\"b\": 1}, \"_c1\": true}",
                 "{}",            // should be skipped because it doesn't have "_c0" and stop_on_invalid_record is false
@@ -311,9 +311,9 @@ public class TestJsonParserPlugin {
     }
 
     @Test(expected = DataException.class)
-    public void useJsonPointerToRootWithStopOnInvalidRecord() throws Exception {
+    public void useRootWithStopOnInvalidRecord() throws Exception {
         ConfigSource config = this.config.deepCopy()
-                .set("__experimental__json_pointer_to_root", "/_c0")
+                .set("root", "/_c0")
                 .set("stop_on_invalid_record", true);
 
         transaction(config, fileInput(
@@ -335,7 +335,7 @@ public class TestJsonParserPlugin {
         schemaConfig.add(config().set("name", "_c5").set("type", "json"));
         schemaConfig.add(config().set("name", "_c99").set("type", "string"));
 
-        ConfigSource config = this.config.set("__experimental__columns", schemaConfig);
+        ConfigSource config = this.config.set("columns", schemaConfig);
         transaction(config, fileInput(
                 "{\"_c0\": 1, \"_c1\": 1.234, \"_c2\": \"a\", \"_c3\": true, \"_c4\": \"2019-01-02 03:04:56\", \"_c5\":{\"a\": 1}}"
         ));
@@ -348,18 +348,18 @@ public class TestJsonParserPlugin {
     }
 
     @Test
-    public void useSchemaConfigWithJsonPointer() throws Exception {
+    public void useSchemaConfigWithPointer() throws Exception {
         // Check parsing all types and inexistent column
         final List<Object> schemaConfig = new ArrayList<>();
-        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("relative_json_pointer_from_root", "/a/0"));
-        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("relative_json_pointer_from_root", "/a/1"));
-        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("relative_json_pointer_from_root", "/a/2"));
-        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("relative_json_pointer_from_root", "/a/3/b/0"));
-        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("relative_json_pointer_from_root", "/a/3/b/1"));
-        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("relative_json_pointer_from_root", "/c"));
-        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("relative_json_pointer_from_root", "/d"));
+        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("pointer", "/a/0"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("pointer", "/a/1"));
+        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("pointer", "/a/2"));
+        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("pointer", "/a/3/b/0"));
+        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("pointer", "/a/3/b/1"));
+        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("pointer", "/c"));
+        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("pointer", "/d"));
 
-        ConfigSource config = this.config.set("__experimental__columns", schemaConfig);
+        ConfigSource config = this.config.set("columns", schemaConfig);
         transaction(config, fileInput(
                 "{\"a\": [1, 1.234, \"foo\", {\"b\": [true, \"2019-01-02 03:04:56\"]}], \"c\": {\"a\": 1}}"
         ));
@@ -373,7 +373,7 @@ public class TestJsonParserPlugin {
 
     @Test
     public void useFlattenJsonArray() throws Exception {
-        ConfigSource config = this.config.set("__experimental__flatten_json_array", true);
+        ConfigSource config = this.config.set("flatten_json_array", true);
         transaction(config, fileInput(
                 "[{\"_c0\": 1},{\"_c0\": 2}]"
         ));
@@ -387,7 +387,7 @@ public class TestJsonParserPlugin {
     @Test(expected = DataException.class)
     public void useFlattenJsonArrayWithNonArrayJson() throws Exception {
         ConfigSource config = this.config
-                .set("__experimental__flatten_json_array", true)
+                .set("flatten_json_array", true)
                 .set("stop_on_invalid_record", true);
 
         transaction(config, fileInput(
@@ -398,8 +398,8 @@ public class TestJsonParserPlugin {
     @Test
     public void useFlattenJsonArrayWithRootPointer() throws Exception {
         ConfigSource config = this.config
-                .set("__experimental__flatten_json_array", true)
-                .set("__experimental__json_pointer_to_root", "/a");
+                .set("flatten_json_array", true)
+                .set("root", "/a");
         transaction(config, fileInput(
                 "{\"a\": [{\"_c0\": 1},{\"_c0\": 2}]}"
         ));

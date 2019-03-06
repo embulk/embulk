@@ -76,24 +76,23 @@ public class JsonParserPlugin implements ParserPlugin {
         @ConfigDefault("\"PASSTHROUGH\"")
         InvalidEscapeStringPolicy getInvalidEscapeStringPolicy();
 
-        // TODO: Rename following experimental configs after they'er determined
-        @Config("__experimental__json_pointer_to_root")
+        @Config("root")
         @ConfigDefault("null")
-        Optional<String> getJsonPointerToRoot();
+        Optional<String> getRoot();
 
-        @Config("__experimental__flatten_json_array")
+        @Config("flatten_json_array")
         @ConfigDefault("false")
         boolean getFlattenJsonArray();
 
-        @Config("__experimental__columns")
+        @Config("columns")
         @ConfigDefault("null")
         Optional<SchemaConfig> getSchemaConfig();
     }
 
     public interface OptionalColumnConfig extends Task, TimestampParser.TimestampColumnOption {
-        @Config("relative_json_pointer_from_root")
+        @Config("pointer")
         @ConfigDefault("null")
-        Optional<String> getJsonPointer();
+        Optional<String> getPointer();
     }
 
     @Override
@@ -135,9 +134,9 @@ public class JsonParserPlugin implements ParserPlugin {
                     while ((originalValue = stream.next()) != null) {
                         try {
                             Value value = originalValue;
-                            if (task.getJsonPointerToRoot().isPresent()) {
+                            if (task.getRoot().isPresent()) {
                                 try {
-                                    value = jsonParser.parseWithOffsetInJsonPointer(originalValue.toJson(), task.getJsonPointerToRoot().get());
+                                    value = jsonParser.parseWithOffsetInJsonPointer(originalValue.toJson(), task.getRoot().get());
                                 } catch (JsonParseException e) {
                                     throw new JsonRecordValidateException("A Json record doesn't have given 'JSON pointer to root'.");
                                 }
@@ -396,8 +395,8 @@ public class JsonParserPlugin implements ParserPlugin {
             final Column column = columns.get(i);
             final ColumnConfig columnConfig = config.getColumn(i);
             final OptionalColumnConfig options = columnConfig.getOption().loadConfig(OptionalColumnConfig.class);
-            if (options.getJsonPointer().isPresent()) {
-                result.put(column, options.getJsonPointer().get());
+            if (options.getPointer().isPresent()) {
+                result.put(column, options.getPointer().get());
             }
         }
         return result;
