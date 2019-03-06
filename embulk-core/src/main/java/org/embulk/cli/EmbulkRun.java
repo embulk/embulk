@@ -17,9 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSetup;
+import org.embulk.deps.cli.CliParser;
 import org.embulk.deps.cli.EmbulkCommandLineHelpRequired;
 import org.embulk.deps.cli.EmbulkCommandLineParseException;
-import org.embulk.deps.cli.EmbulkCommandLineParser;
 import org.embulk.deps.cli.OptionBehavior;
 import org.embulk.deps.cli.OptionDefinition;
 import org.embulk.jruby.ScriptingContainerDelegate;
@@ -74,7 +74,7 @@ public class EmbulkRun {
             case IRB:
                 return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
             default:
-                final EmbulkCommandLineParser parser = buildCommandLineParser(subcommand);
+                final CliParser parser = buildCommandLineParser(subcommand);
                 final EmbulkCommandLine commandLine;
                 try {
                     commandLine = parser.parse(
@@ -92,8 +92,8 @@ public class EmbulkRun {
         }
     }
 
-    private EmbulkCommandLineParser buildCommandLineParser(final EmbulkSubcommand subcommand) {
-        final EmbulkCommandLineParser.Builder parserBuilder = EmbulkCommandLineParser.builder();
+    private CliParser buildCommandLineParser(final EmbulkSubcommand subcommand) {
+        final CliParser.Builder parserBuilder = CliParser.builder();
 
         // TODO: Revisit the width. JLine may help. https://github.com/jline
         parserBuilder
@@ -552,7 +552,7 @@ public class EmbulkRun {
         localJRubyContainer.remove("__internal_argv_java__");
     }
 
-    private void addPluginLoadOptionDefinitions(final EmbulkCommandLineParser.Builder parserBuilder) {
+    private void addPluginLoadOptionDefinitions(final CliParser.Builder parserBuilder) {
         parserBuilder.addHelpMessageLine("");
         parserBuilder.addHelpMessageLine("  Plugin load options:");
         // op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
@@ -600,7 +600,7 @@ public class EmbulkRun {
                 }));
     }
 
-    private void addOtherOptionDefinitions(final EmbulkCommandLineParser.Builder parserBuilder) {
+    private void addOtherOptionDefinitions(final CliParser.Builder parserBuilder) {
         parserBuilder.addHelpMessageLine("");
         parserBuilder.addHelpMessageLine("  Other options:");
         // op.on('-l', '--log PATH', 'Output log messages to a file (default: -)') do |path|
