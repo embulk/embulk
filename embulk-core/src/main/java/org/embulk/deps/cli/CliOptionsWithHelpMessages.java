@@ -1,4 +1,4 @@
-package org.embulk.cli.parse;
+package org.embulk.deps.cli;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import org.apache.commons.cli.Options;
  * It just recognizes {@code HelpMessageAsCliOption} while others are same with {@code org.apache.commons.cli.Options}.
  * {@code HelpMessageAsCliOption} is added just as a help message line, but ignored as a command line option.
  *
- * It is visible only in |org.embulk.cli.parse| because it is an extension of a commons-cli class.
+ * It is visible only in {@code org.embulk.deps.cli} because it is an extension of a commons-cli class.
  * Dependencies on third-party libraries are to be encapsulated.
  */
 final class CliOptionsWithHelpMessages extends Options {

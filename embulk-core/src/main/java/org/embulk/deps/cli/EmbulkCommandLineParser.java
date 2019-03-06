@@ -1,4 +1,4 @@
-package org.embulk.cli.parse;
+package org.embulk.deps.cli;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;

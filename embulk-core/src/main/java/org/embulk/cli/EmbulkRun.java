@@ -17,11 +17,11 @@ import java.util.Arrays;
 import java.util.List;
 import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSetup;
-import org.embulk.cli.parse.EmbulkCommandLineHelpRequired;
-import org.embulk.cli.parse.EmbulkCommandLineParseException;
-import org.embulk.cli.parse.EmbulkCommandLineParser;
-import org.embulk.cli.parse.OptionBehavior;
-import org.embulk.cli.parse.OptionDefinition;
+import org.embulk.deps.cli.EmbulkCommandLineHelpRequired;
+import org.embulk.deps.cli.EmbulkCommandLineParseException;
+import org.embulk.deps.cli.EmbulkCommandLineParser;
+import org.embulk.deps.cli.OptionBehavior;
+import org.embulk.deps.cli.OptionDefinition;
 import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegateImpl;
 

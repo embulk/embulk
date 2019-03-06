@@ -1,4 +1,4 @@
-package org.embulk.cli.parse;
+package org.embulk.deps.cli;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import org.apache.commons.cli.Options;
  * It combines both {@code HelpMessageAsCliOption} and ordinary {@code org.apache.commons.cli.Option}, and
  * builds the entire help message.
  *
- * It is visible only in {@code org.embulk.cli.parse} because it is an extension of a commons-cli class.
+ * It is visible only in {@code org.embulk.deps.cli} because it is an extension of a commons-cli class.
  * Dependencies on third-party libraries are to be encapsulated.
  */
 final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
