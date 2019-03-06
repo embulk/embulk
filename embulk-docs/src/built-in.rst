@@ -353,13 +353,25 @@ The ``json`` parser plugin parses a JSON file that contains a sequence of JSON o
 Options
 ~~~~~~~~
 
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
-| name                       | type     | description                                                                                                    |          required?           |
-+============================+==========+================================================================================================================+==============================+
-| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid json)                            | ``false`` by default         |
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
-| invalid\_string\_escapes   | enum     | Escape strategy of invalid json string such as using invalid ``\`` like ``\a``. (PASSTHROUGH, SKIP, UNESCAPE)  | ``PASSTHROUGH`` by default   |
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| name                       | type     | description                                                                                                     |          required?                     |
++============================+==========+=================================================================================================================+========================================+
+| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid json)                             | ``false`` by default                   |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| invalid\_string\_escapes   | enum     | Escape strategy of invalid json string such as using invalid ``\`` like ``\a``. (PASSTHROUGH, SKIP, UNESCAPE)   | ``PASSTHROUGH`` by default             |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| root                       | string   | Specify when pointing a JSON object value as a record via JSON pointer expression                               | optional                               |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| flatten_json_array         | boolean  | Set true when regard elements in a JSON array as multiple Embulk records.                                       | ``false`` by default                   |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| columns                    | hash     | Columns (see below)                                                                                             | optional                               |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| default\_timezone          | string   | Time zone of timestamp columns. This can be overwritten for each column using ``column``                        | ``UTC`` by default                     |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| default\_timestamp\_format | string   | Format of timestamp columns. This can be overwritten for each column using ``column``                           | ``%Y-%m-%d %H:%M:%S.%N %z`` by default |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
+| default\_date              | string   | Set date part if the format doesn’t include date part. This can be overwritten for each column using ``column`` | ``1970-01-01`` by default              |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------------------+
 
 
 if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a``), it makes following the action.
@@ -376,6 +388,23 @@ if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a
 
 (\*1): Throwing an exception.
 
+The ``columns`` option can extract any value as an Embulk's column.
+
++----------+-----------------------------------------------------------------------------------------------------------+
+| name     | description                                                                                               |
++==========+===========================================================================================================+
+| name     | Name of the column. Select a key within a JSON record or any name can be allowed with ``pointer`` option. |
++----------+-----------------------------------------------------------------------------------------------------------+
+| type     | Type of the column (same as CSV parser's one)                                                             |
++----------+-----------------------------------------------------------------------------------------------------------+
+| pointer  | Set as a JSON Pointer expression if you want to specify any value in a JSON record as the column's value  |
++----------+-----------------------------------------------------------------------------------------------------------+
+| timezone | Set if you want to specify time zone for the timestamp column                                             |
++----------+-----------------------------------------------------------------------------------------------------------+
+| format   | Format of the timestamp if type is timestamp                                                              |
++----------+-----------------------------------------------------------------------------------------------------------+
+| date     | Set date part if the format doesn’t include date part                                                     |
++----------+-----------------------------------------------------------------------------------------------------------+
 
 Example
 ~~~~~~~~
@@ -385,6 +414,10 @@ Example
     in:
       parser:
         type: json
+        columns:
+        - {name: time, type: timestamp, format: "%s"}
+        - {name: ip, type: string}
+        - {name: name, type: string}
 
 Gzip decoder plugin
 --------------------
