@@ -348,6 +348,22 @@ public class TestJsonParserPlugin {
     }
 
     @Test
+    public void useDefaultSchemaIfSchemaConfigIsEmptyArray() throws Exception {
+        ConfigSource config = this.config.set("columns", new ArrayList<>());
+        transaction(config, fileInput(
+                "{\"_c0\": 1, \"_c1\": 1.234, \"_c2\": \"a\", \"_c3\": true, \"_c4\": \"2019-01-02 03:04:56\", \"_c5\":{\"a\": 1}}"
+        ));
+
+        List<Object[]> records = Pages.toObjects(newSchema(), output.pages);
+        assertEquals(1, records.size());
+
+        Object[] record = records.get(0);
+        assertArrayEquals(
+                record,
+                new Object[]{toJson("{\"_c0\": 1, \"_c1\": 1.234, \"_c2\": \"a\", \"_c3\": true, \"_c4\": \"2019-01-02 03:04:56\", \"_c5\":{\"a\": 1}}")});
+    }
+
+    @Test
     public void useSchemaConfigWithPointer() throws Exception {
         // Check parsing all types and inexistent column
         final List<Object> schemaConfig = new ArrayList<>();

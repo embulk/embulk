@@ -202,7 +202,7 @@ public class JsonParserPlugin implements ParserPlugin {
     }
 
     private static boolean isUsingCustomSchema(PluginTask task) {
-        return task.getSchemaConfig().isPresent();
+        return task.getSchemaConfig().isPresent() && !task.getSchemaConfig().get().isEmpty();
     }
 
     private static void setValueWithSingleJsonColumn(PageBuilder pageBuilder, Schema schema, MapValue value) {
