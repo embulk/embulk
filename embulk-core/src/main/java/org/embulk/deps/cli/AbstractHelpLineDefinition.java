@@ -1,7 +1,5 @@
 package org.embulk.deps.cli;
 
-import org.apache.commons.cli.Option;
-
 /**
  * AbstractHelpLineDefinition represents any one line in help messages in the command line parser.
  *
@@ -10,5 +8,6 @@ import org.apache.commons.cli.Option;
  */
 abstract class AbstractHelpLineDefinition {
     // Visible only in org.embulk.deps.cli to keep commons-cli segregated from other components.
-    abstract Option getCliOption();
+    // The return value should be org.apache.commons.cli.Option.
+    abstract Object getCliOption();
 }

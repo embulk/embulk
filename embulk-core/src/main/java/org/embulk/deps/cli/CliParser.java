@@ -43,7 +43,7 @@ public abstract class CliParser {
         }
 
         public Builder addHelpMessageLine(final String message) {
-            this.helpLineDefinitions.add(new HelpMessageLineDefinition(message));
+            this.helpLineDefinitions.add(HelpMessageLineDefinition.create(message));
             return this;
         }
 

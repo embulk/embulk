@@ -1,16 +1,7 @@
 package org.embulk.deps.cli;
 
-import org.apache.commons.cli.Option;
-
-class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
-    HelpMessageLineDefinition(final String message) {
-        this.cliOption = new HelpMessageAsCliOption(message);
+abstract class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
+    static HelpMessageLineDefinition create(final String message) {
+        return new HelpMessageLineDefinitionImpl(message);
     }
-
-    @Override
-    final Option getCliOption() {
-        return this.cliOption;
-    }
-
-    private final Option cliOption;
 }

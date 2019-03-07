@@ -29,9 +29,15 @@ final class CliParserImpl extends CliParser {
 
         final HashMap<Option, OptionDefinition> optionDefinitionFromCliOption = new HashMap<Option, OptionDefinition>();
         for (final AbstractHelpLineDefinition definition : this.helpLineDefinitions) {
-            cliOptions.addOption(definition.getCliOption());
-            if (definition instanceof OptionDefinition) {
-                optionDefinitionFromCliOption.put(definition.getCliOption(), ((OptionDefinition) definition));
+            final Object cliOptionObject = definition.getCliOption();
+            if (cliOptionObject instanceof Option) {
+                final Option cliOption = (Option) cliOptionObject;
+                cliOptions.addOption(cliOption);
+                if (definition instanceof OptionDefinition) {
+                    optionDefinitionFromCliOption.put(cliOption, ((OptionDefinition) definition));
+                }
+            } else {
+                throw new RuntimeException("Unexpected.");
             }
         }
         this.optionDefinitionFromCliOption = optionDefinitionFromCliOption;
