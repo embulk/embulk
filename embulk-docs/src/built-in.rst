@@ -353,13 +353,19 @@ The ``json`` parser plugin parses a JSON file that contains a sequence of JSON o
 Options
 ~~~~~~~~
 
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
-| name                       | type     | description                                                                                                    |          required?           |
-+============================+==========+================================================================================================================+==============================+
-| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid json)                            | ``false`` by default         |
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
-| invalid\_string\_escapes   | enum     | Escape strategy of invalid json string such as using invalid ``\`` like ``\a``. (PASSTHROUGH, SKIP, UNESCAPE)  | ``PASSTHROUGH`` by default   |
-+----------------------------+----------+----------------------------------------------------------------------------------------------------------------+------------------------------+
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
+| name                       | type     | description                                                                                                     |          required?         |
++============================+==========+=================================================================================================================+============================+
+| stop\_on\_invalid\_record  | boolean  | Stop bulk load transaction if a file includes invalid record (such as invalid json)                             | ``false`` by default       |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
+| invalid\_string\_escapes   | enum     | Escape strategy of invalid json string such as using invalid ``\`` like ``\a``. (PASSTHROUGH, SKIP, UNESCAPE)   | ``PASSTHROUGH`` by default |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
+| root                       | string   | Specify when pointing a JSON object value as a record via JSON pointer expression                               | optional                   |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
+| flatten_json_array         | boolean  | Set true when regard elements in a JSON array as multiple Embulk records.                                       | ``false`` by default       |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
+| columns                    | hash     | Columns (see below)                                                                                             | optional                   |
++----------------------------+----------+-----------------------------------------------------------------------------------------------------------------+----------------------------+
 
 
 if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a``), it makes following the action.
@@ -376,6 +382,19 @@ if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a
 
 (\*1): Throwing an exception.
 
+The ``columns`` option declares the list of columns, and the way how to extract JSON values into Embulk columns.
+
++----------+-------------------------------------------------------------------------------------------------------+
+| name     | description                                                                                           |
++==========+=======================================================================================================+
+| name     | Name of the column. The JSON value with this name is extracted if `pointer` is not specified.         |
++----------+-------------------------------------------------------------------------------------------------------+
+| type     | Type of the column (same as CSV parser's one)                                                         |
++----------+-------------------------------------------------------------------------------------------------------+
+| pointer  | Pointer to the descendant node to be extracted as the column, expressed as a JSON Pointer (optional). |
++----------+-------------------------------------------------------------------------------------------------------+
+| format   | Format of the timestamp if type is timestamp                                                          |
++----------+-------------------------------------------------------------------------------------------------------+
 
 Example
 ~~~~~~~~
@@ -385,6 +404,10 @@ Example
     in:
       parser:
         type: json
+        columns:
+        - {name: time, type: timestamp, format: "%s"}
+        - {name: ip, type: string}
+        - {name: name, type: string}
 
 Gzip decoder plugin
 --------------------
