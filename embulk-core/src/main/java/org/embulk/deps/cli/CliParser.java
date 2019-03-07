@@ -2,6 +2,8 @@ package org.embulk.deps.cli;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.cli.EmbulkCommandLine;
@@ -18,12 +20,25 @@ public abstract class CliParser {
         }
 
         public CliParser build() {
-            return new CliParserImpl(
-                    this.mainUsage + this.additionalUsage.toString(),
-                    this.helpLineDefinitions,
-                    this.minArgs,
-                    this.maxArgs,
-                    this.width);
+            try {
+                return CONSTRUCTOR.newInstance(
+                        this.mainUsage + this.additionalUsage.toString(),
+                        this.helpLineDefinitions,
+                        this.minArgs,
+                        this.maxArgs,
+                        this.width);
+            } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
+                throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
+            } catch (final InvocationTargetException ex) {
+                final Throwable targetException = ex.getTargetException();
+                if (targetException instanceof RuntimeException) {
+                    throw (RuntimeException) targetException;
+                } else if (targetException instanceof Error) {
+                    throw (Error) targetException;
+                } else {
+                    throw new RuntimeException("Unexpected Exception in creating: " + CLASS_NAME, ex);
+                }
+            }
         }
 
         public Builder setMainUsage(final String mainUsage) {
@@ -81,4 +96,27 @@ public abstract class CliParser {
     }
 
     public abstract void printHelp(final PrintWriter printWriter);
+
+    @SuppressWarnings("unchecked")
+    private static Class<CliParser> loadImplClass() {
+        try {
+            return (Class<CliParser>) CLASS_LOADER.loadClass(CLASS_NAME);
+        } catch (final ClassNotFoundException ex) {
+            throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
+        }
+    }
+
+    private static final ClassLoader CLASS_LOADER = CliParser.class.getClassLoader();
+    private static final String CLASS_NAME = "org.embulk.deps.cli.CliParserImpl";
+
+    static {
+        final Class<CliParser> clazz = loadImplClass();
+        try {
+            CONSTRUCTOR = clazz.getConstructor(String.class, List.class, int.class, int.class, int.class);
+        } catch (final NoSuchMethodException ex) {
+            throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
+        }
+    }
+
+    private static final Constructor<CliParser> CONSTRUCTOR;
 }

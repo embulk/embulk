@@ -4,7 +4,8 @@ import org.apache.commons.cli.Option;
 import org.embulk.cli.EmbulkCommandLine;
 
 final class OptionDefinitionImpl extends OptionDefinition {
-    OptionDefinitionImpl(
+    // It is public just to be called through getConstructor.
+    public OptionDefinitionImpl(
             final String shortOption,
             final String longOption,
             final boolean hasArgument,

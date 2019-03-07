@@ -13,7 +13,8 @@ import org.apache.commons.cli.ParseException;
 import org.embulk.cli.EmbulkCommandLine;
 
 final class CliParserImpl extends CliParser {
-    CliParserImpl(
+    // It is public just to be called through getConstructor.
+    public CliParserImpl(
             final String usage,
             final List<AbstractHelpLineDefinition> helpLineDefinitions,
             final int minArgs,
