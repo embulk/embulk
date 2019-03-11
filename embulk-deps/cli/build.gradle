@@ -1,0 +1,17 @@
+description = "Wrapper of CLI-related dependency libraries in Embulk core"
+ext {
+    summary = "Embulk's dependency wrapper for CLI"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(':embulk-core')
+
+    compile 'commons-cli:commons-cli:1.3.1'
+
+    testCompile project(':embulk-core')
+    testCompile 'junit:junit:4.12'
+}

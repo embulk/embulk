@@ -1,8 +1,6 @@
 package org.embulk.deps.cli;
 
-import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +10,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.embulk.cli.EmbulkCommandLine;
 
-final class CliParserImpl extends CliParser {
+// It is public just to be accessed from CliParser.
+public final class CliParserImpl extends CliParser {
     // It is public just to be called through getConstructor.
     public CliParserImpl(
             final String usage,

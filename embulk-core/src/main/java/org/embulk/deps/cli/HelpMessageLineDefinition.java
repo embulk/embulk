@@ -2,8 +2,10 @@ package org.embulk.deps.cli;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import org.embulk.deps.EmbulkDependencyClassLoaders;
 
-abstract class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
+// It is public just to be accessible from HelpMessageLineDefinitionImpl.
+public abstract class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
     static HelpMessageLineDefinition create(final String message) {
         try {
             return CONSTRUCTOR.newInstance(message);
@@ -30,7 +32,7 @@ abstract class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = HelpMessageLineDefinition.class.getClassLoader();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.ofCli();
     private static final String CLASS_NAME = "org.embulk.deps.cli.HelpMessageLineDefinitionImpl";
 
     static {

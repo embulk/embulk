@@ -3,7 +3,8 @@ package org.embulk.deps.cli;
 import org.apache.commons.cli.Option;
 import org.embulk.cli.EmbulkCommandLine;
 
-final class OptionDefinitionImpl extends OptionDefinition {
+// It is public just to be accessed from OptionDefinition.
+public final class OptionDefinitionImpl extends OptionDefinition {
     // It is public just to be called through getConstructor.
     public OptionDefinitionImpl(
             final String shortOption,
@@ -38,18 +39,18 @@ final class OptionDefinitionImpl extends OptionDefinition {
     }
 
     @Override
-    final Object getCliOption() {
+    public final Object getCliOption() {
         return this.cliOption;
     }
 
     @Override
-    final void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
+    public final void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
             throws EmbulkCommandLineParseException {
         this.behavior.behave(commandLineBuilder, argument);
     }
 
     @Override
-    final boolean printsHelp() {
+    public final boolean printsHelp() {
         return this.printsHelp;
     }
 

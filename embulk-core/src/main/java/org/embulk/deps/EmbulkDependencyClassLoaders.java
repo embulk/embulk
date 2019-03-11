@@ -24,6 +24,7 @@ public final class EmbulkDependencyClassLoaders {
         private StaticInitializer() {
             this.useSelfContainedJarFiles = false;
             this.mavenDependencies = new ArrayList<>();
+            this.cliDependencies = new ArrayList<>();
         }
 
         public StaticInitializer useSelfContainedJarFiles() {
@@ -41,13 +42,25 @@ public final class EmbulkDependencyClassLoaders {
             return this;
         }
 
+        public StaticInitializer addCliDependency(final Path path) {
+            this.cliDependencies.add(path);
+            return this;
+        }
+
+        public StaticInitializer addCliDependencies(final Collection<Path> paths) {
+            this.cliDependencies.addAll(paths);
+            return this;
+        }
+
         public void initialize() {
             initializeUseSelfContainedJarFiles(this.useSelfContainedJarFiles);
             initializeMaven(Collections.unmodifiableList(this.mavenDependencies));
+            initializeCli(Collections.unmodifiableList(this.cliDependencies));
         }
 
         private boolean useSelfContainedJarFiles;
         private final ArrayList<Path> mavenDependencies;
+        private final ArrayList<Path> cliDependencies;
     }
 
     public static StaticInitializer staticInitializer() {
@@ -56,6 +69,10 @@ public final class EmbulkDependencyClassLoaders {
 
     public static ClassLoader ofMaven() {
         return MavenHolder.MAVEN_DEPENDENCY_CLASS_LOADER;
+    }
+
+    public static ClassLoader ofCli() {
+        return CliHolder.CLI_DEPENDENCY_CLASS_LOADER;
     }
 
     private static class MavenHolder {  // Initialization-on-demand holder
@@ -74,6 +91,22 @@ public final class EmbulkDependencyClassLoaders {
         }
     }
 
+    private static class CliHolder {  // Initialization-on-demand holder
+        public static final DependencyClassLoader CLI_DEPENDENCY_CLASS_LOADER;
+
+        static {
+            if (CLI_DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
+                logger.warn(messageUninitialized("CLI"));
+            }
+            CLI_DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(
+                    CLI_DEPENDENCIES,
+                    CLASS_LOADER,
+                    USE_SELF_CONTAINED_JAR_FILES.get()
+                            ? EmbulkSelfContainedJarFiles.Type.CLI
+                            : EmbulkSelfContainedJarFiles.Type.NONE);
+        }
+    }
+
     private static void initializeUseSelfContainedJarFiles(final boolean useSelfContainedJarFile) {
         USE_SELF_CONTAINED_JAR_FILES.set(useSelfContainedJarFile);
     }
@@ -88,6 +121,16 @@ public final class EmbulkDependencyClassLoaders {
         }
     }
 
+    private static void initializeCli(final List<Path> cliDependencies) {
+        synchronized (CLI_DEPENDENCIES) {
+            if (CLI_DEPENDENCIES.isEmpty()) {
+                CLI_DEPENDENCIES.addAll(cliDependencies);
+            } else {
+                throw new LinkageError("Double initialization of dependencies for CLI.");
+            }
+        }
+    }
+
     private static String messageUninitialized(final String target) {
         return String.format(
                 "Dependencies for %s are uninitialized. Expected to use classes loaded by the parent ClassLoader.", target);
@@ -98,6 +141,7 @@ public final class EmbulkDependencyClassLoaders {
     private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.class.getClassLoader();
 
     private static final ArrayList<Path> MAVEN_DEPENDENCIES = new ArrayList<>();
+    private static final ArrayList<Path> CLI_DEPENDENCIES = new ArrayList<>();
 
     private static final AtomicBoolean USE_SELF_CONTAINED_JAR_FILES = new AtomicBoolean(false);
 }

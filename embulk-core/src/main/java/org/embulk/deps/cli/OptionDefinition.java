@@ -3,6 +3,7 @@ package org.embulk.deps.cli;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import org.embulk.cli.EmbulkCommandLine;
+import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class OptionDefinition extends AbstractHelpLineDefinition {
     public static OptionDefinition defineOnlyLongOptionWithArgument(
@@ -55,10 +56,10 @@ public abstract class OptionDefinition extends AbstractHelpLineDefinition {
             });
     }
 
-    abstract void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
+    public abstract void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
             throws EmbulkCommandLineParseException;
 
-    abstract boolean printsHelp();
+    public abstract boolean printsHelp();
 
     private static OptionDefinition createOptionDefinitionImpl(
             final String shortOption,
@@ -100,7 +101,7 @@ public abstract class OptionDefinition extends AbstractHelpLineDefinition {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = OptionDefinition.class.getClassLoader();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.ofCli();
     private static final String CLASS_NAME = "org.embulk.deps.cli.OptionDefinitionImpl";
 
     static {

@@ -50,7 +50,7 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-configure(subprojects.findAll { ['embulk-core', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'findbugs'
     apply plugin: 'jacoco'
@@ -199,6 +199,8 @@ dependencies {
         exclude group: 'org.apache.commons', module: 'commons-lang3'  // Included in embulk-core.
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
     }
+
+    embed project(':embulk-deps-cli')
 }
 
 def listEmbedDependencies = { rootModuleName, prefix ->
@@ -235,10 +237,6 @@ shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':emb
     dependsOn embeddedJarsJar
     from embeddedJarsJar
 
-    // 'org.apache.commons.cli' is used in:
-    // - embulk-core: EmbulkCommandLineParser (from v0.8.28)
-    relocate 'org.apache.commons.cli', 'org.embulk.third_party.org.apache.commons.cli'
-
     // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
     // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
     manifest {
@@ -248,6 +246,7 @@ shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':emb
                    'Specification-Title': 'embulk',
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path-Maven': listEmbedDependencies('embulk-deps-maven', '/lib/'),
+                   'Embulk-Resource-Class-Path-Cli': listEmbedDependencies('embulk-deps-cli', '/lib/'),
                    'Main-Class': 'org.embulk.cli.Main'
     }
 

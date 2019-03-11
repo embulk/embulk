@@ -28,12 +28,14 @@ public final class EmbulkSelfContainedJarFiles {
     public enum Type {
         NONE,
         MAVEN,
+        CLI,
         ;
     }
 
     public static final class StaticInitializer {
         private StaticInitializer() {
             this.mavenJarFileResourceNames = new ArrayList<>();
+            this.cliJarFileResourceNames = new ArrayList<>();
         }
 
         public StaticInitializer addMavenJarFileResourceName(final String resourceName) {
@@ -46,17 +48,31 @@ public final class EmbulkSelfContainedJarFiles {
             return this;
         }
 
+        public StaticInitializer addCliJarFileResourceName(final String resourceName) {
+            this.cliJarFileResourceNames.add(resourceName);
+            return this;
+        }
+
+        public StaticInitializer addCliJarFileResourceNames(final Collection<String> resourceNames) {
+            this.cliJarFileResourceNames.addAll(resourceNames);
+            return this;
+        }
+
         public StaticInitializer addFromManifest(final Manifest manifest) {
             final Attributes attributes = manifest.getMainAttributes();
             this.addMavenJarFileResourceNames(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path-Maven")));
+            this.addCliJarFileResourceNames(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path-Cli")));
             return this;
         }
 
         public void initialize() {
-            initializeAll(Collections.unmodifiableList(this.mavenJarFileResourceNames));
+            initializeAll(
+                    Collections.unmodifiableList(this.mavenJarFileResourceNames),
+                    Collections.unmodifiableList(this.cliJarFileResourceNames));
         }
 
         private final ArrayList<String> mavenJarFileResourceNames;
+        private final ArrayList<String> cliJarFileResourceNames;
     }
 
     public static StaticInitializer staticInitializer() {
@@ -68,11 +84,14 @@ public final class EmbulkSelfContainedJarFiles {
      *
      * public to be called from org.embulk.cli. Not for plugins. Not guaranteed.
      */
-    private static void initializeAll(final List<String> mavenJarResourceNames) {
+    private static void initializeAll(
+            final List<String> mavenJarResourceNames,
+            final List<String> cliJarResourceNames) {
         synchronized (JAR_RESOURCE_NAMES) {
             if (JAR_RESOURCE_NAMES.isEmpty()) {
                 JAR_RESOURCE_NAMES.put(Type.NONE, Collections.unmodifiableList(new ArrayList<String>()));
                 JAR_RESOURCE_NAMES.put(Type.MAVEN, Collections.unmodifiableList(new ArrayList<String>(mavenJarResourceNames)));
+                JAR_RESOURCE_NAMES.put(Type.CLI, Collections.unmodifiableList(new ArrayList<String>(cliJarResourceNames)));
             } else {
                 throw new LinkageError("Doubly-initialized a set of self-contained JAR files.");
             }
@@ -114,6 +133,9 @@ public final class EmbulkSelfContainedJarFiles {
         static {
             final HashSet<String> allJarResourceNames = new HashSet<>();
             for (final String jarResourceName : JAR_RESOURCE_NAMES.get(Type.MAVEN)) {
+                allJarResourceNames.add(jarResourceName);
+            }
+            for (final String jarResourceName : JAR_RESOURCE_NAMES.get(Type.CLI)) {
                 allJarResourceNames.add(jarResourceName);
             }
 
