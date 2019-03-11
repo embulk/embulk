@@ -6,3 +6,4 @@ project(':embulk-deps-maven').projectDir = file('embulk-deps/maven')
 include 'embulk-standards'
 include 'embulk-test'
 include 'embulk-docs'
+include 'test-helpers'
