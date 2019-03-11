@@ -90,9 +90,9 @@ public class JsonParserPlugin implements ParserPlugin {
     }
 
     public interface OptionalColumnConfig extends Task, TimestampParser.TimestampColumnOption {
-        @Config("pointer")
+        @Config("element_at")
         @ConfigDefault("null")
-        Optional<String> getPointer();
+        Optional<String> getElementAt();
     }
 
     @Override
@@ -395,8 +395,8 @@ public class JsonParserPlugin implements ParserPlugin {
             final Column column = columns.get(i);
             final ColumnConfig columnConfig = config.getColumn(i);
             final OptionalColumnConfig options = columnConfig.getOption().loadConfig(OptionalColumnConfig.class);
-            if (options.getPointer().isPresent()) {
-                result.put(column, options.getPointer().get());
+            if (options.getElementAt().isPresent()) {
+                result.put(column, options.getElementAt().get());
             }
         }
         return result;

@@ -384,17 +384,17 @@ if you set invalid\_string\_escapes and appear invalid JSON string (such as ``\a
 
 The ``columns`` option declares the list of columns, and the way how to extract JSON values into Embulk columns.
 
-+----------+-------------------------------------------------------------------------------------------------------+
-| name     | description                                                                                           |
-+==========+=======================================================================================================+
-| name     | Name of the column. The JSON value with this name is extracted if `pointer` is not specified.         |
-+----------+-------------------------------------------------------------------------------------------------------+
-| type     | Type of the column (same as CSV parser's one)                                                         |
-+----------+-------------------------------------------------------------------------------------------------------+
-| pointer  | Pointer to the descendant node to be extracted as the column, expressed as a JSON Pointer (optional). |
-+----------+-------------------------------------------------------------------------------------------------------+
-| format   | Format of the timestamp if type is timestamp                                                          |
-+----------+-------------------------------------------------------------------------------------------------------+
++-------------+----------------------------------------------------------------------------------------------------+
+| name        | description                                                                                        |
++=============+====================================================================================================+
+| name        | Name of the column. The JSON value with this name is extracted if `element_at` is not specified.   |
++-------------+----------------------------------------------------------------------------------------------------+
+| type        | Type of the column (same as CSV parser's one)                                                      |
++-------------+----------------------------------------------------------------------------------------------------+
+| element\_at | Descendant element to be extracted as the column, expressed as a relative JSON Pointer (optional). |
++-------------+----------------------------------------------------------------------------------------------------+
+| format      | Format of the timestamp if type is timestamp                                                       |
++-------------+----------------------------------------------------------------------------------------------------+
 
 Example
 ~~~~~~~~

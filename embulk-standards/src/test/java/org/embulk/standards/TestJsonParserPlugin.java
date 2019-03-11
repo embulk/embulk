@@ -367,13 +367,13 @@ public class TestJsonParserPlugin {
     public void useSchemaConfigWithPointer() throws Exception {
         // Check parsing all types and inexistent column
         final List<Object> schemaConfig = new ArrayList<>();
-        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("pointer", "/a/0"));
-        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("pointer", "/a/1"));
-        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("pointer", "/a/2"));
-        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("pointer", "/a/3/b/0"));
-        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("pointer", "/a/3/b/1"));
-        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("pointer", "/c"));
-        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("pointer", "/d"));
+        schemaConfig.add(config().set("name", "_c0").set("type", "long").set("element_at", "/a/0"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "double").set("element_at", "/a/1"));
+        schemaConfig.add(config().set("name", "_c2").set("type", "string").set("element_at", "/a/2"));
+        schemaConfig.add(config().set("name", "_c3").set("type", "boolean").set("element_at", "/a/3/b/0"));
+        schemaConfig.add(config().set("name", "_c4").set("type", "timestamp").set("format", "%Y-%m-%d %H:%M:%S").set("element_at", "/a/3/b/1"));
+        schemaConfig.add(config().set("name", "_c5").set("type", "json").set("element_at", "/c"));
+        schemaConfig.add(config().set("name", "_c99").set("type", "json").set("element_at", "/d"));
 
         ConfigSource config = this.config.set("columns", schemaConfig);
         transaction(config, fileInput(
