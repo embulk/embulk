@@ -214,7 +214,7 @@ public class PluginClassLoader extends URLClassLoader {
         final boolean childFirst = isParentFirstPath(resourceName);
 
         if (childFirst) {
-            final InputStream childInputStream = getResourceAsStreamFromChild(resourceName);
+            final InputStream childInputStream = super.getResourceAsStream(resourceName);
             if (childInputStream != null) {
                 return childInputStream;
             }
@@ -226,7 +226,7 @@ public class PluginClassLoader extends URLClassLoader {
         }
 
         if (!childFirst) {
-            final InputStream childInputStream = getResourceAsStreamFromChild(resourceName);
+            final InputStream childInputStream = super.getResourceAsStream(resourceName);
             if (childInputStream != null) {
                 return childInputStream;
             }
@@ -274,10 +274,6 @@ public class PluginClassLoader extends URLClassLoader {
             ++i;
         }
         return allDirectJarUrls;
-    }
-
-    private InputStream getResourceAsStreamFromChild(final String resourceName) {
-        return super.getResourceAsStream(resourceName);
     }
 
     private boolean isParentFirstPackage(String name) {
