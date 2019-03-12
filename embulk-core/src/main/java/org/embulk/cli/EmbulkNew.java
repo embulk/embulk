@@ -20,8 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
+import org.embulk.deps.cli.VelocityEngineDelegate;
 import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkNew {
@@ -51,10 +50,7 @@ public class EmbulkNew {
 
         this.pluginBasePath = this.basePath.resolve(fullProjectName);
 
-        this.velocityEngine = new VelocityEngine();
-        this.velocityEngine.init();
-        this.velocityEngine.setProperty(VelocityEngine.RUNTIME_LOG_LOGSYSTEM_CLASS,
-                                        "org.apache.velocity.runtime.log.NullLogSystem");
+        this.velocityEngine = VelocityEngineDelegate.create();
     }
 
     public boolean newPlugin() throws IOException {
@@ -127,7 +123,7 @@ public class EmbulkNew {
             //
             // Generate project repository
             //
-            final VelocityContext velocityContext = createVelocityContext(
+            final Map<String, String> velocityContext = createVelocityContext(
                     author,
                     category,
                     description,
@@ -325,7 +321,7 @@ public class EmbulkNew {
         return Joiner.on(" ").join(nameComposition);
     }
 
-    private VelocityContext createVelocityContext(
+    private Map<String, String> createVelocityContext(
             final String author,
             final String category,
             final String description,
@@ -342,7 +338,7 @@ public class EmbulkNew {
             final String language,
             final String name,
             final String rubyClassName) {
-        final VelocityContext velocityContext = new VelocityContext();
+        final Map<String, String> velocityContext = new HashMap<String, String>();
         // TODO(dmikurube): Revisit this |argumentToRunEmbulkJava|.
         // This is in the Velocity context because the value could not be in Velocity templates.
         velocityContext.put("argumentToRunEmbulkJava", "\'-L ${file(\".\").absolutePath}\'");
@@ -373,7 +369,7 @@ public class EmbulkNew {
         Files.copy(EmbulkNew.class.getClassLoader().getResourceAsStream(sourceResourcePath), destinationPath);
     }
 
-    private void copyTemplated(String sourceResourcePath, String destinationFileName, VelocityContext velocityContext)
+    private void copyTemplated(String sourceResourcePath, String destinationFileName, Map<String, String> velocityContext)
             throws IOException {
         try (InputStreamReader reader = new InputStreamReader(
                      EmbulkNew.class.getClassLoader().getResourceAsStream(sourceResourcePath))) {
@@ -415,5 +411,5 @@ public class EmbulkNew {
 
     private final Path pluginBasePath;
 
-    private final VelocityEngine velocityEngine;
+    private final VelocityEngineDelegate velocityEngine;
 }

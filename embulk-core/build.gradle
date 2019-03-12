@@ -64,9 +64,6 @@ dependencies {
     // Maven-related dependencies are moved to embulk-deps-maven.
     compile 'org.apache.commons:commons-lang3:3.4'
 
-    // For CLI
-    compile 'org.apache.velocity:velocity:1.7'
-
     testCompile 'junit:junit:4.12'
 
     gems 'rubygems:bundler:1.16.0'
