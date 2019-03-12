@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 import java.util.stream.Collectors;
 
 public class PluginClassLoader extends URLClassLoader {
@@ -182,56 +181,6 @@ public class PluginClassLoader extends URLClassLoader {
             resolveClass(clazz);
         }
         return clazz;
-    }
-
-    /**
-     * Finds a resource recognized as the given name from given JARs and JARs in the given JAR.
-     *
-     * Resources directly in the given JARs are always prioritized. Only if no such a resource is found
-     * directly in the given JAR, it tries to find the resource in JARs in the given JAR.
-     *
-     * Note that URLClassLoader#findResource is public while ClassLoader#findResource is protected.
-     */
-    @Override
-    public URL findResource(final String resourceName) {
-        if (this.oneNestedJarUrlBase == null) {
-            // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
-            return super.findResource(resourceName);
-        } else {
-            // Single nested JAR -- JAR-based plugins
-            // Classes directly in the plugin JAR are always prioritized.
-            final URL rootUrl = super.findResource(resourceName);
-            if (rootUrl != null) {
-                return rootUrl;
-            }
-            return null;
-        }
-    }
-
-    /**
-     * Finds resources recognized as the given name from given JARs and JARs in the given JAR.
-     *
-     * Resources directly in the given JARs precede. Resources in JARs in the given JAR follow resources
-     * directly in the given JARs.
-     *
-     * Note that URLClassLoader#findResources is public while ClassLoader#findResources is protected.
-     */
-    @Override
-    public Enumeration<URL> findResources(final String resourceName) throws IOException {
-        if (this.oneNestedJarUrlBase == null) {
-            // Multiple flat JARs -- Gem-based plugins, or Single JAR (JAR-based plugins) without any embedded JAR
-            return super.findResources(resourceName);
-        } else {
-            // Single nested JAR -- JAR-based plugins
-            final Vector<URL> urls = new Vector<>();
-
-            // Classes directly in the plugin JAR are always prioritized.
-            // Note that |super.findResources| may throw IOException.
-            for (final Enumeration<URL> rootUrls = super.findResources(resourceName); rootUrls.hasMoreElements(); ) {
-                urls.add(rootUrls.nextElement());
-            }
-            return urls.elements();
-        }
     }
 
     @Override
