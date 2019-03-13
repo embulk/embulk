@@ -25,19 +25,6 @@ public class PluginClassLoader extends URLClassLoader {
         super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.<URL>emptyList() : flatJarUrls),
               parentClassLoader);
 
-        // Given |oneNestedJarFileUrl| should be "file:...". |this.oneNestedJarUrlBase| should be "jar:file:...".
-        URL oneNestedJarUrlBaseBuilt = null;
-        if (oneNestedJarFileUrl != null) {
-            try {
-                oneNestedJarUrlBaseBuilt = new URL("jar", "", -1, oneNestedJarFileUrl + "!/");
-            } catch (MalformedURLException ex) {
-                // TODO: Notify this to reporters as far as possible.
-                System.err.println("FATAL: Invalid JAR file URL: " + oneNestedJarFileUrl.toString());
-                ex.printStackTrace();
-            }
-        }
-        this.oneNestedJarUrlBase = oneNestedJarUrlBaseBuilt;
-
         this.parentFirstPackagePrefixes = ImmutableList.copyOf(
                 parentFirstPackages.stream().map(pkg -> pkg + ".").collect(Collectors.toList()));
         this.parentFirstResourcePrefixes = ImmutableList.copyOf(
@@ -267,7 +254,6 @@ public class PluginClassLoader extends URLClassLoader {
         return false;
     }
 
-    private final URL oneNestedJarUrlBase;
     private final List<String> parentFirstPackagePrefixes;
     private final List<String> parentFirstResourcePrefixes;
 }
