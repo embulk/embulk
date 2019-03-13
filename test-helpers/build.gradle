@@ -9,7 +9,7 @@ task deploy(dependsOn: ["deployJarsForEmbulkTestMavenPlugin"])
  */
 task deployJarsForEmbulkTestMavenPlugin(
         type: Copy,
-        dependsOn: ["buildFlatJarForEmbulkTestMavenPlugin", "buildNestedJarEmbulkTestMavenPlugin"]) {
+        dependsOn: ["buildFlatJarForEmbulkTestMavenPlugin", "buildDepsJarForEmbulkTestMavenPlugin"]) {
     from("$buildDir/libs") {
         include "**/embulk-test-maven-plugin-*.jar"
     }
@@ -22,23 +22,13 @@ task buildFlatJarForEmbulkTestMavenPlugin(type: Jar) {
         include "embulk-test-maven-plugin/main.txt"
     }
     manifest {
-        attributes(commonManifestForEmbulkTestMavenPlugin())
+        attributes(
+                "Manifest-Version": "1.0",
+                "Embulk-Plugin-Spi-Version": "0",
+                "Embulk-Plugin-Main-Class": "org.embulk.plugin.jar.ExampleJarSpiV0"
+        )
     }
     archiveName = "embulk-test-maven-plugin-flat.jar"
-}
-
-task buildNestedJarEmbulkTestMavenPlugin(type: Jar, dependsOn: ["buildDepsJarForEmbulkTestMavenPlugin"]) {
-    from(sourceSets.main.runtimeClasspath) {
-        include "org/embulk/plugin/jar/ExampleJarSpiV0.class"
-        include "embulk-test-maven-plugin/main.txt"
-    }
-    into "classpath", { from "$buildDir/libs/embulk-test-maven-plugin-deps.jar" }
-    manifest {
-        attributes(commonManifestForEmbulkTestMavenPlugin() << [
-                "Embulk-Plugin-Class-Path": "classpath/embulk-test-maven-plugin-deps.jar"
-        ])
-    }
-    archiveName = "embulk-test-maven-plugin-nested.jar"
 }
 
 task buildDepsJarForEmbulkTestMavenPlugin(type: Jar) {
@@ -48,9 +38,3 @@ task buildDepsJarForEmbulkTestMavenPlugin(type: Jar) {
     }
     archiveName = "embulk-test-maven-plugin-deps.jar"
 }
-
-static def commonManifestForEmbulkTestMavenPlugin() {[
-        "Manifest-Version": "1.0",
-        "Embulk-Plugin-Spi-Version": "0",
-        "Embulk-Plugin-Main-Class": "org.embulk.plugin.jar.ExampleJarSpiV0"
-]}
