@@ -61,7 +61,7 @@ Next step: [Using plugins](#using-plugins)
 
 ### Using plugins
 
-You can use plugins to load data from/to various systems and file formats. Here is the list of publicly released plugins: [list of plugins by category](http://www.embulk.org/plugins/).
+You can use plugins to load data from/to various systems and file formats. Here is the list of publicly released plugins: [list of plugins by category](https://plugins.embulk.org/).
 
 An example is [embulk-output-command](https://github.com/embulk/embulk-output-command) plugin. It executes an external command to output the records.
 
