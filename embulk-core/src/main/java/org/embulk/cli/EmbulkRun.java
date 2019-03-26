@@ -3,7 +3,6 @@ package org.embulk.cli;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -301,6 +300,7 @@ public class EmbulkRun {
                                     }
                                 }))
                         .setArgumentsRange(0, 1);
+                addOtherOptionDefinitions(parserBuilder);
                 break;
             case EXAMPLE:
                 parserBuilder
@@ -352,16 +352,13 @@ public class EmbulkRun {
                 }
                 return 0;
             case SELFUPDATE:
-                final String specifiedVersionString;
-                if (commandLine.getArguments().isEmpty()) {
-                    specifiedVersionString = null;
-                } else {
-                    specifiedVersionString = commandLine.getArguments().get(0);
-                }
-                final EmbulkSelfUpdate embulkSelfUpdate = new EmbulkSelfUpdate();
                 try {
-                    embulkSelfUpdate.updateSelf(this.embulkVersion, specifiedVersionString, commandLine.getForce());
-                } catch (IOException | URISyntaxException ex) {
+                    if (commandLine.getArguments().isEmpty()) {
+                        SelfUpdate.toLatest(this.embulkVersion, commandLine.getForce());
+                    } else {
+                        SelfUpdate.toSpecific(this.embulkVersion, commandLine.getArguments().get(0), commandLine.getForce());
+                    }
+                } catch (final IOException ex) {
                     ex.printStackTrace();
                     return 1;
                 }
