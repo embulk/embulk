@@ -31,6 +31,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile project(':embulk-core').sourceSets.test.output
     testCompile project(':embulk-test')
+    testCompile 'ch.qos.logback:logback-classic:1.1.3'
 
     jrubyExec 'rubygems:simplecov:0.10.+'
     jrubyExec 'rubygems:test-unit:3.0.+'
