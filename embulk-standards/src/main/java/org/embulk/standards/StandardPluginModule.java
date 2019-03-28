@@ -6,6 +6,7 @@ import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import org.embulk.config.ConfigSource;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
@@ -16,43 +17,86 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 
 public class StandardPluginModule implements Module {
+    public StandardPluginModule(final ConfigSource systemConfig) {
+        this.systemConfig = systemConfig;
+    }
+
     @Override
     public void configure(Binder binder) {
         Preconditions.checkNotNull(binder, "binder is null.");
 
         // input plugins
-        registerPluginTo(binder, InputPlugin.class, "config", ConfigInputPlugin.class);
-        registerPluginTo(binder, InputPlugin.class, "file", LocalFileInputPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.input.config.disabled", false)) {
+            registerPluginTo(binder, InputPlugin.class, "config", ConfigInputPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.input.file.disabled", false)) {
+            registerPluginTo(binder, InputPlugin.class, "file", LocalFileInputPlugin.class);
+        }
 
         // parser plugins
-        registerPluginTo(binder, ParserPlugin.class, "csv", CsvParserPlugin.class);
-        registerPluginTo(binder, ParserPlugin.class, "json", JsonParserPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.parser.csv.disabled", false)) {
+            registerPluginTo(binder, ParserPlugin.class, "csv", CsvParserPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.parser.json.disabled", false)) {
+            registerPluginTo(binder, ParserPlugin.class, "json", JsonParserPlugin.class);
+        }
 
         // file decoder plugins
-        registerPluginTo(binder, DecoderPlugin.class, "gzip", GzipFileDecoderPlugin.class);
-        registerPluginTo(binder, DecoderPlugin.class, "bzip2", Bzip2FileDecoderPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.decoder.gzip.disabled", false)) {
+            registerPluginTo(binder, DecoderPlugin.class, "gzip", GzipFileDecoderPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.decoder.bzip2.disabled", false)) {
+            registerPluginTo(binder, DecoderPlugin.class, "bzip2", Bzip2FileDecoderPlugin.class);
+        }
 
         // output plugins
-        registerPluginTo(binder, OutputPlugin.class, "file", LocalFileOutputPlugin.class);
-        registerPluginTo(binder, OutputPlugin.class, "null", NullOutputPlugin.class);
-        registerPluginTo(binder, OutputPlugin.class, "stdout", StdoutOutputPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.output.file.disabled", false)) {
+            registerPluginTo(binder, OutputPlugin.class, "file", LocalFileOutputPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.output.null.disabled", false)) {
+            registerPluginTo(binder, OutputPlugin.class, "null", NullOutputPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.output.stdout.disabled", false)) {
+            registerPluginTo(binder, OutputPlugin.class, "stdout", StdoutOutputPlugin.class);
+        }
 
         // formatter plugins
-        registerPluginTo(binder, FormatterPlugin.class, "csv", CsvFormatterPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.formatter.csv.disabled", false)) {
+            registerPluginTo(binder, FormatterPlugin.class, "csv", CsvFormatterPlugin.class);
+        }
 
         // file encoder plugins
-        registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
-        registerPluginTo(binder, EncoderPlugin.class, "bzip2", Bzip2FileEncoderPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.encoder.gzip.disabled", false)) {
+            registerPluginTo(binder, EncoderPlugin.class, "gzip", GzipFileEncoderPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.encoder.bzip2.disabled", false)) {
+            registerPluginTo(binder, EncoderPlugin.class, "bzip2", Bzip2FileEncoderPlugin.class);
+        }
 
         // filter plugins
-        registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
-        registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
+        if (!systemConfig.get(boolean.class, "standards.filter.rename.disabled", false)) {
+            registerPluginTo(binder, FilterPlugin.class, "rename", RenameFilterPlugin.class);
+        }
+        if (!systemConfig.get(boolean.class, "standards.filter.remove_columns.disabled", false)) {
+            registerPluginTo(binder, FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class);
+        }
 
         // default guess plugins
-        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));
-        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("bzip2"));
-        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("json")); // should be registered before CsvGuessPlugin
-        registerDefaultGuessPluginTo(binder, DefaultPluginType.create("csv"));
+        if (!systemConfig.get(boolean.class, "standards.decoder.gzip.disabled", false)) {
+            registerDefaultGuessPluginTo(binder, DefaultPluginType.create("gzip"));
+        }
+        if (!systemConfig.get(boolean.class, "standards.decoder.bzip2.disabled", false)) {
+            registerDefaultGuessPluginTo(binder, DefaultPluginType.create("bzip2"));
+        }
+        if (!systemConfig.get(boolean.class, "standards.parser.json.disabled", false)) {
+            // should be registered before CsvGuessPlugin
+            registerDefaultGuessPluginTo(binder, DefaultPluginType.create("json"));
+        }
+        if (!systemConfig.get(boolean.class, "standards.parser.csv.disabled", false)) {
+            registerDefaultGuessPluginTo(binder, DefaultPluginType.create("csv"));
+        }
         // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
     }
+
+    private final ConfigSource systemConfig;
 }
