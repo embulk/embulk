@@ -46,8 +46,13 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     }
 
     @Override
-    public void setGemPaths(final String gemPath) throws JRubyInvalidRuntimeException {
-        getInitialized().setGemPaths(gemPath);
+    public void setGemPaths(final String gemHome) throws JRubyInvalidRuntimeException {
+        getInitialized().setGemPaths(gemHome);
+    }
+
+    @Override
+    public void setGemPaths(final String gemHome, final String gemPath) throws JRubyInvalidRuntimeException {
+        getInitialized().setGemPaths(gemHome, gemPath);
     }
 
     @Override
@@ -80,6 +85,14 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     public void processJRubyOption(final String jrubyOption)
             throws JRubyInvalidRuntimeException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException {
         getInitialized().processJRubyOption(jrubyOption);
+    }
+
+    @Override
+    public Object callMethodArray(
+            final Object receiver,
+            final String methodName,
+            final Object[] args) throws JRubyInvalidRuntimeException {
+        return getInitialized().callMethodArray(receiver, methodName, args);
     }
 
     @Override

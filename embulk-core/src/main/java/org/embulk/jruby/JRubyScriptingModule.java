@@ -46,6 +46,7 @@ public class JRubyScriptingModule implements Module {
                     injector.getInstance(ILoggerFactory.class).getLogger("init"),
 
                     systemConfig.get(String.class, "gem_home", null),
+                    systemConfig.get(String.class, "gem_path", null),
                     systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true"),
 
                     // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory

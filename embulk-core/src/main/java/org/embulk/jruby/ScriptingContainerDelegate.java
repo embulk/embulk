@@ -45,7 +45,9 @@ public abstract class ScriptingContainerDelegate {
 
     public abstract void clearGemPaths() throws JRubyNotLoadedException;
 
-    public abstract void setGemPaths(final String gemPath) throws JRubyNotLoadedException;
+    public abstract void setGemPaths(final String gemHome) throws JRubyNotLoadedException;
+
+    public abstract void setGemPaths(final String gemHome, final String gemPath) throws JRubyNotLoadedException;
 
     public abstract boolean isBundleGemfileDefined() throws JRubyNotLoadedException;
 
@@ -60,6 +62,10 @@ public abstract class ScriptingContainerDelegate {
 
     public abstract void processJRubyOption(final String jrubyOption)
             throws JRubyNotLoadedException, UnrecognizedJRubyOptionException, NotWorkingJRubyOptionException;
+
+    public abstract Object callMethodArray(final Object receiver,
+                                           final String methodName,
+                                           final Object[] args) throws JRubyInvalidRuntimeException;
 
     public abstract Object callMethod(
             final Object receiver,

@@ -18,6 +18,7 @@ public final class JRubyInitializer {
             final Injector injector,
             final Logger logger,
             final String gemHome,
+            final String gemPath,
             final boolean useDefaultEmbulkGemHome,
             final List<String> jrubyLoadPath,
             final List<String> jrubyClasspath,
@@ -26,6 +27,7 @@ public final class JRubyInitializer {
         this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
+        this.gemPath = gemPath;
         this.useDefaultEmbulkGemHome = useDefaultEmbulkGemHome;
         this.jrubyLoadPath = jrubyLoadPath;
         this.jrubyClasspath = jrubyClasspath;
@@ -37,6 +39,7 @@ public final class JRubyInitializer {
             final Injector injector,
             final Logger logger,
             final String gemHome,
+            final String gemPath,
             final boolean useDefaultEmbulkGemHome,
             final List jrubyLoadPathNonGeneric,
             final List jrubyClasspathNonGeneric,
@@ -82,6 +85,7 @@ public final class JRubyInitializer {
                 injector,
                 logger,
                 gemHome,
+                gemPath,
                 useDefaultEmbulkGemHome,
                 Collections.unmodifiableList(jrubyLoadPathBuilt),
                 Collections.unmodifiableList(jrubyClasspathBuilt),
@@ -145,6 +149,10 @@ public final class JRubyInitializer {
         return this.gemHome;
     }
 
+    String probeGemPathForTesting() {
+        return this.gemPath;
+    }
+
     boolean probeUseDefaultEmbulkGemHomeForTesting() {
         return this.useDefaultEmbulkGemHome;
     }
@@ -197,8 +205,8 @@ public final class JRubyInitializer {
                 // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
                 // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
                 // is used.
-                this.logger.info("Gem's home and path are set by system config \"gem_home\": \"" + this.gemHome + "\"");
-                jruby.setGemPaths(this.gemHome);
+                this.logger.info("Gem's home and path are set by system configs \"gem_home\": \"" + this.gemHome + "\", \"gem_path\": \"" + this.gemPath + "\"");
+                jruby.setGemPaths(this.gemHome, this.gemPath);
                 this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
                 this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
             } else if (this.useDefaultEmbulkGemHome) {
@@ -281,6 +289,7 @@ public final class JRubyInitializer {
     private final Injector injector;
     private final Logger logger;
     private final String gemHome;
+    private final String gemPath;
     private final boolean useDefaultEmbulkGemHome;
     private final List<String> jrubyLoadPath;
     private final List<String> jrubyClasspath;
