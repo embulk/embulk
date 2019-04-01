@@ -23,6 +23,7 @@ public class TestJRubyInitializer {
                 null,
                 LoggerFactory.getLogger(TestJRubyInitializer.class),
                 "/gem/home",
+                null,
                 true,
                 loadPath,
                 classpath,
@@ -33,6 +34,8 @@ public class TestJRubyInitializer {
 
         assertEquals("/gem/home", initializer.probeGemHomeForTesting());
         assertTrue(initializer.probeUseDefaultEmbulkGemHomeForTesting());
+
+        assertEquals(null, initializer.probeGemPathForTesting());
 
         assertEquals(1, initializer.probeJRubyLoadPathForTesting().size());
         assertEquals("/load/path", initializer.probeJRubyLoadPathForTesting().get(0));

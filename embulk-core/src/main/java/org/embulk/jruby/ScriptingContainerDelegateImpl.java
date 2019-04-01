@@ -1,5 +1,6 @@
 package org.embulk.jruby;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -436,8 +437,38 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     }
 
     @Override
-    public void setGemPaths(final String gemPath) throws JRubyInvalidRuntimeException {
-        this.callMethod(this.runScriptlet("Gem"), "use_paths", gemPath, gemPath);
+    public void setGemPaths(final String gemHome) throws JRubyInvalidRuntimeException {
+        this.setGemPaths(gemHome, null);
+    }
+
+    @Override
+    public void setGemPaths(final String gemHome, final String gemPath) throws JRubyInvalidRuntimeException {
+        final String[] gemArgs;
+
+        // An empty string in GEM_PATH is still effective as GEM_PATH.
+        // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_6_2/lib/rubygems/path_support.rb?revision=67232&view=markup#l34
+        // https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_6_2/lib/rubygems/path_support.rb?revision=67232&view=markup#l51
+        if (gemPath != null) {
+            // It is believed that Ruby's File::PATH_SEPARATOR is the same with Java's File.pathSeparator.
+            // https://github.com/jruby/jruby/blob/9.2.6.0/core/src/main/java/org/jruby/RubyFile.java#L122-L125
+            final String[] gemPaths = gemPath.split("\\" + File.pathSeparator);
+            gemArgs = new String[gemPaths.length + 1];
+            gemArgs[0] = gemHome;
+            for (int i = 0; i < gemPaths.length; ++i) {
+                gemArgs[i + 1] = gemPaths[i];
+            }
+        } else {
+            gemArgs = new String[2];
+            if (gemHome != null) {
+                gemArgs[0] = gemHome;
+                gemArgs[1] = gemHome;
+            } else {
+                gemArgs[0] = null;
+                gemArgs[1] = null;
+            }
+        }
+
+        this.callMethodArray(this.runScriptlet("Gem"), "use_paths", gemArgs);
     }
 
     @Override
@@ -506,9 +537,9 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     }
 
     @Override
-    public Object callMethod(final Object receiver,
-                             final String methodName,
-                             final Object... args) throws JRubyInvalidRuntimeException {
+    public Object callMethodArray(final Object receiver,
+                                  final String methodName,
+                                  final Object[] args) throws JRubyInvalidRuntimeException {
         if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
         }
@@ -533,6 +564,13 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
                 throw new JRubyRuntimeException(cause);
             }
         }
+    }
+
+    @Override
+    public Object callMethod(final Object receiver,
+                             final String methodName,
+                             final Object... args) throws JRubyInvalidRuntimeException {
+        return this.callMethodArray(receiver, methodName, args);
     }
 
     /*
