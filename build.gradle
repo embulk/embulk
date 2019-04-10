@@ -52,11 +52,11 @@ ext {
 
 configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
-    apply plugin: 'findbugs'
     apply plugin: 'jacoco'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'com.jfrog.bintray'
+    // TODO: Enable SpotBugs instead of FindBugs which was used in Embulk until v0.9.17.
 
     // The version needs to be declared here, not in each build.gradle, so that "bintray" can get the value.
     version = "${rootProject.version}"
@@ -80,13 +80,6 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-
         }
     }
 
-    tasks.withType(FindBugs) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
-        }
-    }
-
     checkstyle {
         toolVersion '8.7'
         configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
@@ -95,10 +88,6 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-
         ]
         ignoreFailures = false
         maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
-    }
-
-    findbugs {
-        ignoreFailures = true
     }
 
     javadoc {

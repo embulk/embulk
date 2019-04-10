@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 
 public class Buffer {
@@ -42,7 +41,7 @@ public class Buffer {
         return new Buffer(src, offset, size).limit(size);
     }
 
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP")
+    // http://findbugs.sourceforge.net/bugDescriptions.html#EI_EXPOSE_REP
     public byte[] array() {
         return array;
     }
