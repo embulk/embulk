@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
-import org.embulk.config.ConfigSource;
 
 /**
  * EmbulkSetup initiates an EmbulkRunner instance. It was originally implemented with Ruby in lib/embulk.rb.
@@ -27,8 +26,7 @@ public class EmbulkSetup {
         }
 
         final EmbulkEmbed.Bootstrap bootstrap = new org.embulk.EmbulkEmbed.Bootstrap();
-        final ConfigSource systemConfig = bootstrap.getSystemConfigLoader().fromJsonString(systemConfigJson);
-        bootstrap.setSystemConfig(systemConfig);
+        bootstrap.setSystemConfigFromJson(systemConfigJson);
         final EmbulkEmbed embed = bootstrap.initialize();  // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
 
         return new EmbulkRunner(embed);
