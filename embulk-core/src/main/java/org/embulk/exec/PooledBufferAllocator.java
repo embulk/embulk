@@ -1,63 +1,68 @@
 package org.embulk.exec;
 
-import com.google.inject.Inject;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.unit.ByteSize;
 
 public class PooledBufferAllocator implements BufferAllocator {
-    private static final int DEFAULT_PAGE_SIZE = 32 * 1024;
+    public PooledBufferAllocator(final int pageSize) {
+        this.pageSize = pageSize;
 
-    private final PooledByteBufAllocator nettyBuffer;
-    private final int pageSize;
-
-    @Inject
-    public PooledBufferAllocator(@ForSystemConfig ConfigSource systemConfig, org.slf4j.ILoggerFactory factory) {
-        this.nettyBuffer = new PooledByteBufAllocator(false);
-        this.pageSize = systemConfig.get(ByteSize.class, "page_size", new ByteSize(DEFAULT_PAGE_SIZE)).getBytesInt();
+        // PooledByteBufAllocator(preferDirect = false): buffers are allocated on Java heap.
+        this.nettyByteBufAllocator = new PooledByteBufAllocator(false);
     }
 
+    public PooledBufferAllocator() {
+        this(DEFAULT_PAGE_SIZE);
+    }
+
+    @Override
     public Buffer allocate() {
-        return allocate(pageSize);
+        return allocate(this.pageSize);
     }
 
-    public Buffer allocate(int minimumCapacity) {
+    @Override
+    public Buffer allocate(final int minimumCapacity) {
         int size = this.pageSize;
         while (size < minimumCapacity) {
             size *= 2;
         }
-        return new NettyByteBufBuffer(nettyBuffer.buffer(size));
+        return new BufferBasedOnNettyByteBuf(nettyByteBufAllocator.buffer(size));
     }
 
-    private static class NettyByteBufBuffer extends Buffer {
-        private ByteBuf buf;
-        private BufferReleasedBeforeAt doubleFreeCheck;
+    private static class BufferBasedOnNettyByteBuf extends Buffer {
+        private BufferBasedOnNettyByteBuf(final ByteBuf internalNettyByteBuf) {
+            super(internalNettyByteBuf.array(), internalNettyByteBuf.arrayOffset(), internalNettyByteBuf.capacity());
 
-        public NettyByteBufBuffer(ByteBuf buf) {
-            super(buf.array(), buf.arrayOffset(), buf.capacity());
-            this.buf = buf;
+            this.internalNettyByteBuf = internalNettyByteBuf;
+            this.alreadyReleasedAt = null;
         }
 
+        @Override
         public void release() {
-            if (doubleFreeCheck != null) {
-                new BufferDoubleReleasedException(doubleFreeCheck).printStackTrace();
+            if (this.alreadyReleasedAt != null) {
+                new BufferDoubleReleasedException(this.alreadyReleasedAt).printStackTrace();
             }
-            if (buf != null) {
-                buf.release();
-                buf = null;
-                doubleFreeCheck = new BufferReleasedBeforeAt();
+            if (this.internalNettyByteBuf != null) {
+                this.internalNettyByteBuf.release();
+                this.internalNettyByteBuf = null;
+                this.alreadyReleasedAt = new Throwable();
             }
+        }
+
+        private ByteBuf internalNettyByteBuf;
+        private Throwable alreadyReleasedAt;
+    }
+
+    private static class BufferDoubleReleasedException extends IllegalStateException {
+        public BufferDoubleReleasedException(final Throwable alreadyReleasedAt) {
+            super("A Buffer detected double release() calls. The buffer has already been released at:", alreadyReleasedAt);
         }
     }
 
-    static class BufferReleasedBeforeAt extends Throwable {}
+    private static final int DEFAULT_PAGE_SIZE = 32 * 1024;
 
-    static class BufferDoubleReleasedException extends IllegalStateException {
-        public BufferDoubleReleasedException(BufferReleasedBeforeAt releasedAt) {
-            super("Detected double release() call of a buffer", releasedAt);
-        }
-    }
+    private final PooledByteBufAllocator nettyByteBufAllocator;
+    private final int pageSize;
 }

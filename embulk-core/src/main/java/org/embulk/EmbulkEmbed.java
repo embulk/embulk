@@ -340,7 +340,7 @@ public class EmbulkEmbed {
     static List<Module> standardModuleList(final ConfigSource systemConfig) {
         final ArrayList<Module> built = new ArrayList<>();
         built.add(new SystemConfigModule(systemConfig));
-        built.add(new ExecModule());
+        built.add(new ExecModule(systemConfig));
         built.add(new ExtensionServiceLoaderModule(systemConfig));
         built.add(new PluginClassLoaderModule(systemConfig));
         built.add(new BuiltinPluginSourceModule());

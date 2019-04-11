@@ -7,14 +7,18 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Parses and formats byte size representations, such as "4MB", "83GB".
+ *
+ * <p>This class is deprecated, to be removed in plan. Any plugin should not use it.
+ */
+@Deprecated
 public class ByteSize implements Comparable<ByteSize> {
-    private static final Pattern PATTERN = Pattern.compile("\\A(\\d+(?:\\.\\d+)?)\\s?([a-zA-Z]*)\\z");
-
-    private final long bytes;
-    private final Unit displayUnit;
-
     public ByteSize(double size, Unit unit) {
+        logger.warn("org.embulk.spi.unit.ByteSize is deprecated. Used at:", new Throwable());
         Preconditions.checkArgument(!Double.isInfinite(size), "size is infinite");
         Preconditions.checkArgument(!Double.isNaN(size), "size is not a number");
         Preconditions.checkArgument(size >= 0, "size is negative");
@@ -26,6 +30,7 @@ public class ByteSize implements Comparable<ByteSize> {
 
     @JsonCreator
     public ByteSize(long bytes) {
+        logger.warn("org.embulk.spi.unit.ByteSize is deprecated. Used at:", new Throwable());
         Preconditions.checkArgument(bytes >= 0, "size is negative");
         this.bytes = bytes;
         this.displayUnit = Unit.BYTES;
@@ -136,4 +141,11 @@ public class ByteSize implements Comparable<ByteSize> {
             return unitString;
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(ByteSize.class);
+
+    private static final Pattern PATTERN = Pattern.compile("\\A(\\d+(?:\\.\\d+)?)\\s?([a-zA-Z]*)\\z");
+
+    private final long bytes;
+    private final Unit displayUnit;
 }
