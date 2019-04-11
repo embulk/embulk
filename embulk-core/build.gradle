@@ -47,7 +47,6 @@ dependencies {
     compile 'com.fasterxml.jackson.module:jackson-module-guice:2.6.7'
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'org.jruby:jruby-complete:' + rootProject.jrubyVersion
-    compile 'com.google.code.findbugs:annotations:3.0.0'
     compile 'org.yaml:snakeyaml:1.18'
     compile 'javax.validation:validation-api:1.1.0.Final'
     compile 'org.apache.bval:bval-jsr303:0.5'
