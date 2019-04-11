@@ -32,7 +32,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
         public void configure(Binder binder) {
             ConfigSource systemConfig = getSystemConfig();
             new SystemConfigModule(systemConfig).configure(binder);
-            new ExecModule().configure(binder);
+            new ExecModule(systemConfig).configure(binder);
             new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule(systemConfig).configure(binder);

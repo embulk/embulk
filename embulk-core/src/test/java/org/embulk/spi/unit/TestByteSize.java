@@ -53,14 +53,17 @@ public class TestByteSize {
         assertByteSizeString("42.33KB", "42.33KB");
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertByteSize(long bytes, String string) {
         assertEquals(bytes, ByteSize.parseByteSize(string).getBytes());
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertByteSizeString(String expected, String string) {
         assertEquals(expected, ByteSize.parseByteSize(string).toString());
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertInvalidByteSize(String string) {
         try {
             ByteSize.parseByteSize(string);
