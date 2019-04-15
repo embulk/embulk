@@ -9,11 +9,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Properties;
-import org.embulk.config.ConfigSource;
 
 public class PluginClassLoaderModule implements Module {
-    public PluginClassLoaderModule(ConfigSource systemConfig) {}
-
     @Override
     public void configure(Binder binder) {
         binder.bind(PluginClassLoaderFactory.class).toProvider(new FactoryProvider()).in(Scopes.SINGLETON);

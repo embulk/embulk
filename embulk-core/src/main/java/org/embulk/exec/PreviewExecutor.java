@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 public class PreviewExecutor {
     private final Injector injector;
-    private final ConfigSource systemConfig;
 
     public interface PreviewTask extends Task {
         @Config("exec")
@@ -61,9 +60,8 @@ public class PreviewExecutor {
     }
 
     @Inject
-    public PreviewExecutor(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
+    public PreviewExecutor(Injector injector) {
         this.injector = injector;
-        this.systemConfig = systemConfig;
     }
 
     public PreviewResult preview(ExecSession exec, final ConfigSource config) {

@@ -342,7 +342,7 @@ public class EmbulkEmbed {
         built.add(new SystemConfigModule(systemConfig));
         built.add(new ExecModule(systemConfig));
         built.add(new ExtensionServiceLoaderModule(systemConfig));
-        built.add(new PluginClassLoaderModule(systemConfig));
+        built.add(new PluginClassLoaderModule());
         built.add(new BuiltinPluginSourceModule());
         built.add(new MavenPluginSourceModule(systemConfig));
         built.add(new JRubyScriptingModule(systemConfig));
