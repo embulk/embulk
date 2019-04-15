@@ -5,15 +5,15 @@ import io.netty.buffer.PooledByteBufAllocator;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 
-public class PooledBufferAllocator implements BufferAllocator {
-    public PooledBufferAllocator(final int pageSize) {
+class PooledBufferAllocator implements BufferAllocator {
+    PooledBufferAllocator(final int pageSize) {
         this.pageSize = pageSize;
 
         // PooledByteBufAllocator(preferDirect = false): buffers are allocated on Java heap.
         this.nettyByteBufAllocator = new PooledByteBufAllocator(false);
     }
 
-    public PooledBufferAllocator() {
+    PooledBufferAllocator() {
         this(DEFAULT_PAGE_SIZE);
     }
 
