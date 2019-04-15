@@ -4,6 +4,13 @@
 
 Embulk has some deprecated classes and methods. This document is to summarize deprecations with their reasons and plans to remove.
 
+
+## List of planned deprecations
+
+* Use of `Exec.getLogger`. To be replaced with direct use of `org.slf4j.LoggerFactory#getLogger`, or Reporter Plugins in the future.
+* Direct use of `org.embulk.exec.TempFileAllocator`.
+
+
 ## List of deprecations
 
 ### `org.embulk.EmbulkService`
