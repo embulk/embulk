@@ -203,15 +203,15 @@ module Embulk
 
     def to_java
       json = to_json
-      Java::Injected::ModelManager.readObject(Java::DataSourceImpl.java_class, json.to_java)
+      Java::org.embulk.spi.Exec.getModelManager().readObject(Java::DataSourceImpl.java_class, json.to_java)
     end
 
     def load_config(task_type)
-      Java::Injected::ModelManager.readObjectWithConfigSerDe(task_type.java_class, to_json.to_java)
+      Java::org.embulk.spi.Exec.getModelManager().readObjectWithConfigSerDe(task_type.java_class, to_json.to_java)
     end
 
     def load_task(task_type)
-      Java::Injected::ModelManager.readObject(task_type.java_class, to_json.to_java)
+      Java::org.embulk.spi.Exec.getModelManager().readObject(task_type.java_class, to_json.to_java)
     end
   end
 

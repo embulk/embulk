@@ -4,14 +4,20 @@ module Embulk
     require 'time'
 
     module Injected
-      # Following constats are set by org.embulk.jruby.JRubyScriptingModule:
-      #   Injector
-      #   ModelManager
-      #   BufferAllocator
+      def Injected.const_missing(id)
+        case id
+        when :Injector then
+          raise NotImplementedError, "The constant Embulk::Java::Injected::Injector is no longer available."
+        when :ModelManager then
+          raise NotImplementedError, "The constant Embulk::Java::Injected::ModelManager is no longer available."
+        when :BufferAllocator then
+          raise NotImplementedError, "The constant Embulk::Java::Injected::BufferAllocator is no longer available."
+        end
+      end
     end
 
     def self.injector
-      Injected::Injector
+      raise NotImplementedError, "The method Embulk::Java.injector is no longer available."
     end
 
     require 'embulk'
