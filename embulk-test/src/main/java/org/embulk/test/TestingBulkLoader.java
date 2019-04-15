@@ -11,11 +11,9 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import java.util.List;
-import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecutionResult;
-import org.embulk.exec.ForSystemConfig;
 import org.embulk.exec.ResumeState;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
@@ -40,9 +38,8 @@ class TestingBulkLoader extends BulkLoader {
     }
 
     @Inject
-    public TestingBulkLoader(Injector injector,
-            @ForSystemConfig ConfigSource systemConfig) {
-        super(injector, systemConfig);
+    public TestingBulkLoader(Injector injector) {
+        super(injector);
     }
 
     @Override

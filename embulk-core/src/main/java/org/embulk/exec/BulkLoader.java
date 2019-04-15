@@ -56,7 +56,7 @@ public class BulkLoader {
     }
 
     @Inject
-    public BulkLoader(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
+    public BulkLoader(Injector injector) {
         this.injector = injector;
     }
 

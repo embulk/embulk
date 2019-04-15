@@ -136,7 +136,7 @@ public class SamplingParserPlugin implements ParserPlugin {
     }
 
     @Inject
-    public SamplingParserPlugin(@ForSystemConfig ConfigSource systemConfig) {
+    public SamplingParserPlugin() {
         this.minSampleBufferBytes = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
     }
 

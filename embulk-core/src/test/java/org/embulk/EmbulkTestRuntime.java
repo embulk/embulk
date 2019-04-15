@@ -36,7 +36,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
             new ExtensionServiceLoaderModule(systemConfig).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule(systemConfig).configure(binder);
-            new PluginClassLoaderModule(systemConfig).configure(binder);
+            new PluginClassLoaderModule().configure(binder);
             new TestUtilityModule().configure(binder);
             new TestPluginSourceModule().configure(binder);
         }
