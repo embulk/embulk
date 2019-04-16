@@ -18,6 +18,7 @@ import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.DateTimeZoneSerDe;
 import org.embulk.spi.time.TimestampSerDe;
 import org.embulk.spi.unit.LocalFileSerDe;
@@ -40,7 +41,7 @@ public class ExecModule implements Module {
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
-        binder.bind(TempFileAllocator.class).in(Scopes.SINGLETON);
+        binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
 
         // GuessExecutor, PreviewExecutor
         registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);

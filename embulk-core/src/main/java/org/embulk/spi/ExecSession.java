@@ -11,7 +11,6 @@ import org.embulk.config.ModelManager;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.exec.TempFileAllocator;
 import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.time.Timestamp;
@@ -97,8 +96,8 @@ public class ExecSession {
 
         this.transactionTime = transactionTime;
 
-        TempFileAllocator tempFileAllocator = injector.getInstance(TempFileAllocator.class);
-        this.tempFileSpace = tempFileAllocator.newSpace(transactionTime.toString());
+        final TempFileSpaceAllocator tempFileSpaceAllocator = injector.getInstance(TempFileSpaceAllocator.class);
+        this.tempFileSpace = tempFileSpaceAllocator.newSpace(transactionTime.toString());
 
         this.preview = false;
     }

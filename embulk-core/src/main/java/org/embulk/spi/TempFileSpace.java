@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -10,60 +9,59 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 public class TempFileSpace {
-    private final File dir;
-    private boolean dirCreated;
-
-    public TempFileSpace(File dir) {
-        Preconditions.checkArgument(dir != null, "dir is null");
+    public TempFileSpace(final File dir) {
+        if (dir == null) {
+            throw new IllegalArgumentException("dir is null");
+        }
         this.dir = dir;
     }
 
     public File createTempFile() {
-        return createTempFile("tmp");
+        return this.createTempFile("tmp");
     }
 
-    public File createTempFile(String fileExt) {
+    public File createTempFile(final String fileExt) {
         // Thread names contain ':' which is not valid as file names in Windows.
-        return createTempFile(Thread.currentThread().getName().replaceAll(":", "_") + "_", fileExt);
+        return this.createTempFile(Thread.currentThread().getName().replaceAll(":", "_") + "_", fileExt);
     }
 
-    public File createTempFile(String prefix, String fileExt) {
+    public synchronized File createTempFile(final String prefix, final String fileExt) {
         try {
-            if (!dirCreated) {
-                dir.mkdirs();
-                dirCreated = true;
+            if (!this.dirCreated) {
+                this.dir.mkdirs();
+                this.dirCreated = true;
             }
-            return File.createTempFile(prefix, "." + fileExt, dir);
-        } catch (IOException ex) {
+            return File.createTempFile(prefix, "." + fileExt, this.dir);
+        } catch (final IOException ex) {
             throw new TempFileException(ex);
         }
     }
 
-    public void cleanup() {
+    public synchronized void cleanup() {
         try {
-            deleteFilesIfExistsRecursively(dir);
-        } catch (IOException ex) {
+            this.deleteFilesIfExistsRecursively(this.dir);
+        } catch (final IOException ex) {
             // ignore IOException
         }
-        dirCreated = false;
+        this.dirCreated = false;
     }
 
-    private void deleteFilesIfExistsRecursively(File dir) throws IOException {
-        Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>() {
+    private void deleteFilesIfExistsRecursively(final File dirToDelete) throws IOException {
+        Files.walkFileTree(dirToDelete.toPath(), new SimpleFileVisitor<Path>() {
                 @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                public FileVisitResult visitFile(final Path fileOnVisit, final BasicFileAttributes attrs) {
                     try {
-                        Files.deleteIfExists(file);
-                    } catch (IOException ex) {
+                        Files.deleteIfExists(fileOnVisit);
+                    } catch (final IOException ex) {
                         // ignore IOException
                     }
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                public FileVisitResult postVisitDirectory(final Path dirOnVisit, final IOException exc) {
                     try {
-                        Files.deleteIfExists(dir);
+                        Files.deleteIfExists(dirOnVisit);
                     } catch (IOException ex) {
                         // ignore IOException
                     }
@@ -71,4 +69,7 @@ public class TempFileSpace {
                 }
             });
     }
+
+    private final File dir;
+    private boolean dirCreated;
 }
