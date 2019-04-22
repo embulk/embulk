@@ -122,7 +122,7 @@ public final class JRubyInitializer {
         }
 
         // Embulk's base Ruby code is loaded at last.
-        jruby.runScriptlet("require 'embulk/logger'");
+        jruby.runScriptlet("begin; require 'embulk/logger'; rescue Exception => ex; puts ex.message; puts ex.backtrace; raise ex; end");
         jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
         jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
