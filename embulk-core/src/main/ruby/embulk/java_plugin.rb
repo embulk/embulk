@@ -7,8 +7,8 @@ module Embulk
       jars = Dir["#{dir}/**/*.jar"]
       urls = jars.map {|jar| java.io.File.new(File.expand_path(jar)).toURI.toURL }
       puts "@@@ Injector in JavaPlugin: #{Java::org.embulk.spi.Exec.getInjector()}"
-      factory = Java.injector.getInstance(Java::PluginClassLoaderFactory.java_class)
-      # factory = Java::org.embulk.spi.Exec.getInjector().getInstance(Java::PluginClassLoaderFactory.java_class)
+      # factory = Java.injector.getInstance(Java::PluginClassLoaderFactory.java_class)
+      factory = Java::org.embulk.spi.Exec.getInjector().getInstance(Java::PluginClassLoaderFactory.java_class)
       factory.create(urls, JRuby.runtime.getJRubyClassLoader())
     end
 
@@ -84,8 +84,8 @@ module Embulk
         unless ruby_module::ClassMethods.method_defined?(:new_java)
           def self.new_java
             puts "@@@ Injector in ruby_adapter_class: #{Java::org.embulk.spi.Exec.getInjector()}"
-            Java.injector.getInstance(plugin_java_class)
-            # Java::org.embulk.spi.Exec.getInjector().getInstance(plugin_java_class)
+            # Java.injector.getInstance(plugin_java_class)
+            Java::org.embulk.spi.Exec.getInjector().getInstance(plugin_java_class)
           end
         end
       end

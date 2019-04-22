@@ -13,9 +13,8 @@ module Embulk
     module RubyAdapter
       module ClassMethods
         def new_java
-          puts "@@@ Injector in FileInputPlugin: #{Java::org.embulk.spi.Exec.getInjector()}"
-          Java::FileInputRunner.new(Java.injector.getInstance(plugin_java_class))
-          # Java::FileInputRunner.new(Java::org.embulk.spi.Exec.getInjector().getInstance(plugin_java_class))
+          # Java::FileInputRunner.new(Java.injector.getInstance(plugin_java_class))
+          Java::FileInputRunner.new(Java::org.embulk.spi.Exec.getInjector().getInstance(plugin_java_class))
         end
         # TODO transaction, resume, cleanup
       end

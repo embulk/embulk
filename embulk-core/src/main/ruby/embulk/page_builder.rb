@@ -37,10 +37,9 @@ module Embulk
       if java_page_output
         # TODO get task as an argument
         task = Java::SPI::Exec.newConfigSource.load_config(Java::DynamicPageBuilder::BuilderTask.java_class)
-        puts "@@@ BufferAllocator in PageBuilder: #{Java::org.embulk.spi.Exec.getBufferAllocator()}"
         @page_builder = Java::DynamicPageBuilder.createWithTimestampMetadataFromBuilderTask(
-            task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
-            # task, Java::org.embulk.spi.Exec.getBufferAllocator(), schema.to_java, java_page_output)
+            # task, Java::Injected::BufferAllocator, schema.to_java, java_page_output)
+            task, Java::org.embulk.spi.Exec.getBufferAllocator(), schema.to_java, java_page_output)
       else
         @page_builder = java_dynamic_page_builder
       end

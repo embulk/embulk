@@ -16,11 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ModelManager;
 import org.embulk.exec.ForSystemConfig;
-import org.embulk.spi.BufferAllocator;
-import org.slf4j.ILoggerFactory;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory;
 
 public class JRubyScriptingModule implements Module {
     public JRubyScriptingModule(final ConfigSource systemConfig) {
@@ -38,17 +35,15 @@ public class JRubyScriptingModule implements Module {
     }
 
     private static class ScriptingContainerProvider
-            implements ProviderWithDependencies<ScriptingContainerDelegate> {
+            implements Provider<ScriptingContainerDelegate> {
         @Inject
-        public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
+        public ScriptingContainerProvider(@ForSystemConfig ConfigSource systemConfig) {
             // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
             // instantiated in this JVM.
             this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
 
             this.initializer = JRubyInitializer.of(
-                    injector,
-                    injector.getInstance(ILoggerFactory.class).getLogger("init"),
-                    // LoggerFactory.getLogger("init"),
+                    LoggerFactory.getLogger("init"),
 
                     systemConfig.get(String.class, "gem_home", null),
                     systemConfig.get(String.class, "gem_path", null),
@@ -83,15 +78,6 @@ public class JRubyScriptingModule implements Module {
             }
         }
 
-        @Override  // from |com.google.inject.spi.HasDependencies|
-        public Set<Dependency<?>> getDependencies() {
-            // get() depends on other modules
-            final HashSet<Dependency<?>> built = new HashSet<>();
-            built.add(Dependency.get(Key.get(ModelManager.class)));
-            built.add(Dependency.get(Key.get(BufferAllocator.class)));
-            return Collections.unmodifiableSet(built);
-        }
-
         private final boolean useGlobalRubyRuntime;
         private final JRubyInitializer initializer;
     }
@@ -103,8 +89,7 @@ public class JRubyScriptingModule implements Module {
         @Inject
         public RawScriptingContainerProvider(final Injector injector, final ScriptingContainerDelegate delegate) {
             this.delegate = delegate;
-            this.logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
-            // this.logger = LoggerFactory.getLogger("init");
+            this.logger = LoggerFactory.getLogger("init");
         }
 
         @Override  // from |com.google.inject.Provider|
