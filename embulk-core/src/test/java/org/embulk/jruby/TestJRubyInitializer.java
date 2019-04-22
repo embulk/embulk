@@ -20,6 +20,7 @@ public class TestJRubyInitializer {
         options.add("arg");
 
         final JRubyInitializer initializer = JRubyInitializer.of(
+                null,
                 LoggerFactory.getLogger(TestJRubyInitializer.class),
                 "/gem/home",
                 null,

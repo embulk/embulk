@@ -4,6 +4,7 @@ module Embulk
     require 'time'
 
     module Injected
+=begin
       def Injected.const_missing(id)
         case id
         when :Injector then
@@ -14,10 +15,12 @@ module Embulk
           raise NotImplementedError, "The constant Embulk::Java::Injected::BufferAllocator is no longer available."
         end
       end
+=end
     end
 
     def self.injector
-      raise NotImplementedError, "The method Embulk::Java.injector is no longer available."
+      Injected::Injector
+      # raise NotImplementedError, "The method Embulk::Java.injector is no longer available."
     end
 
     require 'embulk'

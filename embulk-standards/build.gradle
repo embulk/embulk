@@ -41,7 +41,7 @@ jruby {
     execVersion = rootProject.jrubyVersion
 }
 
-task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars"]) {
+task rubyTestVanilla(type: JRubyExec, dependsOn: [":embulk-core:compileTestJava", "jar", "prepareDependencyJars", "prepareTestDependencyJars"]) {
     jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
 }
 test.dependsOn(['rubyTestVanilla'])
@@ -65,6 +65,14 @@ task prepareDependencyJars(type: Copy) {
     }
     from configurations.runtime
     into "${buildDir}/dependency_jars"
+}
+
+task prepareTestDependencyJars(type: Copy) {
+    doFirst {
+        delete("${buildDir}/test_dependency_jars")
+    }
+    from configurations.testRuntime
+    into "${buildDir}/test_dependency_jars"
 }
 
 task complementEmbulkGem {

@@ -1,5 +1,6 @@
 package org.embulk.jruby;
 
+import com.google.inject.Injector;
 import com.google.inject.ProvisionException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -7,11 +8,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.embulk.config.ModelManager;
+import org.embulk.spi.BufferAllocator;
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.LoggerFactory;
 
 public final class JRubyInitializer {
     private JRubyInitializer(
+            final Injector injector,
             final Logger logger,
             final String gemHome,
             final String gemPath,
@@ -20,6 +25,7 @@ public final class JRubyInitializer {
             final List<String> jrubyClasspath,
             final List<String> jrubyOptions,
             final String jrubyBundlerPluginSourceDirectory) {
+        this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
         this.gemPath = gemPath;
@@ -31,6 +37,7 @@ public final class JRubyInitializer {
     }
 
     public static JRubyInitializer of(
+            final Injector injector,
             final Logger logger,
             final String gemHome,
             final String gemPath,
@@ -76,6 +83,7 @@ public final class JRubyInitializer {
         }
 
         return new JRubyInitializer(
+                injector,
                 logger,
                 gemHome,
                 gemPath,
@@ -125,10 +133,16 @@ public final class JRubyInitializer {
         jruby.runScriptlet("require 'embulk/logger'");
         jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
+        final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
+        jruby.callMethod(injected, "const_set", "Injector", injector);
+        jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(ModelManager.class));
+        jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
+
         jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
                              jruby.runScriptlet("Embulk::Logger"),
                              "new",
-                             LoggerFactory.getLogger("ruby")));
+                             injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
+                             // LoggerFactory.getLogger("ruby")));
     }
 
     // TODO: Remove these probing methods, and test through mocked ScriptingContainerDelegate.
@@ -274,6 +288,7 @@ public final class JRubyInitializer {
         return userHome.toAbsolutePath().resolve(".embulk");
     }
 
+    private final Injector injector;
     private final Logger logger;
     private final String gemHome;
     private final String gemPath;
