@@ -37,7 +37,7 @@ public class FileOutputOutputStream extends OutputStream {
 
     @Override
     public void write(int b) {
-        buffer.array()[buffer.offset() + pos] = (byte) b;
+        buffer.arrayUnsafe()[buffer.offset() + pos] = (byte) b;
         pos++;
         if (pos >= buffer.capacity()) {
             flush();

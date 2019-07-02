@@ -50,6 +50,7 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
+// embulk-api is not to be released in Bintray.
 configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'

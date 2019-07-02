@@ -1,0 +1,11 @@
+description = "APIs to access Embulk's core features"
+ext {
+    summary = "APIs to access Embulk's core features"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}

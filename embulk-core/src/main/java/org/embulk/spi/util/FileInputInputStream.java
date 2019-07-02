@@ -34,7 +34,7 @@ public class FileInputInputStream extends InputStream {
                 return -1;
             }
         }
-        byte b = buffer.array()[buffer.offset() + pos];
+        byte b = buffer.arrayUnsafe()[buffer.offset() + pos];
         pos++;
         if (pos >= buffer.limit()) {
             releaseBuffer();

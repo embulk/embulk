@@ -37,7 +37,7 @@ public class OutputStreamFileOutput implements FileOutput {
             throw new IllegalStateException("nextFile() must be called before poll()");
         }
         try {
-            current.write(buffer.array(), buffer.offset(), buffer.limit());
+            current.write(buffer.arrayUnsafe(), buffer.offset(), buffer.limit());
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } finally {

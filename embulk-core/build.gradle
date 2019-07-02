@@ -34,6 +34,8 @@ repositories {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
+    compile project(":embulk-api-v0")
+
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.inject:guice:4.0'
     compile 'com.google.inject.extensions:guice-multibindings:4.0'
@@ -121,6 +123,10 @@ task unpackDependencyGems(type: JRubyPrepare) {
     }
 }
 processResources.dependsOn("unpackDependencyGems")
+
+jar {
+    from project(":embulk-api-v0").sourceSets.main.output
+}
 
 task buildEmbulkGem {
     doFirst {

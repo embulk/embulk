@@ -148,7 +148,7 @@ public class InputStreamFileInput implements FileInput {
         }
         Buffer buffer = allocator.allocate();
         try {
-            int n = current.getInputStream().read(buffer.array(), buffer.offset(), buffer.capacity());
+            int n = current.getInputStream().read(buffer.arrayUnsafe(), buffer.offset(), buffer.capacity());
             if (n < 0) {
                 return null;
             }

@@ -45,7 +45,7 @@ public class PageBuilder implements AutoCloseable {
 
     private void newBuffer() {
         this.buffer = allocator.allocate(PageFormat.PAGE_HEADER_SIZE + fixedRecordSize);
-        this.bufferSlice = Slices.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
+        this.bufferSlice = Slices.wrappedBuffer(buffer.arrayUnsafe(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences = new ArrayList<>();

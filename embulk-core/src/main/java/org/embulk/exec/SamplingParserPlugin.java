@@ -174,7 +174,7 @@ public class SamplingParserPlugin implements ParserPlugin {
         try {
             for (Buffer buffer : each(fileInput)) {
                 int size = Math.min(buffer.limit(), sample.capacity() - offset);
-                sample.setBytes(offset, buffer, 0, size);
+                sample.setBytes(offset, (org.embulk.api.v0.Buffer) buffer, 0, size);
                 offset += size;
                 buffer.release();
                 if (offset >= sampleBufferBytes) {

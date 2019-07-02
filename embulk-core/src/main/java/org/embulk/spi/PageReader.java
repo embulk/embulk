@@ -27,7 +27,7 @@ public class PageReader implements AutoCloseable {
 
     public static int getRecordCount(Page page) {
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
+        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.arrayUnsafe(), pageBuffer.offset(), pageBuffer.limit());
         return pageSlice.getInt(0);  // see page format
     }
 
@@ -36,7 +36,7 @@ public class PageReader implements AutoCloseable {
         this.page = SENTINEL;
 
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
+        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.arrayUnsafe(), pageBuffer.offset(), pageBuffer.limit());
 
         pageRecordCount = pageSlice.getInt(0);  // see page format
         readCount = 0;
