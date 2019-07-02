@@ -19,7 +19,7 @@ public class TimestampFormatterRuby extends TimestampFormatter {
     static TimestampFormatterRuby of(final String formatString, final ZoneOffset zoneOffset) {
         return new TimestampFormatterRuby(new org.jruby.util.RubyDateFormat(formatString, Locale.ENGLISH, true),
                                           zoneOffset,
-                                          TimeZoneIds.convertZoneOffsetToJodaDateTimeZone(zoneOffset),
+                                          JodaTimeCompat.convertZoneOffsetToJodaDateTimeZone(zoneOffset),
                                           formatString);
     }
 

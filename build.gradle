@@ -50,7 +50,7 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-maven', 'embulk-deps-timestamp', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven'
@@ -190,6 +190,7 @@ dependencies {
     }
 
     embed project(':embulk-deps-cli')
+    embed project(':embulk-deps-timestamp')
 }
 
 def listEmbedDependencies = { rootModuleName, prefix ->
@@ -236,6 +237,7 @@ shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':emb
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path-Maven': listEmbedDependencies('embulk-deps-maven', '/lib/'),
                    'Embulk-Resource-Class-Path-Cli': listEmbedDependencies('embulk-deps-cli', '/lib/'),
+                   'Embulk-Resource-Class-Path-Timestamp': listEmbedDependencies('embulk-deps-timestamp', '/lib/'),
                    'Main-Class': 'org.embulk.cli.Main'
     }
 

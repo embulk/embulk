@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.embulk.deps.timestamp.RubyDateTimeZones;
 
 /**
  * TimeZoneIds is a utility class for operating with time zones.
@@ -21,16 +22,16 @@ import java.util.regex.Pattern;
  * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/lib/time.rb?view=markup">lib/time.rb</a>
  * @see <a href="https://svn.ruby-lang.org/cgi-bin/viewvc.cgi/tags/v2_3_1/COPYING?view=markup">COPYING</a>
  */
-public class TimeZoneIds {
-    private TimeZoneIds() {
+public final class JodaTimeCompat {
+    private JodaTimeCompat() {
         // No instantiation.
     }
 
     /**
      * Converts org.joda.time.DateTimeZone to its corresponding java.time.ZoneID.
      */
-    public static ZoneId convertJodaDateTimeZoneToZoneId(final org.joda.time.DateTimeZone jodaDateTimeZone) {
-        return ZoneId.of(jodaDateTimeZone.getID(), ALIAS_ZONE_IDS_FOR_LEGACY);
+    public static String convertJodaDateTimeZoneToZoneIdString(final org.joda.time.DateTimeZone jodaDateTimeZone) {
+        return ZoneId.of(jodaDateTimeZone.getID(), ALIAS_ZONE_IDS_FOR_LEGACY).toString();
     }
 
     /**
@@ -68,39 +69,6 @@ public class TimeZoneIds {
             return zoneOffset;
         }
         return defaultZoneOffset;
-    }
-
-    /**
-     * Parses time zone ID to java.time.ZoneId as compatible with the time zone parser of Embulk v0.8 as possible.
-     *
-     * It recognizes time zone IDs in the following priority.
-     *
-     * <ol>
-     * <li>"Z" is always recognized as UTC in the first priority.
-     * <li>If the ID is "EST", "EDT", "CST", "CDT", "MST", "MDT", "PST", or "PDT", parsed by ZoneId.of with alias.
-     * <li>If the ID is "HST", "ROC", or recognized by ZoneId.of, it is parsed by ZoneId.of with alias.
-     * <li>Otherwise, the zone ID is recognized by Ruby-compatible zone tab.
-     * <li>If none of the above does not recognize the zone ID, it returns null.
-     * </ol>
-     *
-     * Its time offset transitions in each time zone may be different from the time zone parser of Embulk v0.8,
-     * but the difference is from their base time zone (tz) database. The difference is ignorable as time zone
-     * database is continuously updated anyway.
-     */
-    public static ZoneId parseZoneIdWithJodaAndRubyZoneTab(final String zoneId) {
-        if (zoneId.equals("Z")) {
-            return ZoneOffset.UTC;
-        }
-
-        try {
-            return ZoneId.of(zoneId, ALIAS_ZONE_IDS_FOR_LEGACY);  // Is is never null unless Exception is thrown.
-        } catch (DateTimeException ex) {
-            final int rubyStyleTimeOffsetInSecond = RubyTimeZoneTab.dateZoneToDiff(zoneId);
-            if (rubyStyleTimeOffsetInSecond != Integer.MIN_VALUE) {
-                return ZoneOffset.ofTotalSeconds(rubyStyleTimeOffsetInSecond);
-            }
-            return null;
-        }
     }
 
     public static org.joda.time.DateTimeZone parseJodaDateTimeZone(final String timeZoneName) {
@@ -164,7 +132,7 @@ public class TimeZoneIds {
             // "CET", "EET", "Egypt", "Iran", "MET", "WET"
             //
             // Some zone IDs (ex. "PDT") are parsed by DateTimeFormat#parseMillis as shown above.
-            final int rubyStyleTimeOffsetInSecond = RubyTimeZoneTab.dateZoneToDiff(timeZoneName);
+            final int rubyStyleTimeOffsetInSecond = RubyDateTimeZones.toOffsetInSeconds(timeZoneName);
             if (rubyStyleTimeOffsetInSecond != Integer.MIN_VALUE) {
                 return org.joda.time.DateTimeZone.forOffsetMillis(rubyStyleTimeOffsetInSecond * 1000);
             }

@@ -1,0 +1,16 @@
+description = "Wrapper of timestamp-related dependency libraries in Embulk core"
+ext {
+    summary = "Embulk's dependency wrapper for timestamps"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(':embulk-core')
+    compile "org.embulk:embulk-util-timestamp:0.1.0"
+
+    testCompile project(':embulk-core')
+    testCompile 'junit:junit:4.12'
+}

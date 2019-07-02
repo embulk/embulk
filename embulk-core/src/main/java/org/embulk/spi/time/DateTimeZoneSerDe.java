@@ -35,7 +35,7 @@ public class DateTimeZoneSerDe {
         @Override
         protected org.joda.time.DateTimeZone _deserialize(String value, DeserializationContext context)
                 throws JsonMappingException {
-            org.joda.time.DateTimeZone parsed = TimeZoneIds.parseJodaDateTimeZone(value);
+            org.joda.time.DateTimeZone parsed = JodaTimeCompat.parseJodaDateTimeZone(value);
             if (parsed == null) {
                 // TODO include link to a document to the message for the list of supported time zones
                 throw new JsonMappingException(String.format("Unknown time zone name '%s'", value));

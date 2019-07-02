@@ -21,7 +21,7 @@ public class TimestampFormat {
     // It won't be removed very soon at least until Embulk v0.10.
     @Deprecated
     public static org.joda.time.DateTimeZone parseDateTimeZone(final String timeZoneName) {
-        return TimeZoneIds.parseJodaDateTimeZone(timeZoneName);
+        return JodaTimeCompat.parseJodaDateTimeZone(timeZoneName);
     }
 
     private final String format;

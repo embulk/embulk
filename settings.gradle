@@ -5,6 +5,8 @@ include 'embulk-deps-cli'
 project(':embulk-deps-cli').projectDir = file('embulk-deps/cli')
 include 'embulk-deps-maven'
 project(':embulk-deps-maven').projectDir = file('embulk-deps/maven')
+include 'embulk-deps-timestamp'
+project(':embulk-deps-timestamp').projectDir = file('embulk-deps/timestamp')
 include 'embulk-standards'
 include 'embulk-test'
 include 'embulk-docs'

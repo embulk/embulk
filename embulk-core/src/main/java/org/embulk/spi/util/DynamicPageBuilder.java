@@ -14,7 +14,7 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.time.TimeZoneIds;
+import org.embulk.spi.time.JodaTimeCompat;
 import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
 public class DynamicPageBuilder implements AutoCloseable {
@@ -33,7 +33,7 @@ public class DynamicPageBuilder implements AutoCloseable {
         @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
+                return JodaTimeCompat.parseJodaDateTimeZone(getDefaultTimeZoneId());
             } else {
                 return null;
             }
@@ -67,7 +67,7 @@ public class DynamicPageBuilder implements AutoCloseable {
         @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
+                return Optional.of(JodaTimeCompat.parseJodaDateTimeZone(getTimeZoneId().get()));
             } else {
                 return Optional.absent();
             }

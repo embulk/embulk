@@ -29,6 +29,7 @@ public final class EmbulkSelfContainedJarFiles {
         NONE,
         MAVEN,
         CLI,
+        TIMESTAMP,
         ;
     }
 
@@ -36,6 +37,7 @@ public final class EmbulkSelfContainedJarFiles {
         private StaticInitializer() {
             this.mavenJarFileResourceNames = new ArrayList<>();
             this.cliJarFileResourceNames = new ArrayList<>();
+            this.timestampJarFileResourceNames = new ArrayList<>();
         }
 
         public StaticInitializer addMavenJarFileResourceName(final String resourceName) {
@@ -58,21 +60,34 @@ public final class EmbulkSelfContainedJarFiles {
             return this;
         }
 
+        public StaticInitializer addTimestampJarFileResourceName(final String resourceName) {
+            this.timestampJarFileResourceNames.add(resourceName);
+            return this;
+        }
+
+        public StaticInitializer addTimestampJarFileResourceNames(final Collection<String> resourceNames) {
+            this.timestampJarFileResourceNames.addAll(resourceNames);
+            return this;
+        }
+
         public StaticInitializer addFromManifest(final Manifest manifest) {
             final Attributes attributes = manifest.getMainAttributes();
             this.addMavenJarFileResourceNames(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path-Maven")));
             this.addCliJarFileResourceNames(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path-Cli")));
+            this.addTimestampJarFileResourceNames(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path-Timestamp")));
             return this;
         }
 
         public void initialize() {
             initializeAll(
                     Collections.unmodifiableList(this.mavenJarFileResourceNames),
-                    Collections.unmodifiableList(this.cliJarFileResourceNames));
+                    Collections.unmodifiableList(this.cliJarFileResourceNames),
+                    Collections.unmodifiableList(this.timestampJarFileResourceNames));
         }
 
         private final ArrayList<String> mavenJarFileResourceNames;
         private final ArrayList<String> cliJarFileResourceNames;
+        private final ArrayList<String> timestampJarFileResourceNames;
     }
 
     public static StaticInitializer staticInitializer() {
@@ -86,12 +101,14 @@ public final class EmbulkSelfContainedJarFiles {
      */
     private static void initializeAll(
             final List<String> mavenJarResourceNames,
-            final List<String> cliJarResourceNames) {
+            final List<String> cliJarResourceNames,
+            final List<String> timestampJarResourceNames) {
         synchronized (JAR_RESOURCE_NAMES) {
             if (JAR_RESOURCE_NAMES.isEmpty()) {
                 JAR_RESOURCE_NAMES.put(Type.NONE, Collections.unmodifiableList(new ArrayList<String>()));
                 JAR_RESOURCE_NAMES.put(Type.MAVEN, Collections.unmodifiableList(new ArrayList<String>(mavenJarResourceNames)));
                 JAR_RESOURCE_NAMES.put(Type.CLI, Collections.unmodifiableList(new ArrayList<String>(cliJarResourceNames)));
+                JAR_RESOURCE_NAMES.put(Type.TIMESTAMP, Collections.unmodifiableList(new ArrayList<String>(timestampJarResourceNames)));
             } else {
                 throw new LinkageError("Doubly-initialized a set of self-contained JAR files.");
             }
@@ -136,6 +153,9 @@ public final class EmbulkSelfContainedJarFiles {
                 allJarResourceNames.add(jarResourceName);
             }
             for (final String jarResourceName : JAR_RESOURCE_NAMES.get(Type.CLI)) {
+                allJarResourceNames.add(jarResourceName);
+            }
+            for (final String jarResourceName : JAR_RESOURCE_NAMES.get(Type.TIMESTAMP)) {
                 allJarResourceNames.add(jarResourceName);
             }
 

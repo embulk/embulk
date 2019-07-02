@@ -55,7 +55,7 @@ public class TimestampFormatter {
             }
             return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
         } else {
-            return TimestampFormatterRuby.ofLegacy(pattern, TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+            return TimestampFormatterRuby.ofLegacy(pattern, JodaTimeCompat.parseJodaDateTimeZone(zoneIdString));
         }
     }
 
@@ -92,7 +92,7 @@ public class TimestampFormatter {
             return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
         } else {
             return TimestampFormatterRuby.ofLegacy(pattern,
-                                                   TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+                                                   JodaTimeCompat.parseJodaDateTimeZone(zoneIdString));
         }
     }
 
@@ -106,7 +106,7 @@ public class TimestampFormatter {
         @Deprecated
         public default org.joda.time.DateTimeZone getDefaultTimeZone() {
             if (getDefaultTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
+                return JodaTimeCompat.parseJodaDateTimeZone(getDefaultTimeZoneId());
             } else {
                 return null;
             }
@@ -127,7 +127,7 @@ public class TimestampFormatter {
         @Deprecated
         public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
             if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
+                return Optional.of(JodaTimeCompat.parseJodaDateTimeZone(getTimeZoneId().get()));
             } else {
                 return Optional.absent();
             }

@@ -32,7 +32,7 @@ public class TimestampFormatterJava extends TimestampFormatter {
     @Deprecated
     @Override
     public org.joda.time.DateTimeZone getTimeZone() {
-        return TimeZoneIds.convertZoneOffsetToJodaDateTimeZone(this.zoneOffset);
+        return JodaTimeCompat.convertZoneOffsetToJodaDateTimeZone(this.zoneOffset);
     }
 
     @Override

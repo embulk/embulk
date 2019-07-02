@@ -11,11 +11,14 @@ import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.TimestampType;
 
+@Deprecated
 public class Timestamps {
     private Timestamps() {}
 
     private interface TimestampColumnOption extends Task, TimestampParser.TimestampColumnOption {}
 
+    @SuppressWarnings("deprecation")
+    @Deprecated
     public static TimestampParser[] newTimestampColumnParsers(
             TimestampParser.Task parserTask, SchemaConfig schema) {
         TimestampParser[] parsers = new TimestampParser[schema.getColumnCount()];
