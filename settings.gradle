@@ -2,6 +2,8 @@ rootProject.name = 'embulk'
 
 include 'embulk-api-v0'
 project(':embulk-api-v0').projectDir = file('embulk-api/v0')
+include 'embulk-spi-v0'
+project(':embulk-spi-v0').projectDir = file('embulk-spi/v0')
 include 'embulk-core'
 include 'embulk-deps-cli'
 project(':embulk-deps-cli').projectDir = file('embulk-deps/cli')

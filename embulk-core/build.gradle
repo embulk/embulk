@@ -35,6 +35,7 @@ repositories {
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
     compile project(":embulk-api-v0")
+    compile project(":embulk-spi-v0")
 
     compile 'com.google.guava:guava:18.0'
     compile 'com.google.inject:guice:4.0'
@@ -126,6 +127,7 @@ processResources.dependsOn("unpackDependencyGems")
 
 jar {
     from project(":embulk-api-v0").sourceSets.main.output
+    from project(":embulk-spi-v0").sourceSets.main.output
 }
 
 task buildEmbulkGem {

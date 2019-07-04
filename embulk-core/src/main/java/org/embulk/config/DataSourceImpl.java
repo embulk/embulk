@@ -11,8 +11,13 @@ import java.util.Map;
 
 // TODO: Stop implementing CommitReport by v0.10 or earlier.
 @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/933
-public class DataSourceImpl
-        implements ConfigSource, TaskSource, TaskReport, /* Deprecated */ CommitReport, ConfigDiff {
+public class DataSourceImpl implements
+        org.embulk.config.ConfigSource,
+        org.embulk.config.TaskSource,
+        org.embulk.config.TaskReport,
+        org.embulk.config.CommitReport,  // Deprecated
+        org.embulk.config.ConfigDiff {
+
     protected final ObjectNode data;
     protected final ModelManager model;
 

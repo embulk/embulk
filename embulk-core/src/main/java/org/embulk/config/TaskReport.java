@@ -1,6 +1,6 @@
 package org.embulk.config;
 
-public interface TaskReport extends DataSource {
+public interface TaskReport extends DataSource, org.embulk.api.v0.TaskReport {
     @Override
     TaskReport getNested(String attrName);
 

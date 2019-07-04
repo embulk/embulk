@@ -1,0 +1,12 @@
+description = "SPIs for Embulk plugins to inherit"
+ext {
+    summary = "SPIs for Embulk plugins to inherit"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(":embulk-api-v0")
+}
