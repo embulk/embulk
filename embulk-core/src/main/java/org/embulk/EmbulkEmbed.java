@@ -58,12 +58,11 @@ public class EmbulkEmbed {
         }
 
         public Bootstrap setSystemConfigFromJson(final String systemConfigJson) {
-            this.systemConfig = this.systemConfigLoader.fromJsonString(systemConfigJson);
-            return this;
+            return this.setSystemConfig(this.systemConfigLoader.fromJsonString(systemConfigJson));
         }
 
-        public Bootstrap setSystemConfig(final ConfigSource systemConfig) {
-            this.systemConfig = this.systemConfig.deepCopy();
+        public Bootstrap setSystemConfig(final ConfigSource systemConfigGiven) {
+            this.systemConfig = systemConfigGiven.deepCopy();
             return this;
         }
 
