@@ -1,7 +1,5 @@
 package org.embulk.exec;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -28,8 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PreviewExecutor {
-    private final Injector injector;
-
     public interface PreviewTask extends Task {
         @Config("exec")
         @ConfigDefault("{}")
@@ -59,10 +55,7 @@ public class PreviewExecutor {
         public int getSampleBufferBytes();
     }
 
-    @Inject
-    public PreviewExecutor(Injector injector) {
-        this.injector = injector;
-    }
+    public PreviewExecutor() {}
 
     public PreviewResult preview(ExecSession exec, final ConfigSource config) {
         try {

@@ -40,7 +40,7 @@ public class EmbulkEmbed {
         this.injector = injector;
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
-        this.previewExecutor = injector.getInstance(PreviewExecutor.class);
+        this.previewExecutor = new PreviewExecutor();
     }
 
     public static class Bootstrap {
