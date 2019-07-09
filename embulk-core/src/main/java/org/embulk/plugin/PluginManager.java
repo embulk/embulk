@@ -1,11 +1,10 @@
 package org.embulk.plugin;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 import org.embulk.config.ConfigException;
 import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.jruby.ScriptingContainerDelegate;
@@ -15,15 +14,13 @@ import org.embulk.spi.InputPlugin;
 public class PluginManager {
     private final List<PluginSource> sources;
     private final JRubyPluginSource jrubySource;
-    private final Injector injector;
 
     // Set<PluginSource> is injected by BuiltinPluginSourceModule or extensions
     // using Multibinder<PluginSource>.
     @Inject
-    public PluginManager(Set<PluginSource> pluginSources, Injector injector) {
+    public PluginManager(final Set<PluginSource> pluginSources, final ScriptingContainerDelegate scriptingContainerDelegate) {
         this.sources = ImmutableList.copyOf(pluginSources);
-        this.jrubySource = new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class));
-        this.injector = injector;
+        this.jrubySource = new JRubyPluginSource(scriptingContainerDelegate);
     }
 
     @SuppressWarnings("unchecked")
