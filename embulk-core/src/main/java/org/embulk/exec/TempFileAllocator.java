@@ -1,8 +1,5 @@
 package org.embulk.exec;
 
-import com.google.inject.Inject;
-import org.embulk.config.ConfigSource;
-
 /**
  * Allocates a {@link org.embulk.spi.TempFileSpace}.
  *
@@ -10,8 +7,7 @@ import org.embulk.config.ConfigSource;
  */
 @Deprecated
 public class TempFileAllocator extends SimpleTempFileSpaceAllocator {
-    @Inject
-    public TempFileAllocator(@ForSystemConfig ConfigSource systemConfig) {
+    public TempFileAllocator() {
         super();
     }
 }
