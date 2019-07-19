@@ -71,8 +71,11 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
         }
         final ArrayList<Path> dependencyPaths = new ArrayList<>();
         for (final Dependency dependency : result.getDependencies()) {
-            final Path dependencyPath = this.findMavenArtifact(dependency.getArtifact());
-            dependencyPaths.add(dependencyPath);
+            final String scope = dependency.getScope();
+            if (scope.equals("compile") || scope.equals("runtime")) {
+                final Path dependencyPath = this.findMavenArtifact(dependency.getArtifact());
+                dependencyPaths.add(dependencyPath);
+            }
         }
         final Path artifactPath = this.findMavenArtifact(result.getArtifact());
         return MavenPluginPaths.of(artifactPath, dependencyPaths);
