@@ -68,7 +68,7 @@ public class EmbulkNew {
             // Generate gemspec
             //
             final String author = getGitConfig("user.name", "YOUR_NAME");
-            final String email = getGitConfig("user.email", "YOUR_NAME");
+            final String email = getGitConfig("user.email", "YOUR_EMAIL");
             final String expectedGitHubAccount = email.split("@")[0];
 
             // variables used in Velocity templates
@@ -292,7 +292,7 @@ public class EmbulkNew {
             final Process process = new ProcessBuilder("git", "config", configName).redirectErrorStream(true).start();
             return CharStreams.toString(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)).trim();
         } catch (Throwable ex) {
-            return "YOUR_NAME";
+            return defaultValue;
         }
     }
 
