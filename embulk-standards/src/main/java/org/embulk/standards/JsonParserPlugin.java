@@ -34,6 +34,7 @@ import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.json.JsonParseException;
 import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.TimestampParseException;
 import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.type.Types;
@@ -193,10 +194,15 @@ public class JsonParserPlugin implements ParserPlugin {
                     String.format("A Json record must represent map value but it's %s", value.getValueType().name()));
         }
 
-        if (isUsingCustomSchema(task)) {
-            setValueWithCustomSchema(pageBuilder, schema, timestampParsers, jsonPointers, value.asMapValue());
-        } else {
-            setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
+        try {
+            if (isUsingCustomSchema(task)) {
+                setValueWithCustomSchema(pageBuilder, schema, timestampParsers, jsonPointers, value.asMapValue());
+            } else {
+                setValueWithSingleJsonColumn(pageBuilder, schema, value.asMapValue());
+            }
+        } catch (TimestampParseException e) {
+            throw new JsonRecordValidateException(
+                    String.format("A Json record must have valid timestamp value but it's %s", value.getValueType().name()));
         }
         pageBuilder.addRecord();
     }
