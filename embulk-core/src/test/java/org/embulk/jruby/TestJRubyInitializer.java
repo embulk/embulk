@@ -28,7 +28,8 @@ public class TestJRubyInitializer {
                 loadPath,
                 classpath,
                 options,
-                "/bundle");
+                "/bundle",
+                false);
 
         // TODO: Test through mocked ScriptingContainerDelegate, not through probing methods for testing.
 

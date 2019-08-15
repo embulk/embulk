@@ -54,7 +54,9 @@ public class JRubyScriptingModule implements Module {
                     systemConfig.get(List.class, "jruby_classpath", new ArrayList()),
                     systemConfig.get(List.class, "jruby_command_line_options", null),
 
-                    systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null));
+                    systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null),
+
+                    systemConfig.get(String.class, "jruby.require.sigdump", "false").equals("true"));
         }
 
         @Override  // from |com.google.inject.Provider|

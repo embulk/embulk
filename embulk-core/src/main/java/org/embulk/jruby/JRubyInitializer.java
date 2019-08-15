@@ -23,7 +23,8 @@ public final class JRubyInitializer {
             final List<String> jrubyLoadPath,
             final List<String> jrubyClasspath,
             final List<String> jrubyOptions,
-            final String jrubyBundlerPluginSourceDirectory) {
+            final String jrubyBundlerPluginSourceDirectory,
+            final boolean requiresSigdump) {
         this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
@@ -33,6 +34,7 @@ public final class JRubyInitializer {
         this.jrubyClasspath = jrubyClasspath;
         this.jrubyOptions = jrubyOptions;
         this.jrubyBundlerPluginSourceDirectory = jrubyBundlerPluginSourceDirectory;
+        this.requiresSigdump = requiresSigdump;
     }
 
     public static JRubyInitializer of(
@@ -44,7 +46,8 @@ public final class JRubyInitializer {
             final List jrubyLoadPathNonGeneric,
             final List jrubyClasspathNonGeneric,
             final List jrubyOptionsNonGeneric,
-            final String jrubyBundlerPluginSourceDirectory) {
+            final String jrubyBundlerPluginSourceDirectory,
+            final boolean requiresSigdump) {
         final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<String>();
         if (jrubyLoadPathNonGeneric != null) {
             for (final Object oneJRubyLoadPath : jrubyLoadPathNonGeneric) {
@@ -90,7 +93,8 @@ public final class JRubyInitializer {
                 Collections.unmodifiableList(jrubyLoadPathBuilt),
                 Collections.unmodifiableList(jrubyClasspathBuilt),
                 Collections.unmodifiableList(jrubyOptionsBuilt),
-                jrubyBundlerPluginSourceDirectory);
+                jrubyBundlerPluginSourceDirectory,
+                requiresSigdump);
     }
 
     public void initialize(final ScriptingContainerDelegate jruby) {
@@ -131,6 +135,18 @@ public final class JRubyInitializer {
         // Embulk's base Ruby code is loaded at last.
         jruby.runScriptlet("require 'embulk/logger'");
         jruby.runScriptlet("require 'embulk/java/bootstrap'");
+
+        if (this.requiresSigdump) {
+            try {
+                jruby.runScriptlet("require 'sigdump/setup'");
+            } catch (final RuntimeException ex) {
+                if ("org.jruby.embed.EvalFailedException".equals(ex.getClass().getCanonicalName())) {
+                    this.logger.warn("Failed to load 'sigdump' gem into JRuby. " + ex.getMessage());
+                } else {
+                    this.logger.error("Failed unexpectedly to load 'sigdump' gem into JRuby.", ex);
+                }
+            }
+        }
 
         final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
         jruby.callMethod(injected, "const_set", "Injector", injector);
@@ -295,4 +311,5 @@ public final class JRubyInitializer {
     private final List<String> jrubyClasspath;
     private final List<String> jrubyOptions;
     private final String jrubyBundlerPluginSourceDirectory;
+    private final boolean requiresSigdump;
 }
