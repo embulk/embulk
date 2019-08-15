@@ -139,6 +139,25 @@ public class TestJsonParserPlugin {
     }
 
     @Test
+    public void readInvalidTimestampColumn() {
+        final List<Object> schemaConfig = new ArrayList<>();
+        schemaConfig.add(config().set("name", "_c0").set("type", "long"));
+        schemaConfig.add(config().set("name", "_c1").set("type", "timestamp"));
+
+        ConfigSource config = this.config.deepCopy()
+                .set("stop_on_invalid_record", true)
+                .set("columns", schemaConfig);
+        try {
+            transaction(config, fileInput(
+                    "{\"_c0\":true,\"_c1\":\"\"," // throw DataException
+            ));
+            fail();
+        } catch (Throwable t) {
+            assertTrue(t instanceof DataException);
+        }
+    }
+
+    @Test
     public void useDefaultInvalidEscapeStringFunction() throws Exception {
         try {
             transaction(config, fileInput(
