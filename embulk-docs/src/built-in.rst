@@ -653,23 +653,27 @@ Renaming rules
 
 The ``rules`` is an array of rules as below applied top-down for all the columns.
 
-+-------------------------+----------------------------------------------------------------------------------------+
-| rule                    | description                                                                            |
-+=========================+========================================================================================+
-| character\_types        | Restrict characters by types. Replace restricted characteres.                          |
-+-------------------------+----------------------------------------------------------------------------------------+
-| first\_character\_types | Restrict the first character by types. Prefix or replace first restricted characters.  |
-+-------------------------+----------------------------------------------------------------------------------------+
-| lower\_to\_upper        | Convert lower-case alphabets to upper-case.                                            |
-+-------------------------+----------------------------------------------------------------------------------------+
-| regex\_replace          | Replace with a regular expressions.                                                    |
-+-------------------------+----------------------------------------------------------------------------------------+
-| truncate                | Truncate.                                                                              |
-+-------------------------+----------------------------------------------------------------------------------------+
-| upper\_to\_lower        | Convert upper-case alphabets to lower-case                                             |
-+-------------------------+----------------------------------------------------------------------------------------+
-| unique\_number\_suffix  | Make column names unique in the schema.                                                |
-+-------------------------+----------------------------------------------------------------------------------------+
++-----------------------------+----------------------------------------------------------------------------------------+
+| rule                        | description                                                                            |
++=============================+========================================================================================+
+| character\_types            | Restrict characters by types. Replace restricted characteres.                          |
++-----------------------------+----------------------------------------------------------------------------------------+
+| first\_character\_types     | Restrict the first character by types. Prefix or replace first restricted characters.  |
++-----------------------------+----------------------------------------------------------------------------------------+
+| lower\_to\_upper            | Convert lower-case alphabets to upper-case.                                            |
++-----------------------------+----------------------------------------------------------------------------------------+
+| regex\_replace              | Replace with a regular expressions.                                                    |
++-----------------------------+----------------------------------------------------------------------------------------+
+| truncate                    | Truncate.                                                                              |
++-----------------------------+----------------------------------------------------------------------------------------+
+| upper\_to\_lower            | Convert upper-case alphabets to lower-case                                             |
++-----------------------------+----------------------------------------------------------------------------------------+
+| upper\_to\_lower_underscore | Convert upper-case alphabets to lower-underscore-case (snake-case)                     |
++-----------------------------+----------------------------------------------------------------------------------------+
+| upper\_to\_lower_hyphen     | Convert upper-case alphabets to lower-hypen-case (kebab-case)                          |
++-----------------------------+----------------------------------------------------------------------------------------+
+| unique\_number\_suffix      | Make column names unique in the schema.                                                |
++-----------------------------+----------------------------------------------------------------------------------------+
 
 Renaming rule: character\_types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -819,6 +823,40 @@ Example
       - type: rename
         rules:
         - rule: upper_to_lower
+
+Renaming rule: upper\_to\_lower\_underscore
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``upper_to_lower_underscore`` converts upper-case alphabets to lower-underscore-case (as known as snake-case).
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration converts all upper-case alphabets to lower-underscore-case.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: upper_to_lower_underscore
+
+Renaming rule: upper\_to\_lower\_hyphen
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The rule ``upper_to_lower_phyen`` converts upper-case alphabets to lower-hypen-case (as known as kebab-case).
+
+Example
+""""""""
+
+.. code-block:: yaml
+
+    # This configuration converts all upper-case alphabets to lower-hypen-case.
+    filters:
+      ...
+      - type: rename
+        rules:
+        - rule: upper_to_lower_hyphen
 
 Renaming rule: unique\_number\_suffix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
