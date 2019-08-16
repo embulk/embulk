@@ -180,6 +180,8 @@ public class RenameFilterPlugin implements FilterPlugin {
                 return applyUpperToLowerRule(inputSchema);
             case "upper_to_lower_underscore":
                 return applyUpperToLowerUnderscoreRule(inputSchema);
+            case "upper_to_lower_hyphen":
+                return applyUpperToLowerHyphenRule(inputSchema);
             case "unique_number_suffix":
                 return applyUniqueNumberSuffixRule(inputSchema, ruleConfig.loadConfig(UniqueNumberSuffixRule.class));
             default:
@@ -317,6 +319,14 @@ public class RenameFilterPlugin implements FilterPlugin {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, column.getName()), column.getType());
+        }
+        return builder.build();
+    }
+
+    private Schema applyUpperToLowerHyphenRule(Schema inputSchema) {
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            builder.add(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, column.getName()), column.getType());
         }
         return builder.build();
     }

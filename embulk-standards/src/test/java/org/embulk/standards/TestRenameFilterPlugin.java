@@ -208,6 +208,15 @@ public class TestRenameFilterPlugin {
     }
 
     @Test
+    public void checkRuleUpperToLowerHyphenRule() {
+        final String[] original = { "Foo", "fooBarBaz", "_Foo", "__Foo", "-Foo" };
+        final String[] expected = { "foo", "foo-bar-baz", "_-foo", "__-foo", "--foo" };
+        ConfigSource config = Exec.newConfigSource().set("rules",
+                ImmutableList.of(ImmutableMap.of("rule", "upper_to_lower_hyphen")));
+        renameAndCheckSchema(config, original, expected);
+    }
+
+    @Test
     public void checkCharacterTypesRulePassAlphabet() {
         final String[] original = { "Internal$Foo0123--Bar" };
         final String[] expected = { "Internal_Foo______Bar" };
