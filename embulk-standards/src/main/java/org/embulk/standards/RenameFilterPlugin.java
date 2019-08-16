@@ -1,5 +1,6 @@
 package org.embulk.standards;
 
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -177,6 +178,8 @@ public class RenameFilterPlugin implements FilterPlugin {
                 return applyTruncateRule(inputSchema, ruleConfig.loadConfig(TruncateRule.class));
             case "upper_to_lower":
                 return applyUpperToLowerRule(inputSchema);
+            case "upper_to_lower_underscore":
+                return applyUpperToLowerUnderscoreRule(inputSchema);
             case "unique_number_suffix":
                 return applyUniqueNumberSuffixRule(inputSchema, ruleConfig.loadConfig(UniqueNumberSuffixRule.class));
             default:
@@ -306,6 +309,14 @@ public class RenameFilterPlugin implements FilterPlugin {
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             builder.add(column.getName().toLowerCase(Locale.ENGLISH), column.getType());
+        }
+        return builder.build();
+    }
+
+    private Schema applyUpperToLowerUnderscoreRule(Schema inputSchema) {
+        Schema.Builder builder = Schema.builder();
+        for (Column column : inputSchema.getColumns()) {
+            builder.add(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, column.getName()), column.getType());
         }
         return builder.build();
     }
