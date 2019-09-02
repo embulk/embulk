@@ -1,4 +1,3 @@
-
 module Embulk
   require 'embulk/error'
   require 'embulk/logger'
@@ -35,10 +34,13 @@ module Embulk
 
     def search(type)
       name = "#{@search_prefix}#{type}"
+      Embulk.logger.info "[plugin search] Trying simple require #{name}."
       begin
         require_and_show name
+        Embulk.logger.info "[plugin search] Succeeded to require."
         return true
       rescue LoadError => e
+        Embulk.logger.info "[plugin search] Failed to require."
         # catch LoadError but don't catch ClassNotFoundException
         raise e if e.to_s =~ /java.lang.ClassNotFoundException/
         raise e if $LOAD_PATH.any? {|dir| File.exists? File.join(dir, "#{name}.rb") }
@@ -51,13 +53,16 @@ module Embulk
       end
 
       paths = load_path_files.compact.sort  # sort to prefer newer version
+      Embulk.logger.info "[plugin search] Next trying require with paths: #{paths.to_s}"
       paths.each do |path|
+        Embulk.logger.info "[plugin search] Next trying require: #{path}"
         require_and_show path
         return true
       end
 
       # search gems
       if defined?(::Gem::Specification) && ::Gem::Specification.respond_to?(:find_all)
+        Embulk.logger.info "[plugin search] Last trying."
         specs = Kernel::RUBYGEMS_ACTIVATION_MONITOR.synchronize do  # this lock is added as a workaround of https://github.com/jruby/jruby/issues/3652
           Gem::Specification.find_all do |spec|
             spec.contains_requirable_file? name
@@ -67,13 +72,16 @@ module Embulk
         # prefer newer version
         specs = specs.sort_by {|spec| spec.version }
         if spec = specs.last
+          Embulk.logger.info "[plugin search] Last trying with (newest) spec: #{spec.to_s} #{spec.version}"
           spec.require_paths.each do |lib|
+            Embulk.logger.info "[plugin search] Last trying with: #{spec.full_gem_path}/#{lib}/#{name}"
             require_and_show "#{spec.full_gem_path}/#{lib}/#{name}", spec
           end
           return true
         end
       end
 
+      Embulk.logger.info "[plugin search] Fail"
       return false
     end
 
