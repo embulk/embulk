@@ -31,6 +31,7 @@ re git fetch travis_push
 re git checkout -b gh-pages travis_push/master
 re rm -rf docs
 re cp -a ../embulk-docs/build/html docs
+re touch docs/.nojekyll
 re git add --all docs
 
 re git config user.name "$GIT_USER_NAME"
