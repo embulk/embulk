@@ -16,7 +16,7 @@ function r() {
 [ "$TRAVIS_BRANCH" != "master" -a "$TRAVIS_BRANCH" != "$(git describe --tags --always HEAD)" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
-remote="https://github.com/embulk/www.embulk.org.git"
+remote="https://github.com/embulk/docs.git"
 re ./gradlew site
 
 r git fetch --unshallow || echo "using complete repository."
