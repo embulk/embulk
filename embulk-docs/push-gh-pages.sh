@@ -16,7 +16,7 @@ function r() {
 [ "$TRAVIS_BRANCH" != "master" -a "$TRAVIS_BRANCH" != "$(git describe --tags --always HEAD)" ] && exit 0
 
 revision="$(git rev-parse HEAD)"
-remote="https://github.com/embulk/www.embulk.org.git"
+remote="https://github.com/embulk/docs.git"
 re ./gradlew site
 
 r git fetch --unshallow || echo "using complete repository."
@@ -31,6 +31,7 @@ re git fetch travis_push
 re git checkout -b gh-pages travis_push/master
 re rm -rf docs
 re cp -a ../embulk-docs/build/html docs
+re touch docs/.nojekyll
 re git add --all docs
 
 re git config user.name "$GIT_USER_NAME"
