@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TempFileSpace {
     public TempFileSpace(final File dir) {
@@ -38,6 +40,15 @@ public class TempFileSpace {
     }
 
     public synchronized void cleanup() {
+        if (this.dirCreated && logger.isDebugEnabled()) {
+            final StringBuilder builder = new StringBuilder();
+            builder.append("TempFileSpace \"").append(this.dir.toString()).append("\" is cleaned up at :");
+            for (final StackTraceElement stack : (new Throwable()).getStackTrace()) {
+                builder.append("\n  > ").append(stack.toString());
+            }
+            logger.debug(builder.toString());
+        }
+
         try {
             this.deleteFilesIfExistsRecursively(this.dir);
         } catch (final IOException ex) {
@@ -69,6 +80,8 @@ public class TempFileSpace {
                 }
             });
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(TempFileSpace.class);
 
     private final File dir;
     private boolean dirCreated;
