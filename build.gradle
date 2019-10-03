@@ -41,7 +41,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'org.ajoberstar.grgit'
 
-version = '0.9.19-SNAPSHOT'
+version = '0.9.19'
 
 description = 'Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control.'
 
