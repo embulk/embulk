@@ -1,5 +1,7 @@
 package org.embulk.spi.time;
 
+import java.util.Objects;
+
 /**
  * RubyTimeFormatToken represents a token in Ruby-compatible time format strings.
  *
@@ -23,6 +25,11 @@ abstract class RubyTimeFormatToken {
             }
             final Directive other = (Directive) otherObject;
             return this.formatDirective.equals(other.formatDirective);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(formatDirective);
         }
 
         @Override
@@ -58,6 +65,11 @@ abstract class RubyTimeFormatToken {
             }
             final Immediate other = (Immediate) otherObject;
             return this.string.equals(other.string);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(string);
         }
 
         @Override

@@ -30,6 +30,8 @@ import org.embulk.spi.util.Timestamps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class CsvParserPlugin implements ParserPlugin {
     private static final ImmutableSet<String> TRUE_STRINGS =
             ImmutableSet.of(
@@ -158,6 +160,11 @@ public class CsvParserPlugin implements ParserPlugin {
             QuoteCharacter o = (QuoteCharacter) obj;
             return character == o.character;
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(character);
+        }
     }
 
     public static class EscapeCharacter {
@@ -201,6 +208,11 @@ public class CsvParserPlugin implements ParserPlugin {
             }
             EscapeCharacter o = (EscapeCharacter) obj;
             return character == o.character;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(character);
         }
     }
 

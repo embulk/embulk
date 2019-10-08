@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * RubyTimeFormat represents a Ruby-compatible time format.
@@ -33,6 +34,11 @@ class RubyTimeFormat implements Iterable<RubyTimeFormat.TokenWithNext> {
         }
         final RubyTimeFormat other = (RubyTimeFormat) otherObject;
         return this.compiledPattern.equals(other.compiledPattern);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(compiledPattern);
     }
 
     @Override
