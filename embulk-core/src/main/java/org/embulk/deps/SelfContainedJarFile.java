@@ -55,7 +55,7 @@ final class SelfContainedJarFile {
             return;
         }
 
-        final JarInputStream jarInputStream;
+        JarInputStream jarInputStream = null;
         try {
             jarInputStream = new JarInputStream(inputStream, false);
         } catch (final IOException ex) {
@@ -64,6 +64,7 @@ final class SelfContainedJarFile {
             this.manifest = null;
             this.innerResources = null;
             this.innerResourcesBinary = null;
+            closeQuiet(jarInputStream);
             return;
         }
 
@@ -77,6 +78,7 @@ final class SelfContainedJarFile {
             this.manifest = null;
             this.innerResources = null;
             this.innerResourcesBinary = null;
+            closeQuiet(jarInputStream);
             return;
         }
 
@@ -91,6 +93,16 @@ final class SelfContainedJarFile {
                 + "] ("
                 + this.innerResourcesBinary.capacity()
                 + " bytes)");
+    }
+
+    private static void closeQuiet(final InputStream is) {
+        if (is != null) {
+            try {
+                is.close();
+            } catch (IOException e) {
+                // ignore.
+            }
+        }
     }
 
     URL getCodeSourceUrl() {
