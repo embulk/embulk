@@ -130,6 +130,10 @@ public class TempFileSpace {
         this.tempDirectoryCreated = Optional.empty();
     }
 
+    Optional<Path> getTempDirectoryForTesting() {
+        return this.tempDirectoryCreated;
+    }
+
     private void deleteFilesIfExistsRecursively(final Path dirToDelete) throws IOException {
         Files.walkFileTree(dirToDelete, new SimpleFileVisitor<Path>() {
                 @Override
