@@ -55,7 +55,7 @@ final class SelfContainedJarFile {
             return;
         }
 
-        JarInputStream jarInputStream = null;
+        final JarInputStream jarInputStream;
         try {
             jarInputStream = new JarInputStream(inputStream, false);
         } catch (final IOException ex) {
@@ -64,7 +64,6 @@ final class SelfContainedJarFile {
             this.manifest = null;
             this.innerResources = null;
             this.innerResourcesBinary = null;
-            closeQuiet(jarInputStream);
             return;
         }
 
