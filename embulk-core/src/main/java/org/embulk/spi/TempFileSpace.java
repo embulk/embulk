@@ -56,16 +56,19 @@ public class TempFileSpace {
      * <p>Note that the corresponding directory is created lazily when the first temporary file is created there.
      *
      * <p>It creates {@link TempFileSpace} under the specified {@code baseDir} with the {@code prefix}.
+     *
+     * @param baseDir  the base directory to create a temporary directory, which must be an absolute {@link java.nio.file.Path}
+     * @param prefix  the prefix of the temporary directory to be created
      */
     public static TempFileSpace with(final Path baseDir, final String prefix) throws IOException {
         if (baseDir == null || prefix == null) {
-            throw new IllegalArgumentException("TempFileSpace is created with null.");
+            throw new IllegalArgumentException("TempFileSpace cannot be created with null.");
         }
         if (!baseDir.isAbsolute()) {
-            throw new IllegalArgumentException("TempFileSpace is created under a relative path.");
+            throw new IllegalArgumentException("TempFileSpace cannot be created under a relative path.");
         }
         if (!Files.isDirectory(baseDir)) {  // Following symlinks -- no LinkOption.NOFOLLOW_LINKS.
-            throw new IOException("TempFileSpace is created under non-directory.");
+            throw new IOException("TempFileSpace cannot be created under non-directory.");
         }
 
         return new TempFileSpace(true, baseDir, prefix, null);
