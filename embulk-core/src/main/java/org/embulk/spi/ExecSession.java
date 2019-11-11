@@ -1,6 +1,9 @@
 package org.embulk.spi;
 
 import com.google.inject.Injector;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -19,6 +22,9 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 
 public class ExecSession {
+    private static final DateTimeFormatter ISO8601_BASIC =
+            DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss'Z'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
+
     private final Injector injector;
 
     // TODO: Remove it.
@@ -97,7 +103,7 @@ public class ExecSession {
         this.transactionTime = transactionTime;
 
         final TempFileSpaceAllocator tempFileSpaceAllocator = injector.getInstance(TempFileSpaceAllocator.class);
-        this.tempFileSpace = tempFileSpaceAllocator.newSpace(transactionTime.toString());
+        this.tempFileSpace = tempFileSpaceAllocator.newSpace(ISO8601_BASIC.format(transactionTime.getInstant()));
 
         this.preview = false;
     }
