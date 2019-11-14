@@ -20,6 +20,17 @@ buildscript {
     }
 }
 
+def getRevision = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        workingDir "${rootDir}"
+        commandLine "git", "rev-parse", "HEAD"
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+def revision = getRevision()
+
 allprojects {  // Applies all projects including the root project as well.
     apply plugin: 'java'
 
@@ -60,6 +71,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-
 
     // The version needs to be declared here, not in each build.gradle, so that "bintray" can get the value.
     version = "${rootProject.version}"
+    project.ext.setProperty("revision", revision)
 
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
@@ -130,11 +142,26 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-
 
     publishing {
         publications {
-            bintrayMavenRelease(MavenPublication) {
+            maven(MavenPublication) {
+                if (project.version.endsWith("-SNAPSHOT")) {
+                    version = "${project.version}-${revision}"
+                }
                 from components.java
                 artifact testsJar
                 artifact sourcesJar
                 artifact javadocJar
+            }
+        }
+
+        // publishMavenPublicationToGithubRepository
+        repositories {
+            maven {
+                name = "github"
+                url "https://maven.pkg.github.com/embulk/embulk"
+                credentials {
+                    username = project.hasProperty("github_package_user") ? github_package_user : ""
+                    password = project.hasProperty("github_package_token") ? github_package_token : ""
+                }
             }
         }
     }
@@ -145,7 +172,7 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-cli', 'embulk-deps-
         user = project.hasProperty('bintray_user') ? bintray_user : ''
         key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
 
-        publications = ['bintrayMavenRelease']
+        publications = ["maven"]
 
         dryRun = false
         publish = true
