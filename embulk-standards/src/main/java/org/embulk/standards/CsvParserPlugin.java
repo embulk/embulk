@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
@@ -158,6 +159,11 @@ public class CsvParserPlugin implements ParserPlugin {
             QuoteCharacter o = (QuoteCharacter) obj;
             return character == o.character;
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(character);
+        }
     }
 
     public static class EscapeCharacter {
@@ -201,6 +207,11 @@ public class CsvParserPlugin implements ParserPlugin {
             }
             EscapeCharacter o = (EscapeCharacter) obj;
             return character == o.character;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(character);
         }
     }
 
