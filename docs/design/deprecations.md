@@ -15,9 +15,11 @@ Embulk has some deprecated classes and methods. This document is to summarize de
 
 ### `org.embulk.EmbulkService`
 
-`org.embulk.EmbulkEmbed` has replaced `EmbulkService`.
+`org.embulk.EmbulkService` has been replaced by `org.embulk.EmbulkEmbed`.
 
-`EmbulkService` is to be removed by v0.10 or earlier. Note that `EmbulkService` is constructed only in the Embulk core or user's code embedding Embulk. `EmbulkService` is not to be constructed from plugins.
+`org.embulk.EmbulkService` is removed from Embulk v0.9.19. Note that `EmbulkService` had been used only in the Embulk core, by some user's embedded Embulk, and by a couple of Executor Plugins including [MapReduce Executor](https://github.com/embulk/embulk-executor-mapreduce).
+
+The MapReduce Executor, the only Executor Plugin which was officially supported, no longer works with Embulk v0.9.19+.
 
 * `org.embulk.EmbulkService`
 
