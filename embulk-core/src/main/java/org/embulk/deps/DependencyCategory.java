@@ -1,23 +1,23 @@
 package org.embulk.deps;
 
 public enum DependencyCategory {
-    CLI("CLI", EmbulkSelfContainedJarFiles.Type.CLI),
-    MAVEN("Maven", EmbulkSelfContainedJarFiles.Type.MAVEN),
+    CLI("CLI", "Embulk-Resource-Class-Path-Cli"),
+    MAVEN("Maven", "Embulk-Resource-Class-Path-Maven"),
     ;
 
-    private DependencyCategory(final String name, final EmbulkSelfContainedJarFiles.Type selfContainType) {
+    private DependencyCategory(final String name, final String manifestAttributeName) {
         this.name = name;
-        this.selfContainType = selfContainType;
+        this.manifestAttributeName = manifestAttributeName;
     }
 
     public String getName() {
         return this.name;
     }
 
-    public EmbulkSelfContainedJarFiles.Type getSelfContainType() {
-        return this.selfContainType;
+    public String getManifestAttributeName() {
+        return this.manifestAttributeName;
     }
 
     private final String name;
-    private final EmbulkSelfContainedJarFiles.Type selfContainType;
+    private final String manifestAttributeName;
 }

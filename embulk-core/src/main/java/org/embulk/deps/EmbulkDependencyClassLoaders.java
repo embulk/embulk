@@ -111,8 +111,8 @@ public final class EmbulkDependencyClassLoaders {
                         DEPENDENCIES.get(category),
                         CLASS_LOADER,
                         USE_SELF_CONTAINED_JAR_FILES.get()
-                                ? category.getSelfContainType()
-                                : EmbulkSelfContainedJarFiles.Type.NONE));
+                                ? category
+                                : null));
             }
             DEPENDENCY_CLASS_LOADERS = Collections.unmodifiableMap(classLoaders);
         }
