@@ -5,6 +5,7 @@ import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import org.embulk.deps.DependencyCategory;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class VelocityEngineDelegate {
@@ -40,7 +41,7 @@ public abstract class VelocityEngineDelegate {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.ofCli();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.CLI);
     private static final String CLASS_NAME = "org.embulk.deps.cli.VelocityEngineDelegateImpl";
 
     static {
