@@ -3,6 +3,7 @@ package org.embulk.spi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,6 +105,29 @@ public class TestTempFileSpace {
         assertFalse(space.getTempDirectoryForTesting().isPresent());
         assertEquals(0, entriesPrefixedWith(prefix));
         assertFalse(tempFile.exists());
+    }
+
+    @Test
+    public void testCreateTempFileWithIllegalPrefix() {
+        final String prefix = "embulk20191030T000006Z";
+
+        final TempFileSpace space = create(prefix);
+        // The temporary directory should not have been created before the first createTempFile().
+        assertFalse(space.getTempDirectoryForTesting().isPresent());
+        assertEquals(0, entriesPrefixedWith(prefix));
+
+        try {
+            space.createTempFile("illegal/prefix", "myext");
+        } catch (final TempFileException ex) {
+            final IOException cause1 = ex.getCause();
+            assertTrue(cause1.getMessage().startsWith("Failed to create a temp file with illegal prefix or suffix given."));
+            final Throwable cause2 = cause1.getCause();
+            if (cause2 instanceof IllegalArgumentException) {
+                return;
+            }
+        }
+
+        fail("TempFileException, containing IOException, containing IllegalArgumentException, must be thrown.");
     }
 
     private long entriesPrefixedWith(final String prefix) {
