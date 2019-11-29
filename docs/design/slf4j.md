@@ -14,7 +14,7 @@ Initially
 * Logger instances were retrieved from `org.embulk.exec.LoggerProvider` (`com.google.inject.Provider<org.slf4j.ILoggerFactory>`) through Guice.
   * Log4j, the default logger implementation, was initialized/configured in `org.embulk.exec.LoggerProvider`.
   * Plugins had to call `Exec.getLogger`, instead of calling `LoggerFactory.getLogger` directly, so that the plugin could retrieve an overridden Logger.
-* Software using Embulk as a library had to override Guice bindings through `EmbulkService` or `EmbulkEmbed` to use another logger implementation.
+* Software using Embulk as a library had to override Guice bindings through `EmbulkEmbed` to use another logger implementation.
   * Different logger implementations were able to be assigned to different `ExecSession` instances even in the same Java VM process.
   * Even if `LoggerProvider` was overridden by another logger implementation, slf4j-log4j21 and log4j were still in the classpath.
 

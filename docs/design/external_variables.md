@@ -67,7 +67,7 @@ Plugins are loads from the directories under `${user.home}/.embulk`.
 
 The environment variables `GEM_HOME` and `GEM_PATH` are overridden with `Gem.use_paths` always when Embulk is executed through CLI. The behavior is controlled directly by Embulk's system config `jruby_use_default_embulk_gem_home`. `jruby_use_default_embulk_gem_home` is always set `true` unless `-b` option is given. Even if `-b` is given, `GEM_HOME` and `GEM_PATH` are overridden by Bundler.
 
-They are not overridden only when Embulk is executed through `EmbulkEmbed` (or deprecated `EmbulkService`).
+They are not overridden only when Embulk is executed through `EmbulkEmbed`.
 
 They are directly overwritten as environment variables when executing subcommands `gem`, `bundle`, `exec`, and `irb`.
 
