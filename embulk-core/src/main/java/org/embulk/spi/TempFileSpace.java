@@ -105,7 +105,18 @@ public class TempFileSpace {
         try {
             this.createTempDirectoryIfRequired();
 
-            final Path tempFile = Files.createTempFile(this.tempDirectoryCreated.get(), prefix, "." + fileExt);
+            final Path tempFile;
+            try {
+                tempFile = Files.createTempFile(this.tempDirectoryCreated.get(), prefix, "." + fileExt);
+            } catch (final IllegalArgumentException ex) {
+                throw new IOException(
+                        "Failed to create a temp file with illegal prefix or suffix given. "
+                                + "For example, \"/\" is not accepted in prefix nor suffix since Embulk v0.9.20. "
+                                + "Please advise the plugin developer about it. "
+                                + "(prefix: \"" + prefix + "\", suffix: \"" + fileExt + "\")",
+                        ex);
+            }
+
             logger.debug("TempFile \"{}\" is created.", tempFile);
             return tempFile.toFile();
         } catch (final IOException ex) {
