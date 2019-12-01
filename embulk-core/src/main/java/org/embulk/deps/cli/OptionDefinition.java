@@ -3,6 +3,7 @@ package org.embulk.deps.cli;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import org.embulk.cli.EmbulkCommandLine;
+import org.embulk.deps.DependencyCategory;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class OptionDefinition extends AbstractHelpLineDefinition {
@@ -101,7 +102,7 @@ public abstract class OptionDefinition extends AbstractHelpLineDefinition {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.ofCli();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.CLI);
     private static final String CLASS_NAME = "org.embulk.deps.cli.OptionDefinitionImpl";
 
     static {

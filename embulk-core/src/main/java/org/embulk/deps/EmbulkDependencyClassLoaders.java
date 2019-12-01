@@ -4,13 +4,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Represents a set of class loaders to load dependency libraries for the Embulk core.
+ * Represents a pre-defined set of class loaders to load dependency libraries for the Embulk core.
  *
  * <p>It is intentionally designed to be a singleton. {@link DependencyClassLoader} is introduced only for dependency
  * visibility, not for customizability. It should not be customizable so flexibly.
@@ -23,8 +24,10 @@ public final class EmbulkDependencyClassLoaders {
     public static final class StaticInitializer {
         private StaticInitializer() {
             this.useSelfContainedJarFiles = false;
-            this.mavenDependencies = new ArrayList<>();
-            this.cliDependencies = new ArrayList<>();
+            this.dependencies = new EnumMap<>(DependencyCategory.class);
+            for (final DependencyCategory category : DependencyCategory.values()) {
+                this.dependencies.put(category, new ArrayList<>());
+            }
         }
 
         public StaticInitializer useSelfContainedJarFiles() {
@@ -32,78 +35,86 @@ public final class EmbulkDependencyClassLoaders {
             return this;
         }
 
+        public StaticInitializer addDependency(final DependencyCategory category, final Path path) {
+            this.dependencies.get(category).add(path);
+            return this;
+        }
+
+        public StaticInitializer addDependencies(final DependencyCategory category, final Collection<Path> paths) {
+            this.dependencies.get(category).addAll(paths);
+            return this;
+        }
+
+        @Deprecated
         public StaticInitializer addMavenDependency(final Path path) {
-            this.mavenDependencies.add(path);
-            return this;
+            return this.addDependency(DependencyCategory.MAVEN, path);
         }
 
+        @Deprecated
         public StaticInitializer addMavenDependencies(final Collection<Path> paths) {
-            this.mavenDependencies.addAll(paths);
-            return this;
+            return this.addDependencies(DependencyCategory.MAVEN, paths);
         }
 
+        @Deprecated
         public StaticInitializer addCliDependency(final Path path) {
-            this.cliDependencies.add(path);
-            return this;
+            return this.addDependency(DependencyCategory.CLI, path);
         }
 
+        @Deprecated
         public StaticInitializer addCliDependencies(final Collection<Path> paths) {
-            this.cliDependencies.addAll(paths);
-            return this;
+            return this.addDependencies(DependencyCategory.CLI, paths);
         }
 
         public void initialize() {
             initializeUseSelfContainedJarFiles(this.useSelfContainedJarFiles);
-            initializeMaven(Collections.unmodifiableList(this.mavenDependencies));
-            initializeCli(Collections.unmodifiableList(this.cliDependencies));
+            initializeDependencies(this.dependencies);
         }
 
         private boolean useSelfContainedJarFiles;
-        private final ArrayList<Path> mavenDependencies;
-        private final ArrayList<Path> cliDependencies;
+        private final EnumMap<DependencyCategory, ArrayList<Path>> dependencies;
     }
 
     public static StaticInitializer staticInitializer() {
         return new StaticInitializer();
     }
 
-    public static ClassLoader ofMaven() {
-        return MavenHolder.MAVEN_DEPENDENCY_CLASS_LOADER;
-    }
-
-    public static ClassLoader ofCli() {
-        return CliHolder.CLI_DEPENDENCY_CLASS_LOADER;
-    }
-
-    private static class MavenHolder {  // Initialization-on-demand holder
-        public static final DependencyClassLoader MAVEN_DEPENDENCY_CLASS_LOADER;
-
-        static {
-            if (MAVEN_DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
-                logger.warn(messageUninitialized("Maven"));
-            }
-            MAVEN_DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(
-                    MAVEN_DEPENDENCIES,
-                    CLASS_LOADER,
-                    USE_SELF_CONTAINED_JAR_FILES.get()
-                            ? EmbulkSelfContainedJarFiles.Type.MAVEN
-                            : EmbulkSelfContainedJarFiles.Type.NONE);
+    public static ClassLoader of(final DependencyCategory category) {
+        if (category == null) {
+            throw new LinkageError("No appropriate DependencyClassLoader for null.");
         }
+        return Holder.DEPENDENCY_CLASS_LOADERS.get(category);
     }
 
-    private static class CliHolder {  // Initialization-on-demand holder
-        public static final DependencyClassLoader CLI_DEPENDENCY_CLASS_LOADER;
+    @Deprecated
+    public static ClassLoader ofMaven() {
+        return of(DependencyCategory.MAVEN);
+    }
+
+    @Deprecated
+    public static ClassLoader ofCli() {
+        return of(DependencyCategory.CLI);
+    }
+
+    private static class Holder {  // Initialization-on-demand holder
+        public static final Map<DependencyCategory, DependencyClassLoader> DEPENDENCY_CLASS_LOADERS;
 
         static {
-            if (CLI_DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
-                logger.warn(messageUninitialized("CLI"));
+            final EnumMap<DependencyCategory, DependencyClassLoader> classLoaders = new EnumMap<>(DependencyCategory.class);
+            for (final DependencyCategory category : DependencyCategory.values()) {
+                if (DEPENDENCIES.get(category).isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
+                    logger.warn(
+                            "Dependencies for {} are uninitialized. Expected to use classes loaded by the parent ClassLoader.",
+                            category.getName());
+                }
+
+                classLoaders.put(category, new DependencyClassLoader(
+                        DEPENDENCIES.get(category),
+                        CLASS_LOADER,
+                        USE_SELF_CONTAINED_JAR_FILES.get()
+                                ? category
+                                : null));
             }
-            CLI_DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(
-                    CLI_DEPENDENCIES,
-                    CLASS_LOADER,
-                    USE_SELF_CONTAINED_JAR_FILES.get()
-                            ? EmbulkSelfContainedJarFiles.Type.CLI
-                            : EmbulkSelfContainedJarFiles.Type.NONE);
+            DEPENDENCY_CLASS_LOADERS = Collections.unmodifiableMap(classLoaders);
         }
     }
 
@@ -111,37 +122,32 @@ public final class EmbulkDependencyClassLoaders {
         USE_SELF_CONTAINED_JAR_FILES.set(useSelfContainedJarFile);
     }
 
-    private static void initializeMaven(final List<Path> mavenDependencies) {
-        synchronized (MAVEN_DEPENDENCIES) {
-            if (MAVEN_DEPENDENCIES.isEmpty()) {
-                MAVEN_DEPENDENCIES.addAll(mavenDependencies);
-            } else {
-                throw new LinkageError("Double initialization of dependencies for Maven.");
+    private static void initializeDependencies(final EnumMap<DependencyCategory, ArrayList<Path>> dependencies) {
+        synchronized (DEPENDENCIES) {
+            for (final DependencyCategory category : DependencyCategory.values()) {
+                if (dependencies.containsKey(category)) {
+                    if (dependencies.get(category).isEmpty()) {
+                        DEPENDENCIES.get(category).addAll(dependencies.get(category));
+                    } else {
+                        throw new LinkageError("Double initialization of dependencies for " + category.getName() + ".");
+                    }
+                }
             }
         }
     }
 
-    private static void initializeCli(final List<Path> cliDependencies) {
-        synchronized (CLI_DEPENDENCIES) {
-            if (CLI_DEPENDENCIES.isEmpty()) {
-                CLI_DEPENDENCIES.addAll(cliDependencies);
-            } else {
-                throw new LinkageError("Double initialization of dependencies for CLI.");
-            }
+    static {
+        final EnumMap<DependencyCategory, ArrayList<Path>> dependencies = new EnumMap<>(DependencyCategory.class);
+        for (final DependencyCategory category : DependencyCategory.values()) {
+            dependencies.put(category, new ArrayList<>());
         }
-    }
-
-    private static String messageUninitialized(final String target) {
-        return String.format(
-                "Dependencies for %s are uninitialized. Expected to use classes loaded by the parent ClassLoader.", target);
+        DEPENDENCIES = Collections.unmodifiableMap(dependencies);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(EmbulkDependencyClassLoaders.class);
 
     private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.class.getClassLoader();
-
-    private static final ArrayList<Path> MAVEN_DEPENDENCIES = new ArrayList<>();
-    private static final ArrayList<Path> CLI_DEPENDENCIES = new ArrayList<>();
+    private static final Map<DependencyCategory, ArrayList<Path>> DEPENDENCIES;
 
     private static final AtomicBoolean USE_SELF_CONTAINED_JAR_FILES = new AtomicBoolean(false);
 }
