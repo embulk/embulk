@@ -14,10 +14,12 @@ public class TestDependencyCategory {
      */
     @Test
     public void testConstants() {
-        assertEquals(2, DependencyCategory.values().length);
+        assertEquals(3, DependencyCategory.values().length);
         assertEquals("CLI", DependencyCategory.CLI.getName());
         assertEquals("Embulk-Resource-Class-Path-Cli", DependencyCategory.CLI.getManifestAttributeName());
         assertEquals("Maven", DependencyCategory.MAVEN.getName());
         assertEquals("Embulk-Resource-Class-Path-Maven", DependencyCategory.MAVEN.getManifestAttributeName());
+        assertEquals("Buffer", DependencyCategory.BUFFER.getName());
+        assertEquals("Embulk-Resource-Class-Path-Buffer", DependencyCategory.BUFFER.getManifestAttributeName());
     }
 }
