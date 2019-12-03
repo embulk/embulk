@@ -126,7 +126,7 @@ public final class EmbulkDependencyClassLoaders {
         synchronized (DEPENDENCIES) {
             for (final DependencyCategory category : DependencyCategory.values()) {
                 if (dependencies.containsKey(category)) {
-                    if (dependencies.get(category).isEmpty()) {
+                    if (DEPENDENCIES.get(category).isEmpty()) {
                         DEPENDENCIES.get(category).addAll(dependencies.get(category));
                     } else {
                         throw new LinkageError("Double initialization of dependencies for " + category.getName() + ".");
