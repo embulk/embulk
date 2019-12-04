@@ -9,10 +9,8 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderWithDependencies;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
@@ -50,9 +48,9 @@ public class JRubyScriptingModule implements Module {
                     systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true"),
 
                     // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
-                    systemConfig.get(List.class, "jruby_load_path", null),
-                    systemConfig.get(List.class, "jruby_classpath", new ArrayList()),
-                    systemConfig.get(List.class, "jruby_command_line_options", null),
+                    systemConfig.get(String.class, "jruby_load_path", null),
+                    systemConfig.get(String.class, "jruby_classpath", null),
+                    systemConfig.get(String.class, "jruby_command_line_options", null),
 
                     systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null),
 

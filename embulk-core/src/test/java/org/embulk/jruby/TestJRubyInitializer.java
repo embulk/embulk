@@ -3,31 +3,21 @@ package org.embulk.jruby;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 public class TestJRubyInitializer {
     @Test
     public void testArguments() {
-        final List<String> loadPath = new ArrayList<>();
-        loadPath.add("/load/path");
-        final List<String> classpath = new ArrayList<>();
-        classpath.add("/classpath");
-        final List<String> options = new ArrayList<>();
-        options.add("--option");
-        options.add("arg");
-
         final JRubyInitializer initializer = JRubyInitializer.of(
                 null,
                 LoggerFactory.getLogger(TestJRubyInitializer.class),
                 "/gem/home",
                 null,
                 true,
-                loadPath,
-                classpath,
-                options,
+                "/load/path",
+                "/classpath",
+                "--option,arg",
                 "/bundle",
                 false);
 

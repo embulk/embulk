@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
  * re-implemented again in a different style.
  */
 public class EmbulkRunner {
-    // |EmbulkSetup.setup| initializes:
-    // new EmbulkRunner(embed)
     public EmbulkRunner(final EmbulkEmbed embed) {
         this.embed = embed;  // org.embulk.EmbulkEmbed
     }

@@ -120,6 +120,21 @@ public class ConfigLoader {
         return new DataSourceImpl(model, source);
     }
 
+    /**
+     * Creates ConfigSource from java.util.Properties as-is.
+     *
+     * <p>Users and plugins MUST NOT call this directly. No any compatibility is guaranteed.
+     */
+    @Deprecated
+    public ConfigSource fromPropertiesAsIs(final Properties properties) {
+        final ObjectNode sourceNode = new ObjectNode(JsonNodeFactory.instance);
+        final DataSource dataSource = new DataSourceImpl(model, sourceNode);
+        for (final String key : properties.stringPropertyNames()) {
+            dataSource.set(key, properties.getProperty(key));
+        }
+        return new DataSourceImpl(model, sourceNode);
+    }
+
     private JsonNode objectToJson(Object object) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
