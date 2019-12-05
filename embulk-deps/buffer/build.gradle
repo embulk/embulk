@@ -10,6 +10,7 @@ repositories {
 dependencies {
     compileOnly project(":embulk-core")
     compile "io.netty:netty-buffer:4.0.44.Final"
+    compile "io.airlift:slice:0.9"
 
     testCompile project(":embulk-core")
     testCompile "junit:junit:4.12"

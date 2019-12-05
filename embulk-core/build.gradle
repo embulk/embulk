@@ -50,7 +50,6 @@ dependencies {
     compile 'org.yaml:snakeyaml:1.18'
     compile 'javax.validation:validation-api:1.1.0.Final'
     compile 'org.apache.bval:bval-jsr303:0.5'
-    compile 'io.airlift:slice:0.9'
     compile 'joda-time:joda-time:2.9.2'
     compile 'org.msgpack:msgpack-core:0.8.11'
 

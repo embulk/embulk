@@ -1,7 +1,6 @@
 package org.embulk.spi;
 
-import io.airlift.slice.Slice;
-import io.airlift.slice.Slices;
+import org.embulk.deps.buffer.Slice;
 import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
@@ -27,7 +26,7 @@ public class PageReader implements AutoCloseable {
 
     public static int getRecordCount(Page page) {
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
+        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
         return pageSlice.getInt(0);  // see page format
     }
 
@@ -36,7 +35,7 @@ public class PageReader implements AutoCloseable {
         this.page = SENTINEL;
 
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slices.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.limit());
+        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
 
         pageRecordCount = pageSlice.getInt(0);  // see page format
         readCount = 0;
