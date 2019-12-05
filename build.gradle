@@ -17,6 +17,7 @@ buildscript {
         classpath 'com.github.jruby-gradle:jruby-gradle-jar-plugin:1.0.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'org.ajoberstar.grgit:grgit-gradle:3.0.0'
+        classpath "org.owasp:dependency-check-gradle:5.2.1"
     }
 }
 
@@ -51,6 +52,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'org.ajoberstar.grgit'
+apply plugin: "org.owasp.dependencycheck"
 
 version = '0.9.21-SNAPSHOT'
 
