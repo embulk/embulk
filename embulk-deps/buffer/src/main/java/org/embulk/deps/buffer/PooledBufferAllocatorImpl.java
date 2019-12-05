@@ -1,20 +1,15 @@
-package org.embulk.exec;
+package org.embulk.deps.buffer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.BufferAllocator;
 
-class PooledBufferAllocator implements BufferAllocator {
-    PooledBufferAllocator(final int pageSize) {
+public class PooledBufferAllocatorImpl extends org.embulk.deps.buffer.PooledBufferAllocator {
+    public PooledBufferAllocatorImpl(final int pageSize) {
         this.pageSize = pageSize;
 
         // PooledByteBufAllocator(preferDirect = false): buffers are allocated on Java heap.
         this.nettyByteBufAllocator = new PooledByteBufAllocator(false);
-    }
-
-    PooledBufferAllocator() {
-        this(DEFAULT_PAGE_SIZE);
     }
 
     @Override
@@ -60,8 +55,6 @@ class PooledBufferAllocator implements BufferAllocator {
             super("A Buffer detected double release() calls. The buffer has already been released at:", alreadyReleasedAt);
         }
     }
-
-    private static final int DEFAULT_PAGE_SIZE = 32 * 1024;
 
     private final PooledByteBufAllocator nettyByteBufAllocator;
     private final int pageSize;

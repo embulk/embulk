@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
+import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
@@ -65,10 +66,10 @@ public class ExecModule implements Module {
     private BufferAllocator createBufferAllocatorFromSystemConfig() {
         final String byteSizeRepresentation = this.systemConfig.get(String.class, "page_size", null);
         if (byteSizeRepresentation == null) {
-            return new PooledBufferAllocator();
+            return PooledBufferAllocator.create();
         } else {
             final int byteSize = parseByteSizeRepresentation(byteSizeRepresentation);
-            return new PooledBufferAllocator(byteSize);
+            return PooledBufferAllocator.create(byteSize);
         }
     }
 
