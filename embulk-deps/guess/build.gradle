@@ -1,0 +1,26 @@
+description = "Wrapper of Embulk's Guess-related dependency libraries"
+ext {
+    summary = "Embulk's dependency wrapper for Guess"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(":embulk-core")
+
+    // For embulk/guess/charset.rb. See also embulk.gemspec
+    compile "com.ibm.icu:icu4j:54.1.1"
+
+    testCompile project(":embulk-core")
+    testCompile "junit:junit:4.12"
+}
+
+task prepareDependencyJars(type: Copy) {
+    doFirst {
+        delete("${buildDir}/dependency_jars")
+    }
+    from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
+    into "${buildDir}/dependency_jars"
+}

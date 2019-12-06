@@ -15,9 +15,8 @@ module Embulk
       }
 
       def guess(config, sample_buffer)
-        # ICU4J is always there as embulk.gem is no longer supported. rjack-icu is not required.
-        detector_class = com.ibm.icu.text.CharsetDetector
-        detector = detector_class.new
+        detector_class = org.embulk.deps.guess.CharsetDetector
+        detector = detector_class.create
         detector.setText(sample_buffer.to_java_bytes)
         best_match = detector.detect
         if best_match.getConfidence < 50
