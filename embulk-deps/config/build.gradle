@@ -1,6 +1,6 @@
-description = "Wrapper of Embulk's yaml parsing dependency libraries"
+description = "Wrapper of Embulk's config parsing dependency libraries"
 ext {
-    summary = "Embulk's dependency wrapper for Yaml"
+    summary = "Embulk's dependency wrapper for config parsers"
 }
 
 repositories {

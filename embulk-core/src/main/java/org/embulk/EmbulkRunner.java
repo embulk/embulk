@@ -18,7 +18,7 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.config.ModelManager;
-import org.embulk.deps.yaml.YamlProcessor;
+import org.embulk.deps.config.YamlProcessor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;

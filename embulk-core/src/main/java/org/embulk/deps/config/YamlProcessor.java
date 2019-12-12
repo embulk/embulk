@@ -1,4 +1,4 @@
-package org.embulk.deps.yaml;
+package org.embulk.deps.config;
 
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -57,8 +57,8 @@ public abstract class YamlProcessor {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.YAML);
-    private static final String CLASS_NAME = "org.embulk.deps.yaml.YamlProcessorImpl";
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.CONFIG);
+    private static final String CLASS_NAME = "org.embulk.deps.config.YamlProcessorImpl";
 
     static {
         final Class<YamlProcessor> clazz = loadImplClass();

@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
-import org.embulk.deps.yaml.YamlProcessor;
+import org.embulk.deps.config.YamlProcessor;
 
 public class ConfigLoader {
     private final ModelManager model;

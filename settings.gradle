@@ -3,8 +3,8 @@ rootProject.name = 'embulk'
 include 'embulk-core'
 include 'embulk-deps-buffer'
 project(':embulk-deps-buffer').projectDir = file('embulk-deps/buffer')
-include 'embulk-deps-yaml'
-project(':embulk-deps-yaml').projectDir = file('embulk-deps/yaml')
+include 'embulk-deps-config'
+project(':embulk-deps-config').projectDir = file('embulk-deps/config')
 include 'embulk-deps-cli'
 project(':embulk-deps-cli').projectDir = file('embulk-deps/cli')
 include 'embulk-deps-maven'

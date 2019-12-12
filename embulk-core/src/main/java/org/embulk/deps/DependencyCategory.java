@@ -2,7 +2,7 @@ package org.embulk.deps;
 
 public enum DependencyCategory {
     BUFFER("Buffer", "Embulk-Resource-Class-Path-Buffer"),
-    YAML("Yaml", "Embulk-Resource-Class-Path-Yaml"),
+    CONFIG("Config", "Embulk-Resource-Class-Path-Config"),
     CLI("CLI", "Embulk-Resource-Class-Path-Cli"),
     MAVEN("Maven", "Embulk-Resource-Class-Path-Maven"),
     ;

@@ -21,7 +21,7 @@ public class TestDependencyCategory {
         assertEquals("Embulk-Resource-Class-Path-Maven", DependencyCategory.MAVEN.getManifestAttributeName());
         assertEquals("Buffer", DependencyCategory.BUFFER.getName());
         assertEquals("Embulk-Resource-Class-Path-Buffer", DependencyCategory.BUFFER.getManifestAttributeName());
-        assertEquals("Yaml", DependencyCategory.YAML.getName());
-        assertEquals("Embulk-Resource-Class-Path-Yaml", DependencyCategory.YAML.getManifestAttributeName());
+        assertEquals("Config", DependencyCategory.CONFIG.getName());
+        assertEquals("Embulk-Resource-Class-Path-Config", DependencyCategory.CONFIG.getManifestAttributeName());
     }
 }

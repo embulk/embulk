@@ -1,4 +1,4 @@
-package org.embulk.deps.yaml;
+package org.embulk.deps.config;
 
 import java.io.InputStream;
 import org.yaml.snakeyaml.DumperOptions;

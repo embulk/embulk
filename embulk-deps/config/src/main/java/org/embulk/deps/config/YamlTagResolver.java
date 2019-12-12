@@ -1,4 +1,4 @@
-package org.embulk.deps.yaml;
+package org.embulk.deps.config;
 
 import java.util.regex.Pattern;
 import org.yaml.snakeyaml.nodes.NodeId;
