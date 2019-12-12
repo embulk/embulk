@@ -24,3 +24,4 @@ env:
     - GRADLE_TASK=':embulk-standards:check'
     - GRADLE_TASK=':embulk-test:check'
     - GRADLE_TASK=':embulk-deps-buffer:check'
+    - GRADLE_TASK=':embulk-deps-yaml:check'

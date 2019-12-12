@@ -18,6 +18,7 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.config.ModelManager;
+import org.embulk.deps.yaml.YamlProcessor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
@@ -438,13 +439,15 @@ public class EmbulkRunner {
     private String dumpDataSourceInYaml(final DataSource modelObject) {
         final ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
-        return (new org.yaml.snakeyaml.Yaml()).dump(object);
+        final YamlProcessor yamlProc = YamlProcessor.create(false);
+        return yamlProc.dump(object);
     }
 
     private String dumpResumeStateInYaml(final ResumeState modelObject) {
         final ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
-        return (new org.yaml.snakeyaml.Yaml()).dump(object);
+        final YamlProcessor yamlProc = YamlProcessor.create(false);
+        return yamlProc.dump(object);
     }
 
     // class Runnable

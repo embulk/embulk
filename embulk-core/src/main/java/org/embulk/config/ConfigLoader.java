@@ -8,16 +8,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import org.embulk.deps.yaml.YamlProcessor;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.SafeConstructor;
-import org.yaml.snakeyaml.representer.Representer;
 
 public class ConfigLoader {
     private final ModelManager model;
@@ -55,7 +53,8 @@ public class ConfigLoader {
     }
 
     public ConfigSource fromYamlString(String string) {
-        JsonNode node = objectToJson(newYaml().load(string));
+        YamlProcessor yamlProc = YamlProcessor.create(true);
+        JsonNode node = objectToJson(yamlProc.load(string));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
     }
@@ -67,7 +66,8 @@ public class ConfigLoader {
     }
 
     public ConfigSource fromYaml(InputStream stream) throws IOException {
-        JsonNode node = objectToJson(newYaml().load(stream));
+        YamlProcessor yamlProc = YamlProcessor.create(true);
+        JsonNode node = objectToJson(yamlProc.load(stream));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
     }
@@ -98,13 +98,13 @@ public class ConfigLoader {
     public ConfigSource fromPropertiesYamlLiteral(Map<String, String> props, String keyPrefix) {
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
         DataSource ds = new DataSourceImpl(model, source);
-        Yaml yaml = newYaml();
+        YamlProcessor yamlProc = YamlProcessor.create(true);
         for (Map.Entry<String, String> pair : props.entrySet()) {
             if (!pair.getKey().startsWith(keyPrefix)) {
                 continue;
             }
             String keyName = pair.getKey().substring(keyPrefix.length());
-            Object parsedValue = yaml.load(pair.getValue());  // TODO exception handling
+            Object parsedValue = yamlProc.load(pair.getValue());
             JsonNode node = objectToJson(parsedValue);
 
             // handle "." as a map acccessor. for example:
@@ -127,9 +127,5 @@ public class ConfigLoader {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private Yaml newYaml() {
-        return new Yaml(new SafeConstructor(), new Representer(), new DumperOptions(), new YamlTagResolver());
     }
 }
