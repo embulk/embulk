@@ -1,16 +1,13 @@
 package org.embulk.deps.yaml;
 
-import org.embulk.deps.DependencyCategory;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
-
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import org.embulk.deps.DependencyCategory;
+import org.embulk.deps.EmbulkDependencyClassLoaders;
 
-public abstract class YamlProcessor
-{
-    public static YamlProcessor create(boolean withResolver)
-    {
+public abstract class YamlProcessor {
+    public static YamlProcessor create(boolean withResolver) {
         try {
             return CONSTRUCTOR.newInstance(withResolver);
         } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
@@ -52,8 +49,7 @@ public abstract class YamlProcessor
     public abstract String dump(Object data);
 
     @SuppressWarnings("unchecked")
-    private static Class<YamlProcessor> loadImplClass()
-    {
+    private static Class<YamlProcessor> loadImplClass() {
         try {
             return (Class<YamlProcessor>) CLASS_LOADER.loadClass(CLASS_NAME);
         } catch (final ClassNotFoundException ex) {

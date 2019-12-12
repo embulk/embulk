@@ -8,14 +8,13 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import org.embulk.deps.yaml.YamlProcessor;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
+import org.embulk.deps.yaml.YamlProcessor;
 
 public class ConfigLoader {
     private final ModelManager model;
