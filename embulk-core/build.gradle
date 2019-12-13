@@ -52,9 +52,6 @@ dependencies {
     compile 'joda-time:joda-time:2.9.2'
     compile 'org.msgpack:msgpack-core:0.8.11'
 
-    // For embulk/guess/charset.rb. See also embulk.gemspec
-    compile 'com.ibm.icu:icu4j:54.1.1'
-
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.
     // Maven-related dependencies are moved to embulk-deps-maven.
@@ -67,6 +64,7 @@ dependencies {
     // This statement gets it loaded by the top-level ClassLoader.
     testCompile project(':embulk-deps-buffer')
     testCompile project(':embulk-deps-config')
+    testCompile project(':embulk-deps-guess')
 
     gems 'rubygems:bundler:1.16.0'
     gems 'rubygems:msgpack:1.1.0'
@@ -80,7 +78,7 @@ jruby {
     execVersion = rootProject.jrubyVersion
 }
 
-task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars"]) {
+task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars", ":embulk-deps-guess:prepareDependencyJars"]) {
     jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
 }
 task rubyTestMonkeyStrptime(type: JRubyExec) {

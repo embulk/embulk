@@ -76,7 +76,7 @@ public final class CliParserImpl extends CliParser {
 
         final EmbulkCommandLine.Builder commandLineBuilder = EmbulkCommandLine.builder();
         for (final String jrubyOption : jrubyOptions) {
-            commandLineBuilder.addSystemConfig("jruby_command_line_options", jrubyOption);
+            commandLineBuilder.setEmbulkSystemProperties("jruby_command_line_options", String.join(",", jrubyOption));
         }
         commandLineBuilder.addArguments(arguments);
         for (final Option cliOptionSpecified : cliCommandLine.getOptions()) {

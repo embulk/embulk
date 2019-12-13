@@ -28,6 +28,8 @@ each_jar_in(File.join(root_dir, 'embulk-deps', 'buffer', 'build', 'dependency_ja
 end
 each_jar_in(File.join(root_dir, 'embulk-deps', 'config', 'build', 'dependency_jars')) do |jar|
   static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::CONFIG, java.nio.file.Paths.get(jar.to_s))
+each_jar_in(File.join(root_dir, 'embulk-deps', 'guess', 'build', 'dependency_jars')) do |jar|
+  static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::GUESS, java.nio.file.Paths.get(jar.to_s))
 end
 # https://github.com/jruby/jruby/wiki/CallingJavaFromJRuby#calling-masked-or-unreachable-java-methods-with-java_send
 static_initializer.java_send :initialize
@@ -55,7 +57,11 @@ require 'embulk/java/bootstrap'
 require 'embulk'
 
 # "use_global_ruby_runtime" needs to be true because this test process starts from JRuby, the global instance.
-Java::org.embulk.EmbulkSetup::setup(Java::java.util.HashMap.new({"use_global_ruby_runtime": true}))
+embulk_system_properties = Java::java.util.Properties.new()
+embulk_system_properties.setProperty("use_global_ruby_runtime", "true")
+bootstrap = Java::org.embulk.EmbulkEmbed::Bootstrap.new;
+bootstrap.setEmbulkSystemProperties(embulk_system_properties);
+Java::org.embulk.EmbulkRunner.new(bootstrap.initialize__method())
 
 Dir.glob("#{this_dir}/**/test{_,-}*.rb") do |file|
   require file.sub(/\.rb$/,'')

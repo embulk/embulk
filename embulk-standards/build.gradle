@@ -37,6 +37,7 @@ dependencies {
     // This statement gets it loaded by the top-level ClassLoader.
     testCompile project(':embulk-deps-buffer')
     testCompile project(':embulk-deps-config')
+    testCompile project(':embulk-deps-guess')
 
     jrubyExec 'rubygems:simplecov:0.10.+'
     jrubyExec 'rubygems:test-unit:3.0.+'
@@ -46,7 +47,7 @@ jruby {
     execVersion = rootProject.jrubyVersion
 }
 
-task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars"]) {
+task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars", ":embulk-deps-guess:prepareDependencyJars"]) {
     jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
 }
 test.dependsOn(['rubyTestVanilla'])

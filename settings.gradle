@@ -7,6 +7,8 @@ include 'embulk-deps-config'
 project(':embulk-deps-config').projectDir = file('embulk-deps/config')
 include 'embulk-deps-cli'
 project(':embulk-deps-cli').projectDir = file('embulk-deps/cli')
+include 'embulk-deps-guess'
+project(':embulk-deps-guess').projectDir = file('embulk-deps/guess')
 include 'embulk-deps-maven'
 project(':embulk-deps-maven').projectDir = file('embulk-deps/maven')
 include 'embulk-standards'

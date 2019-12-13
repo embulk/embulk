@@ -1,5 +1,6 @@
 package org.embulk;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
@@ -10,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
@@ -48,6 +51,7 @@ public class EmbulkEmbed {
             // We will stop using JSON-based system config using ObjectMapper.
             this.systemConfigLoader = new ConfigLoader(new ModelManager(null, new ObjectMapper()));
             this.systemConfig = this.systemConfigLoader.newConfigSource();
+            this.embulkSystemProperties = new Properties();
             this.moduleOverrides = new ArrayList<>();
             this.started = false;
         }
@@ -57,12 +61,35 @@ public class EmbulkEmbed {
             return this.systemConfigLoader;
         }
 
+        @Deprecated  // To be removed.
         public Bootstrap setSystemConfigFromJson(final String systemConfigJson) {
             return this.setSystemConfig(this.systemConfigLoader.fromJsonString(systemConfigJson));
         }
 
+        @SuppressWarnings("deprecation")
+        public Bootstrap setEmbulkSystemProperties(final Properties propertiesGiven) {
+            this.embulkSystemProperties = propertiesGiven;
+            this.systemConfig = this.systemConfigLoader.fromPropertiesAsIs(propertiesGiven);
+            return this;
+        }
+
+        @Deprecated  // To be removed.
         public Bootstrap setSystemConfig(final ConfigSource systemConfigGiven) {
             this.systemConfig = systemConfigGiven.deepCopy();
+
+            final Properties properties = new Properties();
+            for (final Map.Entry<String, JsonNode> entry : this.systemConfig.getAttributes()) {
+                final JsonNode value = entry.getValue();
+                if (value.isTextual()) {
+                    properties.setProperty(entry.getKey(), value.asText());
+                } else {
+                    logger.warn("'{}' is configured in system config in a non-textual form. We will no longer support it. "
+                                + "If you see this message, please report it to: https://github.com/embulk/embulk/issues/1159",
+                                entry.getKey());
+                }
+            }
+            this.embulkSystemProperties = properties;
+
             return this;
         }
 
@@ -121,6 +148,7 @@ public class EmbulkEmbed {
 
             final ArrayList<Module> modulesListBuilt = new ArrayList<>();
 
+            // TODO: Replace systemConfig to embulkSystemProperties.
             ArrayList<Module> userModules = new ArrayList<>(standardModuleList(systemConfig));
             for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
                 final Iterable<? extends Module> overridden = override.apply(userModules);
@@ -139,6 +167,7 @@ public class EmbulkEmbed {
                 });
 
             final Injector injector = Guice.createInjector(Stage.PRODUCTION, Collections.unmodifiableList(modulesListBuilt));
+            // TODO: Replace systemConfig to embulkSystemProperties.
             return new EmbulkEmbed(this.systemConfig, injector);
         }
 
@@ -147,10 +176,18 @@ public class EmbulkEmbed {
             return this.initialize();
         }
 
+        // TODO: Remove it.
         private final ConfigLoader systemConfigLoader;
+
         private final List<Function<? super List<Module>, ? extends Iterable<? extends Module>>> moduleOverrides;
 
+        // TODO: Remove it.
         private ConfigSource systemConfig;
+
+        // We are trying to represent the "system config" in java.util.Properties, instead of ConfigSource.
+        // TODO: Make this java.util.Properties use as system config. See: https://github.com/embulk/embulk/issues/1159
+        private Properties embulkSystemProperties;
+
         private boolean started;
     }
 

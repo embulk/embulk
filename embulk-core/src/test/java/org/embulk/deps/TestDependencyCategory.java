@@ -23,5 +23,7 @@ public class TestDependencyCategory {
         assertEquals("Embulk-Resource-Class-Path-Buffer", DependencyCategory.BUFFER.getManifestAttributeName());
         assertEquals("Config", DependencyCategory.CONFIG.getName());
         assertEquals("Embulk-Resource-Class-Path-Config", DependencyCategory.CONFIG.getManifestAttributeName());
+        assertEquals("Guess", DependencyCategory.GUESS.getName());
+        assertEquals("Embulk-Resource-Class-Path-Guess", DependencyCategory.GUESS.getManifestAttributeName());
     }
 }
