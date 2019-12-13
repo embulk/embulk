@@ -1,0 +1,25 @@
+description = "Wrapper of Embulk's config parsing dependency libraries"
+ext {
+    summary = "Embulk's dependency wrapper for config parsers"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly project(":embulk-core")
+
+    compile 'org.yaml:snakeyaml:1.18'
+
+    testCompile project(":embulk-core")
+    testCompile "junit:junit:4.12"
+}
+
+task prepareDependencyJars(type: Copy) {
+    doFirst {
+        delete("${buildDir}/dependency_jars")
+    }
+    from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
+    into "${buildDir}/dependency_jars"
+}

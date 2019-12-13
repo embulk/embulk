@@ -63,7 +63,7 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-configure(subprojects.findAll { ['embulk-core', 'embulk-deps-buffer', 'embulk-deps-cli', 'embulk-deps-guess', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
+configure(subprojects.findAll { ['embulk-core', 'embulk-deps-buffer', 'embulk-deps-cli', 'embulk-deps-guess', 'embulk-deps-config', 'embulk-deps-maven', 'embulk-standards', 'embulk-test'].contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven'
