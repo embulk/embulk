@@ -14,7 +14,7 @@ public class TestDependencyCategory {
      */
     @Test
     public void testConstants() {
-        assertEquals(4, DependencyCategory.values().length);
+        assertEquals(5, DependencyCategory.values().length);
         assertEquals("CLI", DependencyCategory.CLI.getName());
         assertEquals("Embulk-Resource-Class-Path-Cli", DependencyCategory.CLI.getManifestAttributeName());
         assertEquals("Maven", DependencyCategory.MAVEN.getName());
