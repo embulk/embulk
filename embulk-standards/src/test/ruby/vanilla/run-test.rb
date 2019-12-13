@@ -28,6 +28,7 @@ each_jar_in(File.join(root_dir, 'embulk-deps', 'buffer', 'build', 'dependency_ja
 end
 each_jar_in(File.join(root_dir, 'embulk-deps', 'config', 'build', 'dependency_jars')) do |jar|
   static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::CONFIG, java.nio.file.Paths.get(jar.to_s))
+end
 each_jar_in(File.join(root_dir, 'embulk-deps', 'guess', 'build', 'dependency_jars')) do |jar|
   static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::GUESS, java.nio.file.Paths.get(jar.to_s))
 end
