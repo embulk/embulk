@@ -5,6 +5,7 @@ import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.multibindings.Multibinder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +16,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
@@ -65,11 +67,34 @@ public class GuessExecutor {
 
     @Inject
     public GuessExecutor(@ForSystemConfig ConfigSource systemConfig, @ForGuess Set<PluginType> defaultGuessPlugins) {
-        GuessExecutorSystemTask systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
+        String guessPluginsInString = null;
+        GuessExecutorSystemTask systemTask = null;
+        try {
+            guessPluginsInString = systemConfig.get(String.class, "guess_plugins", null);
+        } catch (final RuntimeException ex) {
+            if (ex.getCause() instanceof com.fasterxml.jackson.databind.JsonMappingException) {
+                systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
+            } else {
+                throw ex;  // Pass through.
+            }
+        }
+
+        final List<PluginType> guessPlugins;
+        if (guessPluginsInString != null) {
+            final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
+            for (final String guessPlugin : guessPluginsInString.split(",")) {
+                guessPluginsBuilt.add(DefaultPluginType.create(guessPlugin));
+            }
+            guessPlugins = Collections.unmodifiableList(guessPluginsBuilt);
+        } else if (systemTask != null) {
+            guessPlugins = systemTask.getGuessPlugins();
+        } else {
+            guessPlugins = Collections.unmodifiableList(new ArrayList<>());
+        }
 
         ImmutableList.Builder<PluginType> list = ImmutableList.builder();
         list.addAll(defaultGuessPlugins);
-        list.addAll(systemTask.getGuessPlugins());
+        list.addAll(guessPlugins);
         this.defaultGuessPlugins = list.build();
     }
 

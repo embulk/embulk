@@ -14,8 +14,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkRunner;
-import org.embulk.EmbulkSetup;
 import org.embulk.deps.cli.CliParser;
 import org.embulk.deps.cli.EmbulkCommandLineHelpRequired;
 import org.embulk.deps.cli.EmbulkCommandLineParseException;
@@ -214,9 +214,7 @@ public class EmbulkRun {
                                 "g", "guess", "NAMES", "Comma-separated list of guess plugin names",
                                 new OptionBehavior() {
                                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        for (final String guess : argument.split(",")) {
-                                            commandLineBuilder.addSystemConfig("guess_plugins", guess);
-                                        }
+                                        commandLineBuilder.setEmbulkSystemProperties("guess_plugins", argument);
                                     }
                                 }))
                         .setArgumentsRange(1, 1);
@@ -395,7 +393,7 @@ public class EmbulkRun {
             case GUESS:
                 // NOTE: When it was in Ruby "require 'embulk'" was required on top for Ruby
                 // |Embulk::setup|.
-                // Ruby |Embulk::setup| is now replaced with Java |org.embulk.EmbulkSetup.setup|.
+                // Ruby |Embulk::setup| is now replaced with direct calls to EmbulkEmbed below.
 
                 // TODO: Move this to initial JRuby instantiation.
                 // reset context class loader set by org.jruby.Main.main to nil. embulk manages
@@ -405,14 +403,14 @@ public class EmbulkRun {
 
                 // NOTE: When it was in Ruby ""require 'json'" was required.
 
-                // NOTE: $LOAD_PATH and $CLASSPATH are set in |EmbulkSetup|.
+                // NOTE: $LOAD_PATH and $CLASSPATH are set in JRubyInitializer via system config.
 
-                // call |EmbulkSetup.setup| after setup_classpaths to allow users to overwrite
-                // embulk classes
-                // NOTE: |EmbulkSetup.setup| returns |EmbulkEmbed| while it stores Ruby
-                // |Embulk::EmbulkRunner(EmbulkEmbed)|
-                // into Ruby |Embulk::Runner|.
-                final EmbulkRunner runner = EmbulkSetup.setup(commandLine.getSystemConfig());
+                // Ruby |Embulk::Runner| contained the EmbulkRunner instance, but it's no longer available.
+                final EmbulkEmbed.Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
+                bootstrap.setEmbulkSystemProperties(commandLine.getEmbulkSystemProperties());
+
+                // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
+                final EmbulkRunner runner = new EmbulkRunner(bootstrap.initialize());
 
                 final Path configDiffPath =
                         (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
@@ -579,10 +577,7 @@ public class EmbulkRun {
                 "C", "classpath", "PATH", "Add java classpath separated by " + java.io.File.pathSeparator + " (CLASSPATH)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        final String[] classpaths = argument.split("\\" + java.io.File.pathSeparator);
-                        for (final String classpath : classpaths) {
-                            commandLineBuilder.addSystemConfig("jruby_classpath", classpath);
-                        }
+                        commandLineBuilder.setEmbulkSystemProperties("jruby_classpath", argument);
                     }
                 }));
         // op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory (create one using "embulk mkbundle" command)') do |path|
@@ -592,7 +587,7 @@ public class EmbulkRun {
                 "b", "bundle", "BUNDLE_DIR", "Path to a Gemfile directory (create one using \"embulk mkbundle\" command)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setSystemConfig("jruby_global_bundler_plugin_source_directory", argument);
+                        commandLineBuilder.setEmbulkSystemProperties("jruby_global_bundler_plugin_source_directory", argument);
                     }
                 }));
     }
@@ -607,7 +602,7 @@ public class EmbulkRun {
                 "log", "PATH", "Output log messages to a file (default: -)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setSystemConfig("log_path", argument);
+                        commandLineBuilder.setEmbulkSystemProperties("log_path", argument);
                     }
                 }));
         // op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do
@@ -618,7 +613,7 @@ public class EmbulkRun {
                 "l", "log-level", "LEVEL", "Log level (error, warn, info, debug or trace)",
                 new OptionBehavior() {
                     public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setSystemConfig("log_level", argument);
+                        commandLineBuilder.setEmbulkSystemProperties("log_level", argument);
                     }
                 }));
         // op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
@@ -633,7 +628,7 @@ public class EmbulkRun {
                             throws EmbulkCommandLineParseException {
                         try {
                             final String[] keyValue = argument.split("=", 2);
-                            commandLineBuilder.setSystemConfig(keyValue[0], keyValue[1]);
+                            commandLineBuilder.setEmbulkSystemProperties(keyValue[0], keyValue[1]);
                         } catch (Throwable ex) {
                             throw new EmbulkCommandLineParseException(ex);
                         }

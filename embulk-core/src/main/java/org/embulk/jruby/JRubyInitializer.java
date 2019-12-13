@@ -43,44 +43,29 @@ public final class JRubyInitializer {
             final String gemHome,
             final String gemPath,
             final boolean useDefaultEmbulkGemHome,
-            final List jrubyLoadPathNonGeneric,
-            final List jrubyClasspathNonGeneric,
-            final List jrubyOptionsNonGeneric,
+            final String jrubyLoadPathWithPathSeparator,
+            final String jrubyClasspathWithPathSeparator,
+            final String jrubyOptionsSeparatedByComma,
             final String jrubyBundlerPluginSourceDirectory,
             final boolean requiresSigdump) {
         final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<String>();
-        if (jrubyLoadPathNonGeneric != null) {
-            for (final Object oneJRubyLoadPath : jrubyLoadPathNonGeneric) {
-                if (oneJRubyLoadPath instanceof String) {
-                    jrubyLoadPathBuilt.add((String) oneJRubyLoadPath);
-                } else {
-                    logger.warn("System config \"jruby_load_path\" contains non-String.");
-                    jrubyLoadPathBuilt.add(oneJRubyLoadPath.toString());
-                }
+        if (jrubyLoadPathWithPathSeparator != null) {
+            for (final String oneJRubyLoadPath : jrubyLoadPathWithPathSeparator.split("\\" + java.io.File.pathSeparator)) {
+                jrubyLoadPathBuilt.add((String) oneJRubyLoadPath);
             }
         }
 
         final ArrayList<String> jrubyClasspathBuilt = new ArrayList<String>();
-        if (jrubyClasspathNonGeneric != null) {
-            for (final Object oneJRubyClasspath : jrubyClasspathNonGeneric) {
-                if (oneJRubyClasspath instanceof String) {
-                    jrubyClasspathBuilt.add((String) oneJRubyClasspath);
-                } else {
-                    logger.warn("System config \"jruby_classpath\" contains non-String.");
-                    jrubyClasspathBuilt.add(oneJRubyClasspath.toString());
-                }
+        if (jrubyClasspathWithPathSeparator != null) {
+            for (final String oneJRubyClasspath : jrubyClasspathWithPathSeparator.split("\\" + java.io.File.pathSeparator)) {
+                jrubyClasspathBuilt.add((String) oneJRubyClasspath);
             }
         }
 
         final ArrayList<String> jrubyOptionsBuilt = new ArrayList<String>();
-        if (jrubyOptionsNonGeneric != null) {
-            for (final Object oneJRubyOption : jrubyOptionsNonGeneric) {
-                if (oneJRubyOption instanceof String) {
-                    jrubyOptionsBuilt.add((String) oneJRubyOption);
-                } else {
-                    logger.warn("System config \"jruby_command_line_options\" contains non-String.");
-                    jrubyOptionsBuilt.add(oneJRubyOption.toString());
-                }
+        if (jrubyOptionsSeparatedByComma != null) {
+            for (final String oneJRubyOption : jrubyOptionsSeparatedByComma.split(",")) {
+                jrubyOptionsBuilt.add((String) oneJRubyOption);
             }
         }
 
