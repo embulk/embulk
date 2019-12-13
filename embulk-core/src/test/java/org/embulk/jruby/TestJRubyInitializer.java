@@ -15,8 +15,8 @@ public class TestJRubyInitializer {
                 "/gem/home",
                 null,
                 true,
-                "/load/path",
-                "/classpath",
+                "/load/path" + java.io.File.pathSeparator + "/another/path",
+                "/classpath" + java.io.File.pathSeparator + "/2nd/classpath",
                 "--option,arg",
                 "/bundle",
                 false);
@@ -28,11 +28,13 @@ public class TestJRubyInitializer {
 
         assertEquals(null, initializer.probeGemPathForTesting());
 
-        assertEquals(1, initializer.probeJRubyLoadPathForTesting().size());
+        assertEquals(2, initializer.probeJRubyLoadPathForTesting().size());
         assertEquals("/load/path", initializer.probeJRubyLoadPathForTesting().get(0));
+        assertEquals("/another/path", initializer.probeJRubyLoadPathForTesting().get(1));
 
-        assertEquals(1, initializer.probeJRubyClasspathForTesting().size());
+        assertEquals(2, initializer.probeJRubyClasspathForTesting().size());
         assertEquals("/classpath", initializer.probeJRubyClasspathForTesting().get(0));
+        assertEquals("/2nd/classpath", initializer.probeJRubyClasspathForTesting().get(1));
 
         assertEquals(2, initializer.probeJRubyOptionsForTesting().size());
         assertEquals("--option", initializer.probeJRubyOptionsForTesting().get(0));
