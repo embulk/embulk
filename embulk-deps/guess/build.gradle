@@ -17,7 +17,7 @@ dependencies {
     testCompile "junit:junit:4.12"
 }
 
-task prepareDependencyJars(type: Copy) {
+task prepareDependencyJars(type: Copy, dependsOn: "jar") {
     doFirst {
         delete("${buildDir}/dependency_jars")
     }
