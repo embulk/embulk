@@ -1,13 +1,3 @@
-// TODO: Remove this block once we re-upgrade jruby-gradle-jar-plugin..
-// See #1: https://github.com/embulk/embulk/issues/954
-// See #2: https://github.com/jruby-gradle/jruby-gradle-plugin/issues/297
-repositories {
-    mavenLocal()
-    maven { url 'http://rubygems-proxy.torquebox.org/releases' }
-}
-
-apply plugin: 'com.github.jruby-gradle.jar'
-
 // TODO: Have more details in description and summary.
 description = 'Embulk core'
 ext {
@@ -24,9 +14,6 @@ configurations {
     compile.exclude group: 'asm', module: 'asm'
     compile.exclude group: 'org.sonatype.sisu.inject', module: 'cglib'
 }
-
-import com.github.jrubygradle.JRubyExec
-import com.github.jrubygradle.JRubyPrepare
 
 repositories {
     mavenCentral()
@@ -65,25 +52,31 @@ dependencies {
     testCompile project(':embulk-deps-buffer')
     testCompile project(':embulk-deps-config')
     testCompile project(':embulk-deps-guess')
-
-    gems 'rubygems:bundler:1.16.0'
-    gems 'rubygems:msgpack:1.1.0'
-    gems 'rubygems:liquid:4.0.0'
-
-    jrubyExec 'rubygems:simplecov:0.10.+'
-    jrubyExec 'rubygems:test-unit:3.0.+'
 }
 
-jruby {
-    execVersion = rootProject.jrubyVersion
+task rubyTestVanilla(type: JavaExec, dependsOn: [
+        "jar",
+        "prepareDependencyJars",
+        "installDependencyGems",
+        ":embulk-deps-buffer:prepareDependencyJars",
+        ":embulk-deps-config:prepareDependencyJars",
+        ":embulk-deps-guess:prepareDependencyJars",
+        ]) {
+    workingDir = file("${projectDir}");
+    classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core
+    main = "org.jruby.Main"
+    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
+    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
 }
 
-task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars", ":embulk-deps-guess:prepareDependencyJars"]) {
-    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
+task rubyTestMonkeyStrptime(type: JavaExec, dependsOn: ["jar"]) {
+    workingDir = file("${project.projectDir}");
+    classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core
+    main = "org.jruby.Main"
+    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/monkey_strptime/run-test.rb"]
+    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
 }
-task rubyTestMonkeyStrptime(type: JRubyExec) {
-    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/monkey_strptime/run-test.rb'
-}
+
 test.dependsOn(['rubyTestVanilla', 'rubyTestMonkeyStrptime', ":test-helpers:deploy"])
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
@@ -99,24 +92,34 @@ String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     }
 }
 
-task unpackDependencyGems(type: JRubyPrepare) {
+task installDependencyGems(type: JavaExec) {
+    doFirst {
+        delete("${buildDir}/dependency_gems_installed")
+        mkdir("${buildDir}/dependency_gems_installed")
+    }
+
+    workingDir = file("${projectDir}")
+    classpath = configurations.runtimeClasspath  // Not "sourceSets.main.runtimeClasspath" not to depend on "jar"
+    main = "org.jruby.Main"
+    args = ["-S", "gem", "install", "msgpack:1.1.0", "bundler:1.16.0", "liquid:4.0.0", "simplecov:0.10.0", "test-unit:3.0.9"]
+    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
+}
+
+task unpackDependencyGems(type: Copy, dependsOn: "installDependencyGems") {
     doFirst {
         delete("${buildDir}/dependency_gems_as_resources")
     }
-    outputDir file("${buildDir}/dependency_gems_installed")
-    dependencies configurations.gems
+
+    from "${buildDir}/dependency_gems_installed"
+    into "${buildDir}/dependency_gems_as_resources"
+    include "gems/bundler-1.16.0/**"
+    include "gems/liquid-4.0.0/**"
+    include "gems/msgpack-1.1.0-java/**"
+    include "specifications/bundler-1.16.0.gemspec"
+    include "specifications/liquid-4.0.0.gemspec"
+    include "specifications/msgpack-1.1.0-java.gemspec"
+
     doLast {
-        configurations.gems.each { gemFilePath ->
-            copy {
-                from "${buildDir}/dependency_gems_installed"
-                into "${buildDir}/dependency_gems_as_resources"
-                // These "include" may contain both pure-Ruby and JRuby gems, e.g. "msgpack" and "msgpack-java".
-                // TODO: Specify exact pure-Ruby or JRuby gems.
-                include "gems/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}/**"
-                include "gems/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}-java/**"
-                include "specifications/${gemFilePath.name.take(gemFilePath.name.lastIndexOf('.'))}*.gemspec"
-            }
-        }
         fileTree(dir: "${buildDir}/dependency_gems_as_resources", include: "**/.jrubydir").each { f -> f.delete() }
     }
 }

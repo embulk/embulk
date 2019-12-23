@@ -1,13 +1,3 @@
-// TODO: Remove this block once we re-upgrade jruby-gradle-jar-plugin..
-// See #1: https://github.com/embulk/embulk/issues/954
-// See #2: https://github.com/jruby-gradle/jruby-gradle-plugin/issues/297
-repositories {
-    mavenLocal()
-    maven { url 'http://rubygems-proxy.torquebox.org/releases' }
-}
-
-apply plugin: 'com.github.jruby-gradle.jar'
-
 // TODO: Have more details in description and summary.
 description = 'Embulk standard plugins'
 ext {
@@ -17,8 +7,6 @@ ext {
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
 processResources.from("${buildDir}/embulk_gem_complements")
-
-import com.github.jrubygradle.JRubyExec
 
 repositories {
     mavenCentral()
@@ -38,19 +26,36 @@ dependencies {
     testCompile project(':embulk-deps-buffer')
     testCompile project(':embulk-deps-config')
     testCompile project(':embulk-deps-guess')
-
-    jrubyExec 'rubygems:simplecov:0.10.+'
-    jrubyExec 'rubygems:test-unit:3.0.+'
 }
 
-jruby {
-    execVersion = rootProject.jrubyVersion
-}
-
-task rubyTestVanilla(type: JRubyExec, dependsOn: ["jar", "prepareDependencyJars", ":embulk-deps-buffer:prepareDependencyJars", ":embulk-deps-config:prepareDependencyJars", ":embulk-deps-guess:prepareDependencyJars"]) {
-    jrubyArgs '-Isrc/main/ruby', '-Isrc/test/ruby', '--debug', './src/test/ruby/vanilla/run-test.rb'
+task rubyTestVanilla(type: JavaExec, dependsOn: [
+        "jar",
+        "prepareDependencyJars",
+        "installDependencyGems",
+        ":embulk-deps-buffer:prepareDependencyJars",
+        ":embulk-deps-config:prepareDependencyJars",
+        ":embulk-deps-guess:prepareDependencyJars",
+        ]) {
+    workingDir = file("${project.projectDir}");
+    classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core
+    main = "org.jruby.Main"
+    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
+    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
 }
 test.dependsOn(['rubyTestVanilla'])
+
+task installDependencyGems(type: JavaExec) {
+    doFirst {
+        delete("${buildDir}/dependency_gems_installed")
+        mkdir("${buildDir}/dependency_gems_installed")
+    }
+
+    workingDir = file("${projectDir}")
+    classpath = configurations.runtimeClasspath  // Not "sourceSets.main.runtimeClasspath" not to depend on "jar"
+    main = "org.jruby.Main"
+    args = ["-S", "gem", "install", "simplecov:0.10.0", "test-unit:3.0.9"]
+    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
+}
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains('-')) {
