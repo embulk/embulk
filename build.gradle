@@ -204,6 +204,8 @@ dependencies {
 
     embed project(':embulk-deps-buffer')
 
+    embed project(':embulk-deps-config')
+
     embed project(':embulk-deps-guess')
 
     embed(project(':embulk-deps-maven')) {
@@ -257,6 +259,7 @@ shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':emb
                    'Specification-Title': 'embulk',
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path-Buffer': listEmbedDependencies('embulk-deps-buffer', '/lib/'),
+                   'Embulk-Resource-Class-Path-Config': listEmbedDependencies('embulk-deps-config', '/lib/'),
                    'Embulk-Resource-Class-Path-Guess': listEmbedDependencies('embulk-deps-guess', '/lib/'),
                    'Embulk-Resource-Class-Path-Maven': listEmbedDependencies('embulk-deps-maven', '/lib/'),
                    'Embulk-Resource-Class-Path-Cli': listEmbedDependencies('embulk-deps-cli', '/lib/'),
