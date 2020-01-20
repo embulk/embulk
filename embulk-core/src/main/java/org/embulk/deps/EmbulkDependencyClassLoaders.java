@@ -1,10 +1,12 @@
 package org.embulk.deps;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
@@ -101,14 +103,30 @@ public final class EmbulkDependencyClassLoaders {
         static {
             final EnumMap<DependencyCategory, DependencyClassLoader> classLoaders = new EnumMap<>(DependencyCategory.class);
             for (final DependencyCategory category : DependencyCategory.values()) {
+                final List<Path> classpath;
                 if (DEPENDENCIES.get(category).isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
-                    logger.warn(
-                            "Dependencies for {} are uninitialized. Expected to use classes loaded by the parent ClassLoader.",
-                            category.getName());
+                    logger.warn("Dependencies for {} are uninitialized.", category.getName());
+                    final String propertyClasspath = System.getProperty(category.getSystemPropertyName());
+                    if (propertyClasspath != null) {
+                        logger.warn("Using dependencies from Java system property \"{}\".", category.getSystemPropertyName());
+                        List<Path> classpathTemp = Collections.unmodifiableList(new ArrayList<Path>());
+                        try {
+                            classpathTemp = ClasspathExpander.expand(propertyClasspath);
+                        } catch (final IOException ex) {
+                            logger.error("Failed to expand classpath.", ex);
+                        }
+                        classpath = classpathTemp;
+                    } else {
+                        logger.warn("No corresponding Java system property \"{}\" is set.", category.getSystemPropertyName());
+                        logger.warn("It may work if the dependencies are loaded by the top-level ClassLoader.");
+                        classpath = Collections.unmodifiableList(new ArrayList<Path>());
+                    }
+                } else {
+                    classpath = Collections.unmodifiableList(DEPENDENCIES.get(category));
                 }
 
                 classLoaders.put(category, new DependencyClassLoader(
-                        DEPENDENCIES.get(category),
+                        classpath,
                         CLASS_LOADER,
                         USE_SELF_CONTAINED_JAR_FILES.get()
                                 ? category
