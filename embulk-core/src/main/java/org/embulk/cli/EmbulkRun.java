@@ -350,12 +350,12 @@ public class EmbulkRun {
                 }
                 return 0;
             case SELFUPDATE:
+                if (commandLine.getArguments().isEmpty()) {
+                    System.err.println("'embulk selfupdate' requires the target version since v0.10.0. It no longer updates to the latest version.");
+                    return 1;
+                }
                 try {
-                    if (commandLine.getArguments().isEmpty()) {
-                        SelfUpdate.toLatest(this.embulkVersion, commandLine.getForce());
-                    } else {
-                        SelfUpdate.toSpecific(this.embulkVersion, commandLine.getArguments().get(0), commandLine.getForce());
-                    }
+                    SelfUpdate.toSpecific(this.embulkVersion, commandLine.getArguments().get(0), commandLine.getForce());
                 } catch (final IOException ex) {
                     ex.printStackTrace();
                     return 1;
