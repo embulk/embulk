@@ -11,8 +11,10 @@ processResources.from("${buildDir}/embulk_gem_as_resources", "${buildDir}/depend
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
     // with ones bundled in jruby-complete and cause bytecode compatibility error
-    compile.exclude group: 'asm', module: 'asm'
-    compile.exclude group: 'org.sonatype.sisu.inject', module: 'cglib'
+    implementation.exclude group: "asm", module: "asm"
+    implementation.exclude group: "org.sonatype.sisu.inject", module: "cglib"
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
 
 repositories {
@@ -21,37 +23,37 @@ repositories {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
-    compile 'com.google.guava:guava:18.0'
-    compile 'com.google.inject:guice:4.0'
-    compile 'com.google.inject.extensions:guice-multibindings:4.0'
-    compile 'javax.inject:javax.inject:1'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.7'
-    compile 'com.fasterxml.jackson.core:jackson-core:2.6.7'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.7'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7'
-    compile 'com.fasterxml.jackson.module:jackson-module-guice:2.6.7'
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile 'org.jruby:jruby-complete:' + rootProject.jrubyVersion
-    compile 'javax.validation:validation-api:1.1.0.Final'
-    compile 'org.apache.bval:bval-jsr303:0.5'
-    compile 'joda-time:joda-time:2.9.2'
-    compile 'org.msgpack:msgpack-core:0.8.11'
+    implementation "com.google.guava:guava:18.0"
+    implementation "com.google.inject:guice:4.0"
+    implementation "com.google.inject.extensions:guice-multibindings:4.0"
+    implementation "javax.inject:javax.inject:1"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
+    implementation "com.fasterxml.jackson.core:jackson-core:2.6.7"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
+    implementation "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
+    implementation "org.slf4j:slf4j-api:1.7.12"
+    implementation "org.jruby:jruby-complete:" + rootProject.jrubyVersion
+    implementation "javax.validation:validation-api:1.1.0.Final"
+    implementation "org.apache.bval:bval-jsr303:0.5"
+    implementation "joda-time:joda-time:2.9.2"
+    implementation "org.msgpack:msgpack-core:0.8.11"
 
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.
     // Maven-related dependencies are moved to embulk-deps-maven.
-    compile 'org.apache.commons:commons-lang3:3.4'
+    implementation "org.apache.commons:commons-lang3:3.4"
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'ch.qos.logback:logback-classic:1.1.3'
+    testImplementation "junit:junit:4.12"
+    testImplementation "ch.qos.logback:logback-classic:1.1.3"
 
     // TODO: Remove this, and load it with the proper DependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.
-    testCompile project(':embulk-deps-buffer')
-    testCompile project(':embulk-deps-config')
-    testCompile project(':embulk-deps-guess')
+    testImplementation project(":embulk-deps-buffer")
+    testImplementation project(":embulk-deps-config")
+    testImplementation project(":embulk-deps-guess")
 }
 
 task rubyTestVanilla(type: JavaExec, dependsOn: [
@@ -222,8 +224,10 @@ task updateResources(dependsOn: 'prepareDependencyJars') {
 
 task prepareDependencyJars(type: Copy) {
     doFirst {
-        delete("${buildDir}/dependency_jars")
+        delete file("${buildDir}/dependency_jars")
+        mkdir file("${buildDir}/dependency_jars")
     }
-    from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
     into "${buildDir}/dependency_jars"
+    from configurations.runtimeClasspath
+    from jar.outputs.files
 }

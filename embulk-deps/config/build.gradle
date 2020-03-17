@@ -7,19 +7,26 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
+}
+
 dependencies {
     compileOnly project(":embulk-core")
 
-    compile 'org.yaml:snakeyaml:1.18'
+    implementation 'org.yaml:snakeyaml:1.18'
 
-    testCompile project(":embulk-core")
-    testCompile "junit:junit:4.12"
+    testImplementation project(":embulk-core")
+    testImplementation "junit:junit:4.12"
 }
 
 task prepareDependencyJars(type: Copy, dependsOn: "jar") {
     doFirst {
-        delete("${buildDir}/dependency_jars")
+        delete file("${buildDir}/dependency_jars")
+        mkdir file("${buildDir}/dependency_jars")
     }
-    from configurations.runtime + files("${project.libsDir}/${project.name}-${project.version}.jar")
     into "${buildDir}/dependency_jars"
+    from configurations.runtimeClasspath
+    from jar.outputs.files
 }
