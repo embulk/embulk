@@ -1,8 +1,4 @@
-// TODO: Have more details in description and summary.
-description = 'Embulk test helper'
-ext {
-    summary = 'Embulk test helper'
-}
+description = "A test helper for Embulk plugins with JUnit 4"
 
 repositories {
     mavenCentral()
@@ -14,7 +10,7 @@ configurations {
 }
 
 dependencies {
-    implementation "junit:junit:4.12"
+    implementation "junit:junit:4.13"
     implementation "org.hamcrest:hamcrest-library:1.3"
 
     implementation project(":embulk-core")

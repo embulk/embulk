@@ -12,6 +12,6 @@ project(':embulk-deps-guess').projectDir = file('embulk-deps/guess')
 include 'embulk-deps-maven'
 project(':embulk-deps-maven').projectDir = file('embulk-deps/maven')
 include 'embulk-standards'
-include 'embulk-test'
+include 'embulk-junit4'
 include 'embulk-docs'
 include 'test-helpers'
