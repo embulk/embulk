@@ -22,7 +22,7 @@ env:
   matrix:
     - GRADLE_TASK=':embulk-core:check'
     - GRADLE_TASK=':embulk-standards:check'
-    - GRADLE_TASK=':embulk-test:check'
+    - GRADLE_TASK=':embulk-junit4:check'
     - GRADLE_TASK=':embulk-deps-buffer:check'
     - GRADLE_TASK=':embulk-deps-config:check'
     - GRADLE_TASK=':embulk-deps-guess:check'
