@@ -28,7 +28,7 @@ task buildFlatJarForEmbulkTestMavenPlugin(type: Jar) {
                 "Embulk-Plugin-Main-Class": "org.embulk.plugin.jar.ExampleJarSpiV0"
         )
     }
-    archiveName = "embulk-test-maven-plugin-flat.jar"
+    archiveBaseName = "embulk-test-maven-plugin-flat"
 }
 
 task buildDepsJarForEmbulkTestMavenPlugin(type: Jar) {
@@ -36,5 +36,5 @@ task buildDepsJarForEmbulkTestMavenPlugin(type: Jar) {
         include "org/embulk/plugin/jar/ExampleDependencyJar.class"
         include "embulk-test-maven-plugin/deps.txt"
     }
-    archiveName = "embulk-test-maven-plugin-deps.jar"
+    archiveBaseName = "embulk-test-maven-plugin-deps"
 }

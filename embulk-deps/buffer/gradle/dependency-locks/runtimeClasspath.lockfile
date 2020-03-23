@@ -1,0 +1,6 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+io.airlift:slice:0.9
+io.netty:netty-buffer:4.0.44.Final
+io.netty:netty-common:4.0.44.Final
