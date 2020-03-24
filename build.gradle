@@ -2,7 +2,6 @@ plugins {
     id "java"
     id "maven-publish"
     id "jacoco"
-    id "com.github.johnrengelman.shadow" version "5.2.0"
     id "com.jfrog.bintray" version "1.8.4"
     id "org.ajoberstar.grgit" version "4.0.1"
 }
@@ -221,25 +220,20 @@ def listEmbedDependencies = { rootModuleName, prefix ->
     return String.join(' ', list)
 }
 
-// Workaround: "*.jar" resources in the shadowed JAR are unfortunately unzipped by the Gradle Shadow plugin.
-// @see https://github.com/johnrengelman/shadow/issues/111
-task embeddedJarsJar(type: Jar) {
-    doFirst {
-        delete file("$buildDir/embeddedJars")
-        mkdir file("$buildDir/embeddedJars")
+// Standard "jar" task to build a JAR with dependency JAR resources embedded.
+jar {
+    // Expands all dependencies including "embulk-core" and "embulk-standards"
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    archiveBaseName = "embulk-embedded"
-    classifier = null
-    destinationDirectory = file("$buildDir/embeddedJars")
-    exclude 'META-INF/**'
+
+    // Includes COPYING.
+    from "${rootProject.projectDir}/COPYING"
+
+    // Includes all hidden dependency librarires under "embed" into "lib/".
     into('/lib') {
         from configurations.embed
     }
-}
-
-shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':embulk-core' and ':embulk-standards'.
-    dependsOn embeddedJarsJar
-    from embeddedJarsJar
 
     // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
     // See also: embulk-core/src/main/java/org/embulk/EmbulkVersion.java
@@ -256,11 +250,9 @@ shadowJar {  // Builds a fat-JAR with recurred dependencies from the above ':emb
                    'Embulk-Resource-Class-Path-Cli': listEmbedDependencies('embulk-deps-cli', '/lib/'),
                    'Main-Class': 'org.embulk.cli.Main'
     }
-
-    append("${rootProject.projectDir}/COPYING")
 }
 
-task executableJar(dependsOn: 'shadowJar') {  // Builds an executable fat-JAR from "shadowJar".
+task executableJar(dependsOn: "jar") {
     ext.destinationDir = file("${buildDir}/executable")
     doFirst {
         destinationDir.mkdirs()
@@ -272,7 +264,7 @@ task executableJar(dependsOn: 'shadowJar') {  // Builds an executable fat-JAR fr
         destination.append(file("embulk-core/src/main/bat/selfrun.bat").readBytes())
         destination.append("\r\nEND_OF_EMBULK_SELFRUN_BATCH_PART\r\n\n")
         destination.append(file("embulk-core/src/main/sh/selfrun.sh").readBytes())
-        destination.append(file("${buildDir}/libs/embulk-${project.version}-all.jar").readBytes())
+        destination.append(jar.outputs.files.singleFile.readBytes())
         destination.setExecutable(true)
     }
 }
