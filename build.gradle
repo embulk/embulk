@@ -42,7 +42,18 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-configure(subprojects.findAll { ['embulk-core', 'embulk-deps-buffer', 'embulk-deps-cli', 'embulk-deps-guess', 'embulk-deps-config', 'embulk-deps-maven', 'embulk-standards', 'embulk-junit4'].contains(it.name) }) {
+def subprojectNamesReleased = [
+    "embulk-core",
+    "embulk-deps-buffer",
+    "embulk-deps-cli",
+    "embulk-deps-guess",
+    "embulk-deps-config",
+    "embulk-deps-maven",
+    "embulk-standards",
+    "embulk-junit4",
+]
+
+configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
@@ -162,11 +173,11 @@ configure(subprojects.findAll { ['embulk-core', 'embulk-deps-buffer', 'embulk-de
             repo = 'maven'
             name = 'embulk'
             desc = 'Embulk, a plugin-based parallel bulk data loader'
-            websiteUrl = 'https://github.com/embulk/embulk'
+            websiteUrl = "https://www.embulk.org"
             issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
             vcsUrl = 'https://github.com/embulk/embulk.git'
             licenses = ['Apache-2.0']
-            labels = ['embulk', 'ruby', 'java']
+            labels = [ "embulk" ]
             publicDownloadNumbers = true
             version {
                 name = project.version
@@ -269,40 +280,6 @@ task executableJar(dependsOn: "jar") {
     }
 }
 
-bintray {  // Defines "bintrayUpload" properties for the root project's executable fat-JAR.
-    // NOTE: Define Gradle properties "bintray_user" and "bintray_api_key" to upload the releases to Bintray.
-    // ~/.gradle/gradle.properties would help defining.
-    user = project.hasProperty('bintray_user') ? bintray_user : ''
-    key = project.hasProperty('bintray_api_key') ? bintray_api_key : ''
-
-    // No "publications". The executable embulk-${version}.jar (built by "executableJar") is uploaded by "filesSpec".
-    // The executable is uploaded into the root directory of the version at Bintray.
-    filesSpec {
-        from executableJar.destination
-        into "."
-    }
-
-    dryRun = false
-    publish = true
-
-    pkg {
-        userOrg = 'embulk'
-        repo = 'maven'
-        name = 'embulk'
-        desc = "${project.summary}"
-        websiteUrl = 'https://github.com/embulk/embulk'
-        issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
-        vcsUrl = 'https://github.com/embulk/embulk.git'
-        licenses = ['Apache-2.0']
-        labels = ['embulk', 'ruby', 'java']
-        publicDownloadNumbers = true
-        version {
-            name = project.version
-        }
-    }
-}
-bintrayUpload.dependsOn(['executableJar'])
-
 task releaseCheck {
     doFirst {
         if (rootProject.version.endsWith("-SNAPSHOT")) {
@@ -327,6 +304,11 @@ task releaseCheck {
     }
 }
 
-task release(dependsOn: ["executableJar", "releaseCheck", "bintrayUpload"]) {
+task release {
+    dependsOn "releaseCheck"
+    dependsOn "executableJar"
+    subprojectNamesReleased.each { subprojectName ->
+        dependsOn ":${subprojectName}:bintrayUpload"
+        tasks.findByPath(":${subprojectName}:bintrayUpload").mustRunAfter(":releaseCheck")
+    }
 }
-bintrayUpload.mustRunAfter('releaseCheck')
