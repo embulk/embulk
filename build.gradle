@@ -269,14 +269,6 @@ task executableJar(dependsOn: "jar") {
     }
 }
 
-task cli(type: Copy, dependsOn: 'executableJar') {
-    doFirst {
-        file('pkg').mkdirs()
-    }
-    from executableJar.destination
-    into file('pkg')
-}
-
 bintray {  // Defines "bintrayUpload" properties for the root project's executable fat-JAR.
     // NOTE: Define Gradle properties "bintray_user" and "bintray_api_key" to upload the releases to Bintray.
     // ~/.gradle/gradle.properties would help defining.
@@ -338,15 +330,3 @@ task releaseCheck {
 task release(dependsOn: ["executableJar", "releaseCheck", "bintrayUpload"]) {
 }
 bintrayUpload.mustRunAfter('releaseCheck')
-
-task setVersion {
-    doFirst {
-        throw new GradleException('Gradle task "setVersion" no longer exists. Edit "version" in build.gradle.')
-    }
-}
-
-task updateJRuby {
-    doFirst {
-        throw new GradleException('Gradle task "updateJRuby" no longer exists. Edit "jrubyVersion" in build.gradle.')
-    }
-}
