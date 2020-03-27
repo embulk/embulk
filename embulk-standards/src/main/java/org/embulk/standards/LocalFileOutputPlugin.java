@@ -100,6 +100,7 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
                 }
             }
 
+            @SuppressWarnings("deprecation")  // Calling Buffer#array().
             public void add(Buffer buffer) {
                 try {
                     output.write(buffer.array(), buffer.offset(), buffer.limit());

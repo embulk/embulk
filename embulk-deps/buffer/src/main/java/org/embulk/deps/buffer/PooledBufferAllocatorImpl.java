@@ -3,6 +3,7 @@ package org.embulk.deps.buffer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 
 public class PooledBufferAllocatorImpl extends org.embulk.deps.buffer.PooledBufferAllocator {
     public PooledBufferAllocatorImpl(final int pageSize) {
@@ -26,7 +27,7 @@ public class PooledBufferAllocatorImpl extends org.embulk.deps.buffer.PooledBuff
         return new BufferBasedOnNettyByteBuf(nettyByteBufAllocator.buffer(size));
     }
 
-    private static class BufferBasedOnNettyByteBuf extends Buffer {
+    private static class BufferBasedOnNettyByteBuf extends BufferImpl {
         private BufferBasedOnNettyByteBuf(final ByteBuf internalNettyByteBuf) {
             super(internalNettyByteBuf.array(), internalNettyByteBuf.arrayOffset(), internalNettyByteBuf.capacity());
 

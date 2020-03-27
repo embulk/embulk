@@ -16,7 +16,7 @@ public class PageReader implements AutoCloseable {
     private int position;
     private final byte[] nullBitSet;
 
-    private static final Page SENTINEL = Page.wrap(Buffer.wrap(new byte[4]));  // buffer().release() does nothing
+    private static final Page SENTINEL = Page.wrap(BufferImpl.wrap(new byte[4]));  // buffer().release() does nothing
 
     public PageReader(Schema schema) {
         this.schema = schema;

@@ -32,6 +32,7 @@ public class OutputStreamFileOutput implements FileOutput {
         }
     }
 
+    @SuppressWarnings("deprecation")  // Calling Buffer#array().
     public void add(Buffer buffer) {
         if (current == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");

@@ -29,7 +29,7 @@ public class Page {
     }
 
     public static Page allocate(int length) {
-        return new Page(Buffer.allocate(length));
+        return new Page(BufferImpl.allocate(length));
     }
 
     public static Page wrap(Buffer buffer) {

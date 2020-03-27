@@ -14,6 +14,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
@@ -162,7 +163,7 @@ public class SamplingParserPlugin implements ParserPlugin {
     }
 
     public static Buffer readSample(FileInput fileInput, int sampleBufferBytes) {
-        return readSample(fileInput, Buffer.allocate(sampleBufferBytes), 0, sampleBufferBytes);
+        return readSample(fileInput, BufferImpl.allocate(sampleBufferBytes), 0, sampleBufferBytes);
     }
 
     public static Buffer readSample(FileInput fileInput, Buffer sample, int offset, int sampleBufferBytes) {
