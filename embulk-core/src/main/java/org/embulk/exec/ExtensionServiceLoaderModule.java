@@ -3,7 +3,7 @@ package org.embulk.exec;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import java.util.ServiceLoader;
-import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.spi.Extension;
 
 /**
@@ -15,22 +15,22 @@ import org.embulk.spi.Extension;
  */
 public class ExtensionServiceLoaderModule implements Module {
     private final ClassLoader classLoader;
-    private final ConfigSource systemConfig;
+    private final EmbulkSystemProperties embulkSystemProperties;
 
-    public ExtensionServiceLoaderModule(ConfigSource systemConfig) {
-        this(ExtensionServiceLoaderModule.class.getClassLoader(), systemConfig);
+    public ExtensionServiceLoaderModule(final EmbulkSystemProperties embulkSystemProperties) {
+        this(ExtensionServiceLoaderModule.class.getClassLoader(), embulkSystemProperties);
     }
 
-    public ExtensionServiceLoaderModule(ClassLoader classLoader, ConfigSource systemConfig) {
+    public ExtensionServiceLoaderModule(final ClassLoader classLoader, final EmbulkSystemProperties embulkSystemProperties) {
         this.classLoader = classLoader;
-        this.systemConfig = systemConfig;
+        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     @Override
     public void configure(Binder binder) {
         ServiceLoader<Extension> serviceLoader = ServiceLoader.load(Extension.class, classLoader);
         for (Extension extension : serviceLoader) {
-            for (Module module : extension.getModules(systemConfig)) {
+            for (Module module : extension.getModules(this.embulkSystemProperties)) {
                 module.configure(binder);
             }
         }

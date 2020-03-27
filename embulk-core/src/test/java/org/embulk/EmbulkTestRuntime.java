@@ -3,6 +3,7 @@ package org.embulk;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import java.util.Properties;
 import java.util.Random;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSourceImpl;
@@ -31,11 +32,12 @@ public class EmbulkTestRuntime extends GuiceBinder {
         @Override
         public void configure(Binder binder) {
             ConfigSource systemConfig = getSystemConfig();
-            new SystemConfigModule(systemConfig).configure(binder);
-            new ExecModule(systemConfig).configure(binder);
-            new ExtensionServiceLoaderModule(systemConfig).configure(binder);
+            final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
+            new SystemConfigModule(systemConfig, embulkSystemProperties).configure(binder);
+            new ExecModule(embulkSystemProperties).configure(binder);
+            new ExtensionServiceLoaderModule(embulkSystemProperties).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
-            new JRubyScriptingModule(systemConfig).configure(binder);
+            new JRubyScriptingModule().configure(binder);
             new PluginClassLoaderModule().configure(binder);
             new TestUtilityModule().configure(binder);
             new TestPluginSourceModule().configure(binder);

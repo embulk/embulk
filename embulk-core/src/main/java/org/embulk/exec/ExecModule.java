@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ModelManager;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
@@ -27,8 +27,8 @@ import org.embulk.spi.util.CharsetSerDe;
 import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {
-    public ExecModule(final ConfigSource systemConfig) {
-        this.systemConfig = systemConfig;
+    public ExecModule(final EmbulkSystemProperties embulkSystemProperties) {
+        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class ExecModule implements Module {
     }
 
     private BufferAllocator createBufferAllocatorFromSystemConfig() {
-        final String byteSizeRepresentation = this.systemConfig.get(String.class, "page_size", null);
+        final String byteSizeRepresentation = this.embulkSystemProperties.getProperty("page_size");
         if (byteSizeRepresentation == null) {
             return PooledBufferAllocator.create();
         } else {
@@ -121,5 +121,5 @@ public class ExecModule implements Module {
     private static final BigDecimal TERA = new BigDecimal(1L << 40);  // 1_099_511_627_776
     private static final BigDecimal PETA = new BigDecimal(1L << 50);  // 1_125_899_906_842_624
 
-    private final ConfigSource systemConfig;
+    private final EmbulkSystemProperties embulkSystemProperties;
 }
