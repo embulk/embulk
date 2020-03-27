@@ -1,0 +1,27 @@
+name: Build and test
+on: [ pull_request ]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-latest
+        # - macOS-latest
+        # - windows-latest
+        gradle_task:
+        - ":embulk-core:check"
+        - ":embulk-standards:check"
+        - ":embulk-junit4:check"
+        - ":embulk-deps-buffer:check"
+        - ":embulk-deps-config:check"
+        - ":embulk-deps-guess:check"
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build and test
+      run: ./gradlew ${{ matrix.gradle_task }}
