@@ -46,6 +46,22 @@ public final class EmbulkSystemProperties extends Properties {
         return new EmbulkSystemProperties(mutable);
     }
 
+    public boolean getPropertyAsBoolean(final String key, final boolean defaultValue) {
+        final String value = this.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        return parseBoolean(value, defaultValue);
+    }
+
+    public int getPropertyAsInteger(final String key, final int defaultValue) {
+        final String value = this.getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+        return parseInteger(value);
+    }
+
     @Override  // From Properties
     public void load(final InputStream inStream) {
         throw new UnsupportedOperationException("Modifying EmbulkSystemProperties is not permitted.");
@@ -159,5 +175,122 @@ public final class EmbulkSystemProperties extends Properties {
     @Override  // From Hashtable
     public Collection<Object> values() {
         return Collections.unmodifiableSet(new HashSet<>(super.values()));
+    }
+
+    /**
+     * Parses String into boolean in almost the same way with the default ObjectMapper of Jackson 2.6.7.
+     *
+     * <p>Reimplemented based on jackson-databind 2.6.7, which has been licensed under Apache License 2.0.
+     *
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java#L161-L190">com.fasterxml.jackson.databind.deser.std.NumberDeserializers.BooleanDeserializer</a>
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/StdDeserializer.java#L185-L213">com.fasterxml.jackson.databind.deser.std.StdDeserializer#_parseBoolean</a>
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/resources/META-INF/LICENSE">LICENSE</a>
+     */
+    private static boolean parseBoolean(final String text, final boolean defaultValue) {
+        // This methods expects |text| is not null.
+        final String textTrimmed = text.trim();
+
+        if ("true".equals(textTrimmed) || "True".equals(textTrimmed)) {
+            return true;
+        }
+        if ("false".equals(textTrimmed) || "False".equals(textTrimmed)) {
+            return false;
+        }
+        if (textTrimmed.length() == 0) {
+            return defaultValue;
+        }
+        if ("null".equals(textTrimmed)) {
+            return defaultValue;
+        }
+        throw new IllegalArgumentException("Only \"true\" or \"false\" is recognized.");
+    }
+
+    /**
+     * Parses String into int in the same way with the default ObjectMapper of Jackson 2.6.7.
+     *
+     * <p>Reimplemented based on jackson-databind 2.6.7, which has been licensed under Apache License 2.0.
+     *
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java#L287-L323">com.fasterxml.jackson.databind.deser.std.NumberDeserializers.IntegerDeserializer</a>
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/StdDeserializer.java#L423-L444">com.fasterxml.jackson.databind.deser.std.StdDeserializer#_parseInteger</a>
+     * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/resources/META-INF/LICENSE">LICENSE</a>
+     */
+    private static int parseInteger(final String text) {
+        // This methods expects |text| is not null.
+        final String textTrimmed = text.trim();
+
+        final int length = textTrimmed.length();
+        if ("null".equals(textTrimmed)) {
+            throw new NullPointerException("\"" + text + "\" is considered to be null.");
+        }
+
+        if (length > 9) {
+            final long longValue = Long.parseLong(textTrimmed);
+            if (longValue < Integer.MIN_VALUE || longValue > Integer.MAX_VALUE) {
+                throw new NumberFormatException("Overflow: \"" + text + "\" is out of range of int.");
+            }
+            return Integer.valueOf((int) longValue);
+        }
+        if (length == 0) {
+            throw new NullPointerException("\"" + text + "\" is considered to be an empty string.");
+        }
+        return Integer.valueOf(parseIntegerInternal(textTrimmed));
+    }
+
+    /**
+     * Parses String into int in the same with Jackson 2.6.7.
+     *
+     * <p>Reimplemented based on jackson-core 2.6.7, which has been licensed under Apache License 2.0.
+     *
+     * @see <a href="https://github.com/FasterXML/jackson-core/blob/jackson-core-2.6.7/src/main/java/com/fasterxml/jackson/core/io/NumberInput.java#L187-L223">com.fasterxml.jackson.core.io.NumberInput#parseAsInt</a>
+     * @see <a href="https://github.com/FasterXML/jackson-core/blob/jackson-core-2.6.7/src/main/resources/META-INF/LICENSE">LICENSE</a>
+     */
+    private static int parseIntegerInternal(final String text) {
+        final int length = text.length();
+        final char first = text.charAt(0);
+        final boolean negative = (first == '-');
+
+        char cursor = first;
+        int offset = 1;
+
+        if (negative) {
+            if (length == 1 || length > 10) {
+                return Integer.parseInt(text);
+            }
+            cursor = text.charAt(offset++);
+        } else {
+            if (length > 9) {
+                return Integer.parseInt(text);
+            }
+        }
+
+        if (cursor > '9' || cursor < '0') {
+            return Integer.parseInt(text);
+        }
+
+        int number = cursor - '0';
+        if (offset < length) {
+            cursor = text.charAt(offset++);
+            if (cursor > '9' || cursor < '0') {
+                return Integer.parseInt(text);
+            }
+            number = (number * 10) + (cursor - '0');
+            if (offset < length) {
+                cursor = text.charAt(offset++);
+                if (cursor > '9' || cursor < '0') {
+                    return Integer.parseInt(text);
+                }
+                number = (number * 10) + (cursor - '0');
+                if (offset < length) {
+                    do {
+                        cursor = text.charAt(offset++);
+                        if (cursor > '9' || cursor < '0') {
+                            return Integer.parseInt(text);
+                        }
+                        number = (number * 10) + (cursor - '0');
+                    } while (offset < length);
+                }
+            }
+        }
+        return negative ? -number : number;
     }
 }

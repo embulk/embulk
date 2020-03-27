@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -33,12 +34,6 @@ import org.embulk.spi.Schema;
 
 public class GuessExecutor {
     private final List<PluginType> defaultGuessPlugins;
-
-    private interface GuessExecutorSystemTask extends Task {
-        @Config("guess_plugins")
-        @ConfigDefault("[]")
-        public List<PluginType> getGuessPlugins();
-    }
 
     private interface GuessExecutorTask extends Task {
         @Config("guess_plugins")
@@ -66,36 +61,19 @@ public class GuessExecutor {
     }
 
     @Inject
-    public GuessExecutor(@ForSystemConfig ConfigSource systemConfig, @ForGuess Set<PluginType> defaultGuessPlugins) {
-        String guessPluginsInString = null;
-        GuessExecutorSystemTask systemTask = null;
-        try {
-            guessPluginsInString = systemConfig.get(String.class, "guess_plugins", null);
-        } catch (final RuntimeException ex) {
-            if (ex.getCause() instanceof com.fasterxml.jackson.databind.JsonMappingException) {
-                systemTask = systemConfig.loadConfig(GuessExecutorSystemTask.class);
-            } else {
-                throw ex;  // Pass through.
-            }
-        }
+    public GuessExecutor(
+            final EmbulkSystemProperties embulkSystemProperties, @ForGuess final Set<PluginType> defaultGuessPlugins) {
+        final String guessPlugins = embulkSystemProperties.getProperty("guess_plugins", null);
 
-        final List<PluginType> guessPlugins;
-        if (guessPluginsInString != null) {
-            final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
-            for (final String guessPlugin : guessPluginsInString.split(",")) {
+        final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
+        guessPluginsBuilt.addAll(defaultGuessPlugins);
+        if (guessPlugins != null) {
+            for (final String guessPlugin : guessPlugins.split(",")) {
                 guessPluginsBuilt.add(DefaultPluginType.create(guessPlugin));
             }
-            guessPlugins = Collections.unmodifiableList(guessPluginsBuilt);
-        } else if (systemTask != null) {
-            guessPlugins = systemTask.getGuessPlugins();
-        } else {
-            guessPlugins = Collections.unmodifiableList(new ArrayList<>());
         }
 
-        ImmutableList.Builder<PluginType> list = ImmutableList.builder();
-        list.addAll(defaultGuessPlugins);
-        list.addAll(guessPlugins);
-        this.defaultGuessPlugins = list.build();
+        this.defaultGuessPlugins = Collections.unmodifiableList(guessPluginsBuilt);
     }
 
     public ConfigDiff guess(ExecSession exec, final ConfigSource config) {

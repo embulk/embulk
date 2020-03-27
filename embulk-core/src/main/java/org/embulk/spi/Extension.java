@@ -2,7 +2,7 @@ package org.embulk.spi;
 
 import com.google.inject.Module;
 import java.util.List;
-import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkSystemProperties;
 
 /**
  * Extension is a module to extend the execution framework using Guice.
@@ -39,5 +39,5 @@ import org.embulk.config.ConfigSource;
  * </code>
  */
 public interface Extension {
-    List<Module> getModules(ConfigSource systemConfig);
+    List<Module> getModules(final EmbulkSystemProperties embulkSystemProperties);
 }

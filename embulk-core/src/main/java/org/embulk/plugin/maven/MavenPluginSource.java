@@ -5,10 +5,9 @@ import com.google.inject.Injector;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.maven.MavenArtifactFinder;
 import org.embulk.deps.maven.MavenPluginPaths;
-import org.embulk.exec.ForSystemConfig;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
@@ -32,9 +31,9 @@ import org.embulk.spi.ParserPlugin;
 
 public class MavenPluginSource implements PluginSource {
     @Inject
-    public MavenPluginSource(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
+    public MavenPluginSource(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
         this.injector = injector;
-        this.systemConfig = systemConfig;
+        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     @Override
@@ -154,7 +153,7 @@ public class MavenPluginSource implements PluginSource {
     }
 
     private Path getLocalMavenRepository() throws PluginSourceNotMatchException {
-        final String m2RepoInSystemConfig = systemConfig.get(String.class, "m2_repo", null);
+        final String m2RepoInSystemConfig = this.embulkSystemProperties.getProperty("m2_repo", null);
 
         if (m2RepoInSystemConfig != null) {
             return Paths.get(m2RepoInSystemConfig);
@@ -186,5 +185,5 @@ public class MavenPluginSource implements PluginSource {
     }
 
     private final Injector injector;
-    private final ConfigSource systemConfig;
+    private final EmbulkSystemProperties embulkSystemProperties;
 }

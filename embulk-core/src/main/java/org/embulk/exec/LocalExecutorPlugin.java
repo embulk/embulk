@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
@@ -37,10 +38,10 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
     private int defaultMinThreads;
 
     @Inject
-    public LocalExecutorPlugin(@ForSystemConfig ConfigSource systemConfig) {
+    public LocalExecutorPlugin(final EmbulkSystemProperties embulkSystemProperties) {
         int cores = Runtime.getRuntime().availableProcessors();
-        this.defaultMaxThreads = systemConfig.get(Integer.class, "max_threads", cores * 2);
-        this.defaultMinThreads = systemConfig.get(Integer.class, "min_output_tasks", cores);
+        this.defaultMaxThreads = embulkSystemProperties.getPropertyAsInteger("max_threads", cores * 2);
+        this.defaultMinThreads = embulkSystemProperties.getPropertyAsInteger("min_output_tasks", cores);
     }
 
     @Override

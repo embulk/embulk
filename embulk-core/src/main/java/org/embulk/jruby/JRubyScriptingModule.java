@@ -12,15 +12,12 @@ import com.google.inject.spi.ProviderWithDependencies;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.embulk.config.ConfigSource;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ModelManager;
-import org.embulk.exec.ForSystemConfig;
 import org.embulk.spi.BufferAllocator;
 import org.slf4j.ILoggerFactory;
 
 public class JRubyScriptingModule implements Module {
-    public JRubyScriptingModule(ConfigSource systemConfig) {}
-
     @Override
     public void configure(Binder binder) {
         binder.bind(ScriptingContainerDelegate.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
@@ -34,27 +31,27 @@ public class JRubyScriptingModule implements Module {
     private static class ScriptingContainerProvider
             implements ProviderWithDependencies<ScriptingContainerDelegate> {
         @Inject
-        public ScriptingContainerProvider(Injector injector, @ForSystemConfig ConfigSource systemConfig) {
+        public ScriptingContainerProvider(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
             // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
             // instantiated in this JVM.
-            this.useGlobalRubyRuntime = systemConfig.get(boolean.class, "use_global_ruby_runtime", false);
+            this.useGlobalRubyRuntime = embulkSystemProperties.getPropertyAsBoolean("use_global_ruby_runtime", false);
 
             this.initializer = JRubyInitializer.of(
                     injector,
                     injector.getInstance(ILoggerFactory.class).getLogger("init"),
 
-                    systemConfig.get(String.class, "gem_home", null),
-                    systemConfig.get(String.class, "gem_path", null),
-                    systemConfig.get(String.class, "jruby_use_default_embulk_gem_home", "false").equals("true"),
+                    embulkSystemProperties.getProperty("gem_home", null),
+                    embulkSystemProperties.getProperty("gem_path", null),
+                    embulkSystemProperties.getPropertyAsBoolean("jruby_use_default_embulk_gem_home", false),
 
-                    // TODO get jruby-home from systemConfig to call jruby.container.setHomeDirectory
-                    systemConfig.get(String.class, "jruby_load_path", null),
-                    systemConfig.get(String.class, "jruby_classpath", null),
-                    systemConfig.get(String.class, "jruby_command_line_options", null),
+                    // TODO get jruby-home from embulkSystemProperties to call jruby.container.setHomeDirectory
+                    embulkSystemProperties.getProperty("jruby_load_path", null),
+                    embulkSystemProperties.getProperty("jruby_classpath", null),
+                    embulkSystemProperties.getProperty("jruby_command_line_options", null),
 
-                    systemConfig.get(String.class, "jruby_global_bundler_plugin_source_directory", null),
+                    embulkSystemProperties.getProperty("jruby_global_bundler_plugin_source_directory", null),
 
-                    systemConfig.get(String.class, "jruby.require.sigdump", "false").equals("true"));
+                    embulkSystemProperties.getPropertyAsBoolean("jruby.require.sigdump", false));
         }
 
         @Override  // from |com.google.inject.Provider|

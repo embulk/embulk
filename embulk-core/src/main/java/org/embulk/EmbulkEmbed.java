@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class EmbulkEmbed {
-    private EmbulkEmbed(final ConfigSource systemConfig, final Injector injector) {
+    private EmbulkEmbed(final Injector injector) {
         this.injector = injector;
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
@@ -56,12 +56,13 @@ public class EmbulkEmbed {
             this.started = false;
         }
 
-        @Deprecated  // To be removed. Plugins should not call this by themselves.
+        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
         public ConfigLoader getSystemConfigLoader() {
             return this.systemConfigLoader;
         }
 
-        @Deprecated  // To be removed.
+        @SuppressWarnings("deprecation")  // Calling setSystemConfig(ConfigSource)
+        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
         public Bootstrap setSystemConfigFromJson(final String systemConfigJson) {
             return this.setSystemConfig(this.systemConfigLoader.fromJsonString(systemConfigJson));
         }
@@ -73,7 +74,7 @@ public class EmbulkEmbed {
             return this;
         }
 
-        @Deprecated  // To be removed.
+        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
         public Bootstrap setSystemConfig(final ConfigSource systemConfigGiven) {
             this.systemConfig = systemConfigGiven.deepCopy();
 
@@ -148,8 +149,9 @@ public class EmbulkEmbed {
 
             final ArrayList<Module> modulesListBuilt = new ArrayList<>();
 
-            // TODO: Replace systemConfig to embulkSystemProperties.
-            ArrayList<Module> userModules = new ArrayList<>(standardModuleList(systemConfig));
+            // TODO: Remove systemConfig.
+            ArrayList<Module> userModules = new ArrayList<>(standardModuleList(
+                    this.systemConfig, EmbulkSystemProperties.of(this.embulkSystemProperties)));
             for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
                 final Iterable<? extends Module> overridden = override.apply(userModules);
                 userModules = new ArrayList<Module>();
@@ -167,8 +169,7 @@ public class EmbulkEmbed {
                 });
 
             final Injector injector = Guice.createInjector(Stage.PRODUCTION, Collections.unmodifiableList(modulesListBuilt));
-            // TODO: Replace systemConfig to embulkSystemProperties.
-            return new EmbulkEmbed(this.systemConfig, injector);
+            return new EmbulkEmbed(injector);
         }
 
         @Deprecated
@@ -373,15 +374,16 @@ public class EmbulkEmbed {
                 + "See https://github.com/embulk/embulk/issues/1047 for the details.");
     }
 
-    static List<Module> standardModuleList(final ConfigSource systemConfig) {
+    static List<Module> standardModuleList(
+            final ConfigSource systemConfig, final EmbulkSystemProperties embulkSystemProperties) {
         final ArrayList<Module> built = new ArrayList<>();
-        built.add(new SystemConfigModule(systemConfig));
-        built.add(new ExecModule(systemConfig));
-        built.add(new ExtensionServiceLoaderModule(systemConfig));
+        built.add(new SystemConfigModule(systemConfig, embulkSystemProperties));
+        built.add(new ExecModule(embulkSystemProperties));
+        built.add(new ExtensionServiceLoaderModule(embulkSystemProperties));
         built.add(new PluginClassLoaderModule());
         built.add(new BuiltinPluginSourceModule());
-        built.add(new MavenPluginSourceModule(systemConfig));
-        built.add(new JRubyScriptingModule(systemConfig));
+        built.add(new MavenPluginSourceModule());
+        built.add(new JRubyScriptingModule());
         return Collections.unmodifiableList(built);
     }
 
