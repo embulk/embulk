@@ -13,6 +13,7 @@ dependencies {
     implementation "junit:junit:4.13"
     implementation "org.hamcrest:hamcrest-library:1.3"
 
+    implementation project(":embulk-api")
     implementation project(":embulk-core")
     compileOnly "org.slf4j:slf4j-api:1.7.12"
     compileOnly "com.google.guava:guava:18.0"

@@ -67,10 +67,16 @@ public class DataSourceSerDe {
     }
 
     private static class DataSourceSerializer<T extends DataSource> extends JsonSerializer<T> {
+        @SuppressWarnings("deprecation")  // For the call of getObjectNode().
         @Override
         public void serialize(T value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
-            value.getObjectNode().serialize(jgen, provider);
+            if (value instanceof DataSourceImpl) {
+                final DataSourceImpl valueImpl = (DataSourceImpl) value;
+                valueImpl.getObjectNode().serialize(jgen, provider);
+            } else {
+                throw new IllegalArgumentException("DataSourceSerDe.DataSourceSerializer#serialize aceepts only DataSourceImpl.");
+            }
         }
     }
 }
