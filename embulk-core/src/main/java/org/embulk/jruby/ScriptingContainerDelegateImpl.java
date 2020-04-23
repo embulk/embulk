@@ -881,16 +881,6 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
         }
     }
 
-    // TODO: Remove this method finally. https://github.com/embulk/embulk/issues/1007
-    // It is intentionally package-private. It should return ScriptingContainer while it is Object in the signature.
-    @Override
-    Object getScriptingContainer() throws JRubyNotLoadedException {
-        if (this.scriptingContainer == null) {
-            throw new JRubyNotLoadedException();
-        }
-        return this.scriptingContainer;
-    }
-
     /** Instance of org.jruby.embed.ScriptingContainer. It may be created lazily. */
     private final Object scriptingContainer;
 
