@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.DataSourceImpl;
 import org.embulk.config.ModelManager;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
@@ -74,12 +75,21 @@ public class EmbulkEmbed {
             return this;
         }
 
+        // Once it stops calling DataSourceImpl#getAttributes(), DataSourceImpl#getAttributes() can be private.
+        @SuppressWarnings("deprecation")  // Calling DataSourceImpl#getAttributes().
         @Deprecated  // To be removed. Users and plugins should not call this by themselves.
         public Bootstrap setSystemConfig(final ConfigSource systemConfigGiven) {
             this.systemConfig = systemConfigGiven.deepCopy();
 
+            final DataSourceImpl systemConfigDataSourceImpl;
+            if (this.systemConfig instanceof DataSourceImpl) {
+                systemConfigDataSourceImpl = (DataSourceImpl) this.systemConfig;
+            } else {
+                throw new IllegalArgumentException("EmbulkEmbed.Bootstrap#setSystemConfig must take DataSourceImpl.");
+            }
+
             final Properties properties = new Properties();
-            for (final Map.Entry<String, JsonNode> entry : this.systemConfig.getAttributes()) {
+            for (final Map.Entry<String, JsonNode> entry : systemConfigDataSourceImpl.getAttributes()) {
                 final JsonNode value = entry.getValue();
                 if (value.isTextual()) {
                     properties.setProperty(entry.getKey(), value.asText());

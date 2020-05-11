@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,18 +31,22 @@ public class DataSourceImpl
         return new DataSourceImpl(model, (ObjectNode) data);
     }
 
-    // visible for DataSourceSerDe.DataSourceSerializer
-    @Override
+    // It was overridden from DataSource, but getObjectNode is removed from DataSource.
+    // It can be package-private soon. DataSourceSerDe.DataSourceSerializer is the only user in embulk-core.
+    @Deprecated
     public ObjectNode getObjectNode() {
         return data;
     }
 
     @Override
     public List<String> getAttributeNames() {
-        return ImmutableList.copyOf(data.fieldNames());
+        final ArrayList<String> copy = new ArrayList<>();
+        data.fieldNames().forEachRemaining(copy::add);
+        return Collections.unmodifiableList(copy);
     }
 
-    @Override
+    // It was overridden from DataSource, but getAttributes is removed from DataSource.
+    @Deprecated
     public Iterable<Map.Entry<String, JsonNode>> getAttributes() {
         return new Iterable<Map.Entry<String, JsonNode>>() {
             public Iterator<Map.Entry<String, JsonNode>> iterator() {
@@ -123,16 +128,28 @@ public class DataSourceImpl
         return this;
     }
 
+    @SuppressWarnings("deprecation")  // Calling getObjectNode().
     @Override
     public DataSourceImpl setNested(String attrName, DataSource v) {
-        data.set(attrName, v.getObjectNode());
+        if (v instanceof DataSourceImpl) {
+            final DataSourceImpl vImpl = (DataSourceImpl) v;
+            data.set(attrName, vImpl.getObjectNode());
+        } else {
+            throw new IllegalArgumentException("DataSourceImpl#setNested aceepts only DataSourceImpl.");
+        }
         return this;
     }
 
+    @SuppressWarnings("deprecation")  // Calling getAttributes().
     @Override
     public DataSourceImpl setAll(DataSource other) {
-        for (Map.Entry<String, JsonNode> field : other.getAttributes()) {
-            data.set(field.getKey(), field.getValue());
+        if (other instanceof DataSourceImpl) {
+            final DataSourceImpl otherImpl = (DataSourceImpl) other;
+            for (Map.Entry<String, JsonNode> field : otherImpl.getAttributes()) {
+                data.set(field.getKey(), field.getValue());
+            }
+        } else {
+            throw new IllegalArgumentException("DataSourceImpl#setAll aceepts only DataSourceImpl.");
         }
         return this;
     }
@@ -148,9 +165,15 @@ public class DataSourceImpl
         return newInstance(model, data.deepCopy());
     }
 
+    @SuppressWarnings("deprecation")  // Calling getObjectNode().
     @Override
     public DataSourceImpl merge(DataSource other) {
-        mergeJsonObject(data, other.deepCopy().getObjectNode());
+        if (other instanceof DataSourceImpl) {
+            final DataSourceImpl otherImpl = (DataSourceImpl) other;
+            mergeJsonObject(data, otherImpl.deepCopy().getObjectNode());
+        } else {
+            throw new IllegalArgumentException("DataSourceImpl#merge aceepts only DataSourceImpl.");
+        }
         return this;
     }
 
@@ -204,10 +227,10 @@ public class DataSourceImpl
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof DataSource)) {
+        if (!(other instanceof DataSourceImpl)) {
             return false;
         }
-        return data.equals(((DataSource) other).getObjectNode());
+        return data.equals(((DataSourceImpl) other).getObjectNode());
     }
 
     @Override
