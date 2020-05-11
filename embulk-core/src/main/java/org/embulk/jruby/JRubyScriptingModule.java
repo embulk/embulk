@@ -21,11 +21,6 @@ public class JRubyScriptingModule implements Module {
     @Override
     public void configure(Binder binder) {
         binder.bind(ScriptingContainerDelegate.class).toProvider(ScriptingContainerProvider.class).in(Scopes.SINGLETON);
-
-        // TODO: Bind org.jruby.embed.ScriptingContainer without Java-level reference to the class.
-        // TODO: Remove this binding finally. https://github.com/embulk/embulk/issues/1007
-        binder.bind(org.jruby.embed.ScriptingContainer.class)
-                .toProvider(RawScriptingContainerProvider.class).in(Scopes.SINGLETON);
     }
 
     private static class ScriptingContainerProvider
@@ -86,38 +81,5 @@ public class JRubyScriptingModule implements Module {
 
         private final boolean useGlobalRubyRuntime;
         private final JRubyInitializer initializer;
-    }
-
-    // TODO: Remove the Java-level reference to org.jruby.embed.ScriptingContainer.
-    // TODO: Remove this inner Provider class finally. https://github.com/embulk/embulk/issues/1007
-    private static class RawScriptingContainerProvider
-            implements ProviderWithDependencies<org.jruby.embed.ScriptingContainer> {
-        @Inject
-        public RawScriptingContainerProvider(final Injector injector, final ScriptingContainerDelegate delegate) {
-            this.delegate = delegate;
-            this.logger = injector.getInstance(ILoggerFactory.class).getLogger("init");
-        }
-
-        @Override  // from |com.google.inject.Provider|
-        public org.jruby.embed.ScriptingContainer get() throws ProvisionException {
-            // TODO: Report this deprecation through a reporter.
-            this.logger.warn("DEPRECATION: JRuby org.jruby.embed.ScriptingContainer is directly injected.");
-            try {
-                return (org.jruby.embed.ScriptingContainer) this.delegate.getScriptingContainer();
-            } catch (ClassCastException ex) {
-                throw new ProvisionException("Invalid JRuby ScriptingContainer instance.", ex);
-            }
-        }
-
-        @Override  // from |com.google.inject.spi.HasDependencies|
-        public Set<Dependency<?>> getDependencies() {
-            // get() depends on other modules
-            final HashSet<Dependency<?>> built = new HashSet<>();
-            built.add(Dependency.get(Key.get(ScriptingContainerDelegate.class)));
-            return Collections.unmodifiableSet(built);
-        }
-
-        private final ScriptingContainerDelegate delegate;
-        private final org.slf4j.Logger logger;
     }
 }
