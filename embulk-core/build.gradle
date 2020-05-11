@@ -23,6 +23,8 @@ repositories {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
+    implementation project(":embulk-api")
+
     implementation "com.google.guava:guava:18.0"
     implementation "com.google.inject:guice:4.0"
     implementation "com.google.inject.extensions:guice-multibindings:4.0"

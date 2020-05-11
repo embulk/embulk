@@ -1,5 +1,6 @@
 rootProject.name = 'embulk'
 
+include 'embulk-api'
 include 'embulk-core'
 include 'embulk-deps-buffer'
 project(':embulk-deps-buffer').projectDir = file('embulk-deps/buffer')

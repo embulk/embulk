@@ -1,4 +1,3 @@
-
 module Embulk
   class Buffer < String
     def self.from_java(java_buffer)
@@ -14,7 +13,7 @@ module Embulk
     end
 
     def to_java
-      Java::Buffer.wrap(to_java_bytes)
+      Java::org.embulk.spi.BufferImpl.wrap(to_java_bytes)
     end
   end
 end

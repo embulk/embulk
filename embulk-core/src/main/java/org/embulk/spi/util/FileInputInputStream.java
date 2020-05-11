@@ -2,12 +2,13 @@ package org.embulk.spi.util;
 
 import java.io.InputStream;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.FileInput;
 
 public class FileInputInputStream extends InputStream {
     private final FileInput in;
     private int pos;
-    private Buffer buffer = Buffer.EMPTY;
+    private Buffer buffer = BufferImpl.EMPTY;
 
     public FileInputInputStream(FileInput in) {
         this.in = in;
@@ -27,6 +28,7 @@ public class FileInputInputStream extends InputStream {
         return buffer.limit() - pos;
     }
 
+    @SuppressWarnings("deprecation")  // Calling Buffer#array().
     @Override
     public int read() {
         while (pos >= buffer.limit()) {
@@ -87,7 +89,7 @@ public class FileInputInputStream extends InputStream {
 
     private void releaseBuffer() {
         buffer.release();
-        buffer = Buffer.EMPTY;
+        buffer = BufferImpl.EMPTY;
         pos = 0;
     }
 

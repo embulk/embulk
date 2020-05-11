@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "maven-publish"
     id "jacoco"
-    id "com.jfrog.bintray" version "1.8.4"
+    id "com.jfrog.bintray" version "1.8.4" apply false
     id "org.ajoberstar.grgit" version "4.0.1"
 }
 
@@ -42,7 +42,11 @@ ext {
     summary = 'Embulk, a plugin-based parallel bulk data loader'
 }
 
-def subprojectNamesReleased = [
+def subprojectNamesReleasedInMavenCentral = [
+    "embulk-api",
+]
+
+def subprojectNamesReleasedInBintray = [
     "embulk-core",
     "embulk-deps-buffer",
     "embulk-deps-cli",
@@ -53,16 +57,22 @@ def subprojectNamesReleased = [
     "embulk-junit4",
 ]
 
+def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray
+
 configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
-    apply plugin: 'com.jfrog.bintray'
     // TODO: Enable SpotBugs instead of FindBugs which was used in Embulk until v0.9.17.
 
     // The version needs to be declared here, not in each build.gradle, so that "bintray" can get the value.
     version = "${rootProject.version}"
     project.ext.setProperty("revision", revision)
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
 
     tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
@@ -109,26 +119,18 @@ configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
                        'Specification-Version': project.version
         }
     }
+}
+
+configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.name) }) {
+    apply plugin: "com.jfrog.bintray"
 
     task testsJar(type: Jar, dependsOn: classes) {
         classifier = 'tests'
         from sourceSets.test.output
     }
 
-    task sourcesJar(type: Jar, dependsOn: classes) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
     artifacts {
         archives testsJar
-        archives sourcesJar
-        archives javadocJar
     }
 
     publishing {
@@ -137,22 +139,11 @@ configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
                 if (project.version.endsWith("-SNAPSHOT")) {
                     version = "${project.version}-${revision}"
                 }
-                from components.java
-                artifact testsJar
-                artifact sourcesJar
-                artifact javadocJar
-            }
-        }
 
-        // publishMavenPublicationToGithubRepository
-        repositories {
-            maven {
-                name = "github"
-                url "https://maven.pkg.github.com/embulk/embulk"
-                credentials {
-                    username = project.hasProperty("github_package_user") ? github_package_user : ""
-                    password = project.hasProperty("github_package_token") ? github_package_token : ""
-                }
+                from components.java
+                // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
+                // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
+                artifact testsJar
             }
         }
     }
@@ -183,6 +174,103 @@ configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
                 name = project.version
             }
         }
+    }
+}
+
+configure(subprojects.findAll { subprojectNamesReleasedInMavenCentral.contains(it.name) }) {
+    apply plugin: "signing"
+
+    jar {
+        from rootProject.file("LICENSE")
+    }
+
+    javadoc {
+        options {
+            overview = "src/main/html/overview.html"
+            links "https://docs.oracle.com/javase/8/docs/api/"
+        }
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId = "${project.group}"
+                artifactId = "${project.name}"
+
+                from components.java
+                // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
+                // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
+
+                pom {  // https://central.sonatype.org/pages/requirements.html
+                    name = "${project.name}"
+                    afterEvaluate { project ->
+                        // "description" is declared in subproject's build.gradle. It needs to be configured after evaluation.
+                        description = "${project.description}"
+                    }
+                    url = "https://www.embulk.org/"
+
+                    licenses {
+                        license {
+                            // http://central.sonatype.org/pages/requirements.html#license-information
+                            name = "The Apache License, Version 2.0"
+                            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            name = "Sadayuki Furuhashi"
+                            email = "frsyuki@gmail.com"
+                        }
+                        developer {
+                            name = "Muga Nishizawa"
+                            email = "muga.nishizawa@gmail.com"
+                        }
+                        developer {
+                            name = "Satoshi Akama"
+                            email = "satoshiakama@gmail.com"
+                        }
+                        developer {
+                            name = "Dai MIKURUBE"
+                            email = "dmikurube@treasure-data.com"
+                        }
+                        developer {
+                            name = "Shinichi Ishimura"
+                            email = "shiketaudonko41@gmail.com"
+                        }
+                        developer {
+                            name = "Roman Shtykh"
+                            email = "rshtykh@yahoo.com"
+                        }
+                    }
+
+                    scm {
+                        connection = "scm:git:git://github.com/embulk/embulk.git"
+                        developerConnection = "scm:git:git@github.com:embulk/embulk.git"
+                        url = "https://github.com/embulk/embulk"
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {  // publishMavenPublicationToMavenCentralRepository
+                name = "mavenCentral"
+                if (project.version.endsWith("-SNAPSHOT")) {
+                    url "https://oss.sonatype.org/content/repositories/snapshots"
+                } else {
+                    url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                }
+                credentials {
+                    username = project.hasProperty("sonatype_username") ? sonatype_username : ""
+                    password = project.hasProperty("sonatype_password") ? sonatype_password : ""
+                }
+            }
+        }
+    }
+
+    signing {
+        sign publishing.publications.maven
     }
 }
 
@@ -307,7 +395,11 @@ task releaseCheck {
 task release {
     dependsOn "releaseCheck"
     dependsOn "executableJar"
-    subprojectNamesReleased.each { subprojectName ->
+    subprojectNamesReleasedInMavenCentral.each { subprojectName ->
+        dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
+        tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
+    }
+    subprojectNamesReleasedInBintray.each { subprojectName ->
         dependsOn ":${subprojectName}:bintrayUpload"
         tasks.findByPath(":${subprojectName}:bintrayUpload").mustRunAfter(":releaseCheck")
     }

@@ -3,6 +3,7 @@ package org.embulk.spi.util;
 import java.io.OutputStream;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.FileOutput;
 
 public class FileOutputOutputStream extends OutputStream {
@@ -35,6 +36,7 @@ public class FileOutputOutputStream extends OutputStream {
         out.finish();
     }
 
+    @SuppressWarnings("deprecation")  // Calling Buffer#array().
     @Override
     public void write(int b) {
         buffer.array()[buffer.offset() + pos] = (byte) b;
@@ -69,7 +71,7 @@ public class FileOutputOutputStream extends OutputStream {
         if (pos > 0) {
             buffer.limit(pos);
             out.add(buffer);
-            buffer = Buffer.EMPTY;
+            buffer = BufferImpl.EMPTY;
             pos = 0;
             return true;
         }
@@ -104,7 +106,7 @@ public class FileOutputOutputStream extends OutputStream {
             default:  // Never default as all enums are listed.
         }
         buffer.release();
-        buffer = Buffer.EMPTY;
+        buffer = BufferImpl.EMPTY;
         pos = 0;
     }
 }

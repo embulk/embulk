@@ -142,6 +142,7 @@ public class InputStreamFileInput implements FileInput {
         this(allocator, new InputStreamProvider(openedStream));
     }
 
+    @SuppressWarnings("deprecation")  // Calling Buffer#array().
     public Buffer poll() {
         if (current == null || current.getInputStream() == null) {
             throw new IllegalStateException("nextFile() must be called before poll()");

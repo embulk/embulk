@@ -11,6 +11,7 @@ jobs:
         # - macOS-latest
         # - windows-latest
         gradle_task:
+        - ":embulk-api:check"
         - ":embulk-core:check"
         - ":embulk-standards:check"
         - ":embulk-junit4:check"

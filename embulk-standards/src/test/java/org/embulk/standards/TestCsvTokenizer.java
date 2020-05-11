@@ -12,6 +12,7 @@ import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInput;
@@ -50,7 +51,7 @@ public class TestCsvTokenizer {
         List<Buffer> buffers = new ArrayList<>();
         for (String line : lines) {
             byte[] buffer = (line + task.getNewline().getString()).getBytes(task.getCharset());
-            buffers.add(Buffer.wrap(buffer));
+            buffers.add(BufferImpl.wrap(buffer));
         }
         return new ListFileInput(ImmutableList.of(buffers));
     }
@@ -58,7 +59,7 @@ public class TestCsvTokenizer {
     private static FileInput newFileInputFromText(CsvParserPlugin.PluginTask task, String text) {
         return new ListFileInput(
                 ImmutableList.of(ImmutableList.of(
-                        Buffer.wrap(text.getBytes(task.getCharset())))));
+                        BufferImpl.wrap(text.getBytes(task.getCharset())))));
     }
 
     private static List<List<String>> parse(CsvParserPlugin.PluginTask task, String... lines) {

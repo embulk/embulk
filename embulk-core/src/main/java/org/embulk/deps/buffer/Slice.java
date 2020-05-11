@@ -7,6 +7,7 @@ import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.spi.Buffer;
 
 public abstract class Slice {
+    @SuppressWarnings("deprecation")  // Calling Buffer#array().
     public static Slice createWithWrappedBuffer(final Buffer buffer) {
         try {
             return CONSTRUCTOR.newInstance(buffer.array(), buffer.offset(), buffer.capacity());

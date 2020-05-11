@@ -13,10 +13,12 @@ configurations {
 }
 
 dependencies {
+    compileOnly project(":embulk-api")
     compileOnly project(":embulk-core")
     implementation "io.netty:netty-buffer:4.0.44.Final"
     implementation "io.airlift:slice:0.9"
 
+    testImplementation project(":embulk-api")
     testImplementation project(":embulk-core")
     testImplementation "junit:junit:4.12"
 }

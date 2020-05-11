@@ -12,6 +12,7 @@ import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,7 +82,7 @@ public class TestLineDecoder {
         List<Buffer> buffers = new ArrayList<Buffer>();
         for (String source : sources) {
             ByteBuffer buffer = charset.encode(source);
-            buffers.add(Buffer.wrap(buffer.array(), 0, buffer.limit()));
+            buffers.add(BufferImpl.wrap(buffer.array(), 0, buffer.limit()));
         }
 
         return buffers;

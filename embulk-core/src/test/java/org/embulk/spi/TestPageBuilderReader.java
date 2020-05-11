@@ -252,12 +252,12 @@ public class TestPageBuilderReader {
         this.bufferAllocator = new BufferAllocator() {
             @Override
             public Buffer allocate() {
-                return Buffer.allocate(1);
+                return BufferImpl.allocate(1);
             }
 
             @Override
             public Buffer allocate(int minimumCapacity) {
-                return Buffer.allocate(minimumCapacity);
+                return BufferImpl.allocate(minimumCapacity);
             }
         };
         assertEquals(
@@ -271,12 +271,12 @@ public class TestPageBuilderReader {
         this.bufferAllocator = new BufferAllocator() {
             @Override
             public Buffer allocate() {
-                return Buffer.allocate(1);
+                return BufferImpl.allocate(1);
             }
 
             @Override
             public Buffer allocate(int minimumCapacity) {
-                return Buffer.allocate(minimumCapacity);
+                return BufferImpl.allocate(minimumCapacity);
             }
         };
         assertEquals(

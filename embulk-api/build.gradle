@@ -1,0 +1,13 @@
+description = "Java APIs for Embulk plugins"
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
+}
+
+dependencies {
+}

@@ -99,6 +99,7 @@ public class TestLineEncoder {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private String bufferToString(Buffer buffer, String charset)
             throws UnsupportedEncodingException {
         return new String(buffer.array(), buffer.offset(), buffer.limit(), charset);

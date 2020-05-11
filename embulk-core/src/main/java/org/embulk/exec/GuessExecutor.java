@@ -20,6 +20,7 @@ import org.embulk.config.TaskSource;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
+import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecSession;
@@ -242,7 +243,7 @@ public class GuessExecutor {
         }
 
         private static Buffer readSample(FileInput fileInput, int sampleSize) {
-            Buffer sample = Buffer.allocate(sampleSize);
+            Buffer sample = BufferImpl.allocate(sampleSize);
             try {
                 SamplingParserPlugin.readSample(fileInput, sample, 0, sampleSize);
             } catch (RuntimeException ex) {
