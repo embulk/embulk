@@ -53,6 +53,7 @@ def subprojectNamesReleasedInBintray = [
     "embulk-deps-guess",
     "embulk-deps-config",
     "embulk-deps-maven",
+    "embulk-deps-timestamp",
     "embulk-standards",
     "embulk-junit4",
 ]
@@ -302,6 +303,8 @@ dependencies {
     }
 
     embed project(':embulk-deps-cli')
+
+    embed project(':embulk-deps-timestamp')
 }
 
 def listEmbedDependencies = { rootModuleName, prefix ->
@@ -347,6 +350,7 @@ jar {
                    'Embulk-Resource-Class-Path-Guess': listEmbedDependencies('embulk-deps-guess', '/lib/'),
                    'Embulk-Resource-Class-Path-Maven': listEmbedDependencies('embulk-deps-maven', '/lib/'),
                    'Embulk-Resource-Class-Path-Cli': listEmbedDependencies('embulk-deps-cli', '/lib/'),
+                   'Embulk-Resource-Class-Path-Timestamp': listEmbedDependencies('embulk-deps-timestamp', '/lib/'),
                    'Main-Class': 'org.embulk.cli.Main'
     }
 }

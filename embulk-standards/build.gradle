@@ -51,6 +51,7 @@ dependencies {
     testImplementation project(":embulk-deps-buffer")
     testImplementation project(":embulk-deps-config")
     testImplementation project(":embulk-deps-guess")
+    testImplementation project(":embulk-deps-timestamp")
 
     jruby "org.jruby:jruby-complete:" + rootProject.jrubyVersion
     rubyTestRuntime project(":embulk-api")
@@ -64,6 +65,7 @@ task rubyTestVanilla(type: JavaExec, dependsOn: [
         ":embulk-deps-buffer:prepareDependencyJars",
         ":embulk-deps-config:prepareDependencyJars",
         ":embulk-deps-guess:prepareDependencyJars",
+        ":embulk-deps-timestamp:prepareDependencyJars",
         ]) {
     workingDir = file("${project.projectDir}");
     classpath = configurations.rubyTestRuntime
