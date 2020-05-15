@@ -4,6 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.Exec;
 import org.embulk.spi.time.TimestampParser;
@@ -74,7 +79,7 @@ public class TestConfigSource {
     }
 
     @Test
-    public void testSetGet() {
+    public void testSetGet() throws IOException {
         config.set("boolean", true);
         config.set("int", 3);
         config.set("double", 0.2);
@@ -86,6 +91,28 @@ public class TestConfigSource {
         assertEquals(0.2, (double) config.get(double.class, "double"), 0.001);
         assertEquals(Long.MAX_VALUE, (long) config.get(long.class, "long"));
         assertEquals("sf", config.get(String.class, "string"));
+
+        final JsonNode json = (new ObjectMapper()).readTree(config.toJson());
+        assertTrue(json.isObject());
+        final ArrayList<String> fieldNames = new ArrayList<>();
+        json.fieldNames().forEachRemaining(fieldNames::add);
+        Collections.sort(fieldNames);
+        assertEquals(5, fieldNames.size());
+        assertEquals("boolean", fieldNames.get(0));
+        assertTrue(json.get("boolean").isBoolean());
+        assertEquals(true, json.get("boolean").asBoolean());
+        assertEquals("double", fieldNames.get(1));
+        assertTrue(json.get("double").isDouble());
+        assertEquals(0.2, json.get("double").asDouble(), 0.001);
+        assertEquals("int", fieldNames.get(2));
+        assertTrue(json.get("int").isInt());
+        assertEquals(3, json.get("int").asInt());
+        assertEquals("long", fieldNames.get(3));
+        assertTrue(json.get("long").isLong());
+        assertEquals(Long.MAX_VALUE, json.get("long").asLong());
+        assertEquals("string", fieldNames.get(4));
+        assertTrue(json.get("string").isTextual());
+        assertEquals("sf", json.get("string").asText());
     }
 
     @Test

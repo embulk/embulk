@@ -177,6 +177,11 @@ public class DataSourceImpl
         return this;
     }
 
+    @Override
+    public String toJson() {
+        return this.model.writeObject(this.data);
+    }
+
     private static void mergeJsonObject(ObjectNode src, ObjectNode other) {
         Iterator<Map.Entry<String, JsonNode>> ite = other.fields();
         while (ite.hasNext()) {
