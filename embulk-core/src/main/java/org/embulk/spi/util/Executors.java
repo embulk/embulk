@@ -3,7 +3,6 @@ package org.embulk.spi.util;
 import java.util.List;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.AbortTransactionResource;
 import org.embulk.spi.CloseResource;
 import org.embulk.spi.ExecSession;
@@ -47,8 +46,7 @@ public abstract class Executors {
             List<FilterPlugin> filterPlugins, List<Schema> filterSchemas, List<TaskSource> filterTaskSources,
             OutputPlugin outputPlugin, Schema outputSchema, TaskSource outputTaskSource,
             ProcessStateCallback callback) {
-        TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-                outputPlugin.open(outputTaskSource, outputSchema, taskIndex));
+        final TransactionalPageOutput tran = outputPlugin.open(outputTaskSource, outputSchema, taskIndex);
 
         callback.started();
         // here needs to use try-with-resource to add exception happend at close() or abort()

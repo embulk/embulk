@@ -71,13 +71,6 @@ public class Exec {
         return session().newTaskReport();
     }
 
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @SuppressWarnings("deprecation")
-    public static org.embulk.config.CommitReport newCommitReport() {
-        return session().newCommitReport();
-    }
-
     public static ConfigDiff newConfigDiff() {
         return session().newConfigDiff();
     }

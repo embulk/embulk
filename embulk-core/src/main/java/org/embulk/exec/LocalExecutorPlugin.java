@@ -12,7 +12,6 @@ import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.AbortTransactionResource;
 import org.embulk.spi.CloseResource;
 import org.embulk.spi.Exec;
@@ -399,8 +398,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             for (int i = 0; i < scatterCount; i++) {
                 int outputTaskIndex = taskIndex * scatterCount + i;
                 if (!state.getOutputTaskState(outputTaskIndex).isCommitted()) {
-                    TransactionalPageOutput tran = PluginWrappers.transactionalPageOutput(
-                            outputPlugin.open(outputTaskSource, outputSchema, outputTaskIndex));
+                    final TransactionalPageOutput tran = outputPlugin.open(outputTaskSource, outputSchema, outputTaskIndex);
                     trans[i] = tran;
                     closeThese[i].closeThis(tran);
                 }

@@ -1,7 +1,6 @@
 package org.embulk.exec;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import java.util.List;
@@ -67,24 +66,8 @@ public class ResumeState {
         return inputTaskReports;
     }
 
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @JsonIgnore
-    @SuppressWarnings({"deprecation", "unchecked"})
-    public List<Optional<org.embulk.config.CommitReport>> getInputCommitReports() {
-        return (List) inputTaskReports;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport
-    }
-
     @JsonProperty("out_reports")
     public List<Optional<TaskReport>> getOutputTaskReports() {
         return outputTaskReports;
-    }
-
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @JsonIgnore
-    @SuppressWarnings({"deprecation", "unchecked"})
-    public List<Optional<org.embulk.config.CommitReport>> getOutputCommitReports() {
-        return (List) outputTaskReports;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
     }
 }

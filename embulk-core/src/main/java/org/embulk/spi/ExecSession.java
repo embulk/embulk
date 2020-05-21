@@ -166,13 +166,6 @@ public class ExecSession {
         return new DataSourceImpl(modelManager);
     }
 
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @SuppressWarnings("deprecation")
-    public org.embulk.config.CommitReport newCommitReport() {
-        return new DataSourceImpl(modelManager);
-    }
-
     public ConfigDiff newConfigDiff() {
         return new DataSourceImpl(modelManager);
     }

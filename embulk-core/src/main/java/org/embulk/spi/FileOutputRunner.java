@@ -10,7 +10,6 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
-import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.util.Encoders;
 
 public class FileOutputRunner implements OutputPlugin {
@@ -116,8 +115,7 @@ public class FileOutputRunner implements OutputPlugin {
 
         try (AbortTransactionResource aborter = new AbortTransactionResource()) {
             try (CloseResource closer = new CloseResource()) {
-                TransactionalFileOutput finalOutput = PluginWrappers.transactionalFileOutput(
-                        fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex));
+                final TransactionalFileOutput finalOutput = fileOutputPlugin.open(task.getFileOutputTaskSource(), taskIndex);
                 aborter.abortThis(finalOutput);
                 closer.closeThis(finalOutput);
 
