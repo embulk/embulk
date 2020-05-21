@@ -18,29 +18,29 @@ public class DataSourceSerDe {
         @SuppressWarnings("deprecation")
         public SerDeModule(final ModelManager model) {
             // DataSourceImpl
-            addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>());
+            addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>(model));
             addDeserializer(DataSourceImpl.class, new DataSourceDeserializer<DataSourceImpl>(model));
 
             // ConfigSource
-            addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>());
+            addSerializer(ConfigSource.class, new DataSourceSerializer<ConfigSource>(model));
             addDeserializer(ConfigSource.class, new DataSourceDeserializer<ConfigSource>(model));
 
             // TaskSource
-            addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>());
+            addSerializer(TaskSource.class, new DataSourceSerializer<TaskSource>(model));
             addDeserializer(TaskSource.class, new DataSourceDeserializer<TaskSource>(model));
 
             // TaskReport
-            addSerializer(TaskReport.class, new DataSourceSerializer<TaskReport>());
+            addSerializer(TaskReport.class, new DataSourceSerializer<TaskReport>(model));
             addDeserializer(TaskReport.class, new DataSourceDeserializer<TaskReport>(model));
 
             // TODO: Remove this registration by v0.10 or earlier.
             // https://github.com/embulk/embulk/issues/933
             // CommitReport (Deprecated)
-            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>());
+            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>(model));
             addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
 
             // ConfigDiff
-            addSerializer(ConfigDiff.class, new DataSourceSerializer<ConfigDiff>());
+            addSerializer(ConfigDiff.class, new DataSourceSerializer<ConfigDiff>(model));
             addDeserializer(ConfigDiff.class, new DataSourceDeserializer<ConfigDiff>(model));
         }
     }
@@ -67,16 +67,30 @@ public class DataSourceSerDe {
     }
 
     private static class DataSourceSerializer<T extends DataSource> extends JsonSerializer<T> {
-        @SuppressWarnings("deprecation")  // For the call of getObjectNode().
+        private final ModelManager model;
+
+        DataSourceSerializer(final ModelManager model) {
+            this.model = model;
+        }
+
         @Override
         public void serialize(T value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
-            if (value instanceof DataSourceImpl) {
-                final DataSourceImpl valueImpl = (DataSourceImpl) value;
-                valueImpl.getObjectNode().serialize(jgen, provider);
-            } else {
-                throw new IllegalArgumentException("DataSourceSerDe.DataSourceSerializer#serialize aceepts only DataSourceImpl.");
+            if (value == null) {
+                throw new ConfigException(new NullPointerException(
+                        "DataSourceSerDe.DataSourceSerializer#serialize accepts only non-null value"));
             }
+            final String valueJsonStringified = value.toJson();
+            if (valueJsonStringified == null) {
+                throw new ConfigException(new NullPointerException(
+                        "DataSourceSerDe.DataSourceSerializer#serialize accepts only valid DataSource"));
+            }
+            final JsonNode valueJsonNode = this.model.readObject(JsonNode.class, valueJsonStringified);
+            if (!valueJsonNode.isObject()) {
+                throw new ConfigException(new ClassCastException(
+                        "DataSourceSerDe.DataSourceSerializer#serialize accepts only valid JSON object"));
+            }
+            ((ObjectNode) valueJsonNode).serialize(jgen, provider);
         }
     }
 }
