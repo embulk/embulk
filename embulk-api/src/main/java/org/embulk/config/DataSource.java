@@ -145,4 +145,11 @@ public interface DataSource {
      * @return itself after the other {@link org.embulk.config.DataSource} is merged
      */
     DataSource merge(DataSource other);
+
+    /**
+     * Returns a JSON representation of itself.
+     *
+     * @return its JSON representation in {@link java.lang.String}
+     */
+    String toJson();
 }

@@ -128,28 +128,40 @@ public class DataSourceImpl
         return this;
     }
 
-    @SuppressWarnings("deprecation")  // Calling getObjectNode().
     @Override
     public DataSourceImpl setNested(String attrName, DataSource v) {
-        if (v instanceof DataSourceImpl) {
-            final DataSourceImpl vImpl = (DataSourceImpl) v;
-            data.set(attrName, vImpl.getObjectNode());
+        if (v == null) {
+            this.data.set(attrName, null);
         } else {
-            throw new IllegalArgumentException("DataSourceImpl#setNested aceepts only DataSourceImpl.");
+            final String vJsonStringified = v.toJson();
+            if (vJsonStringified == null) {
+                throw new ConfigException(new NullPointerException("DataSource#setNested accepts only valid DataSource"));
+            }
+            final JsonNode vJsonNode = this.model.readObject(JsonNode.class, vJsonStringified);
+            if (!vJsonNode.isObject()) {
+                throw new ConfigException(new ClassCastException("DataSource#setNested accepts only valid JSON object"));
+            }
+            this.data.set(attrName, (ObjectNode) vJsonNode);
         }
         return this;
     }
 
-    @SuppressWarnings("deprecation")  // Calling getAttributes().
     @Override
     public DataSourceImpl setAll(DataSource other) {
-        if (other instanceof DataSourceImpl) {
-            final DataSourceImpl otherImpl = (DataSourceImpl) other;
-            for (Map.Entry<String, JsonNode> field : otherImpl.getAttributes()) {
-                data.set(field.getKey(), field.getValue());
-            }
-        } else {
-            throw new IllegalArgumentException("DataSourceImpl#setAll aceepts only DataSourceImpl.");
+        if (other == null) {
+            throw new ConfigException(new NullPointerException("DataSource#setAll accepts only non-null value"));
+        }
+        final String otherJsonStringified = other.toJson();
+        if (otherJsonStringified == null) {
+            throw new ConfigException(new NullPointerException("DataSource#setAll accepts only valid DataSource"));
+        }
+        final JsonNode otherJsonNode = this.model.readObject(JsonNode.class, otherJsonStringified);
+        if (!otherJsonNode.isObject()) {
+            throw new ConfigException(new ClassCastException("DataSource#setAll accepts only valid JSON object"));
+        }
+        final ObjectNode otherObjectNode = (ObjectNode) otherJsonNode;
+        for (Map.Entry<String, JsonNode> field : (Iterable<Map.Entry<String, JsonNode>>) () -> otherObjectNode.fields()) {
+            this.data.set(field.getKey(), field.getValue());
         }
         return this;
     }
@@ -165,16 +177,26 @@ public class DataSourceImpl
         return newInstance(model, data.deepCopy());
     }
 
-    @SuppressWarnings("deprecation")  // Calling getObjectNode().
     @Override
     public DataSourceImpl merge(DataSource other) {
-        if (other instanceof DataSourceImpl) {
-            final DataSourceImpl otherImpl = (DataSourceImpl) other;
-            mergeJsonObject(data, otherImpl.deepCopy().getObjectNode());
-        } else {
-            throw new IllegalArgumentException("DataSourceImpl#merge aceepts only DataSourceImpl.");
+        if (other == null) {
+            throw new ConfigException(new NullPointerException("DataSource#merge accepts only non-null value"));
         }
+        final String otherJsonStringified = other.toJson();
+        if (otherJsonStringified == null) {
+            throw new ConfigException(new NullPointerException("DataSource#merge accepts only valid DataSource"));
+        }
+        final JsonNode otherJsonNode = this.model.readObject(JsonNode.class, otherJsonStringified);
+        if (!otherJsonNode.isObject()) {
+            throw new ConfigException(new ClassCastException("DataSource#setAll accepts only valid JSON object"));
+        }
+        mergeJsonObject(data, (ObjectNode) otherJsonNode);
         return this;
+    }
+
+    @Override
+    public String toJson() {
+        return this.model.writeObject(this.data);
     }
 
     private static void mergeJsonObject(ObjectNode src, ObjectNode other) {
@@ -227,10 +249,22 @@ public class DataSourceImpl
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof DataSourceImpl)) {
+        if (other == null) {
             return false;
         }
-        return data.equals(((DataSourceImpl) other).getObjectNode());
+        if (!(other instanceof DataSource)) {
+            return false;
+        }
+        final DataSource otherDataSource = (DataSource) other;
+        final String otherJsonStringified = otherDataSource.toJson();
+        if (otherJsonStringified == null) {
+            return false;
+        }
+        final JsonNode otherJsonNode = this.model.readObject(JsonNode.class, otherJsonStringified);
+        if (!otherJsonNode.isObject()) {
+            return false;
+        }
+        return data.equals((ObjectNode) otherJsonNode);
     }
 
     @Override

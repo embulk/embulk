@@ -31,11 +31,17 @@ public interface TaskSource extends DataSource {
     /**
      * Loads this configuration as a task class like {@code PluginTask}.
      *
+     * <p>This method will be deprecated. Loading tasks will be replaced by another library
+     * {@code embulk-util-config} on plugin's side.
+     *
      * @param <T>   the task class to load this configuration as
      * @param taskType  the task class to load this configuration as
      * @return a task class instance loaded
      */
-    <T> T loadTask(Class<T> taskType);
+    default <T> T loadTask(Class<T> taskType) {
+        throw new UnsupportedOperationException(
+                "TaskSource#loadTask does not work with: " + this.getClass().getCanonicalName());
+    }
 
     /**
      * Returns a nested value under {@code attrName}.
