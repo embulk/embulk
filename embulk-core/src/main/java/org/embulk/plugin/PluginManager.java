@@ -8,8 +8,6 @@ import javax.inject.Inject;
 import org.embulk.config.ConfigException;
 import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.jruby.ScriptingContainerDelegate;
-import org.embulk.plugin.compat.PluginWrappers;
-import org.embulk.spi.InputPlugin;
 
 public class PluginManager {
     private final List<PluginSource> sources;
@@ -26,9 +24,6 @@ public class PluginManager {
     @SuppressWarnings("unchecked")
     public <T> T newPlugin(Class<T> iface, PluginType type) {
         T t = newPluginWithoutWrapper(iface, type);
-        if (t instanceof InputPlugin) {
-            return (T) PluginWrappers.inputPlugin((InputPlugin) t);
-        }
         return t;
     }
 

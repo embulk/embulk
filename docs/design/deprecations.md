@@ -25,17 +25,7 @@ The MapReduce Executor, the only Executor Plugin which was officially supported,
 
 ### `org.embulk.config.CommitReport`
 
-`org.embulk.config.TaskReport` has replaced `CommitReport`. `CommitReport` has been deprecated since v0.6.24.
-
-`org.embulk.config.CommitReport` is to be removed by v0.10 or earlier.
-
-* `org.embulk.config.CommitReport`
-* `org.embulk.exec.ResumeState#getInputCommitReports()`
-* `org.embulk.exec.ResumeState#getOutputCommitReports()`
-* `org.embulk.spi.Exec#newCommitReport()`
-* `org.embulk.spi.ExecSession#newCommitReport()`
-* `org.embulk.spi.TaskState#getCommitReport()`
-* `org.embulk.spi.TaskState#setCommitReport()`
+`org.embulk.config.TaskReport` has replaced `CommitReport`. `CommitReport` has been deprecated since v0.6.24, then removed since v0.10.3.
 
 ### `org.embulk.config.ConfigLoader.fromJson(JsonParser)`
 

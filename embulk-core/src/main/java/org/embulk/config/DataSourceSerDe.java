@@ -33,12 +33,6 @@ public class DataSourceSerDe {
             addSerializer(TaskReport.class, new DataSourceSerializer<TaskReport>(model));
             addDeserializer(TaskReport.class, new DataSourceDeserializer<TaskReport>(model));
 
-            // TODO: Remove this registration by v0.10 or earlier.
-            // https://github.com/embulk/embulk/issues/933
-            // CommitReport (Deprecated)
-            addSerializer(CommitReport.class, new DataSourceSerializer<CommitReport>(model));
-            addDeserializer(CommitReport.class, new DataSourceDeserializer<CommitReport>(model));
-
             // ConfigDiff
             addSerializer(ConfigDiff.class, new DataSourceSerializer<ConfigDiff>(model));
             addDeserializer(ConfigDiff.class, new DataSourceDeserializer<ConfigDiff>(model));

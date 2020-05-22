@@ -15,7 +15,6 @@ import org.embulk.exec.ConfigurableGuessInputPlugin;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.plugin.PluginType;
-import org.embulk.plugin.compat.PluginWrappers;
 import org.embulk.spi.util.Decoders;
 
 public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugin {
@@ -131,8 +130,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
-        final TransactionalFileInput tran = PluginWrappers.transactionalFileInput(
-                fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex));
+        final TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
                 FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);

@@ -23,14 +23,6 @@ public class TaskState {
         this.taskReport = Optional.of(taskReport);
     }
 
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @SuppressWarnings("deprecation")
-    public void setCommitReport(org.embulk.config.CommitReport commitReport) {
-        this.started = true;
-        this.taskReport = Optional.<TaskReport>of(commitReport);
-    }
-
     public void setException(Throwable exception) {
         this.started = true;
         this.exception = Optional.fromNullable(exception);
@@ -55,13 +47,6 @@ public class TaskState {
 
     public Optional<TaskReport> getTaskReport() {
         return taskReport;
-    }
-
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/933
-    @SuppressWarnings({"deprecation", "unchecked"})
-    public Optional<org.embulk.config.CommitReport> getCommitReport() {
-        return (Optional) taskReport;  // the only implementation of TaskReport is DataSourceImpl which implements CommitReport;
     }
 
     public Optional<Throwable> getException() {
