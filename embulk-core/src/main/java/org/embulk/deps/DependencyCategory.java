@@ -6,6 +6,7 @@ public enum DependencyCategory {
     GUESS("Guess", "Embulk-Resource-Class-Path-Guess"),
     CLI("CLI", "Embulk-Resource-Class-Path-Cli"),
     MAVEN("Maven", "Embulk-Resource-Class-Path-Maven"),
+    TIMESTAMP("Timestamp", "Embulk-Resource-Class-Path-Timestamp"),
     ;
 
     private DependencyCategory(final String name, final String manifestAttributeName) {

@@ -1,6 +1,7 @@
 package org.embulk.spi.time;
 
 import com.google.common.base.Optional;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -25,16 +26,16 @@ public class TimestampFormatter {
                      columnOption.isPresent()
                              ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
                              : task.getDefaultTimestampFormat(),
-                     columnOption.isPresent()
-                             ? columnOption.get().getTimeZone().or(task.getDefaultTimeZone())
-                             : task.getDefaultTimeZone()));
+                     ZoneId.of(columnOption.isPresent()
+                             ? columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId())
+                             : task.getDefaultTimeZoneId())));
     }
 
     // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
     // It won't be removed very soon at least until Embulk v0.10.
     @Deprecated
     public TimestampFormatter(final String format, final org.joda.time.DateTimeZone timeZone) {
-        this(TimestampFormatterRuby.ofLegacy(format, timeZone));
+        this(TimestampFormatterRuby.ofLegacy(format, timeZone.toTimeZone().toZoneId()));
     }
 
     public static TimestampFormatter of(final String pattern, final String zoneIdString) {
@@ -55,7 +56,7 @@ public class TimestampFormatter {
             }
             return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
         } else {
-            return TimestampFormatterRuby.ofLegacy(pattern, TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+            return TimestampFormatterRuby.ofLegacy(pattern, ZoneId.of(zoneIdString));
         }
     }
 
@@ -91,8 +92,7 @@ public class TimestampFormatter {
             }
             return TimestampFormatterRuby.of(pattern.substring(5), zoneOffset);
         } else {
-            return TimestampFormatterRuby.ofLegacy(pattern,
-                                                   TimeZoneIds.parseJodaDateTimeZone(zoneIdString));
+            return TimestampFormatterRuby.ofLegacy(pattern, ZoneId.of(zoneIdString));
         }
     }
 

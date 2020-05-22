@@ -30,6 +30,22 @@ public class TestTimestampFormatter {
                            "%Y-%m-%dT%H:%M:%S %Z",
                            "Asia/Tokyo",
                            "2017-02-28T11:00:45 JST");
+        testLegacyToFormat(OffsetDateTime.of(2017, 2, 28, 2, 0, 45, 0, ZoneOffset.UTC).toInstant(),
+                           "%Y-%m-%dT%H:%M:%S %Z",
+                           "America/Los_Angeles",
+                           "2017-02-27T18:00:45 PST");
+        testLegacyToFormat(OffsetDateTime.of(2017, 8, 28, 2, 0, 45, 0, ZoneOffset.UTC).toInstant(),
+                           "%Y-%m-%dT%H:%M:%S %#Z",
+                           "America/Los_Angeles",
+                           "2017-08-27T19:00:45 pdt");
+        testLegacyToFormat(OffsetDateTime.of(2017, 8, 28, 2, 0, 45, 0, ZoneOffset.UTC).toInstant(),
+                           "%Y-%m-%dT%H:%M:%S %Z",
+                           "UTC",
+                           "2017-08-28T02:00:45 UTC");
+        testLegacyToFormat(OffsetDateTime.of(2017, 8, 28, 2, 0, 45, 0, ZoneOffset.UTC).toInstant(),
+                           "%Y-%m-%dT%H:%M:%S %Z",
+                           "+09:00",
+                           "2017-08-28T11:00:45 +09:00");
     }
 
     private void testJavaToFormat(final Instant instant,
