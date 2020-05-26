@@ -151,5 +151,8 @@ public interface DataSource {
      *
      * @return its JSON representation in {@link java.lang.String}
      */
-    String toJson();
+    default String toJson() {
+        throw new UnsupportedOperationException(
+                "ConfigSource#toJson is not implemented with: " + this.getClass().getCanonicalName());
+    }
 }
