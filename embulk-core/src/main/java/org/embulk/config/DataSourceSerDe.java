@@ -1,5 +1,6 @@
 package org.embulk.config;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -71,17 +72,17 @@ public class DataSourceSerDe {
         public void serialize(T value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
             if (value == null) {
-                throw new ConfigException(new NullPointerException(
+                throw new JsonGenerationException(new NullPointerException(
                         "DataSourceSerDe.DataSourceSerializer#serialize accepts only non-null value"));
             }
             final String valueJsonStringified = value.toJson();
             if (valueJsonStringified == null) {
-                throw new ConfigException(new NullPointerException(
+                throw new JsonGenerationException(new NullPointerException(
                         "DataSourceSerDe.DataSourceSerializer#serialize accepts only valid DataSource"));
             }
             final JsonNode valueJsonNode = this.model.readObject(JsonNode.class, valueJsonStringified);
             if (!valueJsonNode.isObject()) {
-                throw new ConfigException(new ClassCastException(
+                throw new JsonGenerationException(new ClassCastException(
                         "DataSourceSerDe.DataSourceSerializer#serialize accepts only valid JSON object"));
             }
             ((ObjectNode) valueJsonNode).serialize(jgen, provider);
