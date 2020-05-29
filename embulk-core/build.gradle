@@ -11,8 +11,8 @@ processResources.from("${buildDir}/embulk_gem_as_resources", "${buildDir}/depend
 configurations {
     // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
     // with ones bundled in jruby-complete and cause bytecode compatibility error
-    implementation.exclude group: "asm", module: "asm"
-    implementation.exclude group: "org.sonatype.sisu.inject", module: "cglib"
+    api.exclude group: "asm", module: "asm"
+    api.exclude group: "org.sonatype.sisu.inject", module: "cglib"
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
@@ -23,30 +23,32 @@ repositories {
 
 // determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
-    implementation project(":embulk-api")
-
-    implementation "com.google.guava:guava:18.0"
-    implementation "com.google.inject:guice:4.0"
-    implementation "com.google.inject.extensions:guice-multibindings:4.0"
-    implementation "javax.inject:javax.inject:1"
-    implementation "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
-    implementation "com.fasterxml.jackson.core:jackson-core:2.6.7"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.6.7"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
-    implementation "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
-    implementation "org.slf4j:slf4j-api:1.7.12"
-    implementation "org.jruby:jruby-complete:" + rootProject.jrubyVersion
-    implementation "javax.validation:validation-api:1.1.0.Final"
-    implementation "org.apache.bval:bval-jsr303:0.5"
-    implementation "joda-time:joda-time:2.9.2"
-    implementation "org.msgpack:msgpack-core:0.8.11"
+    // Embulk plugins have expected that embulk-core's dependencies are declared as "compile" in pom.xml.
+    // Although those dependencies would be finally removed from embulk-core's direct dependencies,
+    // those "compile" declaration would be kept so that plugin developers won't be confused unnecessarily.
+    api project(":embulk-api")
+    api "com.google.guava:guava:18.0"
+    api "com.google.inject:guice:4.0"
+    api "com.google.inject.extensions:guice-multibindings:4.0"
+    api "javax.inject:javax.inject:1"
+    api "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
+    api "com.fasterxml.jackson.core:jackson-core:2.6.7"
+    api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
+    api "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
+    api "org.slf4j:slf4j-api:1.7.12"
+    api "org.jruby:jruby-complete:" + rootProject.jrubyVersion
+    api "javax.validation:validation-api:1.1.0.Final"
+    api "org.apache.bval:bval-jsr303:0.5"
+    api "joda-time:joda-time:2.9.2"
+    api "org.msgpack:msgpack-core:0.8.11"
 
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.
     // Maven-related dependencies are moved to embulk-deps-maven.
-    implementation "org.apache.commons:commons-lang3:3.4"
+    api "org.apache.commons:commons-lang3:3.4"
 
     testImplementation "junit:junit:4.12"
     testImplementation "ch.qos.logback:logback-classic:1.1.3"

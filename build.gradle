@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id "java-library"
     id "maven-publish"
     id "jacoco"
     id "com.jfrog.bintray" version "1.8.4" apply false
@@ -61,6 +62,7 @@ def subprojectNamesReleasedInBintray = [
 def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray
 
 configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
+    apply plugin: "java-library"
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
