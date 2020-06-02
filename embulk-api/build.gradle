@@ -10,4 +10,5 @@ configurations {
 }
 
 dependencies {
+    // Its dependencies would be declared with "api", not "implementation".
 }
