@@ -326,6 +326,16 @@ def listEmbedDependencies = { rootModuleName, prefix ->
 
 // Standard "jar" task to build a JAR with dependency JAR resources embedded.
 jar {
+    dependsOn ":embulk-api:jar",
+              ":embulk-core:jar",
+              ":embulk-deps-buffer:jar",
+              ":embulk-deps-cli:jar",
+              ":embulk-deps-config:jar",
+              ":embulk-deps-guess:jar",
+              ":embulk-deps-maven:jar",
+              ":embulk-deps-timestamp:jar",
+              ":embulk-standards:jar"
+
     // Expands all dependencies including "embulk-core" and "embulk-standards"
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
