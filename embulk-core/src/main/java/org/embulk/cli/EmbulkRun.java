@@ -67,13 +67,13 @@ public class EmbulkRun {
         printEmbulkVersionHeader(System.out);
 
         switch (subcommand) {
+            case EXEC:
             case MIGRATE:
                 printGeneralUsage(System.err);
                 System.err.println("");
                 System.err.println("The `embulk " + subcommand.toString() + "` subcommand no longer works.");
                 return 1;
             case BUNDLE:
-            case EXEC:
             case GEM:
             case IRB:
                 return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
@@ -371,9 +371,6 @@ public class EmbulkRun {
             case MKBUNDLE:
                 newBundle(commandLine.getArguments().get(0), commandLine.getBundlePath());
                 break;
-            case EXEC:
-                callJRubyExec(subcommandArguments);
-                return 127;
             case IRB:
                 callJRubyIrb();
                 return 0;
@@ -678,7 +675,7 @@ public class EmbulkRun {
             jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
         }
 
-        // `Gem.paths` does not work for "gem", "bundle", "exec", and "irb". The environment variables are required.
+        // `Gem.paths` does not work for "gem", "bundle", and "irb". The environment variables are required.
         jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", this.buildDefaultGemPath());
         jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
 
@@ -695,13 +692,6 @@ public class EmbulkRun {
         localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
-        localJRubyContainer.remove("__internal_argv_java__");
-    }
-
-    private void callJRubyExec(final List<String> subcommandArguments) {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
-        localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
-        localJRubyContainer.runScriptlet("exec(*Array.new(__internal_argv_java__))");
         localJRubyContainer.remove("__internal_argv_java__");
     }
 
