@@ -1,7 +1,5 @@
 package org.embulk;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -11,13 +9,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.DataSourceImpl;
 import org.embulk.config.ModelManager;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
@@ -49,58 +45,13 @@ public class EmbulkEmbed {
 
     public static class Bootstrap {
         public Bootstrap() {
-            // We will stop using JSON-based system config using ObjectMapper.
-            this.systemConfigLoader = new ConfigLoader(new ModelManager(null, new ObjectMapper()));
-            this.systemConfig = this.systemConfigLoader.newConfigSource();
             this.embulkSystemProperties = new Properties();
             this.moduleOverrides = new ArrayList<>();
             this.started = false;
         }
 
-        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
-        public ConfigLoader getSystemConfigLoader() {
-            return this.systemConfigLoader;
-        }
-
-        @SuppressWarnings("deprecation")  // Calling setSystemConfig(ConfigSource)
-        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
-        public Bootstrap setSystemConfigFromJson(final String systemConfigJson) {
-            return this.setSystemConfig(this.systemConfigLoader.fromJsonString(systemConfigJson));
-        }
-
-        @SuppressWarnings("deprecation")
         public Bootstrap setEmbulkSystemProperties(final Properties propertiesGiven) {
             this.embulkSystemProperties = propertiesGiven;
-            this.systemConfig = this.systemConfigLoader.fromPropertiesAsIs(propertiesGiven);
-            return this;
-        }
-
-        // Once it stops calling DataSourceImpl#getAttributes(), DataSourceImpl#getAttributes() can be private.
-        @SuppressWarnings("deprecation")  // Calling DataSourceImpl#getAttributes().
-        @Deprecated  // To be removed. Users and plugins should not call this by themselves.
-        public Bootstrap setSystemConfig(final ConfigSource systemConfigGiven) {
-            this.systemConfig = systemConfigGiven.deepCopy();
-
-            final DataSourceImpl systemConfigDataSourceImpl;
-            if (this.systemConfig instanceof DataSourceImpl) {
-                systemConfigDataSourceImpl = (DataSourceImpl) this.systemConfig;
-            } else {
-                throw new IllegalArgumentException("EmbulkEmbed.Bootstrap#setSystemConfig must take DataSourceImpl.");
-            }
-
-            final Properties properties = new Properties();
-            for (final Map.Entry<String, JsonNode> entry : systemConfigDataSourceImpl.getAttributes()) {
-                final JsonNode value = entry.getValue();
-                if (value.isTextual()) {
-                    properties.setProperty(entry.getKey(), value.asText());
-                } else {
-                    logger.warn("'{}' is configured in system config in a non-textual form. We will no longer support it. "
-                                + "If you see this message, please report it to: https://github.com/embulk/embulk/issues/1159",
-                                entry.getKey());
-                }
-            }
-            this.embulkSystemProperties = properties;
-
             return this;
         }
 
@@ -159,9 +110,8 @@ public class EmbulkEmbed {
 
             final ArrayList<Module> modulesListBuilt = new ArrayList<>();
 
-            // TODO: Remove systemConfig.
             ArrayList<Module> userModules = new ArrayList<>(standardModuleList(
-                    this.systemConfig, EmbulkSystemProperties.of(this.embulkSystemProperties)));
+                    EmbulkSystemProperties.of(this.embulkSystemProperties)));
             for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
                 final Iterable<? extends Module> overridden = override.apply(userModules);
                 userModules = new ArrayList<Module>();
@@ -187,24 +137,13 @@ public class EmbulkEmbed {
             return this.initialize();
         }
 
-        // TODO: Remove it.
-        private final ConfigLoader systemConfigLoader;
-
         private final List<Function<? super List<Module>, ? extends Iterable<? extends Module>>> moduleOverrides;
-
-        // TODO: Remove it.
-        private ConfigSource systemConfig;
 
         // We are trying to represent the "system config" in java.util.Properties, instead of ConfigSource.
         // TODO: Make this java.util.Properties use as system config. See: https://github.com/embulk/embulk/issues/1159
         private Properties embulkSystemProperties;
 
         private boolean started;
-    }
-
-    @Deprecated  // To be removed.
-    public static ConfigLoader newSystemConfigLoader() {
-        return new ConfigLoader(new ModelManager(null, new ObjectMapper()));
     }
 
     public Injector getInjector() {
@@ -384,10 +323,9 @@ public class EmbulkEmbed {
                 + "See https://github.com/embulk/embulk/issues/1047 for the details.");
     }
 
-    static List<Module> standardModuleList(
-            final ConfigSource systemConfig, final EmbulkSystemProperties embulkSystemProperties) {
+    static List<Module> standardModuleList(final EmbulkSystemProperties embulkSystemProperties) {
         final ArrayList<Module> built = new ArrayList<>();
-        built.add(new SystemConfigModule(systemConfig, embulkSystemProperties));
+        built.add(new SystemConfigModule(embulkSystemProperties));
         built.add(new ExecModule(embulkSystemProperties));
         built.add(new ExtensionServiceLoaderModule(embulkSystemProperties));
         built.add(new PluginClassLoaderModule());

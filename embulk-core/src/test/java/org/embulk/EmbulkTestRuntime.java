@@ -23,17 +23,11 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 public class EmbulkTestRuntime extends GuiceBinder {
-    private static ConfigSource getSystemConfig() {
-        // TODO set some default values
-        return new DataSourceImpl(null);
-    }
-
     public static class TestRuntimeModule implements Module {
         @Override
         public void configure(Binder binder) {
-            ConfigSource systemConfig = getSystemConfig();
             final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
-            new SystemConfigModule(systemConfig, embulkSystemProperties).configure(binder);
+            new SystemConfigModule(embulkSystemProperties).configure(binder);
             new ExecModule(embulkSystemProperties).configure(binder);
             new ExtensionServiceLoaderModule(embulkSystemProperties).configure(binder);
             new BuiltinPluginSourceModule().configure(binder);
