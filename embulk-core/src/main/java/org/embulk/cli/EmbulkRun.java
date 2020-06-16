@@ -68,6 +68,7 @@ public class EmbulkRun {
 
         switch (subcommand) {
             case EXEC:
+            case IRB:
             case MIGRATE:
                 printGeneralUsage(System.err);
                 System.err.println("");
@@ -75,7 +76,6 @@ public class EmbulkRun {
                 return 1;
             case BUNDLE:
             case GEM:
-            case IRB:
                 return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
             default:
                 final CliParser parser = buildCommandLineParser(subcommand);
@@ -371,9 +371,6 @@ public class EmbulkRun {
             case MKBUNDLE:
                 newBundle(commandLine.getArguments().get(0), commandLine.getBundlePath());
                 break;
-            case IRB:
-                callJRubyIrb();
-                return 0;
             case RUN:
             case CLEANUP:
             case PREVIEW:
@@ -675,7 +672,7 @@ public class EmbulkRun {
             jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
         }
 
-        // `Gem.paths` does not work for "gem", "bundle", and "irb". The environment variables are required.
+        // `Gem.paths` does not work for "gem" and "bundle". The environment variables are required.
         jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", this.buildDefaultGemPath());
         jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
 
@@ -693,12 +690,6 @@ public class EmbulkRun {
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
         localJRubyContainer.remove("__internal_argv_java__");
-    }
-
-    private void callJRubyIrb() {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
-        localJRubyContainer.runScriptlet("require 'irb'");
-        localJRubyContainer.runScriptlet("IRB.start");
     }
 
     private String buildDefaultGemPath() {
