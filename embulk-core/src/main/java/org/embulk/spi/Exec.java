@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import com.google.inject.Injector;
+import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -39,8 +40,13 @@ public class Exec {
         return session().getInjector();
     }
 
+    @Deprecated
     public static Timestamp getTransactionTime() {
-        return session().getTransactionTime();
+        return Timestamp.ofInstant(session().getTransactionTimeInstant());
+    }
+
+    public static Instant getTransactionTimeInstant() {
+        return session().getTransactionTimeInstant();
     }
 
     @Deprecated  // @see docs/design/slf4j.md

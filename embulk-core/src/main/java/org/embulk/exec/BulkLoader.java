@@ -330,7 +330,7 @@ public class BulkLoader {
             List<Optional<TaskReport>> inputTaskReports = (inputTaskStates == null) ? null : getInputTaskReports();
             List<Optional<TaskReport>> outputTaskReports = (outputTaskStates == null) ? null : getOutputTaskReports();
             return new ResumeState(
-                    exec.getSessionExecConfig(),
+                    exec.newConfigSource().set("transaction_time", exec.getTransactionTimeString()),
                     inputTaskSource, outputTaskSource,
                     inputSchema, executorSchema,
                     inputTaskReports, outputTaskReports);
