@@ -67,6 +67,11 @@ public class EmbulkRun {
         printEmbulkVersionHeader(System.out);
 
         switch (subcommand) {
+            case MIGRATE:
+                printGeneralUsage(System.err);
+                System.err.println("");
+                System.err.println("The `embulk " + subcommand.toString() + "` subcommand no longer works.");
+                return 1;
             case BUNDLE:
             case EXEC:
             case GEM:
@@ -279,11 +284,6 @@ public class EmbulkRun {
                         .addUsage("    new ruby-filter int-to-string")
                         .setArgumentsRange(2, 2);
                 break;
-            case MIGRATE:
-                parserBuilder
-                        .setMainUsage("embulk migrate <directory>")
-                        .setArgumentsRange(1, 1);
-                break;
             case SELFUPDATE:
                 parserBuilder
                         .setMainUsage("embulk selfupdate")
@@ -334,16 +334,6 @@ public class EmbulkRun {
                 try {
                     final EmbulkNew embulkNew = new EmbulkNew(categoryWithLanguage, nameGiven, this.embulkVersion);
                     embulkNew.newPlugin();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    return 1;
-                }
-                return 0;
-            case MIGRATE:
-                final String path = commandLine.getArguments().get(0);
-                final EmbulkMigrate embulkMigrate = new EmbulkMigrate();
-                try {
-                    embulkMigrate.migratePlugin(path, this.embulkVersion);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     return 1;
@@ -648,7 +638,6 @@ public class EmbulkRun {
         out.println("   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file.");
         out.println("   gem        <install | list | help>                 # install a plugin or show installed plugins.");
         out.println("   new        <category> <name>                       # generates new plugin template");
-        out.println("   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API");
         out.println("   example    [path]                                  # creates an example config file and csv file to try embulk.");
         out.println("   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version.");
         out.println("");
