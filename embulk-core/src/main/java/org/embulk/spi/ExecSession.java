@@ -22,7 +22,6 @@ import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +38,6 @@ public class ExecSession {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
     private final Injector injector;
-
-    // TODO: Remove it.
-    private final ILoggerFactory loggerFactory;
 
     private final ModelManager modelManager;
     private final PluginManager pluginManager;
@@ -60,7 +56,6 @@ public class ExecSession {
 
     public static class Builder {
         private final Injector injector;
-        private ILoggerFactory loggerFactory;
         private Instant transactionTime;
 
         public Builder(Injector injector) {
@@ -76,13 +71,6 @@ public class ExecSession {
             return this;
         }
 
-        @Deprecated  // @see docs/design/slf4j.md
-        public Builder setLoggerFactory(ILoggerFactory loggerFactory) {
-            // TODO: Make it ineffective.
-            this.loggerFactory = loggerFactory;
-            return this;
-        }
-
         @Deprecated  // TODO: Add setTransactionTime(Instant) if needed. But no one looks using it. May not be needed.
         public Builder setTransactionTime(Timestamp timestamp) {
             this.transactionTime = timestamp.getInstant();
@@ -93,7 +81,7 @@ public class ExecSession {
             if (transactionTime == null) {
                 transactionTime = Instant.now();
             }
-            return new ExecSession(injector, transactionTime, Optional.ofNullable(loggerFactory));
+            return new ExecSession(injector, transactionTime);
         }
     }
 
@@ -105,13 +93,11 @@ public class ExecSession {
     public ExecSession(Injector injector, ConfigSource configSource) {
         this(injector,
              configSource.loadConfig(SessionTask.class).getTransactionTime().flatMap(ExecSession::toInstantFromString).orElse(
-                     Instant.now()),
-             null);
+                     Instant.now()));
     }
 
-    private ExecSession(Injector injector, Instant transactionTime, Optional<ILoggerFactory> loggerFactory) {
+    private ExecSession(Injector injector, Instant transactionTime) {
         this.injector = injector;
-        this.loggerFactory = loggerFactory.orElse(injector.getInstance(ILoggerFactory.class));
         this.modelManager = injector.getInstance(ModelManager.class);
         this.pluginManager = injector.getInstance(PluginManager.class);
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
@@ -126,7 +112,6 @@ public class ExecSession {
 
     private ExecSession(ExecSession copy, boolean preview) {
         this.injector = copy.injector;
-        this.loggerFactory = copy.loggerFactory;
         this.modelManager = copy.modelManager;
         this.pluginManager = copy.pluginManager;
         this.bufferAllocator = copy.bufferAllocator;
@@ -166,14 +151,12 @@ public class ExecSession {
 
     @Deprecated  // @see docs/design/slf4j.md
     public Logger getLogger(String name) {
-        // TODO: Make it always return org.slf4j.LoggerFactory.getLogger(...).
-        return loggerFactory.getLogger(name);
+        return LoggerFactory.getLogger(name);
     }
 
     @Deprecated  // @see docs/design/slf4j.md
-    public Logger getLogger(Class<?> name) {
-        // TODO: Make it always return org.slf4j.LoggerFactory.getLogger(...).
-        return loggerFactory.getLogger(name.getName());
+    public Logger getLogger(Class<?> clazz) {
+        return LoggerFactory.getLogger(clazz);
     }
 
     public BufferAllocator getBufferAllocator() {

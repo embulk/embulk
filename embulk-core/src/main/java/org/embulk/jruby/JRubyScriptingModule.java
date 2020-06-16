@@ -15,7 +15,7 @@ import java.util.Set;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
-import org.slf4j.ILoggerFactory;
+import org.slf4j.LoggerFactory;
 
 public class JRubyScriptingModule implements Module {
     @Override
@@ -33,7 +33,7 @@ public class JRubyScriptingModule implements Module {
 
             this.initializer = JRubyInitializer.of(
                     injector,
-                    injector.getInstance(ILoggerFactory.class).getLogger("init"),
+                    LoggerFactory.getLogger("init"),
 
                     embulkSystemProperties.getProperty("gem_home", null),
                     embulkSystemProperties.getProperty("gem_path", null),
