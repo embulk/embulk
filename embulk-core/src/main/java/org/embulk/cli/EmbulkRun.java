@@ -67,10 +67,15 @@ public class EmbulkRun {
         printEmbulkVersionHeader(System.out);
 
         switch (subcommand) {
-            case BUNDLE:
             case EXEC:
-            case GEM:
             case IRB:
+            case MIGRATE:
+                printGeneralUsage(System.err);
+                System.err.println("");
+                System.err.println("The `embulk " + subcommand.toString() + "` subcommand no longer works.");
+                return 1;
+            case BUNDLE:
+            case GEM:
                 return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
             default:
                 final CliParser parser = buildCommandLineParser(subcommand);
@@ -279,11 +284,6 @@ public class EmbulkRun {
                         .addUsage("    new ruby-filter int-to-string")
                         .setArgumentsRange(2, 2);
                 break;
-            case MIGRATE:
-                parserBuilder
-                        .setMainUsage("embulk migrate <directory>")
-                        .setArgumentsRange(1, 1);
-                break;
             case SELFUPDATE:
                 parserBuilder
                         .setMainUsage("embulk selfupdate")
@@ -339,16 +339,6 @@ public class EmbulkRun {
                     return 1;
                 }
                 return 0;
-            case MIGRATE:
-                final String path = commandLine.getArguments().get(0);
-                final EmbulkMigrate embulkMigrate = new EmbulkMigrate();
-                try {
-                    embulkMigrate.migratePlugin(path, this.embulkVersion);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    return 1;
-                }
-                return 0;
             case SELFUPDATE:
                 if (commandLine.getArguments().isEmpty()) {
                     System.err.println("'embulk selfupdate' requires the target version since v0.10.0. It no longer updates to the latest version.");
@@ -381,12 +371,6 @@ public class EmbulkRun {
             case MKBUNDLE:
                 newBundle(commandLine.getArguments().get(0), commandLine.getBundlePath());
                 break;
-            case EXEC:
-                callJRubyExec(subcommandArguments);
-                return 127;
-            case IRB:
-                callJRubyIrb();
-                return 0;
             case RUN:
             case CLEANUP:
             case PREVIEW:
@@ -648,7 +632,6 @@ public class EmbulkRun {
         out.println("   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file.");
         out.println("   gem        <install | list | help>                 # install a plugin or show installed plugins.");
         out.println("   new        <category> <name>                       # generates new plugin template");
-        out.println("   migrate    <path>                                  # modify plugin code to use the latest Embulk plugin API");
         out.println("   example    [path]                                  # creates an example config file and csv file to try embulk.");
         out.println("   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version.");
         out.println("");
@@ -689,7 +672,7 @@ public class EmbulkRun {
             jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
         }
 
-        // `Gem.paths` does not work for "gem", "bundle", "exec", and "irb". The environment variables are required.
+        // `Gem.paths` does not work for "gem" and "bundle". The environment variables are required.
         jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", this.buildDefaultGemPath());
         jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
 
@@ -707,19 +690,6 @@ public class EmbulkRun {
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
         localJRubyContainer.remove("__internal_argv_java__");
-    }
-
-    private void callJRubyExec(final List<String> subcommandArguments) {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
-        localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
-        localJRubyContainer.runScriptlet("exec(*Array.new(__internal_argv_java__))");
-        localJRubyContainer.remove("__internal_argv_java__");
-    }
-
-    private void callJRubyIrb() {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
-        localJRubyContainer.runScriptlet("require 'irb'");
-        localJRubyContainer.runScriptlet("IRB.start");
     }
 
     private String buildDefaultGemPath() {
