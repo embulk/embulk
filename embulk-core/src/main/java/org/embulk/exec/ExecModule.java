@@ -39,7 +39,9 @@ public class ExecModule implements Module {
 
         binder.bind(BulkLoader.class);
 
+        // TODO: Remove this ILoggerFactory binding.
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
+
         binder.bind(ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
         binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());

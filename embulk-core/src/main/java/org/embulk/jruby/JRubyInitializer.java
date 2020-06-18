@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.List;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class JRubyInitializer {
     private JRubyInitializer(
@@ -141,7 +141,7 @@ public final class JRubyInitializer {
         jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
                              jruby.runScriptlet("Embulk::Logger"),
                              "new",
-                             injector.getInstance(ILoggerFactory.class).getLogger("ruby")));
+                             LoggerFactory.getLogger("ruby")));
     }
 
     // TODO: Remove these probing methods, and test through mocked ScriptingContainerDelegate.
