@@ -223,6 +223,17 @@ public class ExecSession {
         tempFileSpace.cleanup();
     }
 
+    // They are to be tested with generated ExecSession, but generating ExecSession is hard
+    // because it needs a lot of dependencies including Guice Injector and ModelManager.
+
+    static Optional<Instant> toInstantFromStringForTesting(final String string) {
+        return toInstantFromString(string);
+    }
+
+    static String toStringFromInstantForTesting(final Instant instant) {
+        return toStringFromInstant(instant);
+    }
+
     private static Optional<Instant> toInstantFromString(final String string) {
         if (string == null) {
             return Optional.empty();
