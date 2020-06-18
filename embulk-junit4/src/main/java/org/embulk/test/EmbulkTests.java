@@ -6,6 +6,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import java.io.File;
@@ -16,8 +17,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
-import org.embulk.EmbulkEmbed;
+import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.ModelManager;
 
 public class EmbulkTests {
     private EmbulkTests() {}
@@ -26,7 +28,7 @@ public class EmbulkTests {
         String path = System.getenv(envName);
         assumeThat(isNullOrEmpty(path), is(false));
         try {
-            return EmbulkEmbed.newSystemConfigLoader().fromYamlFile(new File(path));
+            return new ConfigLoader(new ModelManager(null, new ObjectMapper())).fromYamlFile(new File(path));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
