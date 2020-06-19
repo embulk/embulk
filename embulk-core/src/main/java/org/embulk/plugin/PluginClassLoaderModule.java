@@ -26,7 +26,7 @@ public class PluginClassLoaderModule implements Module {
             this.parentFirstPackages = readPropertyKeys("/embulk/parent_first_packages.properties");
             this.parentFirstResources = readPropertyKeys("/embulk/parent_first_resources.properties");
 
-            this.factory = new Factory();
+            this.factory = new PluginClassLoaderFactoryImpl(this.parentFirstPackages, this.parentFirstResources);
         }
 
         private static Collection<String> readPropertyKeys(String name) {
@@ -45,42 +45,6 @@ public class PluginClassLoaderModule implements Module {
         @Override
         public PluginClassLoaderFactory get() {
             return factory;
-        }
-
-        private class Factory implements PluginClassLoaderFactory {
-            @Override
-            public PluginClassLoader create(Collection<URL> urls, ClassLoader parentClassLoader) {
-                return PluginClassLoader.createForFlatJars(
-                        parentClassLoader,
-                        urls,
-                        parentFirstPackages,
-                        parentFirstResources);
-            }
-
-            @Override
-            public PluginClassLoader createForNestedJar(
-                    final ClassLoader parentClassLoader,
-                    final URL oneNestedJarUrl) {
-                return PluginClassLoader.createForNestedJar(
-                        parentClassLoader,
-                        oneNestedJarUrl,
-                        null,
-                        parentFirstPackages,
-                        parentFirstResources);
-            }
-
-            @Override
-            public PluginClassLoader createForNestedJarWithDependencies(
-                    final ClassLoader parentClassLoader,
-                    final URL oneNestedJarUrl,
-                    final Collection<URL> dependencyJarUrls) {
-                return PluginClassLoader.createForNestedJar(
-                        parentClassLoader,
-                        oneNestedJarUrl,
-                        dependencyJarUrls,
-                        parentFirstPackages,
-                        parentFirstResources);
-            }
         }
     }
 }
