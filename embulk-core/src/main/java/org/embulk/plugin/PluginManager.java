@@ -21,13 +21,7 @@ public class PluginManager {
         this.jrubySource = new JRubyPluginSource(scriptingContainerDelegate);
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T newPlugin(Class<T> iface, PluginType type) {
-        T t = newPluginWithoutWrapper(iface, type);
-        return t;
-    }
-
-    private <T> T newPluginWithoutWrapper(Class<T> iface, PluginType type) {
         if (sources.isEmpty()) {
             throw new ConfigException("No PluginSource is installed");
         }
