@@ -7,18 +7,16 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import java.io.IOException;
 
-public class DateTimeZoneSerDe {
-    public static void configure(ObjectMapperModule mapper) {
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(org.joda.time.DateTimeZone.class, new DateTimeZoneSerializer());
-        module.addDeserializer(org.joda.time.DateTimeZone.class, new DateTimeZoneDeserializer());
-        mapper.registerModule(module);
+@Deprecated
+public final class DateTimeZoneJacksonModule extends SimpleModule {
+    public DateTimeZoneJacksonModule() {
+        this.addSerializer(org.joda.time.DateTimeZone.class, new DateTimeZoneSerializer());
+        this.addDeserializer(org.joda.time.DateTimeZone.class, new DateTimeZoneDeserializer());
     }
 
-    public static class DateTimeZoneSerializer extends JsonSerializer<org.joda.time.DateTimeZone> {
+    private static class DateTimeZoneSerializer extends JsonSerializer<org.joda.time.DateTimeZone> {
         @Override
         public void serialize(org.joda.time.DateTimeZone value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
@@ -26,8 +24,7 @@ public class DateTimeZoneSerDe {
         }
     }
 
-    public static class DateTimeZoneDeserializer
-            extends FromStringDeserializer<org.joda.time.DateTimeZone> {
+    private static class DateTimeZoneDeserializer extends FromStringDeserializer<org.joda.time.DateTimeZone> {
         public DateTimeZoneDeserializer() {
             super(org.joda.time.DateTimeZone.class);
         }

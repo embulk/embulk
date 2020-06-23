@@ -20,7 +20,7 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.TempFileSpaceAllocator;
-import org.embulk.spi.time.DateTimeZoneSerDe;
+import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.TimestampSerDe;
 import org.embulk.spi.unit.LocalFileSerDe;
 import org.embulk.spi.util.CharsetSerDe;
@@ -31,6 +31,7 @@ public class ExecModule implements Module {
         this.embulkSystemProperties = embulkSystemProperties;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void configure(final Binder binder) {
         if (binder == null) {
@@ -55,7 +56,7 @@ public class ExecModule implements Module {
 
         // SerDe
         final ObjectMapperModule mapper = new ObjectMapperModule();
-        DateTimeZoneSerDe.configure(mapper);
+        mapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
         TimestampSerDe.configure(mapper);
         CharsetSerDe.configure(mapper);
         LocalFileSerDe.configure(mapper);
