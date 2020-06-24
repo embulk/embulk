@@ -2,15 +2,14 @@ package org.embulk.command;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import org.embulk.config.ModelManager;
 import org.embulk.spi.Schema;
 
 public class VerticalPreviewPrinter extends PreviewPrinter {
     private final String format;
     private int count;
 
-    public VerticalPreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema) {
-        super(out, modelManager, schema);
+    public VerticalPreviewPrinter(final PrintStream out, final Schema schema) {
+        super(out, schema);
         this.format = "%" + maxColumnNameLength(schema) + "s (%" + maxColumnTypeNameLength(schema) + "s) : %s%n";
         this.count = 0;
     }
