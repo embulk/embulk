@@ -8,16 +8,13 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class LocalFileSerDe {
-    public static void configure(ObjectMapperModule mapper) {
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(LocalFile.class, new LocalFileSerializer());
-        module.addDeserializer(LocalFile.class, new LocalFileDeserializer());
-        mapper.registerModule(module);
+public final class LocalFileJacksonModule extends SimpleModule {
+    public LocalFileJacksonModule() {
+        this.addSerializer(LocalFile.class, new LocalFileSerializer());
+        this.addDeserializer(LocalFile.class, new LocalFileDeserializer());
     }
 
     private static class LocalFileSerializer extends JsonSerializer<LocalFile> {
