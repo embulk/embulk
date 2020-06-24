@@ -23,7 +23,7 @@ import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileSerDe;
-import org.embulk.spi.util.CharsetSerDe;
+import org.embulk.spi.util.CharsetJacksonModule;
 import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {
@@ -58,7 +58,7 @@ public class ExecModule implements Module {
         final ObjectMapperModule mapper = new ObjectMapperModule();
         mapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
         mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
-        CharsetSerDe.configure(mapper);
+        mapper.registerModule(new CharsetJacksonModule());
         LocalFileSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
