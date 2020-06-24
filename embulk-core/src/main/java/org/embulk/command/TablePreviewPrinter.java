@@ -13,12 +13,14 @@ public class TablePreviewPrinter extends PreviewPrinter {
 
     private List<String[]> samples;
     private int sampleSize;
-    private String format = null;
-    private String border = null;
+    private String format;
+    private String border;
 
     public TablePreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema) {
         super(out, modelManager, schema);
         this.samples = new ArrayList<String[]>();
+        this.format = null;
+        this.border = null;
         String[] header = new String[schema.getColumnCount()];
         for (int i = 0; i < header.length; i++) {
             header[i] = schema.getColumnName(i) + ":" + schema.getColumnType(i);

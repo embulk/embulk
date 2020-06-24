@@ -15,27 +15,37 @@ import org.msgpack.value.Value;
 
 public abstract class PreviewPrinter implements Closeable {
     protected final PrintStream out;
-    protected final ModelManager modelManager;
     protected final Schema schema;
-    private final String[] stringValues;
 
-    private final NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
+    private final ModelManager modelManager;
+    private final String[] stringValues;
+    private final NumberFormat numberFormat;
 
     public PreviewPrinter(PrintStream out, ModelManager modelManager, Schema schema) {
         this.out = out;
         this.modelManager = modelManager;
         this.schema = schema;
         this.stringValues = new String[schema.getColumnCount()];
+        this.numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
     }
 
-    public void printAllPages(List<Page> pages) throws IOException {
+    public final void printAllPages(List<Page> pages) throws IOException {
         List<Object[]> records = Pages.toObjects(schema, pages);
         for (Object[] record : records) {
             printRecord(record);
         }
     }
 
-    public void printRecord(Object... values) throws IOException {
+    @Override
+    public final void close() throws IOException {
+        out.close();
+    }
+
+    public void finish() throws IOException {}
+
+    protected abstract void printRecord(String[] values) throws IOException;
+
+    private void printRecord(Object... values) throws IOException {
         int min = Math.min(schema.getColumnCount(), values.length);
         for (int i = 0; i < min; i++) {
             stringValues[i] = valueToString(values[i]);
@@ -46,9 +56,7 @@ public abstract class PreviewPrinter implements Closeable {
         printRecord(stringValues);
     }
 
-    protected abstract void printRecord(String[] values) throws IOException;
-
-    protected String valueToString(Object obj) {
+    private String valueToString(Object obj) {
         if (obj == null) {
             return "";
         } else if (obj instanceof String) {
@@ -68,12 +76,5 @@ public abstract class PreviewPrinter implements Closeable {
         } else {
             return modelManager.writeObject(obj);
         }
-    }
-
-    public void finish() throws IOException {}
-
-    @Override
-    public void close() throws IOException {
-        out.close();
     }
 }
