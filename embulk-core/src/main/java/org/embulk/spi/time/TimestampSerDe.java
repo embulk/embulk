@@ -9,21 +9,16 @@ import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TimestampSerDe {
     public static void configure(ObjectMapperModule mapper) {
         SimpleModule module = new SimpleModule();
-        module.addSerializer(Timestamp.class, new DateTimeZoneSerializer());
-        module.addDeserializer(Timestamp.class, new DateTimeZoneDeserializer());
+        module.addSerializer(Timestamp.class, new TimestampSerializer());
+        module.addDeserializer(Timestamp.class, new TimestampDeserializer());
         mapper.registerModule(module);
     }
 
-    public static class DateTimeZoneSerializer extends JsonSerializer<Timestamp> {
+    public static class TimestampSerializer extends JsonSerializer<Timestamp> {
         @Override
         public void serialize(Timestamp value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
@@ -31,44 +26,24 @@ public class TimestampSerDe {
         }
     }
 
-    public static class DateTimeZoneDeserializer extends FromStringDeserializer<Timestamp> {
-        public DateTimeZoneDeserializer() {
+    public static class TimestampDeserializer extends FromStringDeserializer<Timestamp> {
+        public TimestampDeserializer() {
             super(Timestamp.class);
         }
 
         @Override
         protected Timestamp _deserialize(String value, DeserializationContext context)
                 throws JsonMappingException {
-            return createTimestampFromString(value);
+            if (value == null) {
+                throw new JsonMappingException("TimestampDeserializer#_deserialize received null unexpectedly.");
+            }
+            try {
+                return Timestamp.ofString(value);
+            } catch (final NumberFormatException ex) {
+                throw new JsonMappingException("Invalid format as a Timestamp value: '" + value + "'", ex);
+            } catch (final IllegalStateException ex) {
+                throw new JsonMappingException("Unexpected failure in parsing: '" + value + "'", ex);
+            }
         }
     }
-
-    static Timestamp createTimestampFromStringForTesting(final String string) {
-        return createTimestampFromString(string);
-    }
-
-    private static Timestamp createTimestampFromString(final String string) {
-        // TODO: Handle exceptions.
-        final Matcher matcher = TIMESTAMP_PATTERN.matcher(string);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException(String.format("Invalid timestamp format '%s'", string));
-        }
-
-        final long epochSecond = LocalDateTime.parse(matcher.group(1), FORMATTER).toEpochSecond(ZoneOffset.UTC);
-
-        final String fraction = matcher.group(2);
-        final int nanoAdjustment;
-        if (fraction == null) {
-            nanoAdjustment = 0;
-        } else {
-            nanoAdjustment = Integer.parseInt(fraction) * (int) Math.pow(10, 9 - fraction.length());
-        }
-
-        return Timestamp.ofEpochSecond(epochSecond, nanoAdjustment);
-    }
-
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
-    private static final Pattern TIMESTAMP_PATTERN =
-            Pattern.compile("(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))? (?:UTC|\\+?00\\:?00)");
 }
