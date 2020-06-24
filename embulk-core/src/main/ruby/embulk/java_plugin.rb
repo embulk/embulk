@@ -6,7 +6,15 @@ module Embulk
     def self.classloader(dir)
       jars = Dir["#{dir}/**/*.jar"]
       urls = jars.map {|jar| java.io.File.new(File.expand_path(jar)).toURI.toURL }
-      factory = Java.injector.getInstance(Java::PluginClassLoaderFactory.java_class)
+      begin
+        expected_temporary_variable_name = Java::org.embulk.jruby.JRubyPluginSource::PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME
+      rescue => e
+        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME unexpectedly."
+      end
+      if expected_temporary_variable_name != "$temporary_internal_plugin_class_loader_factory__"
+        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME correctly."
+      end
+      factory = $temporary_internal_plugin_class_loader_factory__
       factory.create(urls, JRuby.runtime.getJRubyClassLoader())
     end
 

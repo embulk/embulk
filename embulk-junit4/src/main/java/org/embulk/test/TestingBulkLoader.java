@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import java.util.List;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecutionResult;
@@ -38,8 +39,8 @@ class TestingBulkLoader extends BulkLoader {
     }
 
     @Inject
-    public TestingBulkLoader(Injector injector) {
-        super(injector);
+    public TestingBulkLoader(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
+        super(injector, embulkSystemProperties);
     }
 
     @Override

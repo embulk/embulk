@@ -1,6 +1,5 @@
 package org.embulk.plugin.maven;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
@@ -30,10 +29,13 @@ import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
 
 public class MavenPluginSource implements PluginSource {
-    @Inject
-    public MavenPluginSource(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
+    public MavenPluginSource(
+            final Injector injector,
+            final EmbulkSystemProperties embulkSystemProperties,
+            final PluginClassLoaderFactory pluginClassLoaderFactory) {
         this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
+        this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
 
     @Override
@@ -68,9 +70,6 @@ public class MavenPluginSource implements PluginSource {
         }
         final MavenPluginType mavenPluginType = (MavenPluginType) pluginType;
 
-        final PluginClassLoaderFactory pluginClassLoaderFactory =
-                this.injector.getInstance(PluginClassLoaderFactory.class);
-
         final MavenArtifactFinder mavenArtifactFinder;
         try {
             mavenArtifactFinder = MavenArtifactFinder.create(getLocalMavenRepository());
@@ -93,7 +92,7 @@ public class MavenPluginSource implements PluginSource {
         try (JarPluginLoader loader = JarPluginLoader.load(
                  pluginPaths.getPluginJarPath(),
                  pluginPaths.getPluginDependencyJarPaths(),
-                 pluginClassLoaderFactory)) {
+                 this.pluginClassLoaderFactory)) {
             pluginMainClass = loader.getPluginMainClass();
         } catch (InvalidJarPluginException ex) {
             throw new PluginSourceNotMatchException(ex);
@@ -186,4 +185,5 @@ public class MavenPluginSource implements PluginSource {
 
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
+    private final PluginClassLoaderFactory pluginClassLoaderFactory;
 }

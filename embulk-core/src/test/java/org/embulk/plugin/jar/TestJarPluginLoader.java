@@ -42,7 +42,7 @@ public class TestJarPluginLoader {
         try (final JarPluginLoader loader = JarPluginLoader.load(
                  pluginJarPath,
                  Collections.unmodifiableList(dependencyJarPaths),
-                 testRuntime.getPluginClassLoaderFactory())) {
+                 EmbulkTestRuntime.buildPluginClassLoaderFactory())) {
             assertEquals(0, loader.getPluginSpiVersion());
             loadedClass = loader.getPluginMainClass();
         }

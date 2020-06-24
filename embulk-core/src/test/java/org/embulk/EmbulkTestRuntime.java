@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import java.util.Properties;
 import java.util.Random;
+import org.embulk.EmbulkEmbed;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSourceImpl;
 import org.embulk.config.ModelManager;
@@ -12,9 +13,8 @@ import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.exec.SystemConfigModule;
 import org.embulk.jruby.JRubyScriptingModule;
-import org.embulk.plugin.BuiltinPluginSourceModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
-import org.embulk.plugin.PluginClassLoaderModule;
+import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
@@ -30,9 +30,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
             new SystemConfigModule(embulkSystemProperties).configure(binder);
             new ExecModule(embulkSystemProperties).configure(binder);
             new ExtensionServiceLoaderModule(embulkSystemProperties).configure(binder);
-            new BuiltinPluginSourceModule().configure(binder);
             new JRubyScriptingModule().configure(binder);
-            new PluginClassLoaderModule().configure(binder);
             new TestUtilityModule().configure(binder);
             new TestPluginSourceModule().configure(binder);
         }
@@ -63,8 +61,8 @@ public class EmbulkTestRuntime extends GuiceBinder {
         return getInstance(RandomManager.class).getRandom();
     }
 
-    public PluginClassLoaderFactory getPluginClassLoaderFactory() {
-        return getInstance(PluginClassLoaderFactory.class);
+    public static PluginClassLoaderFactory buildPluginClassLoaderFactory() {
+        return PluginClassLoaderFactoryImpl.of(EmbulkEmbed.PARENT_FIRST_PACKAGES, EmbulkEmbed.PARENT_FIRST_RESOURCES);
     }
 
     @Override

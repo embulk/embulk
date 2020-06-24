@@ -2,7 +2,11 @@ package org.embulk.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
+import com.google.inject.ConfigurationException;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,11 +67,21 @@ public class GuessExecutor {
 
     @Inject
     public GuessExecutor(
-            final EmbulkSystemProperties embulkSystemProperties, @ForGuess final Set<PluginType> defaultGuessPlugins) {
+            final EmbulkSystemProperties embulkSystemProperties, final Injector injector) {
         final String guessPlugins = embulkSystemProperties.getProperty("guess_plugins", null);
 
         final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
-        guessPluginsBuilt.addAll(defaultGuessPlugins);
+
+        // This workaround allows no any guess plugin registered. See also:
+        // https://github.com/embulk/embulk/issues/876
+        // https://groups.google.com/forum/#!topic/google-guice/5Rnm-d7MU34
+        // TODO: Remove this workaround.
+        try {
+            guessPluginsBuilt.addAll(injector.getInstance(Key.get(new TypeLiteral<Set<PluginType>>() {}, ForGuess.class)));
+        } catch (final ConfigurationException ex) {
+            // Pass-through.
+        }
+
         if (guessPlugins != null) {
             for (final String guessPlugin : guessPlugins.split(",")) {
                 guessPluginsBuilt.add(DefaultPluginType.create(guessPlugin));
