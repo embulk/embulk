@@ -21,7 +21,7 @@ import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
-import org.embulk.spi.time.TimestampSerDe;
+import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileSerDe;
 import org.embulk.spi.util.CharsetSerDe;
 import org.slf4j.ILoggerFactory;
@@ -57,7 +57,7 @@ public class ExecModule implements Module {
         // SerDe
         final ObjectMapperModule mapper = new ObjectMapperModule();
         mapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
-        TimestampSerDe.configure(mapper);
+        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         CharsetSerDe.configure(mapper);
         LocalFileSerDe.configure(mapper);
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
