@@ -9,10 +9,10 @@ module Embulk
       begin
         expected_temporary_variable_name = Java::org.embulk.jruby.JRubyPluginSource::PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME
       rescue => e
-        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAM unexpectedly."
+        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME unexpectedly."
       end
       if expected_temporary_variable_name != "$temporary_internal_plugin_class_loader_factory__"
-        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAM correctly."
+        raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME correctly."
       end
       factory = $temporary_internal_plugin_class_loader_factory__
       factory.create(urls, JRuby.runtime.getJRubyClassLoader())
