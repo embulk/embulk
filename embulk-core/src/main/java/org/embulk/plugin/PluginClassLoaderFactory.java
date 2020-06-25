@@ -17,4 +17,6 @@ public interface PluginClassLoaderFactory {
                 parentClassLoader,
                 oneNestedJarUrl);
     }
+
+    void clear();
 }

@@ -2,7 +2,6 @@ package org.embulk.plugin;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Binder;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Named;
@@ -29,7 +28,6 @@ import org.embulk.spi.OutputPlugin;
 public class InjectedPluginSource implements PluginSource {
     private final Injector injector;
 
-    @Inject
     public InjectedPluginSource(Injector injector) {
         this.injector = injector;
     }

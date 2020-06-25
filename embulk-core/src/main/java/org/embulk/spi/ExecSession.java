@@ -4,8 +4,12 @@ import com.google.inject.Injector;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -15,8 +19,14 @@ import org.embulk.config.ModelManager;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.jruby.JRubyPluginSource;
+import org.embulk.jruby.ScriptingContainerDelegate;
+import org.embulk.plugin.InjectedPluginSource;
+import org.embulk.plugin.PluginClassLoaderFactory;
+import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
+import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
@@ -30,8 +40,10 @@ public class ExecSession {
             DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss'Z'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
 
     private final Injector injector;
+    private final EmbulkSystemProperties embulkSystemProperties;
 
     private final ModelManager modelManager;
+    private final PluginClassLoaderFactory pluginClassLoaderFactory;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
 
@@ -40,6 +52,7 @@ public class ExecSession {
 
     private final boolean preview;
 
+    @Deprecated  // TODO: Remove it.
     private interface SessionTask extends Task {
         @Config("transaction_time")
         @ConfigDefault("null")
@@ -48,10 +61,17 @@ public class ExecSession {
 
     public static class Builder {
         private final Injector injector;
+        private EmbulkSystemProperties embulkSystemProperties;
+        private Set<String> parentFirstPackages;
+        private Set<String> parentFirstResources;
         private Instant transactionTime;
 
         public Builder(Injector injector) {
             this.injector = injector;
+            this.embulkSystemProperties = null;
+            this.parentFirstPackages = null;
+            this.parentFirstResources = null;
+            this.transactionTime = null;
         }
 
         public Builder fromExecConfig(ConfigSource configSource) {
@@ -63,8 +83,24 @@ public class ExecSession {
             return this;
         }
 
+        public Builder setEmbulkSystemProperties(final EmbulkSystemProperties embulkSystemProperties) {
+            this.embulkSystemProperties = embulkSystemProperties;
+            return this;
+        }
+
+        public Builder setParentFirstPackages(final Set<String> parentFirstPackages) {
+            this.parentFirstPackages = Collections.unmodifiableSet(new HashSet<>(parentFirstPackages));
+            return this;
+        }
+
+        public Builder setParentFirstResources(final Set<String> parentFirstResources) {
+            this.parentFirstResources = Collections.unmodifiableSet(new HashSet<>(parentFirstResources));
+            return this;
+        }
+
         @Deprecated  // TODO: Add setTransactionTime(Instant) if needed. But no one looks using it. May not be needed.
         public Builder setTransactionTime(Timestamp timestamp) {
+            logger.warn("ExecSession.Builder#setTransactionTime is deprecated. Set it via ExecSession.Builder#fromExecConfig.");
             this.transactionTime = timestamp.getInstant();
             return this;
         }
@@ -73,7 +109,17 @@ public class ExecSession {
             if (transactionTime == null) {
                 transactionTime = Instant.now();
             }
-            return new ExecSession(injector, transactionTime);
+            if (this.embulkSystemProperties == null) {
+                logger.warn("EmbulkSystemProperties is not set when building ExecSession. "
+                            + "Use ExecSession.Builder#setEmbulkSystemProperties.");
+                this.embulkSystemProperties = this.injector.getInstance(EmbulkSystemProperties.class);
+            }
+            return new ExecSession(
+                    this.injector,
+                    this.transactionTime,
+                    this.embulkSystemProperties,
+                    this.parentFirstPackages,
+                    this.parentFirstResources);
         }
     }
 
@@ -82,16 +128,44 @@ public class ExecSession {
     }
 
     @Deprecated
+    @SuppressWarnings("deprecation")  // For the use of SessionTask.
     public ExecSession(Injector injector, ConfigSource configSource) {
         this(injector,
              configSource.loadConfig(SessionTask.class).getTransactionTime().flatMap(ExecSession::toInstantFromString).orElse(
-                     Instant.now()));
+                     Instant.now()),
+             injector.getInstance(EmbulkSystemProperties.class),
+             null,
+             null);
+        logger.warn("Constructing with ExecSession(Injector, ConfigSource) is deprecated. Use ExecSession.Builder instead.");
     }
 
-    private ExecSession(Injector injector, Instant transactionTime) {
+    private ExecSession(
+            final Injector injector,
+            final Instant transactionTime,
+            final EmbulkSystemProperties embulkSystemProperties,
+            final Set<String> parentFirstPackages,
+            final Set<String> parentFirstResources) {
+        if (parentFirstPackages == null) {
+            logger.warn("Parent-first packages are not set when building ExecSession. "
+                        + "Use ExecSession.Builder#setParentFirstPackages.");
+        }
+        if (parentFirstResources == null) {
+            logger.warn("Parent-first resources are not set when building ExecSession. "
+                        + "Use ExecSession.Builder#setParentFirstResources.");
+        }
+
         this.injector = injector;
+        this.embulkSystemProperties = embulkSystemProperties;
         this.modelManager = injector.getInstance(ModelManager.class);
-        this.pluginManager = injector.getInstance(PluginManager.class);
+
+        this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
+                (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
+                (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
+        this.pluginManager = PluginManager.with(
+                new InjectedPluginSource(injector),
+                new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
+                new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));
+
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
         this.transactionTime = transactionTime;
@@ -104,7 +178,9 @@ public class ExecSession {
 
     private ExecSession(ExecSession copy, boolean preview) {
         this.injector = copy.injector;
+        this.embulkSystemProperties = copy.embulkSystemProperties;
         this.modelManager = copy.modelManager;
+        this.pluginClassLoaderFactory = copy.pluginClassLoaderFactory;
         this.pluginManager = copy.pluginManager;
         this.bufferAllocator = copy.bufferAllocator;
 
@@ -195,6 +271,7 @@ public class ExecSession {
     }
 
     public void cleanup() {
+        this.pluginClassLoaderFactory.clear();
         tempFileSpace.cleanup();
     }
 

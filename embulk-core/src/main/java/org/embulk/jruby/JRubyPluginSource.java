@@ -1,5 +1,6 @@
 package org.embulk.jruby;
 
+import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.plugin.PluginType;
@@ -12,12 +13,20 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JRubyPluginSource implements PluginSource {
-    private final ScriptingContainerDelegate jruby;
+    public static final String PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME = "$temporary_internal_plugin_class_loader_factory__";
 
-    public JRubyPluginSource(ScriptingContainerDelegate jruby) {
+    private static final Logger logger = LoggerFactory.getLogger(JRubyPluginSource.class);
+
+    private final ScriptingContainerDelegate jruby;
+    private final PluginClassLoaderFactory pluginClassLoaderFactory;
+
+    public JRubyPluginSource(final ScriptingContainerDelegate jruby, final PluginClassLoaderFactory pluginClassLoaderFactory) {
         this.jruby = jruby;
+        this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException {
@@ -51,16 +60,31 @@ public class JRubyPluginSource implements PluginSource {
             throw new PluginSourceNotMatchException("Plugin interface " + iface + " is not supported in JRuby");
         }
 
-        String methodName = "new_java_" + category;
-        try {
-            // get Embulk::Plugin
-            //this.rubyPluginManager = ((RubyModule) jruby.get("Embulk")).const_get(
-            //        RubySymbol.newSymbol(
-            //            jruby.getProvider().getRuntime(), "Plugin"));
-            final Object rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
-            return jruby.callMethod(rubyPluginManager, methodName, name, iface);
-        } catch (Throwable ex) {
-            throw new PluginSourceNotMatchException(ex);
+        synchronized (this.jruby) {
+            try {
+                this.jruby.put(PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME, this.pluginClassLoaderFactory);
+            } catch (final Throwable ex) {
+                throw new PluginSourceNotMatchException(ex);
+            }
+
+            String methodName = "new_java_" + category;
+            try {
+                // get Embulk::Plugin
+                //this.rubyPluginManager = ((RubyModule) jruby.get("Embulk")).const_get(
+                //        RubySymbol.newSymbol(
+                //            jruby.getProvider().getRuntime(), "Plugin"));
+                final Object rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
+                return jruby.callMethod(rubyPluginManager, methodName, name, iface);
+            } catch (Throwable ex) {
+                throw new PluginSourceNotMatchException(ex);
+            } finally {
+                try {
+                    this.jruby.remove(PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME);
+                } catch (final Throwable ex) {
+                    // Pass-through.
+                    logger.warn("Failed to remove a Ruby global variable: " + PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME, ex);
+                }
+            }
         }
     }
 }

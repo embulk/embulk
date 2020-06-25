@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 public class BulkLoader {
     private final Injector injector;
+    private final EmbulkSystemProperties embulkSystemProperties;
 
     public interface BulkLoaderTask extends Task {
         @Config("exec")
@@ -56,8 +58,9 @@ public class BulkLoader {
     }
 
     @Inject
-    public BulkLoader(Injector injector) {
+    public BulkLoader(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
         this.injector = injector;
+        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     protected static class LoaderState implements ProcessState {
@@ -365,9 +368,16 @@ public class BulkLoader {
         }
     }
 
+    @Deprecated
     public ExecutionResult resume(final ConfigSource config, final ResumeState resume) {
+        throw new UnsupportedOperationException(
+                "BulkLoader#resume(ConfigSource, ResumeState) is no longer supported. "
+                + "Use BulkLoader#resume(ExecSession, ConfigSource, ResumeState) instead. "
+                + "Plugins should not call those methods anyway, though.");
+    }
+
+    public ExecutionResult resume(final ExecSession exec, final ConfigSource config, final ResumeState resume) {
         try {
-            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
             ExecutionResult result = Exec.doWith(exec, new ExecAction<ExecutionResult>() {
                     public ExecutionResult run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("resume")) {
@@ -388,9 +398,16 @@ public class BulkLoader {
         }
     }
 
+    @Deprecated
     public void cleanup(final ConfigSource config, final ResumeState resume) {
+        throw new UnsupportedOperationException(
+                "BulkLoader#cleanup(ConfigSource, ResumeState) is no longer supported. "
+                + "Use BulkLoader#cleanup(ExecSession, ConfigSource, ResumeState) instead. "
+                + "Plugins should not call those methods anyway, though.");
+    }
+
+    public void cleanup(final ExecSession exec, final ConfigSource config, final ResumeState resume) {
         try {
-            ExecSession exec = ExecSession.builder(injector).fromExecConfig(resume.getExecSessionConfigSource()).build();
             Exec.doWith(exec, new ExecAction<Void>() {
                     public Void run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("cleanup")) {
