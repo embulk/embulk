@@ -212,15 +212,14 @@ public class EmbulkRunner {
 
     private void previewInternal(final ConfigSource configSource, final String format) throws IOException {
         final PreviewResult previewResult = this.embed.preview(configSource);
-        final ModelManager modelManager = this.embed.getModelManager();
 
         final PreviewPrinter printer;
         switch (format != null ? format : "table") {
             case "table":
-                printer = new TablePreviewPrinter(System.out, modelManager, previewResult.getSchema());
+                printer = new TablePreviewPrinter(System.out, previewResult.getSchema());
                 break;
             case "vertical":
-                printer = new VerticalPreviewPrinter(System.out, modelManager, previewResult.getSchema());
+                printer = new VerticalPreviewPrinter(System.out, previewResult.getSchema());
                 break;
             default:
                 throw new IllegalArgumentException(
