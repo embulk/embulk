@@ -82,4 +82,19 @@ public class TestTimestamp {
         assertEquals("2015-01-19 07:36:10.123456780 UTC", Timestamp.ofEpochSecond(1421652970, 123456780).toString());
         assertEquals("2015-01-19 07:36:10.123456789 UTC", Timestamp.ofEpochSecond(1421652970, 123456789).toString());
     }
+
+    @Test
+    public void testOfString() {
+        assertEquals(Timestamp.ofEpochSecond(0), Timestamp.ofString("1970-01-01 00:00:00 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970), Timestamp.ofString("2015-01-19 07:36:10 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 100 * 1000 * 1000), Timestamp.ofString("2015-01-19 07:36:10.100 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 120 * 1000 * 1000), Timestamp.ofString("2015-01-19 07:36:10.120 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123 * 1000 * 1000), Timestamp.ofString("2015-01-19 07:36:10.123 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123400 * 1000), Timestamp.ofString("2015-01-19 07:36:10.123400 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123450 * 1000), Timestamp.ofString("2015-01-19 07:36:10.123450 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123456 * 1000), Timestamp.ofString("2015-01-19 07:36:10.123456 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123456700), Timestamp.ofString("2015-01-19 07:36:10.123456700 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123456780), Timestamp.ofString("2015-01-19 07:36:10.123456780 UTC"));
+        assertEquals(Timestamp.ofEpochSecond(1421652970, 123456789), Timestamp.ofString("2015-01-19 07:36:10.123456789 UTC"));
+    }
 }
