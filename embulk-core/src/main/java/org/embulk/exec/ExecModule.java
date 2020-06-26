@@ -20,10 +20,10 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.TempFileSpaceAllocator;
-import org.embulk.spi.time.DateTimeZoneSerDe;
-import org.embulk.spi.time.TimestampSerDe;
-import org.embulk.spi.unit.LocalFileSerDe;
-import org.embulk.spi.util.CharsetSerDe;
+import org.embulk.spi.time.DateTimeZoneJacksonModule;
+import org.embulk.spi.time.TimestampJacksonModule;
+import org.embulk.spi.unit.LocalFileJacksonModule;
+import org.embulk.spi.util.CharsetJacksonModule;
 import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {
@@ -31,6 +31,7 @@ public class ExecModule implements Module {
         this.embulkSystemProperties = embulkSystemProperties;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void configure(final Binder binder) {
         if (binder == null) {
@@ -55,10 +56,10 @@ public class ExecModule implements Module {
 
         // SerDe
         final ObjectMapperModule mapper = new ObjectMapperModule();
-        DateTimeZoneSerDe.configure(mapper);
-        TimestampSerDe.configure(mapper);
-        CharsetSerDe.configure(mapper);
-        LocalFileSerDe.configure(mapper);
+        mapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
+        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
+        mapper.registerModule(new CharsetJacksonModule());
+        mapper.registerModule(new LocalFileJacksonModule());
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda

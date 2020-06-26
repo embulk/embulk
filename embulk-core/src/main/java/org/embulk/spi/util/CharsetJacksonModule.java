@@ -7,19 +7,16 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-public class CharsetSerDe {
-    public static void configure(ObjectMapperModule mapper) {
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(Charset.class, new CharsetSerializer());
-        module.addDeserializer(Charset.class, new CharsetDeserializer());
-        mapper.registerModule(module);
+public final class CharsetJacksonModule extends SimpleModule {
+    public CharsetJacksonModule() {
+        this.addSerializer(Charset.class, new CharsetSerializer());
+        this.addDeserializer(Charset.class, new CharsetDeserializer());
     }
 
-    public static class CharsetSerializer extends JsonSerializer<Charset> {
+    private static class CharsetSerializer extends JsonSerializer<Charset> {
         @Override
         public void serialize(Charset value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
@@ -27,7 +24,7 @@ public class CharsetSerDe {
         }
     }
 
-    public static class CharsetDeserializer extends FromStringDeserializer<Charset> {
+    private static class CharsetDeserializer extends FromStringDeserializer<Charset> {
         public CharsetDeserializer() {
             super(Charset.class);
         }
