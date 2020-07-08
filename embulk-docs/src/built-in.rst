@@ -464,12 +464,12 @@ Options
 +====================+==========+===================================================+============================+
 | path\_prefix       | string   | Path prefix of the output files                   | required                   |
 +--------------------+----------+---------------------------------------------------+----------------------------+
-| sequence\_format   | string   | Format of the sequence number of the output files | ``%03d.%02d.`` by default  |
+| sequence\_format   | string   | Format of the sequence number of the output files | ``.%03d.%02d`` by default  |
 +--------------------+----------+---------------------------------------------------+----------------------------+
-| file\_ext          | string   | Path suffix of the output files (e.g. ``"csv"``)  | required                   |
+| file\_ext          | string   | Path suffix of the output files                   | required                   |
 +--------------------+----------+---------------------------------------------------+----------------------------+
 
-For example, if you set ``path_prefix: /path/to/output/sample_``, ``sequence_format: "%03d.%02d."``, and ``file_ext: csv``, name of the output files will be as following:
+For example, if you set ``path_prefix: /path/to/output``, ``sequence_format: ".%03d.%02d"``, and ``file_ext: .csv``, name of the output files will be as following:
 
 ::
 
@@ -477,10 +477,10 @@ For example, if you set ``path_prefix: /path/to/output/sample_``, ``sequence_for
     `-- path
         `-- to
             `-- output
-                |-- sample_01.000.csv
-                |-- sample_02.000.csv
-                |-- sample_03.000.csv
-                |-- sample_04.000.csv
+                |-- sample.01.000.csv
+                |-- sample.02.000.csv
+                |-- sample.03.000.csv
+                |-- sample.04.000.csv
 
 ``sequence_format`` formats task index and sequence number in a task.
 
@@ -491,8 +491,8 @@ Example
 
     out:
       type: file
-      path_prefix: /path/to/output/sample_
-      file_ext: csv
+      path_prefix: /path/to/output/sample
+      file_ext: .csv
       formatter:
         ...
 

@@ -32,8 +32,8 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
         String getFileNameExtension();
 
         @Config("sequence_format")
-        @ConfigDefault("\"%03d.%02d.\"")
-        String getSequenceFormat();
+        @ConfigDefault("\".%03d.%02d\"")
+        public String getSequenceFormat();
     }
 
     @Override
