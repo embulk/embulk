@@ -2,66 +2,18 @@
 
 Embulk is a parallel bulk data loader that **helps data transfer between various storages, databases, NoSQL and cloud services**.
 
-**Embulk supports plugins** to add functions. You can [share the plugins](http://www.embulk.org/plugins/) to keep your custom scripts readable, maintainable, and reusable.
+**Embulk supports plugins** to add functions. You can [share the plugins](https://plugins.embulk.org/) to keep your custom scripts readable, maintainable, and reusable.
 
 [![Embulk](https://gist.githubusercontent.com/frsyuki/f322a77ee2766a508ba9/raw/e8539b6b4fda1b3357e8c79d3966aa8148dbdbd3/embulk-overview.png)](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed/12)
 [Embulk, an open-source plugin-based parallel bulk data loader](http://www.slideshare.net/frsyuki/embuk-making-data-integration-works-relaxed) at Slideshare
 
 # Document
 
-Embulk documents: http://www.embulk.org/docs/
-
-# Mailing list
-
-* [Embulk-announce](https://groups.google.com/forum/#!forum/embulk-announce): Embulk core members post important updates such as **key releases**, **compatibility information**, and **feedback requests to users**.
-
-## Quick Start
-
-### Linux & Mac & BSD
-
-Embulk is a Java application. Please make sure that Java SE Runtime Environment (JRE) is installed. Embulk v0.8 series runs on Java 7, and Embulk v0.9 series runs on Java 8. Java 9 is not supported in any version for the time being.
-
-Following 4 commands install embulk to your home directory:
-
-```sh
-curl --create-dirs -o ~/.embulk/bin/embulk -L "https://dl.embulk.org/embulk-latest.jar"
-chmod +x ~/.embulk/bin/embulk
-echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Next step: [Running example in 4 commands](#running-example)
-
-### Windows
-
-Embulk is a Java application. Please make sure that Java SE Runtime Environment (JRE) is installed. Embulk v0.8 series runs on Java 7, and Embulk v0.9 series runs on Java 8. Java 9 is not supported in any version for the time being.
-
-You can download `embulk.bat` using this command on cmd.exe or PowerShell.exe.
-
-[Bintray no longer supports TLS 1.1 since June, 2018](https://jfrog.com/knowledge-base/why-am-i-failing-to-work-with-jfrog-saas-service-with-tls-1-0-1-1/) although [PowerShell's `Invoke-WebRequest` uses only SSL 3.0 and TLS 1.1 by default](https://social.technet.microsoft.com/Forums/en-US/00b78ac4-cadb-4566-b175-beb9d34a9093/how-to-use-tls-11-or-12-for-invokewebrequest). You'll need a tweak for PowerShell to use TLS 1.2, such as:
-
-```
-PowerShell -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12; Invoke-WebRequest http://dl.embulk.org/embulk-latest.jar -OutFile embulk.bat}"
-```
-
-Next step: [Running example in 4 commands](#running-example)
-
-### Running example
-
-`embulk example` command generates a sample CSV file so that you can try embulk quickly:
-
-```
-embulk example ./try1
-embulk guess   ./try1/seed.yml -o config.yml
-embulk preview config.yml
-embulk run     config.yml
-```
-
-Next step: [Using plugins](#using-plugins)
+Embulk documents: https://www.embulk.org/
 
 ### Using plugins
 
-You can use plugins to load data from/to various systems and file formats. Here is the list of publicly released plugins: [list of plugins by category](http://www.embulk.org/plugins/).
+You can use plugins to load data from/to various systems and file formats. Here is the list of publicly released plugins: [list of plugins by category](https://plugins.embulk.org/).
 
 An example is [embulk-output-command](https://github.com/embulk/embulk-output-command) plugin. It executes an external command to output the records.
 
@@ -124,26 +76,17 @@ embulk run   -b ./embulk_bundle ...
 
 ## Use cases
 
-* [Scheduled bulk data loading to Elasticsearch + Kibana 5 from CSV files](http://www.embulk.org/docs/recipe/scheduled-csv-load-to-elasticsearch-kibana5.html)
+* [Scheduled bulk data loading to Elasticsearch + Kibana 5 from CSV files](https://www.embulk.org/recipes/scheduled-csv-load-to-elasticsearch-kibana5.html)
 
-For further details, visit [Embulk documentation](http://www.embulk.org/docs/).
+For further details, visit [Embulk documentation](https://www.embulk.org/).
 
 ## Upgrading to the latest version
-
-Following command updates embulk itself to the latest released version.
-
-```sh
-embulk selfupdate
-```
 
 Following command updates embulk itself to the specific released version.
 
 ```sh
 embulk selfupdate x.y.z
 ```
-
-Older versions are available at [dl.embulk.org](http://dl.embulk.org).
-
 
 ## Embulk Development
 
@@ -184,17 +127,6 @@ Task `dependencies` shows dependency tree of embulk-core project:
 ### Update JRuby
 
 Modify `jrubyVersion` in `build.gradle` to update JRuby of Embulk.
-
-### Documents
-
-Embulk uses Sphinx, YARD (Ruby API) and JavaDoc (Java API) for document generation.
-
-```
-brew install python
-pip install sphinx
-./gradlew site
-# documents are: embulk-docs/build/html
-```
 
 ### Release
 

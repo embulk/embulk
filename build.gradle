@@ -167,7 +167,7 @@ configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.nam
             repo = 'maven'
             name = 'embulk'
             desc = 'Embulk, a plugin-based parallel bulk data loader'
-            websiteUrl = "https://www.embulk.org"
+            websiteUrl = "https://www.embulk.org/"
             issueTrackerUrl = 'https://github.com/embulk/embulk/issues'
             vcsUrl = 'https://github.com/embulk/embulk.git'
             licenses = ['Apache-2.0']

@@ -16,5 +16,4 @@ include 'embulk-deps-timestamp'
 project(':embulk-deps-timestamp').projectDir = file('embulk-deps/timestamp')
 include 'embulk-standards'
 include 'embulk-junit4'
-include 'embulk-docs'
 include 'test-helpers'

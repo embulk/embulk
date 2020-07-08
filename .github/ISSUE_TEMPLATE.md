@@ -10,7 +10,7 @@ Issue Type: New Feature Request
   * That's not for here.
   * Embulk is plugin-based. Such inputs/outputs/filters are to be implemented as plugins, not in the core.
   * It is recommended for you to search for existing plugins at first.
-    * See: http://www.embulk.org/plugins/
+    * See: https://plugins.embulk.org/
   * If you cannot find existing plugins, it's a good chance for you to create a new plugin by yourself. :)
 
 
