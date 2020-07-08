@@ -1,3 +1,8 @@
+.. Avoid the following warning. Remove if you add a link for this document.
+   WARNING: document isn't included in any toctree
+
+:orphan:
+
 For core/plugin developers
 ===========================
 
