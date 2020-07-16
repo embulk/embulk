@@ -34,6 +34,7 @@ public class TestToStringMap {
         assertMappingException("\"foo\": 000123");
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertMappingException(final String inputJson) throws IOException {
         try {
             MAPPER.readValue(inputJson, ToStringMap.class);
@@ -43,11 +44,13 @@ public class TestToStringMap {
         fail("JsonMappingException is expected.");
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertToStringMap(final Map<String, String> expected, final String inputJson) throws IOException {
         final ToStringMap toStringMap = MAPPER.readValue(inputJson, ToStringMap.class);
         assertEquals(expected, toStringMap);
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertWithMap(final String inputJson) throws IOException {
         final ToStringMap toStringMap = MAPPER.readValue(inputJson, ToStringMap.class);
         final HashMap<String, String> map = MAPPER.readValue(inputJson, new TypeReference<HashMap<String, String>>() {});
@@ -60,10 +63,16 @@ public class TestToStringMap {
         MAPPER = new ObjectMapper();
         MAPPER.registerModule(new Jdk8Module());
         registerToStringJacksonModule(MAPPER);
+        registerToStringMapJacksonModule(MAPPER);
     }
 
     @SuppressWarnings("deprecation")
     private static void registerToStringJacksonModule(final ObjectMapper mapper) {
         mapper.registerModule(new ToStringJacksonModule());
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void registerToStringMapJacksonModule(final ObjectMapper mapper) {
+        mapper.registerModule(new ToStringMapJacksonModule());
     }
 }
