@@ -17,6 +17,7 @@ import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileJacksonModule;
+import org.embulk.spi.unit.ToStringJacksonModule;
 import org.embulk.spi.util.CharsetJacksonModule;
 import org.embulk.spi.util.Pages;
 import org.msgpack.value.Value;
@@ -43,6 +44,7 @@ public abstract class PreviewPrinter implements Closeable {
         this.objectMapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         this.objectMapper.registerModule(new CharsetJacksonModule());
         this.objectMapper.registerModule(new LocalFileJacksonModule());
+        this.objectMapper.registerModule(new ToStringJacksonModule());
         this.objectMapper.registerModule(new GuavaModule());
         this.objectMapper.registerModule(new Jdk8Module());
         this.objectMapper.registerModule(new JodaModule());

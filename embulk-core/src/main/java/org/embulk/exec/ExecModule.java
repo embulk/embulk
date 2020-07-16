@@ -23,6 +23,7 @@ import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileJacksonModule;
+import org.embulk.spi.unit.ToStringJacksonModule;
 import org.embulk.spi.util.CharsetJacksonModule;
 import org.slf4j.ILoggerFactory;
 
@@ -60,6 +61,7 @@ public class ExecModule implements Module {
         mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         mapper.registerModule(new CharsetJacksonModule());
         mapper.registerModule(new LocalFileJacksonModule());
+        mapper.registerModule(new ToStringJacksonModule());
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda

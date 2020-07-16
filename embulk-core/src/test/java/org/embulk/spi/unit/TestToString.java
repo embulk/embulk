@@ -22,6 +22,7 @@ public class TestToString {
         assertMappingException("[ \"something\" ]");
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertMappingException(final String inputJson) throws IOException {
         try {
             MAPPER.readValue(inputJson, ToString.class);
@@ -31,11 +32,13 @@ public class TestToString {
         fail("JsonMappingException is expected.");
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertToString(final String expected, final String inputJson) throws IOException {
         final ToString toString = MAPPER.readValue(inputJson, ToString.class);
         assertEquals(expected, toString.toString());
     }
 
+    @SuppressWarnings("deprecation")
     private static void assertNull(final String inputJson) throws IOException {
         final ToString toString = MAPPER.readValue(inputJson, ToString.class);
         assertEquals(null, toString);
@@ -46,5 +49,11 @@ public class TestToString {
     static {
         MAPPER = new ObjectMapper();
         MAPPER.registerModule(new Jdk8Module());
+        registerToStringJacksonModule(MAPPER);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void registerToStringJacksonModule(final ObjectMapper mapper) {
+        mapper.registerModule(new ToStringJacksonModule());
     }
 }
