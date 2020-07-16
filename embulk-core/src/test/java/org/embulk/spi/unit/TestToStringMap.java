@@ -59,5 +59,11 @@ public class TestToStringMap {
     static {
         MAPPER = new ObjectMapper();
         MAPPER.registerModule(new Jdk8Module());
+        registerToStringJacksonModule(MAPPER);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static void registerToStringJacksonModule(final ObjectMapper mapper) {
+        mapper.registerModule(new ToStringJacksonModule());
     }
 }

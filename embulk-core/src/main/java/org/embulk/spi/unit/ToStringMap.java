@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 
 public class ToStringMap extends HashMap<String, String> {
+    @SuppressWarnings("deprecation")
     @JsonCreator
     public ToStringMap(Map<String, ToString> map) {
         super(Maps.transformValues(map, new Function<ToString, String>() {
