@@ -8,12 +8,17 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PluginClassLoader extends URLClassLoader {
     private PluginClassLoader(
@@ -24,6 +29,8 @@ public class PluginClassLoader extends URLClassLoader {
             final Collection<String> parentFirstResources) {
         super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.<URL>emptyList() : flatJarUrls),
               parentClassLoader);
+
+        this.hasJep320LoggedWithStackTrace = false;
 
         this.parentFirstPackagePrefixes = ImmutableList.copyOf(
                 parentFirstPackages.stream().map(pkg -> pkg + ".").collect(Collectors.toList()));
@@ -139,6 +146,9 @@ public class PluginClassLoader extends URLClassLoader {
             // try {@code #findClass} of the child's ({@code PluginClassLoader}'s).
             if (!parentFirst) {
                 try {
+                    // If a class that is removed by JEP 320 is found here, it should be fine.
+                    // It means that the class is found on the plugin side -- the plugin contains its own one.
+                    // Classes removed by JEP 320 are not in the "parent-first" list.
                     return resolveClass(findClass(name), resolve);
                 } catch (ClassNotFoundException ignored) {
                     // Passing through intentionally.
@@ -148,9 +158,14 @@ public class PluginClassLoader extends URLClassLoader {
             // If the class is "parent-first" (to be loaded by the parent at first), try this part at first.
             // If the class is "not parent-first" (not to be loaded by the parent at first), the above part runs first.
             try {
-                return resolveClass(getParent().loadClass(name), resolve);
-            } catch (ClassNotFoundException ignored) {
-                // Passing through intentionally.
+                final Class<?> resolvedClass = resolveClass(getParent().loadClass(name), resolve);
+                logInfoIfJep320Class(name);
+                return resolvedClass;
+            } catch (final ClassNotFoundException ex) {
+                if (!parentFirst) {
+                    rethrowIfJep320Class(name, ex);
+                }
+                // Passing through intentionally if the class is not not removed by JEP 320.
             }
 
             // If the class is "parent-first" (to be loaded by the parent at first), this part runs after the above.
@@ -254,6 +269,124 @@ public class PluginClassLoader extends URLClassLoader {
         return false;
     }
 
+    private synchronized void logInfoIfJep320Class(final String className) {
+        final int lastDotIndex = className.lastIndexOf('.');
+        if (lastDotIndex != -1) {  // Found
+            final String packageName = className.substring(0, lastDotIndex);
+            if (JEP_320_PACKAGES.contains(packageName)) {
+                if (!this.hasJep320LoggedWithStackTrace) {
+                    // Logging with details and stack trace only against the first one.
+                    // When a class is loaded from a library, more classes are usually loaded.
+                    // It would be too noisy if details and stack trace are dumped every time.
+                    logger.info(
+                            "Class " + className + " is loaded by the parent ClassLoader, which is removed by JEP 320. "
+                            + "The plugin needs to include it on the plugin side. "
+                            + "See https://github.com/embulk/embulk/issues/1270 for more details.", new Exception());
+                    this.hasJep320LoggedWithStackTrace = true;
+                } else {
+                    logger.info("Class " + className + " is loaded by the parent ClassLoader, which is removed by JEP 320.");
+                }
+            }
+        }
+    }
+
+    private void rethrowIfJep320Class(final String className, final ClassNotFoundException ex) throws ClassNotFoundException {
+        final int lastDotIndex = className.lastIndexOf('.');
+        if (lastDotIndex != -1) {  // Found
+            final String packageName = className.substring(0, lastDotIndex);
+            if (JEP_320_PACKAGES.contains(packageName)) {
+                throw new ClassNotFoundException(
+                        "A plugin tried to load " + className + " with the parent ClassLoader. "
+                        + "It is removed from JDK by JEP 320. The plugin needs to include it on the plugin side. "
+                        + "See https://github.com/embulk/embulk/issues/1270 for more details.",
+                        ex);
+            }
+        }
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(PluginClassLoader.class);
+
+    /**
+     * Packages that are deprecated and removed since Java 11 by JEP 320.
+     *
+     * @see <a href="https://openjdk.java.net/jeps/320#Description">JEP 320</a>
+     */
+    private static String[] JEP_320_PACKAGES_ARRAY = {
+        // Module java.xml.ws : JAX-WS, plus the related technologies SAAJ and Web Services Metadata
+        // https://docs.oracle.com/javase/9/docs/api/java.xml.ws-summary.html
+        "javax.jws",
+        "javax.jws.soap",
+        "javax.xml.soap",
+        "javax.xml.ws",
+        "javax.xml.ws.handler",
+        "javax.xml.ws.handler.soap",
+        "javax.xml.ws.http",
+        "javax.xml.ws.soap",
+        "javax.xml.ws.spi",
+        "javax.xml.ws.spi.http",
+        "javax.xml.ws.wsaddressing",
+
+        // Module java.xml.bind : JAXB
+        // https://docs.oracle.com/javase/9/docs/api/java.xml.bind-summary.html
+        "javax.xml.bind",
+        "javax.xml.bind.annotation",
+        "javax.xml.bind.annotation.adapters",
+        "javax.xml.bind.attachment",
+        "javax.xml.bind.helpers",
+        "javax.xml.bind.util",
+
+        // Module java.activation : JAF
+        // https://docs.oracle.com/javase/9/docs/api/java.activation-summary.html
+        "javax.activation",
+
+        // Module java.xml.ws.annotation : Common Annotations
+        // https://docs.oracle.com/javase/9/docs/api/java.xml.ws.annotation-summary.html
+        "javax.annotation",
+
+        // Module java.corba : CORBA
+        // https://docs.oracle.com/javase/9/docs/api/java.corba-summary.html
+        "javax.activity",
+        "javax.rmi",
+        "javax.rmi.CORBA",
+        "org.omg.CORBA",
+        "org.omg.CORBA_2_3",
+        "org.omg.CORBA_2_3.portable",
+        "org.omg.CORBA.DynAnyPackage",
+        "org.omg.CORBA.ORBPackage",
+        "org.omg.CORBA.portable",
+        "org.omg.CORBA.TypeCodePackage",
+        "org.omg.CosNaming",
+        "org.omg.CosNaming.NamingContextExtPackage",
+        "org.omg.CosNaming.NamingContextPackage",
+        "org.omg.Dynamic",
+        "org.omg.DynamicAny",
+        "org.omg.DynamicAny.DynAnyFactoryPackage",
+        "org.omg.DynamicAny.DynAnyPackage",
+        "org.omg.IOP",
+        "org.omg.IOP.CodecFactoryPackage",
+        "org.omg.IOP.CodecPackage",
+        "org.omg.Messaging",
+        "org.omg.PortableInterceptor",
+        "org.omg.PortableInterceptor.ORBInitInfoPackage",
+        "org.omg.PortableServer",
+        "org.omg.PortableServer.CurrentPackage",
+        "org.omg.PortableServer.POAManagerPackage",
+        "org.omg.PortableServer.POAPackage",
+        "org.omg.PortableServer.portable",
+        "org.omg.PortableServer.ServantLocatorPackage",
+        "org.omg.SendingContext",
+        "org.omg.stub.java.rmi",
+
+        // Module java.transaction : JTA
+        // https://docs.oracle.com/javase/9/docs/api/java.transaction-summary.html
+        "javax.transaction",
+    };
+
+    private static Set<String> JEP_320_PACKAGES =
+            Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(JEP_320_PACKAGES_ARRAY)));
+
     private final List<String> parentFirstPackagePrefixes;
     private final List<String> parentFirstResourcePrefixes;
+
+    private boolean hasJep320LoggedWithStackTrace;
 }
