@@ -45,6 +45,7 @@ ext {
 
 def subprojectNamesReleasedInMavenCentral = [
     "embulk-api",
+    "embulk-spi",
 ]
 
 def subprojectNamesReleasedInBintray = [

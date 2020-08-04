@@ -1,0 +1,14 @@
+description = "Java SPI for Embulk plugins to inherit for providing their roles."
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
+}
+
+dependencies {
+    api project(":embulk-api")
+}

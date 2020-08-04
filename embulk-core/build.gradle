@@ -27,6 +27,7 @@ dependencies {
     // Although those dependencies would be finally removed from embulk-core's direct dependencies,
     // those "compile" declaration would be kept so that plugin developers won't be confused unnecessarily.
     api project(":embulk-api")
+    api project(":embulk-spi")
     api "com.google.guava:guava:18.0"
     api "com.google.inject:guice:4.0"
     api "com.google.inject.extensions:guice-multibindings:4.0"
