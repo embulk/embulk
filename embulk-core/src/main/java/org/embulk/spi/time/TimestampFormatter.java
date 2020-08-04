@@ -7,6 +7,7 @@ import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.spi.util.LineEncoder;
 
+@Deprecated  // Externalized to embulk-util-timestamp
 public class TimestampFormatter {
     private TimestampFormatter(final TimestampFormatterRuby delegate) {
         this.delegate = delegate;

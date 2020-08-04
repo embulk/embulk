@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 
+@Deprecated  // Externalized to embulk-util-timestamp
 public class TimestampParser {
     private TimestampParser(final TimestampParserLegacy delegate) {
         this.delegate = delegate;
