@@ -18,14 +18,43 @@ package org.embulk.spi;
 
 import org.embulk.config.TaskReport;
 
+/**
+ * Represents a series of file-like byte sequence inputs in a transaction from a File Input Plugin.
+ */
 public interface TransactionalFileInput extends Transactional, FileInput {
-    Buffer poll();
-
+    /**
+     * Switches the {@link org.embulk.spi.TransactionalFileInput} to process the next file.
+     *
+     * @return {@code true} if this {@link org.embulk.spi.TransactionalFileInput} has switched to the next file. {@code false} if no more files.
+     */
+    @Override
     boolean nextFile();
 
+    /**
+     * Reads a byte sequence from this {@link org.embulk.spi.TransactionalFileInput} into {@link org.embulk.spi.Buffer}.
+     *
+     * @return the {@link org.embulk.spi.Buffer} read
+     */
+    @Override
+    Buffer poll();
+
+    /**
+     * Closes this {@link org.embulk.spi.TransactionalFileInput}.
+     */
+    @Override
     void close();
 
+    /**
+     * Aborts the transaction of {@link org.embulk.spi.TransactionalFileInput}.
+     */
+    @Override
     void abort();
 
+    /**
+     * Commits the transaction of {@link org.embulk.spi.TransactionalFileInput}.
+     *
+     * @return report
+     */
+    @Override
     TaskReport commit();
 }

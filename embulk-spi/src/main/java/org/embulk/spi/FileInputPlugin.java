@@ -22,23 +22,62 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 
+/**
+ * The main class that a File Input Plugin implements.
+ *
+ * <p>It reads a byte sequence into {@link org.embulk.spi.TransactionalFileInput} in a transaction.
+ */
 public interface FileInputPlugin {
+    /**
+     * A controller of the following tasks provided from the Embulk core.
+     */
     interface Control {
-        List<TaskReport> run(TaskSource taskSource,
-                int taskCount);
+        /**
+         * Runs the following tasks of the File Input Plugin.
+         *
+         * <p>It would be executed in {@link #resume(org.embulk.config.TaskSource, int, FileInputPlugin.Control)}.
+         *
+         * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
+         * @param taskCount  the number of tasks
+         * @return reports
+         */
+        List<TaskReport> run(TaskSource taskSource, int taskCount);
     }
 
-    ConfigDiff transaction(ConfigSource config,
-            FileInputPlugin.Control control);
+    /**
+     * Processes the entire file input transaction.
+     *
+     * @param config  a configuration for the File Input Plugin given from a user
+     * @param control  a controller of the following tasks provided from the Embulk core
+     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     */
+    ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control);
 
-    ConfigDiff resume(TaskSource taskSource,
-            int taskCount,
-            FileInputPlugin.Control control);
+    /**
+     * Resumes a file input transaction.
+     *
+     * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
+     * @param taskCount  the number of tasks
+     * @param control  a controller of the following tasks provided from the Embulk core
+     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     */
+    ConfigDiff resume(TaskSource taskSource, int taskCount, FileInputPlugin.Control control);
 
-    void cleanup(TaskSource taskSource,
-            int taskCount,
-            List<TaskReport> successTaskReports);
+    /**
+     * Cleans up resources used in the transaction.
+     *
+     * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
+     * @param taskCount  the number of tasks
+     * @param successTaskReports  {@link org.embulk.config.TaskReport}s of successful tasks
+     */
+    void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successTaskReports);
 
-    TransactionalFileInput open(TaskSource taskSource,
-            int taskIndex);
+    /**
+     * Processes each file input task.
+     *
+     * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
+     * @param taskIndex  the index number of the task
+     * @return an input for a Parser Plugin, or a Decoder Plugin
+     */
+    TransactionalFileInput open(TaskSource taskSource, int taskIndex);
 }

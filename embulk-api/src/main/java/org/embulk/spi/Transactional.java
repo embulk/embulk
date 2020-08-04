@@ -18,8 +18,19 @@ package org.embulk.spi;
 
 import org.embulk.config.TaskReport;
 
+/**
+ * Represents transactional operations.
+ */
 public interface Transactional {
+    /**
+     * Aborts the transaction.
+     */
     void abort();
 
+    /**
+     * Commits the transaction.
+     *
+     * @return report
+     */
     TaskReport commit();
 }

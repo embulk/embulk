@@ -18,16 +18,47 @@ package org.embulk.spi;
 
 import org.embulk.config.TaskReport;
 
+/**
+ * Represents a series of file-like byte sequence outputs in a transaction into a File Output Plugin.
+ */
 public interface TransactionalFileOutput extends Transactional, FileOutput {
+    /**
+     * Switches the {@link org.embulk.spi.TransactionalFileOutput} to process the next file.
+     */
+    @Override
     void nextFile();
 
+    /**
+     * Writes a byte sequence into the {@link org.embulk.spi.TransactionalFileOutput} from {@link org.embulk.spi.Buffer}.
+     *
+     * @param buffer  the {@link org.embulk.spi.Buffer} to write
+     */
+    @Override
     void add(Buffer buffer);
 
+    /**
+     * Finishes the {@link org.embulk.spi.TransactionalFileOutput}.
+     */
+    @Override
     void finish();
 
+    /**
+     * Closes the {@link org.embulk.spi.TransactionalFileOutput}.
+     */
+    @Override
     void close();
 
+    /**
+     * Aborts the transaction of {@link org.embulk.spi.TransactionalFileOutput}.
+     */
+    @Override
     void abort();
 
+    /**
+     * Commits the transaction of {@link org.embulk.spi.TransactionalFileOutput}.
+     *
+     * @return report
+     */
+    @Override
     TaskReport commit();
 }
