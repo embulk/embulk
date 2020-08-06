@@ -37,7 +37,9 @@ public interface TaskSource extends DataSource {
      * @param <T>   the task class to load this configuration as
      * @param taskType  the task class to load this configuration as
      * @return a task class instance loaded
+     * @deprecated Use {@code embulk-util-config} instead.
      */
+    @Deprecated  // Replaced with embulk-util-config
     default <T> T loadTask(Class<T> taskType) {
         throw new UnsupportedOperationException(
                 "TaskSource#loadTask does not work with: " + this.getClass().getCanonicalName());

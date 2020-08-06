@@ -16,6 +16,7 @@ import java.util.Optional;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
+@Deprecated  // Externalized to embulk-util-json
 public class JsonParser {
     public interface Stream extends Closeable {
         Value next() throws IOException;

@@ -3,6 +3,7 @@ package org.embulk.spi.util;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+@Deprecated  // Externalized to embulk-util-retryhelper
 public class RetryExecutor {
     public static RetryExecutor retryExecutor() {
         // TODO default configuration
