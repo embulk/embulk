@@ -33,7 +33,7 @@ import java.util.Arrays;
  * <p>At the same time, a constant {@code Buffer.EMPTY} has already been removed. Plugins cannot use it anymore.
  */
 public abstract class Buffer {
-    Buffer() {
+    protected Buffer() {
     }
 
     /**
