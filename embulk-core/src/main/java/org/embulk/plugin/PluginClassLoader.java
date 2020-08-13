@@ -281,7 +281,7 @@ public class PluginClassLoader extends URLClassLoader {
                     logger.info(
                             "Class " + className + " is loaded by the parent ClassLoader, which is removed by JEP 320. "
                             + "The plugin needs to include it on the plugin side. "
-                            + "See https://github.com/embulk/embulk/issues/1270 for more details.", new Exception());
+                            + "See https://github.com/embulk/embulk/issues/1270 for more details.", new DummyStackTraceDump());
                     this.hasJep320LoggedWithStackTrace = true;
                 } else {
                     logger.info("Class " + className + " is loaded by the parent ClassLoader, which is removed by JEP 320.");
@@ -301,6 +301,12 @@ public class PluginClassLoader extends URLClassLoader {
                         + "See https://github.com/embulk/embulk/issues/1270 for more details.",
                         ex);
             }
+        }
+    }
+
+    private static class DummyStackTraceDump extends Exception {
+        DummyStackTraceDump() {
+            super("[DUMMY] It is not an Exception. Just showing where classes which will be removed in JEP 320 are loaded.");
         }
     }
 
