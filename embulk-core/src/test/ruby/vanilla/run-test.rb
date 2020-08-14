@@ -23,14 +23,8 @@ dependency_jars.each do |dependency_jar|
 end
 
 static_initializer = Java::org.embulk.deps.EmbulkDependencyClassLoaders.staticInitializer()
-each_jar_in(File.join(root_dir, 'embulk-deps', 'buffer', 'build', 'dependency_jars')) do |jar|
-  static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::BUFFER, java.nio.file.Paths.get(jar.to_s))
-end
-each_jar_in(File.join(root_dir, 'embulk-deps', 'config', 'build', 'dependency_jars')) do |jar|
-  static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::CONFIG, java.nio.file.Paths.get(jar.to_s))
-end
-each_jar_in(File.join(root_dir, 'embulk-deps', 'guess', 'build', 'dependency_jars')) do |jar|
-  static_initializer.addDependency(Java::org.embulk.deps.DependencyCategory::GUESS, java.nio.file.Paths.get(jar.to_s))
+each_jar_in(File.join(root_dir, 'embulk-deps', 'build', 'dependency_jars')) do |jar|
+  static_initializer.addDependency(java.nio.file.Paths.get(jar.to_s))
 end
 # https://github.com/jruby/jruby/wiki/CallingJavaFromJRuby#calling-masked-or-unreachable-java-methods-with-java_send
 static_initializer.java_send :initialize

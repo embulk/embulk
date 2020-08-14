@@ -48,7 +48,7 @@ dependencies {
 
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.
-    // Maven-related dependencies are moved to embulk-deps-maven.
+    // Maven-related dependencies are moved to embulk-deps (maven).
     api "org.apache.commons:commons-lang3:3.4"
 
     testImplementation "junit:junit:4.12"
@@ -56,20 +56,14 @@ dependencies {
 
     // TODO: Remove this, and load it with the proper DependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.
-    testImplementation project(":embulk-deps-buffer")
-    testImplementation project(":embulk-deps-config")
-    testImplementation project(":embulk-deps-guess")
-    testImplementation project(":embulk-deps-timestamp")
+    testImplementation project(":embulk-deps")
 }
 
 task rubyTestVanilla(type: JavaExec, dependsOn: [
         "jar",
         "prepareDependencyJars",
         "installDependencyGems",
-        ":embulk-deps-buffer:prepareDependencyJars",
-        ":embulk-deps-config:prepareDependencyJars",
-        ":embulk-deps-guess:prepareDependencyJars",
-        ":embulk-deps-timestamp:prepareDependencyJars",
+        ":embulk-deps:prepareDependencyJars",
         ]) {
     workingDir = file("${projectDir}");
     classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core

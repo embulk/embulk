@@ -2,7 +2,6 @@ package org.embulk.deps.buffer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.deps.DependencyCategory;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.spi.Buffer;
 
@@ -54,7 +53,7 @@ public abstract class Slice {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.BUFFER);
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
     private static final String CLASS_NAME = "org.embulk.deps.buffer.SliceImpl";
 
     static {

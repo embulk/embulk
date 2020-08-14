@@ -48,10 +48,7 @@ dependencies {
 
     // TODO: Remove this, and load it with the proper DependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.
-    testImplementation project(":embulk-deps-buffer")
-    testImplementation project(":embulk-deps-config")
-    testImplementation project(":embulk-deps-guess")
-    testImplementation project(":embulk-deps-timestamp")
+    testImplementation project(":embulk-deps")
 
     jruby "org.jruby:jruby-complete:" + rootProject.jrubyVersion
     rubyTestRuntime project(":embulk-api")
@@ -62,10 +59,7 @@ task rubyTestVanilla(type: JavaExec, dependsOn: [
         "jar",
         "prepareDependencyJars",
         "installDependencyGems",
-        ":embulk-deps-buffer:prepareDependencyJars",
-        ":embulk-deps-config:prepareDependencyJars",
-        ":embulk-deps-guess:prepareDependencyJars",
-        ":embulk-deps-timestamp:prepareDependencyJars",
+        ":embulk-deps:prepareDependencyJars",
         ]) {
     workingDir = file("${project.projectDir}");
     classpath = configurations.rubyTestRuntime

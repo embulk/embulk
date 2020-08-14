@@ -7,7 +7,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.cli.EmbulkCommandLine;
-import org.embulk.deps.DependencyCategory;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class CliParser {
@@ -108,7 +107,7 @@ public abstract class CliParser {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.of(DependencyCategory.CLI);
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
     private static final String CLASS_NAME = "org.embulk.deps.cli.CliParserImpl";
 
     static {
