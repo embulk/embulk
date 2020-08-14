@@ -28,13 +28,9 @@ import java.util.jar.Manifest;
  * @see <a href="https://www.ibm.com/developerworks/library/j-onejar/">Simplify your application delivery with One-JAR</a>
  */
 final class DependencyClassLoader extends URLClassLoader {
-    DependencyClassLoader(
-            final Collection<Path> jarPaths,
-            final ClassLoader parent,
-            final DependencyCategory category) {
+    DependencyClassLoader(final Collection<Path> jarPaths, final ClassLoader parent) {
         // The delegation parent ClassLoader is processed by the super class URLClassLoader.
         super(toUrls(jarPaths), parent);
-        this.category = category;
         this.accessControlContext = AccessController.getContext();
     }
 
@@ -130,7 +126,7 @@ final class DependencyClassLoader extends URLClassLoader {
         }
 
         // TODO: Consider duplicated resources.
-        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.category);
+        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName);
         if (resource == null) {
             return null;
         }
@@ -160,8 +156,7 @@ final class DependencyClassLoader extends URLClassLoader {
         final Enumeration<URL> resourceUrlsFromSuper = super.findResources(resourceName);
 
         // Even if some resources are found from the delegation parent class loader, it looks into self-contained JAR files.
-        final Collection<Resource> resources =
-                EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, this.category);
+        final Collection<Resource> resources = EmbulkSelfContainedJarFiles.getMultipleResources(resourceName);
 
         final Vector<URL> resourceUrls = new Vector<URL>();
         while (resourceUrlsFromSuper.hasMoreElements()) {
@@ -194,7 +189,7 @@ final class DependencyClassLoader extends URLClassLoader {
         final String resourceName = className.replace('.', '/').concat(".class");
 
         // Class must be singular.
-        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.category);
+        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName);
         if (resource == null) {
             throw new ClassNotFoundException(className);
         }
@@ -299,6 +294,5 @@ final class DependencyClassLoader extends URLClassLoader {
         return jarUrls;
     }
 
-    private final DependencyCategory category;
     private final AccessControlContext accessControlContext;
 }

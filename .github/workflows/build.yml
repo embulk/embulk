@@ -16,9 +16,7 @@ jobs:
         - ":embulk-core:check"
         - ":embulk-standards:check"
         - ":embulk-junit4:check"
-        - ":embulk-deps-buffer:check"
-        - ":embulk-deps-config:check"
-        - ":embulk-deps-guess:check"
+        - ":embulk-deps:check"
     steps:
     - uses: actions/checkout@v1
     - name: Set up JDK 1.8

@@ -3,7 +3,6 @@ package org.embulk.deps;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,55 +26,30 @@ public final class EmbulkSelfContainedJarFiles {
 
     public static final class StaticInitializer {
         private StaticInitializer() {
-            this.jarFileResources = new EnumMap<>(DependencyCategory.class);
-            for (final DependencyCategory category : DependencyCategory.values()) {
-                this.jarFileResources.put(category, new ArrayList<>());
-            }
+            this.jarFileResources = new ArrayList<>();
         }
 
-        public StaticInitializer addJarFileResource(final DependencyCategory category, final String resource) {
-            this.jarFileResources.get(category).add(resource);
+        public StaticInitializer addJarFileResource(final String resource) {
+            this.jarFileResources.add(resource);
             return this;
         }
 
-        public StaticInitializer addJarFileResources(final DependencyCategory category, final Collection<String> resources) {
-            this.jarFileResources.get(category).addAll(resources);
+        public StaticInitializer addJarFileResources(final Collection<String> resources) {
+            this.jarFileResources.addAll(resources);
             return this;
-        }
-
-        @Deprecated
-        public StaticInitializer addMavenJarFileResourceName(final String resourceName) {
-            return this.addJarFileResource(DependencyCategory.MAVEN, resourceName);
-        }
-
-        @Deprecated
-        public StaticInitializer addMavenJarFileResourceNames(final Collection<String> resourceNames) {
-            return this.addJarFileResources(DependencyCategory.MAVEN, resourceNames);
-        }
-
-        @Deprecated
-        public StaticInitializer addCliJarFileResourceName(final String resourceName) {
-            return this.addJarFileResource(DependencyCategory.CLI, resourceName);
-        }
-
-        @Deprecated
-        public StaticInitializer addCliJarFileResourceNames(final Collection<String> resourceNames) {
-            return this.addJarFileResources(DependencyCategory.CLI, resourceNames);
         }
 
         public StaticInitializer addFromManifest(final Manifest manifest) {
             final Attributes attributes = manifest.getMainAttributes();
-            for (final DependencyCategory category : DependencyCategory.values()) {
-                this.addJarFileResources(category, splitAttribute(attributes.getValue(category.getManifestAttributeName())));
-            }
+            this.addJarFileResources(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path")));
             return this;
         }
 
         public void initialize() {
-            initializeAll(jarFileResources);
+            initializeAll(this.jarFileResources);
         }
 
-        private final EnumMap<DependencyCategory, ArrayList<String>> jarFileResources;
+        private final ArrayList<String> jarFileResources;
     }
 
     public static StaticInitializer staticInitializer() {
@@ -87,26 +61,20 @@ public final class EmbulkSelfContainedJarFiles {
      *
      * public to be called from org.embulk.cli. Not for plugins. Not guaranteed.
      */
-    private static void initializeAll(final EnumMap<DependencyCategory, ArrayList<String>> jarFileResources) {
+    private static void initializeAll(final ArrayList<String> jarFileResources) {
         synchronized (JAR_RESOURCE_NAMES) {
             if (JAR_RESOURCE_NAMES.isEmpty()) {
-                for (final DependencyCategory category : DependencyCategory.values()) {
-                    JAR_RESOURCE_NAMES.put(category, jarFileResources.get(category));
-                }
+                JAR_RESOURCE_NAMES.addAll(jarFileResources);
             } else {
-                throw new LinkageError("Doubly-initialized a set of self-contained JAR files.");
+                throw new LinkageError("Double initialization of self-contained JAR files.");
             }
         }
     }
 
-    static Resource getSingleResource(final String targetResourceName, final DependencyCategory category) {
-        if (category == null) {
-            return null;
-        }
-
+    static Resource getSingleResource(final String targetResourceName) {
         String foundJarResourceName = null;
         Resource resourceToReturn = null;
-        for (final String jarResourceName : JAR_RESOURCE_NAMES.get(category)) {
+        for (final String jarResourceName : JAR_RESOURCE_NAMES) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
@@ -120,13 +88,9 @@ public final class EmbulkSelfContainedJarFiles {
         return resourceToReturn;
     }
 
-    static Collection<Resource> getMultipleResources(final String targetResourceName, final DependencyCategory category) {
-        if (category == null) {
-            return null;
-        }
-
+    static Collection<Resource> getMultipleResources(final String targetResourceName) {
         final ArrayList<Resource> resourcesToReturn = new ArrayList<>();
-        for (final String jarResourceName : JAR_RESOURCE_NAMES.get(category)) {
+        for (final String jarResourceName : JAR_RESOURCE_NAMES) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
@@ -141,10 +105,8 @@ public final class EmbulkSelfContainedJarFiles {
 
         static {
             final HashSet<String> allJarResourceNames = new HashSet<>();
-            for (final DependencyCategory category : DependencyCategory.values()) {
-                for (final String jarResourceName : JAR_RESOURCE_NAMES.get(category)) {
-                    allJarResourceNames.add(jarResourceName);
-                }
+            for (final String jarResourceName : JAR_RESOURCE_NAMES) {
+                allJarResourceNames.add(jarResourceName);
             }
 
             final HashMap<String, SelfContainedJarFile> instanceBuilt = new HashMap<>();
@@ -170,5 +132,5 @@ public final class EmbulkSelfContainedJarFiles {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbulkSelfContainedJarFiles.class);
 
-    private static final EnumMap<DependencyCategory, List<String>> JAR_RESOURCE_NAMES = new EnumMap<>(DependencyCategory.class);
+    private static final ArrayList<String> JAR_RESOURCE_NAMES = new ArrayList<>();
 }
