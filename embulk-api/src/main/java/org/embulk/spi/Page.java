@@ -16,6 +16,8 @@
 
 package org.embulk.spi;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.msgpack.value.ImmutableValue;
 
@@ -35,56 +37,113 @@ import org.msgpack.value.ImmutableValue;
  * Page is NOT for inter-process communication. For multi-process execution such as MapReduce
  * Executor, the executor plugin takes responsibility about interoperable serialization.
  */
-public class Page {
-    private final Buffer buffer;
-    private List<String> stringReferences;
-    private List<ImmutableValue> valueReferences;
+public abstract class Page {
+    public abstract Page setStringReferences(List<String> values);
 
-    protected Page(Buffer buffer) {
-        this.buffer = buffer;
+    public abstract Page setValueReferences(List<ImmutableValue> values);
+
+    public abstract List<String> getStringReferences();
+
+    public abstract List<ImmutableValue> getValueReferences();
+
+    public abstract String getStringReference(int index);
+
+    public abstract ImmutableValue getValueReference(int index);
+
+    public abstract void release();
+
+    public abstract Buffer buffer();
+
+    @Deprecated
+    public static Page allocate(final int length) {
+        final Buffer buffer;
+        try {
+            buffer = BufferImplHolder.CONSTRUCTOR.newInstance(new byte[length], 0, length);
+        } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
+            throw new LinkageError("[FATAL] org.embulk.spi.BufferImpl is invalid.", ex);
+        } catch (final InvocationTargetException ex) {
+            throwCheckedForcibly(ex.getTargetException());
+            return null;  // Should never reach.
+        }
+
+        try {
+            return PageImplHolder.CONSTRUCTOR.newInstance(buffer);
+        } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
+            throw new LinkageError("[FATAL] org.embulk.spi.PageImpl is invalid.", ex);
+        } catch (final InvocationTargetException ex) {
+            throwCheckedForcibly(ex.getTargetException());
+            return null;  // Should never reach.
+        }
     }
 
-    public static Page allocate(int length) {
-        return new Page(BufferImpl.allocate(length));
+    @Deprecated
+    public static Page wrap(final Buffer buffer) {
+        try {
+            return PageImplHolder.CONSTRUCTOR.newInstance(buffer);
+        } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
+            throw new LinkageError("[FATAL] org.embulk.spi.PageImpl is invalid.", ex);
+        } catch (final InvocationTargetException ex) {
+            throwCheckedForcibly(ex.getTargetException());
+            return null;  // Should never reach.
+        }
     }
 
-    public static Page wrap(Buffer buffer) {
-        return new Page(buffer);
+    private static class BufferImplHolder {  // Initialization-on-demand holder idiom.
+        private static final Class<Buffer> IMPL_CLASS;
+        private static final Constructor<Buffer> CONSTRUCTOR;
+
+        static {
+            try {
+                IMPL_CLASS = loadBufferImpl();
+            } catch (final ClassNotFoundException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.BufferImpl is not found.", ex);
+            }
+
+            try {
+                CONSTRUCTOR = IMPL_CLASS.getConstructor(byte[].class, int.class, int.class);
+            } catch (final NoSuchMethodException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.BufferImpl does not have an expected constructor.", ex);
+            }
+        }
     }
 
-    public Page setStringReferences(List<String> values) {
-        this.stringReferences = values;
-        return this;
+    private static class PageImplHolder {  // Initialization-on-demand holder idiom.
+        private static final Class<Page> IMPL_CLASS;
+        private static final Constructor<Page> CONSTRUCTOR;
+
+        static {
+            try {
+                IMPL_CLASS = loadPageImpl();
+            } catch (final ClassNotFoundException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.PageImpl is not found.", ex);
+            }
+
+            try {
+                CONSTRUCTOR = IMPL_CLASS.getConstructor(Buffer.class);
+            } catch (final NoSuchMethodException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.PageImpl does not have an expected constructor.", ex);
+            }
+        }
     }
 
-    public Page setValueReferences(List<ImmutableValue> values) {
-        this.valueReferences = values;
-        return this;
+    @SuppressWarnings("unchecked")
+    private static Class<Buffer> loadBufferImpl() throws ClassNotFoundException {
+        return (Class<Buffer>) CLASS_LOADER.loadClass("org.embulk.spi.BufferImpl");
     }
 
-    public List<String> getStringReferences() {
-        // TODO used by mapreduce executor
-        return stringReferences;
+    @SuppressWarnings("unchecked")
+    private static Class<Page> loadPageImpl() throws ClassNotFoundException {
+        return (Class<Page>) CLASS_LOADER.loadClass("org.embulk.spi.PageImpl");
     }
 
-    public List<ImmutableValue> getValueReferences() {
-        // TODO used by mapreduce executor
-        return valueReferences;
+    private static void throwCheckedForcibly(final Throwable ex) {
+        Page.<RuntimeException>throwCheckedForciblyInternal(ex);
     }
 
-    public String getStringReference(int index) {
-        return stringReferences.get(index);
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void throwCheckedForciblyInternal(final Throwable ex) throws E {
+        throw (E) ex;
     }
 
-    public ImmutableValue getValueReference(int index) {
-        return valueReferences.get(index);
-    }
-
-    public void release() {
-        buffer.release();
-    }
-
-    public Buffer buffer() {
-        return buffer;
-    }
+    private static final ClassLoader CLASS_LOADER = Page.class.getClassLoader();
 }

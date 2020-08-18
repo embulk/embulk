@@ -206,7 +206,7 @@ public class PageBuilder implements AutoCloseable {
             buffer.limit(position);
 
             // flush page
-            Page page = Page.wrap(buffer)
+            Page page = PageImpl.wrap(buffer)
                     .setStringReferences(stringReferences)
                     .setValueReferences(valueReferences);
             buffer = null;

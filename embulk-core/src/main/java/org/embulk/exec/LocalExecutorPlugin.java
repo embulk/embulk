@@ -21,6 +21,7 @@ import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.Page;
+import org.embulk.spi.PageImpl;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
@@ -286,7 +287,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
     }
 
     private static class ScatterTransactionalPageOutput implements TransactionalPageOutput {
-        private static final Page DONE_PAGE = Page.allocate(0);
+        private static final Page DONE_PAGE = PageImpl.allocate(0);
 
         private static class OutputWorker implements Callable<Throwable> {
             private final PageOutput output;
