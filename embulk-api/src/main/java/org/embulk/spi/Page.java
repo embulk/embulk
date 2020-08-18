@@ -22,20 +22,23 @@ import java.util.List;
 import org.msgpack.value.ImmutableValue;
 
 /**
- * Page is an in-process (in-JVM) container of data records.
+ * An in-process (in-JVM) container of data records.
  *
- * It serializes records to byte[] (in org.embulk.spi.Buffer) in order to:
- * A) Avoid slowness by handling many Java Objects
- * B) Avoid complexity by type-safe primitive arrays
- * C) Track memory consumption by records
- * D) Use off-heap memory
+ * <p>It serializes records to {@code byte[]} (in {@link org.embulk.spi.Buffer}) for the following purposes.
  *
- * (C) and (D) may not be so meaningful as of v0.7+ (or since earlier) as recent Embulk unlikely
- * allocates so many Pages at the same time. Recent Embulk is streaming-driven instead of
+ * <ul>
+ * <li>A) Avoid slowness by handling many Java Objects
+ * <li>B) Avoid complexity by type-safe primitive arrays
+ * <li>C) Track memory consumption by records
+ * <li>D) Use off-heap memory
+ * </ul>
+ *
+ * <p>(C) and (D) may not be so meaningful as of Embulk v0.7+ (or since earlier) as recent Embulk unlikely
+ * allocates so many {@link Page}s at the same time. Recent Embulk is streaming-driven instead of
  * multithreaded queue-based.
  *
- * Page is NOT for inter-process communication. For multi-process execution such as MapReduce
- * Executor, the executor plugin takes responsibility about interoperable serialization.
+ * <p>{@link Page} is NOT for inter-process communication. For multi-process execution such as the deprecated
+ * MapReduce Executor, the executor plugin takes responsibility about interoperable serialization.
  */
 public abstract class Page {
     public abstract Page setStringReferences(List<String> values);
@@ -54,6 +57,13 @@ public abstract class Page {
 
     public abstract Buffer buffer();
 
+    /**
+     * Creates a new {@link Page} instance.
+     *
+     * @deprecated It is to be removed, implemented only for compatibility. Plugins should no longer call it directly.
+     * @param length  length of the internal {@link Buffer} of the created {@link Page}
+     * @return {@link Page} created
+     */
     @Deprecated
     public static Page allocate(final int length) {
         final Buffer buffer;
@@ -76,6 +86,13 @@ public abstract class Page {
         }
     }
 
+    /**
+     * Creates a new {@link Page} instance wrapping an internal {@link Buffer}.
+     *
+     * @deprecated It is to be removed, implemented only for compatibility. Plugins should no longer call it directly.
+     * @param buffer  the internal {@link Buffer}
+     * @return {@link Page} created
+     */
     @Deprecated
     public static Page wrap(final Buffer buffer) {
         try {
