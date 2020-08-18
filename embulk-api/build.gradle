@@ -10,5 +10,5 @@ configurations {
 }
 
 dependencies {
-    // Its dependencies would be declared with "api", not "implementation".
+    api "org.msgpack:msgpack-core:0.8.11"
 }
