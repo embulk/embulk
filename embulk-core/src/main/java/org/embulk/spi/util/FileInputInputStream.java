@@ -5,6 +5,7 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferImpl;
 import org.embulk.spi.FileInput;
 
+@Deprecated  // Externalized to embulk-util-file
 public class FileInputInputStream extends InputStream {
     private final FileInput in;
     private int pos;

@@ -9,6 +9,7 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileInput;
 
+@Deprecated  // Externalized to embulk-util-file
 public class InputStreamFileInput implements FileInput {
     public static class InputStreamWithHints {
         public InputStreamWithHints(final InputStream inputStream, final String hintOfCurrentInputFileNameForLogging) {

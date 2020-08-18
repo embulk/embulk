@@ -1,5 +1,6 @@
 package org.embulk.spi.util;
 
+@Deprecated  // Externalized to embulk-util-text
 public enum Newline {
     CRLF("\r\n"),
     LF("\n"),

@@ -6,6 +6,7 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.BufferImpl;
 import org.embulk.spi.FileOutput;
 
+@Deprecated  // Externalized to embulk-util-file
 public class FileOutputOutputStream extends OutputStream {
     private final FileOutput out;
     private final BufferAllocator allocator;

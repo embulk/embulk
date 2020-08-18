@@ -4,6 +4,7 @@ import java.io.InputStream;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.TransactionalFileInput;
 
+@Deprecated  // Externalized to embulk-util-file
 public abstract class InputStreamTransactionalFileInput extends InputStreamFileInput implements TransactionalFileInput {
     public InputStreamTransactionalFileInput(BufferAllocator allocator, Provider provider) {
         super(allocator, provider);

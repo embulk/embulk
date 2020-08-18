@@ -16,6 +16,7 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
 import org.embulk.spi.FileInput;
 
+@Deprecated  // Externalized to embulk-util-text
 public class LineDecoder implements AutoCloseable, Iterable<String> {
     // TODO optimize
 
