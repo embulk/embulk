@@ -4,13 +4,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.embulk.EmbulkTestRuntime;
-import org.junit.Rule;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import java.io.IOException;
 import org.junit.Test;
 
 public class TestTypeSerDe {
-    @Rule
-    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
     private static class HasType {
         private Type type;
@@ -29,10 +28,18 @@ public class TestTypeSerDe {
     }
 
     @Test
-    public void testGetType() {
+    public void testGetType() throws IOException {
         HasType type = new HasType(StringType.STRING);
-        String json = runtime.getModelManager().writeObject(type);
-        HasType decoded = runtime.getModelManager().readObject(HasType.class, json);
+        String json = MAPPER.writeValueAsString(type);
+        HasType decoded = MAPPER.readValue(json, HasType.class);
         assertTrue(StringType.STRING == decoded.getType());
+    }
+
+    private static final ObjectMapper MAPPER;
+
+    static {
+        MAPPER = new ObjectMapper();
+        MAPPER.registerModule(new Jdk8Module());
+        MAPPER.registerModule(new TypeJacksonModule());
     }
 }
