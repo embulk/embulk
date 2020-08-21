@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileOutput;
 
+@Deprecated  // Externalized to embulk-util-file
 public class OutputStreamFileOutput implements FileOutput {
     public interface Provider extends Closeable {
         public OutputStream openNext() throws IOException;

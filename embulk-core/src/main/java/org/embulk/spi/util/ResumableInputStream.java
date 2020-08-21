@@ -3,6 +3,7 @@ package org.embulk.spi.util;
 import java.io.IOException;
 import java.io.InputStream;
 
+@Deprecated  // Externalized to embulk-util-file
 public class ResumableInputStream extends InputStream {
     public interface Reopener {
         public InputStream reopen(long offset, Exception closedCause) throws IOException;

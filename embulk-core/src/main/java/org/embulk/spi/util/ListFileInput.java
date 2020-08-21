@@ -4,6 +4,7 @@ import java.util.Iterator;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.FileInput;
 
+@Deprecated  // Externalized to embulk-util-file
 public class ListFileInput implements FileInput {
     private Iterator<? extends Iterable<Buffer>> files;
     private Iterator<Buffer> currentBuffers;

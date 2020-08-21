@@ -14,6 +14,7 @@ import org.embulk.config.Task;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.FileOutput;
 
+@Deprecated  // Externalized to embulk-util-text
 public class LineEncoder implements AutoCloseable {
     // TODO optimize
 

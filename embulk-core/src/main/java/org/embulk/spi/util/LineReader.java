@@ -10,6 +10,7 @@ import java.io.Reader;
  *
  * This class is not thread-safe.
  */
+@Deprecated  // Externalized to embulk-util-text
 class LineReader extends BufferedReader {
     private static final int UNREAD = -1;
     private final LineDelimiter lineDelimiter;
