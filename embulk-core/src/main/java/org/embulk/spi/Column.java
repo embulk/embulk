@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
@@ -16,27 +14,20 @@ public class Column {
     private final String name;
     private final Type type;
 
-    @JsonCreator
-    public Column(
-            @JsonProperty("index") int index,
-            @JsonProperty("name") String name,
-            @JsonProperty("type") Type type) {
+    public Column(final int index, final String name, final Type type) {
         this.index = index;
         this.name = name;
         this.type = type;
     }
 
-    @JsonProperty("index")
     public int getIndex() {
         return index;
     }
 
-    @JsonProperty("name")
     public String getName() {
         return name;
     }
 
-    @JsonProperty("type")
     public Type getType() {
         return type;
     }

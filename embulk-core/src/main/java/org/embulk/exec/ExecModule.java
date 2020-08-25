@@ -17,6 +17,7 @@ import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ModelManager;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ColumnJacksonModule;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.TempFileSpaceAllocator;
@@ -66,6 +67,7 @@ public class ExecModule implements Module {
         mapper.registerModule(new ToStringJacksonModule());
         mapper.registerModule(new ToStringMapJacksonModule());
         mapper.registerModule(new TypeJacksonModule());
+        mapper.registerModule(new ColumnJacksonModule());
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         mapper.registerModule(new JodaModule());  // jackson-datatype-joda
