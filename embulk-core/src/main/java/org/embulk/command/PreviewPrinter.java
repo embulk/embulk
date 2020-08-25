@@ -47,7 +47,7 @@ public abstract class PreviewPrinter implements Closeable {
         this.objectMapper.registerModule(new LocalFileJacksonModule());
         this.objectMapper.registerModule(new ToStringJacksonModule());
         this.objectMapper.registerModule(new ToStringMapJacksonModule());
-        // PreviewPrinter would not need TypeJacksonModule, and ColumnJacksonModule.
+        // PreviewPrinter would not need TypeJacksonModule, ColumnJacksonModule, and SchemaJacksonModule.
         this.objectMapper.registerModule(new GuavaModule());
         this.objectMapper.registerModule(new Jdk8Module());
         this.objectMapper.registerModule(new JodaModule());

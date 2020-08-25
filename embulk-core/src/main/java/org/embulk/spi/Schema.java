@@ -1,15 +1,14 @@
 package org.embulk.spi;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.embulk.spi.type.Type;
 
 public class Schema {
     public static class Builder {
-        private final ImmutableList.Builder<Column> columns = ImmutableList.builder();
+        private final ArrayList<Column> columns = new ArrayList<>();
         private int index = 0;  // next version of Guava will have ImmutableList.Builder.size()
 
         public synchronized Builder add(String name, Type type) {
@@ -18,7 +17,7 @@ public class Schema {
         }
 
         public Schema build() {
-            return new Schema(columns.build());
+            return new Schema(Collections.unmodifiableList(columns));
         }
     }
 
@@ -26,11 +25,10 @@ public class Schema {
         return new Builder();
     }
 
-    private final ImmutableList<Column> columns;
+    private final List<Column> columns;
 
-    @JsonCreator
     public Schema(List<Column> columns) {
-        this.columns = ImmutableList.copyOf(columns);
+        this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
     }
 
     /**
@@ -38,7 +36,6 @@ public class Schema {
      *
      * It always returns an immutable list.
      */
-    @JsonValue
     public List<Column> getColumns() {
         return columns;
     }

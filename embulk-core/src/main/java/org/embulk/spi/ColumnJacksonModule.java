@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -49,36 +50,40 @@ public final class ColumnJacksonModule extends SimpleModule {
                 final JsonNode root,
                 final DeserializationContext context)
                 throws JsonProcessingException {
-            if (root == null || !root.isObject()) {
-                throw JsonMappingException.from(context.getParser(), "Column expects a JSON Object node.");
-            }
-            final ObjectNode object = (ObjectNode) root;
-
-            final JsonNode indexNode = object.get("index");
-            if (indexNode == null) {
-                throw JsonMappingException.from(context.getParser(), "index is null.");
-            }
-            final int index = OBJECT_MAPPER.treeToValue(indexNode, int.class);
-
-            final JsonNode nameNode = object.get("name");
-            if (nameNode == null) {
-                throw JsonMappingException.from(context.getParser(), "name is null.");
-            }
-            final String name = OBJECT_MAPPER.treeToValue(nameNode, String.class);
-
-            final JsonNode typeNode = object.get("type");
-            if (typeNode == null) {
-                throw JsonMappingException.from(context.getParser(), "type is null.");
-            }
-            final String typeString = OBJECT_MAPPER.treeToValue(typeNode, String.class);
-
-            if (!STRING_TO_TYPE.containsKey(typeString)) {
-                throw JsonMappingException.from(context.getParser(), "Unexpected type: " + typeString);
-            }
-            final Type type = STRING_TO_TYPE.get(typeString);
-
-            return new Column(index, name, type);
+            return convertJsonNodeToColumn(root, context.getParser());
         }
+    }
+
+    static final Column convertJsonNodeToColumn(final JsonNode root, final JsonParser jsonParser) throws JsonProcessingException {
+        if (root == null || !root.isObject()) {
+            throw JsonMappingException.from(jsonParser, "Column expects a JSON Object node.");
+        }
+        final ObjectNode object = (ObjectNode) root;
+
+        final JsonNode indexNode = object.get("index");
+        if (indexNode == null) {
+            throw JsonMappingException.from(jsonParser, "index is null.");
+        }
+        final int index = OBJECT_MAPPER.treeToValue(indexNode, int.class);
+
+        final JsonNode nameNode = object.get("name");
+        if (nameNode == null) {
+            throw JsonMappingException.from(jsonParser, "name is null.");
+        }
+        final String name = OBJECT_MAPPER.treeToValue(nameNode, String.class);
+
+        final JsonNode typeNode = object.get("type");
+        if (typeNode == null) {
+            throw JsonMappingException.from(jsonParser, "type is null.");
+        }
+        final String typeString = OBJECT_MAPPER.treeToValue(typeNode, String.class);
+
+        if (!STRING_TO_TYPE.containsKey(typeString)) {
+            throw JsonMappingException.from(jsonParser, "Unexpected type: " + typeString);
+        }
+        final Type type = STRING_TO_TYPE.get(typeString);
+
+        return new Column(index, name, type);
     }
 
     static {
