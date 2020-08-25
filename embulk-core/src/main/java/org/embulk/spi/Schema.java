@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +26,6 @@ public class Schema {
 
     private final ImmutableList<Column> columns;
 
-    @JsonCreator
     public Schema(List<Column> columns) {
         this.columns = ImmutableList.copyOf(columns);
     }
@@ -38,7 +35,6 @@ public class Schema {
      *
      * It always returns an immutable list.
      */
-    @JsonValue
     public List<Column> getColumns() {
         return columns;
     }
