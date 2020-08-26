@@ -40,6 +40,7 @@ public class TimestampFormatterRuby extends TimestampFormatter {
         }
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public String format(final Timestamp value) {
         if (this.zoneId instanceof ZoneOffset) {
             return this.formatter.format(OffsetDateTime.ofInstant(value.getInstant(), this.zoneId));

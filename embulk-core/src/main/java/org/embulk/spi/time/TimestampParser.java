@@ -225,6 +225,7 @@ public class TimestampParser {
         return this.delegate.parseInternal(text);
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public final Timestamp parse(final String text) throws TimestampParseException {
         try {
             return Timestamp.ofInstant(this.parseInternal(text));

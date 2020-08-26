@@ -9,7 +9,6 @@ import org.embulk.config.ModelManager;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.time.Timestamp;
 import org.slf4j.Logger;
 
 public class Exec {
@@ -41,8 +40,9 @@ public class Exec {
     }
 
     @Deprecated
-    public static Timestamp getTransactionTime() {
-        return Timestamp.ofInstant(session().getTransactionTimeInstant());
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public static org.embulk.spi.time.Timestamp getTransactionTime() {
+        return org.embulk.spi.time.Timestamp.ofInstant(session().getTransactionTimeInstant());
     }
 
     public static Instant getTransactionTimeInstant() {

@@ -1,7 +1,6 @@
 package org.embulk.spi.util;
 
 import java.time.Instant;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public interface DynamicColumnSetter {
@@ -16,11 +15,12 @@ public interface DynamicColumnSetter {
     void set(String value);
 
     @Deprecated
-    @SuppressWarnings("deprecation")
-    void set(Timestamp value);
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    void set(org.embulk.spi.time.Timestamp value);
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     default void set(Instant value) {
-        this.set(Timestamp.ofInstant(value));
+        this.set(org.embulk.spi.time.Timestamp.ofInstant(value));
     }
 
     void set(Value value);

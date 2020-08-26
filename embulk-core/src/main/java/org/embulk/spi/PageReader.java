@@ -2,7 +2,6 @@ package org.embulk.spi;
 
 import java.time.Instant;
 import org.embulk.deps.buffer.Slice;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public class PageReader implements AutoCloseable {
@@ -105,9 +104,9 @@ public class PageReader implements AutoCloseable {
      */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
-    public Timestamp getTimestamp(Column column) {
+    public org.embulk.spi.time.Timestamp getTimestamp(Column column) {
         // TODO check type?
-        return Timestamp.ofInstant(this.getTimestampInstant(column.getIndex()));
+        return org.embulk.spi.time.Timestamp.ofInstant(this.getTimestampInstant(column.getIndex()));
     }
 
     /**
@@ -117,8 +116,8 @@ public class PageReader implements AutoCloseable {
      */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
-    public Timestamp getTimestamp(int columnIndex) {
-        return Timestamp.ofInstant(this.getTimestampInstant(columnIndex));
+    public org.embulk.spi.time.Timestamp getTimestamp(int columnIndex) {
+        return org.embulk.spi.time.Timestamp.ofInstant(this.getTimestampInstant(columnIndex));
     }
 
     public Instant getTimestampInstant(final Column column) {

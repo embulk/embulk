@@ -3,7 +3,6 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.msgpack.value.Value;
 
@@ -43,14 +42,15 @@ public class StringColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void set(Timestamp v) {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public void set(final org.embulk.spi.time.Timestamp v) {
         pageBuilder.setString(column, timestampFormatter.format(v));
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void set(Instant v) {
-        pageBuilder.setString(column, timestampFormatter.format(Timestamp.ofInstant(v)));
+        pageBuilder.setString(column, timestampFormatter.format(org.embulk.spi.time.Timestamp.ofInstant(v)));
     }
 
     @Override

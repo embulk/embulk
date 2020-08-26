@@ -3,7 +3,6 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampParseException;
 import org.embulk.spi.time.TimestampParser;
 import org.msgpack.value.Value;
@@ -29,15 +28,17 @@ public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void set(long v) {
-        pageBuilder.setTimestamp(column, Timestamp.ofEpochSecond(v));
+        pageBuilder.setTimestamp(column, org.embulk.spi.time.Timestamp.ofEpochSecond(v));
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void set(double v) {
         long sec = (long) v;
         int nsec = (int) ((v - (double) sec) * 1000000000);
-        pageBuilder.setTimestamp(column, Timestamp.ofEpochSecond(sec, nsec));
+        pageBuilder.setTimestamp(column, org.embulk.spi.time.Timestamp.ofEpochSecond(sec, nsec));
         defaultValue.setTimestamp(pageBuilder, column);
     }
 
@@ -51,8 +52,8 @@ public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void set(Timestamp v) {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public void set(org.embulk.spi.time.Timestamp v) {
         pageBuilder.setTimestamp(column, v);
     }
 
