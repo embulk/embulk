@@ -1,7 +1,27 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.spi.type;
 
-import org.embulk.spi.time.Timestamp;
-
+/**
+ * Type class for Embulk's TIMESTAMP.
+ *
+ * <p>Plugins should not refer this class directly. Recommended to use constants in {@link Types} instead.
+ */
+@SuppressWarnings("deprecation")
 public class TimestampType extends AbstractType {
     static final TimestampType TIMESTAMP = new TimestampType();
 
@@ -13,8 +33,9 @@ public class TimestampType extends AbstractType {
         this(null);
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     private TimestampType(String format) {
-        super("timestamp", Timestamp.class, 12);  // long msec + int nsec
+        super("timestamp", org.embulk.spi.time.Timestamp.class, 12);  // long msec + int nsec
         this.format = format;
     }
 

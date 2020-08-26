@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.spi;
 
 import java.util.ArrayList;
@@ -6,28 +22,34 @@ import java.util.List;
 import java.util.Objects;
 import org.embulk.spi.type.Type;
 
+/**
+ * Represents a schema of Embulk's data record.
+ */
 public class Schema {
     public static class Builder {
-        private final ArrayList<Column> columns = new ArrayList<>();
-        private int index = 0;  // next version of Guava will have ImmutableList.Builder.size()
+        public Builder() {
+            this.index = 0;
+        }
 
-        public synchronized Builder add(String name, Type type) {
-            columns.add(new Column(index++, name, type));
+        public synchronized Builder add(final String name, final Type type) {
+            this.columns.add(new Column(this.index++, name, type));
             return this;
         }
 
         public Schema build() {
-            return new Schema(Collections.unmodifiableList(columns));
+            return new Schema(Collections.unmodifiableList(this.columns));
         }
+
+        private final ArrayList<Column> columns = new ArrayList<>();
+
+        private int index;
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    private final List<Column> columns;
-
-    public Schema(List<Column> columns) {
+    public Schema(final List<Column> columns) {
         this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
     }
 
@@ -37,41 +59,41 @@ public class Schema {
      * It always returns an immutable list.
      */
     public List<Column> getColumns() {
-        return columns;
+        return this.columns;
     }
 
     public int size() {
-        return columns.size();
+        return this.columns.size();
     }
 
     public int getColumnCount() {
-        return columns.size();
+        return this.columns.size();
     }
 
-    public Column getColumn(int index) {
-        return columns.get(index);
+    public Column getColumn(final int index) {
+        return this.columns.get(index);
     }
 
-    public String getColumnName(int index) {
-        return getColumn(index).getName();
+    public String getColumnName(final int index) {
+        return this.getColumn(index).getName();
     }
 
-    public Type getColumnType(int index) {
-        return getColumn(index).getType();
+    public Type getColumnType(final int index) {
+        return this.getColumn(index).getType();
     }
 
-    public void visitColumns(ColumnVisitor visitor) {
-        for (Column column : columns) {
+    public void visitColumns(final ColumnVisitor visitor) {
+        for (final Column column : this.columns) {
             column.visit(visitor);
         }
     }
 
     public boolean isEmpty() {
-        return columns.isEmpty();
+        return this.columns.isEmpty();
     }
 
-    public Column lookupColumn(String name) {
-        for (Column c : columns) {
+    public Column lookupColumn(final String name) {
+        for (final Column c : this.columns) {
             if (c.getName().equals(name)) {
                 return c;
             }
@@ -81,37 +103,39 @@ public class Schema {
 
     public int getFixedStorageSize() {
         int total = 0;
-        for (Column column : columns) {
+        for (final Column column : this.columns) {
             total += column.getType().getFixedStorageSize();
         }
         return total;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(final Object otherObject) {
+        if (this == otherObject) {
             return true;
         }
-        if (!(obj instanceof Schema)) {
+        if (!(otherObject instanceof Schema)) {
             return false;
         }
-        Schema other = (Schema) obj;
-        return Objects.equals(columns, other.columns);
+        final Schema other = (Schema) otherObject;
+        return Objects.equals(this.columns, other.columns);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(columns);
+        return Objects.hashCode(this.columns);
     }
 
     @Override
     public String toString() {
-        StringBuilder sbuf = new StringBuilder();
+        final StringBuilder sbuf = new StringBuilder();
         sbuf.append("Schema{\n");
-        for (Column c : columns) {
+        for (final Column c : this.columns) {
             sbuf.append(String.format(" %4d: %s %s%n", c.getIndex(), c.getName(), c.getType()));
         }
         sbuf.append("}");
         return sbuf.toString();
     }
+
+    private final List<Column> columns;
 }

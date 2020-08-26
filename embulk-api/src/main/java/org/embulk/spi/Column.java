@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.spi;
 
 import java.util.Objects;
@@ -9,11 +25,10 @@ import org.embulk.spi.type.StringType;
 import org.embulk.spi.type.TimestampType;
 import org.embulk.spi.type.Type;
 
+/**
+ * Represents a column metadata of Embulk's data record.
+ */
 public class Column {
-    private final int index;
-    private final String name;
-    private final Type type;
-
     public Column(final int index, final String name, final Type type) {
         this.index = index;
         this.name = name;
@@ -21,57 +36,62 @@ public class Column {
     }
 
     public int getIndex() {
-        return index;
+        return this.index;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public Type getType() {
-        return type;
+        return this.type;
     }
 
-    public void visit(ColumnVisitor visitor) {
-        if (type instanceof BooleanType) {
+    public void visit(final ColumnVisitor visitor) {
+        if (this.type instanceof BooleanType) {
             visitor.booleanColumn(this);
-        } else if (type instanceof LongType) {
+        } else if (this.type instanceof LongType) {
             visitor.longColumn(this);
-        } else if (type instanceof DoubleType) {
+        } else if (this.type instanceof DoubleType) {
             visitor.doubleColumn(this);
-        } else if (type instanceof StringType) {
+        } else if (this.type instanceof StringType) {
             visitor.stringColumn(this);
-        } else if (type instanceof TimestampType) {
+        } else if (this.type instanceof TimestampType) {
             visitor.timestampColumn(this);
-        } else if (type instanceof JsonType) {
+        } else if (this.type instanceof JsonType) {
             visitor.jsonColumn(this);
         } else {
-            assert (false);
+            throw new IllegalArgumentException("Column has an unexpected type: " + this.type);
         }
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(final Object otherObject) {
+        if (this == otherObject) {
             return true;
         }
-        if (!(obj instanceof Column)) {
+        if (!(otherObject instanceof Column)) {
             return false;
         }
-        Column other = (Column) obj;
-        return Objects.equals(index, other.index)
-                && Objects.equals(name, other.name)
-                && Objects.equals(type, other.type);
+
+        final Column other = (Column) otherObject;
+        return Objects.equals(this.index, other.index)
+                && Objects.equals(this.name, other.name)
+                && Objects.equals(this.type, other.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, name, type);
+        return Objects.hash(this.index, this.name, this.type);
     }
 
     @Override
     public String toString() {
         return String.format("Column{index:%d, name:%s, type:%s}",
-                getIndex(), getName(), getType().getName());
+                this.getIndex(), this.getName(), this.getType().getName());
     }
+
+    private final int index;
+    private final String name;
+    private final Type type;
 }
