@@ -1,11 +1,11 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.type.Type;
 
 public class MockParserPlugin implements ParserPlugin {
@@ -46,7 +46,7 @@ public class MockParserPlugin implements ParserPlugin {
                                 pageBuilder.setString(column, "45");
                                 break;
                             case "timestamp":
-                                pageBuilder.setTimestamp(column, Timestamp.ofEpochMilli(678L));
+                                pageBuilder.setTimestamp(column, Instant.ofEpochMilli(678L));
                                 break;
                             case "json":
                                 pageBuilder.setJson(

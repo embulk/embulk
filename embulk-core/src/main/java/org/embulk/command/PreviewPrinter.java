@@ -9,12 +9,13 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.NumberFormat;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import org.embulk.spi.Page;
 import org.embulk.spi.Schema;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
-import org.embulk.spi.time.Timestamp;
+import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileJacksonModule;
 import org.embulk.spi.unit.ToStringJacksonModule;
@@ -54,7 +55,7 @@ public abstract class PreviewPrinter implements Closeable {
     }
 
     public final void printAllPages(List<Page> pages) throws IOException {
-        List<Object[]> records = Pages.toObjects(schema, pages);
+        List<Object[]> records = Pages.toObjects(schema, pages, true);
         for (Object[] record : records) {
             printRecord(record);
         }
@@ -93,8 +94,8 @@ public abstract class PreviewPrinter implements Closeable {
                 return numberFormat.format(((Long) obj).longValue());
             }
             return obj.toString();
-        } else if (obj instanceof Timestamp) {
-            return obj.toString();
+        } else if (obj instanceof Instant) {
+            return Instants.toString((Instant) obj);
         } else if (obj instanceof Value) {
             return obj.toString();
         } else {

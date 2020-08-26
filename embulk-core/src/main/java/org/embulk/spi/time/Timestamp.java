@@ -2,6 +2,16 @@ package org.embulk.spi.time;
 
 import java.time.Instant;
 
+/**
+ * Represents an instance of Embulk's Timestamp type.
+ *
+ * <p>Embulk needed this till v0.8 because v0.8 expected Java 7, which does not have {@link java.time.Instant}.
+ * Embulk v0.9 requires Java 8, and it expects {@link java.time.Instant}. {@link org.embulk.spi.time.Timestamp}
+ * remains here for compatibility.
+ *
+ * @deprecated Use {@link java.time.Instant} instead as much as possible.
+ */
+@Deprecated
 public class Timestamp implements Comparable<Timestamp> {
     private Timestamp(final Instant instant) {
         this.instant = instant;

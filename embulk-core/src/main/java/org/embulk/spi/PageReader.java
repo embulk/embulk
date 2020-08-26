@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import org.embulk.deps.buffer.Slice;
 import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
@@ -97,19 +98,42 @@ public class PageReader implements AutoCloseable {
         return page.getStringReference(index);
     }
 
+    /**
+     * Returns a Timestamp value.
+     *
+     * @deprecated Use {@link #getTimestampInstant(Column)} instead.
+     */
+    @Deprecated
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public Timestamp getTimestamp(Column column) {
         // TODO check type?
-        return getTimestamp(column.getIndex());
+        return Timestamp.ofInstant(this.getTimestampInstant(column.getIndex()));
     }
 
+    /**
+     * Returns a Timestamp value.
+     *
+     * @deprecated Use {@link #getTimestampInstant(int)} instead.
+     */
+    @Deprecated
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public Timestamp getTimestamp(int columnIndex) {
+        return Timestamp.ofInstant(this.getTimestampInstant(columnIndex));
+    }
+
+    public Instant getTimestampInstant(final Column column) {
+        // TODO check type?
+        return this.getTimestampInstant(column.getIndex());
+    }
+
+    public Instant getTimestampInstant(final int columnIndex) {
         if (isNull(columnIndex)) {
             return null;
         }
         int offset = getOffset(columnIndex);
         long sec = pageSlice.getLong(offset);
         int nsec = pageSlice.getInt(offset + 8);
-        return Timestamp.ofEpochSecond(sec, nsec);
+        return Instant.ofEpochSecond(sec, nsec);
     }
 
     public Value getJson(Column column) {

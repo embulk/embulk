@@ -2,6 +2,7 @@ package org.embulk.spi.util.dynamic;
 
 import com.google.common.math.DoubleMath;
 import java.math.RoundingMode;
+import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -55,7 +56,13 @@ public class LongColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void set(Timestamp v) {
+        pageBuilder.setLong(column, v.getEpochSecond());
+    }
+
+    @Override
+    public void set(Instant v) {
         pageBuilder.setLong(column, v.getEpochSecond());
     }
 
