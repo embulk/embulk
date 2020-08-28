@@ -72,15 +72,7 @@ task rubyTestVanilla(type: JavaExec, dependsOn: [
     environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
 }
 
-task rubyTestMonkeyStrptime(type: JavaExec, dependsOn: ["jar"]) {
-    workingDir = file("${project.projectDir}");
-    classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core
-    main = "org.jruby.Main"
-    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/monkey_strptime/run-test.rb"]
-    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
-}
-
-test.dependsOn(['rubyTestVanilla', 'rubyTestMonkeyStrptime', ":test-helpers:deploy"])
+test.dependsOn(['rubyTestVanilla', ":test-helpers:deploy"])
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains('-')) {

@@ -3,161 +3,67 @@ package org.embulk.spi.time;
 import com.google.common.base.Optional;
 import java.time.DateTimeException;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.deps.timestamp.DepsTimestampFormatter;
 
-@Deprecated  // Externalized to embulk-util-timestamp
+@Deprecated  // Externalized to embulk-util-timestamp: https://github.com/embulk/embulk/issues/1298
 public class TimestampParser {
-    private TimestampParser(final TimestampParserLegacy delegate) {
-        this.delegate = delegate;
+    private TimestampParser(final String formatString, final String defaultZoneIdString, final String defaultDateString) {
+        this.delegate = DepsTimestampFormatter.of(formatString, utcToNull(formatString, defaultZoneIdString), defaultDateString);
+        this.defaultZoneIdString = defaultZoneIdString;
     }
 
-    TimestampParser() {
-        this(null);
+    private TimestampParser(final String formatString, final String defaultZoneIdString) {
+        this(formatString, defaultZoneIdString, null);
     }
 
-    // Calling the constructor directly is deprecated, but the constructor is kept for plugin compatibility.
-    // Use TimestampParser.of(Task, TimestampColumnOption) instead.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public TimestampParser(final Task task,
                            final TimestampColumnOption columnOption) {
-        this(TimestampParserLegacy.of(
-                     columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-                     TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                     TimeZoneIds.parseJodaDateTimeZone(
-                             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                     columnOption.getDate().or(task.getDefaultDate())));
+        this(columnOption.getFormat().or(task.getDefaultTimestampFormat()),
+             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId()),
+             columnOption.getDate().or(task.getDefaultDate()));
     }
 
-    // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public TimestampParser(final String formatString,
                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone) {
-        this(TimestampParserLegacy.of(
-                     formatString,
-                     TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
-                     defaultJodaDateTimeZone,
-                     1970,
-                     1,
-                     1));
+        // embulk-util-timestamp's default date is 1970-01-01.
+        this(formatString, defaultJodaDateTimeZone.getID());
     }
 
-    // Using Joda-Time is deprecated, but the constructor receives org.joda.time.DateTimeZone for plugin compatibility.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public TimestampParser(final String formatString,
                            final org.joda.time.DateTimeZone defaultJodaDateTimeZone,
                            final String defaultDate) {
-        this(TimestampParserLegacy.of(
-                 formatString,
-                 TimeZoneIds.convertJodaDateTimeZoneToZoneId(defaultJodaDateTimeZone),
-                 defaultJodaDateTimeZone,
-                 defaultDate));
+        this(formatString, defaultJodaDateTimeZone.getID(), defaultDate);
     }
 
-    // "default_date" is deprecated, but the creator method is kept for plugin compatibility.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @Deprecated  // "default_date" is deprecated, but the creator method is kept for plugin compatibility.
     public static TimestampParser of(final String pattern,
                                      final String defaultZoneIdString,
                                      final String defaultDateString) {
-        if (pattern.startsWith("java:")) {
-            // TODO: Warn if "default_date" is set, which is unavailable for "java:".
-            final ZoneOffset zoneOffset;
-            if (defaultZoneIdString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(defaultZoneIdString);
-            }
-            return TimestampParserJava.of(pattern.substring(5),
-                                          zoneOffset);
-        } else if (pattern.startsWith("ruby:")) {
-            // TODO: Warn if "default_date" is set, which is unavailable for "ruby:".
-            final ZoneOffset zoneOffset;
-            if (defaultZoneIdString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(defaultZoneIdString);
-            }
-            return TimestampParserRuby.of(pattern.substring(5),
-                                          zoneOffset);
-        } else {
-            return TimestampParserLegacy.of(pattern,
-                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
-                                            TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
-                                            defaultDateString);
-        }
+        return new TimestampParser(pattern, defaultZoneIdString, defaultDateString);
     }
 
     public static TimestampParser of(final String pattern,
                                      final String defaultZoneIdString) {
-        if (pattern.startsWith("java:")) {
-            final ZoneOffset zoneOffset;
-            if (defaultZoneIdString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(defaultZoneIdString);
-            }
-            return TimestampParserJava.of(pattern.substring(5),
-                                          zoneOffset);
-        } else if (pattern.startsWith("ruby:")) {
-            final ZoneOffset zoneOffset;
-            if (defaultZoneIdString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(defaultZoneIdString);
-            }
-            return TimestampParserRuby.of(pattern.substring(5),
-                                          zoneOffset);
-        } else {
-            return TimestampParserLegacy.of(pattern,
-                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(defaultZoneIdString),
-                                            TimeZoneIds.parseJodaDateTimeZone(defaultZoneIdString),
-                                            1970,
-                                            1,
-                                            1);
-        }
+        // embulk-util-timestamp's default date is 1970-01-01.
+        return new TimestampParser(pattern, defaultZoneIdString);
     }
 
+    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public static TimestampParser of(final Task task,
                                      final TimestampColumnOption columnOption) {
         final String pattern = columnOption.getFormat().or(task.getDefaultTimestampFormat());
-        if (pattern.startsWith("java:")) {
-            // TODO: Warn if "default_date" is set, which is unavailable for "java:".
-            final String zoneOffsetString = columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId());
-            final ZoneOffset zoneOffset;
-            if (zoneOffsetString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(zoneOffsetString);
-            }
-            return TimestampParserJava.of(pattern.substring(5),
-                                          zoneOffset);
-        } else if (pattern.startsWith("ruby:")) {
-            // TODO: Warn if "default_date" is set, which is unavailable for "ruby:".
-            final String zoneOffsetString = columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId());
-            final ZoneOffset zoneOffset;
-            if (zoneOffsetString.equals("UTC")) {
-                zoneOffset = ZoneOffset.UTC;
-            } else {
-                zoneOffset = ZoneOffset.of(zoneOffsetString);
-            }
-            return TimestampParserRuby.of(pattern.substring(5),
-                                          zoneOffset);
-        } else {
-            return TimestampParserLegacy.of(pattern,
-                                            TimeZoneIds.parseZoneIdWithJodaAndRubyZoneTab(
-                                                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                                            TimeZoneIds.parseJodaDateTimeZone(
-                                                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId())),
-                                            columnOption.getDate().or(task.getDefaultDate()));
-        }
+        return new TimestampParser(
+                    pattern,
+                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId()),
+                    columnOption.getDate().or(task.getDefaultDate()));
     }
 
+    @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public interface Task {
         @Config("default_timezone")
         @ConfigDefault("\"UTC\"")
@@ -183,6 +89,7 @@ public class TimestampParser {
         public String getDefaultDate();
     }
 
+    @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public interface TimestampColumnOption {
         @Config("timezone")
         @ConfigDefault("null")
@@ -208,31 +115,32 @@ public class TimestampParser {
         public Optional<String> getDate();
     }
 
-    // Using Joda-Time is deprecated, but the method return org.joda.time.DateTimeZone for plugin compatibility.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
+    @Deprecated  // This method will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public org.joda.time.DateTimeZone getDefaultTimeZone() {
-        if (this.delegate == null) {
-            throw new RuntimeException("FATAL: Unexpected execution path of TimestampParser without delegate.");
-        }
-        return this.delegate.getDefaultTimeZone();
-    }
-
-    Instant parseInternal(final String text) throws TimestampParseException {
-        if (this.delegate == null) {
-            throw new TimestampParseException("FATAL: Unexpected execution path of TimestampParser without delegate.");
-        }
-        return this.delegate.parseInternal(text);
+        return TimeZoneIds.parseJodaDateTimeZone(this.defaultZoneIdString);
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public final Timestamp parse(final String text) throws TimestampParseException {
+        final Instant instant;
         try {
-            return Timestamp.ofInstant(this.parseInternal(text));
+            instant = this.delegate.parse(text);
         } catch (final DateTimeException ex) {
             throw new TimestampParseException(ex);
         }
+        return Timestamp.ofInstant(instant);
     }
 
-    private final TimestampParserLegacy delegate;
+    private static String utcToNull(final String formatString, final String defaultZoneIdString) {
+        if (formatString.startsWith("java:") || formatString.startsWith("ruby:")) {
+            if (defaultZoneIdString == null || defaultZoneIdString.equals("UTC")) {
+                return null;
+            }
+        }
+        return defaultZoneIdString;
+    }
+
+    private final DepsTimestampFormatter delegate;
+
+    private final String defaultZoneIdString;  // Saved only for deprecated #getTimeZone().
 }

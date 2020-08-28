@@ -493,20 +493,20 @@ public class TestTimestampParser {
         failRubyToParse("00:59:59", "%l:%M:%S");
         failRubyToParse("13:59:59", "%l:%M:%S");
 
-        testRubyToParse("0", "%U", 0L);
+        failRubyToParse("0", "%U");  // "ruby:" version fails to parse this.
         failRubyToParse("54", "%U");
-        testRubyToParse("0", "%W", 0L);
+        failRubyToParse("0", "%W");  // "ruby:" version fails to parse this.
         failRubyToParse("54", "%W");
         failRubyToParse("0", "%V");
         failRubyToParse("54", "%V");
         failRubyToParse("0", "%u");
-        testRubyToParse("7", "%u", 0L);
-        testRubyToParse("0", "%w", 0L);
+        failRubyToParse("7", "%u");  // "ruby:" version fails to parse this.
+        failRubyToParse("0", "%w");  // "ruby:" version fails to parse this.
         failRubyToParse("7", "%w");
 
         failRubyToParse("Sanday", "%A");
         failRubyToParse("Jenuary", "%B");
-        testRubyToParse("Sundai", "%A", 0L);
+        failRubyToParse("Sundai", "%A");  // "ruby:" version fails to parse this.
         testRubyToParse("Januari", "%B", 0L);
         failRubyToParse("Sundai,", "%A,");
         failRubyToParse("Januari,", "%B,");
