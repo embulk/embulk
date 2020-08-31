@@ -3,16 +3,16 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.TimestampParseException;
-import org.embulk.spi.time.TimestampParser;
 import org.msgpack.value.Value;
 
 public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
-    private final TimestampParser timestampParser;
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
+    private final org.embulk.spi.time.TimestampParser timestampParser;
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public TimestampColumnSetter(PageBuilder pageBuilder, Column column,
             DefaultValueSetter defaultValue,
-            TimestampParser timestampParser) {
+            org.embulk.spi.time.TimestampParser timestampParser) {
         super(pageBuilder, column, defaultValue);
         this.timestampParser = timestampParser;
     }
@@ -43,10 +43,11 @@ public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public void set(String v) {
         try {
             pageBuilder.setTimestamp(column, timestampParser.parse(v));
-        } catch (TimestampParseException e) {
+        } catch (org.embulk.spi.time.TimestampParseException e) {
             defaultValue.setTimestamp(pageBuilder, column);
         }
     }

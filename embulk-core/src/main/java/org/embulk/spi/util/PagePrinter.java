@@ -6,25 +6,27 @@ import org.embulk.spi.Column;
 import org.embulk.spi.ColumnVisitor;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
-import org.embulk.spi.time.TimestampFormatter;
 import org.embulk.spi.type.TimestampType;
 
 public class PagePrinter {
     private final Schema schema;
-    private final TimestampFormatter[] timestampFormatters;
+
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
+    private final org.embulk.spi.time.TimestampFormatter[] timestampFormatters;
+
     private final ArrayList<String> record;
 
     // To be removed by v0.10 or earlier.
     @Deprecated  // https://github.com/embulk/embulk/issues/937
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292, https://github.com/embulk/embulk/issues/1298
     public PagePrinter(final Schema schema, final org.joda.time.DateTimeZone timezone) {
         this.schema = schema;
-        this.timestampFormatters = new TimestampFormatter[schema.getColumnCount()];
+        this.timestampFormatters = new org.embulk.spi.time.TimestampFormatter[schema.getColumnCount()];
         for (int i = 0; i < timestampFormatters.length; i++) {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
                 // Constructor of TimestampFormatter is deprecated.
-                timestampFormatters[i] = new TimestampFormatter(
+                timestampFormatters[i] = new org.embulk.spi.time.TimestampFormatter(
                         getFormatFromTimestampTypeWithDeprecationSuppressed(type), timezone);
             }
         }
@@ -35,13 +37,14 @@ public class PagePrinter {
         }
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public PagePrinter(final Schema schema, final String timeZoneId) {
         this.schema = schema;
-        this.timestampFormatters = new TimestampFormatter[schema.getColumnCount()];
+        this.timestampFormatters = new org.embulk.spi.time.TimestampFormatter[schema.getColumnCount()];
         for (int i = 0; i < timestampFormatters.length; i++) {
             if (schema.getColumnType(i) instanceof TimestampType) {
                 TimestampType type = (TimestampType) schema.getColumnType(i);
-                timestampFormatters[i] = TimestampFormatter.of(
+                timestampFormatters[i] = org.embulk.spi.time.TimestampFormatter.of(
                         getFormatFromTimestampTypeWithDeprecationSuppressed(type), timeZoneId);
             }
         }
@@ -103,6 +106,7 @@ public class PagePrinter {
             string = reader.getString(column);
         }
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
         public void timestampColumn(Column column) {
             string = timestampFormatters[column.getIndex()].format(reader.getTimestamp(column));
         }

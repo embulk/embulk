@@ -4,8 +4,6 @@ import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.TimestampFormatter;
-import org.embulk.spi.time.TimestampParser;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
 import org.embulk.spi.type.JsonType;
@@ -52,6 +50,7 @@ class DynamicColumnSetterFactory {
         return new NullDefaultValueSetter();
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public DynamicColumnSetter newColumnSetter(PageBuilder pageBuilder, Column column) {
         Type type = column.getType();
         if (type instanceof BooleanType) {
@@ -61,23 +60,23 @@ class DynamicColumnSetterFactory {
         } else if (type instanceof DoubleType) {
             return new DoubleColumnSetter(pageBuilder, column, defaultValue);
         } else if (type instanceof StringType) {
-            TimestampFormatter formatter = TimestampFormatter.of(
+            final org.embulk.spi.time.TimestampFormatter formatter = org.embulk.spi.time.TimestampFormatter.of(
                     getTimestampFormatForFormatter(column), getTimeZoneId(column));
             return new StringColumnSetter(pageBuilder, column, defaultValue, formatter);
         } else if (type instanceof TimestampType) {
             // TODO use flexible time format like Ruby's Time.parse
-            final TimestampParser parser;
+            final org.embulk.spi.time.TimestampParser parser;
             if (this.useColumnForTimestampMetadata) {
                 final TimestampType timestampType = (TimestampType) type;
                 // https://github.com/embulk/embulk/issues/935
-                parser = TimestampParser.of(getFormatFromTimestampTypeWithDepracationSuppressed(timestampType),
-                                            getTimeZoneId(column));
+                parser = org.embulk.spi.time.TimestampParser.of(
+                        getFormatFromTimestampTypeWithDepracationSuppressed(timestampType), getTimeZoneId(column));
             } else {
-                parser = TimestampParser.of(getTimestampFormatForParser(column), getTimeZoneId(column));
+                parser = org.embulk.spi.time.TimestampParser.of(getTimestampFormatForParser(column), getTimeZoneId(column));
             }
             return new TimestampColumnSetter(pageBuilder, column, defaultValue, parser);
         } else if (type instanceof JsonType) {
-            TimestampFormatter formatter = TimestampFormatter.of(
+            final org.embulk.spi.time.TimestampFormatter formatter = org.embulk.spi.time.TimestampFormatter.of(
                     getTimestampFormatForFormatter(column), getTimeZoneId(column));
             return new JsonColumnSetter(pageBuilder, column, defaultValue, formatter);
         }
