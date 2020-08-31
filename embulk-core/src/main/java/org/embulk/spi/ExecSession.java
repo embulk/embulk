@@ -15,7 +15,6 @@ import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSourceImpl;
-import org.embulk.config.ModelManager;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
@@ -41,7 +40,9 @@ public class ExecSession {
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
 
-    private final ModelManager modelManager;
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
+    private final org.embulk.config.ModelManager modelManager;
+
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
     private final PluginManager pluginManager;
     private final BufferAllocator bufferAllocator;
@@ -156,7 +157,7 @@ public class ExecSession {
 
         this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
-        this.modelManager = injector.getInstance(ModelManager.class);
+        this.modelManager = getModelManagerFromInjector(injector);
 
         this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
@@ -232,7 +233,9 @@ public class ExecSession {
         return bufferAllocator;
     }
 
-    public ModelManager getModelManager() {
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    public org.embulk.config.ModelManager getModelManager() {
         return modelManager;
     }
 
@@ -274,6 +277,11 @@ public class ExecSession {
     public void cleanup() {
         this.pluginClassLoaderFactory.clear();
         tempFileSpace.cleanup();
+    }
+
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    private static org.embulk.config.ModelManager getModelManagerFromInjector(final Injector injector) {
+        return injector.getInstance(org.embulk.config.ModelManager.class);
     }
 
     private static Optional<Instant> toInstantFromString(final String string) {

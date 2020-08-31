@@ -12,18 +12,23 @@ import java.util.Map;
 
 public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, ConfigDiff {
     protected final ObjectNode data;
+
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
     protected final ModelManager model;
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public DataSourceImpl(ModelManager model) {
         this(model, new ObjectNode(JsonNodeFactory.instance));
     }
 
     // visible for DataSourceSerDe, ConfigSourceLoader and TaskInvocationHandler.dump
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public DataSourceImpl(ModelManager model, ObjectNode data) {
         this.data = data;
         this.model = model;
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     protected DataSourceImpl newInstance(ModelManager model, ObjectNode data) {
         return new DataSourceImpl(model, (ObjectNode) data);
     }

@@ -14,7 +14,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.config.ModelManager;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ColumnJacksonModule;
@@ -36,7 +35,8 @@ public class ExecModule implements Module {
         this.embulkSystemProperties = embulkSystemProperties;
     }
 
-    @SuppressWarnings("deprecation")
+    // DateTimeZoneJacksonModule, TimestampJacksonModule, ToStringJacksonModule, ToStringMapJacksonModule
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304 and Jackson Modules
     @Override
     public void configure(final Binder binder) {
         if (binder == null) {
@@ -48,7 +48,7 @@ public class ExecModule implements Module {
         // TODO: Remove this ILoggerFactory binding.
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
 
-        binder.bind(ModelManager.class).in(Scopes.SINGLETON);
+        binder.bind(org.embulk.config.ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
         binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
 

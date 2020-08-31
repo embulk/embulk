@@ -17,7 +17,6 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
-import org.embulk.config.ModelManager;
 import org.embulk.deps.config.YamlProcessor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
@@ -433,15 +432,17 @@ public class EmbulkRunner {
         return yamlString;
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private String dumpDataSourceInYaml(final DataSource modelObject) {
-        final ModelManager modelManager = this.embed.getModelManager();
+        final org.embulk.config.ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
         final YamlProcessor yamlProc = YamlProcessor.create(false);
         return yamlProc.dump(object);
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private String dumpResumeStateInYaml(final ResumeState modelObject) {
-        final ModelManager modelManager = this.embed.getModelManager();
+        final org.embulk.config.ModelManager modelManager = this.embed.getModelManager();
         final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
         final YamlProcessor yamlProc = YamlProcessor.create(false);
         return yamlProc.dump(object);
