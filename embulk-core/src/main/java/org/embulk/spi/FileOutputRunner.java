@@ -55,14 +55,14 @@ public class FileOutputRunner implements OutputPlugin {
     public ConfigDiff transaction(ConfigSource config,
             final Schema schema, final int taskCount,
             final OutputPlugin.Control control) {
-        final RunnerTask task = config.loadConfig(RunnerTask.class);
+        final RunnerTask task = loadRunnerTask(config);
         return fileOutputPlugin.transaction(config, taskCount, new RunnerControl(schema, task, control));
     }
 
     public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int taskCount,
             final OutputPlugin.Control control) {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = loadRunnerTaskFromTaskSource(taskSource);
         return fileOutputPlugin.resume(task.getFileOutputTaskSource(), taskCount, new RunnerControl(schema, task, control));
     }
 
@@ -109,7 +109,7 @@ public class FileOutputRunner implements OutputPlugin {
 
     @Override
     public TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex) {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = loadRunnerTaskFromTaskSource(taskSource);
         List<EncoderPlugin> encoderPlugins = newEncoderPlugins(task);
         FormatterPlugin formatterPlugin = newFormatterPlugin(task);
 
@@ -169,7 +169,18 @@ public class FileOutputRunner implements OutputPlugin {
         }
     }
 
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
     public static TaskSource getFileOutputTaskSource(TaskSource runnerTaskSource) {
         return runnerTaskSource.loadTask(RunnerTask.class).getFileOutputTaskSource();
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static RunnerTask loadRunnerTask(final ConfigSource config) {
+        return config.loadConfig(RunnerTask.class);
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static RunnerTask loadRunnerTaskFromTaskSource(final TaskSource taskSource) {
+        return taskSource.loadTask(RunnerTask.class);
     }
 }

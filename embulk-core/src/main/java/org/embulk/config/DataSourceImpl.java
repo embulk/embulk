@@ -230,11 +230,13 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
     }
 
     @Override
+    @Deprecated
     public <T> T loadTask(Class<T> taskType) {
         return model.readObject(taskType, data.traverse());
     }
 
     @Override
+    @Deprecated
     public <T> T loadConfig(Class<T> taskType) {
         return model.readObjectWithConfigSerDe(taskType, data.traverse());
     }

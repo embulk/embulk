@@ -57,7 +57,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
 
     @Override
     public ConfigDiff transaction(ConfigSource config, final InputPlugin.Control control) {
-        final RunnerTask task = config.loadConfig(RunnerTask.class);
+        final RunnerTask task = loadRunnerTask(config);
         return fileInputPlugin.transaction(config, new RunnerControl(task, control));
     }
 
@@ -65,7 +65,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
     public ConfigDiff resume(TaskSource taskSource,
             Schema schema, int taskCount,
             InputPlugin.Control control) {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = loadRunnerTaskFromTaskSource(taskSource);
         return fileInputPlugin.resume(task.getFileInputTaskSource(), taskCount, new RunnerControl(task, control));
     }
 
@@ -126,7 +126,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
     @Override
     public TaskReport run(TaskSource taskSource, Schema schema, int taskIndex,
             PageOutput output) {
-        final RunnerTask task = taskSource.loadTask(RunnerTask.class);
+        final RunnerTask task = loadRunnerTaskFromTaskSource(taskSource);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
 
@@ -144,7 +144,18 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         }
     }
 
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
     public static TaskSource getFileInputTaskSource(TaskSource runnerTaskSource) {
         return runnerTaskSource.loadTask(RunnerTask.class).getFileInputTaskSource();
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static RunnerTask loadRunnerTask(final ConfigSource config) {
+        return config.loadConfig(RunnerTask.class);
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static RunnerTask loadRunnerTaskFromTaskSource(final TaskSource taskSource) {
+        return taskSource.loadTask(RunnerTask.class);
     }
 }

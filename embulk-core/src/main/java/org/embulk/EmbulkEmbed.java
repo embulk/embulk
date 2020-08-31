@@ -244,6 +244,7 @@ public class EmbulkEmbed {
                 .build();
     }
 
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
     public ResumeStateAction resumeState(final ConfigSource config, final ConfigSource resumeStateConfig) {
         logger.info("Started Embulk v" + EmbulkVersion.VERSION);
 

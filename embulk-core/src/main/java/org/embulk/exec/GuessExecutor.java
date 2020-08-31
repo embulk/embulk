@@ -61,7 +61,7 @@ public class GuessExecutor {
 
     // Used by FileInputRunner#guess(..)
     public static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig) {
-        final GuessExecutorTask execTask = execConfig.loadConfig(GuessExecutorTask.class);
+        final GuessExecutorTask execTask = loadGuessExecutorTask(execConfig);
         return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
     }
 
@@ -142,7 +142,7 @@ public class GuessExecutor {
     public ConfigDiff guessParserConfig(Buffer sample, ConfigSource inputConfig, ConfigSource execConfig) {
         List<PluginType> guessPlugins = new ArrayList<PluginType>(defaultGuessPlugins);
 
-        GuessExecutorTask task = execConfig.loadConfig(GuessExecutorTask.class);
+        final GuessExecutorTask task = loadGuessExecutorTask(execConfig);
         guessPlugins.addAll(task.getGuessPlugins());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
         final int guessParserSampleBufferBytes = task.getSampleBufferBytes();
@@ -219,13 +219,13 @@ public class GuessExecutor {
 
         @Override
         public void transaction(ConfigSource config, ParserPlugin.Control control) {
-            PluginTask task = config.loadConfig(PluginTask.class);
+            final PluginTask task = loadPluginTask(config);
             control.run(task.dump(), null);
         }
 
         @Override
         public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput pageOutput) {
-            PluginTask task = taskSource.loadTask(PluginTask.class);
+            final PluginTask task = loadPluginTaskFromTaskSource(taskSource);
             final ConfigSource originalConfig = task.getOriginalConfig();
             final int guessParserSampleBufferBytes = task.getGuessParserSampleBufferBytes();
 
@@ -287,6 +287,16 @@ public class GuessExecutor {
                 return guessed.set("decoders", added.build());
             }
         }
+
+        @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+        private static PluginTask loadPluginTask(final ConfigSource config) {
+            return config.loadConfig(PluginTask.class);
+        }
+
+        @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+        private static PluginTask loadPluginTaskFromTaskSource(final TaskSource taskSource) {
+            return taskSource.loadTask(PluginTask.class);
+        }
     }
 
     public static class GuessedNoticeError extends Error {
@@ -299,5 +309,10 @@ public class GuessExecutor {
         public ConfigDiff getGuessedConfig() {
             return guessedConfig;
         }
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static GuessExecutorTask loadGuessExecutorTask(final ConfigSource config) {
+        return config.loadConfig(GuessExecutorTask.class);
     }
 }
