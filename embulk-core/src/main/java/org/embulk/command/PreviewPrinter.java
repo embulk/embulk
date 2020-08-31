@@ -21,7 +21,6 @@ import org.embulk.spi.unit.LocalFileJacksonModule;
 import org.embulk.spi.unit.ToStringJacksonModule;
 import org.embulk.spi.unit.ToStringMapJacksonModule;
 import org.embulk.spi.util.CharsetJacksonModule;
-import org.embulk.spi.util.Pages;
 import org.msgpack.value.Value;
 
 public abstract class PreviewPrinter implements Closeable {
@@ -54,8 +53,9 @@ public abstract class PreviewPrinter implements Closeable {
         this.objectMapper.registerModule(new JodaModule());
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1306
     public final void printAllPages(List<Page> pages) throws IOException {
-        List<Object[]> records = Pages.toObjects(schema, pages, true);
+        List<Object[]> records = org.embulk.spi.util.Pages.toObjects(schema, pages, true);
         for (Object[] record : records) {
             printRecord(record);
         }
