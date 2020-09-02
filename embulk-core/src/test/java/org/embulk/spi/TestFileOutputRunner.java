@@ -8,6 +8,7 @@ import static org.msgpack.value.ValueFactory.newString;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.EmbulkTestRuntime;
@@ -16,7 +17,6 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.time.Timestamp;
 import org.junit.Rule;
 import org.junit.Test;
 import org.msgpack.value.ImmutableMapValue;
@@ -116,8 +116,8 @@ public class TestFileOutputRunner {
                     );
                     for (Page page : PageTestUtils.buildPage(
                             runtime.getBufferAllocator(), schema, true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue, true, 2L,
-                            3.0D, "45", Timestamp.ofEpochMilli(678L), jsonValue)) {
+                            3.0D, "45", Instant.ofEpochMilli(678L), jsonValue, true, 2L,
+                            3.0D, "45", Instant.ofEpochMilli(678L), jsonValue)) {
                         tran.add(page);
                     }
                     tran.commit();
@@ -139,7 +139,7 @@ public class TestFileOutputRunner {
             assertEquals(2L, record.get(1));
             assertEquals(3.0D, (Double) record.get(2), 0.1D);
             assertEquals("45", record.get(3));
-            assertEquals(678L, ((Timestamp) record.get(4)).toEpochMilli());
+            assertEquals(678L, ((Instant) record.get(4)).toEpochMilli());
             assertEquals("{\"_c1\":true,\"_c2\":10,\"_c3\":\"embulk\",\"_c4\":{\"k\":\"v\"}}", record.get(5).toString());
         }
     }

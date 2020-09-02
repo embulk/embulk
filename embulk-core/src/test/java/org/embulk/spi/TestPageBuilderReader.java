@@ -14,10 +14,10 @@ import static org.msgpack.value.ValueFactory.newInteger;
 import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.EmbulkTestRuntime;
-import org.embulk.spi.time.Timestamp;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -111,7 +111,7 @@ public class TestPageBuilderReader {
     @Test
     public void testTimestamp() {
         check(Schema.builder().add("col1", TIMESTAMP).build(),
-                Timestamp.ofEpochMilli(0), Timestamp.ofEpochMilli(10));
+                Instant.ofEpochMilli(0), Instant.ofEpochMilli(10));
     }
 
     @Test
@@ -143,8 +143,8 @@ public class TestPageBuilderReader {
                     .add("col2", TIMESTAMP)
                     .add("col4", JSON)
                     .build(),
-                8122.0, "val1", 3L, false, Timestamp.ofEpochMilli(0), getJsonSampleData(),
-                140.15, "val2", Long.MAX_VALUE, true, Timestamp.ofEpochMilli(10), getJsonSampleData());
+                8122.0, "val1", 3L, false, Instant.ofEpochMilli(0), getJsonSampleData(),
+                140.15, "val2", Long.MAX_VALUE, true, Instant.ofEpochMilli(10), getJsonSampleData());
     }
 
     private void check(Schema schema, Object... objects) {
@@ -175,8 +175,8 @@ public class TestPageBuilderReader {
                     builder.setLong(column, (Long) value);
                 } else if (value instanceof String) {
                     builder.setString(column, (String) value);
-                } else if (value instanceof Timestamp) {
-                    builder.setTimestamp(column, (Timestamp) value);
+                } else if (value instanceof Instant) {
+                    builder.setTimestamp(column, (Instant) value);
                 } else if (value instanceof Value) {
                     builder.setJson(column, (Value) value);
                 } else {
@@ -209,8 +209,8 @@ public class TestPageBuilderReader {
                     assertEquals(value, reader.getLong(column));
                 } else if (value instanceof String) {
                     assertEquals(value, reader.getString(column));
-                } else if (value instanceof Timestamp) {
-                    assertEquals(value, reader.getTimestamp(column));
+                } else if (value instanceof Instant) {
+                    assertEquals(value, reader.getTimestampInstant(column));
                 } else if (value instanceof Value) {
                     assertEquals(value, reader.getJson(column));
                 } else {

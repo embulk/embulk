@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import java.util.List;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.spi.time.Timestamp;
@@ -30,6 +31,8 @@ public class PageTestUtils {
                         builder.setString(column, (String) value);
                     } else if (value instanceof Timestamp) {
                         builder.setTimestamp(column, (Timestamp) value);
+                    } else if (value instanceof Instant) {
+                        builder.setTimestamp(column, (Instant) value);
                     } else if (value instanceof Value) {
                         builder.setJson(column, (Value) value);
                     } else {

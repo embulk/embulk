@@ -9,29 +9,39 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
 
+/**
+ * A utility class to manupulate {@link org.embulk.spi.Page}s.
+ *
+ * @deprecated Use {@link org.embulk.spi.PageReader} directly.
+ */
+@Deprecated
 public class Pages {
     public static List<Object[]> toObjects(Schema schema, Page page) {
         return toObjects(schema, ImmutableList.of(page));
     }
 
     // TODO use streaming and return Iterable
-    public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages) {
+    public static List<Object[]> toObjects(final Schema schema, final Iterable<Page> pages, final boolean useInstant) {
         ImmutableList.Builder<Object[]> builder = ImmutableList.builder();
         Iterator<Page> ite = pages.iterator();
         try (PageReader reader = new PageReader(schema)) {
             while (ite.hasNext()) {
                 reader.setPage(ite.next());
                 while (reader.nextRecord()) {
-                    builder.add(toObjects(reader));
+                    builder.add(toObjects(reader, useInstant));
                 }
             }
         }
         return builder.build();
     }
 
-    public static Object[] toObjects(final PageReader record) {
+    public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages) {
+        return toObjects(schema, pages, false);
+    }
+
+    public static Object[] toObjects(final PageReader record, final boolean useInstant) {
         final Object[] values = new Object[record.getSchema().getColumns().size()];
-        record.getSchema().visitColumns(new ObjectColumnVisitor(record) {
+        record.getSchema().visitColumns(new ObjectColumnVisitor(record, useInstant) {
                 @Override
                 public void visit(Column column, Object object) {
                     values[column.getIndex()] = object;
@@ -40,11 +50,27 @@ public class Pages {
         return values;
     }
 
+    public static Object[] toObjects(final PageReader record) {
+        return toObjects(record, false);
+    }
+
+    /**
+     * A {@link ColumnVisitor} implementation to map everything to {@link java.lang.Object}.
+     *
+     * @deprecated Implement your own {@link ColumnVisitor}.
+     */
+    @Deprecated
     public abstract static class ObjectColumnVisitor implements ColumnVisitor {
         private final PageReader record;
+        private final boolean useInstant;
+
+        public ObjectColumnVisitor(final PageReader record, final boolean useInstant) {
+            this.record = record;
+            this.useInstant = useInstant;
+        }
 
         public ObjectColumnVisitor(PageReader record) {
-            this.record = record;
+            this(record, false);
         }
 
         public abstract void visit(Column column, Object obj);
@@ -86,11 +112,16 @@ public class Pages {
         }
 
         @Override
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
         public void timestampColumn(Column column) {
             if (record.isNull(column)) {
                 visit(column, null);
             } else {
-                visit(column, record.getTimestamp(column));
+                if (this.useInstant) {
+                    visit(column, record.getTimestampInstant(column));
+                } else {
+                    visit(column, record.getTimestamp(column));
+                }
             }
         }
 

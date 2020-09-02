@@ -1,5 +1,6 @@
 package org.embulk.spi.util.dynamic;
 
+import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -28,7 +29,15 @@ public abstract class AbstractDynamicColumnSetter implements DynamicColumnSetter
 
     public abstract void set(String value);
 
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public abstract void set(Timestamp value);
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void set(Instant value) {
+        this.set(Timestamp.ofInstant(value));
+    }
 
     public abstract void set(Value value);
 }

@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -117,12 +118,25 @@ public class PageBuilder implements AutoCloseable {
         }
     }
 
+    @Deprecated
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void setTimestamp(Column column, Timestamp value) {
         // TODO check type?
-        setTimestamp(column.getIndex(), value);
+        this.setTimestamp(column, value.getInstant());
     }
 
+    public void setTimestamp(final Column column, final Instant value) {
+        // TODO check type?
+        this.setTimestamp(column.getIndex(), value);
+    }
+
+    @Deprecated
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void setTimestamp(int columnIndex, Timestamp value) {
+        this.setTimestamp(columnIndex, value.getInstant());
+    }
+
+    public void setTimestamp(final int columnIndex, final Instant value) {
         if (value == null) {
             setNull(columnIndex);
         } else {
@@ -169,7 +183,8 @@ public class PageBuilder implements AutoCloseable {
         clearNull(columnIndex);
     }
 
-    private void writeTimestamp(int columnIndex, Timestamp value) {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    private void writeTimestamp(int columnIndex, Instant value) {
         int offset = getOffset(columnIndex);
         bufferSlice.setLong(offset, value.getEpochSecond());
         bufferSlice.setInt(offset + 8, value.getNano());
@@ -302,7 +317,7 @@ public class PageBuilder implements AutoCloseable {
             values[columnIndex].setJson(value);
         }
 
-        private void setTimestamp(int columnIndex, Timestamp value) {
+        private void setTimestamp(int columnIndex, Instant value) {
             values[columnIndex].setTimestamp(value);
         }
 
@@ -324,7 +339,7 @@ public class PageBuilder implements AutoCloseable {
 
         void setJson(Value value);
 
-        void setTimestamp(Timestamp value);
+        void setTimestamp(Instant value);
 
         void setNull();
 
@@ -359,7 +374,7 @@ public class PageBuilder implements AutoCloseable {
             throw new IllegalStateException("Not reach here");
         }
 
-        public void setTimestamp(Timestamp value) {
+        public void setTimestamp(Instant value) {
             throw new IllegalStateException("Not reach here");
         }
 
@@ -474,14 +489,14 @@ public class PageBuilder implements AutoCloseable {
     }
 
     private static class TimestampColumnValue extends AbstractColumnValue {
-        private Timestamp value;
+        private Instant value;
 
         TimestampColumnValue(Column column) {
             super(column);
         }
 
         @Override
-        public void setTimestamp(Timestamp value) {
+        public void setTimestamp(Instant value) {
             this.value = value;
             this.isNull = false;
         }

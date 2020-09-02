@@ -1,5 +1,6 @@
 package org.embulk.spi.util.dynamic;
 
+import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -44,7 +45,15 @@ public class DoubleColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void set(Timestamp v) {
+        double sec = (double) v.getEpochSecond();
+        double frac = v.getNano() / 1000000000.0;
+        pageBuilder.setDouble(column, sec + frac);
+    }
+
+    @Override
+    public void set(Instant v) {
         double sec = (double) v.getEpochSecond();
         double frac = v.getNano() / 1000000000.0;
         pageBuilder.setDouble(column, sec + frac);

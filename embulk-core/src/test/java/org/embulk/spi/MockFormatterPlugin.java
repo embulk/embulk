@@ -67,7 +67,7 @@ public class MockFormatterPlugin implements FormatterPlugin {
 
                         public void timestampColumn(Column column) {
                             if (!pageReader.isNull(column)) {
-                                record.add(pageReader.getTimestamp(column));
+                                record.add(pageReader.getTimestampInstant(column));
                             }
                         }
 

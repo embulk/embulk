@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -15,7 +16,6 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.util.Pages;
 import org.junit.Before;
 import org.junit.Rule;
@@ -123,7 +123,7 @@ public class TestFileInputRunner {
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
 
-        List<Object[]> records = Pages.toObjects(schema, output.pages);
+        List<Object[]> records = Pages.toObjects(schema, output.pages, true);
         assertEquals(2, records.size());
         for (Object[] record : records) {
             assertEquals(6, record.length);
@@ -131,7 +131,7 @@ public class TestFileInputRunner {
             assertEquals(2L, record[1]);
             assertEquals(3.0D, (Double) record[2], 0.01D);
             assertEquals("45", record[3]);
-            assertEquals(678L, ((Timestamp) record[4]).toEpochMilli());
+            assertEquals(678L, ((Instant) record[4]).toEpochMilli());
             assertEquals("{\"_c2\":10,\"_c1\":true,\"_c4\":{\"k\":\"v\"},\"_c3\":\"embulk\"}", record[5].toString());
         }
     }

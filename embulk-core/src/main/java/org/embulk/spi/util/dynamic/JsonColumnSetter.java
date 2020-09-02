@@ -1,5 +1,6 @@
 package org.embulk.spi.util.dynamic;
 
+import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.time.Timestamp;
@@ -43,8 +44,14 @@ public class JsonColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void set(Timestamp v) {
         pageBuilder.setJson(column, ValueFactory.newString(timestampFormatter.format(v)));
+    }
+
+    @Override
+    public void set(Instant v) {
+        pageBuilder.setJson(column, ValueFactory.newString(timestampFormatter.format(Timestamp.ofInstant(v))));
     }
 
     @Override
