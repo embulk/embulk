@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class ColumnJacksonModule extends SimpleModule {
     public ColumnJacksonModule() {
@@ -61,25 +63,29 @@ public final class ColumnJacksonModule extends SimpleModule {
         final ObjectNode object = (ObjectNode) root;
 
         final JsonNode indexNode = object.get("index");
+        final int index;
         if (indexNode == null) {
-            throw JsonMappingException.from(jsonParser, "index is null.");
+            logger.warn("Building Column from JSON without \"index\".",
+                        JsonMappingException.from(jsonParser, "Building Column from JSON without \"index\"."));
+            index = 0;
+        } else {
+            index = OBJECT_MAPPER.treeToValue(indexNode, int.class);
         }
-        final int index = OBJECT_MAPPER.treeToValue(indexNode, int.class);
 
         final JsonNode nameNode = object.get("name");
         if (nameNode == null) {
-            throw JsonMappingException.from(jsonParser, "name is null.");
+            throw JsonMappingException.from(jsonParser, "Building Column from JSON without \"name\".");
         }
         final String name = OBJECT_MAPPER.treeToValue(nameNode, String.class);
 
         final JsonNode typeNode = object.get("type");
         if (typeNode == null) {
-            throw JsonMappingException.from(jsonParser, "type is null.");
+            throw JsonMappingException.from(jsonParser, "Building Column from JSON without \"type\".");
         }
         final String typeString = OBJECT_MAPPER.treeToValue(typeNode, String.class);
 
         if (!STRING_TO_TYPE.containsKey(typeString)) {
-            throw JsonMappingException.from(jsonParser, "Unexpected type: " + typeString);
+            throw JsonMappingException.from(jsonParser, "Building Column from JSON with unexpected type: " + typeString);
         }
         final Type type = STRING_TO_TYPE.get(typeString);
 
@@ -96,6 +102,8 @@ public final class ColumnJacksonModule extends SimpleModule {
         builder.put(Types.JSON.getName(), Types.JSON);
         STRING_TO_TYPE = Collections.unmodifiableMap(builder);
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(ColumnJacksonModule.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
