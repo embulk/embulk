@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public class LongColumnSetter extends AbstractDynamicColumnSetter {
@@ -56,8 +55,8 @@ public class LongColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void set(Timestamp v) {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public void set(final org.embulk.spi.time.Timestamp v) {
         pageBuilder.setLong(column, v.getEpochSecond());
     }
 

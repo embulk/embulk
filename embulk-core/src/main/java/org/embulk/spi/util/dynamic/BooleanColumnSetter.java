@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public class BooleanColumnSetter extends AbstractDynamicColumnSetter {
@@ -51,8 +50,8 @@ public class BooleanColumnSetter extends AbstractDynamicColumnSetter {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void set(Timestamp v) {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public void set(org.embulk.spi.time.Timestamp v) {
         defaultValue.setBoolean(pageBuilder, column);
     }
 

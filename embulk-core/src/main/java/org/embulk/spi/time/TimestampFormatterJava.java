@@ -36,6 +36,7 @@ public class TimestampFormatterJava extends TimestampFormatter {
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public String format(final Timestamp value) {
         return this.formatter.format(OffsetDateTime.ofInstant(value.getInstant(), this.zoneOffset));
     }

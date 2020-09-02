@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.embulk.deps.buffer.Slice;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
 import org.msgpack.value.ImmutableValue;
@@ -120,7 +119,7 @@ public class PageBuilder implements AutoCloseable {
 
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
-    public void setTimestamp(Column column, Timestamp value) {
+    public void setTimestamp(Column column, org.embulk.spi.time.Timestamp value) {
         // TODO check type?
         this.setTimestamp(column, value.getInstant());
     }
@@ -132,7 +131,7 @@ public class PageBuilder implements AutoCloseable {
 
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
-    public void setTimestamp(int columnIndex, Timestamp value) {
+    public void setTimestamp(int columnIndex, org.embulk.spi.time.Timestamp value) {
         this.setTimestamp(columnIndex, value.getInstant());
     }
 

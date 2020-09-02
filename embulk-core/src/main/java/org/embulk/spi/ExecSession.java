@@ -28,7 +28,6 @@ import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.time.Instants;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +98,8 @@ public class ExecSession {
         }
 
         @Deprecated  // TODO: Add setTransactionTime(Instant) if needed. But no one looks using it. May not be needed.
-        public Builder setTransactionTime(Timestamp timestamp) {
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+        public Builder setTransactionTime(final org.embulk.spi.time.Timestamp timestamp) {
             logger.warn("ExecSession.Builder#setTransactionTime is deprecated. Set it via ExecSession.Builder#fromExecConfig.");
             this.transactionTime = timestamp.getInstant();
             return this;
@@ -205,8 +205,9 @@ public class ExecSession {
     }
 
     @Deprecated
-    public Timestamp getTransactionTime() {
-        return Timestamp.ofInstant(this.transactionTime);
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public org.embulk.spi.time.Timestamp getTransactionTime() {
+        return org.embulk.spi.time.Timestamp.ofInstant(this.transactionTime);
     }
 
     public Instant getTransactionTimeInstant() {

@@ -3,7 +3,6 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.util.DynamicColumnSetter;
 import org.msgpack.value.Value;
 
@@ -30,13 +29,13 @@ public abstract class AbstractDynamicColumnSetter implements DynamicColumnSetter
     public abstract void set(String value);
 
     @Deprecated
-    @SuppressWarnings("deprecation")
-    public abstract void set(Timestamp value);
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public abstract void set(org.embulk.spi.time.Timestamp value);
 
     @Override
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void set(Instant value) {
-        this.set(Timestamp.ofInstant(value));
+        this.set(org.embulk.spi.time.Timestamp.ofInstant(value));
     }
 
     public abstract void set(Value value);

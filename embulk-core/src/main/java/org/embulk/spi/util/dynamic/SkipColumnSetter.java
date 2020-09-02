@@ -1,7 +1,6 @@
 package org.embulk.spi.util.dynamic;
 
 import java.time.Instant;
-import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
 
 public class SkipColumnSetter extends AbstractDynamicColumnSetter {
@@ -31,8 +30,8 @@ public class SkipColumnSetter extends AbstractDynamicColumnSetter {
     public void set(String v) {}
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void set(Timestamp v) {}
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
+    public void set(final org.embulk.spi.time.Timestamp v) {}
 
     @Override
     public void set(Instant v) {}
