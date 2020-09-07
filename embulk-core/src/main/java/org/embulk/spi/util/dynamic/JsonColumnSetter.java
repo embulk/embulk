@@ -3,16 +3,17 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
-import org.embulk.spi.time.TimestampFormatter;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
 
 public class JsonColumnSetter extends AbstractDynamicColumnSetter {
-    private final TimestampFormatter timestampFormatter;
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
+    private final org.embulk.spi.time.TimestampFormatter timestampFormatter;
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public JsonColumnSetter(PageBuilder pageBuilder, Column column,
                             DefaultValueSetter defaultValue,
-                            TimestampFormatter timestampFormatter) {
+                            org.embulk.spi.time.TimestampFormatter timestampFormatter) {
         super(pageBuilder, column, defaultValue);
         this.timestampFormatter = timestampFormatter;
     }
