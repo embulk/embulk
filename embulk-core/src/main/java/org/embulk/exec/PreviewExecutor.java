@@ -83,7 +83,7 @@ public class PreviewExecutor {
     }
 
     private PreviewResult doPreview(ConfigSource config) {
-        PreviewTask task = config.loadConfig(PreviewTask.class);
+        final PreviewTask task = loadPreviewTask(config);
         InputPlugin inputPlugin = newInputPlugin(task);
         List<FilterPlugin> filterPlugins = newFilterPlugins(task);
 
@@ -100,7 +100,7 @@ public class PreviewExecutor {
     }
 
     private static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig) {
-        final PreviewExecutorTask execTask = execConfig.loadConfig(PreviewExecutorTask.class);
+        final PreviewExecutorTask execTask = loadPreviewExecutorTask(execConfig);
         return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
     }
 
@@ -191,6 +191,16 @@ public class PreviewExecutor {
                 pages = null;
             }
         }
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static PreviewTask loadPreviewTask(final ConfigSource config) {
+        return config.loadConfig(PreviewTask.class);
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static PreviewExecutorTask loadPreviewExecutorTask(final ConfigSource config) {
+        return config.loadConfig(PreviewExecutorTask.class);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(PreviewExecutor.class);

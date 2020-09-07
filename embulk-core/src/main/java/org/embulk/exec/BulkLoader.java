@@ -472,7 +472,7 @@ public class BulkLoader {
     }
 
     public void doCleanup(ConfigSource config, ResumeState resume) {
-        BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
+        final BulkLoaderTask task = loadBulkLoaderTask(config);
         ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
 
         ImmutableList.Builder<TaskReport> successfulInputTaskReports = ImmutableList.builder();
@@ -513,7 +513,7 @@ public class BulkLoader {
     }
 
     private ExecutionResult doRun(ConfigSource config) {
-        final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
+        final BulkLoaderTask task = loadBulkLoaderTask(config);
 
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
@@ -585,7 +585,7 @@ public class BulkLoader {
     }
 
     private ExecutionResult doResume(ConfigSource config, final ResumeState resume) {
-        final BulkLoaderTask task = config.loadConfig(BulkLoaderTask.class);
+        final BulkLoaderTask task = loadBulkLoaderTask(config);
 
         final ExecutorPlugin exec = newExecutorPlugin(task);
         final ProcessPluginSet plugins = new ProcessPluginSet(task);
@@ -708,6 +708,11 @@ public class BulkLoader {
         } catch (Exception ex) {
             state.getLogger().warn("Commit succeeded but cleanup failed. Ignoring this exception.", ex);  // TODO
         }
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static BulkLoaderTask loadBulkLoaderTask(final ConfigSource config) {
+        return config.loadConfig(BulkLoaderTask.class);
     }
 
     private static Schema first(List<Schema> schemas) {

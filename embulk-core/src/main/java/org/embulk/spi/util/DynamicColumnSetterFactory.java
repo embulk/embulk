@@ -110,6 +110,7 @@ class DynamicColumnSetterFactory {
         }
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1301
     private DynamicPageBuilder.ColumnOption getColumnOption(Column column) {
         ConfigSource option = task.getColumnOptions().get(column.getName());
         if (option != null) {

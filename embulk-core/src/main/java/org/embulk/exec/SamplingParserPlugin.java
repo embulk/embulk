@@ -35,7 +35,7 @@ public class SamplingParserPlugin implements ParserPlugin {
     }
 
     public static Buffer runFileInputSampling(final FileInputRunner runner, ConfigSource inputConfig, ConfigSource sampleBufferConfig) {
-        final SampleBufferTask sampleBufferTask = sampleBufferConfig.loadConfig(SampleBufferTask.class);
+        final SampleBufferTask sampleBufferTask = loadSampleBufferTask(sampleBufferConfig);
 
         // override in.parser.type so that FileInputRunner creates SamplingParserPlugin
         ConfigSource samplingInputConfig = inputConfig.deepCopy();
@@ -143,7 +143,7 @@ public class SamplingParserPlugin implements ParserPlugin {
 
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control) {
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = loadPluginTask(config);
         Preconditions.checkArgument(minSampleBufferBytes < task.getSampleBufferBytes(), "minSampleBufferBytes must be smaller than sample_buffer_bytes");
 
         logger.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
@@ -152,7 +152,7 @@ public class SamplingParserPlugin implements ParserPlugin {
 
     @Override
     public void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output) {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = loadPluginTaskFromTaskSource(taskSource);
         Buffer buffer = readSample(input, task.getSampleBufferBytes());
         if (!taskSource.get(boolean.class, "force", false)) {
             if (buffer.limit() < minSampleBufferBytes) {
@@ -186,5 +186,20 @@ public class SamplingParserPlugin implements ParserPlugin {
             sample.limit(offset);
         }
         return sample;
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static SampleBufferTask loadSampleBufferTask(final ConfigSource config) {
+        return config.loadConfig(SampleBufferTask.class);
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static PluginTask loadPluginTask(final ConfigSource config) {
+        return config.loadConfig(PluginTask.class);
+    }
+
+    @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
+    private static PluginTask loadPluginTaskFromTaskSource(final TaskSource taskSource) {
+        return taskSource.loadTask(PluginTask.class);
     }
 }
