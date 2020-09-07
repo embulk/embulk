@@ -9,6 +9,7 @@ import com.google.inject.Injector;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 
+@Deprecated  // https://github.com/embulk/embulk/issues/1304
 public class ModelManager {
     private final Injector injector;
     private final ObjectMapper objectMapper;

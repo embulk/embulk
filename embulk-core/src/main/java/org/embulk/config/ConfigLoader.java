@@ -17,9 +17,11 @@ import java.util.Properties;
 import org.embulk.deps.config.YamlProcessor;
 
 public class ConfigLoader {
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
     private final ModelManager model;
 
     @Inject
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public ConfigLoader(ModelManager model) {
         this.model = model;
     }

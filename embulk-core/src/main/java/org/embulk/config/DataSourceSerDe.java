@@ -16,7 +16,7 @@ import java.io.IOException;
 
 public class DataSourceSerDe {
     public static class SerDeModule extends SimpleModule {
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public SerDeModule(final ModelManager model) {
             // DataSourceImpl
             addSerializer(DataSourceImpl.class, new DataSourceSerializer<DataSourceImpl>(model));
@@ -42,9 +42,12 @@ public class DataSourceSerDe {
 
     // TODO T extends DataSource super DataSourceImpl
     private static class DataSourceDeserializer<T extends DataSource> extends JsonDeserializer<T> {
+        @Deprecated  // https://github.com/embulk/embulk/issues/1304
         private final ModelManager model;
+
         private final ObjectMapper treeObjectMapper;
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         DataSourceDeserializer(ModelManager model) {
             this.model = model;
             this.treeObjectMapper = new ObjectMapper();
@@ -62,8 +65,10 @@ public class DataSourceSerDe {
     }
 
     private static class DataSourceSerializer<T extends DataSource> extends JsonSerializer<T> {
+        @Deprecated  // https://github.com/embulk/embulk/issues/1304
         private final ModelManager model;
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         DataSourceSerializer(final ModelManager model) {
             this.model = model;
         }

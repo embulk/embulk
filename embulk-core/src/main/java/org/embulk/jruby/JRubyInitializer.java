@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +134,7 @@ public final class JRubyInitializer {
 
         final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
         jruby.callMethod(injected, "const_set", "Injector", injector);
-        jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(ModelManager.class));
+        constSetModelManager(jruby, injected, injector);
         jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
 
         jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
@@ -285,6 +284,14 @@ public final class JRubyInitializer {
         }
 
         return userHome.toAbsolutePath().resolve(".embulk");
+    }
+
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    private static void constSetModelManager(
+            final ScriptingContainerDelegate jruby,
+            final Object injected,
+            final Injector injector) {
+        jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(org.embulk.config.ModelManager.class));
     }
 
     private final Injector injector;

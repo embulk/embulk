@@ -12,11 +12,14 @@ import java.util.Map;
 import java.util.Set;
 
 class TaskInvocationHandler implements InvocationHandler {
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
     private final ModelManager model;
+
     private final Class<?> iface;
     private final Map<String, Object> objects;
     private final Set<String> injectedFields;
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects, Set<String> injectedFields) {
         this.model = model;
         this.iface = iface;

@@ -18,7 +18,6 @@ import java.util.function.Function;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ModelManager;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
@@ -153,8 +152,10 @@ public class EmbulkEmbed {
         return injector;
     }
 
-    public ModelManager getModelManager() {
-        return injector.getInstance(ModelManager.class);
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    public org.embulk.config.ModelManager getModelManager() {
+        return injector.getInstance(org.embulk.config.ModelManager.class);
     }
 
     public BufferAllocator getBufferAllocator() {

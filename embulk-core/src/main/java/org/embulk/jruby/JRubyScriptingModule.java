@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.config.ModelManager;
 import org.embulk.spi.BufferAllocator;
 import org.slf4j.LoggerFactory;
 
@@ -71,10 +70,11 @@ public class JRubyScriptingModule implements Module {
         }
 
         @Override  // from |com.google.inject.spi.HasDependencies|
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public Set<Dependency<?>> getDependencies() {
             // get() depends on other modules
             final HashSet<Dependency<?>> built = new HashSet<>();
-            built.add(Dependency.get(Key.get(ModelManager.class)));
+            built.add(Dependency.get(Key.get(org.embulk.config.ModelManager.class)));
             built.add(Dependency.get(Key.get(BufferAllocator.class)));
             return Collections.unmodifiableSet(built);
         }

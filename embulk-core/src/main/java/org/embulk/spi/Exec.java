@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ModelManager;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
@@ -65,7 +64,9 @@ public class Exec {
         return session().getBufferAllocator();
     }
 
-    public static ModelManager getModelManager() {
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    public static org.embulk.config.ModelManager getModelManager() {
         return session().getModelManager();
     }
 

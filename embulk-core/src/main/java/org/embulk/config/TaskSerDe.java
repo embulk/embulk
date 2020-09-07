@@ -67,11 +67,15 @@ class TaskSerDe {
 
     public static class TaskDeserializer<T> extends JsonDeserializer<T> {
         private final ObjectMapper nestedObjectMapper;
+
+        @Deprecated  // https://github.com/embulk/embulk/issues/1304
         private final ModelManager model;
+
         private final Class<?> iface;
         private final Multimap<String, FieldEntry> mappings;
         private final List<InjectEntry> injects;
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface) {
             this.nestedObjectMapper = nestedObjectMapper;
             this.model = model;
@@ -244,6 +248,7 @@ class TaskSerDe {
     }
 
     public static class ConfigTaskDeserializer<T> extends TaskDeserializer<T> {
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public ConfigTaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface) {
             super(nestedObjectMapper, model, iface);
         }
@@ -270,8 +275,11 @@ class TaskSerDe {
 
     public static class TaskDeserializerModule extends Module {  // can't use just SimpleModule, due to generic types
         protected final ObjectMapper nestedObjectMapper;
+
+        @Deprecated  // https://github.com/embulk/embulk/issues/1304
         protected final ModelManager model;
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public TaskDeserializerModule(ObjectMapper nestedObjectMapper, ModelManager model) {
             this.nestedObjectMapper = nestedObjectMapper;
             this.model = model;
@@ -311,6 +319,7 @@ class TaskSerDe {
     }
 
     public static class ConfigTaskDeserializerModule extends TaskDeserializerModule {
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public ConfigTaskDeserializerModule(ObjectMapper nestedObjectMapper, ModelManager model) {
             super(nestedObjectMapper, model);
         }
