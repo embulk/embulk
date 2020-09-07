@@ -18,6 +18,8 @@ public class TestTimestampFormatterParser {
 
     private interface ParserTestTask extends Task, TimestampParser.Task {}
 
+    private interface ParserColumnOption extends Task, TimestampParser.TimestampColumnOption {}
+
     @Test
     public void testSimpleFormat() throws Exception {
         ConfigSource config = Exec.newConfigSource()
@@ -34,7 +36,7 @@ public class TestTimestampFormatterParser {
                 .set("default_timestamp_format", "%Y-%m-%d %H:%M:%S %z");  // %Z is OS-dependent
         ParserTestTask task = config.loadConfig(ParserTestTask.class);
 
-        TimestampParser parser = TimestampParserLegacy.createTimestampParserForTesting(task);
+        TimestampParser parser = TimestampParser.of(task, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
         assertEquals(Timestamp.ofEpochSecond(1416365189, 0), parser.parse("2014-11-19 02:46:29 +0000"));
     }
 
@@ -48,7 +50,7 @@ public class TestTimestampFormatterParser {
         assertEquals("1416365189", formatter.format(Timestamp.ofEpochSecond(1416365189)));
 
         ParserTestTask ptask = config.loadConfig(ParserTestTask.class);
-        TimestampParser parser = TimestampParserLegacy.createTimestampParserForTesting(ptask);
+        TimestampParser parser = TimestampParser.of(ptask, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
         assertEquals(Timestamp.ofEpochSecond(1416365189), parser.parse("1416365189"));
     }
 
@@ -59,7 +61,7 @@ public class TestTimestampFormatterParser {
                 .set("default_date", "2016-02-03");
 
         ParserTestTask ptask = config.loadConfig(ParserTestTask.class);
-        TimestampParser parser = TimestampParserLegacy.createTimestampParserForTesting(ptask);
+        TimestampParser parser = TimestampParser.of(ptask, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
         assertEquals(Timestamp.ofEpochSecond(1454467589, 0), parser.parse("02:46:29 +0000"));
     }
 }
