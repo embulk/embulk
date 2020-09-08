@@ -27,7 +27,8 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.GuessPlugin;
@@ -91,9 +92,9 @@ public class GuessExecutor {
         this.defaultGuessPlugins = Collections.unmodifiableList(guessPluginsBuilt);
     }
 
-    public ConfigDiff guess(ExecSession exec, final ConfigSource config) {
+    public ConfigDiff guess(ExecSessionInternal exec, final ConfigSource config) {
         try {
-            return Exec.doWith(exec, new ExecAction<ConfigDiff>() {
+            return ExecInternal.doWith(exec, new ExecAction<ConfigDiff>() {
                     public ConfigDiff run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("guess")) {
                             return doGuess(config);
@@ -112,7 +113,7 @@ public class GuessExecutor {
     }
 
     protected InputPlugin newInputPlugin(ConfigSource inputConfig) {
-        return Exec.newPlugin(InputPlugin.class, inputConfig.get(PluginType.class, "type"));
+        return ExecInternal.newPlugin(InputPlugin.class, inputConfig.get(PluginType.class, "type"));
     }
 
     private ConfigDiff doGuess(ConfigSource config) {
@@ -235,7 +236,7 @@ public class GuessExecutor {
             // load guess plugins
             ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
             for (PluginType guessType : task.getGuessPluginTypes()) {
-                GuessPlugin guess = Exec.newPlugin(GuessPlugin.class, guessType);
+                GuessPlugin guess = ExecInternal.newPlugin(GuessPlugin.class, guessType);
                 builder.add(guess);
             }
             List<GuessPlugin> guesses = builder.build();

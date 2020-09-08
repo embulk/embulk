@@ -31,7 +31,7 @@ import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecSessionInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,7 +169,7 @@ public class EmbulkEmbed {
     public ConfigDiff guess(final ConfigSource config) {
         logger.info("Started Embulk v" + EmbulkVersion.VERSION);
 
-        final ExecSession exec = this.newExecSession(config.deepCopy().getNestedOrGetEmpty("exec"));
+        final ExecSessionInternal exec = this.newExecSessionInternal(config.deepCopy().getNestedOrGetEmpty("exec"));
         try {
             return this.guessExecutor.guess(exec, config);
         } finally {
@@ -180,7 +180,7 @@ public class EmbulkEmbed {
     public PreviewResult preview(final ConfigSource config) {
         logger.info("Started Embulk v" + EmbulkVersion.VERSION);
 
-        final ExecSession exec = this.newExecSession(config.deepCopy().getNestedOrGetEmpty("exec"));
+        final ExecSessionInternal exec = this.newExecSessionInternal(config.deepCopy().getNestedOrGetEmpty("exec"));
         try {
             return this.previewExecutor.preview(exec, config);
         } finally {
@@ -191,11 +191,12 @@ public class EmbulkEmbed {
     public ExecutionResult run(final ConfigSource config) {
         logger.info("Started Embulk v" + EmbulkVersion.VERSION);
 
-        final ExecSession exec = this.newExecSession(config.deepCopy().getNestedOrGetEmpty("exec"));
+        final ExecSessionInternal exec = this.newExecSessionInternal(config.deepCopy().getNestedOrGetEmpty("exec"));
         try {
             return this.bulkLoader.run(exec, config);
         } catch (final PartialExecutionException partial) {
-            final ExecSession cleanupExec = this.newExecSession(partial.getResumeState().getExecSessionConfigSource());
+            final ExecSessionInternal cleanupExec =
+                    this.newExecSessionInternal(partial.getResumeState().getExecSessionConfigSource());
             try {
                 this.bulkLoader.cleanup(cleanupExec, config, partial.getResumeState());
             } catch (final Throwable ex) {
@@ -216,7 +217,7 @@ public class EmbulkEmbed {
     public ResumableResult runResumable(final ConfigSource config) {
         logger.info("Started Embulk v" + EmbulkVersion.VERSION);
 
-        final ExecSession exec = this.newExecSession(config.deepCopy().getNestedOrGetEmpty("exec"));
+        final ExecSessionInternal exec = this.newExecSessionInternal(config.deepCopy().getNestedOrGetEmpty("exec"));
         try {
             final ExecutionResult result;
             try {
@@ -236,8 +237,8 @@ public class EmbulkEmbed {
         }
     }
 
-    private ExecSession newExecSession(final ConfigSource execConfig) {
-        return ExecSession.builder(this.injector)
+    private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
+        return ExecSessionInternal.builderInternal(this.injector)
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
                 .setParentFirstPackages(PARENT_FIRST_PACKAGES)
                 .setParentFirstResources(PARENT_FIRST_RESOURCES)
@@ -310,7 +311,7 @@ public class EmbulkEmbed {
         }
 
         public ResumableResult resume() {
-            final ExecSession exec = newExecSession(this.resumeState.getExecSessionConfigSource());
+            final ExecSessionInternal exec = newExecSessionInternal(this.resumeState.getExecSessionConfigSource());
             final ExecutionResult result;
             try {
                 result = bulkLoader.resume(exec, config, resumeState);
@@ -321,7 +322,7 @@ public class EmbulkEmbed {
         }
 
         public void cleanup() {
-            final ExecSession exec = newExecSession(this.resumeState.getExecSessionConfigSource());
+            final ExecSessionInternal exec = newExecSessionInternal(this.resumeState.getExecSessionConfigSource());
             bulkLoader.cleanup(exec, config, resumeState);
         }
 

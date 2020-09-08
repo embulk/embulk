@@ -1,88 +1,58 @@
 package org.embulk.spi.util;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
 
+/**
+ * Utility class for handling multiple filter plugins.
+ *
+ * <p>It is considered to be an internal class, not for plugins. To make it explicit, {@link FiltersInternal} replaces it.
+ */
+@Deprecated
 public abstract class Filters {
     private Filters() {}
 
     public static List<PluginType> getPluginTypes(List<ConfigSource> configs) {
-        ImmutableList.Builder<PluginType> builder = ImmutableList.builder();
-        for (ConfigSource config : configs) {
-            builder.add(config.get(PluginType.class, "type"));
-        }
-        return builder.build();
+        return FiltersInternal.getPluginTypes(configs);
     }
 
     public static List<FilterPlugin> newFilterPluginsFromConfigSources(ExecSession exec, List<ConfigSource> configs) {
-        return newFilterPlugins(exec, getPluginTypes(configs));
+        if (!(exec instanceof ExecSessionInternal)) {
+            throw new IllegalArgumentException(new ClassCastException());
+        }
+        final ExecSessionInternal execInternal = (ExecSessionInternal) exec;
+
+        return FiltersInternal.newFilterPluginsFromConfigSources(execInternal, configs);
     }
 
     public static List<FilterPlugin> newFilterPlugins(ExecSession exec, List<PluginType> pluginTypes) {
-        ImmutableList.Builder<FilterPlugin> builder = ImmutableList.builder();
-        for (PluginType pluginType : pluginTypes) {
-            builder.add(exec.newPlugin(FilterPlugin.class, pluginType));
+        if (!(exec instanceof ExecSessionInternal)) {
+            throw new IllegalArgumentException(new ClassCastException());
         }
-        return builder.build();
+        final ExecSessionInternal execInternal = (ExecSessionInternal) exec;
+
+        return FiltersInternal.newFilterPlugins(execInternal, pluginTypes);
     }
 
-    public interface Control {
+    public interface Control extends FiltersInternal.Control {
+        @Override
         public void run(List<TaskSource> taskSources, List<Schema> filterSchemas);
     }
 
     public static void transaction(List<FilterPlugin> plugins, List<ConfigSource> configs,
             Schema inputSchema, Filters.Control control) {
-        new RecursiveControl(plugins, configs, control).transaction(inputSchema);
+        FiltersInternal.transaction(plugins, configs, inputSchema, control);
     }
 
     public static PageOutput open(List<FilterPlugin> plugins, List<TaskSource> taskSources,
             List<Schema> filterSchemas, PageOutput output) {
-        PageOutput out = output;
-        int pos = plugins.size() - 1;
-        while (pos >= 0) {
-            out = plugins.get(pos).open(taskSources.get(pos), filterSchemas.get(pos), filterSchemas.get(pos + 1), out);
-            pos--;
-        }
-        return out;
-    }
-
-    private static class RecursiveControl {
-        private final List<FilterPlugin> plugins;
-        private final List<ConfigSource> configs;
-        private final Filters.Control finalControl;
-        private final ImmutableList.Builder<TaskSource> taskSources;
-        private final ImmutableList.Builder<Schema> filterSchemas;
-        private int pos;
-
-        RecursiveControl(List<FilterPlugin> plugins, List<ConfigSource> configs,
-                Filters.Control finalControl) {
-            this.plugins = plugins;
-            this.configs = configs;
-            this.finalControl = finalControl;
-            this.taskSources = ImmutableList.builder();
-            this.filterSchemas = ImmutableList.builder();
-        }
-
-        public void transaction(Schema inputSchema) {
-            filterSchemas.add(inputSchema);
-            if (pos < plugins.size()) {
-                plugins.get(pos).transaction(configs.get(pos), inputSchema, new FilterPlugin.Control() {
-                        public void run(TaskSource taskSource, Schema outputSchema) {
-                            taskSources.add(taskSource);
-                            pos++;
-                            transaction(outputSchema);
-                        }
-                    });
-            } else {
-                finalControl.run(taskSources.build(), filterSchemas.build());
-            }
-        }
+        return FiltersInternal.open(plugins, taskSources, filterSchemas, output);
     }
 }

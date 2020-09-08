@@ -15,7 +15,7 @@ import org.embulk.exec.ConfigurableGuessInputPlugin;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.util.Decoders;
+import org.embulk.spi.util.DecodersInternal;
 
 public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugin {
     private final FileInputPlugin fileInputPlugin;
@@ -48,11 +48,11 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
     }
 
     protected List<DecoderPlugin> newDecoderPlugins(RunnerTask task) {
-        return Decoders.newDecoderPlugins(Exec.session(), task.getDecoderConfigs());
+        return DecodersInternal.newDecoderPlugins(ExecInternal.sessionInternal(), task.getDecoderConfigs());
     }
 
     protected ParserPlugin newParserPlugin(RunnerTask task) {
-        return Exec.newPlugin(ParserPlugin.class, task.getParserConfig().get(PluginType.class, "type"));
+        return ExecInternal.newPlugin(ParserPlugin.class, task.getParserConfig().get(PluginType.class, "type"));
     }
 
     @Override
@@ -80,7 +80,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         // SamplingParserPlugin.runFileInputSampling throws NoSampleException if there're
         // no files or all files are smaller than minSampleSize (40 bytes).
 
-        GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
+        GuessExecutor guessExecutor = ExecInternal.getInjector().getInstance(GuessExecutor.class);
         return guessExecutor.guessParserConfig(sample, inputConfig, execConfig);
     }
 
@@ -101,7 +101,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         @Override
         public List<TaskReport> run(final TaskSource fileInputTaskSource, final int taskCount) {
             final List<TaskReport> taskReports = new ArrayList<TaskReport>();
-            Decoders.transaction(decoderPlugins, task.getDecoderConfigs(), new Decoders.Control() {
+            DecodersInternal.transaction(decoderPlugins, task.getDecoderConfigs(), new DecodersInternal.Control() {
                     public void run(final List<TaskSource> decoderTaskSources) {
                         parserPlugin.transaction(task.getParserConfig(), new ParserPlugin.Control() {
                                 public void run(final TaskSource parserTaskSource, final Schema schema) {
@@ -133,7 +133,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         final TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
-                FileInput fileInput = Decoders.open(decoderPlugins, task.getDecoderTaskSources(), tran);
+                FileInput fileInput = DecodersInternal.open(decoderPlugins, task.getDecoderTaskSources(), tran);
                 closer.closeThis(fileInput);
                 parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
 

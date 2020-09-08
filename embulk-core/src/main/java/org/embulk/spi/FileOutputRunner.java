@@ -10,7 +10,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.util.Encoders;
+import org.embulk.spi.util.EncodersInternal;
 
 public class FileOutputRunner implements OutputPlugin {
     private final FileOutputPlugin fileOutputPlugin;
@@ -44,11 +44,11 @@ public class FileOutputRunner implements OutputPlugin {
     }
 
     protected List<EncoderPlugin> newEncoderPlugins(RunnerTask task) {
-        return Encoders.newEncoderPlugins(Exec.session(), task.getEncoderConfigs());
+        return EncodersInternal.newEncoderPlugins(ExecInternal.sessionInternal(), task.getEncoderConfigs());
     }
 
     protected FormatterPlugin newFormatterPlugin(RunnerTask task) {
-        return Exec.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get(PluginType.class, "type"));
+        return ExecInternal.newPlugin(FormatterPlugin.class, task.getFormatterConfig().get(PluginType.class, "type"));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class FileOutputRunner implements OutputPlugin {
         @Override
         public List<TaskReport> run(final TaskSource fileOutputTaskSource) {
             final List<TaskReport> taskReports = new ArrayList<TaskReport>();
-            Encoders.transaction(encoderPlugins, task.getEncoderConfigs(), new Encoders.Control() {
+            EncodersInternal.transaction(encoderPlugins, task.getEncoderConfigs(), new EncodersInternal.Control() {
                     public void run(final List<TaskSource> encoderTaskSources) {
                         formatterPlugin.transaction(task.getFormatterConfig(), schema, new FormatterPlugin.Control() {
                                 public void run(final TaskSource formatterTaskSource) {
@@ -119,7 +119,7 @@ public class FileOutputRunner implements OutputPlugin {
                 aborter.abortThis(finalOutput);
                 closer.closeThis(finalOutput);
 
-                FileOutput encodedOutput = Encoders.open(encoderPlugins, task.getEncoderTaskSources(), finalOutput);
+                FileOutput encodedOutput = EncodersInternal.open(encoderPlugins, task.getEncoderTaskSources(), finalOutput);
                 closer.closeThis(encodedOutput);
 
                 PageOutput output = formatterPlugin.open(task.getFormatterTaskSource(), schema, encodedOutput);
