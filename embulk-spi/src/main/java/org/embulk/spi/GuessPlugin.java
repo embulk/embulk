@@ -23,13 +23,14 @@ import org.embulk.spi.Buffer;
 /**
  * The main class that a Guess Plugin implements.
  *
- * <p>It guesses a configuration {@link org.embulk.config.ConfigDiff} from a byte sequence {@link org.embulk.spi.Buffer}.
+ * <p>A Guess Plugin guesses a configuration {@link org.embulk.config.ConfigDiff} from a partial configuration for input,
+ * and a byte sequence {@link org.embulk.spi.Buffer}.
  */
 public interface GuessPlugin {
     /**
      * Performs the guess.
      *
-     * @param config  a configuration for the guess plugin given from a user
+     * @param config  a partial configuration for input given from a user
      * @param sample  a sample data to guess
      * @return a new configuration guessed based on {@code config} and {@code sample}
      */

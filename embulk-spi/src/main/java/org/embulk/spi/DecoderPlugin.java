@@ -22,7 +22,8 @@ import org.embulk.config.TaskSource;
 /**
  * The main class that a Decoder Plugin implements.
  *
- * <p>It converts a byte sequence {@link org.embulk.spi.FileInput} to another byte sequence {@link org.embulk.spi.FileInput}.
+ * <p>A Decoder Plugin converts a set of byte buffers in {@link org.embulk.spi.FileInput} to another set of byte buffers of
+ * {@link org.embulk.spi.FileInput}.
  */
 public interface DecoderPlugin {
     /**
@@ -30,7 +31,7 @@ public interface DecoderPlugin {
      */
     interface Control {
         /**
-         * Runs the following tasks of the decoder plugin.
+         * Runs the following tasks of the Decoder Plugin.
          *
          * <p>It would be executed at the end of {@link #transaction(org.embulk.config.ConfigSource, DecoderPlugin.Control)}.
          *
@@ -42,17 +43,21 @@ public interface DecoderPlugin {
     /**
      * Processes the entire decoding transaction.
      *
-     * @param config  a configuration for the decoder plugin given from a user
+     * @param config  a configuration for the Decoder Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
      */
     void transaction(ConfigSource config, DecoderPlugin.Control control);
 
     /**
-     * Processes each decoding task.
+     * Opens a {@link org.embulk.spi.FileInput} instance that receives {@link org.embulk.spi.Buffer}s from a File Input Plugin,
+     * or another Decoder Plugin, so that decoded input is read from a Parser Plugin, or another Decoder Plugin
+     *
+     * <p>It processes each decoding task.
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
-     * @param fileInput  an input from a File Input Plugin, or another Decoder Plugin
-     * @return an input for a Parser Plugin, or another Decoder Plugin
+     * @param fileInput  {@link org.embulk.spi.FileInput} to read byte buffers from a File Input Plugin, or another Decoder Plugin
+     * @return an implementation of {@link org.embulk.spi.FileInput} that receives {@link org.embulk.spi.Buffer}s from a File
+     *     Input Plugin, or another Decoder Plugin, so that decoded input is read from a Parser Plugin, or another Decoder Plugin
      */
     FileInput open(TaskSource taskSource, FileInput fileInput);
 }

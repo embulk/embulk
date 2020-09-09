@@ -25,7 +25,8 @@ import org.embulk.config.TaskSource;
 /**
  * The main class that a File Input Plugin implements.
  *
- * <p>It reads a byte sequence into {@link org.embulk.spi.TransactionalFileInput} in a transaction.
+ * <p>A File Input Plugin reads file-like byte sequences from the configured source into a set of byte buffers
+ * {@link org.embulk.spi.Buffer} of {@link org.embulk.spi.TransactionalFileInput}.
  */
 public interface FileInputPlugin {
     /**
@@ -39,7 +40,7 @@ public interface FileInputPlugin {
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
          * @param taskCount  the number of tasks
-         * @return reports
+         * @return reports of tasks
          */
         List<TaskReport> run(TaskSource taskSource, int taskCount);
     }
@@ -68,16 +69,20 @@ public interface FileInputPlugin {
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskCount  the number of tasks
-     * @param successTaskReports  {@link org.embulk.config.TaskReport}s of successful tasks
+     * @param successTaskReports  reports of successful tasks
      */
     void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successTaskReports);
 
     /**
-     * Processes each file input task.
+     * Opens a {@link org.embulk.spi.TransactionalFileInput} instance so that {@link org.embulk.spi.Buffer}s read from
+     * the configured source are read from a Parser Plugin, or a Decoder Plugin.
+     *
+     * <p>It processes each file input task.
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskIndex  the index number of the task
-     * @return an input for a Parser Plugin, or a Decoder Plugin
+     * @return an implementation of {@link org.embulk.spi.TransactionalFileInput} so that {@link org.embulk.spi.Buffer}s
+     *     read from the configured source are read from a Parser Plugin, or a Decoder Plugin
      */
     TransactionalFileInput open(TaskSource taskSource, int taskIndex);
 }
