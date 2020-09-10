@@ -466,7 +466,6 @@ public class EmbulkRunner {
     //   end
     // end
 
-    // NOTE: The root logger directly from |LoggerFactory|, not from |Exec.getLogger| as it's outside of |Exec.doWith|.
     private static final Logger rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
     private static final Pattern EXT_YAML = Pattern.compile(".*\\.ya?ml$");

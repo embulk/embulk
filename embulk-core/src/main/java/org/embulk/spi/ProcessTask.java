@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
-import org.embulk.spi.util.Executors;
+import org.embulk.spi.util.ExecutorsInternal;
 
 public class ProcessTask {
     private final PluginType inputPluginType;
@@ -83,12 +83,12 @@ public class ProcessTask {
 
     @JsonIgnore
     public Schema getInputSchema() {
-        return Executors.getInputSchema(schemas);
+        return ExecutorsInternal.getInputSchema(schemas);
     }
 
     @JsonIgnore
     public Schema getOutputSchema() {
-        return Executors.getOutputSchema(schemas);
+        return ExecutorsInternal.getOutputSchema(schemas);
     }
 
     @JsonIgnore

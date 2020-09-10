@@ -13,7 +13,8 @@ import org.embulk.plugin.PluginType;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.InputPlugin;
@@ -21,7 +22,7 @@ import org.embulk.spi.Page;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.PageReader;
 import org.embulk.spi.Schema;
-import org.embulk.spi.util.Filters;
+import org.embulk.spi.util.FiltersInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,9 +58,9 @@ public class PreviewExecutor {
 
     public PreviewExecutor() {}
 
-    public PreviewResult preview(ExecSession exec, final ConfigSource config) {
+    public PreviewResult preview(ExecSessionInternal exec, final ConfigSource config) {
         try {
-            return Exec.doWith(exec.forPreview(), new ExecAction<PreviewResult>() {
+            return ExecInternal.doWith(exec.forPreview(), new ExecAction<PreviewResult>() {
                     public PreviewResult run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("preview")) {
                             return doPreview(config);
@@ -75,11 +76,11 @@ public class PreviewExecutor {
     }
 
     protected InputPlugin newInputPlugin(PreviewTask task) {
-        return Exec.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
+        return ExecInternal.newPlugin(InputPlugin.class, task.getInputConfig().get(PluginType.class, "type"));
     }
 
     protected List<FilterPlugin> newFilterPlugins(PreviewTask task) {
-        return Filters.newFilterPluginsFromConfigSources(Exec.session(), task.getFilterConfigs());
+        return FiltersInternal.newFilterPluginsFromConfigSources(ExecInternal.sessionInternal(), task.getFilterConfigs());
     }
 
     private PreviewResult doPreview(ConfigSource config) {
@@ -109,7 +110,7 @@ public class PreviewExecutor {
         try {
             input.transaction(task.getInputConfig(), new InputPlugin.Control() {
                     public List<TaskReport> run(final TaskSource inputTask, Schema inputSchema, final int taskCount) {
-                        Filters.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                        FiltersInternal.transaction(filterPlugins, task.getFilterConfigs(), inputSchema, new FiltersInternal.Control() {
                                 public void run(final List<TaskSource> filterTasks, final List<Schema> filterSchemas) {
                                     Schema inputSchema = filterSchemas.get(0);
                                     Schema outputSchema = filterSchemas.get(filterSchemas.size() - 1);
@@ -118,7 +119,7 @@ public class PreviewExecutor {
                                     try {
                                         for (int taskIndex = 0; taskIndex < taskCount; taskIndex++) {
                                             try {
-                                                out = Filters.open(filterPlugins, filterTasks, filterSchemas, out);
+                                                out = FiltersInternal.open(filterPlugins, filterTasks, filterSchemas, out);
                                                 input.run(inputTask, inputSchema, taskIndex, out);
                                             } catch (NoSampleException ex) {
                                                 if (taskIndex == taskCount - 1) {

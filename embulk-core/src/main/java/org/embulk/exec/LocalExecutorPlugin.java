@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigSource;
@@ -15,7 +16,8 @@ import org.embulk.config.TaskSource;
 import org.embulk.spi.AbortTransactionResource;
 import org.embulk.spi.CloseResource;
 import org.embulk.spi.Exec;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.InputPlugin;
@@ -27,9 +29,9 @@ import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
-import org.embulk.spi.util.Executors;
-import org.embulk.spi.util.Executors.ProcessStateCallback;
-import org.embulk.spi.util.Filters;
+import org.embulk.spi.util.ExecutorsInternal;
+import org.embulk.spi.util.ExecutorsInternal.ProcessStateCallback;
+import org.embulk.spi.util.FiltersInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,7 +148,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
 
         public DirectExecutor(int maxThreads, int taskCount) {
             super(taskCount, taskCount);
-            this.executor = java.util.concurrent.Executors.newFixedThreadPool(maxThreads,
+            this.executor = Executors.newFixedThreadPool(maxThreads,
                     new ThreadFactoryBuilder()
                             .setNameFormat("embulk-executor-%d")
                             .setDaemon(true)
@@ -168,7 +170,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             return executor.submit(new Callable<Throwable>() {
                     public Throwable call() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                            Executors.process(Exec.session(), task, taskIndex, new ProcessStateCallback() {
+                            ExecutorsInternal.process(ExecInternal.sessionInternal(), task, taskIndex, new ProcessStateCallback() {
                                     public void started() {
                                         state.getInputTaskState(taskIndex).start();
                                         state.getOutputTaskState(taskIndex).start();
@@ -202,13 +204,13 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             super(inputTaskCount, inputTaskCount * scatterCount);
             this.inputTaskCount = inputTaskCount;
             this.scatterCount = scatterCount;
-            this.inputExecutor = java.util.concurrent.Executors.newFixedThreadPool(
+            this.inputExecutor = Executors.newFixedThreadPool(
                     Math.max(maxThreads / scatterCount, 1),
                     new ThreadFactoryBuilder()
                             .setNameFormat("embulk-input-executor-%d")
                             .setDaemon(true)
                             .build());
-            this.outputExecutor = java.util.concurrent.Executors.newCachedThreadPool(
+            this.outputExecutor = Executors.newCachedThreadPool(
                     new ThreadFactoryBuilder()
                             .setNameFormat("embulk-output-executor-%d")
                             .setDaemon(true)
@@ -231,7 +233,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             return inputExecutor.submit(new Callable<Throwable>() {
                     public Throwable call() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName(String.format("task-%04d", taskIndex))) {
-                            runInputTask(Exec.session(), task, state, taskIndex);
+                            runInputTask(ExecInternal.sessionInternal(), task, state, taskIndex);
                             return null;
                         }
                     }
@@ -248,9 +250,9 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             return true;
         }
 
-        private void runInputTask(ExecSession exec, ProcessTask task, ProcessState state, int taskIndex) {
+        private void runInputTask(ExecSessionInternal exec, ProcessTask task, ProcessState state, int taskIndex) {
             InputPlugin inputPlugin = exec.newPlugin(InputPlugin.class, task.getInputPluginType());
-            List<FilterPlugin> filterPlugins = Filters.newFilterPlugins(exec, task.getFilterPluginTypes());
+            List<FilterPlugin> filterPlugins = FiltersInternal.newFilterPlugins(exec, task.getFilterPluginTypes());
             OutputPlugin outputPlugin = exec.newPlugin(OutputPlugin.class, task.getOutputPluginType());
 
             try (ScatterTransactionalPageOutput tran = new ScatterTransactionalPageOutput(state, taskIndex, scatterCount)) {
@@ -410,7 +412,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             for (int i = 0; i < scatterCount; i++) {
                 TransactionalPageOutput tran = trans[i];
                 if (tran != null) {
-                    PageOutput filtered = Filters.open(filterPlugins, filterTaskSources, filterSchemas, trans[i]);
+                    PageOutput filtered = FiltersInternal.open(filterPlugins, filterTaskSources, filterSchemas, trans[i]);
                     filtereds[i] = filtered;
                     closeThese[i].closeThis(filtered);
                 }

@@ -16,9 +16,9 @@ import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -36,16 +36,16 @@ public class EmbulkTestRuntime extends GuiceBinder {
         }
     }
 
-    private ExecSession exec;
+    private ExecSessionInternal exec;
 
     public EmbulkTestRuntime() {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
-        this.exec = ExecSession.builder(injector).fromExecConfig(execConfig).build();
+        this.exec = ExecSessionInternal.builderInternal(injector).fromExecConfig(execConfig).build();
     }
 
-    public ExecSession getExec() {
+    public ExecSessionInternal getExec() {
         return exec;
     }
 
@@ -71,7 +71,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
         return new Statement() {
             public void evaluate() throws Throwable {
                 try {
-                    Exec.doWith(exec, new ExecAction<Void>() {
+                    ExecInternal.doWith(exec, new ExecAction<Void>() {
                             public Void run() {
                                 try {
                                     superStatement.evaluate();

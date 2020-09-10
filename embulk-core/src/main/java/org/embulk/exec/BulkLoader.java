@@ -18,7 +18,8 @@ import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.Exec;
 import org.embulk.spi.ExecAction;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputRunner;
@@ -29,7 +30,7 @@ import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TaskState;
-import org.embulk.spi.util.Filters;
+import org.embulk.spi.util.FiltersInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -328,7 +329,7 @@ public class BulkLoader {
             return new ExecutionResult(configDiff, true, ignoredExceptions.build());
         }
 
-        public ResumeState buildResumeState(ExecSession exec) {
+        public ResumeState buildResumeState(ExecSessionInternal exec) {
             Schema inputSchema = (schemas == null) ? null : schemas.get(0);
             List<Optional<TaskReport>> inputTaskReports = (inputTaskStates == null) ? null : getInputTaskReports();
             List<Optional<TaskReport>> outputTaskReports = (outputTaskStates == null) ? null : getOutputTaskReports();
@@ -339,7 +340,7 @@ public class BulkLoader {
                     inputTaskReports, outputTaskReports);
         }
 
-        public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSession exec) {
+        public PartialExecutionException buildPartialExecuteException(Throwable cause, ExecSessionInternal exec) {
             return new PartialExecutionException(cause, buildResumeState(exec), transactionStage);
         }
     }
@@ -348,9 +349,9 @@ public class BulkLoader {
         return new LoaderState(logger, plugins);
     }
 
-    public ExecutionResult run(ExecSession exec, final ConfigSource config) {
+    public ExecutionResult run(ExecSessionInternal exec, final ConfigSource config) {
         try {
-            return Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+            return ExecInternal.doWith(exec, new ExecAction<ExecutionResult>() {
                     public ExecutionResult run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("transaction")) {
                             return doRun(config);
@@ -372,13 +373,13 @@ public class BulkLoader {
     public ExecutionResult resume(final ConfigSource config, final ResumeState resume) {
         throw new UnsupportedOperationException(
                 "BulkLoader#resume(ConfigSource, ResumeState) is no longer supported. "
-                + "Use BulkLoader#resume(ExecSession, ConfigSource, ResumeState) instead. "
+                + "Use BulkLoader#resume(ExecSessionInternal, ConfigSource, ResumeState) instead. "
                 + "Plugins should not call those methods anyway, though.");
     }
 
-    public ExecutionResult resume(final ExecSession exec, final ConfigSource config, final ResumeState resume) {
+    public ExecutionResult resume(final ExecSessionInternal exec, final ConfigSource config, final ResumeState resume) {
         try {
-            ExecutionResult result = Exec.doWith(exec, new ExecAction<ExecutionResult>() {
+            ExecutionResult result = ExecInternal.doWith(exec, new ExecAction<ExecutionResult>() {
                     public ExecutionResult run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("resume")) {
                             return doResume(config, resume);
@@ -402,13 +403,13 @@ public class BulkLoader {
     public void cleanup(final ConfigSource config, final ResumeState resume) {
         throw new UnsupportedOperationException(
                 "BulkLoader#cleanup(ConfigSource, ResumeState) is no longer supported. "
-                + "Use BulkLoader#cleanup(ExecSession, ConfigSource, ResumeState) instead. "
+                + "Use BulkLoader#cleanup(ExecSessionInternal, ConfigSource, ResumeState) instead. "
                 + "Plugins should not call those methods anyway, though.");
     }
 
-    public void cleanup(final ExecSession exec, final ConfigSource config, final ResumeState resume) {
+    public void cleanup(final ExecSessionInternal exec, final ConfigSource config, final ResumeState resume) {
         try {
-            Exec.doWith(exec, new ExecAction<Void>() {
+            ExecInternal.doWith(exec, new ExecAction<Void>() {
                     public Void run() {
                         try (SetCurrentThreadName dontCare = new SetCurrentThreadName("cleanup")) {
                             doCleanup(config, resume);
@@ -440,10 +441,10 @@ public class BulkLoader {
         public ProcessPluginSet(BulkLoaderTask task) {
             this.inputPluginType = task.getInputConfig().get(PluginType.class, "type");
             this.outputPluginType = task.getOutputConfig().get(PluginType.class, "type");
-            this.filterPluginTypes = Filters.getPluginTypes(task.getFilterConfigs());
-            this.inputPlugin = Exec.newPlugin(InputPlugin.class, inputPluginType);
-            this.outputPlugin = Exec.newPlugin(OutputPlugin.class, outputPluginType);
-            this.filterPlugins = Filters.newFilterPlugins(Exec.session(), filterPluginTypes);
+            this.filterPluginTypes = FiltersInternal.getPluginTypes(task.getFilterConfigs());
+            this.inputPlugin = ExecInternal.newPlugin(InputPlugin.class, inputPluginType);
+            this.outputPlugin = ExecInternal.newPlugin(OutputPlugin.class, outputPluginType);
+            this.filterPlugins = FiltersInternal.newFilterPlugins(ExecInternal.sessionInternal(), filterPluginTypes);
         }
 
         public PluginType getInputPluginType() {
@@ -508,7 +509,7 @@ public class BulkLoader {
     }
 
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task) {
-        return Exec.newPlugin(ExecutorPlugin.class,
+        return ExecInternal.newPlugin(ExecutorPlugin.class,
                 task.getExecConfig().get(PluginType.class, "type", PluginType.LOCAL));
     }
 
@@ -525,7 +526,7 @@ public class BulkLoader {
                 public List<TaskReport> run(final TaskSource inputTask, final Schema inputSchema, final int inputTaskCount) {
                     state.setInputTaskSource(inputTask);
                     state.setTransactionStage(TransactionStage.FILTER_BEGIN);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                    FiltersInternal.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new FiltersInternal.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
                             state.setSchemas(schemas);
                             state.setFilterTaskSources(filterTasks);
@@ -580,7 +581,7 @@ public class BulkLoader {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
-            throw state.buildPartialExecuteException(ex, Exec.session());
+            throw state.buildPartialExecuteException(ex, ExecInternal.sessionInternal());
         }
     }
 
@@ -600,7 +601,7 @@ public class BulkLoader {
                     // TODO validate inputSchema
                     state.setInputTaskSource(inputTask);
                     state.setTransactionStage(TransactionStage.FILTER_BEGIN);
-                    Filters.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new Filters.Control() {
+                    FiltersInternal.transaction(plugins.getFilterPlugins(), task.getFilterConfigs(), inputSchema, new FiltersInternal.Control() {
                         public void run(final List<TaskSource> filterTasks, final List<Schema> schemas) {
                             state.setSchemas(schemas);
                             state.setFilterTaskSources(filterTasks);
@@ -657,7 +658,7 @@ public class BulkLoader {
                 // ignore the exception
                 return state.buildExecuteResultWithWarningException(ex);
             }
-            throw state.buildPartialExecuteException(ex, Exec.session());
+            throw state.buildPartialExecuteException(ex, ExecInternal.sessionInternal());
         }
     }
 
@@ -704,7 +705,7 @@ public class BulkLoader {
 
     private void cleanupCommittedTransaction(ConfigSource config, LoaderState state) {
         try {
-            doCleanup(config, state.buildResumeState(Exec.session()));
+            doCleanup(config, state.buildResumeState(ExecInternal.sessionInternal()));
         } catch (Exception ex) {
             state.getLogger().warn("Commit succeeded but cleanup failed. Ignoring this exception.", ex);  // TODO
         }

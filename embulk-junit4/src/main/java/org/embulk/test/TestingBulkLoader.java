@@ -16,8 +16,8 @@ import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.ResumeState;
-import org.embulk.spi.Exec;
-import org.embulk.spi.ExecSession;
+import org.embulk.spi.ExecInternal;
+import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ class TestingBulkLoader extends BulkLoader {
         @Override
         public ExecutionResult buildExecuteResultWithWarningException(Throwable ex) {
             ExecutionResult result = super.buildExecuteResultWithWarningException(ex);
-            return new TestingExecutionResult(result, buildResumeState(Exec.session()), Exec.session());
+            return new TestingExecutionResult(result, buildResumeState(ExecInternal.sessionInternal()), ExecInternal.sessionInternal());
         }
     }
 
@@ -67,7 +67,7 @@ class TestingBulkLoader extends BulkLoader {
         private final List<TaskReport> outputTaskReports;
 
         public TestingExecutionResult(ExecutionResult orig,
-                ResumeState resumeState, ExecSession session) {
+                ResumeState resumeState, ExecSessionInternal session) {
             super(orig.getConfigDiff(), orig.isSkipped(), orig.getIgnoredExceptions());
             this.inputSchema = resumeState.getInputSchema();
             this.outputSchema = resumeState.getOutputSchema();
@@ -75,7 +75,7 @@ class TestingBulkLoader extends BulkLoader {
             this.outputTaskReports = buildReports(resumeState.getOutputTaskReports(), session);
         }
 
-        private static List<TaskReport> buildReports(List<Optional<TaskReport>> optionalReports, ExecSession session) {
+        private static List<TaskReport> buildReports(List<Optional<TaskReport>> optionalReports, ExecSessionInternal session) {
             ImmutableList.Builder<TaskReport> reports = ImmutableList.builder();
             for (Optional<TaskReport> report : optionalReports) {
                 reports.add(report.or(session.newTaskReport()));
