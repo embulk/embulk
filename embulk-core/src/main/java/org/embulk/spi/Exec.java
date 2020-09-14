@@ -104,6 +104,10 @@ public class Exec {
         return sessionForInside().getBufferAllocator();
     }
 
+    public static PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output) {
+        return sessionForInside().getPageBuilder(allocator, schema, output);
+    }
+
     /**
      * Returns Embulk's {@link org.embulk.config.ModelManager}.
      *

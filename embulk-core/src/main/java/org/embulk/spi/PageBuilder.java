@@ -14,6 +14,14 @@ public class PageBuilder implements AutoCloseable {
         this.delegate = delegate;
     }
 
+    /**
+     * Constructs a {@link PageBuilder} instance.
+     *
+     * @deprecated The constructor is deprecated although Embulk v0.9-compatible plugins still have to use this.
+     *     See <a href="https://github.com/embulk/embulk/issues/1321">GitHub Issue #1321: Deprecate PageBuilder's constructor</a>
+     *     for the details.
+     */
+    @Deprecated  // https://github.com/embulk/embulk/issues/1321
     public PageBuilder(BufferAllocator allocator, Schema schema, PageOutput output) {
         this(createImplInstance(allocator, schema, output));
     }
