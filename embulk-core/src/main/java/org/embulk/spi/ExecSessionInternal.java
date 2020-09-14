@@ -259,6 +259,11 @@ public class ExecSessionInternal extends ExecSession {
         return new PageBuilderImpl(allocator, schema, output);
     }
 
+    @Override
+    public PageReader getPageReader(final Schema schema) {
+        return new PageReaderImpl(schema);
+    }
+
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     @Override
     public org.embulk.config.ModelManager getModelManager() {

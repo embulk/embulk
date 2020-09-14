@@ -15,6 +15,13 @@ public class PageReader implements AutoCloseable {
         this.delegate = delegate;
     }
 
+    /**
+     * Constructs a {@link PageReader} instance.
+     *
+     * @deprecated The constructor is deprecated although Embulk v0.9-compatible plugins still have to use this.
+     *     See <a href="https://github.com/embulk/embulk/issues/1323">GitHub Issue #1323: Deprecate PageReader's constructor</a>
+     *     for the details.
+     */
     public PageReader(Schema schema) {
         this(createImplInstance(schema));
     }
