@@ -25,7 +25,8 @@ import org.embulk.config.TaskSource;
 /**
  * The main class that a File Output Plugin implements.
  *
- * <p>It writes {@link org.embulk.spi.TransactionalFileOutput} as a byte sequence in a transaction.
+ * <p>A File Output Plugin writes file-like byte sequences from a Formatter Plugin, or an Encoder Plugin, into the configured
+ * destination.
  */
 public interface FileOutputPlugin {
     /**
@@ -38,7 +39,7 @@ public interface FileOutputPlugin {
          * <p>It would be executed in {@link #resume(org.embulk.config.TaskSource, int, FileOutputPlugin.Control)}.
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
-         * @return reports
+         * @return reports of tasks
          */
         List<TaskReport> run(TaskSource taskSource);
     }
@@ -49,7 +50,7 @@ public interface FileOutputPlugin {
      * @param config  a configuration for the File Output Plugin given from a user
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
-     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+[     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
      */
     ConfigDiff transaction(ConfigSource config, int taskCount, FileOutputPlugin.Control control);
 
@@ -68,16 +69,20 @@ public interface FileOutputPlugin {
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskCount  the number of tasks
-     * @param successTaskReports  {@link org.embulk.config.TaskReport}s of successful tasks
+     * @param successTaskReports  reports of successful tasks
      */
     void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successTaskReports);
 
     /**
-     * Processes each file input task.
+     * Opens a {@link org.embulk.spi.TransactionalFileOutput} instance that receives {@link org.embulk.spi.Buffer}s from a
+     * Formatter Plugin, or an Encoder Plugin, and writes them into the configured destination.
+     *
+     * <p>It processes each file output task.
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskIndex  the index number of the task
-     * @return an output for a Formatter Plugin, or another Encoder Plugin
+     * @return an implementation of {@link org.embulk.spi.TransactionalFileOutput} that receives {@link org.embulk.spi.Buffer}s
+     *     from a Formatter Plugin, or an Encoder Plugin, and writes them into the configured destination
      */
     TransactionalFileOutput open(TaskSource taskSource, int taskIndex);
 }

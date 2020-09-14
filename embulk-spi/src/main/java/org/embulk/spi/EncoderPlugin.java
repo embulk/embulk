@@ -22,7 +22,8 @@ import org.embulk.config.TaskSource;
 /**
  * The main class that an Encoder Plugin implements.
  *
- * <p>It converts a byte sequence {@link org.embulk.spi.FileOutput} to another byte sequence {@link org.embulk.spi.FileOutput}.
+ * <p>An Encoder Plugin converts a set of byte buffers in {@link org.embulk.spi.FileOutput} to another set of byte buffers of
+ * {@link org.embulk.spi.FileOutput}.
  */
 public interface EncoderPlugin {
     /**
@@ -30,7 +31,7 @@ public interface EncoderPlugin {
      */
     interface Control {
         /**
-         * Runs the following tasks of the encoder plugin.
+         * Runs the following tasks of the Encoder Plugin.
          *
          * <p>It would be executed at the end of {@link #transaction(org.embulk.config.ConfigSource, EncoderPlugin.Control)}.
          *
@@ -42,17 +43,22 @@ public interface EncoderPlugin {
     /**
      * Processes the entire encoding transaction.
      *
-     * @param config  a configuration for the encoder plugin given from a user
+     * @param config  a configuration for the Encoder Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
      */
     void transaction(ConfigSource config, EncoderPlugin.Control control);
 
     /**
-     * Processes each encoding task.
+     * Opens a {@link org.embulk.spi.FileOutput} instance that receives {@link org.embulk.spi.Buffer}s from a Formatter Plugin,
+     * or another Encoder Plugin, and writes encoded output into {@link org.embulk.spi.FileOutput} {@code fileOutput} in the
+     * parameter list.
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
-     * @param fileOutput  an output from a Formatter Plugin, or another Encoder Plugin
-     * @return an output for a File Output Plugin, or another Encoder Plugin
+     * @param fileOutput  {@link org.embulk.spi.FileOutput} to write encoded output for a File Output Plugin, or another Encoder
+     *     Plugin
+     * @return an implementation of {@link org.embulk.spi.FileOutput} that receives {@link org.embulk.spi.Buffer}s from a Formatter
+     *     Plugin, or another Encoder Plugin, and writes encoded output into {@link org.embulk.spi.FileOutput} {@code fileOutput}
+     *     in the parameter list
      */
     FileOutput open(TaskSource taskSource, FileOutput fileOutput);
 }
