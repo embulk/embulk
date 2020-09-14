@@ -101,6 +101,7 @@ public class Schema {
         throw new SchemaConfigException(String.format("Column '%s' is not found", name));
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1324
     public int getFixedStorageSize() {
         int total = 0;
         for (final Column column : this.columns) {
