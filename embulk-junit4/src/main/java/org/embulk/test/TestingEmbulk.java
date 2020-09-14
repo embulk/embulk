@@ -35,6 +35,7 @@ import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.TempFileException;
 import org.embulk.spi.TempFileSpace;
+import org.embulk.spi.TempFileSpaceImpl;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -83,7 +84,7 @@ public class TestingEmbulk implements TestRule {
                 .initializeCloseable();
 
         try {
-            this.tempFiles = new TempFileSpace(Files.createTempDirectory("embulk-test-temp-").toFile());
+            this.tempFiles = TempFileSpaceImpl.with(Files.createTempDirectory("embulk-test-temp-"), "foo");
         } catch (IOException ex) {
             throw new TempFileException(ex);
         }

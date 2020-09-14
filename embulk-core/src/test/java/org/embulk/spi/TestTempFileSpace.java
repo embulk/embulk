@@ -21,30 +21,30 @@ public class TestTempFileSpace {
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullBaseDir() throws IOException {
-        TempFileSpace.with(null, "embulk20191030T000000Z");
+        TempFileSpaceImpl.with(null, "embulk20191030T000000Z");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNullPrefix() throws IOException {
-        TempFileSpace.with(temporaryFolder.getRoot().toPath(), null);
+        TempFileSpaceImpl.with(temporaryFolder.getRoot().toPath(), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testRelativePath() throws IOException {
         final Path path = temporaryFolder.getRoot().toPath();
-        TempFileSpace.with(path.subpath(path.getNameCount() - 1, path.getNameCount()), "embulk20191030T000001Z");
+        TempFileSpaceImpl.with(path.subpath(path.getNameCount() - 1, path.getNameCount()), "embulk20191030T000001Z");
     }
 
     @Test(expected = IOException.class)
     public void testNonexistent() throws IOException {
-        TempFileSpace.with(temporaryFolder.getRoot().toPath().resolve("somenonexistentdir"), "embulk20191030T000002Z");
+        TempFileSpaceImpl.with(temporaryFolder.getRoot().toPath().resolve("somenonexistentdir"), "embulk20191030T000002Z");
     }
 
     @Test
     public void testCreateTempFile() {
         final String prefix = "embulk20191030T000003Z";
 
-        final TempFileSpace space = create(prefix);
+        final TempFileSpaceImpl space = create(prefix);
         // The temporary directory should not have been created before the first createTempFile().
         assertFalse(space.getTempDirectoryForTesting().isPresent());
         assertEquals(0, entriesPrefixedWith(prefix));
@@ -66,7 +66,7 @@ public class TestTempFileSpace {
     public void testCreateTempFileWithExt() {
         final String prefix = "embulk20191030T000004Z";
 
-        final TempFileSpace space = create(prefix);
+        final TempFileSpaceImpl space = create(prefix);
         // The temporary directory should not have been created before the first createTempFile().
         assertFalse(space.getTempDirectoryForTesting().isPresent());
         assertEquals(0, entriesPrefixedWith(prefix));
@@ -88,7 +88,7 @@ public class TestTempFileSpace {
     public void testCreateTempFileWithPrefixAndExt() {
         final String prefix = "embulk20191030T000005Z";
 
-        final TempFileSpace space = create(prefix);
+        final TempFileSpaceImpl space = create(prefix);
         // The temporary directory should not have been created before the first createTempFile().
         assertFalse(space.getTempDirectoryForTesting().isPresent());
         assertEquals(0, entriesPrefixedWith(prefix));
@@ -111,7 +111,7 @@ public class TestTempFileSpace {
     public void testCreateTempFileWithIllegalPrefix() {
         final String prefix = "embulk20191030T000006Z";
 
-        final TempFileSpace space = create(prefix);
+        final TempFileSpaceImpl space = create(prefix);
         // The temporary directory should not have been created before the first createTempFile().
         assertFalse(space.getTempDirectoryForTesting().isPresent());
         assertEquals(0, entriesPrefixedWith(prefix));
@@ -138,9 +138,9 @@ public class TestTempFileSpace {
         }
     }
 
-    private TempFileSpace create(final String prefix) {
+    private TempFileSpaceImpl create(final String prefix) {
         try {
-            return TempFileSpace.with(temporaryFolder.getRoot().toPath(), prefix);
+            return TempFileSpaceImpl.with(temporaryFolder.getRoot().toPath(), prefix);
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
         }
