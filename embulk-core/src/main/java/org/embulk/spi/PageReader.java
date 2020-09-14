@@ -1,100 +1,74 @@
 package org.embulk.spi;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.Instant;
-import org.embulk.deps.buffer.Slice;
 import org.msgpack.value.Value;
 
 public class PageReader implements AutoCloseable {
-    private final Schema schema;
-    private final int[] columnOffsets;
+    PageReader() {
+        this.delegate = null;
+    }
 
-    private Page page = SENTINEL;
-    private Slice pageSlice = null;
-    private int pageRecordCount = 0;
-
-    private int readCount = 0;
-    private int position;
-    private final byte[] nullBitSet;
-
-    private static final Page SENTINEL = PageImpl.wrap(BufferImpl.wrap(new byte[4]));  // buffer().release() does nothing
+    private PageReader(final PageReader delegate) {
+        this.delegate = delegate;
+    }
 
     public PageReader(Schema schema) {
-        this.schema = schema;
-        this.columnOffsets = PageFormat.columnOffsets(schema);
-        this.nullBitSet = new byte[PageFormat.nullBitSetSize(schema)];
+        this(createImplInstance(schema));
     }
 
     public static int getRecordCount(Page page) {
-        Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
-        return pageSlice.getInt(0);  // see page format
+        return callGetRecordCount(page);
     }
 
     public void setPage(Page page) {
-        this.page.buffer().release();
-        this.page = SENTINEL;
-
-        Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
-
-        pageRecordCount = pageSlice.getInt(0);  // see page format
-        readCount = 0;
-        position = PageFormat.PAGE_HEADER_SIZE;
-
-        this.page = page;
-        this.pageSlice = pageSlice;
+        this.delegate.setPage(page);
     }
 
     public Schema getSchema() {
-        return schema;
+        return this.delegate.getSchema();
     }
 
     public boolean isNull(Column column) {
-        return isNull(column.getIndex());
+        return this.delegate.isNull(column);
     }
 
     public boolean isNull(int columnIndex) {
-        return (nullBitSet[columnIndex >>> 3] & (1 << (columnIndex & 7))) != 0;
+        return this.delegate.isNull(columnIndex);
     }
 
     public boolean getBoolean(Column column) {
-        // TODO check type?
-        return getBoolean(column.getIndex());
+        return this.delegate.getBoolean(column);
     }
 
     public boolean getBoolean(int columnIndex) {
-        return pageSlice.getByte(getOffset(columnIndex)) != (byte) 0;
+        return this.delegate.getBoolean(columnIndex);
     }
 
     public long getLong(Column column) {
-        // TODO check type?
-        return getLong(column.getIndex());
+        return this.delegate.getLong(column);
     }
 
     public long getLong(int columnIndex) {
-        return pageSlice.getLong(getOffset(columnIndex));
+        return this.delegate.getLong(columnIndex);
     }
 
     public double getDouble(Column column) {
-        // TODO check type?
-        return getDouble(column.getIndex());
+        return this.delegate.getDouble(column);
     }
 
     public double getDouble(int columnIndex) {
-        return pageSlice.getDouble(getOffset(columnIndex));
+        return this.delegate.getDouble(columnIndex);
     }
 
     public String getString(Column column) {
-        // TODO check type?
-        return getString(column.getIndex());
+        return this.delegate.getString(column);
     }
 
     public String getString(int columnIndex) {
-        if (isNull(columnIndex)) {
-            return null;
-        }
-        int index = pageSlice.getInt(getOffset(columnIndex));
-        return page.getStringReference(index);
+        return this.delegate.getString(columnIndex);
     }
 
     /**
@@ -105,8 +79,7 @@ public class PageReader implements AutoCloseable {
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public org.embulk.spi.time.Timestamp getTimestamp(Column column) {
-        // TODO check type?
-        return org.embulk.spi.time.Timestamp.ofInstant(this.getTimestampInstant(column.getIndex()));
+        return this.delegate.getTimestamp(column);
     }
 
     /**
@@ -117,131 +90,110 @@ public class PageReader implements AutoCloseable {
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public org.embulk.spi.time.Timestamp getTimestamp(int columnIndex) {
-        return org.embulk.spi.time.Timestamp.ofInstant(this.getTimestampInstant(columnIndex));
+        return this.delegate.getTimestamp(columnIndex);
     }
 
     public Instant getTimestampInstant(final Column column) {
-        // TODO check type?
-        return this.getTimestampInstant(column.getIndex());
+        return this.delegate.getTimestampInstant(column);
     }
 
     public Instant getTimestampInstant(final int columnIndex) {
-        if (isNull(columnIndex)) {
-            return null;
-        }
-        int offset = getOffset(columnIndex);
-        long sec = pageSlice.getLong(offset);
-        int nsec = pageSlice.getInt(offset + 8);
-        return Instant.ofEpochSecond(sec, nsec);
+        return this.delegate.getTimestampInstant(columnIndex);
     }
 
     public Value getJson(Column column) {
-        // TODO check type?
-        return getJson(column.getIndex());
+        return this.delegate.getJson(column);
     }
 
     public Value getJson(int columnIndex) {
-        if (isNull(columnIndex)) {
-            return null;
-        }
-        int index = pageSlice.getInt(getOffset(columnIndex));
-        return page.getValueReference(index);
-    }
-
-    private int getOffset(int columnIndex) {
-        return position + columnOffsets[columnIndex];
+        return this.delegate.getJson(columnIndex);
     }
 
     public boolean nextRecord() {
-        if (pageRecordCount <= readCount) {
-            return false;
-        }
-
-        if (readCount > 0) {
-            // advance position excepting the first record
-            int lastRecordSize = pageSlice.getInt(position);
-            position += lastRecordSize;
-        }
-
-        readCount++;
-        pageSlice.getBytes(position + 4, nullBitSet, 0, nullBitSet.length);
-
-        return true;
+        return this.delegate.nextRecord();
     }
 
     @Override
     public void close() {
-        page.buffer().release();
-        page = SENTINEL;
+        this.delegate.close();
     }
 
-    /* TODO for variable-length types
-    public VariableLengthDataReader getVariableLengthData(int columnIndex, int variableLengthDataOffset)
-    {
-        return new VariableLengthDataReader(variableLengthDataOffset);
-    }
-
-    public class VariableLengthDataReader
-    {
-        private int offsetFromPosition;
-
-        VariableLengthDataReader(int offsetFromPosition)
-        {
-            this.offsetFromPosition = offsetFromPosition;
-        }
-
-        public byte readByte()
-        {
-            byte value = page.getByte(position + offsetFromPosition);
-            offsetFromPosition += 1;
-            return value;
-        }
-
-        public short readShort()
-        {
-            short value = page.getShort(position + offsetFromPosition);
-            offsetFromPosition += 2;
-            return value;
-        }
-
-        public int readInt()
-        {
-            int value = page.getInt(position + offsetFromPosition);
-            offsetFromPosition += 4;
-            return value;
-        }
-
-        public long readLong()
-        {
-            long value = page.getLong(position + offsetFromPosition);
-            offsetFromPosition += 8;
-            return value;
-        }
-
-        public float readFloat()
-        {
-            float value = page.getFloat(position + offsetFromPosition);
-            offsetFromPosition += 4;
-            return value;
-        }
-
-        public double readDouble()
-        {
-            double value = page.getDouble(position + offsetFromPosition);
-            offsetFromPosition += 8;
-            return value;
-        }
-
-        public void readBytes(byte[] data)
-        {
-            readBytes(data, 0, data.length);
-        }
-
-        public void readBytes(byte[] data, int off, int len)
-        {
-            page.getBytes(position + offsetFromPosition, data, off, len);
-            offsetFromPosition += len;
+    private static PageReader createImplInstance(final Schema schema) {
+        try {
+            return Holder.CONSTRUCTOR.newInstance(schema);
+        } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
+            throw new LinkageError("[FATAL] org.embulk.spi.PageReaderImpl is invalid.", ex);
+        } catch (final InvocationTargetException ex) {
+            throwCheckedForcibly(ex.getTargetException());
+            return null;  // Should never reach.
         }
     }
-    */
+
+    private static int callGetRecordCount(final Page page) {
+        final Object result;
+        try {
+            result = Holder.GET_RECORD_COUNT.invoke(null, page);
+        } catch (final IllegalAccessException | IllegalArgumentException ex) {
+            throw new LinkageError("[FATAL] org.embulk.spi.PageReaderImpl is invalid.", ex);
+        } catch (final InvocationTargetException ex) {
+            throwCheckedForcibly(ex.getTargetException());
+            return Integer.MIN_VALUE;  // Should never reach.
+        }
+
+        if (result == null) {
+            throw new LinkageError(
+                    "[FATAL] org.embulk.spi.PageReaderImpl is invalid.",
+                    new NullPointerException("PageReaderImpl#getRecordCount returned null."));
+        }
+        if (!(result instanceof Integer)) {
+            throw new LinkageError(
+                    "[FATAL] org.embulk.spi.PageReaderImpl is invalid.",
+                    new ClassCastException("PageReaderImpl#getRecordCount returned non-int."));
+        }
+        return (Integer) result;
+    }
+
+    private static class Holder {  // Initialization-on-demand holder idiom.
+        private static final Class<PageReader> IMPL_CLASS;
+        private static final Constructor<PageReader> CONSTRUCTOR;
+        private static final Method GET_RECORD_COUNT;
+
+        static {
+            try {
+                IMPL_CLASS = loadPageReaderImpl();
+            } catch (final ClassNotFoundException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.PageReaderImpl is not found.", ex);
+            }
+
+            try {
+                CONSTRUCTOR = IMPL_CLASS.getConstructor(Schema.class);
+            } catch (final NoSuchMethodException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.PageReaderImpl does not have an expected constructor.", ex);
+            }
+
+            try {
+                GET_RECORD_COUNT = IMPL_CLASS.getMethod("getRecordCount", Page.class);
+            } catch (final NoSuchMethodException ex) {
+                throw new LinkageError("[FATAL] org.embulk.spi.PageReaderImpl does not have a static method 'getRecordCount'.", ex);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<PageReader> loadPageReaderImpl() throws ClassNotFoundException {
+        return (Class<PageReader>) CLASS_LOADER.loadClass("org.embulk.spi.PageReaderImpl");
+    }
+
+    private static void throwCheckedForcibly(final Throwable ex) {
+        PageReader.<RuntimeException>throwCheckedForciblyInternal(ex);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void throwCheckedForciblyInternal(final Throwable ex) throws E {
+        throw (E) ex;
+    }
+
+    private static final ClassLoader CLASS_LOADER = PageReader.class.getClassLoader();
+
+    private final PageReader delegate;
 }
