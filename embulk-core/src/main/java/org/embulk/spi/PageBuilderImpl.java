@@ -10,7 +10,7 @@ import org.embulk.spi.type.Types;
 import org.msgpack.value.ImmutableValue;
 import org.msgpack.value.Value;
 
-public class PageBuilder implements AutoCloseable {
+public class PageBuilderImpl extends PageBuilder {
     private final BufferAllocator allocator;
     private final PageOutput output;
     private final Schema schema;
@@ -29,7 +29,7 @@ public class PageBuilder implements AutoCloseable {
     private int referenceSize;
     private int nextVariableLengthDataOffset;
 
-    public PageBuilder(BufferAllocator allocator, Schema schema, PageOutput output) {
+    public PageBuilderImpl(BufferAllocator allocator, Schema schema, PageOutput output) {
         this.allocator = allocator;
         this.output = output;
         this.schema = schema;
@@ -254,8 +254,8 @@ public class PageBuilder implements AutoCloseable {
     /**
      * Row is a container to stage values before adding into reference lists such as |stringReferences|.
      *
-     * |Row| works as a buffer against plugins that may add values incorrectly without |PageBuilder#addRecord|.
-     * It accepts just one value per column while |PageBuilder| can double-store values regardless of columns.
+     * |Row| works as a buffer against plugins that may add values incorrectly without |PageBuilderImpl#addRecord|.
+     * It accepts just one value per column while |PageBuilderImpl| can double-store values regardless of columns.
      * Double-stored values are overwritten.
      */
     private static class Row {
@@ -320,7 +320,7 @@ public class PageBuilder implements AutoCloseable {
             values[columnIndex].setTimestamp(value);
         }
 
-        private void write(PageBuilder pageBuilder) {
+        private void write(PageBuilderImpl pageBuilder) {
             for (ColumnValue v : values) {
                 v.write(pageBuilder);
             }
@@ -342,7 +342,7 @@ public class PageBuilder implements AutoCloseable {
 
         void setNull();
 
-        void write(PageBuilder pageBuilder);
+        void write(PageBuilderImpl pageBuilder);
     }
 
     private abstract static class AbstractColumnValue implements ColumnValue {
@@ -381,7 +381,7 @@ public class PageBuilder implements AutoCloseable {
             isNull = true;
         }
 
-        public void write(PageBuilder pageBuilder) {
+        public void write(PageBuilderImpl pageBuilder) {
             if (!isNull) {
                 writeNotNull(pageBuilder);
             } else {
@@ -389,7 +389,7 @@ public class PageBuilder implements AutoCloseable {
             }
         }
 
-        protected abstract void writeNotNull(PageBuilder pageBuilder);
+        protected abstract void writeNotNull(PageBuilderImpl pageBuilder);
     }
 
     private static class BooleanColumnValue extends AbstractColumnValue {
@@ -406,7 +406,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeBoolean(column.getIndex(), value);
         }
     }
@@ -425,7 +425,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeLong(column.getIndex(), value);
         }
     }
@@ -444,7 +444,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeDouble(column.getIndex(), value);
         }
     }
@@ -463,7 +463,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeString(column.getIndex(), value);
         }
     }
@@ -482,7 +482,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeJson(column.getIndex(), value);
         }
     }
@@ -501,7 +501,7 @@ public class PageBuilder implements AutoCloseable {
         }
 
         @Override
-        public void writeNotNull(PageBuilder pageBuilder) {
+        public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeTimestamp(column.getIndex(), value);
         }
     }

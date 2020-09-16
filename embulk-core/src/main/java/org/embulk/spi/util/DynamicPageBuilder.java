@@ -74,6 +74,7 @@ public class DynamicPageBuilder implements AutoCloseable {
         }
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1321
     private DynamicPageBuilder(
             final DynamicColumnSetterFactory factory,
             final BufferAllocator allocator,
