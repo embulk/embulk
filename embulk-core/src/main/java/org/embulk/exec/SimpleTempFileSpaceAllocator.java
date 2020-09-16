@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.regex.Pattern;
 import org.embulk.spi.TempFileSpace;
 import org.embulk.spi.TempFileSpaceAllocator;
+import org.embulk.spi.TempFileSpaceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,7 @@ class SimpleTempFileSpaceAllocator implements TempFileSpaceAllocator {
         // UNIX/Linux cannot include '/' as file name.
         // Windows cannot include ':' as file name.
         try {
-            return TempFileSpace.with(
+            return TempFileSpaceImpl.with(
                     this.tempDirectoryBase, "embulk" + subdirectoryPrefix.replace('/', '-').replace(':', '-'));
         } catch (final IOException ex) {
             throw new UncheckedIOException(ex);

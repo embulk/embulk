@@ -11,56 +11,15 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Responsible to manage a temporary directory (a space for temporary files) for a task.
- *
- * <p>Plugins are expected to get this through {@link Exec#getTempFileSpace}. Do not create an instance of this directly.
- */
-public class TempFileSpace {
-    private TempFileSpace(final boolean isUnique, final Path baseDir, final String prefix, final File exactDir) {
-        this.isUnique = isUnique;
-        if (isUnique) {
-            this.baseDir = baseDir;
-            this.prefix = prefix;
-            this.exactDir = null;
-        } else {  // Backward-compatible behavior for `new TempFileSpace(File)`. To be removed.
-            if (exactDir == null) {
-                throw new IllegalArgumentException("dir is null");
-            }
-            this.baseDir = null;
-            this.prefix = null;
-            this.exactDir = exactDir;
-        }
-
+public class TempFileSpaceImpl extends TempFileSpace {
+    private TempFileSpaceImpl(final Path baseDir, final String prefix) {
+        this.baseDir = baseDir;
+        this.prefix = prefix;
         this.tempDirectoryCreated = Optional.empty();
     }
 
-    /**
-     * Creates an instance of {@link TempFileSpace}.
-     *
-     * <p>It creates {@link TempFileSpace} exactly at the specified {@link java.io.File}.
-     *
-     * <p>Note that the corresponding directory is created lazily when the first temporary file is created there.
-     *
-     * @deprecated It has been deprecated because it may use the same directory from different processes and/or tasks.
-     * Use {@link #with(java.nio.file.Path, java.lang.String)} instead. It is to be removed.
-     */
-    @Deprecated
-    public TempFileSpace(final File dir) {
-        this(false, null, null, dir);
-    }
-
-    /**
-     * Creates an instance of {@link TempFileSpace}.
-     *
-     * <p>Note that the corresponding directory is created lazily when the first temporary file is created there.
-     *
-     * <p>It creates {@link TempFileSpace} under the specified {@code baseDir} with the {@code prefix}.
-     *
-     * @param baseDir  the base directory to create a temporary directory, which must be an absolute {@link java.nio.file.Path}
-     * @param prefix  the prefix of the temporary directory to be created
-     */
-    public static TempFileSpace with(final Path baseDir, final String prefix) throws IOException {
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1319
+    public static TempFileSpaceImpl with(final Path baseDir, final String prefix) throws IOException {
         if (baseDir == null || prefix == null) {
             throw new IllegalArgumentException("TempFileSpace cannot be created with null.");
         }
@@ -71,36 +30,21 @@ public class TempFileSpace {
             throw new IOException("TempFileSpace cannot be created under non-directory.");
         }
 
-        return new TempFileSpace(true, baseDir, prefix, null);
+        return new TempFileSpaceImpl(baseDir, prefix);
     }
 
-    /**
-     * Creates a temporary file with the default file name prefix, and the default file extension suffix.
-     *
-     * @return A temporary {@link java.io.File} created
-     */
+    @Override
     public File createTempFile() {
         return this.createTempFile("tmp");
     }
 
-    /**
-     * Creates a temporary file with the default file name prefix, and the specified file extension suffix.
-     *
-     * @param fileExt  The file extension suffix without a leading dot ({@code '.'})
-     * @return A temporary {@link java.io.File} created
-     */
+    @Override
     public File createTempFile(final String fileExt) {
         // Thread names contain ':' which is not valid as file names in Windows.
         return this.createTempFile(Thread.currentThread().getName().replaceAll(":", "_") + "_", fileExt);
     }
 
-    /**
-     * Creates a temporary file with the specified file name prefix, and the specified file extension suffix.
-     *
-     * @param prefix  The file name prefix
-     * @param fileExt  The file extension suffix without a leading dot ({@code '.'})
-     * @return A temporary {@link java.io.File} created
-     */
+    @Override
     public synchronized File createTempFile(final String prefix, final String fileExt) {
         try {
             this.createTempDirectoryIfRequired();
@@ -124,11 +68,7 @@ public class TempFileSpace {
         }
     }
 
-    /**
-     * Cleans up the temporary file space, and everything in the space.
-     *
-     * <p>It is to be called along with Embulk's cleanup process. Plugins should not call this directly.
-     */
+    @Override
     public synchronized void cleanup() {
         if (this.tempDirectoryCreated.isPresent()) {
             logDebugWithStackTraces("TempFileSpace \"" + this.tempDirectoryCreated.get().toString() + "\" is cleaned up at");
@@ -182,9 +122,6 @@ public class TempFileSpace {
 
         if (this.baseDir != null) {
             this.tempDirectoryCreated = Optional.of(Files.createTempDirectory(this.baseDir, this.prefix));
-        } else if (this.exactDir != null) {
-            this.exactDir.mkdirs();
-            this.tempDirectoryCreated = Optional.of(this.exactDir.toPath());
         }
     }
 
@@ -199,12 +136,7 @@ public class TempFileSpace {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(TempFileSpace.class);
-
-    // true if it is created through TempFileSpace.with.
-    //
-    // TODO: Remove it once the constructor TempFileSpace(File) goes away.
-    private final boolean isUnique;
+    private static final Logger logger = LoggerFactory.getLogger(TempFileSpaceImpl.class);
 
     // The base directory to create a temporary directory under this.
     //
@@ -215,13 +147,6 @@ public class TempFileSpace {
     //
     // Available only when created through TempFileSpace.with.
     private final String prefix;
-
-    // The exact directory specified through the constructor TempFileSpace(File).
-    //
-    // Available only when created through the constructor TempFileSpace(File).
-    //
-    // TODO: Remove it once the constructor TempFileSpace(File) goes away.
-    private final File exactDir;
 
     // The temporary directory created when creating the first temporary file.
     private Optional<Path> tempDirectoryCreated;
