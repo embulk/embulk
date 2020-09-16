@@ -20,9 +20,30 @@ package org.embulk.spi.type;
  * Represents Embulk's data type.
  */
 public interface Type {
+    /**
+     * Returns the name of the Embulk data type.
+     *
+     * @return the name of the Embulk data type
+     */
     String getName();
 
+    /**
+     * Returns the Java type of the internal value in the Embulk data type.
+     *
+     * @deprecated It would be removed in Embulk v0.10 or v0.11. Do not use it.
+     *
+     * @return the Java type of the internal value in the Embulk data type
+     */
+    @Deprecated
     Class<?> getJavaType();
 
+    /**
+     * Returns the size of the internal value in the Embulk data type.
+     *
+     * @deprecated It would be removed in Embulk v0.10 or v0.11. Do not use it.
+     *
+     * @return the size of the internal value in the Embulk data type
+     */
+    @Deprecated
     byte getFixedStorageSize();
 }
