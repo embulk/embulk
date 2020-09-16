@@ -108,6 +108,10 @@ public class Exec {
         return sessionForInside().getPageBuilder(allocator, schema, output);
     }
 
+    public static PageReader getPageReader(final Schema schema) {
+        return sessionForInside().getPageReader(schema);
+    }
+
     /**
      * Returns Embulk's {@link org.embulk.config.ModelManager}.
      *

@@ -87,6 +87,8 @@ public abstract class ExecSession {
 
     public abstract PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output);
 
+    public abstract PageReader getPageReader(final Schema schema);
+
     /**
      * Returns Embulk's {@link org.embulk.config.ModelManager}.
      *
