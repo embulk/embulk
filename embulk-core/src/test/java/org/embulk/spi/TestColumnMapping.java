@@ -22,7 +22,7 @@ public class TestColumnMapping {
 
     @Test
     public void testSerialization() throws IOException {
-        final ModelManager modelManager = Exec.getModelManager();
+        final ModelManager modelManager = ExecInternal.getModelManager();
 
         final Column column = new Column(21, "bar", Types.DOUBLE);
         final String stringified = modelManager.writeObject(column);
@@ -237,7 +237,7 @@ public class TestColumnMapping {
 
     private static void assertColumn(
             final int indexExpected, final String nameExpected, final Type typeExpected, final String json) {
-        final ModelManager modelManager = Exec.getModelManager();
+        final ModelManager modelManager = ExecInternal.getModelManager();
         final Column column = modelManager.readObject(Column.class, json);
         assertEquals(indexExpected, column.getIndex());
         assertEquals(nameExpected, column.getName());
@@ -252,7 +252,7 @@ public class TestColumnMapping {
     }
 
     private static void assertException(final Class<? extends Exception> expectedException, final String json) {
-        final ModelManager modelManager = Exec.getModelManager();
+        final ModelManager modelManager = ExecInternal.getModelManager();
         try {
             modelManager.readObject(Column.class, json);
         } catch (final RuntimeException ex) {

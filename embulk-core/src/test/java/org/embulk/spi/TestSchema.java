@@ -24,7 +24,7 @@ public class TestSchema {
 
     @Test
     public void testSerialization() throws IOException {
-        final ModelManager modelManager = Exec.getModelManager();
+        final ModelManager modelManager = ExecInternal.getModelManager();
         final Schema schema = Schema.builder().add("hoge", Types.DOUBLE).add("fuga", Types.JSON).build();
         final String stringified = modelManager.writeObject(schema);
         final JsonNode reparsed = (new ObjectMapper()).readTree(stringified);
@@ -134,7 +134,7 @@ public class TestSchema {
     }
 
     private static Schema readSchema(final String json) {
-        final ModelManager modelManager = Exec.getModelManager();
+        final ModelManager modelManager = ExecInternal.getModelManager();
         return modelManager.readObject(Schema.class, json);
     }
 }

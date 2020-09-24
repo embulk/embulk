@@ -213,7 +213,6 @@ public class ExecSessionInternal extends ExecSession {
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1313
-    @Override
     public Injector getInjector() {
         return injector;
     }
@@ -265,13 +264,11 @@ public class ExecSessionInternal extends ExecSession {
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    @Override
     public org.embulk.config.ModelManager getModelManager() {
         return modelManager;
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1309
-    @Override
     public <T> T newPlugin(Class<T> iface, PluginType type) {
         return pluginManager.newPlugin(iface, type);
     }
@@ -299,7 +296,6 @@ public class ExecSessionInternal extends ExecSession {
     // To be removed by v0.10 or earlier.
     @Deprecated  // https://github.com/embulk/embulk/issues/936
     @SuppressWarnings("deprecation")
-    @Override
     public TimestampFormatter newTimestampFormatter(String format, org.joda.time.DateTimeZone timezone) {
         return new TimestampFormatter(format, timezone);
     }
