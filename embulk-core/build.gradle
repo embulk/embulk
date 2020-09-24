@@ -39,7 +39,6 @@ dependencies {
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
     api "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
-    api "org.slf4j:slf4j-api:1.7.12"
     api "org.jruby:jruby-complete:" + rootProject.jrubyVersion
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
