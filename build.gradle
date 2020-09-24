@@ -187,6 +187,7 @@ configure(subprojects.findAll { subprojectNamesReleasedInMavenCentral.contains(i
         options {
             overview = "src/main/html/overview.html"
             links "https://docs.oracle.com/javase/8/docs/api/"
+            links "https://www.javadoc.io/doc/org.slf4j/slf4j-api/1.7.12/"
         }
     }
 
