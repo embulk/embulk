@@ -24,10 +24,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>A Decoder Plugin converts a set of byte buffers in {@link org.embulk.spi.FileInput} to another set of byte buffers of
  * {@link org.embulk.spi.FileInput}.
+ *
+ * @since 0.4.0
  */
 public interface DecoderPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -36,6 +40,8 @@ public interface DecoderPlugin {
          * <p>It would be executed at the end of {@link #transaction(org.embulk.config.ConfigSource, DecoderPlugin.Control)}.
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
+         *
+         * @since 0.4.0
          */
         void run(TaskSource taskSource);
     }
@@ -45,6 +51,8 @@ public interface DecoderPlugin {
      *
      * @param config  a configuration for the Decoder Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
+     *
+     * @since 0.4.0
      */
     void transaction(ConfigSource config, DecoderPlugin.Control control);
 
@@ -58,6 +66,8 @@ public interface DecoderPlugin {
      * @param fileInput  {@link org.embulk.spi.FileInput} to read byte buffers from a File Input Plugin, or another Decoder Plugin
      * @return an implementation of {@link org.embulk.spi.FileInput} that receives {@link org.embulk.spi.Buffer}s from a File
      *     Input Plugin, or another Decoder Plugin, so that decoded input is read from a Parser Plugin, or another Decoder Plugin
+     *
+     * @since 0.4.0
      */
     FileInput open(TaskSource taskSource, FileInput fileInput);
 }

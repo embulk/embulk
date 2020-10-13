@@ -27,10 +27,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>A File Output Plugin writes file-like byte sequences from a Formatter Plugin, or an Encoder Plugin, into the configured
  * destination.
+ *
+ * @since 0.4.0
  */
 public interface FileOutputPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -40,6 +44,8 @@ public interface FileOutputPlugin {
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
          * @return reports of tasks
+         *
+         * @since 0.7.0
          */
         List<TaskReport> run(TaskSource taskSource);
     }
@@ -50,7 +56,9 @@ public interface FileOutputPlugin {
      * @param config  a configuration for the File Output Plugin given from a user
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
-[     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff transaction(ConfigSource config, int taskCount, FileOutputPlugin.Control control);
 
@@ -61,6 +69,8 @@ public interface FileOutputPlugin {
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff resume(TaskSource taskSource, int taskCount, FileOutputPlugin.Control control);
 
@@ -70,6 +80,8 @@ public interface FileOutputPlugin {
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskCount  the number of tasks
      * @param successTaskReports  reports of successful tasks
+     *
+     * @since 0.7.0
      */
     void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successTaskReports);
 
@@ -83,6 +95,8 @@ public interface FileOutputPlugin {
      * @param taskIndex  the index number of the task
      * @return an implementation of {@link org.embulk.spi.TransactionalFileOutput} that receives {@link org.embulk.spi.Buffer}s
      *     from a Formatter Plugin, or an Encoder Plugin, and writes them into the configured destination
+     *
+     * @since 0.4.0
      */
     TransactionalFileOutput open(TaskSource taskSource, int taskIndex);
 }

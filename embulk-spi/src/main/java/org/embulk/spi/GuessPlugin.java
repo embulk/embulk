@@ -25,6 +25,8 @@ import org.embulk.spi.Buffer;
  *
  * <p>A Guess Plugin guesses a configuration {@link org.embulk.config.ConfigDiff} from a partial configuration for input,
  * and a byte sequence {@link org.embulk.spi.Buffer}.
+ *
+ * @since 0.4.0
  */
 public interface GuessPlugin {
     /**
@@ -33,6 +35,8 @@ public interface GuessPlugin {
      * @param config  a partial configuration for input given from a user
      * @param sample  a sample data to guess
      * @return a new configuration guessed based on {@code config} and {@code sample}
+     *
+     * @since 0.4.0
      */
     ConfigDiff guess(ConfigSource config, Buffer sample);
 }

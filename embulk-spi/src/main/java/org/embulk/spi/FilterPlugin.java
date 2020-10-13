@@ -25,10 +25,14 @@ import org.embulk.config.TaskSource;
  * <p>A Filter Plugin converts a schema and a sequence of data records in {@link org.embulk.spi.PageOutput} from an Input Plugin,
  * or another Filter Plugin, into another schema and another sequence of data records in {@link org.embulk.spi.PageOutput} for an
  * Output Plugin, or another Filter Plugin.
+ *
+ * @since 0.4.0
  */
 public interface FilterPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -39,6 +43,8 @@ public interface FilterPlugin {
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
          * @param outputSchema  {@link org.embulk.spi.Schema} of the output from the filter
+         *
+         * @since 0.4.0
          */
         void run(TaskSource taskSource, Schema outputSchema);
     }
@@ -49,6 +55,8 @@ public interface FilterPlugin {
      * @param config  a configuration for the Filter Plugin given from a user
      * @param inputSchema  {@link org.embulk.spi.Schema} of the input for the filter
      * @param control  a controller of the following tasks provided from the Embulk core
+     *
+     * @since 0.4.0
      */
     void transaction(ConfigSource config, Schema inputSchema, FilterPlugin.Control control);
 
@@ -64,6 +72,8 @@ public interface FilterPlugin {
      * @return an implementation of {@link org.embulk.spi.PageOutput} that receives {@link org.embulk.spi.Page}s from an Input
      *     Plugin, or another Filter Plugin, and writes converted output into {@link org.embulk.spi.PageOutput} {@code output}
      *     in the parameter list for an Output Plugin, or another Filter Plugin
+     *
+     * @since 0.4.0
      */
     PageOutput open(TaskSource taskSource, Schema inputSchema, Schema outputSchema, PageOutput output);
 }
