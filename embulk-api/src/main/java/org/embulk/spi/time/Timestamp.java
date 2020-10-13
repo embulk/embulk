@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
  * remains here for compatibility.
  *
  * @deprecated Use {@link java.time.Instant} instead as much as possible.
+ *
+ * @since 0.4.0
  */
 @Deprecated
 public class Timestamp implements Comparable<Timestamp> {
@@ -38,42 +40,72 @@ public class Timestamp implements Comparable<Timestamp> {
         this.instant = instant;
     }
 
+    /**
+     * @since 0.10.6
+     */
     public static Timestamp ofString(final String string) {
         return new Timestamp(parseInstant(string));
     }
 
+    /**
+     * @since 0.9.0
+     */
     public static Timestamp ofInstant(final Instant instant) {
         return new Timestamp(instant);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public static Timestamp ofEpochSecond(final long epochSecond) {
         return new Timestamp(Instant.ofEpochSecond(epochSecond));
     }
 
+    /**
+     * @since 0.4.0
+     */
     public static Timestamp ofEpochSecond(final long epochSecond, final long nanoAdjustment) {
         return new Timestamp(Instant.ofEpochSecond(epochSecond, nanoAdjustment));
     }
 
+    /**
+     * @since 0.4.0
+     */
     public static Timestamp ofEpochMilli(final long epochMilli) {
         return new Timestamp(Instant.ofEpochMilli(epochMilli));
     }
 
+    /**
+     * @since 0.9.0
+     */
     public Instant getInstant() {
         return this.instant;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public long getEpochSecond() {
         return this.instant.getEpochSecond();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public int getNano() {
         return this.instant.getNano();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public long toEpochMilli() {
         return this.instant.toEpochMilli();
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public boolean equals(final Object otherObject) {
         if (this == otherObject) {
@@ -86,16 +118,25 @@ public class Timestamp implements Comparable<Timestamp> {
         return this.instant.equals(other.instant);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public int hashCode() {
         return this.instant.hashCode() ^ 0x55555555;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public int compareTo(final Timestamp other) {
         return this.instant.compareTo(other.instant);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public String toString() {
         return toString(this.instant);

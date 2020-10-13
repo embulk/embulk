@@ -22,6 +22,8 @@ import org.msgpack.value.Value;
  * Singleton type class for Embulk's JSON.
  *
  * <p>Plugins should not refer this class directly. Recommended to use constants in {@link Types} instead.
+ *
+ * @since 0.8.0
  */
 @SuppressWarnings("deprecation")
 public class JsonType extends AbstractType {

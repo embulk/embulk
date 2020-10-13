@@ -18,11 +18,22 @@ package org.embulk.spi;
 
 /**
  * Represents a sequence of {@link Page}s as output, passed from an Input Plugin via Filter Plugins to an Output Plugin.
+ *
+ * @since 0.4.0
  */
 public interface PageOutput extends AutoCloseable {
+    /**
+     * @since 0.4.0
+     */
     void add(Page page);
 
+    /**
+     * @since 0.4.0
+     */
     void finish();
 
+    /**
+     * @since 0.4.0
+     */
     void close();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Embulk project
+ * Copyright 2015 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ package org.embulk.config;
  * <li>{@code Iterable<Map.Entry<String, JsonNode>> getAttributes()}
  * <li>{@code ObjectNode getObjectNode()}
  * </ul>
+ *
+ * @since 0.7.0
  */
 public interface TaskReport extends DataSource {
     /**
@@ -33,6 +35,8 @@ public interface TaskReport extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport getNested(String attrName);
@@ -42,6 +46,8 @@ public interface TaskReport extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport getNestedOrSetEmpty(String attrName);
@@ -51,6 +57,8 @@ public interface TaskReport extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.7.5
      */
     @Override
     TaskReport getNestedOrGetEmpty(String attrName);
@@ -61,6 +69,8 @@ public interface TaskReport extends DataSource {
      * @param attrName  name of the attribute to set the value at
      * @param v  the value {@link java.lang.Object} to set
      * @return itself after the value is set
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport set(String attrName, Object v);
@@ -71,6 +81,8 @@ public interface TaskReport extends DataSource {
      * @param attrName  name of the attribute to set the nested value at
      * @param v  the nested value to set
      * @return itself after the nested value is set
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport setNested(String attrName, DataSource v);
@@ -80,6 +92,8 @@ public interface TaskReport extends DataSource {
      *
      * @param other  the other {@link org.embulk.config.TaskReport} to set
      * @return itself after the attributes are set
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport setAll(DataSource other);
@@ -89,6 +103,8 @@ public interface TaskReport extends DataSource {
      *
      * @param attrName  name of the attribute to remove
      * @return itself after the attribute is removed
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport remove(String attrName);
@@ -97,6 +113,8 @@ public interface TaskReport extends DataSource {
      * Creates a deep copy of itself.
      *
      * @return the new {@link org.embulk.config.TaskReport} instance that is deep-copied from itself
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport deepCopy();
@@ -106,6 +124,8 @@ public interface TaskReport extends DataSource {
      *
      * @param other  the other {@link org.embulk.config.TaskReport} to merge
      * @return itself after the other {@link org.embulk.config.TaskReport} is merged
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport merge(DataSource other);

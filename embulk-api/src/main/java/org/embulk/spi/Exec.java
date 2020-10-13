@@ -35,6 +35,8 @@ import org.slf4j.Logger;
  * <p>Keeping on calling {@code ExecInternal} is strongly discouraged although it can be a short-term solution as shown above.
  * Embulk does not guarantee any compatibility in {@code embulk-core} with plugins. The plugin may easily stop working at some
  * point of Embulk versions. Do it at your own risk.
+ *
+ * @since 0.4.0
  */
 public class Exec {
     private static final InheritableThreadLocal<ExecSession> session = new InheritableThreadLocal<ExecSession>();
@@ -52,6 +54,8 @@ public class Exec {
      * Returns the registered {@link ExecSession} instance.
      *
      * @deprecated Plugins are discouraged from getting the {@link ExecSession} instance.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static ExecSession session() {
@@ -70,6 +74,8 @@ public class Exec {
      * Returns the transaction time in {@link org.embulk.spi.time.Timestamp}.
      *
      * @deprecated {@link org.embulk.spi.time.Timestamp} is deprecated.
+     *
+     * @since 0.6.17
      */
     @Deprecated  // https://github.com/embulk/embulk/issues/1292
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
@@ -79,6 +85,8 @@ public class Exec {
 
     /**
      * Returns the transaction time in {@link java.time.Instant}.
+     *
+     * @since 0.10.14
      */
     public static Instant getTransactionTimeInstant() {
         return sessionForInside().getTransactionTimeInstant();
@@ -91,6 +99,8 @@ public class Exec {
      * @return the {@link org.slf4j.Logger} instance
      *
      * @deprecated Call {@link org.slf4j.LoggerFactory#getLogger(String)} directly, instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // @see docs/design/slf4j.md
     @SuppressWarnings("deprecation")
@@ -105,6 +115,8 @@ public class Exec {
      * @return the {@link org.slf4j.Logger} instance
      *
      * @deprecated Call {@link org.slf4j.LoggerFactory#getLogger(Class)} directly, instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // @see docs/design/slf4j.md
     @SuppressWarnings("deprecation")
@@ -114,6 +126,8 @@ public class Exec {
 
     /**
      * Returns the {@link BufferAllocator} instance.
+     *
+     * @since 0.4.0
      */
     public static BufferAllocator getBufferAllocator() {
         return sessionForInside().getBufferAllocator();
@@ -121,6 +135,8 @@ public class Exec {
 
     /**
      * Returns a {@link PageBuilder} instance created for the parameters.
+     *
+     * @since 0.10.17
      */
     public static PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output) {
         return sessionForInside().getPageBuilder(allocator, schema, output);
@@ -128,6 +144,8 @@ public class Exec {
 
     /**
      * Returns a {@link PageReader} instance created for the parameter.
+     *
+     * @since 0.10.17
      */
     public static PageReader getPageReader(final Schema schema) {
         return sessionForInside().getPageReader(schema);
@@ -137,6 +155,8 @@ public class Exec {
      * Creates a new empty {@link org.embulk.config.TaskReport} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newTaskReport}.
+     *
+     * @since 0.7.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -148,6 +168,8 @@ public class Exec {
      * Creates a new empty {@link org.embulk.config.ConfigDiff} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newConfigDiff}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -159,6 +181,8 @@ public class Exec {
      * Creates a new empty {@link org.embulk.config.ConfigSource} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newConfigSource}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -170,6 +194,8 @@ public class Exec {
      * Creates a new empty {@link org.embulk.config.TaskSource} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newTaskSource}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")
@@ -180,6 +206,8 @@ public class Exec {
     /**
      * Returns a space for temporary files, a {@link org.embulk.spi.TempFileSpace} instance corresponding to the registered
      * {@link ExecSession}.
+     *
+     * @since 0.6.16
      */
     public static TempFileSpace getTempFileSpace() {
         return sessionForInside().getTempFileSpace();
@@ -187,6 +215,8 @@ public class Exec {
 
     /**
      * Returns {@code true} if the execution is in a preview mode.
+     *
+     * @since 0.4.4
      */
     public static boolean isPreview() {
         return sessionForInside().isPreview();

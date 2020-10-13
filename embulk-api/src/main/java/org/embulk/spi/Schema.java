@@ -24,18 +24,29 @@ import org.embulk.spi.type.Type;
 
 /**
  * Represents a schema of Embulk's data record.
+ *
+ * @since 0.4.0
  */
 public class Schema {
+    /**
+     * @since 0.6.14
+     */
     public static class Builder {
         public Builder() {
             this.index = 0;
         }
 
+        /**
+         * @since 0.6.14
+         */
         public synchronized Builder add(final String name, final Type type) {
             this.columns.add(new Column(this.index++, name, type));
             return this;
         }
 
+        /**
+         * @since 0.6.14
+         */
         public Schema build() {
             return new Schema(Collections.unmodifiableList(this.columns));
         }
@@ -45,10 +56,16 @@ public class Schema {
         private int index;
     }
 
+    /**
+     * @since 0.6.14
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Schema(final List<Column> columns) {
         this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
     }
@@ -57,41 +74,67 @@ public class Schema {
      * Returns the list of Column objects.
      *
      * It always returns an immutable list.
+     *
+     * @since 0.4.0
      */
     public List<Column> getColumns() {
         return this.columns;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public int size() {
         return this.columns.size();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public int getColumnCount() {
         return this.columns.size();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Column getColumn(final int index) {
         return this.columns.get(index);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public String getColumnName(final int index) {
         return this.getColumn(index).getName();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Type getColumnType(final int index) {
         return this.getColumn(index).getType();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void visitColumns(final ColumnVisitor visitor) {
         for (final Column column : this.columns) {
             column.visit(visitor);
         }
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean isEmpty() {
         return this.columns.isEmpty();
     }
 
+    /**
+     * @since 0.6.14
+     */
     public Column lookupColumn(final String name) {
         for (final Column c : this.columns) {
             if (c.getName().equals(name)) {
@@ -101,6 +144,9 @@ public class Schema {
         throw new SchemaConfigException(String.format("Column '%s' is not found", name));
     }
 
+    /**
+     * @since 0.4.0
+     */
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1324
     public int getFixedStorageSize() {
         int total = 0;
@@ -110,6 +156,9 @@ public class Schema {
         return total;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public boolean equals(final Object otherObject) {
         if (this == otherObject) {
@@ -122,11 +171,17 @@ public class Schema {
         return Objects.equals(this.columns, other.columns);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public int hashCode() {
         return Objects.hashCode(this.columns);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public String toString() {
         final StringBuilder sbuf = new StringBuilder();

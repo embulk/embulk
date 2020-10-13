@@ -20,10 +20,14 @@ import org.embulk.config.TaskReport;
 
 /**
  * Represents a series of file-like byte sequence outputs in a transaction into a File Output Plugin.
+ *
+ * @since 0.4.0
  */
 public interface TransactionalFileOutput extends Transactional, FileOutput {
     /**
      * Switches the {@link org.embulk.spi.TransactionalFileOutput} to process the next file.
+     *
+     * @since 0.4.0
      */
     @Override
     void nextFile();
@@ -32,24 +36,32 @@ public interface TransactionalFileOutput extends Transactional, FileOutput {
      * Writes a byte sequence into the {@link org.embulk.spi.TransactionalFileOutput} from {@link org.embulk.spi.Buffer}.
      *
      * @param buffer  the {@link org.embulk.spi.Buffer} to write
+     *
+     * @since 0.4.0
      */
     @Override
     void add(Buffer buffer);
 
     /**
      * Finishes the {@link org.embulk.spi.TransactionalFileOutput}.
+     *
+     * @since 0.4.0
      */
     @Override
     void finish();
 
     /**
      * Closes the {@link org.embulk.spi.TransactionalFileOutput}.
+     *
+     * @since 0.4.0
      */
     @Override
     void close();
 
     /**
      * Aborts the transaction of {@link org.embulk.spi.TransactionalFileOutput}.
+     *
+     * @since 0.4.0
      */
     @Override
     void abort();
@@ -58,6 +70,8 @@ public interface TransactionalFileOutput extends Transactional, FileOutput {
      * Commits the transaction of {@link org.embulk.spi.TransactionalFileOutput}.
      *
      * @return report
+     *
+     * @since 0.7.0
      */
     @Override
     TaskReport commit();

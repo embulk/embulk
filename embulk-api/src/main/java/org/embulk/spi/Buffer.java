@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Embulk project
+ * Copyright 2014 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import java.util.Arrays;
  * before Embulk v1. Plugins should no longer call them, even in tests.
  *
  * <p>At the same time, a constant {@code Buffer.EMPTY} has already been removed. Plugins cannot use it anymore.
+ *
+ * @since 0.4.0
  */
 public abstract class Buffer {
     protected Buffer() {
@@ -41,6 +43,8 @@ public abstract class Buffer {
      *
      * @deprecated Accessing the internal {@code byte} array is not safe.
      * @return the internal {@code byte} array
+     *
+     * @since 0.4.0
      */
     @Deprecated  // Not for removal, but deprecated.
     public abstract byte[] array();
@@ -49,6 +53,8 @@ public abstract class Buffer {
      * Returns the current offset of this {@link Buffer}.
      *
      * @return the current offset
+     *
+     * @since 0.4.0
      */
     public abstract int offset();
 
@@ -57,6 +63,8 @@ public abstract class Buffer {
      *
      * @param offset  the offset to set
      * @return this {@link Buffer} itself
+     *
+     * @since 0.4.0
      */
     public abstract Buffer offset(int offset);
 
@@ -64,6 +72,8 @@ public abstract class Buffer {
      * Returns the current limit of this {@link Buffer}.
      *
      * @return the current limit
+     *
+     * @since 0.4.0
      */
     public abstract int limit();
 
@@ -72,6 +82,8 @@ public abstract class Buffer {
      *
      * @param limit  the limit to set
      * @return this {@link Buffer} itself
+     *
+     * @since 0.4.0
      */
     public abstract Buffer limit(int limit);
 
@@ -81,6 +93,8 @@ public abstract class Buffer {
      * <p>The capacity does not change once created.
      *
      * @return the capacity
+     *
+     * @since 0.4.0
      */
     public abstract int capacity();
 
@@ -91,6 +105,8 @@ public abstract class Buffer {
      * @param source  the source array
      * @param sourceIndex  starting position in the source array
      * @param length  the number of bytes to be copied
+     *
+     * @since 0.4.0
      */
     public abstract void setBytes(int index, byte[] source, int sourceIndex, int length);
 
@@ -101,6 +117,8 @@ public abstract class Buffer {
      * @param source  the source {@link Buffer}
      * @param sourceIndex  starting position in the source {@link Buffer}
      * @param length  the number of bytes to be copied
+     *
+     * @since 0.4.0
      */
     public abstract void setBytes(int index, Buffer source, int sourceIndex, int length);
 
@@ -111,6 +129,8 @@ public abstract class Buffer {
      * @param dest  the destination array
      * @param destIndex  starting position in the destination array
      * @param length  the number of bytes to be copied
+     *
+     * @since 0.4.0
      */
     public abstract void getBytes(int index, byte[] dest, int destIndex, int length);
 
@@ -121,11 +141,15 @@ public abstract class Buffer {
      * @param dest  the destination {@link Buffer}
      * @param destIndex  starting position in the destination {@link Buffer}
      * @param length  the number of bytes to be copied
+     *
+     * @since 0.4.0
      */
     public abstract void getBytes(int index, Buffer dest, int destIndex, int length);
 
     /**
      * Releases this {@link Buffer}.
+     *
+     * @since 0.4.0
      */
     public abstract void release();
 
@@ -135,6 +159,8 @@ public abstract class Buffer {
      * @deprecated  This method is to be removed. Plugins should no longer call it directly.
      * @param length  length of the created {@link Buffer}
      * @return created {@link Buffer}
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Buffer allocate(final int length) {
@@ -154,6 +180,8 @@ public abstract class Buffer {
      * @deprecated  This method is to be removed. Plugins should no longer call it directly.
      * @param src  the source byte array
      * @return created {@link Buffer}
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Buffer copyOf(final byte[] src) {
@@ -168,6 +196,8 @@ public abstract class Buffer {
      * @param index  starting position in the source array
      * @param length  the number of bytes to be copied
      * @return created {@link Buffer}
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Buffer copyOf(final byte[] src, final int index, final int length) {
@@ -180,6 +210,8 @@ public abstract class Buffer {
      * @deprecated  This method is to be removed. Plugins should no longer call it directly.
      * @param src  the source byte array
      * @return created {@link Buffer}
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Buffer wrap(final byte[] src) {
@@ -194,6 +226,8 @@ public abstract class Buffer {
      * @param offset  starting position in the source array
      * @param size  the number of bytes to be wrapped
      * @return created {@link Buffer}
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Buffer wrap(final byte[] src, final int offset, final int size) {

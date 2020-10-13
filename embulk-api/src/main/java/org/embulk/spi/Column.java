@@ -27,26 +27,43 @@ import org.embulk.spi.type.Type;
 
 /**
  * Represents a column metadata of Embulk's data record.
+ *
+ * @since 0.4.0
  */
 public class Column {
+    /**
+     * @since 0.4.0
+     */
     public Column(final int index, final String name, final Type type) {
         this.index = index;
         this.name = name;
         this.type = type;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public int getIndex() {
         return this.index;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public String getName() {
         return this.name;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Type getType() {
         return this.type;
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void visit(final ColumnVisitor visitor) {
         if (this.type instanceof BooleanType) {
             visitor.booleanColumn(this);
@@ -65,6 +82,9 @@ public class Column {
         }
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public boolean equals(final Object otherObject) {
         if (this == otherObject) {
@@ -80,11 +100,17 @@ public class Column {
                 && Objects.equals(this.type, other.type);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public int hashCode() {
         return Objects.hash(this.index, this.name, this.type);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public String toString() {
         return String.format("Column{index:%d, name:%s, type:%s}",

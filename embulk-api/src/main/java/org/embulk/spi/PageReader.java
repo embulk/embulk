@@ -24,6 +24,8 @@ import org.msgpack.value.Value;
 
 /**
  * Reads data records from {@link Page}s set with {@link #setPage(Page)}.
+ *
+ * @since 0.4.0
  */
 public class PageReader implements AutoCloseable {
     PageReader() {
@@ -40,59 +42,100 @@ public class PageReader implements AutoCloseable {
      * @deprecated The constructor is deprecated although Embulk v0.9-compatible plugins still have to use this.
      *     See <a href="https://github.com/embulk/embulk/issues/1323">GitHub Issue #1323: Deprecate PageReader's constructor</a>
      *     for the details.
+     *
+     * @since 0.4.0
      */
     public PageReader(Schema schema) {
         this(createImplInstance(schema));
     }
 
+    /**
+     * @since 0.4.0
+     */
     public static int getRecordCount(Page page) {
         return callGetRecordCount(page);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setPage(Page page) {
         this.delegate.setPage(page);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Schema getSchema() {
         return this.delegate.getSchema();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean isNull(Column column) {
         return this.delegate.isNull(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean isNull(int columnIndex) {
         return this.delegate.isNull(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean getBoolean(Column column) {
         return this.delegate.getBoolean(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean getBoolean(int columnIndex) {
         return this.delegate.getBoolean(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public long getLong(Column column) {
         return this.delegate.getLong(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public long getLong(int columnIndex) {
         return this.delegate.getLong(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public double getDouble(Column column) {
         return this.delegate.getDouble(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public double getDouble(int columnIndex) {
         return this.delegate.getDouble(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public String getString(Column column) {
         return this.delegate.getString(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public String getString(int columnIndex) {
         return this.delegate.getString(columnIndex);
     }
@@ -101,6 +144,8 @@ public class PageReader implements AutoCloseable {
      * Returns a Timestamp value.
      *
      * @deprecated Use {@link #getTimestampInstant(Column)} instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
@@ -112,6 +157,8 @@ public class PageReader implements AutoCloseable {
      * Returns a Timestamp value.
      *
      * @deprecated Use {@link #getTimestampInstant(int)} instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
@@ -119,26 +166,44 @@ public class PageReader implements AutoCloseable {
         return this.delegate.getTimestamp(columnIndex);
     }
 
+    /**
+     * @since 0.10.13
+     */
     public Instant getTimestampInstant(final Column column) {
         return this.delegate.getTimestampInstant(column);
     }
 
+    /**
+     * @since 0.10.13
+     */
     public Instant getTimestampInstant(final int columnIndex) {
         return this.delegate.getTimestampInstant(columnIndex);
     }
 
+    /**
+     * @since 0.8.0
+     */
     public Value getJson(Column column) {
         return this.delegate.getJson(column);
     }
 
+    /**
+     * @since 0.8.0
+     */
     public Value getJson(int columnIndex) {
         return this.delegate.getJson(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public boolean nextRecord() {
         return this.delegate.nextRecord();
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public void close() {
         this.delegate.close();

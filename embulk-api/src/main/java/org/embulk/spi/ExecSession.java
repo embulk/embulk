@@ -40,6 +40,8 @@ public abstract class ExecSession {
 
     /**
      * Clones this {@link ExecSession} instance in a preview mode.
+     *
+     * @since 0.6.16
      */
     public abstract ExecSession forPreview();
 
@@ -47,6 +49,8 @@ public abstract class ExecSession {
      * Returns a {@link org.embulk.config.ConfigSource} instance that includes {@code transaction_time} for the {@code exec} part.
      *
      * @deprecated Plugins should no longer use it. It would be removed.
+     *
+     * @since 0.6.16
      */
     @Deprecated
     public abstract ConfigSource getSessionExecConfig();
@@ -55,6 +59,8 @@ public abstract class ExecSession {
      * Returns the transaction time in {@link org.embulk.spi.time.Timestamp}.
      *
      * @deprecated {@link org.embulk.spi.time.Timestamp} is deprecated.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // https://github.com/embulk/embulk/issues/1292
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
@@ -62,11 +68,15 @@ public abstract class ExecSession {
 
     /**
      * Returns the transaction time in {@link java.time.Instant}.
+     *
+     * @since 0.10.4
      */
     public abstract Instant getTransactionTimeInstant();
 
     /**
      * Returns the transaction time formatted as a {@link java.lang.String}.
+     *
+     * @since 0.10.4
      */
     public abstract String getTransactionTimeString();
 
@@ -77,6 +87,8 @@ public abstract class ExecSession {
      * @return the {@link org.slf4j.Logger} instance
      *
      * @deprecated Call {@link org.slf4j.LoggerFactory#getLogger(String)} directly, instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // @see docs/design/slf4j.md
     public abstract Logger getLogger(String name);
@@ -88,22 +100,30 @@ public abstract class ExecSession {
      * @return the {@link org.slf4j.Logger} instance
      *
      * @deprecated Call {@link org.slf4j.LoggerFactory#getLogger(Class)} directly, instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // @see docs/design/slf4j.md
     public abstract Logger getLogger(Class<?> clazz);
 
     /**
      * Returns the {@link BufferAllocator} instance.
+     *
+     * @since 0.4.0
      */
     public abstract BufferAllocator getBufferAllocator();
 
     /**
      * Returns a {@link PageBuilder} instance created for the parameters.
+     *
+     * @since 0.10.17
      */
     public abstract PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output);
 
     /**
      * Returns a {@link PageReader} instance created for the parameter.
+     *
+     * @since 0.10.17
      */
     public abstract PageReader getPageReader(final Schema schema);
 
@@ -111,6 +131,8 @@ public abstract class ExecSession {
      * Creates a new empty {@link org.embulk.config.TaskReport} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newTaskReport}.
+     *
+     * @since 0.7.0
      */
     @Deprecated
     public abstract TaskReport newTaskReport();
@@ -119,6 +141,8 @@ public abstract class ExecSession {
      * Creates a new empty {@link org.embulk.config.ConfigDiff} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newConfigDiff}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public abstract ConfigDiff newConfigDiff();
@@ -127,6 +151,8 @@ public abstract class ExecSession {
      * Creates a new empty {@link org.embulk.config.ConfigSource} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newConfigSource}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public abstract ConfigSource newConfigSource();
@@ -135,6 +161,8 @@ public abstract class ExecSession {
      * Creates a new empty {@link org.embulk.config.TaskSource} instance.
      *
      * @deprecated Recommended to start using {@code embulk-util-config} from plugins. Use its own {@code newTaskSource}.
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public abstract TaskSource newTaskSource();
@@ -142,16 +170,22 @@ public abstract class ExecSession {
     /**
      * Returns a space for temporary files, a {@link org.embulk.spi.TempFileSpace} instance corresponding to the registered
      * {@link ExecSession}.
+     *
+     * @since 0.6.16
      */
     public abstract TempFileSpace getTempFileSpace();
 
     /**
      * Returns {@code true} if the execution is in a preview mode.
+     *
+     * @since 0.4.4
      */
     public abstract boolean isPreview();
 
     /**
      * Cleans up the session.
+     *
+     * @since 0.6.16
      */
     public abstract void cleanup();
 }

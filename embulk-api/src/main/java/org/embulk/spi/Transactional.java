@@ -20,10 +20,14 @@ import org.embulk.config.TaskReport;
 
 /**
  * Represents transactional operations.
+ *
+ * @since 0.4.0
  */
 public interface Transactional {
     /**
      * Aborts the transaction.
+     *
+     * @since 0.4.0
      */
     void abort();
 
@@ -31,6 +35,8 @@ public interface Transactional {
      * Commits the transaction.
      *
      * @return report
+     *
+     * @since 0.7.0
      */
     TaskReport commit();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Embulk project
+ * Copyright 2014 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ package org.embulk.config;
  * <li>{@code Iterable<Map.Entry<String, JsonNode>> getAttributes()}
  * <li>{@code ObjectNode getObjectNode()}
  * </ul>
+ *
+ * @since 0.4.0
  */
 public interface ConfigSource extends DataSource {
     /**
@@ -38,6 +40,8 @@ public interface ConfigSource extends DataSource {
      * @param taskType  the task class to load this configuration as
      * @return a task class instance loaded
      * @deprecated Use {@code embulk-util-config} instead.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // Replaced with embulk-util-config
     default <T> T loadConfig(Class<T> taskType) {
@@ -50,6 +54,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource getNested(String attrName);
@@ -59,6 +65,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource getNestedOrSetEmpty(String attrName);
@@ -68,6 +76,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.7.5
      */
     @Override
     ConfigSource getNestedOrGetEmpty(String attrName);
@@ -78,6 +88,8 @@ public interface ConfigSource extends DataSource {
      * @param attrName  name of the attribute to set the value at
      * @param v  the value {@link java.lang.Object} to set
      * @return itself after the value is set
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource set(String attrName, Object v);
@@ -88,6 +100,8 @@ public interface ConfigSource extends DataSource {
      * @param attrName  name of the attribute to set the nested value at
      * @param v  the nested value to set
      * @return itself after the nested value is set
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource setNested(String attrName, DataSource v);
@@ -97,6 +111,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param other  the other {@link org.embulk.config.ConfigSource} to set
      * @return itself after the attributes are set
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource setAll(DataSource other);
@@ -106,6 +122,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param attrName  name of the attribute to remove
      * @return itself after the attribute is removed
+     *
+     * @since 0.6.14
      */
     @Override
     ConfigSource remove(String attrName);
@@ -114,6 +132,8 @@ public interface ConfigSource extends DataSource {
      * Creates a deep copy of itself.
      *
      * @return the new {@link org.embulk.config.ConfigSource} instance that is deep-copied from itself
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource deepCopy();
@@ -123,6 +143,8 @@ public interface ConfigSource extends DataSource {
      *
      * @param other  the other {@link org.embulk.config.ConfigSource} to merge
      * @return itself after the other {@link org.embulk.config.ConfigSource} is merged
+     *
+     * @since 0.4.0
      */
     @Override
     ConfigSource merge(DataSource other);

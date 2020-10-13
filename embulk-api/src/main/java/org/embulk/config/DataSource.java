@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Embulk project
+ * Copyright 2014 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,16 @@ import java.util.List;
  * <li>{@code Iterable<Map.Entry<String, JsonNode>> getAttributes()}
  * <li>{@code ObjectNode getObjectNode()}
  * </ul>
+ *
+ * @since 0.4.0
  */
 public interface DataSource {
     /**
      * Returns a {@link java.util.List} of attribute names under this node.
      *
      * @return a {@link java.util.List} of attribute names
+     *
+     * @since 0.4.0
      */
     List<String> getAttributeNames();
 
@@ -41,6 +45,8 @@ public interface DataSource {
      * Returns {@code true} if it is empty.
      *
      * @return {@code true} if it is empty
+     *
+     * @since 0.4.0
      */
     boolean isEmpty();
 
@@ -49,6 +55,8 @@ public interface DataSource {
      *
      * @param attrName  name of the attribute to look for
      * @return {@code true} if it has an attribute named {@code attrName}
+     *
+     * @since 0.6.21
      */
     boolean has(String attrName);
 
@@ -59,6 +67,8 @@ public interface DataSource {
      * @param type  the class to get the value as
      * @param attrName  name of the attribute to look for
      * @return the attribute value of {@code attrName} as {@code type}
+     *
+     * @since 0.4.0
      */
     <E> E get(Class<E> type, String attrName);
 
@@ -70,6 +80,8 @@ public interface DataSource {
      * @param attrName  name of the attribute to look for
      * @param defaultValue  the default value in case a value does not exist for {@code attrName}
      * @return the attribute value of {@code attrName} as {@code type}
+     *
+     * @since 0.4.0
      */
     <E> E get(Class<E> type, String attrName, E defaultValue);
 
@@ -78,6 +90,8 @@ public interface DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.4.0
      */
     DataSource getNested(String attrName);
 
@@ -86,6 +100,8 @@ public interface DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.4.0
      */
     DataSource getNestedOrSetEmpty(String attrName);
 
@@ -94,6 +110,8 @@ public interface DataSource {
      *
      * @param attrName  name of the nested attribute to look for
      * @return the nested attribute value of {@code attrName}
+     *
+     * @since 0.7.5
      */
     DataSource getNestedOrGetEmpty(String attrName);
 
@@ -103,6 +121,8 @@ public interface DataSource {
      * @param attrName  name of the attribute to set the value at
      * @param v  the value {@link java.lang.Object} to set
      * @return itself after the value is set
+     *
+     * @since 0.4.0
      */
     DataSource set(String attrName, Object v);
 
@@ -112,6 +132,8 @@ public interface DataSource {
      * @param attrName  name of the attribute to set the nested value at
      * @param v  the nested value to set
      * @return itself after the nested value is set
+     *
+     * @since 0.4.0
      */
     DataSource setNested(String attrName, DataSource v);
 
@@ -120,6 +142,8 @@ public interface DataSource {
      *
      * @param other  the other {@link org.embulk.config.DataSource} to set
      * @return itself after the attributes are set
+     *
+     * @since 0.4.0
      */
     DataSource setAll(DataSource other);
 
@@ -128,6 +152,8 @@ public interface DataSource {
      *
      * @param attrName  name of the attribute to remove
      * @return itself after the attribute is removed
+     *
+     * @since 0.6.14
      */
     DataSource remove(String attrName);
 
@@ -135,6 +161,8 @@ public interface DataSource {
      * Creates a deep copy of itself.
      *
      * @return the new {@link org.embulk.config.DataSource} instance that is deep-copied from itself
+     *
+     * @since 0.4.0
      */
     DataSource deepCopy();
 
@@ -143,6 +171,8 @@ public interface DataSource {
      *
      * @param other  the other {@link org.embulk.config.DataSource} to merge
      * @return itself after the other {@link org.embulk.config.DataSource} is merged
+     *
+     * @since 0.4.0
      */
     DataSource merge(DataSource other);
 
@@ -150,6 +180,8 @@ public interface DataSource {
      * Returns a JSON representation of itself.
      *
      * @return its JSON representation in {@link java.lang.String}
+     *
+     * @since 0.10.3
      */
     default String toJson() {
         throw new UnsupportedOperationException(

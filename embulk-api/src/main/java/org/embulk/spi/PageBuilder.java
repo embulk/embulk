@@ -23,6 +23,8 @@ import org.msgpack.value.Value;
 
 /**
  * Builds {@link Page}s from {@link Schema} and data records with pushing the built {@link Page}s to {@link PageOutput}.
+ *
+ * @since 0.4.0
  */
 public class PageBuilder implements AutoCloseable {
     PageBuilder() {
@@ -39,96 +41,161 @@ public class PageBuilder implements AutoCloseable {
      * @deprecated The constructor is deprecated although Embulk v0.9-compatible plugins still have to use this.
      *     See <a href="https://github.com/embulk/embulk/issues/1321">GitHub Issue #1321: Deprecate PageBuilder's constructor</a>
      *     for the details.
+     *
+     * @since 0.4.0
      */
     @Deprecated  // https://github.com/embulk/embulk/issues/1321
     public PageBuilder(BufferAllocator allocator, Schema schema, PageOutput output) {
         this(createImplInstance(allocator, schema, output));
     }
 
+    /**
+     * @since 0.4.0
+     */
     public Schema getSchema() {
         return this.delegate.getSchema();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setNull(Column column) {
         this.delegate.setNull(column);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setNull(int columnIndex) {
         this.delegate.setNull(columnIndex);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setBoolean(Column column, boolean value) {
         this.delegate.setBoolean(column, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setBoolean(int columnIndex, boolean value) {
         this.delegate.setBoolean(columnIndex, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setLong(Column column, long value) {
         this.delegate.setLong(column, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setLong(int columnIndex, long value) {
         this.delegate.setLong(columnIndex, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setDouble(Column column, double value) {
         this.delegate.setDouble(column, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setDouble(int columnIndex, double value) {
         this.delegate.setDouble(columnIndex, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setString(Column column, String value) {
         this.delegate.setString(column, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void setString(int columnIndex, String value) {
         this.delegate.setString(columnIndex, value);
     }
 
+    /**
+     * @since 0.8.0
+     */
     public void setJson(Column column, Value value) {
         this.delegate.setJson(column, value);
     }
 
+    /**
+     * @since 0.8.0
+     */
     public void setJson(int columnIndex, Value value) {
         this.delegate.setJson(columnIndex, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void setTimestamp(Column column, org.embulk.spi.time.Timestamp value) {
         this.delegate.setTimestamp(column, value);
     }
 
+    /**
+     * @since 0.10.13
+     */
     public void setTimestamp(final Column column, final Instant value) {
         this.delegate.setTimestamp(column, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Deprecated
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public void setTimestamp(int columnIndex, org.embulk.spi.time.Timestamp value) {
         this.delegate.setTimestamp(columnIndex, value);
     }
 
+    /**
+     * @since 0.10.13
+     */
     public void setTimestamp(final int columnIndex, final Instant value) {
         this.delegate.setTimestamp(columnIndex, value);
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void addRecord() {
         this.delegate.addRecord();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void flush() {
         this.delegate.flush();
     }
 
+    /**
+     * @since 0.4.0
+     */
     public void finish() {
         this.delegate.finish();
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public void close() {
         this.delegate.close();
