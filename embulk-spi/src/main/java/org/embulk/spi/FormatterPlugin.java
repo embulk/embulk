@@ -67,7 +67,7 @@ public interface FormatterPlugin {
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param schema  {@link org.embulk.spi.Schema} of the input for the formatter
-     * @param fileOutput  {@link org.embulk.spi.FileOutput} to write formatted output so that the output is read from a File
+     * @param output  {@link org.embulk.spi.FileOutput} to write formatted output so that the output is read from a File
      *     Output Plugin, or an Encoder Plugin
      * @return an implementation of {@link org.embulk.spi.PageOutput} that receives {@link org.embulk.spi.Page}s from an Input
      *     Plugin, or a Filter Plugin, and writes formatted output into {@link org.embulk.spi.FileOutput} {@code output} in the
