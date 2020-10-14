@@ -11,5 +11,5 @@ configurations {
 
 dependencies {
     api "org.msgpack:msgpack-core:0.8.11"
-    api "org.slf4j:slf4j-api:1.7.12"
+    api "org.slf4j:slf4j-api:1.7.30"
 }
