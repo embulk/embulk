@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The Embulk project
+ * Copyright 2015 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,16 @@ import org.embulk.config.UserDataException;
 
 /**
  * Represents an Exception caused by user's data processed.
+ *
+ * @since 0.7.1
  */
 public class DataException extends RuntimeException implements UserDataException {
     /**
      * Constructs a new {@link DataException} with the specified detail message.
      *
      * @param message  the detail message
+     *
+     * @since 0.7.1
      */
     public DataException(final String message) {
         super(message);
@@ -35,6 +39,8 @@ public class DataException extends RuntimeException implements UserDataException
      * Constructs a new {@link DataException} with the specified cause and a detail message of the cause.
      *
      * @param cause  the cause
+     *
+     * @since 0.7.1
      */
     public DataException(final Throwable cause) {
         super(cause);
@@ -45,6 +51,8 @@ public class DataException extends RuntimeException implements UserDataException
      *
      * @param message  the detail message
      * @param cause  the cause
+     *
+     * @since 0.7.1
      */
     public DataException(final String message, final Throwable cause) {
         super(message, cause);

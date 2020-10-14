@@ -39,22 +39,48 @@ import org.msgpack.value.ImmutableValue;
  *
  * <p>{@link Page} is NOT for inter-process communication. For multi-process execution such as the deprecated
  * MapReduce Executor, the executor plugin takes responsibility about interoperable serialization.
+ *
+ * @since 0.4.0
  */
 public abstract class Page {
+    /**
+     * @since 0.4.0
+     */
     public abstract Page setStringReferences(List<String> values);
 
+    /**
+     * @since 0.8.0
+     */
     public abstract Page setValueReferences(List<ImmutableValue> values);
 
+    /**
+     * @since 0.6.0
+     */
     public abstract List<String> getStringReferences();
 
+    /**
+     * @since 0.8.0
+     */
     public abstract List<ImmutableValue> getValueReferences();
 
+    /**
+     * @since 0.4.0
+     */
     public abstract String getStringReference(int index);
 
+    /**
+     * @since 0.8.0
+     */
     public abstract ImmutableValue getValueReference(int index);
 
+    /**
+     * @since 0.4.0
+     */
     public abstract void release();
 
+    /**
+     * @since 0.4.0
+     */
     public abstract Buffer buffer();
 
     /**
@@ -63,6 +89,8 @@ public abstract class Page {
      * @deprecated It is to be removed, implemented only for compatibility. Plugins should no longer call it directly.
      * @param length  length of the internal {@link Buffer} of the created {@link Page}
      * @return {@link Page} created
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Page allocate(final int length) {
@@ -92,6 +120,8 @@ public abstract class Page {
      * @deprecated It is to be removed, implemented only for compatibility. Plugins should no longer call it directly.
      * @param buffer  the internal {@link Buffer}
      * @return {@link Page} created
+     *
+     * @since 0.4.0
      */
     @Deprecated
     public static Page wrap(final Buffer buffer) {

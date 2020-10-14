@@ -18,10 +18,14 @@ package org.embulk.spi;
 
 /**
  * Represents a series of file-like byte sequence outputs into a File Output Plugin.
+ *
+ * @since 0.4.0
  */
 public interface FileOutput extends AutoCloseable {
     /**
      * Switches the {@link org.embulk.spi.FileOutput} to process the next file.
+     *
+     * @since 0.4.0
      */
     void nextFile();
 
@@ -29,16 +33,22 @@ public interface FileOutput extends AutoCloseable {
      * Writes a byte sequence into the {@link org.embulk.spi.FileOutput} from {@link org.embulk.spi.Buffer}.
      *
      * @param buffer  the {@link org.embulk.spi.Buffer} to write
+     *
+     * @since 0.4.0
      */
     void add(Buffer buffer);
 
     /**
      * Finishes the {@link org.embulk.spi.FileOutput}.
+     *
+     * @since 0.4.0
      */
     void finish();
 
     /**
      * Closes the {@link org.embulk.spi.FileOutput}.
+     *
+     * @since 0.4.0
      */
     @Override
     void close();

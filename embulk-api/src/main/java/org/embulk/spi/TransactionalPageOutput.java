@@ -20,15 +20,32 @@ import org.embulk.config.TaskReport;
 
 /**
  * Represents a sequence of {@link Page}s as output in a transaction.
+ *
+ * @since 0.4.0
  */
 public interface TransactionalPageOutput extends Transactional, PageOutput {
+    /**
+     * @since 0.4.0
+     */
     void add(Page page);
 
+    /**
+     * @since 0.4.0
+     */
     void finish();
 
+    /**
+     * @since 0.4.0
+     */
     void close();
 
+    /**
+     * @since 0.4.0
+     */
     void abort();
 
+    /**
+     * @since 0.7.0
+     */
     TaskReport commit();
 }

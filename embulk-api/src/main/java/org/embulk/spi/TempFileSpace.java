@@ -24,6 +24,8 @@ import java.nio.file.Path;
  * Manages a space for temporary files.
  *
  * <p>Plugins are expected to get this through {@link org.embulk.spi.Exec#getTempFileSpace}.
+ *
+ * @since 0.6.16
  */
 public abstract class TempFileSpace {
     /**
@@ -34,6 +36,8 @@ public abstract class TempFileSpace {
 
     /**
      * @deprecated The constructor is no longer available. Use {@link org.embulk.spi.Exec#getTempFileSpace} instead.
+     *
+     * @since 0.6.16
      */
     @Deprecated
     public TempFileSpace(final File dir) {
@@ -43,6 +47,8 @@ public abstract class TempFileSpace {
 
     /**
      * @deprecated The static creator method is no longer available. Use {@link org.embulk.spi.Exec#getTempFileSpace} instead.
+     *
+     * @since 0.9.20
      */
     @Deprecated
     public static TempFileSpace with(final Path baseDir, final String prefix) throws IOException {
@@ -54,6 +60,8 @@ public abstract class TempFileSpace {
      * Creates a temporary file in the space, with the default file name prefix, and the default file extension suffix.
      *
      * @return a temporary {@link java.io.File} created
+     *
+     * @since 0.6.16
      */
     public abstract File createTempFile();
 
@@ -62,6 +70,8 @@ public abstract class TempFileSpace {
      *
      * @param fileExt  the file extension suffix without a leading dot ({@code '.'})
      * @return a temporary {@link java.io.File} created
+     *
+     * @since 0.6.16
      */
     public abstract File createTempFile(final String fileExt);
 
@@ -71,6 +81,8 @@ public abstract class TempFileSpace {
      * @param prefix  the file name prefix
      * @param fileExt  the file extension suffix without a leading dot ({@code '.'})
      * @return a temporary {@link java.io.File} created
+     *
+     * @since 0.6.16
      */
     public abstract File createTempFile(final String prefix, final String fileExt);
 
@@ -78,6 +90,8 @@ public abstract class TempFileSpace {
      * Cleans up the temporary file space, and everything in the space.
      *
      * <p>It is to be called along with Embulk's cleanup process. Plugins should not call this directly.
+     *
+     * @since 0.6.16
      */
     public abstract void cleanup();
 }

@@ -18,12 +18,16 @@ package org.embulk.spi;
 
 /**
  * Represents an allocator of {@link org.embulk.spi.Buffer}.
+ *
+ * @since 0.4.0
  */
 public interface BufferAllocator {
     /**
      * Allocates a {@link org.embulk.spi.Buffer} with the default size of this {@link org.embulk.spi.BufferAllocator}.
      *
      * @return {@link org.embulk.spi.Buffer} allocated
+     *
+     * @since 0.4.0
      */
     Buffer allocate();
 
@@ -32,6 +36,8 @@ public interface BufferAllocator {
      *
      * @param minimumCapacity  the minimum size of the {@link org.embulk.spi.Buffer} allocated
      * @return {@link org.embulk.spi.Buffer} allocated
+     *
+     * @since 0.4.0
      */
     Buffer allocate(int minimumCapacity);
 }

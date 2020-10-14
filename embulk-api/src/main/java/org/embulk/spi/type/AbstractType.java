@@ -20,9 +20,14 @@ package org.embulk.spi.type;
  * Base class of singleton type classes.
  *
  * @deprecated Plugins should not refer this class directly.
+ *
+ * @since 0.4.0
  */
 @Deprecated
 public abstract class AbstractType implements Type {
+    /**
+     * @since 0.4.0
+     */
     protected AbstractType(final String name, final Class<?> javaType, final int fixedStorageSize) {
         this.name = name;
         this.javaType = javaType;
@@ -30,22 +35,34 @@ public abstract class AbstractType implements Type {
         this.fixedStorageSize = (byte) fixedStorageSize;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public String getName() {
         return this.name;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Deprecated
     @Override
     public Class<?> getJavaType() {
         return this.javaType;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public byte getFixedStorageSize() {
         return this.fixedStorageSize;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public boolean equals(final Object other) {
         if (other == null) {
@@ -54,11 +71,17 @@ public abstract class AbstractType implements Type {
         return other.getClass().isAssignableFrom(this.getClass());
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public int hashCode() {
         return this.getClass().hashCode();
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Override
     public String toString() {
         return this.name;

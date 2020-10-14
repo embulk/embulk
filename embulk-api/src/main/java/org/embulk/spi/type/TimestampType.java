@@ -20,6 +20,8 @@ package org.embulk.spi.type;
  * Type class for Embulk's TIMESTAMP.
  *
  * <p>Plugins should not refer this class directly. Recommended to use constants in {@link Types} instead.
+ *
+ * @since 0.4.0
  */
 @SuppressWarnings("deprecation")
 public class TimestampType extends AbstractType {
@@ -39,12 +41,18 @@ public class TimestampType extends AbstractType {
         this.format = format;
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Deprecated
     public TimestampType withFormat(String format) {
         // TODO is this correct design...?
         return new TimestampType(format);
     }
 
+    /**
+     * @since 0.4.0
+     */
     @Deprecated
     public String getFormat() {
         if (format == null) {

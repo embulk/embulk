@@ -20,16 +20,27 @@ import org.embulk.config.ConfigException;
 
 /**
  * Represents an Exception caused by schema config errors.
+ *
+ * @since 0.6.14
  */
 public class SchemaConfigException extends ConfigException {
+    /**
+     * @since 0.6.14
+     */
     public SchemaConfigException(final String message) {
         super(message);
     }
 
+    /**
+     * @since 0.6.14
+     */
     public SchemaConfigException(final Throwable cause) {
         super(cause);
     }
 
+    /**
+     * @since 0.6.14
+     */
     public SchemaConfigException(final String message, final Throwable cause) {
         super(message, cause);
     }

@@ -20,12 +20,16 @@ import java.util.Optional;
 
 /**
  * Represents a series of file-like byte sequence inputs from a File Input Plugin.
+ *
+ * @since 0.4.0
  */
 public interface FileInput extends AutoCloseable {
     /**
      * Switches the {@link org.embulk.spi.FileInput} to process the next file.
      *
      * @return {@code true} if this {@link org.embulk.spi.FileInput} has switched to the next file. {@code false} if no more files.
+     *
+     * @since 0.4.0
      */
     boolean nextFile();
 
@@ -33,11 +37,15 @@ public interface FileInput extends AutoCloseable {
      * Reads a byte sequence from this {@link org.embulk.spi.FileInput} into {@link org.embulk.spi.Buffer}.
      *
      * @return the {@link org.embulk.spi.Buffer} read
+     *
+     * @since 0.4.0
      */
     Buffer poll();
 
     /**
      * Closes this {@link org.embulk.spi.FileInput}.
+     *
+     * @since 0.4.0
      */
     @Override
     void close();
@@ -51,6 +59,8 @@ public interface FileInput extends AutoCloseable {
      * Decoder Plugins, and Parser Plugin.
      *
      * @return the hinting {@link java.lang.String} in {@link java.util.Optional}
+     *
+     * @since 0.9.12
      */
     default Optional<String> hintOfCurrentInputFileNameForLogging() {
         return Optional.empty();

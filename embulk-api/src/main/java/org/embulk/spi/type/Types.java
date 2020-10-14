@@ -18,17 +18,37 @@ package org.embulk.spi.type;
 
 /**
  * Constants of Embulk's data types.
+ *
+ * @since 0.4.0
  */
 public class Types {
+    /**
+     * @since 0.4.0
+     */
     public static final BooleanType BOOLEAN = BooleanType.BOOLEAN;
 
+    /**
+     * @since 0.4.0
+     */
     public static final LongType LONG = LongType.LONG;
 
+    /**
+     * @since 0.4.0
+     */
     public static final DoubleType DOUBLE = DoubleType.DOUBLE;
 
+    /**
+     * @since 0.4.0
+     */
     public static final StringType STRING = StringType.STRING;
 
+    /**
+     * @since 0.4.0
+     */
     public static final TimestampType TIMESTAMP = TimestampType.TIMESTAMP;
 
+    /**
+     * @since 0.8.0
+     */
     public static final JsonType JSON = JsonType.JSON;
 }

@@ -18,17 +18,37 @@ package org.embulk.spi;
 
 /**
  * A visitor interface for {@link Column#visit(ColumnVisitor)}.
+ *
+ * @since 0.4.0
  */
 public interface ColumnVisitor {
+    /**
+     * @since 0.4.0
+     */
     void booleanColumn(Column column);
 
+    /**
+     * @since 0.4.0
+     */
     void longColumn(Column column);
 
+    /**
+     * @since 0.4.0
+     */
     void doubleColumn(Column column);
 
+    /**
+     * @since 0.4.0
+     */
     void stringColumn(Column column);
 
+    /**
+     * @since 0.4.0
+     */
     void timestampColumn(Column column);
 
+    /**
+     * @since 0.8.0
+     */
     void jsonColumn(Column column);
 }
