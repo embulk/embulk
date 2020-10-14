@@ -27,10 +27,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>A File Input Plugin reads file-like byte sequences from the configured source into a set of byte buffers
  * {@link org.embulk.spi.Buffer} of {@link org.embulk.spi.TransactionalFileInput}.
+ *
+ * @since 0.4.0
  */
 public interface FileInputPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -41,6 +45,8 @@ public interface FileInputPlugin {
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
          * @param taskCount  the number of tasks
          * @return reports of tasks
+         *
+         * @since 0.7.0
          */
         List<TaskReport> run(TaskSource taskSource, int taskCount);
     }
@@ -51,6 +57,8 @@ public interface FileInputPlugin {
      * @param config  a configuration for the File Input Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control);
 
@@ -61,6 +69,8 @@ public interface FileInputPlugin {
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff resume(TaskSource taskSource, int taskCount, FileInputPlugin.Control control);
 
@@ -70,6 +80,8 @@ public interface FileInputPlugin {
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param taskCount  the number of tasks
      * @param successTaskReports  reports of successful tasks
+     *
+     * @since 0.7.0
      */
     void cleanup(TaskSource taskSource, int taskCount, List<TaskReport> successTaskReports);
 
@@ -83,6 +95,8 @@ public interface FileInputPlugin {
      * @param taskIndex  the index number of the task
      * @return an implementation of {@link org.embulk.spi.TransactionalFileInput} so that {@link org.embulk.spi.Buffer}s
      *     read from the configured source are read from a Parser Plugin, or a Decoder Plugin
+     *
+     * @since 0.4.0
      */
     TransactionalFileInput open(TaskSource taskSource, int taskIndex);
 }

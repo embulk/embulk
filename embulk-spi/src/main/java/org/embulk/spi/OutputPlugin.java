@@ -27,10 +27,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>An Output Plugin writes a sequence of data records in {@link org.embulk.spi.Page}s read from an Input Plugin, or a Filter
  * Plugin, into the configured destination.
+ *
+ * @since 0.4.0
  */
 public interface OutputPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -41,6 +45,8 @@ public interface OutputPlugin {
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
          * @return reports of tasks
+         *
+         * @since 0.7.0
          */
         List<TaskReport> run(TaskSource taskSource);
     }
@@ -53,6 +59,8 @@ public interface OutputPlugin {
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff transaction(ConfigSource config, Schema schema, int taskCount, OutputPlugin.Control control);
 
@@ -64,6 +72,8 @@ public interface OutputPlugin {
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff resume(TaskSource taskSource, Schema schema, int taskCount, OutputPlugin.Control control);
 
@@ -74,6 +84,8 @@ public interface OutputPlugin {
      * @param schema  {@link org.embulk.spi.Schema} of the output
      * @param taskCount  the number of tasks
      * @param successTaskReports  reports of successful tasks
+     *
+     * @since 0.7.0
      */
     void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<TaskReport> successTaskReports);
 
@@ -88,6 +100,8 @@ public interface OutputPlugin {
      * @param taskIndex  the index number of the task
      * @return an implementation of {@link org.embulk.spi.TransactionalPageOutput} that receives {@link org.embulk.spi.Page}s
      *     from an Input Plugin, or a Filter Plugin, and writes them into the configured destination
+     *
+     * @since 0.4.0
      */
     TransactionalPageOutput open(TaskSource taskSource, Schema schema, int taskIndex);
 }

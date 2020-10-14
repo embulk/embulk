@@ -27,10 +27,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>An Input Plugin reads a sequence of data records from the configured source into {@link org.embulk.spi.PageOutput} so that
  * the read input is read from an Output Plugin, or a Filter Plugin.
+ *
+ * @since 0.4.0
  */
 public interface InputPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -42,6 +46,8 @@ public interface InputPlugin {
          * @param schema  {@link org.embulk.spi.Schema} of the input
          * @param taskCount  the number of tasks
          * @return reports of tasks
+         *
+         * @since 0.7.0
          */
         List<TaskReport> run(TaskSource taskSource, Schema schema, int taskCount);
     }
@@ -52,6 +58,8 @@ public interface InputPlugin {
      * @param config  a configuration for the Input Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff transaction(ConfigSource config, InputPlugin.Control control);
 
@@ -63,6 +71,8 @@ public interface InputPlugin {
      * @param taskCount  the number of tasks
      * @param control  a controller of the following tasks provided from the Embulk core
      * @return {@link org.embulk.config.ConfigDiff} to represent the difference the next incremental run
+     *
+     * @since 0.4.0
      */
     ConfigDiff resume(TaskSource taskSource, Schema schema, int taskCount, InputPlugin.Control control);
 
@@ -73,6 +83,8 @@ public interface InputPlugin {
      * @param schema  {@link org.embulk.spi.Schema} of the input
      * @param taskCount  the number of tasks
      * @param successTaskReports  reports of successful tasks
+     *
+     * @since 0.7.0
      */
     void cleanup(TaskSource taskSource, Schema schema, int taskCount, List<TaskReport> successTaskReports);
 
@@ -85,6 +97,8 @@ public interface InputPlugin {
      * @param output  {@link org.embulk.spi.PageOutput} to write read input so that the input is read from an Output Plugin,
      *     or a Filter Plugin
      * @return a report from the task
+     *
+     * @since 0.7.0
      */
     TaskReport run(TaskSource taskSource, Schema schema, int taskIndex, PageOutput output);
 
@@ -93,6 +107,8 @@ public interface InputPlugin {
      *
      * @param config  a partial configuration for the Input Plugin given from a user
      * @return a new configuration guessed based on {@code config}
+     *
+     * @since 0.4.0
      */
     ConfigDiff guess(ConfigSource config);
 }

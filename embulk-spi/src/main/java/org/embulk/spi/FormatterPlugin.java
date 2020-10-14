@@ -24,10 +24,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>A Formatter Plugin formats a sequence of data records in {@link org.embulk.spi.PageOutput} from an Input Plugin, or a Filter
  * Plugin, into a set of byte buffers of {@link org.embulk.spi.FileOutput} for a File Output Plugin, or an Encoder Plugin.
+ *
+ * @since 0.4.0
  */
 public interface FormatterPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -37,6 +41,8 @@ public interface FormatterPlugin {
          * {@link #transaction(org.embulk.config.ConfigSource, org.embulk.spi.Schema, FormatterPlugin.Control)}.
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
+         *
+         * @since 0.4.0
          */
         void run(TaskSource taskSource);
     }
@@ -47,6 +53,8 @@ public interface FormatterPlugin {
      * @param config  a configuration for the Formatter Plugin given from a user
      * @param schema  {@link org.embulk.spi.Schema} of the input for the formatter
      * @param control  a controller of the following tasks provided from the Embulk core
+     *
+     * @since 0.4.0
      */
     void transaction(ConfigSource config, Schema schema, FormatterPlugin.Control control);
 
@@ -59,11 +67,13 @@ public interface FormatterPlugin {
      *
      * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
      * @param schema  {@link org.embulk.spi.Schema} of the input for the formatter
-     * @param fileOutput  {@link org.embulk.spi.FileOutput} to write formatted output so that the output is read from a File
+     * @param output  {@link org.embulk.spi.FileOutput} to write formatted output so that the output is read from a File
      *     Output Plugin, or an Encoder Plugin
      * @return an implementation of {@link org.embulk.spi.PageOutput} that receives {@link org.embulk.spi.Page}s from an Input
      *     Plugin, or a Filter Plugin, and writes formatted output into {@link org.embulk.spi.FileOutput} {@code output} in the
      *     parameter list for a File Output Plugin, or an Encoder Plugin
+     *
+     * @since 0.4.0
      */
     PageOutput open(TaskSource taskSource, Schema schema, FileOutput output);
 }

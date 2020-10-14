@@ -24,10 +24,14 @@ import org.embulk.config.TaskSource;
  *
  * <p>An Encoder Plugin converts a set of byte buffers in {@link org.embulk.spi.FileOutput} to another set of byte buffers of
  * {@link org.embulk.spi.FileOutput}.
+ *
+ * @since 0.4.0
  */
 public interface EncoderPlugin {
     /**
      * A controller of the following tasks provided from the Embulk core.
+     *
+     * @since 0.4.0
      */
     interface Control {
         /**
@@ -36,6 +40,8 @@ public interface EncoderPlugin {
          * <p>It would be executed at the end of {@link #transaction(org.embulk.config.ConfigSource, EncoderPlugin.Control)}.
          *
          * @param taskSource  {@link org.embulk.config.TaskSource} processed for tasks from {@link org.embulk.config.ConfigSource}
+         *
+         * @since 0.4.0
          */
         void run(TaskSource taskSource);
     }
@@ -45,6 +51,8 @@ public interface EncoderPlugin {
      *
      * @param config  a configuration for the Encoder Plugin given from a user
      * @param control  a controller of the following tasks provided from the Embulk core
+     *
+     * @since 0.4.0
      */
     void transaction(ConfigSource config, EncoderPlugin.Control control);
 
@@ -59,6 +67,8 @@ public interface EncoderPlugin {
      * @return an implementation of {@link org.embulk.spi.FileOutput} that receives {@link org.embulk.spi.Buffer}s from a Formatter
      *     Plugin, or another Encoder Plugin, and writes encoded output into {@link org.embulk.spi.FileOutput} {@code fileOutput}
      *     in the parameter list
+     *
+     * @since 0.4.0
      */
     FileOutput open(TaskSource taskSource, FileOutput fileOutput);
 }
