@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a pre-defined set of self-contained JAR file resources in the Embulk JAR file.
@@ -129,8 +127,6 @@ public final class EmbulkSelfContainedJarFiles {
 
         return list;
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(EmbulkSelfContainedJarFiles.class);
 
     private static final ArrayList<String> JAR_RESOURCE_NAMES = new ArrayList<>();
 }

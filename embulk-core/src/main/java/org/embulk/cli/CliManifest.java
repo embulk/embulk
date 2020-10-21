@@ -6,8 +6,6 @@ import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class CliManifest {
     private CliManifest() {
@@ -27,31 +25,32 @@ final class CliManifest {
                 try {
                     protectionDomain = CliManifest.class.getProtectionDomain();
                 } catch (final SecurityException ex) {
-                    logger.error("Manifest unavailable: ProtectionDomain inaccessible.", ex);
+                    System.err.println("Manifest unavailable: ProtectionDomain inaccessible.");
+                    ex.printStackTrace();
                     return null;
                 }
 
                 final CodeSource codeSource = protectionDomain.getCodeSource();
                 if (codeSource == null) {
-                    logger.error("Manifest unavailable: CodeSource inaccessible.");
+                    System.err.println("Manifest unavailable: CodeSource inaccessible.");
                     return null;
                 }
 
                 final URL selfJarUrl = codeSource.getLocation();
                 if (selfJarUrl == null) {
-                    logger.error("Manifest unavailable: location unavailable from CodeSource.");
+                    System.err.println("Manifest unavailable: location unavailable from CodeSource.");
                     return null;
                 } else if (!selfJarUrl.getProtocol().equals("file")) {
-                    logger.error("Manifest unavailable: invalid location: " + selfJarUrl.toString());
+                    System.err.println("Manifest unavailable: invalid location: " + selfJarUrl.toString());
                     return null;
                 }
 
                 final String selfJarPathString = selfJarUrl.getPath();
                 if (selfJarPathString == null) {
-                    logger.error("Manifest unavailable: path unavailable in CodeSource location: " + selfJarUrl.toString());
+                    System.err.println("Manifest unavailable: path unavailable in CodeSource location: " + selfJarUrl.toString());
                     return null;
                 } else if (selfJarPathString.isEmpty()) {
-                    logger.error("Manifest unavailable: empty path from CodeSource location: " + selfJarUrl.toString());
+                    System.err.println("Manifest unavailable: empty path from CodeSource location: " + selfJarUrl.toString());
                     return null;
                 }
 
@@ -59,25 +58,28 @@ final class CliManifest {
                     try {
                         return selfJarFile.getManifest();
                     } catch (final IllegalStateException ex) {
-                        logger.error("Manifest unavailable: JAR closed unexpectedly.", ex);
+                        System.err.println("Manifest unavailable: JAR closed unexpectedly.");
+                        ex.printStackTrace();
                         return null;
                     } catch (final IOException ex) {
-                        logger.error("Manifest unavailable: I/O error in reading manifest.", ex);
+                        System.err.println("Manifest unavailable: I/O error in reading manifest.");
+                        ex.printStackTrace();
                         return null;
                     }
                 } catch (final SecurityException ex) {
-                    logger.error("Manifest unavailable: JAR file inaccessible.", ex);
+                    System.err.println("Manifest unavailable: JAR file inaccessible.");
+                    ex.printStackTrace();
                     return null;
                 } catch (final IOException ex) {
-                    logger.error("Manifest unavailable: I/O error in reading JAR.", ex);
+                    System.err.println("Manifest unavailable: I/O error in reading JAR.");
+                    ex.printStackTrace();
                     return null;
                 }
             } catch (final Throwable ex) {
-                logger.error("Manifest unavailable: unknown error.", ex);
+                System.err.println("Manifest unavailable: unknown error.");
+                ex.printStackTrace();
                 return null;
             }
         }
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(CliManifest.class);
 }

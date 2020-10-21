@@ -4,8 +4,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a pre-defined set of class loaders to load dependency libraries for the Embulk core.
@@ -61,7 +59,8 @@ public final class EmbulkDependencyClassLoaders {
 
         static {
             if (DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
-                logger.warn("Hidden dependencies are uninitialized. Maybe using classes loaded by Embulk's top-level ClassLoader.");
+                System.err.println(
+                        "Hidden dependencies are uninitialized. Maybe using classes loaded by Embulk's top-level ClassLoader.");
             }
             DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(DEPENDENCIES, CLASS_LOADER);
         }
@@ -80,8 +79,6 @@ public final class EmbulkDependencyClassLoaders {
             }
         }
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(EmbulkDependencyClassLoaders.class);
 
     private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.class.getClassLoader();
     private static final ArrayList<Path> DEPENDENCIES = new ArrayList<>();
