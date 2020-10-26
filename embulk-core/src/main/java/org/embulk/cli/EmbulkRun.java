@@ -1,8 +1,6 @@
 package org.embulk.cli;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -10,313 +8,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkRunner;
-import org.embulk.deps.cli.CliParser;
-import org.embulk.deps.cli.EmbulkCommandLineHelpRequired;
-import org.embulk.deps.cli.EmbulkCommandLineParseException;
-import org.embulk.deps.cli.OptionBehavior;
-import org.embulk.deps.cli.OptionDefinition;
+import org.embulk.EmbulkVersion;
 import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegateImpl;
 
 public class EmbulkRun {
-    public EmbulkRun(final String embulkVersion) {
-        this.embulkVersion = embulkVersion;
+    public static int run(final CommandLine commandLine) {
+        return (new EmbulkRun()).runInternal(commandLine);
     }
 
-    public int run(final List<String> argsEmbulk, final List<String> jrubyOptions) {
-        final EmbulkArguments arguments;
-        try {
-            arguments = EmbulkArguments.extract(argsEmbulk);
-        } catch (EmbulkCommandLineException ex) {
-            printGeneralUsage(System.err);
-            System.err.println("");
-            System.err.println("error: " + ex.getMessage());
-            return 1;
-        }
+    private int runInternal(final CommandLine commandLine) {
+        final List<String> subcommandArguments = commandLine.getArguments();
+        final Properties embulkSystemProperties = commandLine.getCommandLineProperties();
 
-        final EmbulkSubcommand subcommand = arguments.getSubcommand();
-        if (subcommand == null) {
-            printGeneralUsage(System.err);
-            System.err.println("");
-            System.err.println("Use `<command> --help` to see description of the commands.");
-            return 1;
-        }
-
-        final List<String> subcommandArguments = arguments.getSubcommandArguments();
-
-        switch (subcommand) {
-            case VERSION_OUT:
-                // TODO(v2)[#723]: Consider capitalizing this "embulk".
-                // https://github.com/embulk/embulk/issues/723
-                System.out.println("embulk " + this.embulkVersion);
-                return 0;
-            case VERSION_ERR:
-                // TODO(v2)[#723]: Consider capitalizing this "embulk".
-                // https://github.com/embulk/embulk/issues/723
-                System.err.println("embulk " + this.embulkVersion);
-                return 0;
-            default:  // Do nothing, and just pass through.
-        }
-
-        printEmbulkVersionHeader(System.out);
-
-        switch (subcommand) {
-            case EXEC:
-            case IRB:
-            case MIGRATE:
-                printGeneralUsage(System.err);
-                System.err.println("");
-                System.err.println("The `embulk " + subcommand.toString() + "` subcommand no longer works.");
-                return 1;
-            case BUNDLE:
-            case GEM:
-                return runSubcommand(subcommand, subcommandArguments, null, jrubyOptions);
-            default:
-                final CliParser parser = buildCommandLineParser(subcommand);
-                final EmbulkCommandLine commandLine;
-                try {
-                    commandLine = parser.parse(
-                            subcommandArguments, jrubyOptions, new PrintWriter(System.out), new PrintWriter(System.err));
-                } catch (EmbulkCommandLineParseException ex) {
-                    parser.printHelp(System.err);
-                    System.err.println("");
-                    System.err.println(ex.getMessage());
-                    return 1;
-                } catch (EmbulkCommandLineHelpRequired ex) {
-                    parser.printHelp(System.err);
-                    return 1;
-                }
-                return runSubcommand(subcommand, subcommandArguments, commandLine, jrubyOptions);
-        }
-    }
-
-    private CliParser buildCommandLineParser(final EmbulkSubcommand subcommand) {
-        final CliParser.Builder parserBuilder = CliParser.builder();
-
-        // TODO: Revisit the width. JLine may help. https://github.com/jline
-        parserBuilder
-                .setWidth(160)
-                .addHelpMessageLine("  Help:")
-                .addOptionDefinition(OptionDefinition.defineHelpOption("h", "help", "Print help."))
-                .addHelpMessageLine("");
-
-        switch (subcommand) {
-            case RUN:
-                parserBuilder
-                        .setMainUsage("embulk run <config.yml>")
-                        .addHelpMessageLine("  Options:")
-                        // op.on('-r', '--resume-state PATH', 'Path to a file to write or read resume state') do |path|
-                        //   options[:resume_state_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "r", "resume-state", "PATH", "Path to a file to write or read resume state",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder,
-                                                       final String argument) {
-                                        commandLineBuilder.setResumeState(argument);
-                                    }
-                                }))
-                        // op.on('-o', '--output PATH', '(deprecated)') do |path|
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: Run with -o option is deprecated. Please use -c option instead. For example,"
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}:   $ embulk run config.yml -c diff.yml"
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: This -c option stores only diff of the next configuration."
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: The diff will be merged to the original config.yml file."
-                        //   STDERR.puts "#{Time.now.strftime("%Y-%m-%d %H:%M:%S.%3N %z")}: "
-                        //   options[:next_config_output_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "o", "output", "PATH", "(deprecated)",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
-                                        final String now = ZonedDateTime.now().format(formatter);
-                                        errorWriter().println(now + ": Run with -o option is deprecated. Please use -c option instead. For example,");
-                                        errorWriter().println(now + ": ");
-                                        errorWriter().println(now + ":   $ embulk run config.yml -c diff.yml");
-                                        errorWriter().println(now + ": ");
-                                        errorWriter().println(now + ": This -c option stores only diff of the next configuration.");
-                                        errorWriter().println(now + ": The diff will be merged to the original config.yml file.");
-                                        errorWriter().println(now + ": ");
-                                        commandLineBuilder.setOutput(argument);
-                                    }
-                                }))
-                        // op.on('-c', '--config-diff PATH', 'Path to a file to read & write the next configuration diff') do |path|
-                        //   options[:next_config_diff_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "c", "config-diff", "PATH", "Path to a file to read & write the next configuration diff",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setConfigDiff(argument);
-                                    }
-                                }))
-                        .setArgumentsRange(1, 1);
-                addPluginLoadOptionDefinitions(parserBuilder);
-                addOtherOptionDefinitions(parserBuilder);
-                break;
-            case CLEANUP:
-                parserBuilder
-                        .setMainUsage("embulk cleanup <config.yml>")
-                        .addHelpMessageLine("  Options:")
-                        // op.on('-r', '--resume-state PATH', 'Path to a file to cleanup resume state') do |path|
-                        //   options[:resume_state_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "r", "resume-state", "PATH", "Path to a file to cleanup resume state",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setResumeState(argument);
-                                    }
-                                }))
-                        .setArgumentsRange(1, 1);
-                addPluginLoadOptionDefinitions(parserBuilder);
-                addOtherOptionDefinitions(parserBuilder);
-                break;
-            case PREVIEW:
-                parserBuilder
-                        .setMainUsage("embulk preview <config.yml>")
-                        .addHelpMessageLine("  Options:")
-                        // op.on('-G', '--vertical', "Use vertical output format", TrueClass) do |b|
-                        //   options[:format] = "vertical"
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithoutArgument(
-                                "G", "vertical", "Use vertical output format",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setFormat("vertical");
-                                    }
-                                }))
-                        .setArgumentsRange(1, 1);
-                addPluginLoadOptionDefinitions(parserBuilder);
-                addOtherOptionDefinitions(parserBuilder);
-                break;
-            case GUESS:
-                parserBuilder
-                        .setMainUsage("embulk guess <partial-config.yml>")
-                        .addHelpMessageLine("  Options:")
-                        // op.on('-o', '--output PATH', 'Path to a file to write the guessed configuration') do |path|
-                        //   options[:next_config_output_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "o", "output", "PATH", "Path to a file to write the guessed configuration",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setOutput(argument);
-                                    }
-                                }))
-                        // op.on('-g', '--guess NAMES', "Comma-separated list of guess plugin names") do |names|
-                        //   (options[:system_config][:guess_plugins] ||= []).concat names.split(",")  # TODO
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                                "g", "guess", "NAMES", "Comma-separated list of guess plugin names",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setEmbulkSystemProperties("guess_plugins", argument);
-                                    }
-                                }))
-                        .setArgumentsRange(1, 1);
-                addPluginLoadOptionDefinitions(parserBuilder);
-                addOtherOptionDefinitions(parserBuilder);
-                break;
-            case MKBUNDLE:
-                parserBuilder
-                        .setMainUsage("embulk mkbundle <directory> [--path PATH]")
-                        .addHelpMessageLine("  Options:")
-                        // op.on('--path PATH', 'Relative path from <directory> for the location to install gems to (e.g. --path shared/bundle).') do |path|
-                        //   options[:bundle_path] = path
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOnlyLongOptionWithArgument(
-                            "path", "PATH",
-                            "Relative path from <directory> for the location to install gems to (e.g. --path shared/bundle).",
-                            new OptionBehavior() {
-                                public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                    commandLineBuilder.setBundlePath(argument);
-                                }
-                            }))
-                        .addHelpMessageLine("")
-                        .addHelpMessageLine("  \"mkbundle\" creates a new a plugin bundle directory. You can install")
-                        .addHelpMessageLine("  plugins (gems) to the directory instead of ~/.embulk.")
-                        .addHelpMessageLine("")
-                        .addHelpMessageLine("  See generated <directory>/Gemfile to install plugins to the directory.")
-                        .addHelpMessageLine("  Use -b, --bundle BUNDLE_DIR option to use it:")
-                        .addHelpMessageLine("")
-                        .addHelpMessageLine("    $ embulk mkbundle ./dir                # create bundle directory")
-                        .addHelpMessageLine("    $ (cd dir && vi Gemfile && embulk bundle)   # update plugin list")
-                        .addHelpMessageLine("    $ embulk guess -b ./dir ...            # guess using bundled plugins")
-                        .addHelpMessageLine("    $ embulk run   -b ./dir ...            # run using bundled plugins")
-                        .setArgumentsRange(1, 1);
-                break;
-            case NEW:
-                parserBuilder
-                        .setMainUsage("embulk new <category> <name>")
-                        .addUsage("")
-                        .addUsage("categories:")
-                        .addUsage("")
-                        .addUsage("    ruby-input                 Ruby record input plugin    (like \"mysql\")")
-                        .addUsage("    ruby-output                Ruby record output plugin   (like \"mysql\")")
-                        .addUsage("    ruby-filter                Ruby record filter plugin   (like \"add-hostname\")")
-                        .addUsage("    #ruby-file-input           Ruby file input plugin      (like \"ftp\")          # not implemented yet [#21]")
-                        .addUsage("    #ruby-file-output          Ruby file output plugin     (like \"ftp\")          # not implemented yet [#22]")
-                        .addUsage("    ruby-parser                Ruby file parser plugin     (like \"csv\")")
-                        .addUsage("    ruby-formatter             Ruby file formatter plugin  (like \"csv\")")
-                        .addUsage("    #ruby-decoder              Ruby file decoder plugin    (like \"gzip\")         # not implemented yet [#31]")
-                        .addUsage("    #ruby-encoder              Ruby file encoder plugin    (like \"gzip\")         # not implemented yet [#32]")
-                        .addUsage("    java-input                 Java record input plugin    (like \"mysql\")")
-                        .addUsage("    java-output                Java record output plugin   (like \"mysql\")")
-                        .addUsage("    java-filter                Java record filter plugin   (like \"add-hostname\")")
-                        .addUsage("    java-file-input            Java file input plugin      (like \"ftp\")")
-                        .addUsage("    java-file-output           Java file output plugin     (like \"ftp\")")
-                        .addUsage("    java-parser                Java file parser plugin     (like \"csv\")")
-                        .addUsage("    java-formatter             Java file formatter plugin  (like \"csv\")")
-                        .addUsage("    java-decoder               Java file decoder plugin    (like \"gzip\")")
-                        .addUsage("    java-encoder               Java file encoder plugin    (like \"gzip\")")
-                        .addUsage("")
-                        .addUsage("examples:")
-                        .addUsage("    new ruby-output hbase")
-                        .addUsage("    new ruby-filter int-to-string")
-                        .setArgumentsRange(2, 2);
-                break;
-            case SELFUPDATE:
-                parserBuilder
-                        .setMainUsage("embulk selfupdate")
-                        // op.on('-f', "Skip corruption check", TrueClass) do |b|
-                        //   options[:force] = true
-                        // end
-                        .addOptionDefinition(OptionDefinition.defineOnlyShortOptionWithoutArgument(
-                                "f", "Skip corruption check",
-                                new OptionBehavior() {
-                                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                                        commandLineBuilder.setForce(true);
-                                    }
-                                }))
-                        .setArgumentsRange(0, 1);
-                addOtherOptionDefinitions(parserBuilder);
-                break;
-            case EXAMPLE:
-                parserBuilder
-                        .setMainUsage("embulk example [directory]")
-                        .setArgumentsRange(0, 1);
-                break;
-            default:
-                parserBuilder.setMainUsage("[FATAL] Unknown subcommand: " + subcommand);
-        }
-
-        return parserBuilder.build();
-    }
-
-    private int runSubcommand(final EmbulkSubcommand subcommand,
-                              final List<String> subcommandArguments,
-                              final EmbulkCommandLine commandLine,
-                              final List<String> jrubyOptions) {
-        switch (subcommand) {
+        switch (commandLine.getCommand()) {
             case EXAMPLE:
                 final EmbulkExample embulkExample = new EmbulkExample();
                 try {
@@ -332,7 +42,7 @@ public class EmbulkRun {
                 final String categoryWithLanguage = commandLine.getArguments().get(0);
                 final String nameGiven = commandLine.getArguments().get(1);
                 try {
-                    final EmbulkNew embulkNew = new EmbulkNew(categoryWithLanguage, nameGiven, this.embulkVersion);
+                    final EmbulkNew embulkNew = new EmbulkNew(categoryWithLanguage, nameGiven, EmbulkVersion.VERSION);
                     embulkNew.newPlugin();
                 } catch (IOException ex) {
                     ex.printStackTrace();
@@ -345,7 +55,10 @@ public class EmbulkRun {
                     return 1;
                 }
                 try {
-                    SelfUpdate.toSpecific(this.embulkVersion, commandLine.getArguments().get(0), commandLine.getForce());
+                    SelfUpdate.toSpecific(
+                            EmbulkVersion.VERSION,
+                            commandLine.getArguments().get(0),
+                            "true".equals(embulkSystemProperties.getProperty("force_selfupdate")));
                 } catch (final IOException ex) {
                     ex.printStackTrace();
                     return 1;
@@ -353,14 +66,7 @@ public class EmbulkRun {
                 return 0;
             case BUNDLE:
                 if (!subcommandArguments.isEmpty() && subcommandArguments.get(0).equals("new")) {
-                    if (subcommandArguments.size() != 2) {
-                        printGeneralUsage(System.err);
-                        System.err.println("");
-                        System.err.println("Use `<command> --help` to see description of the commands.");
-                        return 1;
-                    }
-                    newBundle(subcommandArguments.get(1), null);
-                    System.err.println("'embulk bundle new' is deprecated. This will be removed in future release. Please use 'embulk mkbundle' instead.");
+                    System.err.println("embulk: 'embulk bundle new' is no longer available. Please use 'embulk mkbundle' instead.");
                 } else {
                     runBundler(subcommandArguments, null);
                 }
@@ -369,7 +75,7 @@ public class EmbulkRun {
                 callJRubyGem(subcommandArguments);
                 return 0;
             case MKBUNDLE:
-                newBundle(commandLine.getArguments().get(0), commandLine.getBundlePath());
+                newBundle(commandLine.getArguments().get(0), embulkSystemProperties.getProperty("bundle_Path"));
                 break;
             case RUN:
             case CLEANUP:
@@ -391,25 +97,23 @@ public class EmbulkRun {
 
                 // Ruby |Embulk::Runner| contained the EmbulkRunner instance, but it's no longer available.
                 final EmbulkEmbed.Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
-                bootstrap.setEmbulkSystemProperties(commandLine.getEmbulkSystemProperties());
+                bootstrap.setEmbulkSystemProperties(embulkSystemProperties);
 
                 // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
                 final EmbulkRunner runner = new EmbulkRunner(bootstrap.initialize());
 
-                final Path configDiffPath =
-                        (commandLine.getConfigDiff() == null ? null : Paths.get(commandLine.getConfigDiff()));
-                final Path outputPath =
-                        (commandLine.getOutput() == null ? null : Paths.get(commandLine.getOutput()));
-                final Path resumeStatePath =
-                        (commandLine.getResumeState() == null ? null : Paths.get(commandLine.getResumeState()));
+                final Path configDiffPath = getPathFromProperties("config_diff_path", embulkSystemProperties);
+                final Path outputPath = getPathFromProperties("output_path", embulkSystemProperties);
+                final Path resumeStatePath = getPathFromProperties("resume_state_path", embulkSystemProperties);
+                final String previewFormat = embulkSystemProperties.getProperty("preview_format");
 
                 try {
-                    switch (subcommand) {
+                    switch (commandLine.getCommand()) {
                         case GUESS:
                             runner.guess(Paths.get(commandLine.getArguments().get(0)), outputPath);
                             break;
                         case PREVIEW:
-                            runner.preview(Paths.get(commandLine.getArguments().get(0)), commandLine.getFormat());
+                            runner.preview(Paths.get(commandLine.getArguments().get(0)), previewFormat);
                             break;
                         case RUN:
                             runner.run(Paths.get(commandLine.getArguments().get(0)),
@@ -429,6 +133,14 @@ public class EmbulkRun {
             default:  // Do nothing, and just pass through.
         }
         return 0;
+    }
+
+    private static Path getPathFromProperties(final String key, final Properties properties) {
+        final String value = properties.getProperty(key);
+        if (value == null) {
+            return null;
+        }
+        return Paths.get(value);
     }
 
     private void copyResourceToFile(final String sourceResourceName,
@@ -531,126 +243,6 @@ public class EmbulkRun {
         localJRubyContainer.remove("__internal_argv_java__");
     }
 
-    private void addPluginLoadOptionDefinitions(final CliParser.Builder parserBuilder) {
-        parserBuilder.addHelpMessageLine("");
-        parserBuilder.addHelpMessageLine("  Plugin load options:");
-        // op.on('-L', '--load PATH', 'Add a local plugin path') do |plugin_path|
-        //   plugin_paths << plugin_path
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                "L", "load", "PATH", "Add a local plugin path",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.addLoad(argument);
-                    }
-                }));
-        // op.on('-I', '--load-path PATH', 'Add ruby script directory path ($LOAD_PATH)') do |load_path|
-        //   load_paths << load_path
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                "I", "load-path", "PATH", "Add ruby script directory path ($LOAD_PATH)",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.addLoadPath(argument);
-                    }
-                }));
-        // op.on('-C', '--classpath PATH', "Add java classpath separated by #{classpath_separator} (CLASSPATH)") do |classpath|
-        //   classpaths.concat classpath.split(classpath_separator)
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                "C", "classpath", "PATH", "Add java classpath separated by " + java.io.File.pathSeparator + " (CLASSPATH)",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setEmbulkSystemProperties("jruby_classpath", argument);
-                    }
-                }));
-        // op.on('-b', '--bundle BUNDLE_DIR', 'Path to a Gemfile directory (create one using "embulk mkbundle" command)') do |path|
-        //   # only for help message. implemented at lib/embulk/command/embulk_bundle.rb
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                "b", "bundle", "BUNDLE_DIR", "Path to a Gemfile directory (create one using \"embulk mkbundle\" command)",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setEmbulkSystemProperties("jruby_global_bundler_plugin_source_directory", argument);
-                    }
-                }));
-    }
-
-    private void addOtherOptionDefinitions(final CliParser.Builder parserBuilder) {
-        parserBuilder.addHelpMessageLine("");
-        parserBuilder.addHelpMessageLine("  Other options:");
-        // op.on('-l', '--log PATH', 'Output log messages to a file (default: -)') do |path|
-        //   options[:system_config][:log_path] = path
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOnlyLongOptionWithArgument(
-                "log", "PATH", "Output log messages to a file (default: -)",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setEmbulkSystemProperties("log_path", argument);
-                    }
-                }));
-        // op.on('-l', '--log-level LEVEL', 'Log level (error, warn, info, debug or trace)') do
-        // |level|
-        //   options[:system_config][:log_level] = level
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOptionWithArgument(
-                "l", "log-level", "LEVEL", "Log level (error, warn, info, debug or trace)",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument) {
-                        commandLineBuilder.setEmbulkSystemProperties("log_level", argument);
-                    }
-                }));
-        // op.on('-X KEY=VALUE', 'Add a performance system config') do |kv|
-        //   k, v = kv.split('=', 2)
-        //   v ||= "true"
-        //   options[:system_config][k] = v
-        // end
-        parserBuilder.addOptionDefinition(OptionDefinition.defineOnlyShortOptionWithArgument(
-                "X", "KEY=VALUE", "Add a performance system config",
-                new OptionBehavior() {
-                    public void behave(final EmbulkCommandLine.Builder commandLineBuilder, final String argument)
-                            throws EmbulkCommandLineParseException {
-                        try {
-                            final String[] keyValue = argument.split("=", 2);
-                            commandLineBuilder.setEmbulkSystemProperties(keyValue[0], keyValue[1]);
-                        } catch (Throwable ex) {
-                            throw new EmbulkCommandLineParseException(ex);
-                        }
-                    }
-                }));
-    }
-
-    private void printGeneralUsage(final PrintStream out) {
-        out.println("Embulk v" + this.embulkVersion);
-        out.println("Usage: embulk [-vm-options] <command> [--options]");
-        out.println("Commands:");
-        out.println("   mkbundle   <directory>                             # create a new plugin bundle environment.");
-        out.println("   bundle     [directory]                             # update a plugin bundle environment.");
-        out.println("   run        <config.yml>                            # run a bulk load transaction.");
-        out.println("   cleanup    <config.yml>                            # cleanup resume state.");
-        out.println("   preview    <config.yml>                            # dry-run the bulk load without output and show preview.");
-        out.println("   guess      <partial-config.yml> -o <output.yml>    # guess missing parameters to create a complete configuration file.");
-        out.println("   gem        <install | list | help>                 # install a plugin or show installed plugins.");
-        out.println("   new        <category> <name>                       # generates new plugin template");
-        out.println("   example    [path]                                  # creates an example config file and csv file to try embulk.");
-        out.println("   selfupdate [version]                               # upgrades embulk to the latest released version or to the specified version.");
-        out.println("");
-        out.println("VM options:");
-        out.println("   -E...                            Run an external script to configure environment variables in JVM");
-        out.println("                                    (Operations not just setting envs are not recommended nor guaranteed.");
-        out.println("                                     Expect side effects by running your external script at your own risk.)");
-        out.println("   -J-O                             Disable JVM optimizations to speed up startup time (enabled by default if command is 'run')");
-        out.println("   -J+O                             Enable JVM optimizations to speed up throughput");
-        out.println("   -J...                            Set JVM options (use -J-help to see available options)");
-        out.println("   -R--dev                          Set JRuby to be in development mode");
-    }
-
-    private void printEmbulkVersionHeader(final PrintStream out) {
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
-        final String now = ZonedDateTime.now().format(formatter);
-        out.println(now + ": Embulk v" + this.embulkVersion);
-    }
-
     // TODO: Check if it is required to process JRuby options.
     @SuppressWarnings("checkstyle:LineLength")
     private ScriptingContainerDelegate createLocalJRubyScriptingContainerDelegate() {
@@ -714,6 +306,4 @@ public class EmbulkRun {
 
         return userHome.toAbsolutePath().resolve(".embulk");
     }
-
-    private final String embulkVersion;
 }

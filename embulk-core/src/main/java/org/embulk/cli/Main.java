@@ -1,11 +1,16 @@
 package org.embulk.cli;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Optional;
-import org.embulk.EmbulkVersion;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
+import org.embulk.deps.cli.CommandLineParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.SubstituteLoggingEvent;
+import org.slf4j.helpers.SubstituteLogger;
 
 public class Main {
     public static void main(final String[] args) {
@@ -13,64 +18,42 @@ public class Main {
         EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(CliManifest.getManifest()).initialize();
         EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
 
-        final ArrayList<String> jrubyOptions = new ArrayList<String>();
+        // Using SubstituteLogger here because SLF4J and Logback are initialized later (CliLogbackConfigurator.configure).
+        final LinkedBlockingQueue<SubstituteLoggingEvent> loggingEventQueue = new LinkedBlockingQueue<SubstituteLoggingEvent>();
+        final SubstituteLogger substituteLogger = new SubstituteLogger(Main.class.getName(), loggingEventQueue, false);
 
-        int i;
-        for (i = 0; i < args.length; ++i) {
-            if (args[i].startsWith("-R")) {
-                jrubyOptions.add(args[i].substring(2));
-            } else {
-                break;
-            }
+        final CommandLineParser commandLineParser = CommandLineParser.create();
+        final CommandLine commandLine = commandLineParser.parse(Arrays.asList(args), substituteLogger);
+        System.out.print(commandLine.getStdErr());
+        System.out.print(commandLine.getStdOut());
+
+        final Properties commandLineProperties = commandLine.getCommandLineProperties();
+        CliLogbackConfigurator.configure(commandLineProperties);
+        final Logger mainLogger = LoggerFactory.getLogger(Main.class);
+        flushLogs(substituteLogger, loggingEventQueue, mainLogger);
+
+        if (!commandLine.isValid()) {
+            System.exit(-1);
+            return;
         }
 
-        final ArrayList<String> embulkArgs = new ArrayList<String>();
-
-        // Process only logging-related options early so that Logback can be configured at the earliest.
-        Expect expect = Expect.NONE;
-        String logPath = null;
-        String logLevel = null;
-        for (; i < args.length; ++i) {
-            switch (expect) {
-                case NONE:
-                    if (args[i].startsWith("-l")) {
-                        if (args[i].equals("-l")) {
-                            expect = Expect.LOG_LEVEL;
-                        } else {
-                            logLevel = args[i].substring(2);
-                            expect = Expect.NONE;
-                        }
-                    } else if (args[i].equals("--log-level")) {
-                        expect = Expect.LOG_LEVEL;
-                    } else if (args[i].equals("--log")) {
-                        expect = Expect.LOG_PATH;
-                    }
-                    break;
-                case LOG_LEVEL:
-                    logLevel = args[i];
-                    expect = Expect.NONE;
-                    break;
-                case LOG_PATH:
-                    logPath = args[i];
-                    expect = Expect.NONE;
-                    break;
-                default:
-                    break;
-            }
-            embulkArgs.add(args[i]);
+        if (mainLogger.isDebugEnabled()) {
+            mainLogger.debug("Command-line arguments: {}", commandLine.getArguments());
+            mainLogger.debug("Embulk system properties: {}", commandLine.getCommandLineProperties());
         }
 
-        CliLogbackConfigurator.configure(Optional.ofNullable(logPath), Optional.ofNullable(logLevel));
-
-        final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
-        final int error = run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));
-        System.exit(error);
+        System.exit(EmbulkRun.run(commandLine));
     }
 
-    private enum Expect {
-        NONE,
-        LOG_LEVEL,
-        LOG_PATH,
-        ;
+    private static void flushLogs(
+            final SubstituteLogger substituteLogger,
+            final LinkedBlockingQueue<SubstituteLoggingEvent> loggingEventQueue,
+            final Logger mainLogger) {
+        substituteLogger.setDelegate(mainLogger);
+        final ArrayList<SubstituteLoggingEvent> events = new ArrayList<>();
+        loggingEventQueue.drainTo(events);
+        for (final SubstituteLoggingEvent event : events) {
+            substituteLogger.log(event);
+        }
     }
 }

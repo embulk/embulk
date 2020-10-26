@@ -2,13 +2,15 @@ package org.embulk.deps.cli;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import org.embulk.cli.CommandLine;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.slf4j.Logger;
 
-// It is public just to be accessible from HelpMessageLineDefinitionImpl.
-public abstract class HelpMessageLineDefinition extends AbstractHelpLineDefinition {
-    static HelpMessageLineDefinition create(final String message) {
+public abstract class CommandLineParser {
+    public static CommandLineParser create() {
         try {
-            return CONSTRUCTOR.newInstance(message);
+            return CONSTRUCTOR.newInstance();
         } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
             throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
         } catch (final InvocationTargetException ex) {
@@ -23,26 +25,28 @@ public abstract class HelpMessageLineDefinition extends AbstractHelpLineDefiniti
         }
     }
 
+    public abstract CommandLine parse(final List<String> originalArgs, final Logger logger);
+
     @SuppressWarnings("unchecked")
-    private static Class<HelpMessageLineDefinition> loadImplClass() {
+    private static Class<CommandLineParser> loadImplClass() {
         try {
-            return (Class<HelpMessageLineDefinition>) CLASS_LOADER.loadClass(CLASS_NAME);
+            return (Class<CommandLineParser>) CLASS_LOADER.loadClass(CLASS_NAME);
         } catch (final ClassNotFoundException ex) {
             throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
         }
     }
 
     private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
-    private static final String CLASS_NAME = "org.embulk.deps.cli.HelpMessageLineDefinitionImpl";
+    private static final String CLASS_NAME = "org.embulk.deps.cli.CommandLineParserImpl";
 
     static {
-        final Class<HelpMessageLineDefinition> clazz = loadImplClass();
+        final Class<CommandLineParser> clazz = loadImplClass();
         try {
-            CONSTRUCTOR = clazz.getConstructor(String.class);
+            CONSTRUCTOR = clazz.getConstructor();
         } catch (final NoSuchMethodException ex) {
             throw new LinkageError("Dependencies for Commons-CLI are not loaded correctly: " + CLASS_NAME, ex);
         }
     }
 
-    private static final Constructor<HelpMessageLineDefinition> CONSTRUCTOR;
+    private static final Constructor<CommandLineParser> CONSTRUCTOR;
 }

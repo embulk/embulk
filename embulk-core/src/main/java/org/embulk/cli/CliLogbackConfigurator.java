@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Optional;
+import java.util.Properties;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,9 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings({"checkstyle:AbbreviationAsWordInName", "checkstyle:MemberName", "checkstyle:ParameterName"})
 final class CliLogbackConfigurator {
-    static void configure(final Optional<String> logPath, final Optional<String> logLevel) {
+    static void configure(final Properties properties) {
+        final Optional<String> logPath = Optional.ofNullable(properties.getProperty("log_path"));
+        final Optional<String> logLevel = Optional.ofNullable(properties.getProperty("log_level"));
         final URL configurationResource = chooseConfigurationResource(logPath);
         final ClassLoader classLoader = CliLogbackConfigurator.class.getClassLoader();
         try {
