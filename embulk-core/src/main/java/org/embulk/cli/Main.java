@@ -24,7 +24,7 @@ public class Main {
 
         final CommandLineParser commandLineParser = CommandLineParser.create();
         final CommandLine commandLine = commandLineParser.parse(Arrays.asList(args), substituteLogger);
-        System.out.print(commandLine.getStdErr());
+        System.err.print(commandLine.getStdErr());
         System.out.print(commandLine.getStdOut());
 
         final Properties commandLineProperties = commandLine.getCommandLineProperties();
