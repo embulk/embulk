@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.spi.BufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ public final class JRubyInitializer {
             final Logger logger,
             final String gemHome,
             final String gemPath,
-            final boolean useDefaultEmbulkGemHome,
             final List<String> jrubyLoadPath,
             final List<String> jrubyClasspath,
             final List<String> jrubyOptions,
@@ -28,7 +28,6 @@ public final class JRubyInitializer {
         this.logger = logger;
         this.gemHome = gemHome;
         this.gemPath = gemPath;
-        this.useDefaultEmbulkGemHome = useDefaultEmbulkGemHome;
         this.jrubyLoadPath = jrubyLoadPath;
         this.jrubyClasspath = jrubyClasspath;
         this.jrubyOptions = jrubyOptions;
@@ -39,14 +38,18 @@ public final class JRubyInitializer {
     public static JRubyInitializer of(
             final Injector injector,
             final Logger logger,
-            final String gemHome,
-            final String gemPath,
-            final boolean useDefaultEmbulkGemHome,
-            final String jrubyLoadPathWithPathSeparator,
-            final String jrubyClasspathWithPathSeparator,
-            final String jrubyOptionsSeparatedByComma,
-            final String jrubyBundlerPluginSourceDirectory,
-            final boolean requiresSigdump) {
+            final EmbulkSystemProperties embulkSystemProperties) {
+        final String gemHome = embulkSystemProperties.getProperty("gem_home", null);
+        final String gemPath = embulkSystemProperties.getProperty("gem_path", null);
+
+        // TODO get jruby-home from embulkSystemProperties to call jruby.container.setHomeDirectory
+        final String jrubyLoadPathWithPathSeparator = embulkSystemProperties.getProperty("jruby_load_path", null);
+        final String jrubyClasspathWithPathSeparator = embulkSystemProperties.getProperty("jruby_classpath", null);
+        final String jrubyOptionsSeparatedByComma = embulkSystemProperties.getProperty("jruby_command_line_options", null);
+        final String jrubyBundlerPluginSourceDirectory =
+                embulkSystemProperties.getProperty("jruby_global_bundler_plugin_source_directory", null);
+        final boolean requiresSigdump = embulkSystemProperties.getPropertyAsBoolean("jruby.require.sigdump", false);
+
         final ArrayList<String> jrubyLoadPathBuilt = new ArrayList<String>();
         if (jrubyLoadPathWithPathSeparator != null) {
             for (final String oneJRubyLoadPath : jrubyLoadPathWithPathSeparator.split("\\" + java.io.File.pathSeparator)) {
@@ -73,7 +76,6 @@ public final class JRubyInitializer {
                 logger,
                 gemHome,
                 gemPath,
-                useDefaultEmbulkGemHome,
                 Collections.unmodifiableList(jrubyLoadPathBuilt),
                 Collections.unmodifiableList(jrubyClasspathBuilt),
                 Collections.unmodifiableList(jrubyOptionsBuilt),
@@ -153,10 +155,6 @@ public final class JRubyInitializer {
         return this.gemPath;
     }
 
-    boolean probeUseDefaultEmbulkGemHomeForTesting() {
-        return this.useDefaultEmbulkGemHome;
-    }
-
     List<String> probeJRubyLoadPathForTesting() {
         return this.jrubyLoadPath;
     }
@@ -197,6 +195,8 @@ public final class JRubyInitializer {
                 jruby.unsetBundleGemfile();
             }
             if (this.gemHome != null) {
+                // It expects the Embulk system property "gem_home" is set from org.embulk.cli.EmbulkSystemPropertiesBuilder.
+                //
                 // The system config "gem_home" is always prioritized.
                 //
                 // Overwrites GEM_HOME and GEM_PATH. GEM_PATH becomes same with GEM_HOME. Therefore
@@ -207,14 +207,6 @@ public final class JRubyInitializer {
                 // is used.
                 this.logger.info("Gem's home and path are set by system configs \"gem_home\": \"" + this.gemHome + "\", \"gem_path\": \"" + this.gemPath + "\"");
                 jruby.setGemPaths(this.gemHome, this.gemPath);
-                this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
-                this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
-            } else if (this.useDefaultEmbulkGemHome) {
-                // NOTE: Same done in "gem", "exec", and "irb" subcommands.
-                // Remember to update |org.embulk.cli.EmbulkRun| as well when these environment variables are change
-                final String defaultGemHome = this.buildDefaultGemPath();
-                this.logger.info("Gem's home and path are set by default: \"" + defaultGemHome + "\"");
-                jruby.setGemPaths(defaultGemHome);
                 this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
                 this.logger.debug("Gem.paths.path = " + jruby.getGemPathInString() + "");
             } else {
@@ -255,10 +247,6 @@ public final class JRubyInitializer {
         }
     }
 
-    private String buildDefaultGemPath() throws ProvisionException {
-        return this.buildEmbulkHome().resolve("lib").resolve("gems").toString();
-    }
-
     private String buildGemfilePath(final String bundleDirectoryString) throws ProvisionException {
         final Path bundleDirectory;
         try {
@@ -267,23 +255,6 @@ public final class JRubyInitializer {
             throw new ProvisionException("Bundle directory is invalid: \"" + bundleDirectoryString + "\"", ex);
         }
         return bundleDirectory.toAbsolutePath().resolve("Gemfile").toString();
-    }
-
-    private Path buildEmbulkHome() throws ProvisionException {
-        final String userHomeProperty = System.getProperty("user.home");
-
-        if (userHomeProperty == null) {
-            throw new ProvisionException("User home directory is not set in Java properties.");
-        }
-
-        final Path userHome;
-        try {
-            userHome = Paths.get(userHomeProperty);
-        } catch (InvalidPathException ex) {
-            throw new ProvisionException("User home directory is invalid: \"" + userHomeProperty + "\"", ex);
-        }
-
-        return userHome.toAbsolutePath().resolve(".embulk");
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
@@ -298,7 +269,6 @@ public final class JRubyInitializer {
     private final Logger logger;
     private final String gemHome;
     private final String gemPath;
-    private final boolean useDefaultEmbulkGemHome;
     private final List<String> jrubyLoadPath;
     private final List<String> jrubyClasspath;
     private final List<String> jrubyOptions;

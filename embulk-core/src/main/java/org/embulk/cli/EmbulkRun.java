@@ -3,7 +3,6 @@ package org.embulk.cli;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -13,18 +12,20 @@ import java.util.List;
 import java.util.Properties;
 import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkRunner;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.EmbulkVersion;
 import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegateImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EmbulkRun {
-    public static int run(final CommandLine commandLine) {
-        return (new EmbulkRun()).runInternal(commandLine);
+    public static int run(final CommandLine commandLine, final EmbulkSystemProperties embulkSystemProperties) {
+        return (new EmbulkRun()).runInternal(commandLine, embulkSystemProperties);
     }
 
-    private int runInternal(final CommandLine commandLine) {
+    private int runInternal(final CommandLine commandLine, final EmbulkSystemProperties embulkSystemProperties) {
         final List<String> subcommandArguments = commandLine.getArguments();
-        final Properties embulkSystemProperties = commandLine.getCommandLineProperties();
 
         switch (commandLine.getCommand()) {
             case EXAMPLE:
@@ -67,15 +68,14 @@ public class EmbulkRun {
             case BUNDLE:
                 if (!subcommandArguments.isEmpty() && subcommandArguments.get(0).equals("new")) {
                     System.err.println("embulk: 'embulk bundle new' is no longer available. Please use 'embulk mkbundle' instead.");
+                    return -1;
                 } else {
-                    runBundler(subcommandArguments, null);
+                    return runBundler(subcommandArguments, null, embulkSystemProperties);
                 }
-                return 0;
             case GEM:
-                callJRubyGem(subcommandArguments);
-                return 0;
+                return callJRubyGem(subcommandArguments, embulkSystemProperties);
             case MKBUNDLE:
-                newBundle(commandLine.getArguments().get(0), embulkSystemProperties.getProperty("bundle_Path"));
+                newBundle(commandLine.getArguments().get(0), embulkSystemProperties);
                 break;
             case RUN:
             case CLEANUP:
@@ -152,7 +152,7 @@ public class EmbulkRun {
         Files.copy(EmbulkRun.class.getClassLoader().getResourceAsStream(sourceResourceName), destinationPath);
     }
 
-    private int newBundle(final String pathString, final String bundlePath) {
+    private int newBundle(final String pathString, final EmbulkSystemProperties embulkSystemProperties) {
         final Path path = Paths.get(pathString).toAbsolutePath();
         if (Files.exists(path)) {
             System.err.println("'" + pathString + "' already exists.");
@@ -181,10 +181,15 @@ public class EmbulkRun {
             throw new RuntimeException(ex);
         }
 
+        int result = -1;
+        final String bundlePath = embulkSystemProperties.getProperty("bundle_path");
         try {
             // run the first bundle-install
-            runBundler(Arrays.asList("install", "--path", bundlePath != null ? bundlePath : "."), path);
-            success = true;
+            result = runBundler(
+                    Arrays.asList("install", "--path", bundlePath != null ? bundlePath : "."), path, embulkSystemProperties);
+            if (result == 0) {
+                success = true;
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
             throw ex;
@@ -218,11 +223,17 @@ public class EmbulkRun {
                 }
             }
         }
-        return 0;
+        return result;
     }
 
-    private void runBundler(final List<String> arguments, final Path path) {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
+    private int runBundler(final List<String> arguments, final Path path, final EmbulkSystemProperties embulkSystemProperties) {
+        final ScriptingContainerDelegate localJRubyContainer;
+        try {
+            localJRubyContainer = createJRubyForRubyCommand(embulkSystemProperties, "bundle");
+        } catch (final NullPointerException ex) {
+            return -1;
+        }
+
         localJRubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
 
         // this hack is necessary to make --help working
@@ -241,69 +252,116 @@ public class EmbulkRun {
             localJRubyContainer.remove("__internal_working_dir__");
         }
         localJRubyContainer.remove("__internal_argv_java__");
+
+        return 0;
     }
 
     // TODO: Check if it is required to process JRuby options.
-    @SuppressWarnings("checkstyle:LineLength")
-    private ScriptingContainerDelegate createLocalJRubyScriptingContainerDelegate() {
+    private static ScriptingContainerDelegate createJRubyForRubyCommand(
+            final EmbulkSystemProperties embulkSystemProperties,
+            final String command) {
+        final String propertyGemHome = embulkSystemProperties.getProperty("gem_home");
+        if (propertyGemHome == null || propertyGemHome.isEmpty()) {
+            logger.error("Embulk system property \"gem_home\" is not configured.");
+            throw new NullPointerException("Embulk system property \"gem_home\" is not configured.");
+        }
+        final String propertyGemPath = embulkSystemProperties.getProperty("gem_path");  // gem_path is optional.
+
         // Not |LocalContextScope.SINGLETON| to narrow down considerations.
         final ScriptingContainerDelegate jruby = ScriptingContainerDelegateImpl.create(
                 EmbulkRun.class.getClassLoader(),
                 ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
                 ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
 
-        // NOTE: Same done in JRubyScriptingModule.
-        // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
-        final boolean hasBundleGemfile =
-                jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class);
-        if (hasBundleGemfile) {
-            final String bundleGemFile =
-                    jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
-            System.err.println("BUNDLE_GEMFILE has already been set: \"" + bundleGemFile + "\"");
-            System.err.println("BUNDLE_GEMFILE is being unset.");
-            jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+        // The environment variables "GEM_HOME" (and "GEM_PATH") are mandatory for the "gem" and "bundle" commands.
+        //
+        // Unlike normal RubyGem loading, `Gem.paths.home=` does not work for the "gem" and "bundle" commands
+        //
+        // `Gem.paths` is overwritten in `GemRunner.new` in "rubygems".
+        // https://github.com/rubygems/rubygems/blob/v3.1.4/lib/rubygems/gem_runner.rb#L80
+
+        final String currentGemHome;
+        if (jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "GEM_HOME", Boolean.class)) {
+            currentGemHome = jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "GEM_HOME", String.class);
+        } else {
+            currentGemHome = null;
+        }
+        if (currentGemHome == null || currentGemHome.isEmpty()) {
+            logger.info(
+                    "Environment variable \"GEM_HOME\" is not set. "
+                    + "Setting \"GEM_HOME\" to \"{}\" from Embulk system property \"gem_home\" for the \"{}\" command.",
+                    propertyGemHome, command);
+            jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", propertyGemHome);
+        } else if (!currentGemHome.equals(propertyGemHome)) {
+            logger.info(
+                    "Environment variable \"GEM_HOME\" is \"{}\", "
+                    + "which is different from Embulk system property \"gem_home\". "
+                    + "Resetting \"GEM_HOME\" to \"{}\" from \"gem_home\" for the \"{}\" command.",
+                    currentGemHome, propertyGemHome, command);
+            jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", propertyGemHome);
         }
 
-        // `Gem.paths` does not work for "gem" and "bundle". The environment variables are required.
-        jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_HOME", this.buildDefaultGemPath());
-        jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
+        final String currentGemPath;
+        if (jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "GEM_PATH", Boolean.class)) {
+            currentGemPath = jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "GEM_PATH", String.class);
+        } else {
+            currentGemPath = null;
+        }
+        jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_PATH", embulkSystemProperties.getProperty("gem_path"));
+        if (currentGemPath == null || currentGemPath.isEmpty()) {
+            if (propertyGemPath != null && !propertyGemPath.isEmpty()) {
+                logger.info(
+                        "Environment variable \"GEM_PATH\" is not set while Embulk system property \"gem_path\" is set. "
+                        + "Setting \"GEM_PATH\" to \"{}\" from \"gem_path\" for the \"{}\" command.",
+                        propertyGemPath, command);
+                jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_PATH", propertyGemPath);
+            }
+        } else if (!currentGemPath.equals(propertyGemPath)) {
+            if (propertyGemPath == null && propertyGemPath.isEmpty()) {
+                logger.info(
+                        "Environment variable \"GEM_PATH\" is \"{}\" while Embulk system property \"gem_path\" is not set. "
+                        + "Unsetting \"GEM_PATH\" from \"gem_path\" for the \"{}\" command.",
+                        currentGemPath, command);
+                jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "GEM_PATH");
+            } else {
+                logger.info(
+                        "Environment variable \"GEM_PATH\" is \"{}\", "
+                        + "which is different from Embulk system property \"gem_path\". "
+                        + "Resetting \"GEM_PATH\" to \"{}\" from \"gem_path\" for the \"{}\" command.",
+                        currentGemPath, propertyGemPath, command);
+                jruby.callMethod(jruby.runScriptlet("ENV"), "store", "GEM_PATH", propertyGemPath);
+            }
+        }
+
+        // NOTE: Same done in JRubyScriptingModule.
+        // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
+        if (jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class)) {
+            final String currentBundleGemFile =
+                    jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);
+            logger.warn(
+                    "Environment variable \"BUNDLE_GEMFILE\" is set. Unsetting \"BUNDLE_GEMFILE\" for the \"{}\" command.",
+                    command);
+            jruby.callMethod(jruby.runScriptlet("ENV"), "delete", "BUNDLE_GEMFILE");
+        }
 
         return jruby;
     }
 
-    private void callJRubyGem(final List<String> subcommandArguments) {
-        final ScriptingContainerDelegate localJRubyContainer = createLocalJRubyScriptingContainerDelegate();
-
-        localJRubyContainer.runScriptlet("puts ''");
-        localJRubyContainer.runScriptlet("puts 'Gem plugin path is: %s' % (ENV.has_key?('GEM_HOME') ? ENV['GEM_HOME'] : '(empty)')");
-        localJRubyContainer.runScriptlet("puts ''");
+    private int callJRubyGem(final List<String> subcommandArguments, final EmbulkSystemProperties embulkSystemProperties) {
+        final ScriptingContainerDelegate localJRubyContainer;
+        try {
+            localJRubyContainer = createJRubyForRubyCommand(embulkSystemProperties, "gem");
+        } catch (final NullPointerException ex) {
+            return -1;
+        }
 
         localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
         localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
         localJRubyContainer.remove("__internal_argv_java__");
+
+        return 0;
     }
 
-    private String buildDefaultGemPath() {
-        return this.buildEmbulkHome().resolve("lib").resolve("gems").toString();
-    }
-
-    // TODO: Manage the "home directory" in one place in a configurable way.
-    // https://github.com/embulk/embulk/issues/910
-    private Path buildEmbulkHome() {
-        final String userHomeProperty = System.getProperty("user.home");
-
-        if (userHomeProperty == null) {
-            throw new RuntimeException("User home directory is not set in Java properties.");
-        }
-
-        final Path userHome;
-        try {
-            userHome = Paths.get(userHomeProperty);
-        } catch (InvalidPathException ex) {
-            throw new RuntimeException("User home directory is invalid: \"" + userHomeProperty + "\"", ex);
-        }
-
-        return userHome.toAbsolutePath().resolve(".embulk");
-    }
+    private static final Logger logger = LoggerFactory.getLogger(EmbulkRun.class);
 }

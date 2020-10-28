@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.embulk.deps.cli.CommandLineParser;
@@ -28,7 +29,13 @@ public class Main {
         System.out.print(commandLine.getStdOut());
 
         final Properties commandLineProperties = commandLine.getCommandLineProperties();
-        CliLogbackConfigurator.configure(commandLineProperties);
+        final EmbulkSystemPropertiesBuilder embulkSystemPropertiesBuilder = EmbulkSystemPropertiesBuilder.from(
+                System.getProperties(), commandLineProperties, System.getenv(), substituteLogger);
+        final EmbulkSystemProperties embulkSystemProperties = embulkSystemPropertiesBuilder.buildProperties();
+
+        CliLogbackConfigurator.configure(embulkSystemProperties);
+
+        // Creating a real logger after SLF4J is initialized along with Logback. Flushing recorded logs by SubstituteLogger, then.
         final Logger mainLogger = LoggerFactory.getLogger(Main.class);
         flushLogs(substituteLogger, loggingEventQueue, mainLogger);
 
@@ -39,10 +46,10 @@ public class Main {
 
         if (mainLogger.isDebugEnabled()) {
             mainLogger.debug("Command-line arguments: {}", commandLine.getArguments());
-            mainLogger.debug("Embulk system properties: {}", commandLine.getCommandLineProperties());
+            mainLogger.debug("Embulk system properties: {}", embulkSystemProperties);
         }
 
-        System.exit(EmbulkRun.run(commandLine));
+        System.exit(EmbulkRun.run(commandLine, embulkSystemProperties));
     }
 
     private static void flushLogs(
