@@ -5,8 +5,6 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.security.CodeSigner;
 import java.util.jar.Manifest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class Resource {
     Resource(
@@ -37,7 +35,8 @@ final class Resource {
                             + this.name,
                     new JarEmbeddedUrlStreamHandler(this.jarFile.getInnerResourcesBinary(), this.begin, this.end));
         } catch (final MalformedURLException ex) {
-            logger.error("Failed to build an internal resource URL unexpectedly.", ex);
+            System.err.println("Failed to build an internal resource URL unexpectedly.");
+            ex.printStackTrace();
             return null;
         }
     }
@@ -64,8 +63,6 @@ final class Resource {
     public String toString() {
         return "[" + this.name + ":" + this.begin + "-" + this.end + "]";
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(Resource.class);
 
     private final String name;
     private final SelfContainedJarFile jarFile;

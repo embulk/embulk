@@ -9,6 +9,10 @@ import org.embulk.deps.EmbulkSelfContainedJarFiles;
 
 public class Main {
     public static void main(final String[] args) {
+        // They are loaded before SLF4J is initialized along with Logback. They don't use SLF4J for error logging.
+        EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(CliManifest.getManifest()).initialize();
+        EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
+
         final ArrayList<String> jrubyOptions = new ArrayList<String>();
 
         int i;
@@ -57,8 +61,6 @@ public class Main {
         }
 
         CliLogbackConfigurator.configure(Optional.ofNullable(logPath), Optional.ofNullable(logLevel));
-        EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(CliManifest.getManifest()).initialize();
-        EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
 
         final EmbulkRun run = new EmbulkRun(EmbulkVersion.VERSION);
         final int error = run.run(Collections.unmodifiableList(embulkArgs), Collections.unmodifiableList(jrubyOptions));

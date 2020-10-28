@@ -13,8 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 final class SelfContainedJarFile {
     SelfContainedJarFile(final String outerResourceName) {
@@ -23,7 +21,7 @@ final class SelfContainedJarFile {
         }
 
         if (CODE_SOURCE_URL_BASE == null) {
-            logger.error("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.");
+            System.err.println("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.");
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -37,7 +35,8 @@ final class SelfContainedJarFile {
                     CODE_SOURCE_URL_BASE,
                     outerResourceName.startsWith("/") ? outerResourceName.substring(1) : outerResourceName);
         } catch (final MalformedURLException ex) {
-            logger.error("Invalid JAR resource: " + CODE_SOURCE_URL_BASE.toString() + " : " + outerResourceName, ex);
+            System.err.println("Invalid JAR resource: " + CODE_SOURCE_URL_BASE.toString() + " : " + outerResourceName);
+            ex.printStackTrace();
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -47,7 +46,7 @@ final class SelfContainedJarFile {
 
         final InputStream inputStream = SelfContainedJarFile.class.getResourceAsStream(outerResourceName);
         if (inputStream == null) {
-            logger.error("JAR resource not found: " + outerResourceName);
+            System.err.println("JAR resource not found: " + outerResourceName);
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -59,7 +58,8 @@ final class SelfContainedJarFile {
         try {
             jarInputStream = new JarInputStream(inputStream, false);
         } catch (final IOException ex) {
-            logger.error("Invalid JAR format: " + outerResourceName, ex);
+            System.err.println("Invalid JAR format: " + outerResourceName);
+            ex.printStackTrace();
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -72,7 +72,8 @@ final class SelfContainedJarFile {
         try {
             innerResourcesBinaryBuilt = extract(outerResourceName, jarInputStream, this, innerResourcesBuilt);
         } catch (final IOException ex) {
-            logger.error("Failed to read JAR: " + outerResourceName, ex);
+            System.err.println("Failed to read JAR: " + outerResourceName);
+            ex.printStackTrace();
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -86,12 +87,14 @@ final class SelfContainedJarFile {
         this.innerResources = innerResourcesBuilt;
         this.innerResourcesBinary = innerResourcesBinaryBuilt;
 
-        logger.debug(
-                "Extracted an embedded JAR resource: ["
-                + this.codeSourceUrl.toString()
-                + "] ("
-                + this.innerResourcesBinary.capacity()
-                + " bytes)");
+        if ("true".equals(System.getProperty("org.embulk.trace_embedded_jar_resources"))) {
+            System.err.println(
+                    "Extracted an embedded JAR resource: ["
+                    + this.codeSourceUrl.toString()
+                    + "] ("
+                    + this.innerResourcesBinary.capacity()
+                    + " bytes)");
+        }
     }
 
     private static void closeQuiet(final InputStream is) {
@@ -185,9 +188,6 @@ final class SelfContainedJarFile {
         PROTECTION_DOMAIN = protectionDomain;
         CODE_SOURCE = codeSource;
 
-        final Logger loggerLocal = LoggerFactory.getLogger(SelfContainedJarFile.class);
-        logger = loggerLocal;
-
         URL codeSourceUrlBase = null;
         boolean hasFailedInCodeSource = false;
         try {
@@ -211,7 +211,8 @@ final class SelfContainedJarFile {
                 throw new MalformedURLException("Invalid CodeSource URL, neither 'file:' nor 'jar:': " + codeSourceUrl);
             }
         } catch (final Exception ex) {
-            loggerLocal.error("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.", ex);
+            System.err.println("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.");
+            ex.printStackTrace();
             hasFailedInCodeSource = true;
         }
 
@@ -221,8 +222,6 @@ final class SelfContainedJarFile {
             CODE_SOURCE_URL_BASE = codeSourceUrlBase;
         }
     }
-
-    private static final Logger logger;
 
     private static final ProtectionDomain PROTECTION_DOMAIN;
     private static final CodeSource CODE_SOURCE;
