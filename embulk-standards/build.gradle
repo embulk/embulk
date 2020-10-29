@@ -13,7 +13,6 @@ repositories {
 }
 
 configurations {
-    jruby
     rubyTestRuntime
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
@@ -52,40 +51,30 @@ dependencies {
 
     testImplementation "org.jruby:jruby-complete:9.1.15.0"
 
-    jruby "org.jruby:jruby-complete:9.1.15.0"
-
     rubyTestRuntime project(":embulk-api")
     rubyTestRuntime project(":embulk-spi")
     rubyTestRuntime project(":embulk-core")
     rubyTestRuntime "org.jruby:jruby-complete:9.1.15.0"
 }
 
+test.dependsOn(":installGemsForTesting")
+test {
+    environment "GEM_HOME", "${rootProject.buildDir}/gems_for_testing"
+}
+
 task rubyTestVanilla(type: JavaExec, dependsOn: [
         "jar",
         "prepareDependencyJars",
-        "installDependencyGems",
         ":embulk-deps:prepareDependencyJars",
+        ":installGemsForTesting",
         ]) {
     workingDir = file("${project.projectDir}");
     classpath = configurations.rubyTestRuntime
     main = "org.jruby.Main"
     args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
-    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
+    environment "GEM_HOME": "${rootProject.buildDir}/gems_for_testing"
 }
 test.dependsOn(['rubyTestVanilla'])
-
-task installDependencyGems(type: JavaExec) {
-    doFirst {
-        delete("${buildDir}/dependency_gems_installed")
-        mkdir("${buildDir}/dependency_gems_installed")
-    }
-
-    workingDir = file("${projectDir}")
-    classpath = configurations.jruby
-    main = "org.jruby.Main"
-    args = ["-S", "gem", "install", "simplecov:0.10.0", "test-unit:3.0.9"]
-    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
-}
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains('-')) {

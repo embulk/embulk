@@ -6,7 +6,7 @@ ext {
 
 // include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
 // because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${buildDir}/embulk_gem_as_resources", "${buildDir}/dependency_gems_as_resources")
+processResources.from("${buildDir}/embulk_gem_as_resources")
 
 configurations {
     jruby
@@ -54,8 +54,6 @@ dependencies {
     // This statement gets it loaded by the top-level ClassLoader.
     testImplementation project(":embulk-deps")
 
-    jruby "org.jruby:jruby-complete:9.1.15.0"
-
     rubyTestRuntime project(":embulk-api")
     rubyTestRuntime project(":embulk-spi")
     rubyTestRuntime project(":embulk-core")
@@ -65,14 +63,14 @@ dependencies {
 task rubyTestVanilla(type: JavaExec, dependsOn: [
         "jar",
         "prepareDependencyJars",
-        "installDependencyGems",
         ":embulk-deps:prepareDependencyJars",
+        ":installGemsForTesting",
         ]) {
     workingDir = file("${projectDir}");
     classpath = configurations.rubyTestRuntime
     main = "org.jruby.Main"
     args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
-    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
+    environment "GEM_HOME": "${rootProject.buildDir}/gems_for_testing"
 }
 
 test.dependsOn(['rubyTestVanilla', ":test-helpers:deploy"])
@@ -89,39 +87,6 @@ String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
         return javaStyleVersion;
     }
 }
-
-task installDependencyGems(type: JavaExec) {
-    doFirst {
-        delete("${buildDir}/dependency_gems_installed")
-        mkdir("${buildDir}/dependency_gems_installed")
-    }
-
-    workingDir = file("${projectDir}")
-    classpath = configurations.jruby
-    main = "org.jruby.Main"
-    args = ["-S", "gem", "install", "msgpack:1.1.0", "bundler:1.16.0", "liquid:4.0.0", "simplecov:0.10.0", "test-unit:3.0.9"]
-    environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
-}
-
-task unpackDependencyGems(type: Copy, dependsOn: "installDependencyGems") {
-    doFirst {
-        delete("${buildDir}/dependency_gems_as_resources")
-    }
-
-    from "${buildDir}/dependency_gems_installed"
-    into "${buildDir}/dependency_gems_as_resources"
-    include "gems/bundler-1.16.0/**"
-    include "gems/liquid-4.0.0/**"
-    include "gems/msgpack-1.1.0-java/**"
-    include "specifications/bundler-1.16.0.gemspec"
-    include "specifications/liquid-4.0.0.gemspec"
-    include "specifications/msgpack-1.1.0-java.gemspec"
-
-    doLast {
-        fileTree(dir: "${buildDir}/dependency_gems_as_resources", include: "**/.jrubydir").each { f -> f.delete() }
-    }
-}
-processResources.dependsOn("unpackDependencyGems")
 
 task buildEmbulkGem {
     doFirst {
@@ -166,18 +131,12 @@ Gem::Specification.new do |s|
     s.specification_version = 4
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<bundler>.freeze, [">= 1.10.6"])
       s.add_runtime_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
-      s.add_runtime_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
     else
-      s.add_dependency(%q<bundler>.freeze, [">= 1.10.6"])
       s.add_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
-      s.add_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
     end
   else
-    s.add_dependency(%q<bundler>.freeze, [">= 1.10.6"])
     s.add_dependency(%q<msgpack>.freeze, ["~> 1.1.0"])
-    s.add_dependency(%q<liquid>.freeze, ["~> 4.0.0"])
   end
 end
 /$)

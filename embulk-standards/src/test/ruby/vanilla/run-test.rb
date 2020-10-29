@@ -29,23 +29,6 @@ end
 # https://github.com/jruby/jruby/wiki/CallingJavaFromJRuby#calling-masked-or-unreachable-java-methods-with-java_send
 static_initializer.java_send :initialize
 
-Gem.path << File.join(core_dir, 'build', 'dependency_gems_as_resources')
-Gem.path << File.join(core_dir, 'build', 'embulk_gems_as_resources')
-Gem::Specification.reset
-
-=begin
-require 'simplecov'
-# fix inaccurate coverage
-# see: https://github.com/colszowka/simplecov/blob/82920ca1502be78ccde4fd315634066093bb855d/lib/simplecov.rb#L7
-ENV['JRUBY_OPTS'] = '-Xcli.debug=true --debug'
-SimpleCov.profiles.define 'embulk' do
-  add_filter 'test/'
-
-  add_group 'Libraries', 'lib'
-end
-SimpleCov.start 'embulk'
-=end
-
 require 'test/unit'
 
 require 'embulk/java/bootstrap'
