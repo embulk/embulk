@@ -30,6 +30,15 @@ public class JRubyPluginSource implements PluginSource {
     }
 
     public <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException {
+        if (this.jruby == null) {
+            throw new PluginSourceNotMatchException(
+                    "JRuby is not configured properly. If you are using a RubyGem-based plugin, prepare your own JRuby package, "
+                            + "and configure the Embulk system property \"jruby\" with it. "
+                            + "For example: \"jruby=file:///your/path/to/jruby-complete-9.1.15.0.jar\"");
+        }
+
+        // TODO: Check jruby.getJRubyVersion() to check compatibility issues.
+
         if (type.getSourceType() != PluginSource.Type.DEFAULT) {
             throw new PluginSourceNotMatchException();
         }
