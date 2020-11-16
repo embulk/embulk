@@ -14,8 +14,8 @@ import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkRunner;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.EmbulkVersion;
+import org.embulk.jruby.LazyScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegate;
-import org.embulk.jruby.ScriptingContainerDelegateImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +100,7 @@ public class EmbulkRun {
                 bootstrap.setEmbulkSystemProperties(embulkSystemProperties);
 
                 // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
-                final EmbulkRunner runner = new EmbulkRunner(bootstrap.initialize());
+                final EmbulkRunner runner = new EmbulkRunner(bootstrap.initialize(), embulkSystemProperties);
 
                 final Path configDiffPath = getPathFromProperties("config_diff_path", embulkSystemProperties);
                 final Path outputPath = getPathFromProperties("output_path", embulkSystemProperties);
@@ -267,11 +267,7 @@ public class EmbulkRun {
         }
         final String propertyGemPath = embulkSystemProperties.getProperty("gem_path");  // gem_path is optional.
 
-        // Not |LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainerDelegate jruby = ScriptingContainerDelegateImpl.create(
-                EmbulkRun.class.getClassLoader(),
-                ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
-                ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
+        final ScriptingContainerDelegate jruby = LazyScriptingContainerDelegate.withGemsIgnored(logger, embulkSystemProperties);
 
         // The environment variables "GEM_HOME" (and "GEM_PATH") are mandatory for the "gem" and "bundle" commands.
         //

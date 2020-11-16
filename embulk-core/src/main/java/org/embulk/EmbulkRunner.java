@@ -22,8 +22,8 @@ import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
+import org.embulk.jruby.LazyScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegate;
-import org.embulk.jruby.ScriptingContainerDelegateImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +34,9 @@ import org.slf4j.LoggerFactory;
  * re-implemented again in a different style.
  */
 public class EmbulkRunner {
-    public EmbulkRunner(final EmbulkEmbed embed) {
+    public EmbulkRunner(final EmbulkEmbed embed, final EmbulkSystemProperties embulkSystemProperties) {
         this.embed = embed;  // org.embulk.EmbulkEmbed
+        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     /**
@@ -373,11 +374,8 @@ public class EmbulkRunner {
             final Map<String, Object> templateParams,
             final String templateIncludePath) {
         // TODO: Check if it is required to process JRuby options.
-        // Not |ScriptingContainerDelegate.LocalContextScope.SINGLETON| to narrow down considerations.
-        final ScriptingContainerDelegate localJRubyContainer = ScriptingContainerDelegateImpl.create(
-                EmbulkRunner.class.getClassLoader(),
-                ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
-                ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT);
+        final ScriptingContainerDelegate localJRubyContainer =
+                LazyScriptingContainerDelegate.withGems(rootLogger, this.embulkSystemProperties);
 
         localJRubyContainer.runScriptlet("require 'liquid'");
 
@@ -472,4 +470,5 @@ public class EmbulkRunner {
     private static final Pattern EXT_YAML_LIQUID = Pattern.compile(".*\\.ya?ml\\.liquid$");
 
     private final EmbulkEmbed embed;
+    private final EmbulkSystemProperties embulkSystemProperties;
 }

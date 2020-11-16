@@ -13,8 +13,10 @@ import org.embulk.spi.BufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class JRubyInitializer {
+final class JRubyInitializer {
     private JRubyInitializer(
+            final boolean isEmbulkSpecific,
+            final boolean initializesGem,
             final Injector injector,
             final Logger logger,
             final String gemHome,
@@ -24,6 +26,8 @@ public final class JRubyInitializer {
             final List<String> jrubyOptions,
             final String jrubyBundlerPluginSourceDirectory,
             final boolean requiresSigdump) {
+        this.isEmbulkSpecific = isEmbulkSpecific;
+        this.initializesGem = initializesGem;
         this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
@@ -35,7 +39,9 @@ public final class JRubyInitializer {
         this.requiresSigdump = requiresSigdump;
     }
 
-    public static JRubyInitializer of(
+    static JRubyInitializer of(
+            final boolean isEmbulkSpecific,
+            final boolean initializesGem,
             final Injector injector,
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
@@ -72,6 +78,8 @@ public final class JRubyInitializer {
         }
 
         return new JRubyInitializer(
+                isEmbulkSpecific,
+                initializesGem,
                 injector,
                 logger,
                 gemHome,
@@ -83,7 +91,7 @@ public final class JRubyInitializer {
                 requiresSigdump);
     }
 
-    public void initialize(final ScriptingContainerDelegate jruby) {
+    void initialize(final ScriptingContainerDelegate jruby) {
         // JRuby runtime options are processed at first.
         for (final String jrubyOption : this.jrubyOptions) {
             try {
@@ -99,8 +107,10 @@ public final class JRubyInitializer {
         }
 
         // Gem paths and Bundler are configured earlier.
-        this.setGemVariables(jruby);
-        this.setBundlerPluginSourceDirectory(jruby, this.jrubyBundlerPluginSourceDirectory);
+        if (this.initializesGem) {
+            this.setGemVariables(jruby);
+            this.setBundlerPluginSourceDirectory(jruby, this.jrubyBundlerPluginSourceDirectory);
+        }
 
         // $LOAD_PATH and $CLASSPATH are configured after Gem paths and Bundler.
         for (final String oneJRubyLoadPath : this.jrubyLoadPath) {
@@ -118,31 +128,33 @@ public final class JRubyInitializer {
             jruby.remove("__internal_classpath__");
         }
 
-        // Embulk's base Ruby code is loaded at last.
-        jruby.runScriptlet("require 'embulk/logger'");
-        jruby.runScriptlet("require 'embulk/java/bootstrap'");
+        if (this.isEmbulkSpecific) {
+            // Embulk's base Ruby code is loaded at last.
+            jruby.runScriptlet("require 'embulk/logger'");
+            jruby.runScriptlet("require 'embulk/java/bootstrap'");
 
-        if (this.requiresSigdump) {
-            try {
-                jruby.runScriptlet("require 'sigdump/setup'");
-            } catch (final RuntimeException ex) {
-                if ("org.jruby.embed.EvalFailedException".equals(ex.getClass().getCanonicalName())) {
-                    this.logger.warn("Failed to load 'sigdump' gem into JRuby. " + ex.getMessage());
-                } else {
-                    this.logger.error("Failed unexpectedly to load 'sigdump' gem into JRuby.", ex);
+            if (this.requiresSigdump) {
+                try {
+                    jruby.runScriptlet("require 'sigdump/setup'");
+                } catch (final RuntimeException ex) {
+                    if ("org.jruby.embed.EvalFailedException".equals(ex.getClass().getCanonicalName())) {
+                        this.logger.warn("Failed to load 'sigdump' gem into JRuby. " + ex.getMessage());
+                    } else {
+                        this.logger.error("Failed unexpectedly to load 'sigdump' gem into JRuby.", ex);
+                    }
                 }
             }
+
+            final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
+            jruby.callMethod(injected, "const_set", "Injector", injector);
+            constSetModelManager(jruby, injected, injector);
+            jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
+
+            jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
+                                 jruby.runScriptlet("Embulk::Logger"),
+                                 "new",
+                                 LoggerFactory.getLogger("ruby")));
         }
-
-        final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
-        jruby.callMethod(injected, "const_set", "Injector", injector);
-        constSetModelManager(jruby, injected, injector);
-        jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
-
-        jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
-                             jruby.runScriptlet("Embulk::Logger"),
-                             "new",
-                             LoggerFactory.getLogger("ruby")));
     }
 
     // TODO: Remove these probing methods, and test through mocked ScriptingContainerDelegate.
@@ -265,6 +277,8 @@ public final class JRubyInitializer {
         jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(org.embulk.config.ModelManager.class));
     }
 
+    private final boolean isEmbulkSpecific;
+    private final boolean initializesGem;
     private final Injector injector;
     private final Logger logger;
     private final String gemHome;
