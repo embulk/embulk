@@ -8,19 +8,19 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 /**
- * CliHelpFormatterWithHelpMessages is an extension of commons-cli's org.apache.commons.cli.HelpFormatter.
+ * HelpFormatterWithPlaceholders is an extension of commons-cli's org.apache.commons.cli.HelpFormatter.
  *
- * It recognizes {@code HelpMessageAsCliOption} from {@code CliOptionsWithHelpMessages} in addition to that
+ * It recognizes {@code PlaceholderOption} from {@code OptionsWithPlaceholders} in addition to that
  * {@code org.apache.commons.cli.HelpFormatter} processes ordinary {@code org.apache.commons.cli.Option}.
  *
- * It combines both {@code HelpMessageAsCliOption} and ordinary {@code org.apache.commons.cli.Option}, and
+ * It combines both {@code PlaceholderOption} and ordinary {@code org.apache.commons.cli.Option}, and
  * builds the entire help message.
  *
  * It is visible only in {@code org.embulk.deps.cli} because it is an extension of a commons-cli class.
  * Dependencies on third-party libraries are to be encapsulated.
  */
-final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
-    CliHelpFormatterWithHelpMessages(final String syntaxPrefix, final int prefixWidth) {
+final class HelpFormatterWithPlaceholders extends HelpFormatter {
+    HelpFormatterWithPlaceholders(final String syntaxPrefix, final int prefixWidth) {
         super();
         this.prefixWidth = prefixWidth;
         this.setSyntaxPrefix(syntaxPrefix);
@@ -58,11 +58,11 @@ final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
             final int leftPaddingWidth,
             final int descriptionPaddingWidth) {
         // If |options| is not the extended version, it is just delegated to the original HelpFormatter.
-        if (!(options instanceof CliOptionsWithHelpMessages)) {
+        if (!(options instanceof OptionsWithPlaceholders)) {
             return super.renderOptions(buffer, width, options, leftPaddingWidth, descriptionPaddingWidth);
         }
 
-        final List<Option> allOptions = ((CliOptionsWithHelpMessages) options).getAllOptions();
+        final List<Option> allOptions = ((OptionsWithPlaceholders) options).getOptionsToRender();
         final String leftPadding = super.createPadding(leftPaddingWidth);
         final String descriptionPadding = super.createPadding(descriptionPaddingWidth);
 
@@ -73,7 +73,7 @@ final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
         for (final Option option : allOptions) {
             final StringBuilder optionLinePrefixBuilder = new StringBuilder();
 
-            if (!(option instanceof HelpMessageAsCliOption)) {
+            if (!(option instanceof PlaceholderOption)) {
                 optionLinePrefixBuilder.append(leftPadding);
                 if (option.getOpt() == null) {
                     optionLinePrefixBuilder.append("    ").append(getLongOptPrefix()).append(option.getLongOpt());
@@ -107,7 +107,7 @@ final class CliHelpFormatterWithHelpMessages extends HelpFormatter {
 
         // The second pass: builds all lines both from options and help messages.
         for (final Option option : allOptions) {
-            if (option instanceof HelpMessageAsCliOption) {
+            if (option instanceof PlaceholderOption) {
                 buffer.append(option.toString());
             } else {
                 final StringBuilder lineBuilder = new StringBuilder();

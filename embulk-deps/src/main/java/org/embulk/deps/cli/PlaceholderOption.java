@@ -2,8 +2,8 @@ package org.embulk.deps.cli;
 
 import org.apache.commons.cli.Option;
 
-final class HelpMessageAsCliOption extends Option {
-    public HelpMessageAsCliOption(final String message) {
+final class PlaceholderOption extends Option {
+    public PlaceholderOption(final String message) {
         super("_", message);
     }
 
@@ -24,6 +24,6 @@ final class HelpMessageAsCliOption extends Option {
 
     @Override
     public final Object clone() {
-        return new HelpMessageAsCliOption(this.getDescription());
+        return new PlaceholderOption(this.getDescription());
     }
 }
