@@ -30,22 +30,11 @@ public class JRubyScriptingModule implements Module {
             // instantiated in this JVM.
             this.useGlobalRubyRuntime = embulkSystemProperties.getPropertyAsBoolean("use_global_ruby_runtime", false);
 
-            this.initializer = JRubyInitializer.of(
-                    injector,
-                    LoggerFactory.getLogger("init"),
+            if (embulkSystemProperties.getProperty("jruby_use_default_embulk_gem_home") != null) {
+                // TODO: Log it is no longer used.
+            }
 
-                    embulkSystemProperties.getProperty("gem_home", null),
-                    embulkSystemProperties.getProperty("gem_path", null),
-                    embulkSystemProperties.getPropertyAsBoolean("jruby_use_default_embulk_gem_home", false),
-
-                    // TODO get jruby-home from embulkSystemProperties to call jruby.container.setHomeDirectory
-                    embulkSystemProperties.getProperty("jruby_load_path", null),
-                    embulkSystemProperties.getProperty("jruby_classpath", null),
-                    embulkSystemProperties.getProperty("jruby_command_line_options", null),
-
-                    embulkSystemProperties.getProperty("jruby_global_bundler_plugin_source_directory", null),
-
-                    embulkSystemProperties.getPropertyAsBoolean("jruby.require.sigdump", false));
+            this.initializer = JRubyInitializer.of(injector, LoggerFactory.getLogger("init"), embulkSystemProperties);
         }
 
         @Override  // from |com.google.inject.Provider|

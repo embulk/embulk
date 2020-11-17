@@ -152,35 +152,13 @@ public class MavenPluginSource implements PluginSource {
     }
 
     private Path getLocalMavenRepository() throws PluginSourceNotMatchException {
-        final String m2RepoInSystemConfig = this.embulkSystemProperties.getProperty("m2_repo", null);
-
-        if (m2RepoInSystemConfig != null) {
-            return Paths.get(m2RepoInSystemConfig);
+        // It expects the Embulk system property "m2_repo" is set from org.embulk.cli.EmbulkSystemPropertiesBuilder.
+        final String m2Repo = this.embulkSystemProperties.getProperty("m2_repo", null);
+        if (m2Repo == null) {
+            throw new PluginSourceNotMatchException("Embulk system property \"m2_repo\" is not set properly.");
         }
 
-        String m2RepoInEnv;
-        try {
-            m2RepoInEnv = System.getenv("M2_REPO");
-        } catch (NullPointerException | SecurityException ex) {
-            // The Exceptions are just ignored, and the default local Maven repository is used.
-            // TODO: Log?
-            m2RepoInEnv = null;
-        }
-
-        if (m2RepoInEnv != null) {
-            return Paths.get(m2RepoInEnv);
-        }
-
-        return getEmbulkHome().resolve("lib").resolve("m2").resolve("repository");
-    }
-
-    private Path getEmbulkHome() throws PluginSourceNotMatchException {
-        final String propertyHome = System.getProperty("user.home");
-        if (propertyHome == null) {
-            throw new PluginSourceNotMatchException();
-        }
-
-        return Paths.get(propertyHome, ".embulk");
+        return Paths.get(m2Repo);
     }
 
     private final Injector injector;
