@@ -201,7 +201,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
 
         final Properties properties = new Properties();
         for (final Option option : commandLine.getOptions()) {
-            processOptionToProperties(option, properties, logger);
+            processOptionToProperties(option, command, properties, logger);
         }
 
         return CommandLineImpl.ofValid(command, args, properties, writers);
@@ -239,7 +239,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
 
         final Properties properties = new Properties();
         for (final Option option : commandLine.getOptions()) {
-            processOptionToProperties(option, properties, logger);
+            processOptionToProperties(option, command, properties, logger);
         }
 
         return new CommandLineImpl(
@@ -313,7 +313,8 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
         return null;
     }
 
-    private static void processOptionToProperties(final Option option, final Properties properties, final Logger logger) {
+    private static void processOptionToProperties(
+            final Option option, final Command command, final Properties properties, final Logger logger) {
         if (LOG_LEVEL.getOpt().equals(option.getOpt())) {
             properties.setProperty("log_level", option.getValue());
         } else if (LOG_PATH.getLongOpt().equals(option.getLongOpt())) {
@@ -359,17 +360,17 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             properties.setProperty("resume_state_path", option.getValue());
         } else if (VERTICAL.getOpt().equals(option.getOpt())) {
             properties.setProperty("preview_format", "vertical");
-        } else if (OUTPUT.getOpt().equals(option.getOpt())) {
+        } else if (OUTPUT.getOpt().equals(option.getOpt()) || OUTPUT_GUESS.getOpt().equals(option.getOpt())) {
             properties.setProperty("output_path", option.getValue());
-            logger.warn(
-                    "Run with -o option is deprecated. Please use -c option instead. For example,\n"
-                    + "\n"
-                    + "$ embulk run config.yml -c diff.yml\n"
-                    + "\n"
-                    + "This -c option stores only diff of the next configuration. "
-                    + "The diff will be merged to the original config.yml file.");
-        } else if (OUTPUT_GUESS.getOpt().equals(option.getOpt())) {
-            properties.setProperty("output_path", option.getValue());
+            if (command == Command.RUN) {
+                logger.warn(
+                        "Run with -o option is deprecated. Please use -c option instead. For example,\n"
+                        + "\n"
+                        + "$ embulk run config.yml -c diff.yml\n"
+                        + "\n"
+                        + "This -c option stores only diff of the next configuration. "
+                        + "The diff will be merged to the original config.yml file.");
+            }
         } else if (GUESS_PLUGINS.getOpt().equals(option.getOpt())) {
             properties.setProperty("guess_plugins", option.getValue());
         } else if (FORCE_SELFUPDATE.getOpt().equals(option.getOpt())) {
@@ -457,7 +458,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
     static final Option OUTPUT = Option.builder("o").longOpt("output").hasArg().argName("PATH")
             .desc("(deprecated)").build();
 
-    static final Option OUTPUT_GUESS = Option.builder("o").longOpt("output")
+    static final Option OUTPUT_GUESS = Option.builder("o").longOpt("output").hasArg().argName("PATH")
             .desc("Path to a file to write the guessed configuration").build();
 
     static final Option CONFIG_DIFF = Option.builder("c").longOpt("config-diff").hasArg().argName("PATH")
