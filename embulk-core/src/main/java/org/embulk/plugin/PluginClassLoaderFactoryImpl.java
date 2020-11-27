@@ -21,38 +21,9 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
 
     @Override
     public PluginClassLoader create(final Collection<URL> urls, final ClassLoader parentClassLoader) {
-        final PluginClassLoader created = PluginClassLoader.createForFlatJars(
+        final PluginClassLoader created = PluginClassLoader.create(
                 parentClassLoader,
                 urls,
-                parentFirstPackages,
-                parentFirstResources);
-        this.createdPluginClassLoaders.add(created);
-        return created;
-    }
-
-    @Override
-    public PluginClassLoader createForNestedJar(
-            final ClassLoader parentClassLoader,
-            final URL oneNestedJarUrl) {
-        final PluginClassLoader created = PluginClassLoader.createForNestedJar(
-                parentClassLoader,
-                oneNestedJarUrl,
-                null,
-                parentFirstPackages,
-                parentFirstResources);
-        this.createdPluginClassLoaders.add(created);
-        return created;
-    }
-
-    @Override
-    public PluginClassLoader createForNestedJarWithDependencies(
-            final ClassLoader parentClassLoader,
-            final URL oneNestedJarUrl,
-            final Collection<URL> dependencyJarUrls) {
-        final PluginClassLoader created = PluginClassLoader.createForNestedJar(
-                parentClassLoader,
-                oneNestedJarUrl,
-                dependencyJarUrls,
                 parentFirstPackages,
                 parentFirstResources);
         this.createdPluginClassLoaders.add(created);

@@ -23,12 +23,10 @@ import org.slf4j.LoggerFactory;
 public class PluginClassLoader extends URLClassLoader {
     private PluginClassLoader(
             final ClassLoader parentClassLoader,
-            final URL oneNestedJarFileUrl,
-            final Collection<URL> flatJarUrls,
+            final Collection<URL> jarUrls,
             final Collection<String> parentFirstPackages,
             final Collection<String> parentFirstResources) {
-        super(combineUrlsToArray(oneNestedJarFileUrl, flatJarUrls == null ? Collections.<URL>emptyList() : flatJarUrls),
-              parentClassLoader);
+        super(jarUrls.toArray(new URL[0]), parentClassLoader);
 
         this.hasJep320LoggedWithStackTrace = false;
 
@@ -38,50 +36,23 @@ public class PluginClassLoader extends URLClassLoader {
                 parentFirstResources.stream().map(pkg -> pkg + "/").collect(Collectors.toList()));
     }
 
-    @Deprecated  // Constructing directly with the constructor is deprecated (no warnings). Use static creator methods.
-    public PluginClassLoader(
-            final Collection<URL> flatJarUrls,
-            final ClassLoader parentClassLoader,
-            final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
-        this(parentClassLoader, null, flatJarUrls, parentFirstPackages, parentFirstResources);
-    }
-
     /**
-     * Creates PluginClassLoader for plugins with dependency JARs flat on the file system, like Gem-based plugins.
-     */
-    public static PluginClassLoader createForFlatJars(
-            final ClassLoader parentClassLoader,
-            final Collection<URL> flatJarUrls,
-            final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
-        return new PluginClassLoader(
-                parentClassLoader,
-                null,
-                flatJarUrls,
-                parentFirstPackages,
-                parentFirstResources);
-    }
-
-    /**
-     * Creates PluginClassLoader for plugins with dependency JARs embedded in the plugin JAR itself, and even external.
+     * Creates PluginClassLoader for plugins with dependency JARs.
      *
      * @param parentClassLoader  the parent ClassLoader of this PluginClassLoader instance
-     * @param oneNestedJarFileUrl  "file:" URL of the plugin JAR file
-     * @param dependencyJarUrls  collection of "file:" URLs of dependency JARs out of the plugin JAR
+     * @param jarUrls  collection of "file:" URLs of all JARs related to the plugin
      * @param parentFirstPackages  collection of package names that are to be loaded first before the plugin's
      * @param parentFirstResources  collection of resource names that are to be loaded first before the plugin's
+     * @return {@code PluginClassLoader} instance created
      */
-    public static PluginClassLoader createForNestedJar(
+    public static PluginClassLoader create(
             final ClassLoader parentClassLoader,
-            final URL oneNestedJarFileUrl,
-            final Collection<URL> dependencyJarUrls,
+            final Collection<URL> jarUrls,
             final Collection<String> parentFirstPackages,
             final Collection<String> parentFirstResources) {
         return new PluginClassLoader(
                 parentClassLoader,
-                oneNestedJarFileUrl,
-                dependencyJarUrls,
+                jarUrls,
                 parentFirstPackages,
                 parentFirstResources);
     }
@@ -230,25 +201,6 @@ public class PluginClassLoader extends URLClassLoader {
         }
 
         return Iterators.asEnumeration(Iterators.concat(resources.iterator()));
-    }
-
-    private static URL[] combineUrlsToArray(final URL oneNestedJarFileUrl, final Collection<URL> flatJarUrls) {
-        final int offset;
-        final URL[] allDirectJarUrls;
-        if (oneNestedJarFileUrl == null) {
-            offset = 0;
-            allDirectJarUrls = new URL[flatJarUrls.size()];
-        } else {
-            offset = 1;
-            allDirectJarUrls = new URL[flatJarUrls.size() + 1];
-            allDirectJarUrls[0] = oneNestedJarFileUrl;
-        }
-        int i = 0;
-        for (final URL flatJarUrl : flatJarUrls) {
-            allDirectJarUrls[i + offset] = flatJarUrl;
-            ++i;
-        }
-        return allDirectJarUrls;
     }
 
     private boolean isParentFirstPackage(String name) {

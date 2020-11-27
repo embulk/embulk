@@ -121,6 +121,7 @@ public class JarPluginLoader implements AutoCloseable {
         }
 
         final List<URL> dependencyJarUrls = new ArrayList<>();
+        dependencyJarUrls.add(fileUrlJar);
         for (final Path dependencyJarPath : dependencyJarPaths) {
             final URI dependencyJarUri;
             try {
@@ -142,16 +143,8 @@ public class JarPluginLoader implements AutoCloseable {
             }
         }
 
-        final PluginClassLoader pluginClassLoader;
-        if (!dependencyJarPaths.isEmpty()) {
-            pluginClassLoader = pluginClassLoaderFactory.createForNestedJarWithDependencies(
-                    JarPluginLoader.class.getClassLoader(),
-                    fileUrlJar,
-                    dependencyJarUrls);
-        } else {
-            pluginClassLoader = pluginClassLoaderFactory.createForNestedJar(
-                    JarPluginLoader.class.getClassLoader(), fileUrlJar);
-        }
+        final PluginClassLoader pluginClassLoader = pluginClassLoaderFactory.create(
+                dependencyJarUrls, JarPluginLoader.class.getClassLoader());
 
         final Class pluginMainClass;
         try {
