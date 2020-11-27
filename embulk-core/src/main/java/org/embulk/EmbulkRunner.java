@@ -372,10 +372,16 @@ public class EmbulkRunner {
     private String runLiquid(
             final String templateSource,
             final Map<String, Object> templateParams,
-            final String templateIncludePath) {
+            final String templateIncludePath)
+            throws IOException {
         // TODO: Check if it is required to process JRuby options.
         final ScriptingContainerDelegate localJRubyContainer =
                 LazyScriptingContainerDelegate.withGems(rootLogger, this.embulkSystemProperties);
+
+        if (localJRubyContainer == null) {
+            // TODO: Handle the exception better and have a better error message.
+            throw new IOException("JRuby is not configured well to run Liquid. Configure the Embulk system property \"jruby\".");
+        }
 
         localJRubyContainer.runScriptlet("require 'liquid'");
 

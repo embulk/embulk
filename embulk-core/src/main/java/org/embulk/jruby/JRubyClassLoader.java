@@ -15,7 +15,7 @@ import java.util.Vector;
  * in JRuby. Some of them conflict with {@code embulk-core}'s top-level dependencies, such as {@code "asm:asm"}
  * and {@code "org.sonatype.sisu.inject:cglib"} used from Guice.
  *
- * <p>JRuby should use JRuby's own dependencies, and Embulk should not be impacted from JRuby's depencencies.
+ * <p>JRuby should use JRuby's own dependencies, and Embulk should not be impacted from JRuby's dependencies.
  */
 final class JRubyClassLoader extends URLClassLoader {
     JRubyClassLoader(final Collection<URL> jarUrls, final ClassLoader parent) {
@@ -96,7 +96,7 @@ final class JRubyClassLoader extends URLClassLoader {
 
     @Override
     public Enumeration<URL> getResources(final String name) throws IOException {
-        final Vector<URL> resources = new Vector<URL>();
+        final Vector<URL> resources = new Vector<>();
 
         final Enumeration<URL> parentResources = this.getParent().getResources(name);
         while (parentResources.hasMoreElements()) {

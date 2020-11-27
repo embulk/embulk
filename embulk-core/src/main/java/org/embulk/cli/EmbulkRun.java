@@ -231,6 +231,8 @@ public class EmbulkRun {
         try {
             localJRubyContainer = createJRubyForRubyCommand(embulkSystemProperties, "bundle");
         } catch (final NullPointerException ex) {
+            // TODO: Handle the exception better and have a better error message.
+            System.err.println(ex.getMessage());
             return -1;
         }
 
@@ -268,6 +270,12 @@ public class EmbulkRun {
         final String propertyGemPath = embulkSystemProperties.getProperty("gem_path");  // gem_path is optional.
 
         final ScriptingContainerDelegate jruby = LazyScriptingContainerDelegate.withGemsIgnored(logger, embulkSystemProperties);
+
+        if (jruby == null) {
+            // TODO: Handle the exception better and have a better error message.
+            throw new NullPointerException(
+                    "JRuby is not configured well to run \"" + command + "\". Configure the Embulk system property \"jruby\".");
+        }
 
         // The environment variables "GEM_HOME" (and "GEM_PATH") are mandatory for the "gem" and "bundle" commands.
         //
@@ -348,6 +356,8 @@ public class EmbulkRun {
         try {
             localJRubyContainer = createJRubyForRubyCommand(embulkSystemProperties, "gem");
         } catch (final NullPointerException ex) {
+            // TODO: Handle the exception better and have a better error message.
+            System.err.println(ex.getMessage());
             return -1;
         }
 
