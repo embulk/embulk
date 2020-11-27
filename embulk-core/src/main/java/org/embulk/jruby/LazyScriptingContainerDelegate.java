@@ -1,5 +1,14 @@
 package org.embulk.jruby;
 
+import com.google.inject.Injector;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.embulk.EmbulkSystemProperties;
+import org.slf4j.Logger;
+
 /**
  * Indirects onto JRuby with initializing ScriptingContainer lazily.
  */
@@ -16,6 +25,101 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
         this.delegateLocalContextScope = delegateLocalContextScope;
         this.delegateLocalVariableBehavior = delegateLocalVariableBehavior;
         this.initializer = initializer;
+    }
+
+    public static LazyScriptingContainerDelegate withGems(
+            final Logger logger,
+            final EmbulkSystemProperties embulkSystemProperties) {
+        return of(false, true, null, logger, embulkSystemProperties);
+    }
+
+    public static LazyScriptingContainerDelegate withGemsIgnored(
+            final Logger logger,
+            final EmbulkSystemProperties embulkSystemProperties) {
+        return of(false, false, null, logger, embulkSystemProperties);
+    }
+
+    public static LazyScriptingContainerDelegate withInjector(
+            final Injector injector,
+            final Logger logger,
+            final EmbulkSystemProperties embulkSystemProperties) {
+        return of(true, true, injector, logger, embulkSystemProperties);
+    }
+
+    private static LazyScriptingContainerDelegate of(
+            final boolean isEmbulkSpecific,
+            final boolean initializesGem,
+            final Injector injector,
+            final Logger logger,
+            final EmbulkSystemProperties embulkSystemProperties) {
+        // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
+        // instantiated in this JVM.
+        final boolean useGlobalRubyRuntime = embulkSystemProperties.getPropertyAsBoolean("use_global_ruby_runtime", false);
+
+        final String jrubyProperty = embulkSystemProperties.getProperty("jruby");
+
+        final ArrayList<URL> jrubyUrlsBuilt = new ArrayList<>();
+        if (jrubyProperty != null && !jrubyProperty.isEmpty()) {
+            // File.pathSeparator is not available here because the property "jruby" expects a URL-like style:
+            // "file:" and "mvn:". It now supports only "file:", though.
+            //
+            // Semicolons basically do not appear in URLs without quoting except for the "optional fields and values"
+            // case described in RFC 1738. We don't need to take care of the "optional fields and values" case here.
+            // https://tools.ietf.org/html/rfc1738
+            for (final String jarLocator : jrubyProperty.split("\\;")) {
+                if (jarLocator.startsWith("file:")) {
+                    // TODO: Validate the path more.
+                    final URL jarUrl;
+                    try {
+                        jarUrl = new URL(jarLocator);
+                    } catch (final MalformedURLException ex) {
+                        throw new JRubyInvalidRuntimeException("Embulk system property \"jruby\" is invalid: " + jrubyProperty, ex);
+                    }
+                    jrubyUrlsBuilt.add(jarUrl);
+                } else {
+                    throw new JRubyInvalidRuntimeException("Embulk system property \"jruby\" is invalid: " + jrubyProperty);
+                }
+            }
+        }
+        final List<URL> jrubyUrls = Collections.unmodifiableList(jrubyUrlsBuilt);
+
+        final JRubyInitializer initializer = JRubyInitializer.of(
+                isEmbulkSpecific,
+                initializesGem,
+                isEmbulkSpecific ? injector : null,
+                logger,
+                embulkSystemProperties);
+
+        final JRubyClassLoader jrubyClassLoader;
+        try {
+            jrubyClassLoader = new JRubyClassLoader(jrubyUrls, LazyScriptingContainerDelegate.class.getClassLoader());
+        } catch (final RuntimeException ex) {
+            return null;
+        }
+
+        try {
+            jrubyClassLoader.loadClass("org.jruby.Main");
+        } catch (final ClassNotFoundException ex) {
+            return null;
+        }
+
+        try {
+            final LazyScriptingContainerDelegate jruby = new LazyScriptingContainerDelegate(
+                    jrubyClassLoader,
+                    useGlobalRubyRuntime
+                            ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
+                            : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
+                    ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT,
+                    initializer);
+            if (useGlobalRubyRuntime) {
+                // In case the global JRuby instance is used, the instance should be always initialized.
+                // Ruby tests (src/test/ruby/ of embulk-core and embulk-standards) are examples.
+                jruby.getInitialized();
+            }
+            return jruby;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     @Override

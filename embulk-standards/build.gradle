@@ -50,9 +50,14 @@ dependencies {
     // This statement gets it loaded by the top-level ClassLoader.
     testImplementation project(":embulk-deps")
 
-    jruby "org.jruby:jruby-complete:" + rootProject.jrubyVersion
+    testImplementation "org.jruby:jruby-complete:9.1.15.0"
+
+    jruby "org.jruby:jruby-complete:9.1.15.0"
+
     rubyTestRuntime project(":embulk-api")
+    rubyTestRuntime project(":embulk-spi")
     rubyTestRuntime project(":embulk-core")
+    rubyTestRuntime "org.jruby:jruby-complete:9.1.15.0"
 }
 
 task rubyTestVanilla(type: JavaExec, dependsOn: [

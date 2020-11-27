@@ -25,16 +25,16 @@ class SchemaTest < ::Test::Unit::TestCase
     ]
     schema.write_record(page_builder, record)
 
-    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][0].class)
+    assert_equal(Java::java.time::Instant, page_builder.get_records[0][0].class)
     assert_equal(1492207583, page_builder.get_records[0][0].getEpochSecond())
     assert_equal(281939141, page_builder.get_records[0][0].getNano())
-    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][1].class)
+    assert_equal(Java::java.time::Instant, page_builder.get_records[0][1].class)
     assert_equal(1592207583, page_builder.get_records[0][1].getEpochSecond())
     assert_equal(181939141, page_builder.get_records[0][1].getNano())
-    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][2].class)
+    assert_equal(Java::java.time::Instant, page_builder.get_records[0][2].class)
     assert_equal(1292207583, page_builder.get_records[0][2].getEpochSecond())
     assert_equal(191939141, page_builder.get_records[0][2].getNano())
-    assert_equal(Java::org.embulk.spi.time::Timestamp, page_builder.get_records[0][3].class)
+    assert_equal(Java::java.time::Instant, page_builder.get_records[0][3].class)
     assert_equal(1192207583, page_builder.get_records[0][3].getEpochSecond())
     assert_equal(171939141, page_builder.get_records[0][3].getNano())
   end
@@ -59,7 +59,7 @@ end
 class DummyPageReader
   def initialize(name, epoch, nano)
     @name = Java::java.lang.String.new(name)
-    @timestamp = Java::org.embulk.spi.time.Timestamp.ofEpochSecond(epoch, nano)
+    @timestamp = Java::java.time.Instant.ofEpochSecond(epoch, nano)
   end
 
   def isNull(index)
@@ -70,7 +70,7 @@ class DummyPageReader
     return @name
   end
 
-  def getTimestamp(index)
+  def getTimestampInstant(index)
     return @timestamp
   end
 end

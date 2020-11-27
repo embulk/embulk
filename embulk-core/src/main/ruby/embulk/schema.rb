@@ -33,13 +33,8 @@ module Embulk
           when :string
             "record << reader.getString(#{idx})"
           when :timestamp
-            # Constructing through Java::org.jruby.RubyTime instead of constructing Ruby's Time directly
-            # as Ruby's Time cannot be constructed from nanoseconds as of Ruby 2.4. Ruby's Time might be
-            # extended independently from Java::org.jruby.RubyTime, for example, to_msgpack.
-            # Java::org.jruby.RubyTime is converted to Ruby's Time by gmtime() as a result.
-            # TODO: Replace to Ruby's Time.at(seconds, nanoseconds, :nsec) available from Ruby 2.5.0.
-            # http://ruby-doc.org/core-2.5.0/Time.html#method-c-at
-            "record << (java_timestamp = reader.getTimestamp(#{idx}); Java::org.jruby.RubyTime.newTime(JRuby.runtime, Java::org.joda.time.DateTime.new((java_timestamp.getEpochSecond() * 1000) + (java_timestamp.getNano() / 1000000)), (java_timestamp.getNano() % 1000000)).gmtime())"
+            # https://ruby-doc.org/core-2.3.3/Time.html#method-c-at
+            "record << (java_instant = reader.getTimestampInstant(#{idx}); Time.at(java_instant.getEpochSecond(), Rational(java_instant.getNano(), 1000)))"
           when :json
             "record << MessagePack.unpack(String.from_java_bytes((::Java::org.msgpack.core.MessagePack.newDefaultBufferPacker()).packValue(reader.getJson(#{idx})).toMessageBuffer().toByteArray()))"
           else
@@ -53,7 +48,6 @@ module Embulk
       @record_reader = eval(record_reader_script)
 
       record_writer_script = "lambda do |builder,record|\n"
-      record_writer_script << "java_timestamp_class = ::Embulk::Java::Timestamp\n"
       each do |column|
         idx = column.index
         column_script =
@@ -70,7 +64,7 @@ module Embulk
           when :string
             "builder.setString(#{idx}, record[#{idx}])"
           when :timestamp
-            "builder.setTimestamp(#{idx}, case record[#{idx}] when Java::org.embulk.spi.time.Timestamp then record[#{idx}] when Java::java.time.Instant then Java::org.embulk.spi.time.Timestamp.ofInstant(record[#{idx}]) when Time then Java::org.embulk.spi.time.Timestamp.ofEpochSecond(record[#{idx}].to_i, record[#{idx}].nsec) end)"
+            "builder.setTimestamp(#{idx}, case record[#{idx}] when Java::org.embulk.spi.time.Timestamp then record[#{idx}].getInstant() when Java::java.time.Instant then record[#{idx}] when Time then Java::java.time.Instant.ofEpochSecond(record[#{idx}].to_i, record[#{idx}].nsec) end)"
           when :json
             "builder.setJson(#{idx}, ::Java::org.msgpack.core.MessagePack.newDefaultUnpacker(MessagePack.pack(record[#{idx}]).to_java_bytes).unpackValue())"
           else

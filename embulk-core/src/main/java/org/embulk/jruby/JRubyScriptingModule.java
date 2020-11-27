@@ -26,35 +26,22 @@ public class JRubyScriptingModule implements Module {
             implements ProviderWithDependencies<ScriptingContainerDelegate> {
         @Inject
         public ScriptingContainerProvider(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
-            // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
-            // instantiated in this JVM.
-            this.useGlobalRubyRuntime = embulkSystemProperties.getPropertyAsBoolean("use_global_ruby_runtime", false);
-
-            if (embulkSystemProperties.getProperty("jruby_use_default_embulk_gem_home") != null) {
+            this.injector = injector;
+            this.embulkSystemProperties = embulkSystemProperties;
+            if (this.embulkSystemProperties.getProperty("jruby_use_default_embulk_gem_home") != null) {
                 // TODO: Log it is no longer used.
             }
-
-            this.initializer = JRubyInitializer.of(injector, LoggerFactory.getLogger("init"), embulkSystemProperties);
         }
 
         @Override  // from |com.google.inject.Provider|
         public ScriptingContainerDelegate get() throws ProvisionException {
             try {
-                final LazyScriptingContainerDelegate jruby = new LazyScriptingContainerDelegate(
-                        JRubyScriptingModule.class.getClassLoader(),
-                        this.useGlobalRubyRuntime
-                                ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
-                                : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
-                        ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT,
-                        this.initializer);
-                if (this.useGlobalRubyRuntime) {
-                    // In case the global JRuby instance is used, the instance should be always initialized.
-                    // Ruby tests (src/test/ruby/ of embulk-core and embulk-standards) are examples.
-                    jruby.getInitialized();
-                }
-                return jruby;
-            } catch (Exception ex) {
-                return null;
+                return LazyScriptingContainerDelegate.withInjector(
+                        this.injector, LoggerFactory.getLogger("init"), this.embulkSystemProperties);
+            } catch (final ProvisionException ex) {
+                throw ex;
+            } catch (final RuntimeException ex) {
+                throw new ProvisionException(ex.getMessage(), ex);
             }
         }
 
@@ -68,7 +55,7 @@ public class JRubyScriptingModule implements Module {
             return Collections.unmodifiableSet(built);
         }
 
-        private final boolean useGlobalRubyRuntime;
-        private final JRubyInitializer initializer;
+        private final Injector injector;
+        private final EmbulkSystemProperties embulkSystemProperties;
     }
 }

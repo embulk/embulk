@@ -9,10 +9,8 @@ ext {
 processResources.from("${buildDir}/embulk_gem_as_resources", "${buildDir}/dependency_gems_as_resources")
 
 configurations {
-    // com.google.inject:guice depends on asm and cglib but version of the libraries conflict
-    // with ones bundled in jruby-complete and cause bytecode compatibility error
-    api.exclude group: "asm", module: "asm"
-    api.exclude group: "org.sonatype.sisu.inject", module: "cglib"
+    jruby
+    rubyTestRuntime
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
@@ -39,7 +37,6 @@ dependencies {
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
     api "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
-    api "org.jruby:jruby-complete:" + rootProject.jrubyVersion
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
     api "joda-time:joda-time:2.9.2"
@@ -56,6 +53,13 @@ dependencies {
     // TODO: Remove this, and load it with the proper DependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.
     testImplementation project(":embulk-deps")
+
+    jruby "org.jruby:jruby-complete:9.1.15.0"
+
+    rubyTestRuntime project(":embulk-api")
+    rubyTestRuntime project(":embulk-spi")
+    rubyTestRuntime project(":embulk-core")
+    rubyTestRuntime "org.jruby:jruby-complete:9.1.15.0"
 }
 
 task rubyTestVanilla(type: JavaExec, dependsOn: [
@@ -65,7 +69,7 @@ task rubyTestVanilla(type: JavaExec, dependsOn: [
         ":embulk-deps:prepareDependencyJars",
         ]) {
     workingDir = file("${projectDir}");
-    classpath = sourceSets.main.runtimeClasspath  // Not "configurations.runtimeClasspath" to use compiled embulk-core
+    classpath = configurations.rubyTestRuntime
     main = "org.jruby.Main"
     args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
     environment "GEM_HOME": "${buildDir}/dependency_gems_installed"
@@ -93,7 +97,7 @@ task installDependencyGems(type: JavaExec) {
     }
 
     workingDir = file("${projectDir}")
-    classpath = configurations.runtimeClasspath  // Not "sourceSets.main.runtimeClasspath" not to depend on "jar"
+    classpath = configurations.jruby
     main = "org.jruby.Main"
     args = ["-S", "gem", "install", "msgpack:1.1.0", "bundler:1.16.0", "liquid:4.0.0", "simplecov:0.10.0", "test-unit:3.0.9"]
     environment "GEM_HOME": "${buildDir}/dependency_gems_installed"

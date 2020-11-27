@@ -14,8 +14,8 @@ module Embulk
       elsif ruby_object.kind_of?(String)
         self.java_send(:set, [::Java::java.lang.String], ruby_object.to_java(::Java::java.lang.String))
       elsif ruby_object.kind_of?(Time)
-        self.java_send(:set, [::Java::org.embulk.spi.time.Timestamp],
-                       ::Java::org.embulk.spi.time.Timestamp.ofEpochSecond(ruby_object.to_i, ruby_object.nsec))
+        self.java_send(:set, [::Java::java.time.Instant],
+                       ::Java::java.time.Timestamp.ofEpochSecond(ruby_object.to_i, ruby_object.nsec))
       else
         self.java_send(:set, [::Java::org.msgpack.value.Value],
                        ::Java::org.msgpack.core.MessagePack.newDefaultUnpacker(ruby_object.to_msgpack.to_java_bytes).unpackValue())
