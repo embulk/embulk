@@ -279,6 +279,7 @@ repositories {
 
 configurations {
     embed
+    jruby
 }
 
 dependencies {
@@ -293,6 +294,9 @@ dependencies {
         exclude group: 'org.apache.commons', module: 'commons-lang3'  // Included in embulk-core.
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
     }
+
+    // Only to install the msgpack gem in embulk/build/.
+    jruby "org.jruby:jruby-complete:9.1.15.0"
 }
 
 def listEmbedDependencies = { rootModuleName, prefix ->
@@ -359,6 +363,19 @@ task executableJar(dependsOn: "jar") {
         destination.append(jar.outputs.files.singleFile.readBytes())
         destination.setExecutable(true)
     }
+}
+
+task installGemsForTesting(type: JavaExec) {
+    doFirst {
+        delete("${buildDir}/gems_for_testing")
+        mkdir("${buildDir}/gems_for_testing")
+    }
+
+    workingDir = file("${projectDir}")
+    classpath = configurations.jruby
+    main = "org.jruby.Main"
+    args = [ "-S", "gem", "install", "msgpack:1.1.0" ]
+    environment "GEM_HOME": "${buildDir}/gems_for_testing"
 }
 
 task releaseCheck {
