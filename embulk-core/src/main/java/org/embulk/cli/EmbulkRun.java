@@ -250,7 +250,10 @@ public class EmbulkRun {
             localJRubyContainer.runScriptlet("Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }");
         } else {
             localJRubyContainer.put("__internal_working_dir__", path.toString());
-            localJRubyContainer.runScriptlet("Dir.chdir(__internal_working_dir__) { Bundler.with_friendly_errors { Bundler::CLI.start(__internal_argv__, debug: true) } }");
+            localJRubyContainer.runScriptlet(
+                    "Dir.chdir(__internal_working_dir__) {"
+                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
+                    + "}");
             localJRubyContainer.remove("__internal_working_dir__");
         }
         localJRubyContainer.remove("__internal_argv_java__");
