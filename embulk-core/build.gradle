@@ -40,7 +40,6 @@ dependencies {
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
     api "joda-time:joda-time:2.9.2"
-    api "org.msgpack:msgpack-core:0.8.11"
 
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.
