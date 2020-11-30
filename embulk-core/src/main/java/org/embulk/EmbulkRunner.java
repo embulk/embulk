@@ -10,14 +10,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
-import org.embulk.command.PreviewPrinter;
-import org.embulk.command.TablePreviewPrinter;
-import org.embulk.command.VerticalPreviewPrinter;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.deps.config.YamlProcessor;
+import org.embulk.deps.preview.PreviewPrinter;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
@@ -216,10 +214,10 @@ public class EmbulkRunner {
         final PreviewPrinter printer;
         switch (format != null ? format : "table") {
             case "table":
-                printer = new TablePreviewPrinter(System.out, previewResult.getSchema());
+                printer = PreviewPrinter.ofTable(System.out, previewResult.getSchema());
                 break;
             case "vertical":
-                printer = new VerticalPreviewPrinter(System.out, previewResult.getSchema());
+                printer = PreviewPrinter.ofVertical(System.out, previewResult.getSchema());
                 break;
             default:
                 throw new IllegalArgumentException(

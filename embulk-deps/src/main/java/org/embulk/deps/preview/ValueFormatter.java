@@ -1,19 +1,13 @@
-package org.embulk.command;
+package org.embulk.deps.preview;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.time.Instant;
-import java.util.List;
 import java.util.Locale;
-import org.embulk.spi.Page;
-import org.embulk.spi.Schema;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.TimestampJacksonModule;
@@ -23,19 +17,8 @@ import org.embulk.spi.unit.ToStringMapJacksonModule;
 import org.embulk.spi.util.CharsetJacksonModule;
 import org.msgpack.value.Value;
 
-public abstract class PreviewPrinter implements Closeable {
-    protected final PrintStream out;
-    protected final Schema schema;
-
-    private final ObjectMapper objectMapper;
-    private final String[] stringValues;
-    private final NumberFormat numberFormat;
-
-    @SuppressWarnings("deprecation")
-    public PreviewPrinter(final PrintStream out, final Schema schema) {
-        this.out = out;
-        this.schema = schema;
-        this.stringValues = new String[schema.getColumnCount()];
+final class ValueFormatter {
+    ValueFormatter() {
         this.numberFormat = NumberFormat.getNumberInstance(Locale.ENGLISH);
 
         this.objectMapper = new ObjectMapper();
@@ -53,35 +36,7 @@ public abstract class PreviewPrinter implements Closeable {
         this.objectMapper.registerModule(new JodaModule());
     }
 
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1306
-    public final void printAllPages(List<Page> pages) throws IOException {
-        List<Object[]> records = org.embulk.spi.util.Pages.toObjects(schema, pages, true);
-        for (Object[] record : records) {
-            printRecord(record);
-        }
-    }
-
-    @Override
-    public final void close() throws IOException {
-        out.close();
-    }
-
-    public void finish() throws IOException {}
-
-    protected abstract void printRecord(String[] values) throws IOException;
-
-    private void printRecord(Object... values) throws IOException {
-        int min = Math.min(schema.getColumnCount(), values.length);
-        for (int i = 0; i < min; i++) {
-            stringValues[i] = valueToString(values[i]);
-        }
-        for (int i = min; i < schema.getColumnCount(); i++) {
-            stringValues[i] = valueToString(null);
-        }
-        printRecord(stringValues);
-    }
-
-    private String valueToString(Object obj) {
+    String valueToString(final Object obj) {
         if (obj == null) {
             return "";
         } else if (obj instanceof String) {
@@ -100,10 +55,13 @@ public abstract class PreviewPrinter implements Closeable {
             return obj.toString();
         } else {
             try {
-                return this.objectMapper.writeValueAsString(obj);
+                return objectMapper.writeValueAsString(obj);
             } catch (final JsonProcessingException ex) {
                 throw new RuntimeException(ex);
             }
         }
     }
+
+    private final NumberFormat numberFormat;
+    private final ObjectMapper objectMapper;
 }
