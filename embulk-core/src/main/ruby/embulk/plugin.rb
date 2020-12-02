@@ -220,12 +220,12 @@ module Embulk
   end
 
   module Plugin
+    INSTANCE = PluginManager.new
     class <<self
-      INSTANCE = PluginManager.new
 
       extend Forwardable
 
-      def_delegators 'INSTANCE',
+      def_delegators :'Embulk::Plugin::INSTANCE',
         :register_input, :get_input, :register_java_input, :new_java_input,
         :register_output, :get_output, :register_java_output, :new_java_output,
         :register_filter, :get_filter, :register_java_filter, :new_java_filter,
