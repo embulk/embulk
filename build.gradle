@@ -34,7 +34,7 @@ allprojects {  // Applies all projects including the root project as well.
     }
 }
 
-version = "0.10.23-SNAPSHOT"
+version = "0.10.24-SNAPSHOT"
 
 description = 'Embulk is an open-source, plugin-based bulk data loader to scale and simplify data management across heterogeneous data stores. It can collect and ship any kinds of data in high throughput with transaction control.'
 
