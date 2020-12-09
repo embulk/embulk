@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.maven.MavenArtifactFinder;
 import org.embulk.deps.maven.MavenPluginPaths;
+import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
@@ -65,10 +66,20 @@ public class MavenPluginSource implements PluginSource {
             throw new PluginSourceNotMatchException("Plugin interface " + pluginInterface + " is not supported.");
         }
 
-        if (pluginType.getSourceType() != PluginSource.Type.MAVEN) {
-            throw new PluginSourceNotMatchException();
+        final MavenPluginType mavenPluginType;
+        switch (pluginType.getSourceType()) {
+            case DEFAULT:
+                mavenPluginType = MavenPluginType.createFromDefaultPluginType(
+                        category, (DefaultPluginType) pluginType, this.embulkSystemProperties);
+                break;
+
+            case MAVEN:
+                mavenPluginType = (MavenPluginType) pluginType;
+                break;
+
+            default:
+                throw new PluginSourceNotMatchException();
         }
-        final MavenPluginType mavenPluginType = (MavenPluginType) pluginType;
 
         final MavenArtifactFinder mavenArtifactFinder;
         try {
