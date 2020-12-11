@@ -126,7 +126,7 @@ final class DependencyClassLoader extends URLClassLoader {
         }
 
         // TODO: Consider duplicated resources.
-        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName);
+        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, EmbulkSelfContainedJarFiles.CORE);
         if (resource == null) {
             return null;
         }
@@ -156,7 +156,8 @@ final class DependencyClassLoader extends URLClassLoader {
         final Enumeration<URL> resourceUrlsFromSuper = super.findResources(resourceName);
 
         // Even if some resources are found from the delegation parent class loader, it looks into self-contained JAR files.
-        final Collection<Resource> resources = EmbulkSelfContainedJarFiles.getMultipleResources(resourceName);
+        final Collection<Resource> resources =
+                EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, EmbulkSelfContainedJarFiles.CORE);
 
         final Vector<URL> resourceUrls = new Vector<URL>();
         while (resourceUrlsFromSuper.hasMoreElements()) {
@@ -189,7 +190,7 @@ final class DependencyClassLoader extends URLClassLoader {
         final String resourceName = className.replace('.', '/').concat(".class");
 
         // Class must be singular.
-        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName);
+        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, EmbulkSelfContainedJarFiles.CORE);
         if (resource == null) {
             throw new ClassNotFoundException(className);
         }
