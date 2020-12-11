@@ -8,7 +8,7 @@ public interface PluginSource {
     <T> T newPlugin(Class<T> iface, PluginType type) throws PluginSourceNotMatchException;
 
     public enum Type {
-        DEFAULT("default"),  // DEFAULT includes InjectedPluginSource and JRubyPluginSource.
+        DEFAULT("default"),  // DEFAULT includes SelfContainedPluginSource and JRubyPluginSource.
         MAVEN("maven"),
         ;
 

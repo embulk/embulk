@@ -2,28 +2,42 @@ package org.embulk.plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigException;
+import org.embulk.exec.GuessExecutor;
+import org.embulk.exec.LocalExecutorPlugin;
+import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.plugin.InjectedPluginSource;
 import org.embulk.plugin.maven.MavenPluginSource;
+import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.ParserPlugin;
 
 public class PluginManager {
     private PluginManager(
+            final EmbulkSystemProperties embulkSystemProperties,
             final InjectedPluginSource injectedSource,
             final MavenPluginSource mavenSource,
+            final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
+        this.embulkSystemProperties = embulkSystemProperties;
         this.injectedSource = injectedSource;
         this.mavenSource = mavenSource;
+        this.selfContainedSource = selfContainedSource;
         this.jrubySource = jrubySource;
     }
 
     public static PluginManager with(
+            final EmbulkSystemProperties embulkSystemProperties,
             final InjectedPluginSource injectedSource,
             final MavenPluginSource mavenSource,
+            final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
         return new PluginManager(
+                embulkSystemProperties,
                 injectedSource,
                 mavenSource,
+                selfContainedSource,
                 jrubySource);
     }
 
@@ -36,6 +50,25 @@ public class PluginManager {
 
         List<PluginSourceNotMatchException> exceptions = new ArrayList<>();
 
+        // GuessExecutor
+        if (ParserPlugin.class.equals(iface) && "system_guess".equals(type.getName())) {
+            return iface.cast(new GuessExecutor.GuessParserPlugin());
+        }
+
+        // PreviewExecutor
+        if (ParserPlugin.class.equals(iface) && "system_sampling".equals(type.getName())) {
+            return iface.cast(new SamplingParserPlugin());
+        }
+
+        // LocalExecutorPlugin
+        if (ExecutorPlugin.class.equals(iface) && "local".equals(type.getName())) {
+            return iface.cast(new LocalExecutorPlugin(this.embulkSystemProperties));
+        }
+
+        // The order is intentional.
+        // * MavenPluginSource comes first so that newly-installed Maven-based plugins can override self-contained ones.
+        // * JRubyPluginSource comes last because JRuby is optional, and RubyGem-based plugins are the last choice.
+
         try {
             return this.injectedSource.newPlugin(iface, type);
         } catch (final PluginSourceNotMatchException e) {
@@ -44,6 +77,12 @@ public class PluginManager {
 
         try {
             return this.mavenSource.newPlugin(iface, type);
+        } catch (final PluginSourceNotMatchException e) {
+            exceptions.add(e);
+        }
+
+        try {
+            return this.selfContainedSource.newPlugin(iface, type);
         } catch (final PluginSourceNotMatchException e) {
             exceptions.add(e);
         }
@@ -75,7 +114,9 @@ public class PluginManager {
         return e;
     }
 
+    private final EmbulkSystemProperties embulkSystemProperties;
     private final InjectedPluginSource injectedSource;
     private final MavenPluginSource mavenSource;
+    private final SelfContainedPluginSource selfContainedSource;
     private final JRubyPluginSource jrubySource;
 }

@@ -111,7 +111,7 @@ public class MavenPluginSource implements PluginSource {
 
         final Object pluginMainObject;
         try {
-            // Unlike InjectedPluginSource and JRubyPluginSource,
+            // Unlike JRubyPluginSource,
             // MavenPluginSource does not have "registration" before creating an instance of the plugin class.
             // FileInputPlugin and FileOutputPlugin are wrapped with FileInputRunner and FileOutputRunner here.
             if (FileInputPlugin.class.isAssignableFrom(pluginMainClass)) {

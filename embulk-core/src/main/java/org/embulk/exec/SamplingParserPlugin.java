@@ -4,7 +4,6 @@ import static java.util.Locale.ENGLISH;
 import static org.embulk.spi.util.Inputs.each;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import java.text.NumberFormat;
 import java.util.List;
 import org.embulk.config.Config;
@@ -136,7 +135,6 @@ public class SamplingParserPlugin implements ParserPlugin {
         public int getSampleBufferBytes();
     }
 
-    @Inject
     public SamplingParserPlugin() {
         this.minSampleBufferBytes = 40;  // empty gzip file is 33 bytes. // TODO get sample size from system config
     }

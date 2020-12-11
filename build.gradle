@@ -47,6 +47,23 @@ def subprojectNamesReleasedInMavenCentral = [
     "embulk-spi",
 ]
 
+def subprojectNamesOfStandardPlugins = [
+    "embulk-decoder-bzip2",
+    "embulk-decoder-gzip",
+    "embulk-encoder-bzip2",
+    "embulk-encoder-gzip",
+    "embulk-filter-remove_columns",
+    "embulk-filter-rename",
+    "embulk-formatter-csv",
+    "embulk-input-config",
+    "embulk-input-file",
+    "embulk-output-file",
+    "embulk-output-null",
+    "embulk-output-stdout",
+    "embulk-parser-csv",
+    "embulk-parser-json",
+]
+
 def subprojectNamesReleasedInBintray = [
     "embulk-core",
     "embulk-deps",
@@ -284,7 +301,11 @@ configurations {
 
 dependencies {
     implementation project(':embulk-core')
-    implementation project(':embulk-standards')
+    implementation(project(':embulk-standards')) {  // embulk-standards is still here only for some Ruby-based standard guess.
+        // embulk-standards' transitive dependencies are now only subprojects, such as ":embulk-parser-csv".
+        // Those subprojects are now embedded as self-contained JAR resources. All transitive dependencies are not needed.
+        transitive = false
+    }
 
     // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
     implementation "ch.qos.logback:logback-classic:1.2.3"
@@ -295,23 +316,42 @@ dependencies {
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
     }
 
+    subprojectNamesOfStandardPlugins.each { pluginName ->
+        embed(project(":${pluginName}"))
+    }
+
     // Only to install the msgpack gem in embulk/build/.
     jruby "org.jruby:jruby-complete:9.1.15.0"
 }
 
 def listEmbedDependencies = { rootModuleName, prefix ->
-    def list = []
+    def firstArtifact = []  // The artifact of rootModuleName -- the list should contain only one.
+    def followingArtifacts = []  // Artifacts depended from the artifact of rootModuleName.
+
     configurations.embed.resolvedConfiguration.firstLevelModuleDependencies.each { firstLevelDependency ->
         if (firstLevelDependency.moduleName == rootModuleName) {
             firstLevelDependency.allModuleArtifacts.each { requiredArtifact ->
-                list.add(prefix + requiredArtifact.file.name)
+                if (requiredArtifact.name == rootModuleName) {
+                    firstArtifact.add(prefix + requiredArtifact.file.name)
+                } else {
+                    followingArtifacts.add(prefix + requiredArtifact.file.name)
+                }
             }
         }
     }
-    if (list.isEmpty()) {
-        throw new GradleException('Failed to collect libraries to embed: no dependencies found')
+
+    if (firstArtifact.isEmpty()) {
+        if (followingArtifacts.isEmpty()) {
+            throw new GradleException('Failed to collect libraries to embed: no dependencies found')
+        } else {
+            throw new GradleException('Failed to collect libraries to embed: specified root module is not found')
+        }
+    } else if (firstArtifact.size() > 1) {
+        throw new GradleException('Failed to collect libraries to embed: multiple root modules are found')
     }
-    return String.join(' ', list)
+
+    // It guarantees that the artifact of rootModuleName comes first.
+    return String.join(' ', firstArtifact + followingArtifacts)
 }
 
 // Standard "jar" task to build a JAR with dependency JAR resources embedded.
@@ -320,7 +360,11 @@ jar {
               ":embulk-spi:jar",
               ":embulk-core:jar",
               ":embulk-deps:jar",
-              ":embulk-standards:jar"
+              ":embulk-standards:jar"  // embulk-standards is here only for some Ruby-based standard guess.
+
+    subprojectNamesOfStandardPlugins.each { pluginName ->
+        dependsOn ":${pluginName}:jar"
+    }
 
     // Expands all dependencies including "embulk-core" and "embulk-standards"
     from {
@@ -344,7 +388,12 @@ jar {
                    'Specification-Title': 'embulk',
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
-                   'Main-Class': 'org.embulk.cli.Main'
+                   "Main-Class": "org.embulk.cli.Main",
+                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins)
+        def pluginAttributes = subprojectNamesOfStandardPlugins.collectEntries { pluginName ->
+            [ ("Embulk-Plugin-${pluginName}".toString()): listEmbedDependencies(pluginName, "/lib/") ]
+        }
+        attributes(pluginAttributes)
     }
 }
 

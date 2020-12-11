@@ -42,6 +42,12 @@ public final class EmbulkSelfContainedJarFiles {
             // embulk-core's own self-contained dependencies
             this.addJarFileResources(CORE, splitAttribute(attributes.getValue("Embulk-Resource-Class-Path")));
 
+            // self-contained plugins
+            final List<String> pluginNames = splitAttribute(attributes.getValue("Embulk-Plugins"));
+            for (final String pluginName : pluginNames) {
+                this.addJarFileResources(pluginName, splitAttribute(attributes.getValue("Embulk-Plugin-" + pluginName)));
+            }
+
             return this;
         }
 
@@ -54,6 +60,30 @@ public final class EmbulkSelfContainedJarFiles {
 
     public static StaticInitializer staticInitializer() {
         return new StaticInitializer();
+    }
+
+    public static boolean has(final String category) {
+        return JAR_RESOURCE_NAMES.containsKey(category);
+    }
+
+    /**
+     * Returns the JAR manifest of the first JAR resource in the category.
+     *
+     * <p>This is for self-contained plugins. Plugin's main JAR file (e.g. {@code embulk-input-file.jar}) should be
+     * listed first in the {@code Embulk-Plugin-*} (e.g. {@code Embulk-Plugin-embulk-input-file}) attribute of
+     * Embulk executable's top-level manifest.
+     *
+     * <pre>{@code Embulk-Plugin-embulk-decoder-gzip: /lib/embulk-decoder-gzip.jar /lib/commons-compress-1.10.jar}</pre>
+     */
+    public static Manifest getFirstManifest(final String category) {
+        final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
+        if (jarResourceNames.isEmpty()) {
+            return null;
+        }
+
+        final String firstJarResourceName = jarResourceNames.get(0);
+        final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(firstJarResourceName);
+        return selfContainedJarFile.getManifest();
     }
 
     /**

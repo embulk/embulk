@@ -24,6 +24,7 @@ import org.embulk.spi.OutputPlugin;
  *     InjectedPluginSource.registerPluginTo(InputPluginclass, "my", MyInputPlugin.class);
  * }
  *
+ * InjectedPluginSource is still here only for testing. It will be removed very soon.
  */
 public class InjectedPluginSource implements PluginSource {
     private final Injector injector;
