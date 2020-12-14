@@ -8,6 +8,8 @@ import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Properties;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigSource;
 import org.embulk.exec.PreviewResult;
 import org.embulk.test.TestingEmbulk;
@@ -17,8 +19,17 @@ import org.junit.Test;
 public class TestFilePreview {
     private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/preview/file/test/";
 
+    private static final EmbulkSystemProperties EMBULK_SYSTEM_PROPERTIES;
+
+    static {
+        final Properties properties = new Properties();
+        properties.setProperty("default_guess_plugins", "gzip,bzip2,json,csv");
+        EMBULK_SYSTEM_PROPERTIES = EmbulkSystemProperties.of(properties);
+    }
+
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
+            .setEmbulkSystemProperties(EMBULK_SYSTEM_PROPERTIES)
             .build();
 
     @Test

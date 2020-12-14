@@ -46,6 +46,7 @@ public final class EmbulkSystemProperties extends Properties {
         return new EmbulkSystemProperties(mutable);
     }
 
+    @SuppressWarnings("deprecation")  // For use of parseBoolean.
     public boolean getPropertyAsBoolean(final String key, final boolean defaultValue) {
         final String value = this.getProperty(key);
         if (value == null) {
@@ -185,8 +186,11 @@ public final class EmbulkSystemProperties extends Properties {
      * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java#L161-L190">com.fasterxml.jackson.databind.deser.std.NumberDeserializers.BooleanDeserializer</a>
      * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/java/com/fasterxml/jackson/databind/deser/std/StdDeserializer.java#L185-L213">com.fasterxml.jackson.databind.deser.std.StdDeserializer#_parseBoolean</a>
      * @see <a href="https://github.com/FasterXML/jackson-databind/blob/jackson-databind-2.6.7/src/main/resources/META-INF/LICENSE">LICENSE</a>
+     *
+     * @deprecated This method is not for plugins. It is {@code public} only for {@code EmbulkSystemPropertiesBuilder}.
      */
-    private static boolean parseBoolean(final String text, final boolean defaultValue) {
+    @Deprecated
+    public static boolean parseBoolean(final String text, final boolean defaultValue) {
         // This methods expects |text| is not null.
         final String textTrimmed = text.trim();
 

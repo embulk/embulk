@@ -389,7 +389,12 @@ jar {
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
                    "Main-Class": "org.embulk.cli.Main",
-                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins)
+                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins),
+
+                   // "json" should be registered before "csv".
+                   // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
+                   "Embulk-Default-Guess-Plugins": "gzip,bzip2,json,csv"
+
         def pluginAttributes = subprojectNamesOfStandardPlugins.collectEntries { pluginName ->
             [ ("Embulk-Plugin-${pluginName}".toString()): listEmbedDependencies(pluginName, "/lib/") ]
         }

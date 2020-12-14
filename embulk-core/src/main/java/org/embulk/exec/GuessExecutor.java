@@ -2,16 +2,10 @@ package org.embulk.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
-import com.google.inject.ConfigurationException;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
@@ -56,8 +50,7 @@ public class GuessExecutor {
     }
 
     public static void registerDefaultGuessPluginTo(Binder binder, PluginType type) {
-        Multibinder<PluginType> multibinder = Multibinder.newSetBinder(binder, PluginType.class, ForGuess.class);
-        multibinder.addBinding().toInstance(type);
+        throw new UnsupportedOperationException("GuessExecutor.registerDefaultGuessPluginTo no longer works.");
     }
 
     // Used by FileInputRunner#guess(..)
@@ -67,23 +60,19 @@ public class GuessExecutor {
     }
 
     @Inject
-    public GuessExecutor(
-            final EmbulkSystemProperties embulkSystemProperties, final Injector injector) {
+    public GuessExecutor(final EmbulkSystemProperties embulkSystemProperties) {
+        final String defaultGuessPlugins = embulkSystemProperties.getProperty("default_guess_plugins", null);
         final String guessPlugins = embulkSystemProperties.getProperty("guess_plugins", null);
 
         final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
 
-        // This workaround allows no any guess plugin registered. See also:
-        // https://github.com/embulk/embulk/issues/876
-        // https://groups.google.com/forum/#!topic/google-guice/5Rnm-d7MU34
-        // TODO: Remove this workaround.
-        try {
-            guessPluginsBuilt.addAll(injector.getInstance(Key.get(new TypeLiteral<Set<PluginType>>() {}, ForGuess.class)));
-        } catch (final ConfigurationException ex) {
-            // Pass-through.
+        if (defaultGuessPlugins != null && !defaultGuessPlugins.isEmpty()) {
+            for (final String defaultGuessPlugin : defaultGuessPlugins.split(",")) {
+                guessPluginsBuilt.add(DefaultPluginType.create(defaultGuessPlugin));
+            }
         }
 
-        if (guessPlugins != null) {
+        if (guessPlugins != null && !guessPlugins.isEmpty()) {
             for (final String guessPlugin : guessPlugins.split(",")) {
                 guessPluginsBuilt.add(DefaultPluginType.create(guessPlugin));
             }
