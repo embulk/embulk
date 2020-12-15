@@ -6,14 +6,11 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newBufferedReader;
 import static java.util.Locale.ENGLISH;
-import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
 import static org.embulk.test.EmbulkTests.copyResource;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Binder;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,7 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.embulk.EmbulkEmbed;
 import org.embulk.EmbulkSystemProperties;
@@ -33,6 +32,17 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.PreviewResult;
 import org.embulk.spi.ColumnConfig;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
+import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.GuessPlugin;
+import org.embulk.spi.InputPlugin;
+import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.TempFileException;
@@ -45,17 +55,26 @@ import org.junit.runners.model.Statement;
 
 public class TestingEmbulk implements TestRule {
     public static class Builder {
-        private List<Module> modules = new ArrayList<>();
         private Properties embulkSystemProperties = null;
+        private LinkedHashMap<Class<?>, LinkedHashMap<String, Class<?>>> builtinPlugins;
 
-        Builder() {}
+        Builder() {
+            this.builtinPlugins = new LinkedHashMap<>();
+            this.builtinPlugins.put(DecoderPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(EncoderPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(ExecutorPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(FileInputPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(FileOutputPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(FilterPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(FormatterPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(GuessPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(InputPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(OutputPlugin.class, new LinkedHashMap<>());
+            this.builtinPlugins.put(ParserPlugin.class, new LinkedHashMap<>());
+        }
 
         public <T> Builder registerPlugin(final Class<T> iface, final String name, final Class<?> impl) {
-            modules.add(new Module() {
-                    public void configure(Binder binder) {
-                        registerPluginTo(binder, iface, name, impl);
-                    }
-                });
+            this.builtinPlugins.get(iface).put(name, impl);
             return this;
         }
 
@@ -73,14 +92,15 @@ public class TestingEmbulk implements TestRule {
         return new Builder();
     }
 
-    private final List<Module> modules;
     private final EmbulkSystemProperties embulkSystemProperties;
+    private final LinkedHashMap<Class<?>, LinkedHashMap<String, Class<?>>> builtinPlugins;
 
     private EmbulkEmbed embed;
     private TempFileSpace tempFiles;
 
     TestingEmbulk(Builder builder) {
-        this.modules = ImmutableList.copyOf(builder.modules);
+        this.builtinPlugins = builder.builtinPlugins;
+
         if (builder.embulkSystemProperties != null) {
             this.embulkSystemProperties = EmbulkSystemProperties.of(builder.embulkSystemProperties);
         } else {
@@ -96,8 +116,41 @@ public class TestingEmbulk implements TestRule {
         if (this.embulkSystemProperties != null) {
             bootstrap.setEmbulkSystemProperties(this.embulkSystemProperties);
         }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(DecoderPlugin.class).entrySet()) {
+            bootstrap.builtinDecoderPlugin(plugin.getKey(), (Class<DecoderPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(EncoderPlugin.class).entrySet()) {
+            bootstrap.builtinEncoderPlugin(plugin.getKey(), (Class<EncoderPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(ExecutorPlugin.class).entrySet()) {
+            bootstrap.builtinExecutorPlugin(plugin.getKey(), (Class<ExecutorPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(FileInputPlugin.class).entrySet()) {
+            bootstrap.builtinFileInputPlugin(plugin.getKey(), (Class<FileInputPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(FileOutputPlugin.class).entrySet()) {
+            bootstrap.builtinFileOutputPlugin(plugin.getKey(), (Class<FileOutputPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(FilterPlugin.class).entrySet()) {
+            bootstrap.builtinFilterPlugin(plugin.getKey(), (Class<FilterPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(FormatterPlugin.class).entrySet()) {
+            bootstrap.builtinFormatterPlugin(plugin.getKey(), (Class<FormatterPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(GuessPlugin.class).entrySet()) {
+            bootstrap.builtinGuessPlugin(plugin.getKey(), (Class<GuessPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(InputPlugin.class).entrySet()) {
+            bootstrap.builtinInputPlugin(plugin.getKey(), (Class<InputPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(OutputPlugin.class).entrySet()) {
+            bootstrap.builtinOutputPlugin(plugin.getKey(), (Class<OutputPlugin>) plugin.getValue());
+        }
+        for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(ParserPlugin.class).entrySet()) {
+            bootstrap.builtinParserPlugin(plugin.getKey(), (Class<ParserPlugin>) plugin.getValue());
+        }
         this.embed = bootstrap
-                .addModules(modules)
+                .builtinInputPlugin("preview_result", PreviewResultInputPlugin.class)
                 .overrideModules(TestingBulkLoader.override())
                 .initializeCloseable();
 

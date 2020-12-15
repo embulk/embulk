@@ -19,6 +19,8 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecInternal;
 import org.embulk.spi.ExecSessionInternal;
+import org.embulk.spi.MockFormatterPlugin;
+import org.embulk.spi.MockParserPlugin;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -32,7 +34,6 @@ public class EmbulkTestRuntime extends GuiceBinder {
             new ExtensionServiceLoaderModule(embulkSystemProperties).configure(binder);
             new JRubyScriptingModule().configure(binder);
             new TestUtilityModule().configure(binder);
-            new TestPluginSourceModule().configure(binder);
         }
     }
 
@@ -42,7 +43,11 @@ public class EmbulkTestRuntime extends GuiceBinder {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
-        this.exec = ExecSessionInternal.builderInternal(injector).fromExecConfig(execConfig).build();
+        this.exec = ExecSessionInternal.builderInternal(injector)
+                .fromExecConfig(execConfig)
+                .registerParserPlugin("mock", MockParserPlugin.class)
+                .registerFormatterPlugin("mock", MockFormatterPlugin.class)
+                .build();
     }
 
     public ExecSessionInternal getExec() {

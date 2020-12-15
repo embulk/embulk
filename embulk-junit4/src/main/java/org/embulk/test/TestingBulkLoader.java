@@ -1,7 +1,5 @@
 package org.embulk.test;
 
-import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -18,7 +16,6 @@ import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.spi.ExecInternal;
 import org.embulk.spi.ExecSessionInternal;
-import org.embulk.spi.InputPlugin;
 import org.embulk.spi.Schema;
 import org.slf4j.Logger;
 
@@ -30,7 +27,6 @@ class TestingBulkLoader extends BulkLoader {
                 Module override = new Module() {
                         public void configure(Binder binder) {
                             binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
-                            registerPluginTo(binder, InputPlugin.class, "preview_result", PreviewResultInputPlugin.class);
                         }
                     };
                 return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));

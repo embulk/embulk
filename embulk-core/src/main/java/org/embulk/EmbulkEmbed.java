@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
@@ -31,13 +33,48 @@ import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.DecoderPlugin;
+import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.ExecSessionInternal;
+import org.embulk.spi.ExecutorPlugin;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.GuessPlugin;
+import org.embulk.spi.InputPlugin;
+import org.embulk.spi.OutputPlugin;
+import org.embulk.spi.ParserPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class EmbulkEmbed {
-    private EmbulkEmbed(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
+    private EmbulkEmbed(
+            final Injector injector,
+            final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins,
+            final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins,
+            final LinkedHashMap<String, Class<? extends ExecutorPlugin>> executorPlugins,
+            final LinkedHashMap<String, Class<? extends FileInputPlugin>> fileInputPlugins,
+            final LinkedHashMap<String, Class<? extends FileOutputPlugin>> fileOutputPlugins,
+            final LinkedHashMap<String, Class<? extends FilterPlugin>> filterPlugins,
+            final LinkedHashMap<String, Class<? extends FormatterPlugin>> formatterPlugins,
+            final LinkedHashMap<String, Class<? extends GuessPlugin>> guessPlugins,
+            final LinkedHashMap<String, Class<? extends InputPlugin>> inputPlugins,
+            final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins,
+            final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins,
+            final EmbulkSystemProperties embulkSystemProperties) {
         this.injector = injector;
+        this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
+        this.encoderPlugins = Collections.unmodifiableMap(encoderPlugins);
+        this.executorPlugins = Collections.unmodifiableMap(executorPlugins);
+        this.fileInputPlugins = Collections.unmodifiableMap(fileInputPlugins);
+        this.fileOutputPlugins = Collections.unmodifiableMap(fileOutputPlugins);
+        this.filterPlugins = Collections.unmodifiableMap(filterPlugins);
+        this.formatterPlugins = Collections.unmodifiableMap(formatterPlugins);
+        this.guessPlugins = Collections.unmodifiableMap(guessPlugins);
+        this.inputPlugins = Collections.unmodifiableMap(inputPlugins);
+        this.outputPlugins = Collections.unmodifiableMap(outputPlugins);
+        this.parserPlugins = Collections.unmodifiableMap(parserPlugins);
         this.embulkSystemProperties = embulkSystemProperties;
 
         this.bulkLoader = injector.getInstance(BulkLoader.class);
@@ -47,9 +84,75 @@ public class EmbulkEmbed {
 
     public static class Bootstrap {
         public Bootstrap() {
+            this.decoderPlugins = new LinkedHashMap<>();
+            this.encoderPlugins = new LinkedHashMap<>();
+            this.executorPlugins = new LinkedHashMap<>();
+            this.fileInputPlugins = new LinkedHashMap<>();
+            this.fileOutputPlugins = new LinkedHashMap<>();
+            this.filterPlugins = new LinkedHashMap<>();
+            this.formatterPlugins = new LinkedHashMap<>();
+            this.guessPlugins = new LinkedHashMap<>();
+            this.inputPlugins = new LinkedHashMap<>();
+            this.outputPlugins = new LinkedHashMap<>();
+            this.parserPlugins = new LinkedHashMap<>();
             this.embulkSystemPropertiesBuilt = new Properties();
             this.moduleOverrides = new ArrayList<>();
             this.started = false;
+        }
+
+        public Bootstrap builtinDecoderPlugin(final String name, final Class<? extends DecoderPlugin> decoderImpl) {
+            this.decoderPlugins.put(name, decoderImpl);
+            return this;
+        }
+
+        public Bootstrap builtinEncoderPlugin(final String name, final Class<? extends EncoderPlugin> encoderImpl) {
+            this.encoderPlugins.put(name, encoderImpl);
+            return this;
+        }
+
+        public Bootstrap builtinExecutorPlugin(final String name, final Class<? extends ExecutorPlugin> executorImpl) {
+            this.executorPlugins.put(name, executorImpl);
+            return this;
+        }
+
+        public Bootstrap builtinFileInputPlugin(final String name, final Class<? extends FileInputPlugin> fileInputImpl) {
+            this.fileInputPlugins.put(name, fileInputImpl);
+            return this;
+        }
+
+        public Bootstrap builtinFileOutputPlugin(final String name, final Class<? extends FileOutputPlugin> fileOutputImpl) {
+            this.fileOutputPlugins.put(name, fileOutputImpl);
+            return this;
+        }
+
+        public Bootstrap builtinFilterPlugin(final String name, final Class<? extends FilterPlugin> filterImpl) {
+            this.filterPlugins.put(name, filterImpl);
+            return this;
+        }
+
+        public Bootstrap builtinFormatterPlugin(final String name, final Class<? extends FormatterPlugin> formatterImpl) {
+            this.formatterPlugins.put(name, formatterImpl);
+            return this;
+        }
+
+        public Bootstrap builtinGuessPlugin(final String name, final Class<? extends GuessPlugin> guessImpl) {
+            this.guessPlugins.put(name, guessImpl);
+            return this;
+        }
+
+        public Bootstrap builtinInputPlugin(final String name, final Class<? extends InputPlugin> inputImpl) {
+            this.inputPlugins.put(name, inputImpl);
+            return this;
+        }
+
+        public Bootstrap builtinOutputPlugin(final String name, final Class<? extends OutputPlugin> outputImpl) {
+            this.outputPlugins.put(name, outputImpl);
+            return this;
+        }
+
+        public Bootstrap builtinParserPlugin(final String name, final Class<? extends ParserPlugin> parserImpl) {
+            this.parserPlugins.put(name, parserImpl);
+            return this;
         }
 
         public Bootstrap setEmbulkSystemProperties(final Properties propertiesGiven) {
@@ -131,7 +234,20 @@ public class EmbulkEmbed {
                 });
 
             final Injector injector = Guice.createInjector(Stage.PRODUCTION, Collections.unmodifiableList(modulesListBuilt));
-            return new EmbulkEmbed(injector, embulkSystemProperties);
+            return new EmbulkEmbed(
+                    injector,
+                    decoderPlugins,
+                    encoderPlugins,
+                    executorPlugins,
+                    fileInputPlugins,
+                    fileOutputPlugins,
+                    filterPlugins,
+                    formatterPlugins,
+                    guessPlugins,
+                    inputPlugins,
+                    outputPlugins,
+                    parserPlugins,
+                    embulkSystemProperties);
         }
 
         @Deprecated
@@ -144,6 +260,18 @@ public class EmbulkEmbed {
         // We are trying to represent the "system config" in java.util.Properties, instead of ConfigSource.
         // TODO: Make this java.util.Properties use as system config. See: https://github.com/embulk/embulk/issues/1159
         private Properties embulkSystemPropertiesBuilt;
+
+        private final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins;
+        private final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins;
+        private final LinkedHashMap<String, Class<? extends ExecutorPlugin>> executorPlugins;
+        private final LinkedHashMap<String, Class<? extends FileInputPlugin>> fileInputPlugins;
+        private final LinkedHashMap<String, Class<? extends FileOutputPlugin>> fileOutputPlugins;
+        private final LinkedHashMap<String, Class<? extends FilterPlugin>> filterPlugins;
+        private final LinkedHashMap<String, Class<? extends FormatterPlugin>> formatterPlugins;
+        private final LinkedHashMap<String, Class<? extends GuessPlugin>> guessPlugins;
+        private final LinkedHashMap<String, Class<? extends InputPlugin>> inputPlugins;
+        private final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins;
+        private final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins;
 
         private boolean started;
     }
@@ -238,7 +366,41 @@ public class EmbulkEmbed {
     }
 
     private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
-        return ExecSessionInternal.builderInternal(this.injector)
+        final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(this.injector);
+        for (final Map.Entry<String, Class<? extends DecoderPlugin>> decoderPlugin : this.decoderPlugins.entrySet()) {
+            builder.registerDecoderPlugin(decoderPlugin.getKey(), decoderPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends EncoderPlugin>> encoderPlugin : this.encoderPlugins.entrySet()) {
+            builder.registerEncoderPlugin(encoderPlugin.getKey(), encoderPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends ExecutorPlugin>> executorPlugin : this.executorPlugins.entrySet()) {
+            builder.registerExecutorPlugin(executorPlugin.getKey(), executorPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends FileInputPlugin>> fileInputPlugin : this.fileInputPlugins.entrySet()) {
+            builder.registerFileInputPlugin(fileInputPlugin.getKey(), fileInputPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends FileOutputPlugin>> fileOutputPlugin : this.fileOutputPlugins.entrySet()) {
+            builder.registerFileOutputPlugin(fileOutputPlugin.getKey(), fileOutputPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends FilterPlugin>> filterPlugin : this.filterPlugins.entrySet()) {
+            builder.registerFilterPlugin(filterPlugin.getKey(), filterPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends FormatterPlugin>> formatterPlugin : this.formatterPlugins.entrySet()) {
+            builder.registerFormatterPlugin(formatterPlugin.getKey(), formatterPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends GuessPlugin>> guessPlugin : this.guessPlugins.entrySet()) {
+            builder.registerGuessPlugin(guessPlugin.getKey(), guessPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends InputPlugin>> inputPlugin : this.inputPlugins.entrySet()) {
+            builder.registerInputPlugin(inputPlugin.getKey(), inputPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends OutputPlugin>> outputPlugin : this.outputPlugins.entrySet()) {
+            builder.registerOutputPlugin(outputPlugin.getKey(), outputPlugin.getValue());
+        }
+        for (final Map.Entry<String, Class<? extends ParserPlugin>> parserPlugin : this.parserPlugins.entrySet()) {
+            builder.registerParserPlugin(parserPlugin.getKey(), parserPlugin.getValue());
+        }
+        return builder
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
                 .setParentFirstPackages(PARENT_FIRST_PACKAGES)
                 .setParentFirstResources(PARENT_FIRST_RESOURCES)
@@ -368,6 +530,17 @@ public class EmbulkEmbed {
 
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
+    private final Map<String, Class<? extends DecoderPlugin>> decoderPlugins;
+    private final Map<String, Class<? extends EncoderPlugin>> encoderPlugins;
+    private final Map<String, Class<? extends ExecutorPlugin>> executorPlugins;
+    private final Map<String, Class<? extends FileInputPlugin>> fileInputPlugins;
+    private final Map<String, Class<? extends FileOutputPlugin>> fileOutputPlugins;
+    private final Map<String, Class<? extends FilterPlugin>> filterPlugins;
+    private final Map<String, Class<? extends FormatterPlugin>> formatterPlugins;
+    private final Map<String, Class<? extends GuessPlugin>> guessPlugins;
+    private final Map<String, Class<? extends InputPlugin>> inputPlugins;
+    private final Map<String, Class<? extends OutputPlugin>> outputPlugins;
+    private final Map<String, Class<? extends ParserPlugin>> parserPlugins;
 
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;

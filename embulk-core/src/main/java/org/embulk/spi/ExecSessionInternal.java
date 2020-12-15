@@ -20,7 +20,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.jruby.ScriptingContainerDelegate;
-import org.embulk.plugin.InjectedPluginSource;
+import org.embulk.plugin.BuiltinPluginSource;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.plugin.PluginManager;
@@ -71,6 +71,7 @@ public class ExecSessionInternal extends ExecSession {
     public static class Builder {
         private final Injector injector;
         private EmbulkSystemProperties embulkSystemProperties;
+        private BuiltinPluginSource.Builder builtinPluginSourceBuilder;
         private Set<String> parentFirstPackages;
         private Set<String> parentFirstResources;
         private Instant transactionTime;
@@ -78,6 +79,7 @@ public class ExecSessionInternal extends ExecSession {
         public Builder(Injector injector) {
             this.injector = injector;
             this.embulkSystemProperties = null;
+            this.builtinPluginSourceBuilder = BuiltinPluginSource.builder(injector);
             this.parentFirstPackages = null;
             this.parentFirstResources = null;
             this.transactionTime = null;
@@ -89,6 +91,61 @@ public class ExecSessionInternal extends ExecSession {
             if (transactionTime.isPresent()) {
                 this.transactionTime = transactionTime.get();
             }
+            return this;
+        }
+
+        public Builder registerDecoderPlugin(final String name, final Class<? extends DecoderPlugin> decoderImpl) {
+            this.builtinPluginSourceBuilder.registerDecoderPlugin(name, decoderImpl);
+            return this;
+        }
+
+        public Builder registerEncoderPlugin(final String name, final Class<? extends EncoderPlugin> encoderImpl) {
+            this.builtinPluginSourceBuilder.registerEncoderPlugin(name, encoderImpl);
+            return this;
+        }
+
+        public Builder registerExecutorPlugin(final String name, final Class<? extends ExecutorPlugin> executorImpl) {
+            this.builtinPluginSourceBuilder.registerExecutorPlugin(name, executorImpl);
+            return this;
+        }
+
+        public Builder registerFileInputPlugin(final String name, final Class<? extends FileInputPlugin> fileInputImpl) {
+            this.builtinPluginSourceBuilder.registerFileInputPlugin(name, fileInputImpl);
+            return this;
+        }
+
+        public Builder registerFileOutputPlugin(final String name, final Class<? extends FileOutputPlugin> fileOutputImpl) {
+            this.builtinPluginSourceBuilder.registerFileOutputPlugin(name, fileOutputImpl);
+            return this;
+        }
+
+        public Builder registerFilterPlugin(final String name, final Class<? extends FilterPlugin> filterImpl) {
+            this.builtinPluginSourceBuilder.registerFilterPlugin(name, filterImpl);
+            return this;
+        }
+
+        public Builder registerFormatterPlugin(final String name, final Class<? extends FormatterPlugin> formatterImpl) {
+            this.builtinPluginSourceBuilder.registerFormatterPlugin(name, formatterImpl);
+            return this;
+        }
+
+        public Builder registerGuessPlugin(final String name, final Class<? extends GuessPlugin> guessImpl) {
+            this.builtinPluginSourceBuilder.registerGuessPlugin(name, guessImpl);
+            return this;
+        }
+
+        public Builder registerInputPlugin(final String name, final Class<? extends InputPlugin> inputImpl) {
+            this.builtinPluginSourceBuilder.registerInputPlugin(name, inputImpl);
+            return this;
+        }
+
+        public Builder registerOutputPlugin(final String name, final Class<? extends OutputPlugin> outputImpl) {
+            this.builtinPluginSourceBuilder.registerOutputPlugin(name, outputImpl);
+            return this;
+        }
+
+        public Builder registerParserPlugin(final String name, final Class<? extends ParserPlugin> parserImpl) {
+            this.builtinPluginSourceBuilder.registerParserPlugin(name, parserImpl);
             return this;
         }
 
@@ -128,6 +185,7 @@ public class ExecSessionInternal extends ExecSession {
                     this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
+                    this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
                     this.parentFirstResources);
         }
@@ -137,22 +195,11 @@ public class ExecSessionInternal extends ExecSession {
         return new Builder(injector);
     }
 
-    @Deprecated
-    @SuppressWarnings("deprecation")  // For the use of SessionTask.
-    public ExecSessionInternal(Injector injector, ConfigSource configSource) {
-        this(injector,
-             configSource.loadConfig(SessionTask.class).getTransactionTime().flatMap(ExecSessionInternal::toInstantFromString).orElse(
-                     Instant.now()),
-             injector.getInstance(EmbulkSystemProperties.class),
-             null,
-             null);
-        logger.warn("Constructing with ExecSession(Injector, ConfigSource) is deprecated. Use ExecSession.Builder instead.");
-    }
-
     private ExecSessionInternal(
             final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
+            final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
             final Set<String> parentFirstResources) {
         if (parentFirstPackages == null) {
@@ -173,7 +220,7 @@ public class ExecSessionInternal extends ExecSession {
                 (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
         this.pluginManager = PluginManager.with(
                 embulkSystemProperties,
-                new InjectedPluginSource(injector),
+                builtinPluginSource,
                 new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));

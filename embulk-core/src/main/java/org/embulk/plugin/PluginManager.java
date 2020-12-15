@@ -8,7 +8,6 @@ import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.LocalExecutorPlugin;
 import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.jruby.JRubyPluginSource;
-import org.embulk.plugin.InjectedPluginSource;
 import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ParserPlugin;
@@ -16,12 +15,12 @@ import org.embulk.spi.ParserPlugin;
 public class PluginManager {
     private PluginManager(
             final EmbulkSystemProperties embulkSystemProperties,
-            final InjectedPluginSource injectedSource,
+            final BuiltinPluginSource builtinSource,
             final MavenPluginSource mavenSource,
             final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
         this.embulkSystemProperties = embulkSystemProperties;
-        this.injectedSource = injectedSource;
+        this.builtinSource = builtinSource;
         this.mavenSource = mavenSource;
         this.selfContainedSource = selfContainedSource;
         this.jrubySource = jrubySource;
@@ -29,13 +28,13 @@ public class PluginManager {
 
     public static PluginManager with(
             final EmbulkSystemProperties embulkSystemProperties,
-            final InjectedPluginSource injectedSource,
+            final BuiltinPluginSource builtinSource,
             final MavenPluginSource mavenSource,
             final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
         return new PluginManager(
                 embulkSystemProperties,
-                injectedSource,
+                builtinSource,
                 mavenSource,
                 selfContainedSource,
                 jrubySource);
@@ -66,11 +65,12 @@ public class PluginManager {
         }
 
         // The order is intentional.
-        // * MavenPluginSource comes first so that newly-installed Maven-based plugins can override self-contained ones.
+        // * BuiltinPluginSource comes first because "built-in" ones are there always much intentionally (e.g. for testing).
+        // * MavenPluginSource comes second so that newly-installed Maven-based plugins can override self-contained ones.
         // * JRubyPluginSource comes last because JRuby is optional, and RubyGem-based plugins are the last choice.
 
         try {
-            return this.injectedSource.newPlugin(iface, type);
+            return this.builtinSource.newPlugin(iface, type);
         } catch (final PluginSourceNotMatchException e) {
             exceptions.add(e);
         }
@@ -115,7 +115,7 @@ public class PluginManager {
     }
 
     private final EmbulkSystemProperties embulkSystemProperties;
-    private final InjectedPluginSource injectedSource;
+    private final BuiltinPluginSource builtinSource;
     private final MavenPluginSource mavenSource;
     private final SelfContainedPluginSource selfContainedSource;
     private final JRubyPluginSource jrubySource;
