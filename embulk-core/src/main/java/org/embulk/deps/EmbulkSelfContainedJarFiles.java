@@ -75,12 +75,17 @@ public final class EmbulkSelfContainedJarFiles {
 
     static Resource getSingleResource(final String targetResourceName, final String category) {
         if (category == null) {
-            return null;
+            throw new NullPointerException("EmbulkSelfContainedJarFiles.getSingleResources received null.");
+        }
+        final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
+        if (jarResourceNames == null) {
+            throw new IllegalArgumentException(
+                    "EmbulkSelfContainedJarFiles.getSingleResources received unexpected category: " + category);
         }
 
         String foundJarResourceName = null;
         Resource resourceToReturn = null;
-        for (final String jarResourceName : JAR_RESOURCE_NAMES.get(category)) {
+        for (final String jarResourceName : jarResourceNames) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
@@ -96,11 +101,16 @@ public final class EmbulkSelfContainedJarFiles {
 
     static Collection<Resource> getMultipleResources(final String targetResourceName, final String category) {
         if (category == null) {
-            return null;
+            throw new NullPointerException("EmbulkSelfContainedJarFiles.getMultipleResources received null.");
+        }
+        final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
+        if (jarResourceNames == null) {
+            throw new IllegalArgumentException(
+                    "EmbulkSelfContainedJarFiles.getMultipleResources received unexpected category: " + category);
         }
 
         final ArrayList<Resource> resourcesToReturn = new ArrayList<>();
-        for (final String jarResourceName : JAR_RESOURCE_NAMES.get(category)) {
+        for (final String jarResourceName : jarResourceNames) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
