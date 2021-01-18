@@ -143,7 +143,7 @@ public final class EmbulkSelfContainedJarFiles {
     }
 
     // Category for embulk-core's own self-contained dependencies.
-    public static final String CORE = "";
+    public static final String CORE = "$embulk-deps$";
 
     // Note this is technically mutable -- so that it can be initialized lazily via StaticInitializer.
     private static final HashMap<String, List<String>> JAR_RESOURCE_NAMES = new HashMap<>();
