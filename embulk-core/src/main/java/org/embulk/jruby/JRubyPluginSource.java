@@ -40,7 +40,7 @@ public class JRubyPluginSource implements PluginSource {
         // TODO: Check jruby.getJRubyVersion() to check compatibility issues.
 
         if (type.getSourceType() != PluginSource.Type.DEFAULT) {
-            throw new PluginSourceNotMatchException();
+            throw new PluginSourceNotMatchException("Unexpected: plugin type is not in the default form.");
         }
 
         final String name = type.getName();
@@ -73,7 +73,8 @@ public class JRubyPluginSource implements PluginSource {
             try {
                 this.jruby.put(PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME, this.pluginClassLoaderFactory);
             } catch (final Throwable ex) {
-                throw new PluginSourceNotMatchException(ex);
+                throw new PluginSourceNotMatchException(String.format(
+                        "Failed to set PluginClassLoaderFactory as %s in JRuby.", PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME), ex);
             }
 
             String methodName = "new_java_" + category;
@@ -85,7 +86,7 @@ public class JRubyPluginSource implements PluginSource {
                 final Object rubyPluginManager = jruby.runScriptlet("Embulk::Plugin");
                 return jruby.callMethod(rubyPluginManager, methodName, name, iface);
             } catch (Throwable ex) {
-                throw new PluginSourceNotMatchException(ex);
+                throw new PluginSourceNotMatchException(String.format("Failed to initialize embulk-%s-%s.", category, name), ex);
             } finally {
                 try {
                     this.jruby.remove(PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME);
