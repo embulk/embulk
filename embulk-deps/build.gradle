@@ -54,13 +54,3 @@ dependencies {
     testImplementation project(":embulk-core")
     testImplementation "junit:junit:4.12"
 }
-
-task prepareDependencyJars(type: Copy, dependsOn: "jar") {
-    doFirst {
-        delete file("${buildDir}/dependency_jars")
-        mkdir file("${buildDir}/dependency_jars")
-    }
-    into "${buildDir}/dependency_jars"
-    from configurations.runtimeClasspath
-    from jar.outputs.files
-}

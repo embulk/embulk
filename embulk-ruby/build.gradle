@@ -1,0 +1,102 @@
+String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
+    if (javaStyleVersion.contains("-")) {
+        List<String> versionTokens = javaStyleVersion.tokenize("-");
+        if (versionTokens.size() != 2) {
+            throw new GradleException("Invalid project version: " + javaStyleVersion);
+        }
+        return versionTokens.get(0) + "." + versionTokens.get(1).toLowerCase();
+    }
+    else {
+        return javaStyleVersion;
+    }
+}
+
+version = rootProject.version
+ext.ruby_version = buildRubyStyleVersionFromJavaStyleVersion(version)
+
+configurations {
+    jruby
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    jruby "org.jruby:jruby-complete:9.1.15.0"
+}
+
+task gemContents(type: Copy) {
+    doFirst {
+        delete("${buildDir}/gemContents")
+        mkdir("${buildDir}/gemContents")
+    }
+    into "${buildDir}/gemContents/"
+    from("${projectDir}/lib") {
+        into "lib"
+    }
+    from("${projectDir}/test") {
+        into "test"
+    }
+    from("${projectDir}/embulk.gemspec.template") {
+        rename "embulk.gemspec.template", "embulk.gemspec"
+        expand([
+            java_version: project.version,
+            ruby_version: project.ruby_version,
+        ])
+    }
+    from "${projectDir}/Gemfile"
+    from "${rootProject.projectDir}/LICENSE"
+}
+
+// TODO: Install dependencies from Gemfile or embulk.gemspec.
+task installDependencyGems(type: JavaExec, dependsOn: "gemContents") {
+    doFirst {
+        delete("${buildDir}/dependencyGems")
+        mkdir("${buildDir}/dependencyGems")
+    }
+    workingDir = file("${projectDir}/build/gemContents");
+    classpath = configurations.jruby
+    main = "org.jruby.Main"
+    args = ["-rjars/setup", "-S", "gem", "install", "msgpack:1.1.0"]
+    environment "GEM_HOME": "${buildDir}/dependencyGems"
+}
+
+task rubyTest(type: JavaExec, dependsOn: [
+        "gemContents",
+        "installDependencyGems",
+        ":embulk-core:assemble",
+        ":embulk-standards:assemble",
+        ":embulk-deps:assemble",
+        ]) {
+    workingDir = file("${projectDir}/build/gemContents")
+    classpath = configurations.jruby +
+                project(":embulk-core").sourceSets.main.runtimeClasspath +
+                project(":embulk-standards").sourceSets.main.runtimeClasspath
+    main = "org.jruby.Main"
+    args = ["-Ilib", "-Itest", "--debug", "./test/vanilla/run-test.rb"]
+    systemProperty "deps_classpath", project(":embulk-deps").sourceSets.main.runtimeClasspath.files.join(File.pathSeparator)
+    environment "GEM_HOME": "${buildDir}/dependencyGems"
+}
+
+test.dependsOn("rubyTest")
+
+task gem(type: JavaExec, dependsOn: "gemContents") {
+    workingDir = file("${projectDir}/build/gemContents");
+    classpath = configurations.jruby
+    main = "org.jruby.Main"
+    args = ["-rjars/setup", "-S", "gem", "build", "embulk.gemspec"]
+    doLast {
+        mkdir("${buildDir}/gems")
+        ant.move file: "${projectDir}/build/gemContents/embulk-${ruby_version}-java.gem", todir: "${buildDir}/gems"
+    }
+    ext.archivePath = "${buildDir}/gems/embulk-${ruby_version}-java.gem"
+}
+
+task gemPush(type: JavaExec, dependsOn: "gem") {
+    workingDir = file("${projectDir}/build/gems");
+    classpath = configurations.jruby
+    main = "org.jruby.Main"
+    args = ["-rjars/setup", "-S", "gem", "push", "--verbose", tasks.getByPath(":embulk-ruby:gem").archivePath]
+    environment "RUBYGEMS_HOST": "https://rubygems.org/"
+}

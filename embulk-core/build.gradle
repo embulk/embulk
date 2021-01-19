@@ -4,13 +4,7 @@ ext {
     summary = 'Embulk core'
 }
 
-// include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
-// because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${buildDir}/embulk_gem_as_resources")
-
 configurations {
-    jruby
-    rubyTestRuntime
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
@@ -52,96 +46,9 @@ dependencies {
     // TODO: Remove this, and load it with the proper DependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.
     testImplementation project(":embulk-deps")
-
-    rubyTestRuntime project(":embulk-api")
-    rubyTestRuntime project(":embulk-spi")
-    rubyTestRuntime project(":embulk-core")
-    rubyTestRuntime "org.jruby:jruby-complete:9.1.15.0"
 }
 
-task rubyTestVanilla(type: JavaExec, dependsOn: [
-        "jar",
-        "prepareDependencyJars",
-        ":embulk-deps:prepareDependencyJars",
-        ":installGemsForTesting",
-        ]) {
-    workingDir = file("${projectDir}");
-    classpath = configurations.rubyTestRuntime
-    main = "org.jruby.Main"
-    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
-    environment "GEM_HOME": "${rootProject.buildDir}/gems_for_testing"
-}
-
-test.dependsOn(['rubyTestVanilla', ":test-helpers:deploy"])
-
-String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
-    if (javaStyleVersion.contains('-')) {
-        List<String> versionTokens = javaStyleVersion.tokenize('-');
-        if (versionTokens.size() != 2) {
-            throw new GradleException('Invalid project version: ' + javaStyleVersion);
-        }
-        return versionTokens.get(0) + '.' + versionTokens.get(1).toLowerCase();
-    }
-    else {
-        return javaStyleVersion;
-    }
-}
-
-task buildEmbulkGem {
-    doFirst {
-        delete("${buildDir}/embulk_gem_as_resources")
-    }
-    doLast {
-        def rubyVersion = buildRubyStyleVersionFromJavaStyleVersion("${project.version}")
-        file("${buildDir}/embulk_gem_as_resources/gems/embulk-${rubyVersion}-java/lib").mkdirs()
-        copy {
-            from "${projectDir}/src/main/ruby"
-            into "${buildDir}/embulk_gem_as_resources/gems/embulk-${rubyVersion}-java/lib"
-        }
-        file("${buildDir}/embulk_gem_as_resources/specifications").mkdirs()
-        // TODO: Build the gemspec properly by the gem command, not by templating.
-        // TODO: Set gem versions directly from this build.gradle's dependencies.
-        // TODO: Fill the rubygems version from the actual JRuby runtime.
-        // NOTE: add_development_dependency (test-unit and others) is basically not required here.
-        file("${buildDir}/embulk_gem_as_resources/specifications/embulk-${rubyVersion}-java.gemspec").write($/\
-# -*- encoding: utf-8 -*-
-# stub: embulk ${rubyVersion} java lib
-
-Gem::Specification.new do |s|
-  s.name = "embulk".freeze
-  s.version = "${rubyVersion}"
-  s.platform = "java".freeze
-
-  s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
-  s.require_paths = ["lib".freeze]
-  s.authors = ["Sadayuki Furuhashi".freeze]
-  s.date = "2017-11-22"
-  s.description = "${project.description}".freeze
-  s.email = ["frsyuki@gmail.com".freeze]
-  s.executables = ["embulk".freeze]
-  s.homepage = "https://github.com/embulk/embulk".freeze
-  s.licenses = ["Apache 2.0".freeze]
-  s.rubygems_version = "2.6.13".freeze
-  s.summary = "${project.ext.summary}".freeze
-
-  s.installed_by_version = "2.6.13" if s.respond_to? :installed_by_version
-
-  if s.respond_to? :specification_version then
-    s.specification_version = 4
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<msgpack>.freeze, [">= 1.1.0"])
-    else
-      s.add_dependency(%q<msgpack>.freeze, [">= 1.1.0"])
-    end
-  else
-    s.add_dependency(%q<msgpack>.freeze, ["=> 1.1.0"])
-  end
-end
-/$)
-    }
-}
-processResources.dependsOn("buildEmbulkGem")
+test.dependsOn([":test-helpers:deploy"])
 
 import java.util.zip.ZipFile
 task updateResources(dependsOn: 'prepareDependencyJars') {
