@@ -4,16 +4,12 @@ ext {
     summary = 'Embulk standard plugins'
 }
 
-// include ruby scripts to jar. don't use sourceSets.main.resources.srcDirs
-// because IntelliJ causes error if srcDirs includes files out of projectDir.
-processResources.from("${buildDir}/embulk_gem_complements")
-
 repositories {
     mavenCentral()
 }
 
 configurations {
-    rubyTestRuntime
+    jruby
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
@@ -51,64 +47,39 @@ dependencies {
 
     testImplementation "org.jruby:jruby-complete:9.1.15.0"
 
-    rubyTestRuntime project(":embulk-api")
-    rubyTestRuntime project(":embulk-spi")
-    rubyTestRuntime project(":embulk-core")
-    rubyTestRuntime "org.jruby:jruby-complete:9.1.15.0"
+    jruby "org.jruby:jruby-complete:9.1.15.0"
 }
 
-test.dependsOn(":installGemsForTesting")
-test {
-    environment "GEM_HOME", "${rootProject.buildDir}/gems_for_testing"
+// Tests depending on ":embulk-ruby" to run Ruby-based guess mechanisms.
+// TODO: Remove them once guess implementations are converted to Java.
+
+evaluationDependsOn(":embulk-ruby")
+
+task cleanDependencyGems {
+    doFirst {
+        delete("${buildDir}/dependencyGems")
+        mkdir("${buildDir}/dependencyGems")
+    }
 }
 
-task rubyTestVanilla(type: JavaExec, dependsOn: [
-        "jar",
-        "prepareDependencyJars",
-        ":embulk-deps:prepareDependencyJars",
-        ":installGemsForTesting",
-        ]) {
-    workingDir = file("${project.projectDir}");
-    classpath = configurations.rubyTestRuntime
+task installDependencyGems(type: JavaExec, dependsOn: "cleanDependencyGems") {
+    classpath = configurations.jruby
     main = "org.jruby.Main"
-    args = ["-Isrc/main/ruby", "-Isrc/test/ruby", "--debug", "./src/test/ruby/vanilla/run-test.rb"]
-    environment "GEM_HOME": "${rootProject.buildDir}/gems_for_testing"
-}
-test.dependsOn(['rubyTestVanilla'])
-
-String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
-    if (javaStyleVersion.contains('-')) {
-        List<String> versionTokens = javaStyleVersion.tokenize('-');
-        if (versionTokens.size() != 2) {
-            throw new GradleException('Invalid project version: ' + javaStyleVersion);
-        }
-        return versionTokens.get(0) + '.' + versionTokens.get(1).toLowerCase();
-    }
-    else {
-        return javaStyleVersion;
-    }
+    args = ["-rjars/setup", "-S", "gem", "install", "msgpack:1.1.0"]
+    environment "GEM_HOME": "${buildDir}/dependencyGems"
 }
 
-task prepareDependencyJars(type: Copy) {
+task installEmbulkGem(type: JavaExec, dependsOn: ["installDependencyGems", ":embulk-ruby:gem"]) {
     doFirst {
-        delete file("${buildDir}/dependency_jars")
-        mkdir file("${buildDir}/dependency_jars")
+        println tasks.getByPath(":embulk-ruby:gem").archivePath
     }
-    into "${buildDir}/dependency_jars"
-    from configurations.runtimeClasspath
+    classpath = configurations.jruby
+    main = "org.jruby.Main"
+    args = ["-rjars/setup", "-S", "gem", "install", "--local", tasks.getByPath(":embulk-ruby:gem").archivePath]
+    environment "GEM_HOME": "${buildDir}/dependencyGems"
 }
 
-task complementEmbulkGem {
-    doFirst {
-        delete("${buildDir}/embulk_gem_complements")
-    }
-    doLast {
-        def rubyVersion = buildRubyStyleVersionFromJavaStyleVersion("${project.version}")
-        file("${buildDir}/embulk_gem_complements/gems/embulk-${rubyVersion}-java/lib").mkdirs()
-        copy {
-            from "${projectDir}/src/main/ruby"
-            into "${buildDir}/embulk_gem_complements/gems/embulk-${rubyVersion}-java/lib"
-        }
-    }
+test.dependsOn("installEmbulkGem")
+test {
+    environment "GEM_HOME", "${buildDir}/dependencyGems"
 }
-processResources.dependsOn("complementEmbulkGem")

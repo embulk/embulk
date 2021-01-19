@@ -14,6 +14,7 @@ jobs:
         - ":embulk-api:check"
         - ":embulk-spi:check"
         - ":embulk-core:check"
+        - ":embulk-ruby:check"
         - ":embulk-standards:check"
         - ":embulk-junit4:check"
         - ":embulk-deps:check"
