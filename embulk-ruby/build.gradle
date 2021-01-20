@@ -16,6 +16,7 @@ ext.ruby_version = buildRubyStyleVersionFromJavaStyleVersion(version)
 
 configurations {
     jruby
+    rubyTest
 }
 
 repositories {
@@ -24,6 +25,8 @@ repositories {
 
 dependencies {
     jruby "org.jruby:jruby-complete:9.1.15.0"
+    rubyTest project(":embulk-core")
+    rubyTest project(":embulk-standards")
 }
 
 task gemContents(type: Copy) {
@@ -40,6 +43,14 @@ task gemContents(type: Copy) {
     }
     from("${projectDir}/embulk.gemspec.template") {
         rename "embulk.gemspec.template", "embulk.gemspec"
+        expand([
+            java_version: project.version,
+            ruby_version: project.ruby_version,
+        ])
+    }
+    from("${projectDir}/gem_version.rb.template") {
+        into "lib/embulk"
+        rename "gem_version.rb.template", "gem_version.rb"
         expand([
             java_version: project.version,
             ruby_version: project.ruby_version,
@@ -70,9 +81,7 @@ task rubyTest(type: JavaExec, dependsOn: [
         ":embulk-deps:assemble",
         ]) {
     workingDir = file("${projectDir}/build/gemContents")
-    classpath = configurations.jruby +
-                project(":embulk-core").sourceSets.main.runtimeClasspath +
-                project(":embulk-standards").sourceSets.main.runtimeClasspath
+    classpath = configurations.jruby + configurations.rubyTest
     main = "org.jruby.Main"
     args = ["-Ilib", "-Itest", "--debug", "./test/vanilla/run-test.rb"]
     systemProperty "deps_classpath", project(":embulk-deps").sourceSets.main.runtimeClasspath.files.join(File.pathSeparator)

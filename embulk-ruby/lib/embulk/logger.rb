@@ -1,5 +1,6 @@
-
 module Embulk
+  require 'embulk/version'  # 'embulk/version' is loaded in the very beginning.
+
   # this file is required before loading embulk-core.jar
 
   require 'logger'

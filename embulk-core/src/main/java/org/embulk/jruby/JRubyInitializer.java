@@ -129,6 +129,10 @@ final class JRubyInitializer {
             }
 
             if (this.isEmbulkSpecific) {
+                // Loading 'embulk/version' triggers a version check with embulk.gem v0.10.25 or later.
+                // (Even in Embulk v0.10.24 or earlier, 'embulk/version' is loaded soon below from 'embulk/logger'.)
+                jruby.runScriptlet("require 'embulk/version'");
+
                 // Embulk's base Ruby code is loaded at last.
                 jruby.runScriptlet("require 'embulk/logger'");
                 jruby.runScriptlet("require 'embulk/java/bootstrap'");
