@@ -307,6 +307,10 @@ dependencies {
         transitive = false
     }
 
+    subprojectNamesOfStandardPlugins.each { pluginName ->
+        embed(project(":${pluginName}"))
+    }
+
     // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
     implementation "ch.qos.logback:logback-classic:1.2.3"
     implementation "org.fusesource.jansi:jansi:1.18"
@@ -314,10 +318,6 @@ dependencies {
     embed(project(':embulk-deps')) {
         exclude group: 'org.apache.commons', module: 'commons-lang3'  // Included in embulk-core.
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
-    }
-
-    subprojectNamesOfStandardPlugins.each { pluginName ->
-        embed(project(":${pluginName}"))
     }
 
     // Only to install the msgpack gem in embulk/build/.
