@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.embulk.EmbulkSystemProperties;
 
 public final class MavenPluginType extends PluginType {
     private MavenPluginType(final String name, final String group, final String classifier, final String version) {
@@ -41,6 +42,29 @@ public final class MavenPluginType extends PluginType {
             throw new NullPointerException("\"name\", \"group\" and \"version\" must be present.");
         }
         return new MavenPluginType(name, group, classifier, version);
+    }
+
+    public static MavenPluginType createFromDefaultPluginType(
+            final String category,
+            final DefaultPluginType defaultPluginType,
+            final EmbulkSystemProperties embulkSystemProperties)
+            throws PluginSourceNotMatchException {
+        final String propertyName = "plugins." + category + "." + defaultPluginType.getName();
+        final String declaration = embulkSystemProperties.getProperty(propertyName);
+        if (declaration == null) {
+            throw new PluginSourceNotMatchException("Embulk system property \"" + propertyName + "\" is not set.");
+        }
+
+        final String[] parts = declaration.split(":");  // "maven:com.example:name:1.2.3[:classifier]"
+        if ((parts.length != 4 && parts.length != 5) || !"maven".equals(parts[0])) {
+            throw new PluginSourceNotMatchException(
+                    "Embulk system property \"" + propertyName + "\" is invalid: \"" + declaration + "\"");
+        }
+
+        if (parts.length == 5) {
+            return new MavenPluginType(parts[2], parts[1], parts[4], parts[3]);
+        }
+        return new MavenPluginType(parts[2], parts[1], null, parts[3]);
     }
 
     @JsonValue
