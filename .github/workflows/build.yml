@@ -18,6 +18,20 @@ jobs:
         - ":embulk-standards:check"
         - ":embulk-junit4:check"
         - ":embulk-deps:check"
+        - ":embulk-decoder-bzip2:check"
+        - ":embulk-decoder-gzip:check"
+        - ":embulk-encoder-bzip2:check"
+        - ":embulk-encoder-gzip:check"
+        - ":embulk-filter-remove_columns:check"
+        - ":embulk-filter-rename:check"
+        - ":embulk-formatter-csv:check"
+        - ":embulk-input-config:check"
+        - ":embulk-input-file:check"
+        - ":embulk-output-file:check"
+        - ":embulk-output-null:check"
+        - ":embulk-output-stdout:check"
+        - ":embulk-parser-csv:check"
+        - ":embulk-parser-json:check"
     steps:
     - uses: actions/checkout@v1
     - name: Set up JDK 1.8
