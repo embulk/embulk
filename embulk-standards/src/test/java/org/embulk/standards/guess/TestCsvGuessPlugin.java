@@ -11,6 +11,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.guess.bzip2.Bzip2GuessPlugin;
+import org.embulk.guess.gzip.GzipGuessPlugin;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FormatterPlugin;
@@ -43,6 +44,7 @@ public class TestCsvGuessPlugin {
             .registerPlugin(FileOutputPlugin.class, "file", LocalFileOutputPlugin.class)
             .registerPlugin(ParserPlugin.class, "csv", CsvParserPlugin.class)
             .registerPlugin(GuessPlugin.class, "bzip2", Bzip2GuessPlugin.class)
+            .registerPlugin(GuessPlugin.class, "gzip", GzipGuessPlugin.class)
             .build();
 
     @Test
