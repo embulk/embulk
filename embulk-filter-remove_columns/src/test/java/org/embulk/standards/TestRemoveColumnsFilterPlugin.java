@@ -14,6 +14,11 @@ import java.nio.file.Path;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.exec.PartialExecutionException;
+import org.embulk.spi.FileInputPlugin;
+import org.embulk.spi.FileOutputPlugin;
+import org.embulk.spi.FilterPlugin;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.ParserPlugin;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,7 +27,13 @@ public class TestRemoveColumnsFilterPlugin {
     private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/remove_columns/test/";
 
     @Rule
-    public TestingEmbulk embulk = TestingEmbulk.builder().build();
+    public TestingEmbulk embulk = TestingEmbulk.builder()
+            .registerPlugin(FormatterPlugin.class, "csv", CsvFormatterPlugin.class)
+            .registerPlugin(FileInputPlugin.class, "file", LocalFileInputPlugin.class)
+            .registerPlugin(FileOutputPlugin.class, "file", LocalFileOutputPlugin.class)
+            .registerPlugin(ParserPlugin.class, "csv", CsvParserPlugin.class)
+            .registerPlugin(FilterPlugin.class, "remove_columns", RemoveColumnsFilterPlugin.class)
+            .build();
 
     @Test
     public void useKeepOption() throws Exception {
