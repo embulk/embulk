@@ -71,7 +71,7 @@ def subprojectNamesReleasedInBintray = [
     "embulk-junit4",
 ]
 
-def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray
+def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray + subprojectNamesOfStandardPlugins
 
 configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     apply plugin: "java-library"
@@ -136,7 +136,7 @@ configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     }
 }
 
-configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.name) }) {
+configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.name) || subprojectNamesOfStandardPlugins.contains(it.name) }) {
     apply plugin: "com.jfrog.bintray"
 
     task testsJar(type: Jar, dependsOn: classes) {
@@ -447,6 +447,10 @@ task release {
         tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
     }
     subprojectNamesReleasedInBintray.each { subprojectName ->
+        dependsOn ":${subprojectName}:bintrayUpload"
+        tasks.findByPath(":${subprojectName}:bintrayUpload").mustRunAfter(":releaseCheck")
+    }
+    subprojectNamesOfStandardPlugins.each { subprojectName ->
         dependsOn ":${subprojectName}:bintrayUpload"
         tasks.findByPath(":${subprojectName}:bintrayUpload").mustRunAfter(":releaseCheck")
     }
