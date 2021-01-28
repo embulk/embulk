@@ -50,7 +50,7 @@ public class GuessExecutor {
     }
 
     public static void registerDefaultGuessPluginTo(Binder binder, PluginType type) {
-        throw new UnsupportedOperationException("GuessExecutor.registerDefaultGuessPluginTo no longer works.");
+        throw new UnsupportedOperationException("GuessExecutor.registerDefaultGuessPluginTo is no longer available.");
     }
 
     // Used by FileInputRunner#guess(..)
