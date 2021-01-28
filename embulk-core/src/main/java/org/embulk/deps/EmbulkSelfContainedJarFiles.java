@@ -24,22 +24,24 @@ public final class EmbulkSelfContainedJarFiles {
 
     public static final class StaticInitializer {
         private StaticInitializer() {
-            this.jarFileResources = new ArrayList<>();
+            this.jarFileResources = new HashMap<>();
         }
 
-        public StaticInitializer addJarFileResource(final String resource) {
-            this.jarFileResources.add(resource);
-            return this;
-        }
-
-        public StaticInitializer addJarFileResources(final Collection<String> resources) {
-            this.jarFileResources.addAll(resources);
+        public StaticInitializer addJarFileResources(final String category, final Collection<String> resources) {
+            this.jarFileResources.compute(category, (dummy, old) -> {
+                final ArrayList<String> targetList = (old != null) ? old : new ArrayList();
+                targetList.addAll(resources);
+                return targetList;
+            });
             return this;
         }
 
         public StaticInitializer addFromManifest(final Manifest manifest) {
             final Attributes attributes = manifest.getMainAttributes();
-            this.addJarFileResources(splitAttribute(attributes.getValue("Embulk-Resource-Class-Path")));
+
+            // embulk-core's own self-contained dependencies
+            this.addJarFileResources(CORE, splitAttribute(attributes.getValue("Embulk-Resource-Class-Path")));
+
             return this;
         }
 
@@ -47,7 +49,7 @@ public final class EmbulkSelfContainedJarFiles {
             initializeAll(this.jarFileResources);
         }
 
-        private final ArrayList<String> jarFileResources;
+        private final HashMap<String, ArrayList<String>> jarFileResources;
     }
 
     public static StaticInitializer staticInitializer() {
@@ -59,20 +61,31 @@ public final class EmbulkSelfContainedJarFiles {
      *
      * public to be called from org.embulk.cli. Not for plugins. Not guaranteed.
      */
-    private static void initializeAll(final ArrayList<String> jarFileResources) {
+    private static void initializeAll(final HashMap<String, ArrayList<String>> jarFileResources) {
         synchronized (JAR_RESOURCE_NAMES) {
             if (JAR_RESOURCE_NAMES.isEmpty()) {
-                JAR_RESOURCE_NAMES.addAll(jarFileResources);
+                for (final Map.Entry<String, ArrayList<String>> entry : jarFileResources.entrySet()) {
+                    JAR_RESOURCE_NAMES.put(entry.getKey(), entry.getValue());
+                }
             } else {
                 throw new LinkageError("Double initialization of self-contained JAR files.");
             }
         }
     }
 
-    static Resource getSingleResource(final String targetResourceName) {
+    static Resource getSingleResource(final String targetResourceName, final String category) {
+        if (category == null) {
+            throw new NullPointerException("EmbulkSelfContainedJarFiles.getSingleResources received null.");
+        }
+        final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
+        if (jarResourceNames == null) {
+            throw new IllegalArgumentException(
+                    "EmbulkSelfContainedJarFiles.getSingleResources received unexpected category: " + category);
+        }
+
         String foundJarResourceName = null;
         Resource resourceToReturn = null;
-        for (final String jarResourceName : JAR_RESOURCE_NAMES) {
+        for (final String jarResourceName : jarResourceNames) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
@@ -86,9 +99,18 @@ public final class EmbulkSelfContainedJarFiles {
         return resourceToReturn;
     }
 
-    static Collection<Resource> getMultipleResources(final String targetResourceName) {
+    static Collection<Resource> getMultipleResources(final String targetResourceName, final String category) {
+        if (category == null) {
+            throw new NullPointerException("EmbulkSelfContainedJarFiles.getMultipleResources received null.");
+        }
+        final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
+        if (jarResourceNames == null) {
+            throw new IllegalArgumentException(
+                    "EmbulkSelfContainedJarFiles.getMultipleResources received unexpected category: " + category);
+        }
+
         final ArrayList<Resource> resourcesToReturn = new ArrayList<>();
-        for (final String jarResourceName : JAR_RESOURCE_NAMES) {
+        for (final String jarResourceName : jarResourceNames) {
             final SelfContainedJarFile selfContainedJarFile = Holder.INSTANCE.get(jarResourceName);
             final Resource resourceFound = selfContainedJarFile.getResource(targetResourceName);
             if (resourceFound != null) {
@@ -103,8 +125,10 @@ public final class EmbulkSelfContainedJarFiles {
 
         static {
             final HashSet<String> allJarResourceNames = new HashSet<>();
-            for (final String jarResourceName : JAR_RESOURCE_NAMES) {
-                allJarResourceNames.add(jarResourceName);
+            for (final Map.Entry<String, List<String>> entry : JAR_RESOURCE_NAMES.entrySet()) {
+                for (final String jarResourceName : entry.getValue()) {
+                    allJarResourceNames.add(jarResourceName);
+                }
             }
 
             final HashMap<String, SelfContainedJarFile> instanceBuilt = new HashMap<>();
@@ -128,5 +152,9 @@ public final class EmbulkSelfContainedJarFiles {
         return list;
     }
 
-    private static final ArrayList<String> JAR_RESOURCE_NAMES = new ArrayList<>();
+    // Category for embulk-core's own self-contained dependencies.
+    public static final String CORE = "$embulk-deps$";
+
+    // Note this is technically mutable -- so that it can be initialized lazily via StaticInitializer.
+    private static final HashMap<String, List<String>> JAR_RESOURCE_NAMES = new HashMap<>();
 }
