@@ -24,7 +24,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import org.embulk.EmbulkEmbed;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
@@ -44,6 +46,7 @@ import org.junit.runners.model.Statement;
 public class TestingEmbulk implements TestRule {
     public static class Builder {
         private List<Module> modules = new ArrayList<>();
+        private Properties embulkSystemProperties = null;
 
         Builder() {}
 
@@ -53,6 +56,11 @@ public class TestingEmbulk implements TestRule {
                         registerPluginTo(binder, iface, name, impl);
                     }
                 });
+            return this;
+        }
+
+        public <T> Builder setEmbulkSystemProperties(final Properties properties) {
+            this.embulkSystemProperties = properties;
             return this;
         }
 
@@ -66,19 +74,29 @@ public class TestingEmbulk implements TestRule {
     }
 
     private final List<Module> modules;
+    private final EmbulkSystemProperties embulkSystemProperties;
 
     private EmbulkEmbed embed;
     private TempFileSpace tempFiles;
 
     TestingEmbulk(Builder builder) {
         this.modules = ImmutableList.copyOf(builder.modules);
+        if (builder.embulkSystemProperties != null) {
+            this.embulkSystemProperties = EmbulkSystemProperties.of(builder.embulkSystemProperties);
+        } else {
+            this.embulkSystemProperties = null;
+        }
         reset();
     }
 
     public void reset() {
         destroy();
 
-        this.embed = new EmbulkEmbed.Bootstrap()
+        final EmbulkEmbed.Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
+        if (this.embulkSystemProperties != null) {
+            bootstrap.setEmbulkSystemProperties(this.embulkSystemProperties);
+        }
+        this.embed = bootstrap
                 .addModules(modules)
                 .overrideModules(TestingBulkLoader.override())
                 .initializeCloseable();

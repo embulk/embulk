@@ -5,6 +5,8 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.Properties;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
@@ -15,8 +17,17 @@ import org.junit.Test;
 public class TestCsvGuessPlugin {
     private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/guess/csv/test/";
 
+    private static final EmbulkSystemProperties EMBULK_SYSTEM_PROPERTIES;
+
+    static {
+        final Properties properties = new Properties();
+        properties.setProperty("default_guess_plugins", "gzip,bzip2,json,csv");
+        EMBULK_SYSTEM_PROPERTIES = EmbulkSystemProperties.of(properties);
+    }
+
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
+            .setEmbulkSystemProperties(EMBULK_SYSTEM_PROPERTIES)
             .build();
 
     @Test

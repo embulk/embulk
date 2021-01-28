@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import org.embulk.EmbulkSystemProperties;
 import org.slf4j.Logger;
@@ -25,11 +27,13 @@ class EmbulkSystemPropertiesBuilder {
     private EmbulkSystemPropertiesBuilder(
             final Properties commandLineProperties,
             final Map<String, String> env,
+            final Manifest manifest,
             final PathOrException userHomeOrEx,
             final PathOrException userDirOrEx,
             final Logger logger) {
         this.commandLineProperties = commandLineProperties;
         this.env = env;
+        this.manifest = manifest;
 
         this.userHomeOrEx = userHomeOrEx;
         this.userDirOrEx = userDirOrEx;
@@ -41,10 +45,12 @@ class EmbulkSystemPropertiesBuilder {
             final Properties javaSystemProperties,
             final Properties commandLineProperties,
             final Map<String, String> env,
+            final Manifest manifest,
             final Logger logger) {
         return new EmbulkSystemPropertiesBuilder(
                 commandLineProperties,
                 env,
+                manifest,
                 getUserHome(javaSystemProperties, logger),
                 getUserDir(javaSystemProperties, logger),
                 logger);
@@ -80,6 +86,67 @@ class EmbulkSystemPropertiesBuilder {
         mergedProperties.setProperty("gem_home", gemHome.toString());
         mergedProperties.setProperty(
                 "gem_path", gemPath.stream().map(path -> path.toString()).collect(Collectors.joining(File.pathSeparator)));
+
+        if (mergedProperties.getProperty("default_guess_plugins") != null) {
+            logger.warn("Embulk system property \"default_guess_plugins\" is unexpectedly set. It is reset.");
+            mergedProperties.remove("default_guess_plugins");
+        }
+
+        if (this.manifest != null) {
+            final Attributes mainAttributes = this.manifest.getMainAttributes();
+            if (mainAttributes != null) {
+                final String defaultGuessPluginsString = mainAttributes.getValue("Embulk-Default-Guess-Plugins");
+                if (defaultGuessPluginsString != null) {
+                    final String[] defaultGuessPluginsSpecified = defaultGuessPluginsString.split("\\,");
+                    final ArrayList<String> defaultGuessPlugins = new ArrayList<>();
+                    for (final String defaultGuessPlugin : defaultGuessPluginsSpecified) {
+                        if ("gzip".equals(defaultGuessPlugin)) {
+                            final String value = mergedProperties.getProperty("standards.decoder.gzip.disabled");
+                            if (value != null && EmbulkSystemProperties.parseBoolean(value, false)) {
+                                logger.warn(
+                                        "Disabling the standard gzip decoder plugin by the Embulk system property "
+                                        + "\"standards.decoder.gzip.disabled\" is deprecated.");
+                                continue;
+                            }
+                        } else if ("bzip2".equals(defaultGuessPlugin)) {
+                            final String value = mergedProperties.getProperty("standards.decoder.bzip2.disabled");
+                            if (value != null && EmbulkSystemProperties.parseBoolean(value, false)) {
+                                logger.warn(
+                                        "Disabling the standard bzip2 decoder plugin by the Embulk system property "
+                                        + "\"standards.decoder.bzip2.disabled\" is deprecated.");
+                                continue;
+                            }
+                        } else if ("json".equals(defaultGuessPlugin)) {
+                            final String value = mergedProperties.getProperty("standards.parser.json.disabled");
+                            if (value != null && EmbulkSystemProperties.parseBoolean(value, false)) {
+                                logger.warn(
+                                        "Disabling the standard JSON parser plugin by the Embulk system property "
+                                        + "\"standards.parser.json.disabled\" is deprecated.");
+                                continue;
+                            }
+                        } else if ("csv".equals(defaultGuessPlugin)) {
+                            final String value = mergedProperties.getProperty("standards.parser.csv.disabled");
+                            if (value != null && EmbulkSystemProperties.parseBoolean(value, false)) {
+                                logger.warn(
+                                        "Disabling the standard CSV parser plugin by the Embulk system property "
+                                        + "\"standards.parser.csv.disabled\" is deprecated.");
+                                continue;
+                            }
+                        }
+                        defaultGuessPlugins.add(defaultGuessPlugin);
+                    }
+                    final String defaultGuessPluginsProperty = String.join(",", defaultGuessPlugins);
+                    logger.debug("Embulk system property \"default_guess_plugin\" is set to: \"{}\"", defaultGuessPluginsProperty);
+                    mergedProperties.setProperty("default_guess_plugins", defaultGuessPluginsProperty);
+                } else {
+                    logger.warn("Embulk-Default-Guess-Plugins is not found in the JAR Manifest.");
+                }
+            } else {
+                logger.warn("The JAR Manifest unexpectedly has no main attributes.");
+            }
+        } else {
+            logger.warn("The JAR unexpectedly has no Manifest.");
+        }
 
         return EmbulkSystemProperties.of(mergedProperties);
     }
@@ -572,6 +639,7 @@ class EmbulkSystemPropertiesBuilder {
 
     private final Properties commandLineProperties;
     private final Map<String, String> env;
+    private final Manifest manifest;
 
     private final PathOrException userHomeOrEx;
     private final PathOrException userDirOrEx;

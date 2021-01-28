@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.jar.Manifest;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
@@ -15,8 +16,10 @@ import org.slf4j.helpers.SubstituteLogger;
 
 public class Main {
     public static void main(final String[] args) {
+        final Manifest manifest = CliManifest.getManifest();
+
         // They are loaded before SLF4J is initialized along with Logback. They don't use SLF4J for error logging.
-        EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(CliManifest.getManifest()).initialize();
+        EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(manifest).initialize();
         EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
 
         // Using SubstituteLogger here because SLF4J and Logback are initialized later (CliLogbackConfigurator.configure).
@@ -30,7 +33,7 @@ public class Main {
 
         final Properties commandLineProperties = commandLine.getCommandLineProperties();
         final EmbulkSystemPropertiesBuilder embulkSystemPropertiesBuilder = EmbulkSystemPropertiesBuilder.from(
-                System.getProperties(), commandLineProperties, System.getenv(), substituteLogger);
+                System.getProperties(), commandLineProperties, System.getenv(), manifest, substituteLogger);
         final EmbulkSystemProperties embulkSystemProperties = embulkSystemPropertiesBuilder.buildProperties();
 
         CliLogbackConfigurator.configure(embulkSystemProperties);
