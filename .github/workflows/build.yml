@@ -25,6 +25,7 @@ jobs:
         - ":embulk-filter-remove_columns:check"
         - ":embulk-filter-rename:check"
         - ":embulk-formatter-csv:check"
+        - ":embulk-guess-bzip2:check"
         - ":embulk-input-config:check"
         - ":embulk-input-file:check"
         - ":embulk-output-file:check"

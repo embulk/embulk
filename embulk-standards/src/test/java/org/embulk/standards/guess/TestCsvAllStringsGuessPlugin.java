@@ -9,9 +9,11 @@ import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
+import org.embulk.guess.bzip2.Bzip2GuessPlugin;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.ParserPlugin;
 import org.embulk.standards.CsvFormatterPlugin;
 import org.embulk.standards.CsvParserPlugin;
@@ -39,6 +41,7 @@ public class TestCsvAllStringsGuessPlugin {
             .registerPlugin(FileInputPlugin.class, "file", LocalFileInputPlugin.class)
             .registerPlugin(FileOutputPlugin.class, "file", LocalFileOutputPlugin.class)
             .registerPlugin(ParserPlugin.class, "csv", CsvParserPlugin.class)
+            .registerPlugin(GuessPlugin.class, "bzip2", Bzip2GuessPlugin.class)
             .build();
 
     @Test
