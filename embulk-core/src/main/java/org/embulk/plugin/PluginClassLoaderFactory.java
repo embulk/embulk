@@ -6,5 +6,7 @@ import java.util.Collection;
 public interface PluginClassLoaderFactory {
     PluginClassLoader create(Collection<URL> flatJarUrls, ClassLoader parentClassLoader);
 
+    PluginClassLoader forSelfContainedPlugin(String selfContainedPluginName, ClassLoader parentClassLoader);
+
     void clear();
 }

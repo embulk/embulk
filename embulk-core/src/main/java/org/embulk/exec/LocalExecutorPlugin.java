@@ -1,7 +1,6 @@
 package org.embulk.exec;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -39,7 +38,6 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
     private int defaultMaxThreads;
     private int defaultMinThreads;
 
-    @Inject
     public LocalExecutorPlugin(final EmbulkSystemProperties embulkSystemProperties) {
         int cores = Runtime.getRuntime().availableProcessors();
         this.defaultMaxThreads = embulkSystemProperties.getPropertyAsInteger("max_threads", cores * 2);

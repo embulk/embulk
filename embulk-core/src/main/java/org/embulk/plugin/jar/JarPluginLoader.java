@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.embulk.plugin.PluginClassLoader;
 import org.embulk.plugin.PluginClassLoaderFactory;
 
@@ -44,6 +45,24 @@ public class JarPluginLoader implements AutoCloseable {
             final String mainClassName = getPluginMainClassNameFromManifest(manifestAttributes);
             final Class mainClass = loadJarPluginMainClass(
                     jarPath, dependencyJarPaths, mainClassName, classLoaderFactory);
+            return new JarPluginLoader(manifestAttributes, mainClass);
+        }
+
+        throw new InvalidJarPluginException("Unknown SPI version of JAR plugin: " + spiVersion);
+    }
+
+    public static JarPluginLoader loadSelfContained(
+            final String selfContainedPluginName,
+            final PluginClassLoaderFactory classLoaderFactory)
+            throws InvalidJarPluginException {
+        final Manifest manifest = EmbulkSelfContainedJarFiles.getFirstManifest(selfContainedPluginName);
+        final Attributes manifestAttributes = manifest.getMainAttributes();
+        final int spiVersion = getPluginSpiVersionFromManifest(manifestAttributes);
+
+        if (spiVersion == 0) {
+            final String mainClassName = getPluginMainClassNameFromManifest(manifestAttributes);
+            final Class mainClass = loadSelfContainedJarPluginMainClass(
+                    selfContainedPluginName, mainClassName, classLoaderFactory);
             return new JarPluginLoader(manifestAttributes, mainClass);
         }
 
@@ -151,6 +170,24 @@ public class JarPluginLoader implements AutoCloseable {
             pluginMainClass = pluginClassLoader.loadClass(pluginMainClassName);
         } catch (ClassNotFoundException ex) {
             throw new InvalidJarPluginException("Class " + pluginMainClassName + " not found in " + jarPath.toString(),
+                                                ex);
+        }
+
+        return pluginMainClass;
+    }
+
+    private static Class loadSelfContainedJarPluginMainClass(final String selfContainedPluginName,
+                                                             final String pluginMainClassName,
+                                                             final PluginClassLoaderFactory pluginClassLoaderFactory)
+            throws InvalidJarPluginException {
+        final PluginClassLoader pluginClassLoader = pluginClassLoaderFactory.forSelfContainedPlugin(
+                selfContainedPluginName, JarPluginLoader.class.getClassLoader());
+
+        final Class pluginMainClass;
+        try {
+            pluginMainClass = pluginClassLoader.loadClass(pluginMainClassName);
+        } catch (ClassNotFoundException ex) {
+            throw new InvalidJarPluginException("Class " + pluginMainClassName + " not found in " + selfContainedPluginName,
                                                 ex);
         }
 

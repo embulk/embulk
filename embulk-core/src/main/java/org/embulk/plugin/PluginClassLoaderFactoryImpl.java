@@ -31,6 +31,17 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
     }
 
     @Override
+    public PluginClassLoader forSelfContainedPlugin(final String selfContainedPluginName, final ClassLoader parentClassLoader) {
+        final PluginClassLoader created = PluginClassLoader.forSelfContainedPlugin(
+                parentClassLoader,
+                selfContainedPluginName,
+                this.parentFirstPackages,
+                this.parentFirstResources);
+        this.createdPluginClassLoaders.add(created);
+        return created;
+    }
+
+    @Override
     public void clear() {
         // "close()" is intentionally not called for them considering: https://bugs.openjdk.java.net/browse/JDK-8246714
         /*

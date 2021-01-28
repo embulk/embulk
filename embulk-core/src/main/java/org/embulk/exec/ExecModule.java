@@ -1,7 +1,5 @@
 package org.embulk.exec;
 
-import static org.embulk.plugin.InjectedPluginSource.registerPluginTo;
-
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -17,8 +15,6 @@ import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ColumnJacksonModule;
-import org.embulk.spi.ExecutorPlugin;
-import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.SchemaJacksonModule;
 import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.DateTimeZoneJacksonModule;
@@ -51,13 +47,6 @@ public class ExecModule implements Module {
         binder.bind(org.embulk.config.ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
         binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
-
-        // GuessExecutor, PreviewExecutor
-        registerPluginTo(binder, ParserPlugin.class, "system_guess", GuessExecutor.GuessParserPlugin.class);
-        registerPluginTo(binder, ParserPlugin.class, "system_sampling", SamplingParserPlugin.class);
-
-        // LocalExecutorPlugin
-        registerPluginTo(binder, ExecutorPlugin.class, "local", LocalExecutorPlugin.class);
 
         // SerDe
         final ObjectMapperModule mapper = new ObjectMapperModule();

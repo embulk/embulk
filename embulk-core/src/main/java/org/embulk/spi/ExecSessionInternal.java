@@ -25,6 +25,7 @@ import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
+import org.embulk.plugin.SelfContainedPluginSource;
 import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.TimestampFormatter;
@@ -171,8 +172,10 @@ public class ExecSessionInternal extends ExecSession {
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
                 (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
         this.pluginManager = PluginManager.with(
+                embulkSystemProperties,
                 new InjectedPluginSource(injector),
                 new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
+                new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));
 
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);

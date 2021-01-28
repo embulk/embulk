@@ -5,7 +5,6 @@ import com.google.common.collect.Iterators;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,16 +16,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.embulk.deps.SelfContainedJarAwareURLClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PluginClassLoader extends URLClassLoader {
+public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
     private PluginClassLoader(
             final ClassLoader parentClassLoader,
             final Collection<URL> jarUrls,
+            final String selfContainedPluginName,
             final Collection<String> parentFirstPackages,
             final Collection<String> parentFirstResources) {
-        super(jarUrls.toArray(new URL[0]), parentClassLoader);
+        super(jarUrls.toArray(new URL[0]), parentClassLoader, selfContainedPluginName);
 
         this.hasJep320LoggedWithStackTrace = false;
 
@@ -53,6 +54,20 @@ public class PluginClassLoader extends URLClassLoader {
         return new PluginClassLoader(
                 parentClassLoader,
                 jarUrls,
+                null,
+                parentFirstPackages,
+                parentFirstResources);
+    }
+
+    public static PluginClassLoader forSelfContainedPlugin(
+            final ClassLoader parentClassLoader,
+            final String selfContainedPluginName,
+            final Collection<String> parentFirstPackages,
+            final Collection<String> parentFirstResources) {
+        return new PluginClassLoader(
+                parentClassLoader,
+                new ArrayList<>(),
+                selfContainedPluginName,
                 parentFirstPackages,
                 parentFirstResources);
     }
