@@ -1,3 +1,5 @@
+# This is a copy of the original Ruby-based CSV guess, which is kept so that CsvGuessPlugin can be tested by comparing with it.
+
 module Embulk
   module Guess
     require 'embulk/guess/schema_guess'

@@ -1,0 +1,24 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+aopalliance:aopalliance:1.0
+com.fasterxml.jackson.core:jackson-annotations:2.6.7
+com.fasterxml.jackson.core:jackson-core:2.6.7
+com.fasterxml.jackson.core:jackson-databind:2.6.7
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
+com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7
+com.fasterxml.jackson.module:jackson-module-guice:2.6.7
+com.google.guava:guava:18.0
+com.google.inject.extensions:guice-multibindings:4.0
+com.google.inject:guice:4.0
+com.ibm.icu:icu4j:54.1.1
+commons-beanutils:commons-beanutils-core:1.8.3
+javax.inject:javax.inject:1
+javax.validation:validation-api:1.1.0.Final
+joda-time:joda-time:2.9.2
+org.apache.bval:bval-core:0.5
+org.apache.bval:bval-jsr303:0.5
+org.apache.commons:commons-lang3:3.4
+org.msgpack:msgpack-core:0.8.11
+org.slf4j:slf4j-api:1.7.30
