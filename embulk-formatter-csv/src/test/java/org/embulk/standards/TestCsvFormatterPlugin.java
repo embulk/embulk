@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import static org.junit.Assert.assertEquals;
@@ -9,8 +25,10 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.Exec;
-import org.embulk.spi.util.Newline;
+import org.embulk.util.config.ConfigMapper;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.modules.CharsetModule;
+import org.embulk.util.text.Newline;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -20,9 +38,9 @@ public class TestCsvFormatterPlugin {
 
     @Test
     public void checkDefaultValues() {
-        ConfigSource config = Exec.newConfigSource();
+        ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource();
 
-        CsvFormatterPlugin.PluginTask task = config.loadConfig(CsvFormatterPlugin.PluginTask.class);
+        final CsvFormatterPlugin.PluginTask task = CONFIG_MAPPER.map(config, CsvFormatterPlugin.PluginTask.class);
         assertEquals(Charset.forName("utf-8"), task.getCharset());
         assertEquals(Newline.CRLF, task.getNewline());
         assertEquals(true, task.getHeaderLine());
@@ -31,14 +49,14 @@ public class TestCsvFormatterPlugin {
         assertEquals(CsvFormatterPlugin.QuotePolicy.MINIMAL, task.getQuotePolicy());
         assertEquals(false, task.getEscapeChar().isPresent());
         assertEquals("", task.getNullString());
-        assertEquals(org.joda.time.DateTimeZone.UTC, task.getDefaultTimeZone());
+        assertEquals("UTC", task.getDefaultTimeZoneId());
         assertEquals("%Y-%m-%d %H:%M:%S.%6N %z", task.getDefaultTimestampFormat());
         assertEquals(Newline.LF, task.getNewlineInField());
     }
 
     @Test
     public void checkLoadConfig() {
-        ConfigSource config = Exec.newConfigSource()
+        ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource()
                 .set("charset", "utf-16")
                 .set("newline", "LF")
                 .set("header_line", false)
@@ -49,7 +67,7 @@ public class TestCsvFormatterPlugin {
                 .set("null_string", "\\N")
                 .set("newline_in_field", "CRLF");
 
-        CsvFormatterPlugin.PluginTask task = config.loadConfig(CsvFormatterPlugin.PluginTask.class);
+        final CsvFormatterPlugin.PluginTask task = CONFIG_MAPPER.map(config, CsvFormatterPlugin.PluginTask.class);
         assertEquals(Charset.forName("utf-16"), task.getCharset());
         assertEquals(Newline.LF, task.getNewline());
         assertEquals(false, task.getHeaderLine());
@@ -297,4 +315,11 @@ public class TestCsvFormatterPlugin {
         assertEquals("", method.invoke(formatter, "", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, "N/A"));
         assertEquals("N/A", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, "N/A"));
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
+            .addDefaultModules()
+            .addModule(new CharsetModule())
+            .build();
+
+    private static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
 }
