@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.decoder.gzip;
 
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
