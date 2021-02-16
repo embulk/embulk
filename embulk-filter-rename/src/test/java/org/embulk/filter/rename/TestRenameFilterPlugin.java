@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.filter.rename;
 
 import static org.embulk.spi.type.Types.STRING;
 import static org.embulk.spi.type.Types.TIMESTAMP;
@@ -32,12 +32,12 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
+import org.embulk.filter.rename.RenameFilterPlugin.PluginTask;
 import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfigException;
-import org.embulk.standards.RenameFilterPlugin.PluginTask;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.junit.Before;
 import org.junit.Rule;

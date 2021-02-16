@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.filter.rename;
 
 import java.util.Collections;
 import java.util.HashMap;

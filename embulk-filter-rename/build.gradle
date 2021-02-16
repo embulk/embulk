@@ -35,7 +35,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.RenameFilterPlugin"
+    mainClass = "org.embulk.filter.rename.RenameFilterPlugin"
     category = "filter"
     type = "rename"
 }
