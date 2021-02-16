@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.decoder.bzip2;
 
 import java.io.IOException;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
