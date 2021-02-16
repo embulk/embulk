@@ -1,26 +1,41 @@
+/*
+ * Copyright 2015 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Column;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapper;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +64,10 @@ public class RenameFilterPlugin implements FilterPlugin {
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // For the use of task#dump().
     public void transaction(ConfigSource config, Schema inputSchema,
                             FilterPlugin.Control control) {
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER.map(config, PluginTask.class);
         Map<String, String> renameMap = task.getRenameMap();
         List<ConfigSource> rulesList = task.getRulesList();
 
@@ -87,7 +103,7 @@ public class RenameFilterPlugin implements FilterPlugin {
         return output;
     }
 
-    // Extending Task is required to be deserialized with ConfigSource.loadConfig()
+    // Extending Task is required to be deserialized with ConfigMapper#map()
     // although this Rule is not really a Task.
     // TODO(dmikurube): Revisit this to consider how not to extend Task for this.
     private interface Rule extends Task {
@@ -106,7 +122,6 @@ public class RenameFilterPlugin implements FilterPlugin {
 
         @Config("replace")
         @ConfigDefault("\"_\"")
-        @Size(min = 1, max = 1)
         String getReplace();
     }
 
@@ -131,7 +146,6 @@ public class RenameFilterPlugin implements FilterPlugin {
     private interface TruncateRule extends Rule {
         @Config("max_length")
         @ConfigDefault("128")
-        @Min(0)
         int getMaxLength();
     }
 
@@ -158,27 +172,31 @@ public class RenameFilterPlugin implements FilterPlugin {
 
         @Config("offset")
         @ConfigDefault("1")
-        @Min(0)
         int getOffset();
     }
 
     private Schema applyRule(ConfigSource ruleConfig, Schema inputSchema) throws ConfigException {
-        Rule rule = ruleConfig.loadConfig(Rule.class);
+        final Rule rule = CONFIG_MAPPER.map(ruleConfig, Rule.class);
         switch (rule.getRule()) {
             case "character_types":
-                return applyCharacterTypesRule(inputSchema, ruleConfig.loadConfig(CharacterTypesRule.class));
+                return applyCharacterTypesRule(
+                        inputSchema, CONFIG_MAPPER.map(ruleConfig, CharacterTypesRule.class));
             case "first_character_types":
-                return applyFirstCharacterTypesRule(inputSchema, ruleConfig.loadConfig(FirstCharacterTypesRule.class));
+                return applyFirstCharacterTypesRule(
+                        inputSchema, CONFIG_MAPPER.map(ruleConfig, FirstCharacterTypesRule.class));
             case "lower_to_upper":
                 return applyLowerToUpperRule(inputSchema);
             case "regex_replace":
-                return applyRegexReplaceRule(inputSchema, ruleConfig.loadConfig(RegexReplaceRule.class));
+                return applyRegexReplaceRule(
+                        inputSchema, CONFIG_MAPPER.map(ruleConfig, RegexReplaceRule.class));
             case "truncate":
-                return applyTruncateRule(inputSchema, ruleConfig.loadConfig(TruncateRule.class));
+                return applyTruncateRule(
+                        inputSchema, CONFIG_MAPPER.map(ruleConfig, TruncateRule.class));
             case "upper_to_lower":
                 return applyUpperToLowerRule(inputSchema);
             case "unique_number_suffix":
-                return applyUniqueNumberSuffixRule(inputSchema, ruleConfig.loadConfig(UniqueNumberSuffixRule.class));
+                return applyUniqueNumberSuffixRule(
+                        inputSchema, CONFIG_MAPPER.map(ruleConfig, UniqueNumberSuffixRule.class));
             default:
                 throw new ConfigException("Renaming rule \"" + rule + "\" is unknown");
         }
@@ -286,13 +304,18 @@ public class RenameFilterPlugin implements FilterPlugin {
     }
 
     private Schema applyTruncateRule(Schema inputSchema, TruncateRule rule) {
+        final int maxLength = rule.getMaxLength();
+        if (maxLength < 0) {
+            throw new ConfigException("\"max_length\" in \"truncate\" must be larger than 0");
+        }
+
         Schema.Builder builder = Schema.builder();
         for (Column column : inputSchema.getColumns()) {
             if (column.getName().length() <= rule.getMaxLength()) {
                 builder.add(column.getName(), column.getType());
             } else {
                 try {
-                    builder.add(column.getName().substring(0, rule.getMaxLength()), column.getType());
+                    builder.add(column.getName().substring(0, maxLength), column.getType());
                 } catch (IndexOutOfBoundsException ex) {
                     logger.error("FATAL unexpected error in \"truncate\" rule: substring failed.");
                     throw new AssertionError("FATAL unexpected error in \"truncate\" rule: substring failed.", ex);
@@ -364,6 +387,10 @@ public class RenameFilterPlugin implements FilterPlugin {
         final Optional<Integer> maxLength = rule.getMaxLength();
         final int offset = rule.getOffset();
 
+        if (offset < 0) {
+            throw new ConfigException("\"offset\" in rule \"unique_number_suffix\" must larger than 0");
+        }
+
         // |delimiter| must consist of just 1 character to check quickly that it does not contain any digit.
         if (delimiter == null || delimiter.length() != 1 || Character.isDigit(delimiter.charAt(0))) {
             throw new ConfigException("\"delimiter\" in rule \"unique_number_suffix\" must contain just 1 non-digit character");
@@ -397,7 +424,7 @@ public class RenameFilterPlugin implements FilterPlugin {
         HashSet<String> fixedColumnNames = new HashSet<>();
         for (Column column : inputSchema.getColumns()) {
             String truncatedName = column.getName();
-            if (column.getName().length() > maxLength.or(Integer.MAX_VALUE)) {
+            if (column.getName().length() > maxLength.orElse(Integer.MAX_VALUE)) {
                 truncatedName = column.getName().substring(0, maxLength.get());
             }
 
@@ -419,12 +446,13 @@ public class RenameFilterPlugin implements FilterPlugin {
                 // have variable widths ("%*d" in C's printf). It cannot be very simple with String#format.
                 String differentiatorString = Integer.toString(index);
                 if (digits.isPresent() && (digits.get() > differentiatorString.length())) {
+
                     differentiatorString =
-                        Strings.repeat("0", digits.get() - differentiatorString.length()) + differentiatorString;
+                        repeatStrings("0", digits.get() - differentiatorString.length()) + differentiatorString;
                 }
                 differentiatorString = delimiter + differentiatorString;
                 concatenatedName = column.getName() + differentiatorString;
-                if (concatenatedName.length() > maxLength.or(Integer.MAX_VALUE)) {
+                if (concatenatedName.length() > maxLength.orElse(Integer.MAX_VALUE)) {
                     concatenatedName =
                         column.getName().substring(0, maxLength.get() - differentiatorString.length())
                         + differentiatorString;
@@ -441,12 +469,27 @@ public class RenameFilterPlugin implements FilterPlugin {
         return outputBuilder.build();
     }
 
-    private static final ImmutableMap<String, String> CHARACTER_TYPE_KEYWORDS =
-            new ImmutableMap.Builder<String, String>()
-                    .put("a-z", "a-z")
-                    .put("A-Z", "A-Z")
-                    .put("0-9", "0-9")
-                    .build();
+    private static String repeatStrings(final String string, final int count) {
+        final StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < count; i++) {
+            buffer.append(string);
+        }
+        return buffer.toString();
+    }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
+
+    private static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
+
+    private static final Map<String, String> CHARACTER_TYPE_KEYWORDS;
+
+    static {
+        final HashMap<String, String> characterTypeKeywords = new HashMap<>();
+        characterTypeKeywords.put("a-z", "a-z");
+        characterTypeKeywords.put("A-Z", "A-Z");
+        characterTypeKeywords.put("0-9", "0-9");
+        CHARACTER_TYPE_KEYWORDS = Collections.unmodifiableMap(characterTypeKeywords);
+    }
 
     // TODO(dmikurube): Revisit the limitation.
     // It should be practically acceptable to assume any output accepts column names with 8 characters at least...

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import static org.embulk.spi.type.Types.STRING;
@@ -16,13 +32,13 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
-import org.embulk.config.TaskValidationException;
 import org.embulk.spi.Column;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.Schema;
 import org.embulk.spi.SchemaConfigException;
 import org.embulk.standards.RenameFilterPlugin.PluginTask;
+import org.embulk.util.config.ConfigMapperFactory;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +76,7 @@ public class TestRenameFilterPlugin {
 
     @Test
     public void checkDefaultValues() {
-        PluginTask task = Exec.newConfigSource().loadConfig(PluginTask.class);
+        PluginTask task = CONFIG_MAPPER_FACTORY.createConfigMapper().map(CONFIG_MAPPER_FACTORY.newConfigSource(), PluginTask.class);
         assertTrue(task.getRenameMap().isEmpty());
     }
 
@@ -183,7 +199,7 @@ public class TestRenameFilterPlugin {
         final String[] original = { "foo" };
         ConfigSource config = Exec.newConfigSource().set("rules",
                 ImmutableList.of(ImmutableMap.of("rule", "truncate", "max_length", -1)));
-        exception.expect(TaskValidationException.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         renameAndCheckSchema(config, original, original);
@@ -274,7 +290,7 @@ public class TestRenameFilterPlugin {
     public void checkCharacterTypesRuleLongReplace() {
         final String[] original = { "fooBAR" };
         final String[] pass_types = { "a-z" };
-        exception.expect(TaskValidationException.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "___");
@@ -284,7 +300,7 @@ public class TestRenameFilterPlugin {
     public void checkCharacterTypesRuleEmptyReplace() {
         final String[] original = { "fooBAR" };
         final String[] pass_types = { "a-z" };
-        exception.expect(TaskValidationException.class);
+        exception.expect(ConfigException.class);
         // TODO(dmikurube): Except "Caused by": exception.expectCause(instanceOf(JsonMappingException.class));
         // Needs to import org.hamcrest.Matchers... in addition to org.junit...
         checkCharacterTypesRuleInternal(original, original, pass_types, "", "");
@@ -930,4 +946,6 @@ public class TestRenameFilterPlugin {
                 }
             });
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }
