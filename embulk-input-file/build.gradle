@@ -36,7 +36,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.LocalFileInputPlugin"
+    mainClass = "org.embulk.input.file.LocalFileInputPlugin"
     category = "input"
     type = "file"
 }

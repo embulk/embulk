@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.input.file;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
