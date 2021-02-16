@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import java.io.File;
@@ -8,18 +24,18 @@ import java.util.ArrayList;
 import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +53,10 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // For the use of task#dump().
     public ConfigDiff transaction(ConfigSource config, int taskCount,
             FileOutputPlugin.Control control) {
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, PluginTask.class);
 
         // validate sequence_format
         try {
@@ -56,7 +73,7 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
             int taskCount,
             FileOutputPlugin.Control control) {
         control.run(taskSource);
-        return Exec.newConfigDiff();
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     @Override
@@ -66,7 +83,7 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
 
     @Override
     public TransactionalFileOutput open(TaskSource taskSource, final int taskIndex) {
-        PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createTaskMapper().map(taskSource, PluginTask.class);
 
         final String pathPrefix = task.getPathPrefix();
         final String pathSuffix = task.getFileNameExtension();
@@ -122,7 +139,7 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
             public void abort() {}
 
             public TaskReport commit() {
-                TaskReport report = Exec.newTaskReport();
+                TaskReport report = CONFIG_MAPPER_FACTORY.newTaskReport();
                 // TODO better setting for Report
                 // report.set("file_names", fileNames);
                 // report.set("file_sizes", fileSizes);
@@ -130,6 +147,8 @@ public class LocalFileOutputPlugin implements FileOutputPlugin {
             }
         };
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static final Logger logger = LoggerFactory.getLogger(LocalFileOutputPlugin.class);
 }
