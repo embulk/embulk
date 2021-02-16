@@ -29,7 +29,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.Bzip2FileEncoderPlugin"
+    mainClass = "org.embulk.encoder.bzip2.Bzip2FileEncoderPlugin"
     category = "encoder"
     type = "bzip2"
 }
