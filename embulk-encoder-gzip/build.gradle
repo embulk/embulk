@@ -28,7 +28,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.GzipFileEncoderPlugin"
+    mainClass = "org.embulk.encoder.gzip.GzipFileEncoderPlugin"
     category = "encoder"
     type = "gzip"
 }
