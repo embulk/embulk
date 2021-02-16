@@ -22,7 +22,6 @@ dependencies {
     compile project(":embulk-guess-csv_all_strings")
     compile project(":embulk-guess-gzip")
     compile project(":embulk-guess-json")
-    compile project(":embulk-input-config")
     compile project(":embulk-input-file")
     compile project(":embulk-output-file")
     compile project(":embulk-output-null")
