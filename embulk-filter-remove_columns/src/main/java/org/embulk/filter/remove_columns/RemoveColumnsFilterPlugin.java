@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.filter.remove_columns;
 
 import java.util.ArrayList;
 import java.util.Collections;

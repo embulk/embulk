@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.filter.remove_columns;
 
 import static org.embulk.test.EmbulkTests.copyResource;
 import static org.embulk.test.EmbulkTests.readResource;
@@ -35,12 +35,16 @@ import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.standards.CsvFormatterPlugin;
+import org.embulk.standards.CsvParserPlugin;
+import org.embulk.standards.LocalFileInputPlugin;
+import org.embulk.standards.LocalFileOutputPlugin;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class TestRemoveColumnsFilterPlugin {
-    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/remove_columns/test/";
+    private static final String RESOURCE_NAME_PREFIX = "org/embulk/filter/remove_columns/test/";
 
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()

@@ -39,7 +39,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.RemoveColumnsFilterPlugin"
+    mainClass = "org.embulk.filter.remove_columns.RemoveColumnsFilterPlugin"
     category = "filter"
     type = "remove_columns"
 }
