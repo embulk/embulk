@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.formatter.csv;
 
 import java.nio.charset.Charset;
 import java.time.Instant;

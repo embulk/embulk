@@ -41,7 +41,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.CsvFormatterPlugin"
+    mainClass = "org.embulk.formatter.csv.CsvFormatterPlugin"
     category = "formatter"
     type = "csv"
 }
