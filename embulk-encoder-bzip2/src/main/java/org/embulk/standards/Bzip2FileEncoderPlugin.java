@@ -1,44 +1,59 @@
+/*
+ * Copyright 2016 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigInject;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.EncoderPlugin;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
-import org.embulk.spi.util.FileOutputOutputStream;
-import org.embulk.spi.util.OutputStreamFileOutput;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
+import org.embulk.util.file.FileOutputOutputStream;
+import org.embulk.util.file.OutputStreamFileOutput;
 
 public class Bzip2FileEncoderPlugin implements EncoderPlugin {
     public interface PluginTask extends Task {
         @Config("level")
         @ConfigDefault("9")
-        @Min(1)
-        @Max(9)
         int getLevel();
-
-        @ConfigInject
-        BufferAllocator getBufferAllocator();
     }
 
+    @Override
+    @SuppressWarnings("deprecation")  // For the use of task#dump().
     public void transaction(ConfigSource config, EncoderPlugin.Control control) {
-        PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, PluginTask.class);
+        if (1 > task.getLevel() || task.getLevel() > 9) {
+            throw new ConfigException("\"level\" must be in the range of 1 <= level <= 9.");
+        }
         control.run(task.dump());
     }
 
     @Override
     public FileOutput open(TaskSource taskSource, final FileOutput fileOutput) {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createTaskMapper().map(taskSource, PluginTask.class);
 
-        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
+        final FileOutputOutputStream output = new FileOutputOutputStream(fileOutput, Exec.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH);
 
         return new OutputStreamFileOutput(new OutputStreamFileOutput.Provider() {
                 public OutputStream openNext() throws IOException {
@@ -55,4 +70,6 @@ public class Bzip2FileEncoderPlugin implements EncoderPlugin {
                 }
             });
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }
