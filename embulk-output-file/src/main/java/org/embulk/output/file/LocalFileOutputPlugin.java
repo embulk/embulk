@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.output.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;
