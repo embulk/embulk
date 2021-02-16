@@ -1,17 +1,33 @@
+/*
+ * Copyright 2018 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Optional;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.Exec;
+import org.embulk.util.config.ConfigMapperFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -244,7 +260,7 @@ public class TestLocalFileInputPlugin {
             final String pathPrefix,
             final String lastPath,
             final Boolean followSymlinks) {
-        final ConfigSource config = Exec.newConfigSource();
+        final ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource();
         config.set("path_prefix", pathPrefix);
         if (lastPath != null) {
             config.set("last_path", Optional.of(lastPath));
@@ -252,7 +268,7 @@ public class TestLocalFileInputPlugin {
         if (followSymlinks != null) {
             config.set("follow_symlinks", followSymlinks);
         }
-        return config.loadConfig(LocalFileInputPlugin.PluginTask.class);
+        return CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, LocalFileInputPlugin.PluginTask.class);
     }
 
     private LocalFileInputPlugin.PluginTask buildTask(
@@ -265,7 +281,7 @@ public class TestLocalFileInputPlugin {
             final String lastPath,
             final Boolean followSymlinks) {
         final String pathPrefix = this.buildPath(subPathPrefix);
-        final ConfigSource config = Exec.newConfigSource();
+        final ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource();
         config.set("path_prefix", pathPrefix);
         if (lastPath != null) {
             config.set("last_path", Optional.of(lastPath));
@@ -273,7 +289,7 @@ public class TestLocalFileInputPlugin {
         if (followSymlinks != null) {
             config.set("follow_symlinks", followSymlinks);
         }
-        return config.loadConfig(LocalFileInputPlugin.PluginTask.class);
+        return CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, LocalFileInputPlugin.PluginTask.class);
     }
 
     private String buildPath(final String subPath) {
@@ -285,4 +301,6 @@ public class TestLocalFileInputPlugin {
         pathPrefixBuilder.append(subPath);
         return pathPrefixBuilder.toString();
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }

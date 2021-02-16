@@ -1,3 +1,19 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
 import java.io.File;
@@ -21,19 +37,18 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import org.embulk.config.Config;
-import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.TransactionalFileInput;
-import org.embulk.spi.util.InputStreamTransactionalFileInput;
+import org.embulk.util.config.Config;
+import org.embulk.util.config.ConfigDefault;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.Task;
+import org.embulk.util.file.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,14 +68,12 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         List<String> getFiles();
 
         void setFiles(List<String> files);
-
-        @ConfigInject
-        BufferAllocator getBufferAllocator();
     }
 
     @Override
+    @SuppressWarnings("deprecation")  // For the use of task#dump().
     public ConfigDiff transaction(final ConfigSource config, final FileInputPlugin.Control control) {
-        final PluginTask task = config.loadConfig(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, PluginTask.class);
 
         // list files recursively
         final List<String> files = listFiles(task);
@@ -74,12 +87,12 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
     @Override
     public ConfigDiff resume(final TaskSource taskSource, final int taskCount, final FileInputPlugin.Control control) {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createTaskMapper().map(taskSource, PluginTask.class);
 
         control.run(taskSource, taskCount);
 
         // build next config
-        final ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = CONFIG_MAPPER_FACTORY.newConfigDiff();
 
         // last_path
         if (task.getFiles().isEmpty()) {
@@ -102,12 +115,12 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
     @Override
     public TransactionalFileInput open(final TaskSource taskSource, final int taskIndex) {
-        final PluginTask task = taskSource.loadTask(PluginTask.class);
+        final PluginTask task = CONFIG_MAPPER_FACTORY.createTaskMapper().map(taskSource, PluginTask.class);
 
         final File file = new File(task.getFiles().get(taskIndex));
 
         return new InputStreamTransactionalFileInput(
-                task.getBufferAllocator(),
+                Exec.getBufferAllocator(),
                 new InputStreamTransactionalFileInput.Opener() {
                     public InputStream open() throws IOException {
                         return new FileInputStream(file);
@@ -118,7 +131,7 @@ public class LocalFileInputPlugin implements FileInputPlugin {
 
             @Override
             public TaskReport commit() {
-                return Exec.newTaskReport();
+                return CONFIG_MAPPER_FACTORY.newTaskReport();
             }
 
             @Override
@@ -391,6 +404,8 @@ public class LocalFileInputPlugin implements FileInputPlugin {
         }
         return built;
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     // Java expects the working directory does not change during an execution.
     // @see <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4045688">Bug ID: JDK-4045688 Add chdir or equivalent notion of changing working directory</a>
