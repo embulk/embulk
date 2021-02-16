@@ -34,7 +34,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.ConfigInputPlugin"
+    mainClass = "org.embulk.input.config.ConfigInputPlugin"
     category = "input"
     type = "config"
 }

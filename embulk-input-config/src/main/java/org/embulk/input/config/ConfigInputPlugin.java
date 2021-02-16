@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.input.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
