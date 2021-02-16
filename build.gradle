@@ -52,10 +52,10 @@ def subprojectNamesOfStandardPlugins = [
     "embulk-decoder-bzip2",
     "embulk-decoder-gzip",
     "embulk-encoder-bzip2",
+    "embulk-encoder-gzip",
 ]
 
 def subprojectNamesOfLegacyStandardPlugins = [
-    "embulk-encoder-gzip",
     "embulk-guess-bzip2",
     "embulk-guess-csv",
     "embulk-guess-csv_all_strings",

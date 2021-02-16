@@ -17,7 +17,6 @@ dependencies {
     compileOnly project(":embulk-spi")
     compileOnly project(":embulk-core")
 
-    compile project(":embulk-encoder-gzip")
     compile project(":embulk-guess-bzip2")
     compile project(":embulk-guess-csv")
     compile project(":embulk-guess-csv_all_strings")
