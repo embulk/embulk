@@ -28,7 +28,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.StdoutOutputPlugin"
+    mainClass = "org.embulk.output.stdout.StdoutOutputPlugin"
     category = "output"
     type = "stdout"
 }

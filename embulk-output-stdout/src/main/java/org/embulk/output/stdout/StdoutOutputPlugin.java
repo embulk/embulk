@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.output.stdout;
 
 import java.util.List;
 import org.embulk.config.ConfigDiff;
