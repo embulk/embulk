@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.parser.json;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

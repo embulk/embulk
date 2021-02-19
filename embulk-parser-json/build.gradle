@@ -43,7 +43,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.JsonParserPlugin"
+    mainClass = "org.embulk.parser.json.JsonParserPlugin"
     category = "parser"
     type = "json"
 }

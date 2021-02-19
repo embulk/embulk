@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.parser.json;
 
-import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.PASSTHROUGH;
-import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.SKIP;
-import static org.embulk.standards.JsonParserPlugin.InvalidEscapeStringPolicy.UNESCAPE;
+import static org.embulk.parser.json.JsonParserPlugin.InvalidEscapeStringPolicy.PASSTHROUGH;
+import static org.embulk.parser.json.JsonParserPlugin.InvalidEscapeStringPolicy.SKIP;
+import static org.embulk.parser.json.JsonParserPlugin.InvalidEscapeStringPolicy.UNESCAPE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
