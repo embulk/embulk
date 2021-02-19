@@ -23,7 +23,6 @@ dependencies {
     compile project(":embulk-guess-gzip")
     compile project(":embulk-guess-json")
     compile project(":embulk-parser-csv")
-    compile project(":embulk-parser-json")
 
     testImplementation "junit:junit:4.12"
     testImplementation "org.hamcrest:hamcrest-library:1.3"
