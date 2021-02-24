@@ -27,16 +27,17 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.GuessPlugin;
-import org.embulk.spi.json.JsonParseException;
-import org.embulk.spi.json.JsonParser;
-import org.embulk.spi.util.FileInputInputStream;
-import org.embulk.spi.util.InputStreamFileInput;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.file.FileInputInputStream;
+import org.embulk.util.file.InputStreamFileInput;
+import org.embulk.util.json.JsonParseException;
+import org.embulk.util.json.JsonParser;
 import org.msgpack.value.Value;
 
 public class JsonGuessPlugin implements GuessPlugin {
     @Override
     public ConfigDiff guess(final ConfigSource config, final Buffer sample) {
-        final ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = CONFIG_MAPPER_FACTORY.newConfigDiff();
 
         if (!"json".equals(config.getNestedOrGetEmpty("parser").get(String.class, "type", "json"))) {
             return configDiff;
@@ -67,7 +68,7 @@ public class JsonGuessPlugin implements GuessPlugin {
 
         if (oneJsonParsed) {
             // if JsonParser can parse even one JSON data
-            final ConfigDiff typeJson = Exec.newConfigDiff();
+            final ConfigDiff typeJson = CONFIG_MAPPER_FACTORY.newConfigDiff();
             typeJson.set("type", "json");
             configDiff.set("parser", typeJson);
         }
@@ -94,4 +95,6 @@ public class JsonGuessPlugin implements GuessPlugin {
     private static ByteArrayInputStream buildByteArrayInputStream(final Buffer buffer) {
         return new ByteArrayInputStream(buffer.array());
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }
