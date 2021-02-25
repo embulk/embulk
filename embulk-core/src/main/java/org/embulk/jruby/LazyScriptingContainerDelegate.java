@@ -113,7 +113,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
                     initializer);
             if (useGlobalRubyRuntime) {
                 // In case the global JRuby instance is used, the instance should be always initialized.
-                // Ruby tests (src/test/ruby/ of embulk-core and embulk-standards) are examples.
+                // Ruby tests (in embulk-ruby/) are examples.
                 jruby.getInitialized();
             }
             return jruby;

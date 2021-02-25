@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>It replaces {@code InjectedPluginSource} for embulk-standards plugins embedded in an Embulk executable binary.
+ * <p>It replaces {@code InjectedPluginSource} for old embulk-standards plugins which were embedded in an Embulk executable binary.
  */
 public class SelfContainedPluginSource implements PluginSource {
     public SelfContainedPluginSource(

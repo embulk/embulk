@@ -26,7 +26,6 @@ repositories {
 dependencies {
     jruby "org.jruby:jruby-complete:9.1.15.0"
     rubyTest project(":embulk-core")
-    rubyTest project(":embulk-standards")
 }
 
 task gemContents(type: Copy) {
@@ -77,7 +76,6 @@ task rubyTest(type: JavaExec, dependsOn: [
         "gemContents",
         "installDependencyGems",
         ":embulk-core:assemble",
-        ":embulk-standards:assemble",
         ":embulk-deps:assemble",
         ]) {
     workingDir = file("${projectDir}/build/gemContents")

@@ -5,7 +5,6 @@ include 'embulk-spi'
 include 'embulk-core'
 include 'embulk-deps'
 include 'embulk-ruby'
-include 'embulk-standards'
 include 'embulk-junit4'
 include 'test-helpers'
 include "embulk-decoder-bzip2"
