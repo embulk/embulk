@@ -64,13 +64,13 @@ def subprojectNamesOfStandardPlugins = [
     "embulk-output-file",
     "embulk-output-null",
     "embulk-output-stdout",
+    "embulk-parser-csv",
     "embulk-parser-json",
 ]
 
 def subprojectNamesOfLegacyStandardPlugins = [
     "embulk-guess-csv",
     "embulk-guess-csv_all_strings",
-    "embulk-parser-csv",
 ]
 
 def subprojectNamesReleasedInBintray = [

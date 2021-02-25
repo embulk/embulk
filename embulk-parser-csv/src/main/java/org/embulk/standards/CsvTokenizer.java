@@ -1,14 +1,29 @@
+/*
+ * Copyright 2014 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.embulk.standards;
 
-import com.google.common.base.Preconditions;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import org.embulk.config.ConfigException;
 import org.embulk.spi.DataException;
-import org.embulk.spi.util.LineDecoder;
 import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
+import org.embulk.util.text.LineDecoder;
 
 public class CsvTokenizer {
     static enum RecordState {
@@ -56,8 +71,8 @@ public class CsvTokenizer {
                 delimiterFollowingString = null;
             }
         }
-        quote = task.getQuoteChar().or(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
-        escape = task.getEscapeChar().or(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
+        quote = task.getQuoteChar().orElse(CsvParserPlugin.QuoteCharacter.noQuote()).getCharacter();
+        escape = task.getEscapeChar().orElse(CsvParserPlugin.EscapeCharacter.noEscape()).getCharacter();
         newline = task.getNewline().getString();
         trimIfNotQuoted = task.getTrimIfNotQuoted();
         quotesInQuotedFields = task.getQuotesInQuotedFields();
@@ -67,8 +82,8 @@ public class CsvTokenizer {
             throw new ConfigException("[quotes_in_quoted_fields != ACCEPT_ONLY_RFC4180_ESCAPED] is not allowed to specify with [trim_if_not_quoted = true]");
         }
         maxQuotedSizeLimit = task.getMaxQuotedSizeLimit();
-        commentLineMarker = task.getCommentLineMarker().orNull();
-        nullStringOrNull = task.getNullString().orNull();
+        commentLineMarker = task.getCommentLineMarker().orElse(null);
+        nullStringOrNull = task.getNullString().orElse(null);
         this.input = input;
     }
 
@@ -407,7 +422,9 @@ public class CsvTokenizer {
     }
 
     private char nextChar() {
-        Preconditions.checkState(line != null, "nextColumn is called after end of file");
+        if (line == null) {
+            throw new IllegalStateException("nextColumn is called after end of file");
+        }
 
         if (linePos >= line.length()) {
             return END_OF_LINE;
@@ -417,7 +434,9 @@ public class CsvTokenizer {
     }
 
     private char peekNextChar() {
-        Preconditions.checkState(line != null, "peekNextChar is called after end of file");
+        if (line == null) {
+            throw new IllegalStateException("peekNextChar is called after end of file");
+        }
 
         if (linePos >= line.length()) {
             return END_OF_LINE;
@@ -427,7 +446,9 @@ public class CsvTokenizer {
     }
 
     private char peekNextNextChar() {
-        Preconditions.checkState(line != null, "peekNextNextChar is called after end of file");
+        if (line == null) {
+            throw new IllegalStateException("peekNextNextChar is called after end of file");
+        }
 
         if (linePos + 1 >= line.length()) {
             return END_OF_LINE;
