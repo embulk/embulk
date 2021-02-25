@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.parser.csv;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import org.embulk.config.ConfigException;
+import org.embulk.parser.csv.CsvParserPlugin.QuotesInQuotedFields;
 import org.embulk.spi.DataException;
-import org.embulk.standards.CsvParserPlugin.QuotesInQuotedFields;
 import org.embulk.util.text.LineDecoder;
 
 public class CsvTokenizer {

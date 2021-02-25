@@ -44,7 +44,7 @@ dependencies {
 }
 
 embulkPlugin {
-    mainClass = "org.embulk.standards.CsvParserPlugin"
+    mainClass = "org.embulk.parser.csv.CsvParserPlugin"
     category = "parser"
     type = "csv"
 }

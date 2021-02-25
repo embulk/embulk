@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.embulk.standards;
+package org.embulk.parser.csv;
 
 import static org.junit.Assert.assertEquals;
 
