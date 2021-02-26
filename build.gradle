@@ -132,23 +132,7 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
                        'Specification-Version': project.version
         }
     }
-}
 
-project(":embulk-core") {
-    // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
-    // TODO: Merge them into embulk-junit4 in some manner.
-
-    task testsJar(type: Jar, dependsOn: classes) {
-        classifier = 'tests'
-        from sourceSets.test.output
-    }
-
-    artifacts {
-        archives testsJar
-    }
-}
-
-configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name) }) {
     apply plugin: "signing"
 
     jar {
@@ -162,6 +146,19 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
                 links "https://docs.oracle.com/javase/8/docs/api/"
                 links "https://www.javadoc.io/doc/org.slf4j/slf4j-api/1.7.30/"
             }
+        }
+    }
+
+    // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
+    // TODO: Merge them into embulk-junit4 in some manner.
+    if (project.name == "embulk-core") {
+        task testsJar(type: Jar, dependsOn: classes) {
+            classifier = 'tests'
+            from sourceSets.test.output
+        }
+
+        artifacts {
+            archives testsJar
         }
     }
 
