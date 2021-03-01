@@ -8,11 +8,11 @@ plugins {
 }
 
 allprojects {  // Applies all projects including the root project as well.
-    group = 'org.embulk'
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 }
 
+group = "org.embulk"
 version = "0.10.28-SNAPSHOT"
 
 def subprojectNamesOfCoreArtifacts = [
@@ -52,6 +52,8 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
     // TODO: Enable SpotBugs instead of FindBugs which was used in Embulk until v0.9.17.
+
+    group = rootProject.group
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
