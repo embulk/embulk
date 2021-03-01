@@ -8,8 +8,6 @@ plugins {
 }
 
 allprojects {  // Applies all projects including the root project as well.
-    apply plugin: 'java'
-
     group = 'org.embulk'
 
     sourceCompatibility = 1.8
@@ -52,6 +50,7 @@ def subprojectNamesOfStandardPlugins = [
 ]
 
 configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name) }) {
+    apply plugin: "java"
     apply plugin: "java-library"
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'

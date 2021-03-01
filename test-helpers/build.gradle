@@ -1,6 +1,4 @@
-plugins {
-    id 'java'
-}
+apply plugin: "java"
 
 task deploy(dependsOn: ["deployJarsForEmbulkTestMavenPlugin"])
 
