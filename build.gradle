@@ -47,6 +47,7 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
+    apply plugin: "signing"
 
     group = rootProject.group
 
@@ -106,8 +107,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
                        'Specification-Version': project.version
         }
     }
-
-    apply plugin: "signing"
 
     jar {
         from rootProject.file("LICENSE")
