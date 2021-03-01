@@ -68,6 +68,17 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         withSourcesJar()
     }
 
+    javadoc {
+        options {
+            locale = 'en_US'
+            encoding = 'UTF-8'
+            if (project.name == "embulk-api" || project.name == "embulk-spi" ) {
+                overview = "src/main/html/overview.html"
+                links "https://docs.oracle.com/javase/8/docs/api/"
+                links "https://www.javadoc.io/doc/org.slf4j/slf4j-api/1.7.30/"
+            }
+        }
+    }
 
     tasks.withType(Test) {
         systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
@@ -94,13 +105,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
     }
 
-    javadoc {
-        options {
-            locale = 'en_US'
-            encoding = 'UTF-8'
-        }
-    }
-
     jar {
         manifest {
             attributes 'Implementation-Title': project.name,
@@ -115,15 +119,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         from rootProject.file("LICENSE")
     }
 
-    if (project.name == "embulk-api" || project.name == "embulk-spi" ) {
-        javadoc {
-            options {
-                overview = "src/main/html/overview.html"
-                links "https://docs.oracle.com/javase/8/docs/api/"
-                links "https://www.javadoc.io/doc/org.slf4j/slf4j-api/1.7.30/"
-            }
-        }
-    }
 
     // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
     // TODO: Merge them into embulk-junit4 in some manner.
