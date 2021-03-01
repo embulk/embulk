@@ -1,12 +1,12 @@
 description = "The core classes of Embulk, a pluggable multi-source/destination bulk data loader."
 
+repositories {
+    mavenCentral()
+}
+
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
-}
-
-repositories {
-    mavenCentral()
 }
 
 // determine which dependencies have updates: $ gradle dependencyUpdates

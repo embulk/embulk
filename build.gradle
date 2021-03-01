@@ -7,6 +7,9 @@ plugins {
     id "org.embulk.embulk-plugins" version "0.4.2" apply false
 }
 
+repositories {
+    mavenCentral()
+}
 
 group = "org.embulk"
 version = "0.10.28-SNAPSHOT"
@@ -222,10 +225,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     signing {
         sign publishing.publications.maven
     }
-}
-
-repositories {
-    mavenCentral()
 }
 
 configurations {
