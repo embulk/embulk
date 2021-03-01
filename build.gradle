@@ -7,10 +7,6 @@ plugins {
     id "org.embulk.embulk-plugins" version "0.4.2" apply false
 }
 
-allprojects {  // Applies all projects including the root project as well.
-    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
-}
 
 group = "org.embulk"
 version = "0.10.28-SNAPSHOT"
@@ -58,15 +54,16 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     targetCompatibility = 1.8
 
     version = "${rootProject.version}"
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
 
     java {
         withJavadocJar()
         withSourcesJar()
     }
 
-    tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-    }
 
     tasks.withType(Test) {
         systemProperties System.properties.findAll { it.key.startsWith("org.embulk") }
