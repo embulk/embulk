@@ -51,7 +51,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     apply plugin: 'checkstyle'
     apply plugin: 'jacoco'
     apply plugin: 'maven-publish'
-    // TODO: Enable SpotBugs instead of FindBugs which was used in Embulk until v0.9.17.
 
     group = rootProject.group
 
