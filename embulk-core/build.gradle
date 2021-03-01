@@ -44,7 +44,11 @@ dependencies {
     testImplementation project(":embulk-deps")
 }
 
-test.dependsOn([":test-helpers:deploy"])
+test {
+    dependsOn ":test-helpers:deploy"
+    maxHeapSize = "1536m"
+    forkEvery = 1  // test processes are forked by each test class (default is 0)
+}
 
 import java.util.zip.ZipFile
 task updateResources(dependsOn: 'prepareDependencyJars') {
