@@ -1,4 +1,4 @@
-description = "A test helper for Embulk plugins with JUnit 4"
+description = "A test helper for Embulk plugins with JUnit 4."
 
 repositories {
     mavenCentral()

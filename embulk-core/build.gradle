@@ -1,8 +1,4 @@
-// TODO: Have more details in description and summary.
-description = 'Embulk core'
-ext {
-    summary = 'Embulk core'
-}
+description = "The core classes of Embulk, a pluggable multi-source/destination bulk data loader."
 
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
