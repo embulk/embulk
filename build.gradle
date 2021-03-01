@@ -50,11 +50,11 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     apply plugin: "signing"
 
     group = rootProject.group
+    version = rootProject.version
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
-    version = "${rootProject.version}"
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
