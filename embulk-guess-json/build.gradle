@@ -1,0 +1,79 @@
+apply plugin: "java"
+apply plugin: "checkstyle"
+
+repositories {
+    mavenCentral()
+}
+
+group = "${rootProject.group}"
+version = "${rootProject.version}"
+description = "Guesses if an input is in JSON."
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+configurations {
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+}
+
+dependencies {
+    compileOnly project(":embulk-api")
+    compileOnly project(":embulk-spi")
+    compileOnly project(":embulk-core")
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.encoding = "UTF-8"
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+jar {
+    from rootProject.file("LICENSE")
+
+    // The Manifest will be filled out by the Gradle plugin "org.embulk.embulk-plugins". This is a tentative declaration.
+    manifest {
+        attributes "Embulk-Plugin-Main-Class": "org.embulk.guess.json.JsonGuessPlugin",
+                   "Embulk-Plugin-Category": "guess",
+                   "Embulk-Plugin-Type": "json",
+                   "Embulk-Plugin-Spi-Version": "0",
+                   "Implementation-Title": "${project.name}",
+                   "Implementation-Version": "${project.version}"
+    }
+}
+
+sourcesJar {
+    from rootProject.file("LICENSE")
+}
+
+javadocJar {
+    from rootProject.file("LICENSE")
+}
+
+test {
+    testLogging {
+        outputs.upToDateWhen { false }
+        showStandardStreams = true
+    }
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        // Not to skip up-to-date checkstyles.
+        outputs.upToDateWhen { false }
+    }
+}
+
+checkstyle {
+    toolVersion "8.7"
+    configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+    configProperties = [
+        "checkstyle.config.path": file("${projectDir}/config/checkstyle")
+    ]
+    ignoreFailures = false
+    maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
+}
