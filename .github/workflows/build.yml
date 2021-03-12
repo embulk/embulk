@@ -26,6 +26,8 @@ jobs:
         - ":embulk-filter-rename:check"
         - ":embulk-formatter-csv:check"
         - ":embulk-guess-bzip2:check"
+        - ":embulk-guess-csv:check"
+        - ":embulk-guess-csv_all_strings:check"
         - ":embulk-guess-gzip:check"
         - ":embulk-guess-json:check"
         - ":embulk-input-config:check"

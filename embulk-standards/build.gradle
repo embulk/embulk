@@ -24,6 +24,8 @@ dependencies {
     compile project(":embulk-encoder-bzip2")
     compile project(":embulk-encoder-gzip")
     compile project(":embulk-guess-bzip2")
+    compile project(":embulk-guess-csv")
+    compile project(":embulk-guess-csv_all_strings")
     compile project(":embulk-guess-gzip")
     compile project(":embulk-guess-json")
     compile project(":embulk-filter-remove_columns")
