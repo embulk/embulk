@@ -10,8 +10,6 @@ repositories {
 
 configurations {
     jruby
-    compileClasspath.resolutionStrategy.activateDependencyLocking()
-    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
 
 dependencies {
