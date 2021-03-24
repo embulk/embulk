@@ -38,6 +38,11 @@ public abstract class Buffer {
     protected Buffer() {
     }
 
+    @Deprecated  // Declared only for embulk-util-file can refer this.
+    protected Buffer(final byte[] wrap, final int offset, final int capacity) {
+        this();
+    }
+
     /**
      * Returns the internal {@code byte} array of this {@link Buffer}.
      *
