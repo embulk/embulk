@@ -116,8 +116,7 @@ final class SelfContainedJarFile {
     }
 
     ByteBuffer getInnerResourcesBinary() {
-        // TODO: Call asReadOnlyBuffer or duplicate?
-        return this.innerResourcesBinary;
+        return this.innerResourcesBinary.asReadOnlyBuffer();
     }
 
     /**
