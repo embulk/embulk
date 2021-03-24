@@ -28,6 +28,8 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MavenPluginSource implements PluginSource {
     public MavenPluginSource(
@@ -153,6 +155,10 @@ public class MavenPluginSource implements PluginSource {
                     ex);
         }
 
+        logger.info("Loaded plugin {} ({})",
+                    "embulk-" + category + "-" + mavenPluginType.getName(),
+                    mavenPluginType.getFullName());
+
         try {
             return pluginInterface.cast(pluginMainObject);
         } catch (ClassCastException ex) {
@@ -171,6 +177,8 @@ public class MavenPluginSource implements PluginSource {
 
         return Paths.get(m2Repo);
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(MavenPluginSource.class);
 
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
