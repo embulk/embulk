@@ -1,11 +1,37 @@
-# This is a copy of the original Ruby-based CSV guess, which is kept so that CsvGuessPlugin can be tested by comparing with it.
-
 module Embulk
   module Guess
     require 'embulk/guess/schema_guess'
+    require 'embulk/logger'
 
     class CsvGuessPlugin < LineGuessPlugin
-      Plugin.register_guess('csv', self)
+      Plugin.register_guess('csv_verify', self)
+
+      def self.create_classloader
+        jars = Dir["#{File.expand_path('../../../../classpath', __FILE__)}/**/*.jar"]
+        urls = jars.map {|jar| java.io.File.new(File.expand_path(jar)).toURI.toURL }
+        begin
+          expected_temporary_variable_name = Java::org.embulk.jruby.JRubyPluginSource::PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME
+        rescue => e
+          raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME unexpectedly."
+        end
+        if expected_temporary_variable_name != "$temporary_internal_plugin_class_loader_factory__"
+          raise PluginLoadError.new "Java's org.embulk.jruby.JRubyPluginSource does not define PLUGIN_CLASS_LOADER_FACTORY_VARIABLE_NAME correctly."
+        end
+        factory = $temporary_internal_plugin_class_loader_factory__
+        factory.create(urls, JRuby.runtime.getJRubyClassLoader())
+      end
+
+      CLASSLOADER = create_classloader
+      CONFIG_MAPPER_FACTORY_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.ConfigMapperFactory").ruby_class
+      TYPE_MODULE_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.modules.TypeModule").ruby_class
+      CONFIG_MAPPER_FACTORY = CONFIG_MAPPER_FACTORY_CLASS.builder.addDefaultModules.addModule(TYPE_MODULE_CLASS.new).build
+      PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvParserPlugin$PluginTask")
+      LIST_FILE_INPUT_CLASS = CLASSLOADER.loadClass("org.embulk.util.file.ListFileInput").ruby_class
+      LINE_DECODER_CLASS = CLASSLOADER.loadClass("org.embulk.util.text.LineDecoder").ruby_class
+      CSV_GUESS_PLUGIN_CLASS = CLASSLOADER.loadClass("org.embulk.guess.csv.CsvGuessPlugin").ruby_class
+      CSV_TOKENIZER_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer").ruby_class
+      TOO_FEW_COLUMNS_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$TooFewColumnsException").ruby_class
+      INVALID_VALUE_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$InvalidValueException").ruby_class
 
       DELIMITER_CANDIDATES = [
         ",", "\t", "|", ";"
@@ -35,6 +61,28 @@ module Embulk
       NO_SKIP_DETECT_LINES = 10
 
       def guess_lines(config, sample_lines)
+        guessed_ruby = guess_lines_iter(config, sample_lines)
+
+        begin
+          guess_plugin_java = CSV_GUESS_PLUGIN_CLASS.new
+          guessed_java = guess_plugin_java.guess_lines(config_to_java(config), config_to_java(sample_lines))
+          if guessed_java.nil?
+            raise "embulk-guess-csv (Java) returned null."
+          end
+          guessed_ruby_converted = config_to_java(guessed_ruby)
+          if !guessed_java.equals(guessed_ruby_converted)
+            raise_and_log_guess_diff(guessed_ruby, guessed_java)
+          end
+        rescue Exception => e
+          # Any error from the Java-based guess plugin should pass-through just with logging.
+          Embulk.logger.error "[Embulk CSV guess verify] #{e.inspect}"
+        end
+
+        # This plugin returns a result from the Ruby-based implementation.
+        return guessed_ruby
+      end
+
+      def guess_lines_iter(config, sample_lines)
         return {} unless config.fetch("parser", {}).fetch("type", "csv") == "csv"
 
         parser_config = config["parser"] || {}
@@ -189,14 +237,64 @@ module Embulk
 
       private
 
+      def raise_and_log_guess_diff(guessed_ruby_entire, guessed_java_entire)
+        guessed_ruby = guessed_ruby_entire["parser"] || {}
+        guessed_java = guessed_java_entire.getNestedOrGetEmpty("parser")
+
+        require 'set'
+        keys = Set.new(guessed_ruby.keys) + Set.new(guessed_java.getAttributeNames)
+
+        begin
+          require 'json'
+        rescue LoadError
+          Embulk.logger.warn "The 'json' gem is not installed. No details compared."
+          guessed_java_hash = nil
+        else
+          guessed_java_hash = JSON.parse(guessed_java.toJson)
+        end
+
+        diffs = []
+        keys.each do |key|
+          if !guessed_ruby.has_key?(key)
+            diffs << "Only embulk-guess-csv (Java) has: \"#{key}\""
+          elsif !guessed_java.has(key.to_java)
+            diffs << "Only embulk-guess-csv (Ruby) has: \"#{key}\""
+          elsif guessed_java_hash && guessed_ruby[key] != guessed_java_hash[key]
+            diffs << "embulk-guess-csv has difference between Java/Ruby: \"#{key}\""
+          end
+        end
+
+        raise "embulk-guess-csv has difference between Java/Ruby: #{diffs.inspect}"
+      end
+
+      def config_to_java(config_ruby)
+        case config_ruby
+        when Hash then
+          config_java = CONFIG_MAPPER_FACTORY.newConfigSource
+          config_ruby.each do |key, value|
+            config_java.set(key.to_java, config_to_java(value))
+          end
+          return config_java
+        when Array then
+          config_java = Java::java.util.ArrayList.new
+          config_ruby.each do |v|
+            config_java.add(config_to_java(v))
+          end
+          return Java::java.util.Collections.unmodifiableList(config_java)
+        else
+          return config_ruby.to_java
+        end
+      end
+
       def split_lines(parser_config, skip_empty_lines, sample_lines, delim, extra_config)
         null_string = parser_config["null_string"]
         config = parser_config.merge(extra_config).merge({"charset" => "UTF-8", "columns" => []})
-        parser_task = config.load_config(org.embulk.standards.CsvParserPlugin::PluginTask)
+        parser_task = CONFIG_MAPPER_FACTORY.createConfigMapper.map(config_to_java(parser_config), PLUGIN_TASK_CLASS)
         data = sample_lines.map {|line| line.force_encoding('UTF-8') }.join(parser_task.getNewline.getString.encode('UTF-8'))
         sample = Buffer.from_ruby_string(data)
-        decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), parser_task)
-        tokenizer = org.embulk.standards.CsvTokenizer.new(decoder, parser_task)
+        decoder = LINE_DECODER_CLASS.of(
+          LIST_FILE_INPUT_CLASS.new([[sample.to_java]]), parser_task.getCharset, parser_task.getLineDelimiterRecognized.orElse(nil))
+        tokenizer = CSV_TOKENIZER_CLASS.new(decoder, parser_task)
         rows = []
         while tokenizer.nextFile
           while tokenizer.nextRecord(skip_empty_lines)
@@ -210,12 +308,12 @@ module Embulk
                     column = nil
                   end
                   columns << column
-                rescue org.embulk.standards.CsvTokenizer::TooFewColumnsException
+                rescue TOO_FEW_COLUMNS_EXCEPTION_CLASS
                   rows << columns
                   break
                 end
               end
-            rescue org.embulk.standards.CsvTokenizer::InvalidValueException
+            rescue INVALID_VALUE_EXCEPTION_CLASS
               # TODO warning
               tokenizer.skipCurrentLine
             end
