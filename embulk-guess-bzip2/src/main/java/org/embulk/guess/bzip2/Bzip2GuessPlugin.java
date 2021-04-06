@@ -19,8 +19,8 @@ package org.embulk.guess.bzip2;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.Exec;
 import org.embulk.spi.GuessPlugin;
+import org.embulk.util.config.ConfigMapperFactory;
 
 public class Bzip2GuessPlugin implements GuessPlugin {
     @Override
@@ -28,7 +28,7 @@ public class Bzip2GuessPlugin implements GuessPlugin {
         final byte[] header = new byte[10];
         sample.getBytes(0, header, 0, 10);
 
-        final ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = CONFIG_MAPPER_FACTORY.newConfigDiff();
 
         // magic: BZ
         // version: 'h' = bzip2
@@ -44,7 +44,7 @@ public class Bzip2GuessPlugin implements GuessPlugin {
                 && header[7] == (byte) 0x26
                 && header[8] == (byte) 0x53
                 && header[9] == (byte) 0x59) {
-            final ConfigDiff typeBzip2 = Exec.newConfigDiff();
+            final ConfigDiff typeBzip2 = CONFIG_MAPPER_FACTORY.newConfigDiff();
             typeBzip2.set("type", "bzip2");
             final ConfigDiff[] decoders = new ConfigDiff[1];
             decoders[0] = typeBzip2;
@@ -53,4 +53,6 @@ public class Bzip2GuessPlugin implements GuessPlugin {
 
         return configDiff;
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }
