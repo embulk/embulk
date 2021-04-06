@@ -62,7 +62,7 @@ public class CsvGuessPlugin implements GuessPlugin {
     }
 
     ConfigDiff guessLines(final ConfigSource config, final List<String> sampleLines) {
-        final ConfigDiff configDiff = CONFIG_MAPPER_FACTORY.newConfigDiff();
+        final ConfigDiff configDiff = newConfigDiff();
 
         // return {} unless config.fetch("parser", {}).fetch("type", "csv") == "csv"
         if (!"csv".equals(config.getNestedOrGetEmpty("parser").get(String.class, "type", "csv"))) {
@@ -79,7 +79,7 @@ public class CsvGuessPlugin implements GuessPlugin {
             delim = this.guessDelimiter(sampleLines);
         }
 
-        final ConfigDiff parserGuessed = CONFIG_MAPPER_FACTORY.newConfigDiff();
+        final ConfigDiff parserGuessed = newConfigDiff();
         parserGuessed.merge(parserConfig);
         parserGuessed.set("type", "csv");
         parserGuessed.set("delimiter", delim);
@@ -245,13 +245,17 @@ public class CsvGuessPlugin implements GuessPlugin {
      * @return a new column config
      */
     protected ConfigDiff newColumn(final String name, final SchemaGuess.GuessedType type) {
-        final ConfigDiff column = CONFIG_MAPPER_FACTORY.newConfigDiff();
+        final ConfigDiff column = newConfigDiff();
         column.set("name", name);
         column.set("type", type.toString());
         if (type.isTimestamp()) {
             column.set("format", type.getFormatOrTimeValue());
         }
         return column;
+    }
+
+    protected static ConfigDiff newConfigDiff() {
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     private static List<List<String>> splitLines(
