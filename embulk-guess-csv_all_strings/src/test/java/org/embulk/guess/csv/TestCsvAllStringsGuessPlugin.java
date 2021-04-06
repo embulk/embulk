@@ -24,7 +24,8 @@ import java.util.Map;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
-import org.embulk.spi.Exec;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.modules.TypeModule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -104,10 +105,15 @@ public class TestCsvAllStringsGuessPlugin {
     }
 
     private static ConfigDiff guess(final String... sampleLines) {
-        final ConfigSource config = Exec.newConfigSource();
-        final ConfigSource parserConfig = Exec.newConfigSource();
+        final ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource();
+        final ConfigSource parserConfig = CONFIG_MAPPER_FACTORY.newConfigSource();
         parserConfig.set("type", "csv");
         config.set("parser", parserConfig);
         return new CsvAllStringsGuessPlugin().guessLines(config, Arrays.asList(sampleLines));
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
+            .addDefaultModules()
+            .addModule(new TypeModule())
+            .build();
 }

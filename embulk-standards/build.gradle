@@ -19,7 +19,6 @@ dependencies {
 
     compile project(":embulk-guess-csv")
     compile project(":embulk-guess-csv_all_strings")
-    compile project(":embulk-parser-csv")
 
     testImplementation "junit:junit:4.12"
     testImplementation "org.hamcrest:hamcrest-library:1.3"
@@ -32,6 +31,7 @@ dependencies {
     testImplementation project(":embulk-formatter-csv")
     testImplementation project(":embulk-input-file")
     testImplementation project(":embulk-output-file")
+    testImplementation project(":embulk-parser-csv")
     testImplementation project(":embulk-guess-bzip2")
     testImplementation project(":embulk-guess-gzip")
     testImplementation project(":embulk-guess-json")

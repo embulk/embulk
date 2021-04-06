@@ -57,6 +57,8 @@ def subprojectNamesOfStandardPlugins = [
     "embulk-filter-rename",
     "embulk-formatter-csv",
     "embulk-guess-bzip2",
+    "embulk-guess-csv",
+    "embulk-guess-csv_all_strings",
     "embulk-guess-gzip",
     "embulk-guess-json",
     "embulk-input-config",
@@ -64,13 +66,8 @@ def subprojectNamesOfStandardPlugins = [
     "embulk-output-file",
     "embulk-output-null",
     "embulk-output-stdout",
-    "embulk-parser-json",
-]
-
-def subprojectNamesOfLegacyStandardPlugins = [
-    "embulk-guess-csv",
-    "embulk-guess-csv_all_strings",
     "embulk-parser-csv",
+    "embulk-parser-json",
 ]
 
 def subprojectNamesReleasedInBintray = [
@@ -83,7 +80,7 @@ def subprojectNamesReleasedInBintray = [
 // NOTE: "subprojectNamesReleased" represents subprojects that are released by tasks defined in the top-level build.gradle.
 // A subproject in "subprojectNamesOfStandardPlugins" is released by its own task defined in its own build.gradle.
 // This is prepration for splitting each standard plugin as a separate repository.
-def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray + subprojectNamesOfLegacyStandardPlugins
+def subprojectNamesReleased = subprojectNamesReleasedInMavenCentral + subprojectNamesReleasedInBintray
 
 configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     apply plugin: "java-library"
@@ -148,7 +145,7 @@ configure(subprojects.findAll { subprojectNamesReleased.contains(it.name) }) {
     }
 }
 
-configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.name) || subprojectNamesOfLegacyStandardPlugins.contains(it.name) }) {
+configure(subprojects.findAll { subprojectNamesReleasedInBintray.contains(it.name) }) {
     apply plugin: "com.jfrog.bintray"
 
     task testsJar(type: Jar, dependsOn: classes) {
@@ -321,9 +318,6 @@ dependencies {
     subprojectNamesOfStandardPlugins.each { pluginName ->
         embed(project(":${pluginName}"))
     }
-    subprojectNamesOfLegacyStandardPlugins.each { pluginName ->
-        embed(project(":${pluginName}"))
-    }
 
     // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
     implementation "ch.qos.logback:logback-classic:1.2.3"
@@ -376,9 +370,6 @@ jar {
     subprojectNamesOfStandardPlugins.each { pluginName ->
         dependsOn ":${pluginName}:jar"
     }
-    subprojectNamesOfLegacyStandardPlugins.each { pluginName ->
-        dependsOn ":${pluginName}:jar"
-    }
 
     // Expands all dependencies including "embulk-core" and "embulk-standards"
     from {
@@ -403,13 +394,13 @@ jar {
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
                    "Main-Class": "org.embulk.cli.Main",
-                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins + subprojectNamesOfLegacyStandardPlugins),
+                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins),
 
                    // "json" should be registered before "csv".
                    // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
                    "Embulk-Default-Guess-Plugins": "gzip,bzip2,json,csv"
 
-        def pluginAttributes = (subprojectNamesOfStandardPlugins + subprojectNamesOfLegacyStandardPlugins).collectEntries { pluginName ->
+        def pluginAttributes = subprojectNamesOfStandardPlugins.collectEntries { pluginName ->
             [ ("Embulk-Plugin-${pluginName}".toString()): listEmbedDependencies(pluginName, "/lib/") ]
         }
         attributes(pluginAttributes)
@@ -471,10 +462,6 @@ task release {
     subprojectNamesOfStandardPlugins.each { subprojectName ->
         dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
         tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
-    }
-    subprojectNamesOfLegacyStandardPlugins.each { subprojectName ->
-        dependsOn ":${subprojectName}:bintrayUpload"
-        tasks.findByPath(":${subprojectName}:bintrayUpload").mustRunAfter(":releaseCheck")
     }
     dependsOn "embulk-ruby:gemPush"
 }

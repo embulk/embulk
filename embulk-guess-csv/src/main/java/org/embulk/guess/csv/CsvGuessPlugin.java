@@ -29,14 +29,19 @@ import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
+import org.embulk.parser.csv.CsvParserPlugin;
+import org.embulk.parser.csv.CsvTokenizer;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.GuessPlugin;
-import org.embulk.spi.util.LineDecoder;
-import org.embulk.spi.util.ListFileInput;
-import org.embulk.spi.util.Newline;
-import org.embulk.standards.CsvParserPlugin;
-import org.embulk.standards.CsvTokenizer;
+import org.embulk.util.config.ConfigMapperFactory;
+import org.embulk.util.config.modules.TypeModule;
+import org.embulk.util.file.ListFileInput;
+import org.embulk.util.guess.CharsetGuess;
+import org.embulk.util.guess.LineGuessHelper;
+import org.embulk.util.guess.NewlineGuess;
+import org.embulk.util.text.LineDecoder;
+import org.embulk.util.text.Newline;
 
 public class CsvGuessPlugin implements GuessPlugin {
     @Override
@@ -45,19 +50,19 @@ public class CsvGuessPlugin implements GuessPlugin {
 
         // If "charset" is not set yet, return only with a charset guessed.
         if (!parserConfig.has("charset")) {
-            return CharsetGuess.guess(sample);
+            return CharsetGuess.of(CONFIG_MAPPER_FACTORY).guess(sample);
         }
 
         // If "newline" is not set yet, return only with a newline guessed.
         if (!parserConfig.has("newline")) {
-            return NewlineGuess.guess(sample);
+            return NewlineGuess.of(CONFIG_MAPPER_FACTORY).guess(config, sample);
         }
 
-        return this.guessLines(config, LineGuessHelper.toLines(config, sample));
+        return this.guessLines(config, LineGuessHelper.of(CONFIG_MAPPER_FACTORY).toLines(config, sample));
     }
 
     ConfigDiff guessLines(final ConfigSource config, final List<String> sampleLines) {
-        final ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = newConfigDiff();
 
         // return {} unless config.fetch("parser", {}).fetch("type", "csv") == "csv"
         if (!"csv".equals(config.getNestedOrGetEmpty("parser").get(String.class, "type", "csv"))) {
@@ -74,7 +79,7 @@ public class CsvGuessPlugin implements GuessPlugin {
             delim = this.guessDelimiter(sampleLines);
         }
 
-        final ConfigDiff parserGuessed = Exec.newConfigDiff();
+        final ConfigDiff parserGuessed = newConfigDiff();
         parserGuessed.merge(parserConfig);
         parserGuessed.set("type", "csv");
         parserGuessed.set("delimiter", delim);
@@ -240,13 +245,17 @@ public class CsvGuessPlugin implements GuessPlugin {
      * @return a new column config
      */
     protected ConfigDiff newColumn(final String name, final SchemaGuess.GuessedType type) {
-        final ConfigDiff column = Exec.newConfigDiff();
+        final ConfigDiff column = newConfigDiff();
         column.set("name", name);
         column.set("type", type.toString());
         if (type.isTimestamp()) {
             column.set("format", type.getFormatOrTimeValue());
         }
         return column;
+    }
+
+    protected static ConfigDiff newConfigDiff() {
+        return CONFIG_MAPPER_FACTORY.newConfigDiff();
     }
 
     private static List<List<String>> splitLines(
@@ -257,7 +266,7 @@ public class CsvGuessPlugin implements GuessPlugin {
             final Boolean trimIfNotQuoted) {
         try {
             final String nullString = parserConfig.get(String.class, "null_string", null);
-            final ConfigSource config = Exec.newConfigSource();
+            final ConfigSource config = CONFIG_MAPPER_FACTORY.newConfigSource();
             config.merge(parserConfig);
             if (trimIfNotQuoted != null) {
                 config.set("trim_if_not_quoted", (boolean) trimIfNotQuoted);
@@ -265,7 +274,8 @@ public class CsvGuessPlugin implements GuessPlugin {
             config.set("charset", "UTF-8");
             config.set("columns", new ArrayList<>());
 
-            final CsvParserPlugin.PluginTask parserTask = config.loadConfig(CsvParserPlugin.PluginTask.class);
+            final CsvParserPlugin.PluginTask parserTask =
+                    CONFIG_MAPPER_FACTORY.createConfigMapper().map(config, CsvParserPlugin.PluginTask.class);
 
             final byte[] data = joinBytes(sampleLines, parserTask.getNewline());
             final Buffer sample = Exec.getBufferAllocator().allocate(data.length);
@@ -276,8 +286,8 @@ public class CsvGuessPlugin implements GuessPlugin {
             listBuffer.add(sample);
             final ArrayList<ArrayList<Buffer>> listListBuffer = new ArrayList<>();
             listListBuffer.add(listBuffer);
-            final LineDecoder decoder = new LineDecoder(new ListFileInput(listListBuffer), parserTask);
-
+            final LineDecoder decoder = LineDecoder.of(
+                    new ListFileInput(listListBuffer), parserTask.getCharset(), parserTask.getLineDelimiterRecognized().orElse(null));
             final CsvTokenizer tokenizer = new CsvTokenizer(decoder, parserTask);
 
             final ArrayList<List<String>> rows = new ArrayList<>();
@@ -575,6 +585,11 @@ public class CsvGuessPlugin implements GuessPlugin {
 
         return data.toByteArray();
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
+            .addDefaultModules()
+            .addModule(new TypeModule())
+            .build();
 
     private static List<Character> DELIMITER_CANDIDATES = Collections.unmodifiableList(Arrays.asList(
             ',',
