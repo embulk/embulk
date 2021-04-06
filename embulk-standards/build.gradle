@@ -22,7 +22,6 @@ dependencies {
     compile project(":embulk-guess-csv_all_strings")
     compile project(":embulk-guess-gzip")
     compile project(":embulk-guess-json")
-    compile project(":embulk-filter-remove_columns")
     compile project(":embulk-filter-rename")
     compile project(":embulk-formatter-csv")
     compile project(":embulk-input-config")
