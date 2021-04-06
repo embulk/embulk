@@ -19,7 +19,6 @@ dependencies {
 
     compile project(":embulk-guess-csv")
     compile project(":embulk-guess-csv_all_strings")
-    compile project(":embulk-guess-json")
     compile project(":embulk-parser-csv")
 
     testImplementation "junit:junit:4.12"
@@ -35,6 +34,7 @@ dependencies {
     testImplementation project(":embulk-output-file")
     testImplementation project(":embulk-guess-bzip2")
     testImplementation project(":embulk-guess-gzip")
+    testImplementation project(":embulk-guess-json")
 
     testImplementation "ch.qos.logback:logback-classic:1.1.3"
 
