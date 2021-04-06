@@ -1,4 +1,20 @@
-package org.embulk.standards;
+/*
+ * Copyright 2017 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.embulk.filter.remove_columns;
 
 import static org.embulk.test.EmbulkTests.copyResource;
 import static org.embulk.test.EmbulkTests.readResource;
@@ -19,12 +35,16 @@ import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FilterPlugin;
 import org.embulk.spi.FormatterPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.standards.CsvFormatterPlugin;
+import org.embulk.standards.CsvParserPlugin;
+import org.embulk.standards.LocalFileInputPlugin;
+import org.embulk.standards.LocalFileOutputPlugin;
 import org.embulk.test.TestingEmbulk;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class TestRemoveColumnsFilterPlugin {
-    private static final String RESOURCE_NAME_PREFIX = "org/embulk/standards/remove_columns/test/";
+    private static final String RESOURCE_NAME_PREFIX = "org/embulk/filter/remove_columns/test/";
 
     @Rule
     public TestingEmbulk embulk = TestingEmbulk.builder()
