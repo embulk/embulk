@@ -22,7 +22,6 @@ dependencies {
     compile project(":embulk-guess-csv_all_strings")
     compile project(":embulk-guess-gzip")
     compile project(":embulk-guess-json")
-    compile project(":embulk-formatter-csv")
     compile project(":embulk-input-config")
     compile project(":embulk-input-file")
     compile project(":embulk-output-file")
@@ -38,6 +37,9 @@ dependencies {
     testImplementation project(":embulk-core")
     testImplementation project(":embulk-core").sourceSets.test.output
     testImplementation project(":embulk-junit4")
+
+    testImplementation project(":embulk-formatter-csv")
+
     testImplementation "ch.qos.logback:logback-classic:1.1.3"
 
     testImplementation "com.fasterxml.jackson.core:jackson-databind:2.6.7"
