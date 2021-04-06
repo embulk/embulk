@@ -90,6 +90,6 @@ public class ${javaClassName}
         throw new UnsupportedOperationException("${javaClassName}.open method is not implemented yet");
 
         // See LocalFileOutputPlugin as an example implementation:
-        // https://github.com/embulk/embulk/blob/master/embulk-standards/src/main/java/org/embulk/standards/LocalFileOutputPlugin.java
+        // https://github.com/embulk/embulk/blob/master/embulk-output-file/src/main/java/org/embulk/output/file/LocalFileOutputPlugin.java
     }
 }

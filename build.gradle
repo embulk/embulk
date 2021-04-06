@@ -73,7 +73,6 @@ def subprojectNamesOfStandardPlugins = [
 def subprojectNamesReleasedInBintray = [
     "embulk-core",
     "embulk-deps",
-    "embulk-standards",
     "embulk-junit4",
 ]
 
@@ -309,11 +308,6 @@ configurations {
 
 dependencies {
     implementation project(':embulk-core')
-    implementation(project(':embulk-standards')) {  // embulk-standards is still here only for some Ruby-based standard guess.
-        // embulk-standards' transitive dependencies are now only subprojects, such as ":embulk-parser-csv".
-        // Those subprojects are now embedded as self-contained JAR resources. All transitive dependencies are not needed.
-        transitive = false
-    }
 
     subprojectNamesOfStandardPlugins.each { pluginName ->
         embed(project(":${pluginName}"))
@@ -364,14 +358,13 @@ jar {
     dependsOn ":embulk-api:jar",
               ":embulk-spi:jar",
               ":embulk-core:jar",
-              ":embulk-deps:jar",
-              ":embulk-standards:jar"  // embulk-standards is here only for some Ruby-based standard guess.
+              ":embulk-deps:jar"
 
     subprojectNamesOfStandardPlugins.each { pluginName ->
         dependsOn ":${pluginName}:jar"
     }
 
-    // Expands all dependencies including "embulk-core" and "embulk-standards"
+    // Expands all dependencies including "embulk-core"
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
