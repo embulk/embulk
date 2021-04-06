@@ -130,12 +130,26 @@ Modify `jrubyVersion` in `build.gradle` to update JRuby of Embulk.
 
 ### Release
 
-You need to add your bintray account information to ~/.gradle/gradle.properties
+#### Prerequisite: Sonatype OSSRH
+
+You need an account in [Sonatype OSSRH](https://central.sonatype.org/pages/ossrh-guide.html), and configure it in your `~/.gradle/gradle.properties`.
 
 ```
-bintray_user=(bintray user name)
-bintray_api_key=(bintray api key)
+ossrhUsername=(your Sonatype OSSRH username)
+ossrhPassword=(your Sonatype OSSRH password)
 ```
+
+#### Prerequisite: PGP signatures
+
+You need your [PGP signatures to release artifacts into Maven Central](https://central.sonatype.org/pages/working-with-pgp-signatures.html), and [configure Gradle to use your key to sign](https://docs.gradle.org/current/userguide/signing_plugin.html).
+
+```
+signing.keyId=(the last 8 symbols of your keyId)
+signing.password=(the passphrase used to protect your private key)
+signing.secretKeyRingFile=(the absolute path to the secret key ring file containing your private key)
+```
+
+#### Release
 
 Modify `version` in `build.gradle` at a detached commit to bump Embulk version up.
 
@@ -149,7 +163,3 @@ git tag -a vX.Y.Z
 ./gradlew clean && ./gradlew release
 git push -u origin vX.Y.Z
 ```
-
-See also:
-* [Bintray](https://bintray.com)
-* [How to acquire bintray API Keys](https://bintray.com/docs/usermanual/interacting/interacting_editingyouruserprofile.html#anchorAPIKEY)
