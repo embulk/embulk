@@ -25,11 +25,9 @@ dependencies {
     api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
-    api "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7"
     api "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
-    api "joda-time:joda-time:2.9.2"
 
     // bval-jsr303:0.5 depends on commons-lang3:3.1,
     // but it was upgraded to 3.4 when maven-aether-provider:3.3.9 was introduced.

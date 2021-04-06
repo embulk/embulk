@@ -23,11 +23,6 @@ public class TimestampFormatter {
                      : task.getDefaultTimeZoneId());
     }
 
-    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public TimestampFormatter(final String format, final org.joda.time.DateTimeZone timeZone) {
-        this(format, timeZone.toTimeZone().toZoneId().toString());
-    }
-
     public static TimestampFormatter of(final String pattern, final String zoneIdString) {
         return new TimestampFormatter(pattern, zoneIdString);
     }
@@ -57,16 +52,7 @@ public class TimestampFormatter {
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
 
-        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
-        // It won't be removed very soon at least until Embulk v0.10.
-        @Deprecated
-        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
-            if (getDefaultTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
-            } else {
-                return null;
-            }
-        }
+        // The method has been removed: public default org.joda.time.DateTimeZone getDefaultTimeZone()
 
         @Config("default_timestamp_format")
         @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N %z\"")
@@ -79,26 +65,14 @@ public class TimestampFormatter {
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
 
-        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
-        // It won't be removed very soon at least until Embulk v0.10.
-        @Deprecated
-        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
-            if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
-            } else {
-                return Optional.absent();
-            }
-        }
+        // The method has been removed: public default org.joda.time.DateTimeZone getDefaultTimeZone()
 
         @Config("format")
         @ConfigDefault("null")
         public Optional<String> getFormat();
     }
 
-    @Deprecated  // This method will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public org.joda.time.DateTimeZone getTimeZone() {
-        return TimeZoneIds.parseJodaDateTimeZone(this.zoneIdString);
-    }
+    // The method has been removed: public org.joda.time.DateTimeZone getTimeZone()
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public String format(final Timestamp value) {

@@ -16,26 +16,7 @@ public class PagePrinter {
 
     private final ArrayList<String> record;
 
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/937
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292, https://github.com/embulk/embulk/issues/1298
-    public PagePrinter(final Schema schema, final org.joda.time.DateTimeZone timezone) {
-        this.schema = schema;
-        this.timestampFormatters = new org.embulk.spi.time.TimestampFormatter[schema.getColumnCount()];
-        for (int i = 0; i < timestampFormatters.length; i++) {
-            if (schema.getColumnType(i) instanceof TimestampType) {
-                TimestampType type = (TimestampType) schema.getColumnType(i);
-                // Constructor of TimestampFormatter is deprecated.
-                timestampFormatters[i] = new org.embulk.spi.time.TimestampFormatter(
-                        getFormatFromTimestampTypeWithDeprecationSuppressed(type), timezone);
-            }
-        }
-
-        this.record = new ArrayList<String>(schema.getColumnCount());
-        for (int i = 0; i < schema.getColumnCount(); i++) {
-            record.add("");
-        }
-    }
+    // The constructor has been removed: public PagePrinter(final Schema schema, final org.joda.time.DateTimeZone timezone)
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1298
     public PagePrinter(final Schema schema, final String timeZoneId) {
