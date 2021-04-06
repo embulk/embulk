@@ -137,6 +137,8 @@ signing {
 }
 
 test {
+    maxHeapSize = "1536m"
+    forkEvery = 1  // test processes are forked by each test class (default is 0)
     testLogging {
         outputs.upToDateWhen { false }
         showStandardStreams = true

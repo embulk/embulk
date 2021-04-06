@@ -1,7 +1,4 @@
-description = "Embulk core's hidden dependencies."
-ext {
-    summary = "Embulk core's hidden dependencies."
-}
+description = "Dependencies of Embulk to be loaded behind an inner class loader."
 
 repositories {
     mavenCentral()

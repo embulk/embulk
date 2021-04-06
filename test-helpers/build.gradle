@@ -1,6 +1,6 @@
-plugins {
-    id 'java'
-}
+apply plugin: "java"
+
+group = rootProject.group
 
 task deploy(dependsOn: ["deployJarsForEmbulkTestMavenPlugin"])
 

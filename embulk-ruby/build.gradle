@@ -1,3 +1,5 @@
+apply plugin: "java"
+
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains("-")) {
         List<String> versionTokens = javaStyleVersion.tokenize("-");
@@ -11,6 +13,7 @@ String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     }
 }
 
+group = rootProject.group
 version = rootProject.version
 ext.ruby_version = buildRubyStyleVersionFromJavaStyleVersion(version)
 
