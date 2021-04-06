@@ -19,8 +19,8 @@ package org.embulk.guess.gzip;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
-import org.embulk.spi.Exec;
 import org.embulk.spi.GuessPlugin;
+import org.embulk.util.config.ConfigMapperFactory;
 
 public class GzipGuessPlugin implements GuessPlugin {
     @Override
@@ -28,10 +28,10 @@ public class GzipGuessPlugin implements GuessPlugin {
         final byte[] header = new byte[2];
         sample.getBytes(0, header, 0, 2);
 
-        final ConfigDiff configDiff = Exec.newConfigDiff();
+        final ConfigDiff configDiff = CONFIG_MAPPER_FACTORY.newConfigDiff();
 
         if (header[0] == (byte) 0x1f && header[1] == (byte) 0x8b) {
-            final ConfigDiff typeGzip = Exec.newConfigDiff();
+            final ConfigDiff typeGzip = CONFIG_MAPPER_FACTORY.newConfigDiff();
             typeGzip.set("type", "gzip");
             final ConfigDiff[] decoders = new ConfigDiff[1];
             decoders[0] = typeGzip;
@@ -40,4 +40,6 @@ public class GzipGuessPlugin implements GuessPlugin {
 
         return configDiff;
     }
+
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }
