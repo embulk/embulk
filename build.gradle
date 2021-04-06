@@ -50,10 +50,10 @@ def subprojectNamesReleasedInMavenCentral = [
 
 def subprojectNamesOfStandardPlugins = [
     "embulk-decoder-bzip2",
+    "embulk-decoder-gzip",
 ]
 
 def subprojectNamesOfLegacyStandardPlugins = [
-    "embulk-decoder-gzip",
     "embulk-encoder-bzip2",
     "embulk-encoder-gzip",
     "embulk-guess-bzip2",
