@@ -54,6 +54,7 @@ def subprojectNamesOfStandardPlugins = [
     "embulk-encoder-bzip2",
     "embulk-encoder-gzip",
     "embulk-filter-remove_columns",
+    "embulk-filter-rename",
 ]
 
 def subprojectNamesOfLegacyStandardPlugins = [
@@ -62,7 +63,6 @@ def subprojectNamesOfLegacyStandardPlugins = [
     "embulk-guess-csv_all_strings",
     "embulk-guess-gzip",
     "embulk-guess-json",
-    "embulk-filter-rename",
     "embulk-formatter-csv",
     "embulk-input-config",
     "embulk-input-file",
