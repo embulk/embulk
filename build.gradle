@@ -106,6 +106,7 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     }
 
     jar {
+        from rootProject.file("LICENSE")
         manifest {
             attributes 'Implementation-Title': project.name,
                        'Implementation-Version': project.version,
@@ -115,10 +116,13 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         }
     }
 
-    jar {
+    sourcesJar {
         from rootProject.file("LICENSE")
     }
 
+    javadocJar {
+        from rootProject.file("LICENSE")
+    }
 
     // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
     // TODO: Merge them into embulk-junit4 in some manner.
@@ -126,6 +130,7 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         task testsJar(type: Jar, dependsOn: classes) {
             classifier = 'tests'
             from sourceSets.test.output
+            from rootProject.file("LICENSE")
         }
 
         artifacts {
