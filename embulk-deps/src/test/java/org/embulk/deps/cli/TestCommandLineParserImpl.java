@@ -24,10 +24,10 @@ public class TestCommandLineParserImpl {
                 "-Xjruby=file:///some/jruby.jar",
                 "-X", "bar=baz",
                 "run",
-                "-I", "test",
+                "-L", "test",
                 "-R", "bar",
                 "file3.yml",
-                "-L", "example");
+                "-I", "example");
 
         assertEquals(Command.RUN, commandLine.getCommand());
 
