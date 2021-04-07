@@ -3,6 +3,7 @@ package org.embulk.plugin;
 import com.google.inject.Injector;  // Only for instantiating a plugin.
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.ExecutorPlugin;
@@ -20,6 +21,7 @@ import org.embulk.spi.ParserPlugin;
 public class BuiltinPluginSource implements PluginSource {
     private BuiltinPluginSource(
             final Injector injector,
+            final EmbulkSystemProperties embulkSystemProperties,
             final Map<String, Class<? extends DecoderPlugin>> decoderPlugins,
             final Map<String, Class<? extends EncoderPlugin>> encoderPlugins,
             final Map<String, Class<? extends ExecutorPlugin>> executorPlugins,
@@ -32,6 +34,7 @@ public class BuiltinPluginSource implements PluginSource {
             final Map<String, Class<? extends OutputPlugin>> outputPlugins,
             final Map<String, Class<? extends ParserPlugin>> parserPlugins) {
         this.injector = injector;
+        this.embulkSystemProperties = embulkSystemProperties;
         this.decoderPlugins = decoderPlugins;
         this.encoderPlugins = encoderPlugins;
         this.executorPlugins = executorPlugins;
@@ -146,9 +149,15 @@ public class BuiltinPluginSource implements PluginSource {
             return this;
         }
 
+        public Builder setEmbulkSystemProperties(final EmbulkSystemProperties embulkSystemProperties) {
+            this.embulkSystemProperties = embulkSystemProperties;
+            return this;
+        }
+
         public BuiltinPluginSource build() {
             return new BuiltinPluginSource(
                     this.injector,
+                    this.embulkSystemProperties,
                     this.decoderPlugins,
                     this.encoderPlugins,
                     this.executorPlugins,
@@ -174,6 +183,8 @@ public class BuiltinPluginSource implements PluginSource {
         private final LinkedHashMap<String, Class<? extends InputPlugin>> inputPlugins;
         private final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins;
         private final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins;
+
+        private EmbulkSystemProperties embulkSystemProperties;
     }
 
     public static Builder builder(final Injector injector) {
@@ -195,7 +206,8 @@ public class BuiltinPluginSource implements PluginSource {
             }
             final Class<? extends FileInputPlugin> fileInputPluginImpl = this.fileInputPlugins.get(name);
             if (fileInputPluginImpl != null) {
-                return pluginInterface.cast(new FileInputRunner((FileInputPlugin) this.injector.getInstance(fileInputPluginImpl)));
+                return pluginInterface.cast(new FileInputRunner(
+                        (FileInputPlugin) this.injector.getInstance(fileInputPluginImpl), this.embulkSystemProperties));
             }
         } else if (OutputPlugin.class.isAssignableFrom(pluginInterface)) {
             // Duplications between Output Plugins and File Output Plugins are rejected when registered above.
@@ -235,6 +247,7 @@ public class BuiltinPluginSource implements PluginSource {
     }
 
     private final Injector injector;
+    private final EmbulkSystemProperties embulkSystemProperties;
     private final Map<String, Class<? extends DecoderPlugin>> decoderPlugins;
     private final Map<String, Class<? extends EncoderPlugin>> encoderPlugins;
     private final Map<String, Class<? extends ExecutorPlugin>> executorPlugins;

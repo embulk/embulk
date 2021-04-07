@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Queue;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -94,7 +96,7 @@ public class TestFileInputRunner {
                 runtime.getBufferAllocator().allocate() };
         MockFileInputPlugin fileInputPlugin = new MockFileInputPlugin(
                 new LinkedList<Buffer>(Arrays.asList(buffers)));
-        final FileInputRunner runner = new FileInputRunner(fileInputPlugin);
+        final FileInputRunner runner = new FileInputRunner(fileInputPlugin, EmbulkSystemProperties.of(new Properties()));
 
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
@@ -143,7 +145,7 @@ public class TestFileInputRunner {
                 runtime.getBufferAllocator().allocate() };
         MockFileInputPlugin fileInputPlugin = new MockFileInputPlugin(
                 new LinkedList<Buffer>(Arrays.asList(buffers)));
-        final FileInputRunner runner = new FileInputRunner(fileInputPlugin);
+        final FileInputRunner runner = new FileInputRunner(fileInputPlugin, EmbulkSystemProperties.of(new Properties()));
 
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
