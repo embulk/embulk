@@ -149,7 +149,6 @@ public class GuessExecutor {
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
         final int guessParserSampleBufferBytes =
                 task.getSampleBufferBytes().orElse(this.systemGuessSampleBufferBytes.orElse(DEAULT_SAMPLE_BUFFER_BYTES));
-        System.out.println(guessParserSampleBufferBytes);
 
         return guessParserConfig(sample, inputConfig, guessPlugins, guessParserSampleBufferBytes);
     }
