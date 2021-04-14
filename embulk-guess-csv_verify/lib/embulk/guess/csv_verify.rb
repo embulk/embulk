@@ -25,13 +25,13 @@ module Embulk
       CONFIG_MAPPER_FACTORY_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.ConfigMapperFactory").ruby_class
       TYPE_MODULE_CLASS = CLASSLOADER.loadClass("org.embulk.util.config.modules.TypeModule").ruby_class
       CONFIG_MAPPER_FACTORY = CONFIG_MAPPER_FACTORY_CLASS.builder.addDefaultModules.addModule(TYPE_MODULE_CLASS.new).build
-      PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvParserPlugin$PluginTask")
+      LEGACY_PLUGIN_TASK_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvParserPlugin$PluginTask")
       LIST_FILE_INPUT_CLASS = CLASSLOADER.loadClass("org.embulk.util.file.ListFileInput").ruby_class
       LINE_DECODER_CLASS = CLASSLOADER.loadClass("org.embulk.util.text.LineDecoder").ruby_class
       CSV_GUESS_PLUGIN_CLASS = CLASSLOADER.loadClass("org.embulk.guess.csv.CsvGuessPlugin").ruby_class
-      CSV_TOKENIZER_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer").ruby_class
-      TOO_FEW_COLUMNS_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$TooFewColumnsException").ruby_class
-      INVALID_VALUE_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$InvalidValueException").ruby_class
+      LEGACY_CSV_TOKENIZER_CLASS = CLASSLOADER.loadClass("org.embulk.standards.CsvTokenizer").ruby_class
+      LEGACY_TOO_FEW_COLUMNS_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$TooFewColumnsException").ruby_class
+      LEGACY_INVALID_VALUE_EXCEPTION_CLASS = CLASSLOADER.loadClass("org.embulk.parser.csv.CsvTokenizer$InvalidValueException").ruby_class
 
       DELIMITER_CANDIDATES = [
         ",", "\t", "|", ";"
@@ -280,12 +280,11 @@ module Embulk
       def split_lines(parser_config, skip_empty_lines, sample_lines, delim, extra_config)
         null_string = parser_config["null_string"]
         config = parser_config.merge(extra_config).merge({"charset" => "UTF-8", "columns" => []})
-        parser_task = CONFIG_MAPPER_FACTORY.createConfigMapper.map(config_to_java(parser_config), PLUGIN_TASK_CLASS)
+        parser_task = config.load_config(LEGACY_PLUGIN_TASK_CLASS)
         data = sample_lines.map {|line| line.force_encoding('UTF-8') }.join(parser_task.getNewline.getString.encode('UTF-8'))
         sample = Buffer.from_ruby_string(data)
-        decoder = LINE_DECODER_CLASS.of(
-          LIST_FILE_INPUT_CLASS.new([[sample.to_java]]), parser_task.getCharset, parser_task.getLineDelimiterRecognized.orElse(nil))
-        tokenizer = CSV_TOKENIZER_CLASS.new(decoder, parser_task)
+        decoder = Java::LineDecoder.new(Java::ListFileInput.new([[sample.to_java]]), parser_task)
+        tokenizer = LEGACY_CSV_TOKENIZER_CLASS.new(decoder, parser_task)
         rows = []
         while tokenizer.nextFile
           while tokenizer.nextRecord(skip_empty_lines)
@@ -299,12 +298,12 @@ module Embulk
                     column = nil
                   end
                   columns << column
-                rescue TOO_FEW_COLUMNS_EXCEPTION_CLASS
+                rescue LEGACY_TOO_FEW_COLUMNS_EXCEPTION_CLASS
                   rows << columns
                   break
                 end
               end
-            rescue INVALID_VALUE_EXCEPTION_CLASS
+            rescue LEGACY_INVALID_VALUE_EXCEPTION_CLASS
               # TODO warning
               tokenizer.skipCurrentLine
             end
