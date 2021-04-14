@@ -194,7 +194,7 @@ public class CsvGuessPlugin implements GuessPlugin {
                 }
             }
             headerLine = ((!firstTypes.equals(otherTypes)
-                                 && firstTypes.stream().allMatch(t -> "string".equals(t) || "boolean".equals(t)))
+                                 && firstTypes.stream().allMatch(t -> SchemaGuess.GuessedType.STRING.equals(t) || SchemaGuess.GuessedType.BOOLEAN.equals(t)))
                              || guessStringHeaderLine(sampleRecords));
             columnTypes = otherTypes;
         }
