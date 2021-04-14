@@ -71,7 +71,9 @@ module Embulk
           end
           guessed_ruby_converted = config_to_java(guessed_ruby)
           if !guessed_java.equals(guessed_ruby_converted)
-            raise_and_log_guess_diff(guessed_ruby, guessed_java)
+            log_guess_diff(guessed_ruby, guessed_java, "decoders")
+            log_guess_diff(guessed_ruby, guessed_java, "parser")
+            raise "embulk-guess-csv has difference between Java/Ruby."
           end
         rescue Exception => e
           # Any error from the Java-based guess plugin should pass-through just with logging.
@@ -237,34 +239,23 @@ module Embulk
 
       private
 
-      def raise_and_log_guess_diff(guessed_ruby_entire, guessed_java_entire)
-        guessed_ruby = guessed_ruby_entire["parser"] || {}
-        guessed_java = guessed_java_entire.getNestedOrGetEmpty("parser")
-
-        require 'set'
-        keys = Set.new(guessed_ruby.keys) + Set.new(guessed_java.getAttributeNames)
+      def log_guess_diff(guessed_ruby_entire, guessed_java_entire, key)
+        guessed_ruby = guessed_ruby_entire[key] || {}
+        guessed_java = guessed_java_entire.getNestedOrGetEmpty(key)
 
         begin
           require 'json'
         rescue LoadError
-          Embulk.logger.warn "The 'json' gem is not installed. No details compared."
-          guessed_java_hash = nil
+          raise "The 'json' gem is not installed. No details compared."
         else
           guessed_java_hash = JSON.parse(guessed_java.toJson)
         end
 
-        diffs = []
-        keys.each do |key|
-          if !guessed_ruby.has_key?(key)
-            diffs << "Only embulk-guess-csv (Java) has: \"#{key}\""
-          elsif !guessed_java.has(key.to_java)
-            diffs << "Only embulk-guess-csv (Ruby) has: \"#{key}\""
-          elsif guessed_java_hash && guessed_ruby[key] != guessed_java_hash[key]
-            diffs << "embulk-guess-csv has difference between Java/Ruby: \"#{key}\""
-          end
+        if guessed_java_hash && guessed_ruby != guessed_java_hash
+          Embulk.logger.error "[Embulk CSV guess verify] '#{key}' has difference."
+          Embulk.logger.error "[Embulk CSV guess verify] Java => #{guessed_java_hash.to_json}"
+          Embulk.logger.error "[Embulk CSV guess verify] Ruby => #{guessed_ruby.to_json}"
         end
-
-        raise "embulk-guess-csv has difference between Java/Ruby: #{diffs.inspect}"
       end
 
       def config_to_java(config_ruby)

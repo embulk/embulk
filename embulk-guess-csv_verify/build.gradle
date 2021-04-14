@@ -7,7 +7,7 @@ repositories {
 
 group = "${rootProject.group}"
 version = "${rootProject.version}"
-description = "Verification-purpose Embulk CSV guess plugin to compare the old Ruby-based one and the new Java-based one (not for your production use)"
+description = "Verification-purpose Embulk CSV guess plugin to compare the old Ruby-based one and the new Java-based one (not for your production use; note that 'decoders' and 'parser' sections in your configuration can be logged even if they contain confidential information)"
 
 dependencies {
     compile project(":embulk-guess-csv")
