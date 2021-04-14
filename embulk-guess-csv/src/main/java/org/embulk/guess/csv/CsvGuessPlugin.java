@@ -42,6 +42,8 @@ import org.embulk.util.guess.LineGuessHelper;
 import org.embulk.util.guess.NewlineGuess;
 import org.embulk.util.text.LineDecoder;
 import org.embulk.util.text.Newline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CsvGuessPlugin implements GuessPlugin {
     @Override
@@ -177,6 +179,10 @@ public class CsvGuessPlugin implements GuessPlugin {
             final List<SchemaGuess.GuessedType> firstTypes = SCHEMA_GUESS.typesFromListRecords(sampleRecords.subList(0, 1));
             final List<SchemaGuess.GuessedType> otherTypesUntrimmed =
                     SCHEMA_GUESS.typesFromListRecords(sampleRecords.subList(1, sampleRecords.size()));
+
+            logger.debug("Types of the first line : {}", firstTypes);
+            logger.debug("Types of the other lines (untrimmed): {}", otherTypesUntrimmed);
+
             final List<SchemaGuess.GuessedType> otherTypes;
 
             if (parserGuessed.has("trim_if_not_quoted")) {
@@ -193,9 +199,15 @@ public class CsvGuessPlugin implements GuessPlugin {
                     otherTypes = otherTypesTrimmed;
                 }
             }
+
+            logger.debug("Types of the other lines: {}", otherTypes);
+
             headerLine = ((!firstTypes.equals(otherTypes)
-                                 && firstTypes.stream().allMatch(t -> "string".equals(t) || "boolean".equals(t)))
+                                 && firstTypes.stream().allMatch(t -> SchemaGuess.GuessedType.STRING.equals(t) || SchemaGuess.GuessedType.BOOLEAN.equals(t)))
                              || guessStringHeaderLine(sampleRecords));
+
+            logger.debug("headerLine: {}", headerLine);
+
             columnTypes = otherTypes;
         }
 
@@ -624,4 +636,6 @@ public class CsvGuessPlugin implements GuessPlugin {
 
     private static int MAX_SKIP_LINES = 10;
     private static int NO_SKIP_DETECT_LINES = 10;
+
+    private static final Logger logger = LoggerFactory.getLogger(CsvGuessPlugin.class);
 }

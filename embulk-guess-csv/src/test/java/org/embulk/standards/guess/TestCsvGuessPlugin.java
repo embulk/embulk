@@ -194,6 +194,13 @@ public class TestCsvGuessPlugin {
     }
 
     @Test
+    public void testHeader() throws Exception {
+        assertGuessByResource(embulk,
+                "test_header_seed.yml", "test_header.csv",
+                "test_header_guessed.yml");
+    }
+
+    @Test
     public void suggestTabAsDelimiter() throws Exception {
         assertGuessByResource(embulk,
                 "test_tab_delimiter_seed.yml", "test_tab_delimiter.csv",
