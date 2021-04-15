@@ -1,4 +1,4 @@
-package org.embulk.plugin;
+package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,18 +9,23 @@ import static org.junit.Assert.fail;
 import java.util.HashMap;
 import java.util.Properties;
 import org.embulk.EmbulkSystemProperties;
+import org.embulk.plugin.DefaultPluginType;
+import org.embulk.plugin.MavenPluginType;
+import org.embulk.plugin.PluginSource;
+import org.embulk.plugin.PluginSourceNotMatchException;
+import org.embulk.plugin.PluginType;
 import org.junit.Test;
 
 public class TestPluginType {
     @Test
     public void testEquals() {
-        PluginType type = PluginType.createFromStringForTesting("a");
+        PluginType type = PluginTypeJacksonModule.createFromStringForTesting("a");
         assertTrue(type instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
         assertTrue(type.equals(type));
 
-        assertTrue(type.equals(PluginType.createFromStringForTesting("a")));
-        assertFalse(type.equals(PluginType.createFromStringForTesting("b")));
+        assertTrue(type.equals(PluginTypeJacksonModule.createFromStringForTesting("a")));
+        assertFalse(type.equals(PluginTypeJacksonModule.createFromStringForTesting("b")));
     }
 
     @Test
@@ -29,13 +34,13 @@ public class TestPluginType {
         mapping.put("source", "default");
         mapping.put("name", "c");
 
-        PluginType type = PluginType.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
         assertTrue(type instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
         assertTrue(type.equals(type));
 
-        assertTrue(type.equals(PluginType.createFromStringForTesting("c")));
-        assertFalse(type.equals(PluginType.createFromStringForTesting("d")));
+        assertTrue(type.equals(PluginTypeJacksonModule.createFromStringForTesting("c")));
+        assertFalse(type.equals(PluginTypeJacksonModule.createFromStringForTesting("d")));
     }
 
     @Test
@@ -46,7 +51,7 @@ public class TestPluginType {
         mapping.put("group", "org.embulk.foobar");
         mapping.put("version", "0.1.2");
 
-        PluginType type = PluginType.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
         assertTrue(type instanceof MavenPluginType);
         assertEquals(PluginSource.Type.MAVEN, type.getSourceType());
         MavenPluginType mavenType = (MavenPluginType) type;
@@ -67,7 +72,7 @@ public class TestPluginType {
         mapping.put("version", "0.1.2");
         mapping.put("classifier", "bar");
 
-        PluginType type = PluginType.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
         assertTrue(type instanceof MavenPluginType);
         assertEquals(PluginSource.Type.MAVEN, type.getSourceType());
         MavenPluginType mavenType = (MavenPluginType) type;
@@ -81,7 +86,7 @@ public class TestPluginType {
 
     @Test
     public void testMavenFail1() {
-        final DefaultPluginType type = (DefaultPluginType) PluginType.createFromStringForTesting("qux");
+        final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("qux");
 
         try {
             MavenPluginType.createFromDefaultPluginType("input", type, EmbulkSystemProperties.of(new Properties()));
@@ -94,7 +99,7 @@ public class TestPluginType {
 
     @Test
     public void testMavenFail2() {
-        final DefaultPluginType type = (DefaultPluginType) PluginType.createFromStringForTesting("foo");
+        final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("foo");
 
         try {
             final Properties properties = new Properties();
@@ -110,7 +115,7 @@ public class TestPluginType {
 
     @Test
     public void testMavenFail3() {
-        final DefaultPluginType type = (DefaultPluginType) PluginType.createFromStringForTesting("test");
+        final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("test");
 
         try {
             final Properties properties = new Properties();
@@ -126,7 +131,7 @@ public class TestPluginType {
 
     @Test
     public void testMaven() throws PluginSourceNotMatchException {
-        final DefaultPluginType type = (DefaultPluginType) PluginType.createFromStringForTesting("some");
+        final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("some");
 
         final Properties properties1 = new Properties();
         properties1.setProperty("plugins.input.some", "maven:org.embulk.baz:some:0.2.3");
