@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
 
@@ -13,8 +15,18 @@ public class ModelManager {
     private final ObjectMapper configObjectMapper;  // configObjectMapper uses different TaskDeserializer
     private final TaskValidator taskValidator;
 
-    public ModelManager(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public ModelManager() {
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
+        objectMapper.registerModule(new CharsetJacksonModule());
+        objectMapper.registerModule(new LocalFileJacksonModule());
+        objectMapper.registerModule(new ToStringJacksonModule());
+        objectMapper.registerModule(new ToStringMapJacksonModule());
+        objectMapper.registerModule(new TypeJacksonModule());
+        objectMapper.registerModule(new ColumnJacksonModule());
+        objectMapper.registerModule(new SchemaJacksonModule());
+        objectMapper.registerModule(new GuavaModule());  // jackson-datatype-guava
+        objectMapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         this.configObjectMapper = objectMapper.copy();
         this.taskValidator = new TaskValidator(
                 Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());

@@ -1,8 +1,5 @@
 package org.embulk;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -20,18 +17,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
-import org.embulk.config.CharsetJacksonModule;
-import org.embulk.config.ColumnJacksonModule;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
-import org.embulk.config.LocalFileJacksonModule;
-import org.embulk.config.SchemaJacksonModule;
-import org.embulk.config.TimestampJacksonModule;
-import org.embulk.config.ToStringJacksonModule;
-import org.embulk.config.ToStringMapJacksonModule;
-import org.embulk.config.TypeJacksonModule;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
@@ -547,18 +536,7 @@ public class EmbulkEmbed {
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private static org.embulk.config.ModelManager createModelManager() {
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
-        mapper.registerModule(new CharsetJacksonModule());
-        mapper.registerModule(new LocalFileJacksonModule());
-        mapper.registerModule(new ToStringJacksonModule());
-        mapper.registerModule(new ToStringMapJacksonModule());
-        mapper.registerModule(new TypeJacksonModule());
-        mapper.registerModule(new ColumnJacksonModule());
-        mapper.registerModule(new SchemaJacksonModule());
-        mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
-        mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
-        return new org.embulk.config.ModelManager(mapper);
+        return new org.embulk.config.ModelManager();
     }
 
     // TODO: Remove them finally.
