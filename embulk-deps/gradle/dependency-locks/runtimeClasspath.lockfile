@@ -1,6 +1,7 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
+com.fasterxml.jackson.core:jackson-core:2.6.7
 com.ibm.icu:icu4j:54.1.1
 commons-cli:commons-cli:1.4
 commons-collections:commons-collections:3.2.1
@@ -23,6 +24,7 @@ org.apache.velocity:velocity:1.7
 org.codehaus.plexus:plexus-component-annotations:1.7.1
 org.codehaus.plexus:plexus-interpolation:1.25
 org.codehaus.plexus:plexus-utils:3.2.0
+org.embulk:embulk-util-json:0.1.0
 org.embulk:embulk-util-rubytime:0.3.2
 org.embulk:embulk-util-timestamp:0.2.1
 org.jline:jline-terminal:3.16.0
