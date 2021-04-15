@@ -12,7 +12,7 @@ repositories {
 }
 
 group = "org.embulk"
-version = "0.10.30-SNAPSHOT"
+version = "0.10.31-SNAPSHOT"
 
 def subprojectNamesOfCoreArtifacts = [
     "embulk-api",
