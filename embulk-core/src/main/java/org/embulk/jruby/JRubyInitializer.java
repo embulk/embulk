@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ExecInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -281,7 +282,7 @@ final class JRubyInitializer {
             final ScriptingContainerDelegate jruby,
             final Object injected,
             final Injector injector) {
-        jruby.callMethod(injected, "const_set", "ModelManager", injector.getInstance(org.embulk.config.ModelManager.class));
+        jruby.callMethod(injected, "const_set", "ModelManager", ExecInternal.getModelManager());
     }
 
     private final boolean isEmbulkSpecific;

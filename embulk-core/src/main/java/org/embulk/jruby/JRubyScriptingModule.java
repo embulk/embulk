@@ -46,11 +46,9 @@ public class JRubyScriptingModule implements Module {
         }
 
         @Override  // from |com.google.inject.spi.HasDependencies|
-        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public Set<Dependency<?>> getDependencies() {
             // get() depends on other modules
             final HashSet<Dependency<?>> built = new HashSet<>();
-            built.add(Dependency.get(Key.get(org.embulk.config.ModelManager.class)));
             built.add(Dependency.get(Key.get(BufferAllocator.class)));
             return Collections.unmodifiableSet(built);
         }

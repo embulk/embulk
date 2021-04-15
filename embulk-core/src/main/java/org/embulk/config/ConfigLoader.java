@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,7 +19,6 @@ public class ConfigLoader {
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
     private final ModelManager model;
 
-    @Inject
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public ConfigLoader(ModelManager model) {
         this.model = model;
