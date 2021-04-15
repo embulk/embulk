@@ -1,4 +1,4 @@
-package org.embulk.spi.unit;
+package org.embulk.config;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.embulk.spi.unit.ToStringMap;
 
 @Deprecated
 public final class ToStringMapJacksonModule extends SimpleModule {

@@ -11,17 +11,17 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.embulk.EmbulkSystemProperties;
+import org.embulk.config.CharsetJacksonModule;
+import org.embulk.config.ColumnJacksonModule;
+import org.embulk.config.LocalFileJacksonModule;
+import org.embulk.config.SchemaJacksonModule;
+import org.embulk.config.TimestampJacksonModule;
+import org.embulk.config.ToStringJacksonModule;
+import org.embulk.config.ToStringMapJacksonModule;
+import org.embulk.config.TypeJacksonModule;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
-import org.embulk.spi.ColumnJacksonModule;
-import org.embulk.spi.SchemaJacksonModule;
 import org.embulk.spi.TempFileSpaceAllocator;
-import org.embulk.spi.time.TimestampJacksonModule;
-import org.embulk.spi.type.TypeJacksonModule;
-import org.embulk.spi.unit.LocalFileJacksonModule;
-import org.embulk.spi.unit.ToStringJacksonModule;
-import org.embulk.spi.unit.ToStringMapJacksonModule;
-import org.embulk.spi.util.CharsetJacksonModule;
 import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {

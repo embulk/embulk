@@ -15,7 +15,7 @@ public class ToStringMap extends HashMap<String, String> {
         super(map);
     }
 
-    static ToStringMap of(final Map<String, String> map) {
+    public static ToStringMap of(final Map<String, String> map) {
         return new ToStringMap(map, true);
     }
 
