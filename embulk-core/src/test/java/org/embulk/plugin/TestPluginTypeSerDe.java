@@ -3,7 +3,9 @@ package org.embulk.plugin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import org.embulk.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,6 +22,8 @@ public class TestPluginTypeSerDe {
         assertTrue(pluginType instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, pluginType.getSourceType());
         assertEquals("file", pluginType.getName());
+
+        assertEquals("\"file\"", testRuntime.getModelManager().writeObject(pluginType));
     }
 
     @Test
@@ -30,6 +34,8 @@ public class TestPluginTypeSerDe {
         assertTrue(pluginType instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, pluginType.getSourceType());
         assertEquals("dummy", pluginType.getName());
+
+        assertEquals("\"dummy\"", testRuntime.getModelManager().writeObject(pluginType));
     }
 
     @Test
@@ -44,6 +50,15 @@ public class TestPluginTypeSerDe {
         assertEquals(mavenPluginType.getGroup(), "org.embulk.bar");
         assertEquals(mavenPluginType.getVersion(), "0.1.2");
         assertNull(mavenPluginType.getClassifier());
+
+        // Serializing MavenPluginType has been failing unintentionally.
+        try {
+            testRuntime.getModelManager().writeObject(pluginType);
+        } catch (final RuntimeException ex) {
+            assertTrue(ex.getCause() instanceof JsonMappingException);
+            return;
+        }
+        fail();
     }
 
     @Test
@@ -58,5 +73,14 @@ public class TestPluginTypeSerDe {
         assertEquals(mavenPluginType.getGroup(), "org.embulk.bar");
         assertEquals(mavenPluginType.getVersion(), "0.1.2");
         assertEquals(mavenPluginType.getClassifier(), "foo");
+
+        // Serializing MavenPluginType has been failing unintentionally.
+        try {
+            testRuntime.getModelManager().writeObject(pluginType);
+        } catch (final RuntimeException ex) {
+            assertTrue(ex.getCause() instanceof JsonMappingException);
+            return;
+        }
+        fail();
     }
 }
