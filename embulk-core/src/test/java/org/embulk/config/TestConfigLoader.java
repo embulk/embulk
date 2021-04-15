@@ -16,7 +16,7 @@ public class TestConfigLoader {
 
     @Before
     public void setup() throws Exception {
-        this.loader = new ConfigLoader(new ModelManager(null, new ObjectMapper()));
+        this.loader = new ConfigLoader(new ModelManager(new ObjectMapper()));
     }
 
     @Test
