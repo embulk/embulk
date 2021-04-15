@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
@@ -10,12 +8,10 @@ import org.embulk.spi.type.Type;
 public class SchemaConfig {
     private final List<ColumnConfig> columns;
 
-    @JsonCreator
     public SchemaConfig(List<ColumnConfig> columns) {
         this.columns = columns;
     }
 
-    @JsonValue
     public List<ColumnConfig> getColumns() {
         return columns;
     }

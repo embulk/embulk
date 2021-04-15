@@ -1,7 +1,5 @@
 package org.embulk.spi;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Objects;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.type.TimestampType;
@@ -28,7 +26,6 @@ public class ColumnConfig {
         this.option = option;
     }
 
-    @JsonCreator
     public ColumnConfig(ConfigSource conf) {
         this.name = conf.get(String.class, "name");
         this.type = conf.get(Type.class, "type");
@@ -49,7 +46,6 @@ public class ColumnConfig {
         return option;
     }
 
-    @JsonValue
     public ConfigSource getConfigSource() {
         ConfigSource conf = option.deepCopy();
         conf.set("name", name);
