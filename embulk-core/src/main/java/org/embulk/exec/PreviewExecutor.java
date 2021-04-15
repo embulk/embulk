@@ -3,10 +3,10 @@ package org.embulk.exec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
-import javax.validation.constraints.NotNull;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
@@ -35,7 +35,6 @@ public class PreviewExecutor {
         public ConfigSource getExecConfig();
 
         @Config("in")
-        @NotNull
         public ConfigSource getInputConfig();
 
         @Config("filters")
@@ -205,7 +204,11 @@ public class PreviewExecutor {
 
     @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301
     private static PreviewTask loadPreviewTask(final ConfigSource config) {
-        return config.loadConfig(PreviewTask.class);
+        final PreviewTask task = config.loadConfig(PreviewTask.class);
+        if (task.getInputConfig() == null) {
+            throw new ConfigException("'in' (InputConfig) must not be null.");
+        }
+        return task;
     }
 
     @SuppressWarnings("deprecation") // https://github.com/embulk/embulk/issues/1301

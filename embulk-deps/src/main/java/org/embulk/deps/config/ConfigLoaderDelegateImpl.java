@@ -15,17 +15,12 @@ import java.util.Map;
 import java.util.Properties;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
-import org.embulk.config.DataSourceImpl;
-import org.embulk.config.ModelManager;
-import org.embulk.deps.config.YamlProcessor;
 
 public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
-    @Deprecated  // https://github.com/embulk/embulk/issues/1304
-    private final ModelManager model;
+    private final ModelManagerDelegateImpl model;
 
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    public ConfigLoaderDelegateImpl(ModelManager model) {
-        this.model = model;
+    public ConfigLoaderDelegateImpl(ModelManagerDelegate model) {
+        this.model = (ModelManagerDelegateImpl) model;
     }
 
     @Override

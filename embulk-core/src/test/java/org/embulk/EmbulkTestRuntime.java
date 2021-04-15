@@ -6,8 +6,6 @@ import com.google.inject.Module;
 import java.util.Properties;
 import java.util.Random;
 import org.embulk.EmbulkEmbed;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.DataSourceImpl;
 import org.embulk.config.ModelManager;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
@@ -43,9 +41,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         final ModelManager model = createModelManager();
-        ConfigSource execConfig = new DataSourceImpl(model);
         this.exec = ExecSessionInternal.builderInternal(injector)
-                .fromExecConfig(execConfig)
                 .setModelManager(model)
                 .registerParserPlugin("mock", MockParserPlugin.class)
                 .registerFormatterPlugin("mock", MockFormatterPlugin.class)

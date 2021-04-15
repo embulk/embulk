@@ -7,11 +7,11 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.Locale;
-import org.embulk.config.CharsetJacksonModule;
-import org.embulk.config.LocalFileJacksonModule;
-import org.embulk.config.TimestampJacksonModule;
-import org.embulk.config.ToStringJacksonModule;
-import org.embulk.config.ToStringMapJacksonModule;
+import org.embulk.deps.config.CharsetJacksonModule;
+import org.embulk.deps.config.LocalFileJacksonModule;
+import org.embulk.deps.config.TimestampJacksonModule;
+import org.embulk.deps.config.ToStringJacksonModule;
+import org.embulk.deps.config.ToStringMapJacksonModule;
 import org.embulk.spi.time.Instants;
 import org.msgpack.value.Value;
 

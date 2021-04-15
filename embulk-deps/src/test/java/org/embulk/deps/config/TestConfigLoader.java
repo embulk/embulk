@@ -1,0 +1,60 @@
+package org.embulk.deps.config;
+
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
+import org.embulk.config.ConfigLoader;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.ModelManager;
+import org.junit.Before;
+import org.junit.Test;
+
+public class TestConfigLoader {
+    private ConfigLoader loader;
+
+    @Before
+    public void setup() throws Exception {
+        this.loader = new ConfigLoader(new ModelManager());
+    }
+
+    @Test
+    public void testFromEmptyJson() throws IOException {
+        ConfigSource config = loader.fromJson(newInputStream("{\"type\":\"test\",\"data\":1}"));
+        assertEquals("test", config.get(String.class, "type"));
+        assertEquals(1, (int) config.get(Integer.class, "data"));
+    }
+
+    @Test
+    public void testFromYamlProperties() throws IOException {
+        Properties props = new Properties();
+        props.setProperty("type", "test");
+        props.setProperty("data", "1");
+
+        ConfigSource config = loader.fromPropertiesYamlLiteral(props, "");
+        assertEquals("test", config.get(String.class, "type"));
+        assertEquals(1, (int) config.get(Integer.class, "data"));
+    }
+
+    @Test
+    public void testFromYamlPropertiesNested() throws IOException {
+        Properties props = new Properties();
+        props.setProperty("type", "test");
+        props.setProperty("columns.k1", "1");
+        props.setProperty("values.myval.data", "2");
+
+        ConfigSource config = loader.fromPropertiesYamlLiteral(props, "");
+        System.out.println("config: " + config);
+        assertEquals("test", config.get(String.class, "type"));
+        assertEquals(1, (int) config.getNested("columns").get(Integer.class, "k1"));
+        assertEquals(2, (int) config.getNested("values").getNested("myval").get(Integer.class, "data"));
+    }
+
+    private static InputStream newInputStream(String string) {
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        return new ByteArrayInputStream(bytes);
+    }
+}
