@@ -67,12 +67,11 @@ public class TestConfigSource {
         public double getDouble();
     }
 
-    // getDefaultTimeZone() with org.joda.time.DateTimeZone is deprecated, but intentionally tested.
     @SuppressWarnings("deprecation")
     private static interface DuplicatedDateTimeZone extends Task, TimestampParser.Task {
         @Config("default_timezone")
-        @ConfigDefault("\"America/Los_Angeles\"")
-        public org.joda.time.DateTimeZone getDefaultTimeZone();
+        @ConfigDefault("\"UTC\"")
+        public String getDefaultTimeZoneId();
 
         @Config("dummy_value")
         public String getDummyValue();
@@ -168,7 +167,6 @@ public class TestConfigSource {
 
         DuplicatedDateTimeZone task = config.loadConfig(DuplicatedDateTimeZone.class);
         assertEquals("Asia/Tokyo", task.getDefaultTimeZoneId());
-        assertEquals(org.joda.time.DateTimeZone.forID("Asia/Tokyo"), task.getDefaultTimeZone());
         assertEquals("%Y", task.getDefaultTimestampFormat());
         assertEquals("1970-01-01", task.getDefaultDate());
         assertEquals("foobar", task.getDummyValue());
@@ -181,7 +179,6 @@ public class TestConfigSource {
 
         DuplicatedDateTimeZone task = config.loadConfig(DuplicatedDateTimeZone.class);
         assertEquals("UTC", task.getDefaultTimeZoneId());
-        assertEquals(org.joda.time.DateTimeZone.forID("America/Los_Angeles"), task.getDefaultTimeZone());
         assertEquals("%Y", task.getDefaultTimestampFormat());
         assertEquals("1970-01-01", task.getDefaultDate());
         assertEquals("foobar", task.getDummyValue());

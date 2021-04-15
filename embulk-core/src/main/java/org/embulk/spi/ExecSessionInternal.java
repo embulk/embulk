@@ -28,7 +28,6 @@ import org.embulk.plugin.PluginType;
 import org.embulk.plugin.SelfContainedPluginSource;
 import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.time.Instants;
-import org.embulk.spi.time.TimestampFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -342,13 +341,6 @@ public class ExecSessionInternal extends ExecSession {
     @Override
     public TaskSource newTaskSource() {
         return new DataSourceImpl(modelManager);
-    }
-
-    // To be removed by v0.10 or earlier.
-    @Deprecated  // https://github.com/embulk/embulk/issues/936
-    @SuppressWarnings("deprecation")
-    public TimestampFormatter newTimestampFormatter(String format, org.joda.time.DateTimeZone timezone) {
-        return new TimestampFormatter(format, timezone);
     }
 
     @Override

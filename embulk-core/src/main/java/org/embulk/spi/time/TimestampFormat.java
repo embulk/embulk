@@ -17,12 +17,5 @@ public class TimestampFormat {
         return this.format;
     }
 
-    // Using Joda-Time is deprecated, but the parser returns org.joda.time.DateTimeZone for plugin compatibility.
-    // It won't be removed very soon at least until Embulk v0.10.
-    @Deprecated
-    public static org.joda.time.DateTimeZone parseDateTimeZone(final String timeZoneName) {
-        return TimeZoneIds.parseJodaDateTimeZone(timeZoneName);
-    }
-
     private final String format;
 }

@@ -2,7 +2,6 @@ package org.embulk.exec;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -17,7 +16,6 @@ import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.ColumnJacksonModule;
 import org.embulk.spi.SchemaJacksonModule;
 import org.embulk.spi.TempFileSpaceAllocator;
-import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.type.TypeJacksonModule;
 import org.embulk.spi.unit.LocalFileJacksonModule;
@@ -50,7 +48,6 @@ public class ExecModule implements Module {
 
         // SerDe
         final ObjectMapperModule mapper = new ObjectMapperModule();
-        mapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
         mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         mapper.registerModule(new CharsetJacksonModule());
         mapper.registerModule(new LocalFileJacksonModule());
@@ -61,7 +58,6 @@ public class ExecModule implements Module {
         mapper.registerModule(new SchemaJacksonModule());
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
-        mapper.registerModule(new JodaModule());  // jackson-datatype-joda
         mapper.configure(binder);
     }
 

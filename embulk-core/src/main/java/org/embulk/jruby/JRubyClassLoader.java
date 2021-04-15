@@ -53,18 +53,12 @@ final class JRubyClassLoader extends URLClassLoader {
                 return this.resolveClassIfNeeded(loadedClass, resolve);
             }
 
-            // JRuby should use Joda-Time of embulk-core (on the top-level class loader), not of jruby-complete.
-            // Otherwise, embulk-core uses its own, and JRuby uses its own, then they wouldn't match.
-            //
-            // TODO: Remove the condition when embulk-core removes Joda-Time from its dependencies.
-            if (!name.startsWith("org.joda.time.")) {
-                // If a class of the specified name has not been loaded yet, and is found by this (not parent) class loader,
-                // find it, and return it.
-                try {
-                    return this.resolveClassIfNeeded(this.findClass(name), resolve);
-                } catch (final ClassNotFoundException ignored) {
-                    // Passing through intentionally.
-                }
+            // If a class of the specified name has not been loaded yet, and is found by this (not parent) class loader,
+            // find it, and return it.
+            try {
+                return this.resolveClassIfNeeded(this.findClass(name), resolve);
+            } catch (final ClassNotFoundException ignored) {
+                // Passing through intentionally.
             }
 
             // If a class of the specified name is found by this class loader (not by the parent class loader),

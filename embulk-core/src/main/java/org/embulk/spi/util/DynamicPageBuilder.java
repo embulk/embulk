@@ -14,7 +14,6 @@ import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.PageOutput;
 import org.embulk.spi.Schema;
-import org.embulk.spi.time.TimeZoneIds;
 import org.embulk.spi.util.dynamic.SkipColumnSetter;
 
 public class DynamicPageBuilder implements AutoCloseable {
@@ -28,16 +27,7 @@ public class DynamicPageBuilder implements AutoCloseable {
         @ConfigDefault("\"UTC\"")
         public String getDefaultTimeZoneId();
 
-        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
-        // It won't be removed very soon at least until Embulk v0.10.
-        @Deprecated
-        public default org.joda.time.DateTimeZone getDefaultTimeZone() {
-            if (getDefaultTimeZoneId() != null) {
-                return TimeZoneIds.parseJodaDateTimeZone(getDefaultTimeZoneId());
-            } else {
-                return null;
-            }
-        }
+        // The method has been removed: public default org.joda.time.DateTimeZone getDefaultTimeZone()
 
         @Config("column_options")
         @ConfigDefault("{}")
@@ -62,16 +52,7 @@ public class DynamicPageBuilder implements AutoCloseable {
         @ConfigDefault("null")
         public Optional<String> getTimeZoneId();
 
-        // Using Joda-Time is deprecated, but the getter returns org.joda.time.DateTimeZone for plugin compatibility.
-        // It won't be removed very soon at least until Embulk v0.10.
-        @Deprecated
-        public default Optional<org.joda.time.DateTimeZone> getTimeZone() {
-            if (getTimeZoneId().isPresent()) {
-                return Optional.of(TimeZoneIds.parseJodaDateTimeZone(getTimeZoneId().get()));
-            } else {
-                return Optional.absent();
-            }
-        }
+        // The method has been removed: public default Optional<org.joda.time.DateTimeZone> getTimeZone()
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1321

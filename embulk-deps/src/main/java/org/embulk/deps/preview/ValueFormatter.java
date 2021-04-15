@@ -4,11 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.joda.JodaModule;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.Locale;
-import org.embulk.spi.time.DateTimeZoneJacksonModule;
 import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.TimestampJacksonModule;
 import org.embulk.spi.unit.LocalFileJacksonModule;
@@ -24,7 +22,6 @@ final class ValueFormatter {
         this.objectMapper = new ObjectMapper();
 
         // Those Jackson modules are registered for a while, but unnecessary ones will be swiped out.
-        this.objectMapper.registerModule(new DateTimeZoneJacksonModule());  // Deprecated -- to be removed.
         this.objectMapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         this.objectMapper.registerModule(new CharsetJacksonModule());
         this.objectMapper.registerModule(new LocalFileJacksonModule());
@@ -33,7 +30,6 @@ final class ValueFormatter {
         // PreviewPrinter would not need TypeJacksonModule, ColumnJacksonModule, and SchemaJacksonModule.
         this.objectMapper.registerModule(new GuavaModule());
         this.objectMapper.registerModule(new Jdk8Module());
-        this.objectMapper.registerModule(new JodaModule());
     }
 
     String valueToString(final Object obj) {
