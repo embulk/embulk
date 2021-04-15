@@ -338,15 +338,15 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             }
         } else if (LOAD.getOpt().equals(option.getOpt())) {  // -L
             final String oldValue = properties.getProperty("jruby_load_path");
-            final String newValue = option.getValue();
+            final String newValue = Paths.get(option.getValue()).resolve("lib").toString();
             if (oldValue == null || oldValue.isEmpty()) {
                 properties.setProperty("jruby_load_path", newValue);
             } else {
                 properties.setProperty("jruby_load_path", oldValue + java.io.File.pathSeparator + newValue);
             }
         } else if (LOAD_PATH.getOpt().equals(option.getOpt())) {  // -I
-            final String newValue = Paths.get(option.getValue()).resolve("lib").toString();
             final String oldValue = properties.getProperty("jruby_load_path");
+            final String newValue = option.getValue();
             if (oldValue == null || oldValue.isEmpty()) {
                 properties.setProperty("jruby_load_path", newValue);
             } else {
