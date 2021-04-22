@@ -79,7 +79,7 @@ public class EmbulkEmbed {
 
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
-        this.previewExecutor = new PreviewExecutor(embulkSystemProperties);
+        this.previewExecutor = new PreviewExecutor();
     }
 
     public static class Bootstrap {

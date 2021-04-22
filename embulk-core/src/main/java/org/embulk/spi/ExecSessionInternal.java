@@ -150,7 +150,6 @@ public class ExecSessionInternal extends ExecSession {
 
         public Builder setEmbulkSystemProperties(final EmbulkSystemProperties embulkSystemProperties) {
             this.embulkSystemProperties = embulkSystemProperties;
-            this.builtinPluginSourceBuilder.setEmbulkSystemProperties(embulkSystemProperties);
             return this;
         }
 

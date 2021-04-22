@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -62,14 +61,6 @@ public final class EmbulkSystemProperties extends Properties {
             return defaultValue;
         }
         return parseInteger(value);
-    }
-
-    public OptionalInt getPropertyAsOptionalInt(final String key) {
-        final String value = this.getProperty(key);
-        if (value == null) {
-            return OptionalInt.empty();
-        }
-        return OptionalInt.of(parseInteger(value));
     }
 
     @Override  // From Properties

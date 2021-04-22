@@ -4,7 +4,6 @@ import static org.embulk.exec.GuessExecutor.createSampleBufferConfigFromExecConf
 
 import java.util.ArrayList;
 import java.util.List;
-import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -20,11 +19,9 @@ import org.embulk.spi.util.DecodersInternal;
 
 public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugin {
     private final FileInputPlugin fileInputPlugin;
-    private final EmbulkSystemProperties embulkSystemProperties;
 
-    public FileInputRunner(final FileInputPlugin fileInputPlugin, final EmbulkSystemProperties embulkSystemProperties) {
+    public FileInputRunner(FileInputPlugin fileInputPlugin) {
         this.fileInputPlugin = fileInputPlugin;
-        this.embulkSystemProperties = embulkSystemProperties;
     }
 
     private interface RunnerTask extends Task {
@@ -78,8 +75,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
     }
 
     public ConfigDiff guess(ConfigSource execConfig, ConfigSource inputConfig) {
-        final ConfigSource sampleBufferConfig = createSampleBufferConfigFromExecConfig(
-                execConfig, this.embulkSystemProperties);
+        final ConfigSource sampleBufferConfig = createSampleBufferConfigFromExecConfig(execConfig);
         final Buffer sample = SamplingParserPlugin.runFileInputSampling(this, inputConfig, sampleBufferConfig);
         // SamplingParserPlugin.runFileInputSampling throws NoSampleException if there're
         // no files or all files are smaller than minSampleSize (40 bytes).
