@@ -1,3 +1,0 @@
-Embulk::JavaPlugin.register_${embulkCategory}(
-  "${name}", "${javaPackageName}.${javaClassName}",
-  File.expand_path('../../../../classpath', __FILE__))

@@ -46,6 +46,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             case EXEC:
             case IRB:
             case MIGRATE:
+            case NEW:
                 return ofUnsupported(command, commandString, logger);
             case BUNDLE:
                 return ofRubyCommand(command, commandString, originalArgs, BUNDLE_USAGE, BUNDLE_HEADER, logger);
@@ -63,8 +64,6 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
                 return ofCommand(command, originalArgs, 0, 1, EXAMPLE_OPTIONS, EXAMPLE_USAGE, EXAMPLE_HEADER, logger);
             case MKBUNDLE:
                 return ofCommand(command, originalArgs, 1, 1, MKBUNDLE_OPTIONS, MKBUNDLE_USAGE, MKBUNDLE_HEADER, logger);
-            case NEW:
-                return ofCommand(command, originalArgs, 2, 2, NEW_OPTIONS, NEW_USAGE, NEW_HEADER, logger);
             case SELFUPDATE:
                 return ofCommand(command, originalArgs, 1, 1, SELFUPDATE_OPTIONS, SELFUPDATE_USAGE, SELFUPDATE_HEADER, logger);
             default:
@@ -412,8 +411,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             + "   selfupdate   Upgrade Embulk to the specified version.\n"
             + "   gem          Run \"gem\" to install a RubyGem plugin.\n"
             + "   mkbundle     Create a new plugin bundle environment.\n"
-            + "   bundle       Update a plugin bundle environment.\n"
-            + "   new          Generate new plugin template\n\n";
+            + "   bundle       Update a plugin bundle environment.\n\n";
 
     static final Option RUBY = Option.builder("R").hasArg().argName("OPTION")
             .desc("Command-line option for JRuby. (Only '--dev')").build();
@@ -605,33 +603,6 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             .addOption(new PlaceholderOption(""))
             .addOption(new PlaceholderOption("Another 'mkbundle' option:"))
             .addOption(BUNDLE_PATH);
-
-    private static final String NEW_USAGE = "embulk [common options] new [command options] <category> <name>";
-
-    private static final String NEW_HEADER =
-            "\n"
-            + "Categories:\n"
-            + "    java-input          Java Input Plugin\n"
-            + "    java-output         Java Output Plugin\n"
-            + "    java-filter         Java Filter Plugin\n"
-            + "    java-file-input     Java File Input Plugin\n"
-            + "    java-file-output    Java File Output Plugin\n"
-            + "    java-parser         Java Parser Plugin\n"
-            + "    java-formatter      Java Formatter Plugin\n"
-            + "    java-decoder        Java Decoder Plugin\n"
-            + "    java-encoder        Java Encoder Plugin\n"
-            + "    ruby-input          Ruby Input Plugin\n"
-            + "    ruby-output         Ruby Output Plugin\n"
-            + "    ruby-filter         Ruby Filter Plugin\n"
-            + "    ruby-parser         Ruby Parser Plugin\n"
-            + "    ruby-formatter      Ruby Formatter Plugin\n"
-            + "\n"
-            + "Examples:\n"
-            + "    $ embulk new java-output jdbc\n"
-            + "    $ embulk new java-filter int-to-string\n"
-            + "\n";
-
-    private static final OptionsWithPlaceholders NEW_OPTIONS = COMMON_OPTIONS.clone();
 
     private static final String SELFUPDATE_USAGE = "embulk [common options] selfupdate [command options] <version>";
 
