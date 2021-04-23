@@ -30,7 +30,6 @@ import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
-import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
@@ -62,7 +61,8 @@ public class EmbulkEmbed {
             final LinkedHashMap<String, Class<? extends InputPlugin>> inputPlugins,
             final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins,
             final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins,
-            final EmbulkSystemProperties embulkSystemProperties) {
+            final EmbulkSystemProperties embulkSystemProperties,
+            final BulkLoader alternativeBulkLoader) {
         this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
         this.encoderPlugins = Collections.unmodifiableMap(encoderPlugins);
@@ -77,8 +77,12 @@ public class EmbulkEmbed {
         this.parserPlugins = Collections.unmodifiableMap(parserPlugins);
         this.embulkSystemProperties = embulkSystemProperties;
 
-        this.bulkLoader = injector.getInstance(BulkLoader.class);
-        this.guessExecutor = injector.getInstance(GuessExecutor.class);
+        if (alternativeBulkLoader == null) {
+            this.bulkLoader = new BulkLoader(embulkSystemProperties);
+        } else {
+            this.bulkLoader = alternativeBulkLoader;
+        }
+        this.guessExecutor = new GuessExecutor(embulkSystemProperties);
         this.previewExecutor = new PreviewExecutor();
 
         this.modelManager = createModelManager();
@@ -98,6 +102,7 @@ public class EmbulkEmbed {
             this.outputPlugins = new LinkedHashMap<>();
             this.parserPlugins = new LinkedHashMap<>();
             this.embulkSystemPropertiesBuilt = new Properties();
+            this.alternativeBulkLoader = null;
             this.moduleOverrides = new ArrayList<>();
             this.started = false;
         }
@@ -159,6 +164,14 @@ public class EmbulkEmbed {
 
         public Bootstrap setEmbulkSystemProperties(final Properties propertiesGiven) {
             this.embulkSystemPropertiesBuilt = propertiesGiven;
+            return this;
+        }
+
+        /**
+         * Sets an alternative {@code BulkLoader} instance mainly for testing-purpose.
+         */
+        public Bootstrap setAlternativeBulkLoader(final BulkLoader alternativeBulkLoader) {
+            this.alternativeBulkLoader = alternativeBulkLoader;
             return this;
         }
 
@@ -249,7 +262,8 @@ public class EmbulkEmbed {
                     inputPlugins,
                     outputPlugins,
                     parserPlugins,
-                    embulkSystemProperties);
+                    embulkSystemProperties,
+                    alternativeBulkLoader);
         }
 
         @Deprecated
@@ -262,6 +276,8 @@ public class EmbulkEmbed {
         // We are trying to represent the "system config" in java.util.Properties, instead of ConfigSource.
         // TODO: Make this java.util.Properties use as system config. See: https://github.com/embulk/embulk/issues/1159
         private Properties embulkSystemPropertiesBuilt;
+
+        private BulkLoader alternativeBulkLoader;
 
         private final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins;
         private final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins;
@@ -413,6 +429,7 @@ public class EmbulkEmbed {
         return builder
                 .setModelManager(this.modelManager)
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
+                .setGuessExecutor(this.guessExecutor)
                 .setParentFirstPackages(PARENT_FIRST_PACKAGES)
                 .setParentFirstResources(PARENT_FIRST_RESOURCES)
                 .fromExecConfig(execConfig)
@@ -511,7 +528,6 @@ public class EmbulkEmbed {
 
     static List<Module> standardModuleList(final EmbulkSystemProperties embulkSystemProperties) {
         final ArrayList<Module> built = new ArrayList<>();
-        built.add(new SystemConfigModule(embulkSystemProperties));
         built.add(new ExecModule(embulkSystemProperties));
         built.add(new ExtensionServiceLoaderModule(embulkSystemProperties));
         return Collections.unmodifiableList(built);

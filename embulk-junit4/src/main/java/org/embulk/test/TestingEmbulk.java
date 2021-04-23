@@ -104,7 +104,7 @@ public class TestingEmbulk implements TestRule {
         if (builder.embulkSystemProperties != null) {
             this.embulkSystemProperties = EmbulkSystemProperties.of(builder.embulkSystemProperties);
         } else {
-            this.embulkSystemProperties = null;
+            this.embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
         }
         reset();
     }
@@ -113,9 +113,7 @@ public class TestingEmbulk implements TestRule {
         destroy();
 
         final EmbulkEmbed.Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
-        if (this.embulkSystemProperties != null) {
-            bootstrap.setEmbulkSystemProperties(this.embulkSystemProperties);
-        }
+        bootstrap.setEmbulkSystemProperties(this.embulkSystemProperties);
         for (final Map.Entry<String, Class<?>> plugin : this.builtinPlugins.get(DecoderPlugin.class).entrySet()) {
             bootstrap.builtinDecoderPlugin(plugin.getKey(), (Class<DecoderPlugin>) plugin.getValue());
         }
@@ -151,7 +149,7 @@ public class TestingEmbulk implements TestRule {
         }
         this.embed = bootstrap
                 .builtinInputPlugin("preview_result", PreviewResultInputPlugin.class)
-                .overrideModules(TestingBulkLoader.override())
+                .setAlternativeBulkLoader(new TestingBulkLoader(this.embulkSystemProperties))
                 .initializeCloseable();
 
         try {

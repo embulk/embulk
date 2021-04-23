@@ -2,7 +2,6 @@ package org.embulk.exec;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
-import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +58,6 @@ public class GuessExecutor {
         return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
     }
 
-    @Inject
     public GuessExecutor(final EmbulkSystemProperties embulkSystemProperties) {
         final String defaultGuessPlugins = embulkSystemProperties.getProperty("default_guess_plugins", null);
         final String guessPlugins = embulkSystemProperties.getProperty("guess_plugins", null);

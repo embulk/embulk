@@ -2,8 +2,6 @@ package org.embulk.exec;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.embulk.EmbulkSystemProperties;
@@ -35,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BulkLoader {
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
 
     public interface BulkLoaderTask extends Task {
@@ -58,9 +55,7 @@ public class BulkLoader {
         public void setOutputTask(TaskSource taskSource);
     }
 
-    @Inject
-    public BulkLoader(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
-        this.injector = injector;
+    public BulkLoader(final EmbulkSystemProperties embulkSystemProperties) {
         this.embulkSystemProperties = embulkSystemProperties;
     }
 

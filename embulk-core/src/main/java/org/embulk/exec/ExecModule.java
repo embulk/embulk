@@ -26,8 +26,6 @@ public class ExecModule implements Module {
             throw new NullPointerException("binder is null.");
         }
 
-        binder.bind(BulkLoader.class);
-
         // TODO: Remove this ILoggerFactory binding.
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
 

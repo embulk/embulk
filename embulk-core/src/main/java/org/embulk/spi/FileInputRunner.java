@@ -80,7 +80,7 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         // SamplingParserPlugin.runFileInputSampling throws NoSampleException if there're
         // no files or all files are smaller than minSampleSize (40 bytes).
 
-        GuessExecutor guessExecutor = ExecInternal.getInjector().getInstance(GuessExecutor.class);
+        GuessExecutor guessExecutor = ExecInternal.getGuessExecutor();
         return guessExecutor.guessParserConfig(sample, inputConfig, execConfig);
     }
 

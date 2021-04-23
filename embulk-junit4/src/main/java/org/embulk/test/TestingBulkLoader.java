@@ -1,13 +1,7 @@
 package org.embulk.test;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Binder;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
 import java.util.List;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.TaskReport;
@@ -20,23 +14,8 @@ import org.embulk.spi.Schema;
 import org.slf4j.Logger;
 
 class TestingBulkLoader extends BulkLoader {
-    static Function<List<Module>, List<Module>> override() {
-        return new Function<List<Module>, List<Module>>() {
-            @Override
-            public List<Module> apply(List<Module> modules) {
-                Module override = new Module() {
-                        public void configure(Binder binder) {
-                            binder.bind(BulkLoader.class).to(TestingBulkLoader.class);
-                        }
-                    };
-                return ImmutableList.of(Modules.override(modules).with(ImmutableList.of(override)));
-            }
-        };
-    }
-
-    @Inject
-    public TestingBulkLoader(final Injector injector, final EmbulkSystemProperties embulkSystemProperties) {
-        super(injector, embulkSystemProperties);
+    public TestingBulkLoader(final EmbulkSystemProperties embulkSystemProperties) {
+        super(embulkSystemProperties);
     }
 
     @Override
