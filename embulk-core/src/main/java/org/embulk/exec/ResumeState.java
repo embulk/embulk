@@ -1,7 +1,5 @@
 package org.embulk.exec;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import java.util.List;
 import org.embulk.config.ConfigSource;
@@ -18,15 +16,14 @@ public class ResumeState {
     private final List<Optional<TaskReport>> inputTaskReports;
     private final List<Optional<TaskReport>> outputTaskReports;
 
-    @JsonCreator
     public ResumeState(
-            @JsonProperty("exec_task") ConfigSource execSessionConfigSource,
-            @JsonProperty("in_task") TaskSource inputTaskSource,
-            @JsonProperty("out_task") TaskSource outputTaskSource,
-            @JsonProperty("in_schema") Schema inputSchema,
-            @JsonProperty("out_schema") Schema outputSchema,
-            @JsonProperty("in_reports") List<Optional<TaskReport>> inputTaskReports,
-            @JsonProperty("out_reports") List<Optional<TaskReport>> outputTaskReports) {
+            final ConfigSource execSessionConfigSource,
+            final TaskSource inputTaskSource,
+            final TaskSource outputTaskSource,
+            final Schema inputSchema,
+            final Schema outputSchema,
+            final List<Optional<TaskReport>> inputTaskReports,
+            final List<Optional<TaskReport>> outputTaskReports) {
         this.execSessionConfigSource = execSessionConfigSource;
         this.inputTaskSource = inputTaskSource;
         this.outputTaskSource = outputTaskSource;
@@ -36,37 +33,30 @@ public class ResumeState {
         this.outputTaskReports = outputTaskReports;
     }
 
-    @JsonProperty("exec_task")
     public ConfigSource getExecSessionConfigSource() {
         return execSessionConfigSource;
     }
 
-    @JsonProperty("in_task")
     public TaskSource getInputTaskSource() {
         return inputTaskSource;
     }
 
-    @JsonProperty("out_task")
     public TaskSource getOutputTaskSource() {
         return outputTaskSource;
     }
 
-    @JsonProperty("in_schema")
     public Schema getInputSchema() {
         return inputSchema;
     }
 
-    @JsonProperty("out_schema")
     public Schema getOutputSchema() {
         return outputSchema;
     }
 
-    @JsonProperty("in_reports")
     public List<Optional<TaskReport>> getInputTaskReports() {
         return inputTaskReports;
     }
 
-    @JsonProperty("out_reports")
     public List<Optional<TaskReport>> getOutputTaskReports() {
         return outputTaskReports;
     }
