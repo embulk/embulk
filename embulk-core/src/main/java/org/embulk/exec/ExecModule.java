@@ -4,7 +4,6 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import org.embulk.EmbulkSystemProperties;
-import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {
     public ExecModule(final EmbulkSystemProperties embulkSystemProperties) {
@@ -18,9 +17,6 @@ public class ExecModule implements Module {
         if (binder == null) {
             throw new NullPointerException("binder is null.");
         }
-
-        // TODO: Remove this ILoggerFactory binding.
-        binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
     }
 
     private final EmbulkSystemProperties embulkSystemProperties;
