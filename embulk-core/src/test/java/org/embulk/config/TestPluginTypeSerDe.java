@@ -1,12 +1,14 @@
-package org.embulk.plugin;
+package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import org.embulk.EmbulkTestRuntime;
+import org.embulk.plugin.DefaultPluginType;
+import org.embulk.plugin.MavenPluginType;
+import org.embulk.plugin.PluginSource;
+import org.embulk.plugin.PluginType;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -51,14 +53,9 @@ public class TestPluginTypeSerDe {
         assertEquals(mavenPluginType.getVersion(), "0.1.2");
         assertNull(mavenPluginType.getClassifier());
 
-        // Serializing MavenPluginType has been failing unintentionally.
-        try {
-            testRuntime.getModelManager().writeObject(pluginType);
-        } catch (final RuntimeException ex) {
-            assertTrue(ex.getCause() instanceof JsonMappingException);
-            return;
-        }
-        fail();
+        assertEquals(
+                "{\"source\":\"maven\",\"name\":\"foo\",\"group\":\"org.embulk.bar\",\"version\":\"0.1.2\"}",
+                testRuntime.getModelManager().writeObject(pluginType));
     }
 
     @Test
@@ -74,13 +71,8 @@ public class TestPluginTypeSerDe {
         assertEquals(mavenPluginType.getVersion(), "0.1.2");
         assertEquals(mavenPluginType.getClassifier(), "foo");
 
-        // Serializing MavenPluginType has been failing unintentionally.
-        try {
-            testRuntime.getModelManager().writeObject(pluginType);
-        } catch (final RuntimeException ex) {
-            assertTrue(ex.getCause() instanceof JsonMappingException);
-            return;
-        }
-        fail();
+        assertEquals(
+                "{\"source\":\"maven\",\"name\":\"foo\",\"group\":\"org.embulk.bar\",\"classifier\":\"foo\",\"version\":\"0.1.2\"}",
+                testRuntime.getModelManager().writeObject(pluginType));
     }
 }
