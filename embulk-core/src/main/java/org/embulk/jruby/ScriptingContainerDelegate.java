@@ -37,10 +37,10 @@ public abstract class ScriptingContainerDelegate {
 
     public abstract String getRubyVersion();
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     abstract String getGemHome() throws JRubyNotLoadedException;
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     abstract String getGemPathInString() throws JRubyNotLoadedException;
 
     public abstract void clearGemPaths() throws JRubyNotLoadedException;

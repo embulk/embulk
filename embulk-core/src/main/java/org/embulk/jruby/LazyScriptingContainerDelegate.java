@@ -132,13 +132,13 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
         return getInitialized().getRubyVersion();
     }
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     @Override
     String getGemHome() throws JRubyInvalidRuntimeException {
         return getInitialized().getGemHome();
     }
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     @Override
     String getGemPathInString() throws JRubyInvalidRuntimeException {
         return getInitialized().getGemPathInString();

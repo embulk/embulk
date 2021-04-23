@@ -418,13 +418,13 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
         return this.rubyVersion;
     }
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     @Override
     String getGemHome() throws JRubyInvalidRuntimeException {
         return this.callMethod(this.getGemPaths(), "home", String.class);
     }
 
-    // It is intentionally package-private. It is just for logging from JRubyScriptingModule.
+    // It is intentionally package-private. It is just for logging from JRubyInitializer.
     @Override
     String getGemPathInString() throws JRubyInvalidRuntimeException {
         final List gemPath = this.callMethod(this.getGemPaths(), "path", List.class);

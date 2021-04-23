@@ -10,7 +10,6 @@ import org.embulk.config.ModelManager;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.exec.SystemConfigModule;
-import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.spi.BufferAllocator;
@@ -30,7 +29,6 @@ public class EmbulkTestRuntime extends GuiceBinder {
             new SystemConfigModule(embulkSystemProperties).configure(binder);
             new ExecModule(embulkSystemProperties).configure(binder);
             new ExtensionServiceLoaderModule(embulkSystemProperties).configure(binder);
-            new JRubyScriptingModule().configure(binder);
             new TestUtilityModule().configure(binder);
         }
     }
