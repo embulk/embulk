@@ -12,4 +12,9 @@ configurations {
 dependencies {
     api "org.msgpack:msgpack-core:0.8.11"
     api "org.slf4j:slf4j-api:1.7.30"
+
+    // We have a plan to enable @Inject for each plugin instance.
+    // "javax.inject" is intentionally included in "embulk-api" for that purpose.
+    // https://github.com/embulk/embulk/issues/1452
+    api "javax.inject:javax.inject:1"
 }
