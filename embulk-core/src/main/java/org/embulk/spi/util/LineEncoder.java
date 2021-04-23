@@ -10,7 +10,6 @@ import java.nio.charset.CodingErrorAction;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.Task;
-import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
 import org.slf4j.Logger;
@@ -28,13 +27,6 @@ public class LineEncoder implements AutoCloseable {
         @Config("newline")
         @ConfigDefault("\"CRLF\"")
         public Newline getNewline();
-
-        @Deprecated
-        default BufferAllocator getBufferAllocator() {
-            logger.warn("org.embulk.spi.util.LineEncoder is deprecated. "
-                        + "Contact a developer of the plugin to use embulk-util-text, instead.");
-            return Exec.getBufferAllocator();
-        }
     }
 
     private final String newline;

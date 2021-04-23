@@ -7,28 +7,33 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
+import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.exec.BulkLoader;
-import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
+import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.exec.TransactionStage;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
@@ -43,6 +48,7 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.TempFileSpaceAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +67,8 @@ public class EmbulkEmbed {
             final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins,
             final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins,
             final EmbulkSystemProperties embulkSystemProperties,
+            final BufferAllocator bufferAllocator,
+            final TempFileSpaceAllocator tempFileSpaceAllocator,
             final BulkLoader alternativeBulkLoader) {
         this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
@@ -75,6 +83,8 @@ public class EmbulkEmbed {
         this.outputPlugins = Collections.unmodifiableMap(outputPlugins);
         this.parserPlugins = Collections.unmodifiableMap(parserPlugins);
         this.embulkSystemProperties = embulkSystemProperties;
+        this.bufferAllocator = bufferAllocator;
+        this.tempFileSpaceAllocator = tempFileSpaceAllocator;
 
         if (alternativeBulkLoader == null) {
             this.bulkLoader = new BulkLoader(embulkSystemProperties);
@@ -230,7 +240,7 @@ public class EmbulkEmbed {
             final ArrayList<Module> modulesListBuilt = new ArrayList<>();
 
             final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(this.embulkSystemPropertiesBuilt);
-            ArrayList<Module> userModules = new ArrayList<>(standardModuleList(embulkSystemProperties));
+            ArrayList<Module> userModules = new ArrayList<>();
             for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
                 final Iterable<? extends Module> overridden = override.apply(userModules);
                 userModules = new ArrayList<Module>();
@@ -238,6 +248,8 @@ public class EmbulkEmbed {
                     userModules.add(module);
                 }
             }
+            final BufferAllocator bufferAllocator = createBufferAllocatorFromSystemConfig(embulkSystemProperties);
+            final TempFileSpaceAllocator tempFileSpaceAllocator = new SimpleTempFileSpaceAllocator();
             modulesListBuilt.addAll(userModules);
 
             modulesListBuilt.add(new Module() {
@@ -262,6 +274,8 @@ public class EmbulkEmbed {
                     outputPlugins,
                     parserPlugins,
                     embulkSystemProperties,
+                    bufferAllocator,
+                    tempFileSpaceAllocator,
                     alternativeBulkLoader);
         }
 
@@ -312,7 +326,7 @@ public class EmbulkEmbed {
     }
 
     public BufferAllocator getBufferAllocator() {
-        return injector.getInstance(BufferAllocator.class);
+        return this.bufferAllocator;
     }
 
     public ConfigLoader newConfigLoader() {
@@ -391,7 +405,8 @@ public class EmbulkEmbed {
     }
 
     private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
-        final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(this.injector);
+        final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(
+                this.injector, this.bufferAllocator, this.tempFileSpaceAllocator);
         for (final Map.Entry<String, Class<? extends DecoderPlugin>> decoderPlugin : this.decoderPlugins.entrySet()) {
             builder.registerDecoderPlugin(decoderPlugin.getKey(), decoderPlugin.getValue());
         }
@@ -525,12 +540,6 @@ public class EmbulkEmbed {
                 + "See https://github.com/embulk/embulk/issues/1047 for the details.");
     }
 
-    static List<Module> standardModuleList(final EmbulkSystemProperties embulkSystemProperties) {
-        final ArrayList<Module> built = new ArrayList<>();
-        built.add(new ExecModule(embulkSystemProperties));
-        return Collections.unmodifiableList(built);
-    }
-
     private static Set<String> readPropertyKeys(final String name) {
         try (final InputStream in = EmbulkEmbed.class.getResourceAsStream(name)) {
             if (in == null) {
@@ -546,6 +555,56 @@ public class EmbulkEmbed {
         }
     }
 
+    private static BufferAllocator createBufferAllocatorFromSystemConfig(final EmbulkSystemProperties embulkSystemProperties) {
+        final String byteSizeRepresentation = embulkSystemProperties.getProperty("page_size");
+        if (byteSizeRepresentation == null) {
+            return PooledBufferAllocator.create();
+        } else {
+            final int byteSize = parseByteSizeRepresentation(byteSizeRepresentation);
+            return PooledBufferAllocator.create(byteSize);
+        }
+    }
+
+    private static int parseByteSizeRepresentation(final String byteSizeRepresentation) {
+        if (byteSizeRepresentation == null) {  // Should not happen.
+            throw new NullPointerException("size is null");
+        }
+        if (byteSizeRepresentation.isEmpty()) {
+            throw new IllegalArgumentException("size is empty");
+        }
+
+        final Matcher matcher = BYTE_SIZE_PATTERN.matcher(byteSizeRepresentation);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Invalid byte size string '" + byteSizeRepresentation + "'");
+        }
+
+        final String numberPart = matcher.group(1);
+        final String unitPart = matcher.group(2);
+
+        final BigDecimal number = new BigDecimal(numberPart);  // NumberFormatException extends IllegalArgumentException.
+
+        if (unitPart.isEmpty()) {
+            return number.intValue();
+        }
+
+        switch (unitPart.toUpperCase(Locale.ENGLISH)) {
+            case "B":
+                return number.intValue();
+            case "KB":
+                return number.multiply(KILO).intValue();
+            case "MB":
+                return number.multiply(MEGA).intValue();
+            case "GB":
+                return number.multiply(GIGA).intValue();
+            case "TB":
+                return number.multiply(TERA).intValue();
+            case "PB":
+                return number.multiply(PETA).intValue();
+            default:
+                throw new IllegalArgumentException("Unknown unit '" + unitPart + "'");
+        }
+    }
+
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private static org.embulk.config.ModelManager createModelManager() {
         return new org.embulk.config.ModelManager();
@@ -555,10 +614,21 @@ public class EmbulkEmbed {
     static final Set<String> PARENT_FIRST_PACKAGES = readPropertyKeys("/embulk/parent_first_packages.properties");
     static final Set<String> PARENT_FIRST_RESOURCES = readPropertyKeys("/embulk/parent_first_resources.properties");
 
+    private static final Pattern BYTE_SIZE_PATTERN = Pattern.compile("\\A(\\d+(?:\\.\\d+)?)\\s?([a-zA-Z]*)\\z");
+
+    private static final BigDecimal KILO = new BigDecimal(1L << 10);  // 1_024
+    private static final BigDecimal MEGA = new BigDecimal(1L << 20);  // 1_048_576
+    private static final BigDecimal GIGA = new BigDecimal(1L << 30);  // 1_073_741_824
+    private static final BigDecimal TERA = new BigDecimal(1L << 40);  // 1_099_511_627_776
+    private static final BigDecimal PETA = new BigDecimal(1L << 50);  // 1_125_899_906_842_624
+
     private static final Logger logger = LoggerFactory.getLogger(EmbulkEmbed.class);
 
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
+    private final BufferAllocator bufferAllocator;
+    private final TempFileSpaceAllocator tempFileSpaceAllocator;
+
     private final Map<String, Class<? extends DecoderPlugin>> decoderPlugins;
     private final Map<String, Class<? extends EncoderPlugin>> encoderPlugins;
     private final Map<String, Class<? extends ExecutorPlugin>> executorPlugins;
