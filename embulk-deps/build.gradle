@@ -67,6 +67,6 @@ dependencies {
     testImplementation project(":embulk-api")
     testImplementation project(":embulk-spi")
     testImplementation project(":embulk-core")
-    testImplementation project(":embulk-core").sourceSets.test.output
+    testImplementation project(":embulk-junit4")
     testImplementation "junit:junit:4.13.2"
 }
