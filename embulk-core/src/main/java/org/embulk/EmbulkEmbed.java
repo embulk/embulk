@@ -24,7 +24,6 @@ import org.embulk.config.DataSource;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
-import org.embulk.exec.ExtensionServiceLoaderModule;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.PreviewExecutor;
@@ -529,7 +528,6 @@ public class EmbulkEmbed {
     static List<Module> standardModuleList(final EmbulkSystemProperties embulkSystemProperties) {
         final ArrayList<Module> built = new ArrayList<>();
         built.add(new ExecModule(embulkSystemProperties));
-        built.add(new ExtensionServiceLoaderModule(embulkSystemProperties));
         return Collections.unmodifiableList(built);
     }
 
