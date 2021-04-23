@@ -74,6 +74,8 @@ public class ExecSessionInternal extends ExecSession {
 
     public static class Builder {
         private final Injector injector;
+        private final BufferAllocator bufferAllocator;
+
         private EmbulkSystemProperties embulkSystemProperties;
         private GuessExecutor guessExecutor;
         private BuiltinPluginSource.Builder builtinPluginSourceBuilder;
@@ -84,8 +86,9 @@ public class ExecSessionInternal extends ExecSession {
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         private org.embulk.config.ModelManager modelManager;
 
-        public Builder(Injector injector) {
+        public Builder(Injector injector, final BufferAllocator bufferAllocator) {
             this.injector = injector;
+            this.bufferAllocator = bufferAllocator;
             this.embulkSystemProperties = null;
             this.builtinPluginSourceBuilder = BuiltinPluginSource.builder(injector);
             this.parentFirstPackages = null;
@@ -208,6 +211,7 @@ public class ExecSessionInternal extends ExecSession {
                     this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
+                    this.bufferAllocator,
                     this.guessExecutor,
                     this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
@@ -216,8 +220,8 @@ public class ExecSessionInternal extends ExecSession {
         }
     }
 
-    public static Builder builderInternal(Injector injector) {
-        return new Builder(injector);
+    public static Builder builderInternal(final Injector injector, final BufferAllocator bufferAllocator) {
+        return new Builder(injector, bufferAllocator);
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
@@ -225,6 +229,7 @@ public class ExecSessionInternal extends ExecSession {
             final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
+            final BufferAllocator bufferAllocator,
             final GuessExecutor guessExecutor,
             final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
@@ -257,7 +262,7 @@ public class ExecSessionInternal extends ExecSession {
                 new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(this.jrubyScriptingContainerDelegate, pluginClassLoaderFactory));
 
-        this.bufferAllocator = injector.getInstance(BufferAllocator.class);
+        this.bufferAllocator = bufferAllocator;
 
         this.transactionTime = transactionTime;
 

@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.Random;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ModelManager;
+import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.exec.ExecModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
@@ -35,7 +36,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         final ModelManager model = createModelManager();
-        this.exec = ExecSessionInternal.builderInternal(injector)
+        this.exec = ExecSessionInternal.builderInternal(injector, PooledBufferAllocator.create())
                 .setModelManager(model)
                 .registerParserPlugin("mock", MockParserPlugin.class)
                 .registerFormatterPlugin("mock", MockFormatterPlugin.class)
@@ -47,7 +48,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
     }
 
     public BufferAllocator getBufferAllocator() {
-        return getInstance(BufferAllocator.class);
+        return this.exec.getBufferAllocator();
     }
 
     @SuppressWarnings("deprecation")
