@@ -1,6 +1,5 @@
 package org.embulk.spi.unit;
 
-import com.google.common.base.Preconditions;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -17,18 +16,30 @@ import org.slf4j.LoggerFactory;
 public class ByteSize implements Comparable<ByteSize> {
     public ByteSize(double size, Unit unit) {
         logger.warn("org.embulk.spi.unit.ByteSize is deprecated. Used at:", new Throwable());
-        Preconditions.checkArgument(!Double.isInfinite(size), "size is infinite");
-        Preconditions.checkArgument(!Double.isNaN(size), "size is not a number");
-        Preconditions.checkArgument(size >= 0, "size is negative");
-        Preconditions.checkNotNull(unit, "unit is null");
-        Preconditions.checkArgument(size * unit.getFactor() <= (double) Long.MAX_VALUE, "size is large than (2^63)-1 in bytes");
+        if (Double.isInfinite(size)) {
+            throw new IllegalArgumentException("size is infinite");
+        }
+        if (Double.isNaN(size)) {
+            throw new IllegalArgumentException("size is not a number");
+        }
+        if (size < 0) {
+            throw new IllegalArgumentException("size is negative");
+        }
+        if (unit == null) {
+            throw new NullPointerException("unit is null");
+        }
+        if (size * unit.getFactor() > (double) Long.MAX_VALUE) {
+            throw new IllegalArgumentException("size is large than (2^63)-1 in bytes");
+        }
         this.bytes = (long) (size * unit.getFactor());
         this.displayUnit = unit;
     }
 
     public ByteSize(long bytes) {
         logger.warn("org.embulk.spi.unit.ByteSize is deprecated. Used at:", new Throwable());
-        Preconditions.checkArgument(bytes >= 0, "size is negative");
+        if (bytes < 0) {
+            throw new IllegalArgumentException("size is negative");
+        }
         this.bytes = bytes;
         this.displayUnit = Unit.BYTES;
     }
@@ -53,8 +64,12 @@ public class ByteSize implements Comparable<ByteSize> {
     }
 
     public static ByteSize parseByteSize(String size) {
-        Preconditions.checkNotNull(size, "size is null");
-        Preconditions.checkArgument(!size.isEmpty(), "size is empty");
+        if (size == null) {
+            throw new NullPointerException("size is null");
+        }
+        if (size.isEmpty()) {
+            throw new IllegalArgumentException("size is empty");
+        }
 
         Matcher matcher = PATTERN.matcher(size);
         if (!matcher.matches()) {
