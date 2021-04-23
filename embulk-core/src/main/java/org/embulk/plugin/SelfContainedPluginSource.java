@@ -90,7 +90,8 @@ public class SelfContainedPluginSource implements PluginSource {
             if (FileInputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileInputPlugin fileInputPluginMainObject;
                 try {
-                    fileInputPluginMainObject = (FileInputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileInputPluginMainObject = (FileInputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (final ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-input.",
@@ -100,7 +101,8 @@ public class SelfContainedPluginSource implements PluginSource {
             } else if (FileOutputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileOutputPlugin fileOutputPluginMainObject;
                 try {
-                    fileOutputPluginMainObject = (FileOutputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileOutputPluginMainObject = (FileOutputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (final ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-output.",
@@ -112,7 +114,7 @@ public class SelfContainedPluginSource implements PluginSource {
                     throw new PluginSourceNotMatchException(
                             "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
                 }
-                pluginMainObject = this.injector.getInstance(pluginMainClass);
+                pluginMainObject = PluginManager.newPluginInstance(pluginMainClass, this.embulkSystemProperties);
             }
         } catch (final ExceptionInInitializerError ex) {
             throw new PluginSourceNotMatchException(

@@ -13,7 +13,7 @@ module Embulk
     module RubyAdapter
       module ClassMethods
         def new_java
-          Java::FileOutputRunner.new(Java.injector.getInstance(plugin_java_class))
+          Java::FileOutputRunner.new(Java::org.embulk.plugin.PluginManager.newPluginInstance(plugin_java_class, Embulk::Java::EmbulkSystemProperties))
         end
         # TODO transaction, resume, cleanup
       end

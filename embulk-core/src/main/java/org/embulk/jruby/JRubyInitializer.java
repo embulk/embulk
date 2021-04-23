@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 final class JRubyInitializer {
     private JRubyInitializer(
+            final EmbulkSystemProperties embulkSystemProperties,
             final boolean isEmbulkSpecific,
             final boolean initializesGem,
             final Injector injector,
@@ -26,6 +27,7 @@ final class JRubyInitializer {
             final List<String> jrubyOptions,
             final String jrubyBundlerPluginSourceDirectory,
             final boolean requiresSigdump) {
+        this.embulkSystemProperties = embulkSystemProperties;
         this.isEmbulkSpecific = isEmbulkSpecific;
         this.initializesGem = initializesGem;
         this.injector = injector;
@@ -78,6 +80,7 @@ final class JRubyInitializer {
         }
 
         return new JRubyInitializer(
+                embulkSystemProperties,
                 isEmbulkSpecific,
                 initializesGem,
                 injector,
@@ -152,6 +155,7 @@ final class JRubyInitializer {
 
                 final Object java = jruby.runScriptlet("Embulk::Java");
                 jruby.callMethod(java, "const_set", "BufferAllocator", Exec.getBufferAllocator());
+                jruby.callMethod(java, "const_set", "EmbulkSystemProperties", this.embulkSystemProperties);
 
                 final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
                 jruby.callMethod(injected, "const_set", "Injector", injector);
@@ -284,6 +288,8 @@ final class JRubyInitializer {
             final Injector injector) {
         jruby.callMethod(injected, "const_set", "ModelManager", ExecInternal.getModelManager());
     }
+
+    private final EmbulkSystemProperties embulkSystemProperties;
 
     private final boolean isEmbulkSpecific;
     private final boolean initializesGem;
