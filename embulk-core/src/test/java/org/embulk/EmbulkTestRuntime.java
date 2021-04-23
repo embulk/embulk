@@ -9,6 +9,7 @@ import org.embulk.EmbulkEmbed;
 import org.embulk.config.ModelManager;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.exec.ExecModule;
+import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.spi.BufferAllocator;
@@ -36,7 +37,8 @@ public class EmbulkTestRuntime extends GuiceBinder {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
         final ModelManager model = createModelManager();
-        this.exec = ExecSessionInternal.builderInternal(injector, PooledBufferAllocator.create())
+        this.exec = ExecSessionInternal
+                .builderInternal(injector, PooledBufferAllocator.create(), new SimpleTempFileSpaceAllocator())
                 .setModelManager(model)
                 .registerParserPlugin("mock", MockParserPlugin.class)
                 .registerFormatterPlugin("mock", MockFormatterPlugin.class)

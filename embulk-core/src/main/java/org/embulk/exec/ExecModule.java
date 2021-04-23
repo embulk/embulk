@@ -4,7 +4,6 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.spi.TempFileSpaceAllocator;
 import org.slf4j.ILoggerFactory;
 
 public class ExecModule implements Module {
@@ -22,8 +21,6 @@ public class ExecModule implements Module {
 
         // TODO: Remove this ILoggerFactory binding.
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
-
-        binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
     }
 
     private final EmbulkSystemProperties embulkSystemProperties;

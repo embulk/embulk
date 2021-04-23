@@ -11,8 +11,8 @@ import org.embulk.spi.TempFileSpaceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class SimpleTempFileSpaceAllocator implements TempFileSpaceAllocator {
-    SimpleTempFileSpaceAllocator() {
+public class SimpleTempFileSpaceAllocator implements TempFileSpaceAllocator {
+    public SimpleTempFileSpaceAllocator() {
         // It is originally intended to use `temp_dirs` in system config, but the reasons are missing.
         // https://github.com/embulk/embulk/commit/a7643573ecb39e6dd71a08edce77c8e64dc70a77
 

@@ -34,6 +34,7 @@ import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
+import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.exec.TransactionStage;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
@@ -48,6 +49,7 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.TempFileSpaceAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +69,7 @@ public class EmbulkEmbed {
             final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins,
             final EmbulkSystemProperties embulkSystemProperties,
             final BufferAllocator bufferAllocator,
+            final TempFileSpaceAllocator tempFileSpaceAllocator,
             final BulkLoader alternativeBulkLoader) {
         this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
@@ -82,6 +85,7 @@ public class EmbulkEmbed {
         this.parserPlugins = Collections.unmodifiableMap(parserPlugins);
         this.embulkSystemProperties = embulkSystemProperties;
         this.bufferAllocator = bufferAllocator;
+        this.tempFileSpaceAllocator = tempFileSpaceAllocator;
 
         if (alternativeBulkLoader == null) {
             this.bulkLoader = new BulkLoader(embulkSystemProperties);
@@ -246,6 +250,7 @@ public class EmbulkEmbed {
                 }
             }
             final BufferAllocator bufferAllocator = createBufferAllocatorFromSystemConfig(embulkSystemProperties);
+            final TempFileSpaceAllocator tempFileSpaceAllocator = new SimpleTempFileSpaceAllocator();
             modulesListBuilt.addAll(userModules);
 
             modulesListBuilt.add(new Module() {
@@ -271,6 +276,7 @@ public class EmbulkEmbed {
                     parserPlugins,
                     embulkSystemProperties,
                     bufferAllocator,
+                    tempFileSpaceAllocator,
                     alternativeBulkLoader);
         }
 
@@ -400,7 +406,8 @@ public class EmbulkEmbed {
     }
 
     private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
-        final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(this.injector, this.bufferAllocator);
+        final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(
+                this.injector, this.bufferAllocator, this.tempFileSpaceAllocator);
         for (final Map.Entry<String, Class<? extends DecoderPlugin>> decoderPlugin : this.decoderPlugins.entrySet()) {
             builder.registerDecoderPlugin(decoderPlugin.getKey(), decoderPlugin.getValue());
         }
@@ -627,6 +634,8 @@ public class EmbulkEmbed {
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final BufferAllocator bufferAllocator;
+    private final TempFileSpaceAllocator tempFileSpaceAllocator;
+
     private final Map<String, Class<? extends DecoderPlugin>> decoderPlugins;
     private final Map<String, Class<? extends EncoderPlugin>> encoderPlugins;
     private final Map<String, Class<? extends ExecutorPlugin>> executorPlugins;
