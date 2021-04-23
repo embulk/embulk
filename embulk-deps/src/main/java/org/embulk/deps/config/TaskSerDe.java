@@ -80,7 +80,7 @@ class TaskSerDe {
 
         protected Multimap<String, FieldEntry> getterMappings(Class<?> iface) {
             ImmutableMultimap.Builder<String, FieldEntry> builder = ImmutableMultimap.builder();
-            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entries()) {
+            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface)) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
 
