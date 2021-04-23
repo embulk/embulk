@@ -1,19 +1,24 @@
 package org.embulk.spi.util.dynamic;
 
-import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
 import org.msgpack.value.Value;
 
 public class BooleanColumnSetter extends AbstractDynamicColumnSetter {
-    private static final ImmutableSet<String> TRUE_STRINGS =
-            ImmutableSet.of(
-                    "true", "True", "TRUE",
-                    "yes", "Yes", "YES",
-                    "t", "T", "y", "Y",
-                    "on", "On",
-                    "ON", "1");
+    private static final String[] TRUE_STRINGS_ARRAY = {
+            "true", "True", "TRUE",
+            "yes", "Yes", "YES",
+            "t", "T", "y", "Y",
+            "on", "On",
+            "ON", "1"};
+
+    private static final Set<String> TRUE_STRINGS = Collections.unmodifiableSet(
+            new LinkedHashSet<>(Arrays.asList(TRUE_STRINGS_ARRAY)));
 
     public BooleanColumnSetter(PageBuilder pageBuilder, Column column,
             DefaultValueSetter defaultValue) {

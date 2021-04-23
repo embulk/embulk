@@ -3,6 +3,7 @@ package org.embulk.spi.util;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Column;
+import org.embulk.spi.Exec;
 import org.embulk.spi.PageBuilder;
 import org.embulk.spi.type.BooleanType;
 import org.embulk.spi.type.DoubleType;
@@ -84,39 +85,36 @@ class DynamicColumnSetterFactory {
     }
 
     private String getTimestampFormatForFormatter(Column column) {
-        DynamicPageBuilder.ColumnOption option = getColumnOption(column);
-        if (option != null) {
-            return option.getTimestampFormatString();
-        } else {
+        final ConfigSource option = this.getColumnOption(column);
+        if (option == null) {
             return "%Y-%m-%d %H:%M:%S.%6N";
         }
+        return option.get(String.class, "timestamp_format", "%Y-%m-%d %H:%M:%S.%6N");
     }
 
     private String getTimestampFormatForParser(Column column) {
-        DynamicPageBuilder.ColumnOption option = getColumnOption(column);
-        if (option != null) {
-            return option.getTimestampFormatString();
-        } else {
+        final ConfigSource option = this.getColumnOption(column);
+        if (option == null) {
             return "%Y-%m-%d %H:%M:%S.%N";
         }
+        return option.get(String.class, "timestamp_format", "%Y-%m-%d %H:%M:%S.%N");
     }
 
     private String getTimeZoneId(Column column) {
-        DynamicPageBuilder.ColumnOption option = getColumnOption(column);
-        if (option != null) {
-            return option.getTimeZoneId().or(task.getDefaultTimeZoneId());
-        } else {
-            return task.getDefaultTimeZoneId();
+        final ConfigSource option = this.getColumnOption(column);
+        if (option == null) {
+            return this.task.getDefaultTimeZoneId();
         }
+        return option.get(String.class, "timezone", this.task.getDefaultTimeZoneId());
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1301
-    private DynamicPageBuilder.ColumnOption getColumnOption(Column column) {
-        ConfigSource option = task.getColumnOptions().get(column.getName());
+    private ConfigSource getColumnOption(final Column column) {
+        final ConfigSource option = this.task.getColumnOptions().get(column.getName());
         if (option != null) {
-            return option.loadConfig(DynamicPageBuilder.ColumnOption.class);
+            return option;
         } else {
-            return null;
+            return Exec.newConfigSource();
         }
     }
 
