@@ -39,6 +39,7 @@ dependencies {
     testImplementation project(":embulk-guess-bzip2")
     testImplementation project(":embulk-guess-gzip")
     testImplementation project(":embulk-guess-json")
+    testImplementation "com.google.guava:guava:18.0"
 }
 
 embulkPlugin {

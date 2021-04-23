@@ -39,6 +39,8 @@ dependencies {
     testImplementation project(":embulk-core")
     testImplementation project(":embulk-deps")
     testImplementation project(":embulk-junit4")
+
+    testImplementation "com.google.guava:guava:18.0"
 }
 
 embulkPlugin {

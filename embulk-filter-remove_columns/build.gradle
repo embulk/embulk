@@ -35,6 +35,7 @@ dependencies {
     testImplementation project(":embulk-input-file")
     testImplementation project(":embulk-output-file")
     testImplementation project(":embulk-parser-csv")
+    testImplementation "com.google.guava:guava:18.0"
 }
 
 embulkPlugin {
