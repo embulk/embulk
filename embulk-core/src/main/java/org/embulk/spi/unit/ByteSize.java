@@ -1,7 +1,5 @@
 package org.embulk.spi.unit;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 import java.util.Locale;
 import java.util.Objects;
@@ -28,7 +26,6 @@ public class ByteSize implements Comparable<ByteSize> {
         this.displayUnit = unit;
     }
 
-    @JsonCreator
     public ByteSize(long bytes) {
         logger.warn("org.embulk.spi.unit.ByteSize is deprecated. Used at:", new Throwable());
         Preconditions.checkArgument(bytes >= 0, "size is negative");
@@ -55,7 +52,6 @@ public class ByteSize implements Comparable<ByteSize> {
         return bytes / (double) unit.getFactor();
     }
 
-    @JsonCreator
     public static ByteSize parseByteSize(String size) {
         Preconditions.checkNotNull(size, "size is null");
         Preconditions.checkArgument(!size.isEmpty(), "size is empty");
@@ -82,7 +78,6 @@ public class ByteSize implements Comparable<ByteSize> {
         throw new IllegalArgumentException("Unknown unit '" + unitString + "'");
     }
 
-    @JsonValue
     @Override
     public String toString() {
         double value = getValue(displayUnit);

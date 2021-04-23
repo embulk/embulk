@@ -22,6 +22,7 @@ public class ModelManager {
         objectMapper.registerModule(new PluginTypeJacksonModule());
         objectMapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         objectMapper.registerModule(new TimestampFormatJacksonModule());
+        objectMapper.registerModule(new ByteSizeJacksonModule());
         objectMapper.registerModule(new CharsetJacksonModule());
         objectMapper.registerModule(new LocalFileJacksonModule());
         objectMapper.registerModule(new ToStringJacksonModule());
