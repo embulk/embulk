@@ -8,7 +8,6 @@ import java.util.Random;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ModelManager;
 import org.embulk.deps.buffer.PooledBufferAllocator;
-import org.embulk.exec.ExecModule;
 import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
@@ -26,7 +25,6 @@ public class EmbulkTestRuntime extends GuiceBinder {
         @Override
         public void configure(Binder binder) {
             final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
-            new ExecModule(embulkSystemProperties).configure(binder);
             new TestUtilityModule().configure(binder);
         }
     }

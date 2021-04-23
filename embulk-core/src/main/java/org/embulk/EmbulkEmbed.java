@@ -27,7 +27,6 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.exec.BulkLoader;
-import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.PartialExecutionException;
@@ -241,7 +240,7 @@ public class EmbulkEmbed {
             final ArrayList<Module> modulesListBuilt = new ArrayList<>();
 
             final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(this.embulkSystemPropertiesBuilt);
-            ArrayList<Module> userModules = new ArrayList<>(standardModuleList(embulkSystemProperties));
+            ArrayList<Module> userModules = new ArrayList<>();
             for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
                 final Iterable<? extends Module> overridden = override.apply(userModules);
                 userModules = new ArrayList<Module>();
@@ -539,12 +538,6 @@ public class EmbulkEmbed {
         throw new UnsupportedOperationException(
                 "EmbulkEmbed#destroy() is no longer supported as JSR-250 lifecycle annotations are unsupported. "
                 + "See https://github.com/embulk/embulk/issues/1047 for the details.");
-    }
-
-    static List<Module> standardModuleList(final EmbulkSystemProperties embulkSystemProperties) {
-        final ArrayList<Module> built = new ArrayList<>();
-        built.add(new ExecModule(embulkSystemProperties));
-        return Collections.unmodifiableList(built);
     }
 
     private static Set<String> readPropertyKeys(final String name) {
