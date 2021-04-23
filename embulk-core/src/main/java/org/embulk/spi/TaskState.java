@@ -1,13 +1,13 @@
 package org.embulk.spi;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 import org.embulk.config.TaskReport;
 
 public class TaskState {
     private volatile boolean started = false;
     private volatile boolean finished = false;
-    private volatile Optional<TaskReport> taskReport = Optional.absent();
-    private volatile Optional<Throwable> exception = Optional.absent();
+    private volatile Optional<TaskReport> taskReport = Optional.empty();
+    private volatile Optional<Throwable> exception = Optional.empty();
 
     public void start() {
         this.started = true;
@@ -25,12 +25,12 @@ public class TaskState {
 
     public void setException(Throwable exception) {
         this.started = true;
-        this.exception = Optional.fromNullable(exception);
+        this.exception = Optional.ofNullable(exception);
     }
 
     public void resetException() {
         this.started = true;
-        this.exception = Optional.absent();
+        this.exception = Optional.empty();
     }
 
     public boolean isStarted() {
