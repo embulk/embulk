@@ -1,5 +1,8 @@
 package org.embulk;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -20,6 +23,7 @@ import java.util.function.Function;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.DataSource;
 import org.embulk.exec.BulkLoader;
 import org.embulk.exec.ExecModule;
 import org.embulk.exec.ExecutionResult;
@@ -33,6 +37,7 @@ import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ColumnJacksonModule;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
 import org.embulk.spi.ExecSessionInternal;
@@ -45,6 +50,13 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.SchemaJacksonModule;
+import org.embulk.spi.time.TimestampJacksonModule;
+import org.embulk.spi.type.TypeJacksonModule;
+import org.embulk.spi.unit.LocalFileJacksonModule;
+import org.embulk.spi.unit.ToStringJacksonModule;
+import org.embulk.spi.unit.ToStringMapJacksonModule;
+import org.embulk.spi.util.CharsetJacksonModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +92,8 @@ public class EmbulkEmbed {
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = new PreviewExecutor();
+
+        this.modelManager = createModelManager(injector);
     }
 
     public static class Bootstrap {
@@ -283,7 +297,15 @@ public class EmbulkEmbed {
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public org.embulk.config.ModelManager getModelManager() {
-        return injector.getInstance(org.embulk.config.ModelManager.class);
+        return this.modelManager;
+    }
+
+    public Object dumpObjectFromDataSource(final DataSource modelObject) {
+        return modelManager.readObject(Object.class, this.modelManager.writeObject(modelObject));
+    }
+
+    public Object dumpObjectFromResumeState(final ResumeState modelObject) {
+        return modelManager.readObject(Object.class, this.modelManager.writeObject(modelObject));
     }
 
     public BufferAllocator getBufferAllocator() {
@@ -291,7 +313,7 @@ public class EmbulkEmbed {
     }
 
     public ConfigLoader newConfigLoader() {
-        return injector.getInstance(ConfigLoader.class);
+        return new ConfigLoader(this.modelManager);
     }
 
     public ConfigDiff guess(final ConfigSource config) {
@@ -401,6 +423,7 @@ public class EmbulkEmbed {
             builder.registerParserPlugin(parserPlugin.getKey(), parserPlugin.getValue());
         }
         return builder
+                .setModelManager(this.modelManager)
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
                 .setParentFirstPackages(PARENT_FIRST_PACKAGES)
                 .setParentFirstResources(PARENT_FIRST_RESOURCES)
@@ -522,6 +545,22 @@ public class EmbulkEmbed {
         }
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    private static org.embulk.config.ModelManager createModelManager(final Injector injector) {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
+        mapper.registerModule(new CharsetJacksonModule());
+        mapper.registerModule(new LocalFileJacksonModule());
+        mapper.registerModule(new ToStringJacksonModule());
+        mapper.registerModule(new ToStringMapJacksonModule());
+        mapper.registerModule(new TypeJacksonModule());
+        mapper.registerModule(new ColumnJacksonModule());
+        mapper.registerModule(new SchemaJacksonModule());
+        mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
+        mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
+        return new org.embulk.config.ModelManager(injector, mapper);
+    }
+
     // TODO: Remove them finally.
     static final Set<String> PARENT_FIRST_PACKAGES = readPropertyKeys("/embulk/parent_first_packages.properties");
     static final Set<String> PARENT_FIRST_RESOURCES = readPropertyKeys("/embulk/parent_first_resources.properties");
@@ -545,4 +584,8 @@ public class EmbulkEmbed {
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
     private final PreviewExecutor previewExecutor;
+
+    @Deprecated  // https://github.com/embulk/embulk/issues/1304
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    private final org.embulk.config.ModelManager modelManager;
 }

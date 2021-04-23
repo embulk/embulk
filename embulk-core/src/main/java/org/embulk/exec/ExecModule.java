@@ -42,11 +42,11 @@ public class ExecModule implements Module {
         // TODO: Remove this ILoggerFactory binding.
         binder.bind(ILoggerFactory.class).toProvider(LoggerProvider.class).in(Scopes.SINGLETON);
 
-        binder.bind(org.embulk.config.ModelManager.class).in(Scopes.SINGLETON);
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
         binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
 
-        // SerDe
+        // TODO: Remove the ObjectMapperModule Guice module.
+        // They should be no longer required once ModelManager is managed in ExecSessionInternal.
         final ObjectMapperModule mapper = new ObjectMapperModule();
         mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         mapper.registerModule(new CharsetJacksonModule());
