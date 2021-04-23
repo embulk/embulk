@@ -1,4 +1,4 @@
-package org.embulk.spi.unit;
+package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.embulk.spi.unit.ToStringMap;
 import org.junit.Test;
 
 public class TestToStringMap {

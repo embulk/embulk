@@ -1,4 +1,4 @@
-package org.embulk.spi.type;
+package org.embulk.config;
 
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -7,18 +7,20 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
+import org.embulk.spi.type.Type;
+import org.embulk.spi.type.Types;
 
-public class TypeDeserializer extends FromStringDeserializer<Type> {
+class TypeDeserializer extends FromStringDeserializer<Type> {
     private static final Map<String, Type> stringToTypeMap;
 
     static {
         ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
-        builder.put(BooleanType.BOOLEAN.getName(), BooleanType.BOOLEAN);
-        builder.put(LongType.LONG.getName(), LongType.LONG);
-        builder.put(DoubleType.DOUBLE.getName(), DoubleType.DOUBLE);
-        builder.put(StringType.STRING.getName(), StringType.STRING);
-        builder.put(TimestampType.TIMESTAMP.getName(), TimestampType.TIMESTAMP);
-        builder.put(JsonType.JSON.getName(), JsonType.JSON);
+        builder.put(Types.BOOLEAN.getName(), Types.BOOLEAN);
+        builder.put(Types.LONG.getName(), Types.LONG);
+        builder.put(Types.DOUBLE.getName(), Types.DOUBLE);
+        builder.put(Types.STRING.getName(), Types.STRING);
+        builder.put(Types.TIMESTAMP.getName(), Types.TIMESTAMP);
+        builder.put(Types.JSON.getName(), Types.JSON);
         stringToTypeMap = builder.build();
     }
 

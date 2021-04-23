@@ -1,4 +1,4 @@
-package org.embulk.spi;
+package org.embulk.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.embulk.spi.Column;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
 import org.slf4j.Logger;

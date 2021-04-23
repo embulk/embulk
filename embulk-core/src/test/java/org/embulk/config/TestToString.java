@@ -1,4 +1,4 @@
-package org.embulk.spi.unit;
+package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.io.IOException;
+import org.embulk.spi.unit.ToString;
 import org.junit.Test;
 
 public class TestToString {
