@@ -1,7 +1,6 @@
 package org.embulk.exec;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Binder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,10 +45,6 @@ public class GuessExecutor {
         @Config("guess_sample_buffer_bytes")
         @ConfigDefault("32768") // 32 * 1024
         public int getSampleBufferBytes();
-    }
-
-    public static void registerDefaultGuessPluginTo(Binder binder, PluginType type) {
-        throw new UnsupportedOperationException("GuessExecutor.registerDefaultGuessPluginTo is no longer available.");
     }
 
     // Used by FileInputRunner#guess(..)

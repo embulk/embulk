@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.google.inject.Injector;  // Only for instantiating a plugin.
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
@@ -20,7 +19,6 @@ import org.embulk.spi.ParserPlugin;
 
 public class BuiltinPluginSource implements PluginSource {
     private BuiltinPluginSource(
-            final Injector injector,
             final EmbulkSystemProperties embulkSystemProperties,
             final Map<String, Class<? extends DecoderPlugin>> decoderPlugins,
             final Map<String, Class<? extends EncoderPlugin>> encoderPlugins,
@@ -33,7 +31,6 @@ public class BuiltinPluginSource implements PluginSource {
             final Map<String, Class<? extends InputPlugin>> inputPlugins,
             final Map<String, Class<? extends OutputPlugin>> outputPlugins,
             final Map<String, Class<? extends ParserPlugin>> parserPlugins) {
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.decoderPlugins = decoderPlugins;
         this.encoderPlugins = encoderPlugins;
@@ -49,8 +46,7 @@ public class BuiltinPluginSource implements PluginSource {
     }
 
     public static class Builder {
-        private Builder(final Injector injector) {
-            this.injector = injector;
+        private Builder() {
             this.embulkSystemProperties = null;
             this.decoderPlugins = new LinkedHashMap<>();
             this.encoderPlugins = new LinkedHashMap<>();
@@ -157,7 +153,6 @@ public class BuiltinPluginSource implements PluginSource {
 
         public BuiltinPluginSource build() {
             return new BuiltinPluginSource(
-                    this.injector,
                     this.embulkSystemProperties,
                     this.decoderPlugins,
                     this.encoderPlugins,
@@ -172,7 +167,6 @@ public class BuiltinPluginSource implements PluginSource {
                     this.parserPlugins);
         }
 
-        private final Injector injector;
         private final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins;
         private final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins;
         private final LinkedHashMap<String, Class<? extends ExecutorPlugin>> executorPlugins;
@@ -188,8 +182,8 @@ public class BuiltinPluginSource implements PluginSource {
         private EmbulkSystemProperties embulkSystemProperties;
     }
 
-    public static Builder builder(final Injector injector) {
-        return new Builder(injector);
+    public static Builder builder() {
+        return new Builder();
     }
 
     @Override
@@ -250,7 +244,6 @@ public class BuiltinPluginSource implements PluginSource {
         throw new PluginSourceNotMatchException();
     }
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final Map<String, Class<? extends DecoderPlugin>> decoderPlugins;
     private final Map<String, Class<? extends EncoderPlugin>> encoderPlugins;

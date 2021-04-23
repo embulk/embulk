@@ -1,6 +1,5 @@
 package org.embulk.plugin.maven;
 
-import com.google.inject.Injector;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,10 +33,8 @@ import org.slf4j.LoggerFactory;
 
 public class MavenPluginSource implements PluginSource {
     public MavenPluginSource(
-            final Injector injector,
             final EmbulkSystemProperties embulkSystemProperties,
             final PluginClassLoaderFactory pluginClassLoaderFactory) {
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
@@ -183,7 +180,6 @@ public class MavenPluginSource implements PluginSource {
 
     private static final Logger logger = LoggerFactory.getLogger(MavenPluginSource.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
 }

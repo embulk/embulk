@@ -1,8 +1,5 @@
 package org.embulk;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Stage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -48,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 public class EmbulkEmbed {
     private EmbulkEmbed(
-            final Injector injector,
             final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins,
             final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins,
             final LinkedHashMap<String, Class<? extends ExecutorPlugin>> executorPlugins,
@@ -64,7 +60,6 @@ public class EmbulkEmbed {
             final BufferAllocator bufferAllocator,
             final TempFileSpaceAllocator tempFileSpaceAllocator,
             final BulkLoader alternativeBulkLoader) {
-        this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
         this.encoderPlugins = Collections.unmodifiableMap(encoderPlugins);
         this.executorPlugins = Collections.unmodifiableMap(executorPlugins);
@@ -187,9 +182,7 @@ public class EmbulkEmbed {
             final BufferAllocator bufferAllocator = createBufferAllocatorFromSystemConfig(embulkSystemProperties);
             final TempFileSpaceAllocator tempFileSpaceAllocator = new SimpleTempFileSpaceAllocator();
 
-            final Injector injector = Guice.createInjector(Stage.PRODUCTION);
             return new EmbulkEmbed(
-                    injector,
                     decoderPlugins,
                     encoderPlugins,
                     executorPlugins,
@@ -231,10 +224,6 @@ public class EmbulkEmbed {
         private final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins;
 
         private boolean started;
-    }
-
-    public Injector getInjector() {
-        return injector;
     }
 
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
@@ -332,7 +321,7 @@ public class EmbulkEmbed {
 
     private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
         final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(
-                this.injector, this.bufferAllocator, this.tempFileSpaceAllocator);
+                this.bufferAllocator, this.tempFileSpaceAllocator);
         for (final Map.Entry<String, Class<? extends DecoderPlugin>> decoderPlugin : this.decoderPlugins.entrySet()) {
             builder.registerDecoderPlugin(decoderPlugin.getKey(), decoderPlugin.getValue());
         }
@@ -550,7 +539,6 @@ public class EmbulkEmbed {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbulkEmbed.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final BufferAllocator bufferAllocator;
     private final TempFileSpaceAllocator tempFileSpaceAllocator;

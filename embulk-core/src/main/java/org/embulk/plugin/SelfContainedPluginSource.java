@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.google.inject.Injector;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.embulk.plugin.PluginClassLoaderFactory;
@@ -30,10 +29,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SelfContainedPluginSource implements PluginSource {
     public SelfContainedPluginSource(
-            final Injector injector,
             final EmbulkSystemProperties embulkSystemProperties,
             final PluginClassLoaderFactory pluginClassLoaderFactory) {
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
@@ -301,7 +298,6 @@ public class SelfContainedPluginSource implements PluginSource {
 
     private static final Logger logger = LoggerFactory.getLogger(SelfContainedPluginSource.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
 }
