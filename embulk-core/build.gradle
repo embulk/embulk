@@ -19,7 +19,7 @@ dependencies {
     api "com.google.guava:guava:18.0"
     api "javax.inject:javax.inject:1"
 
-    testImplementation "junit:junit:4.12"
+    testImplementation "junit:junit:4.13.2"
     testImplementation "ch.qos.logback:logback-classic:1.1.3"
 
     // TODO: Remove this, and load it with the proper DependencyClassLoader.

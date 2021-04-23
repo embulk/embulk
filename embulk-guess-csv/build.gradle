@@ -27,7 +27,7 @@ dependencies {
     compile "com.ibm.icu:icu4j:54.1.1"
     compile "org.embulk:embulk-util-guess:0.1.1"
 
-    testImplementation "junit:junit:4.12"
+    testImplementation "junit:junit:4.13.2"
     testImplementation project(":embulk-api")
     testImplementation project(":embulk-spi")
     testImplementation project(":embulk-core")
