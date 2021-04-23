@@ -18,16 +18,13 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,9 +47,6 @@ class TaskSerDe {
                     Map<String, Object> objects = h.getObjects();
                     jgen.writeStartObject();
                     for (Map.Entry<String, Object> pair : objects.entrySet()) {
-                        if (h.getInjectedFields().contains(pair.getKey())) {
-                            continue;
-                        }
                         jgen.writeFieldName(pair.getKey());
                         nestedObjectMapper.writeValue(jgen, pair.getValue());
                     }
@@ -73,7 +67,6 @@ class TaskSerDe {
 
         private final Class<?> iface;
         private final Multimap<String, FieldEntry> mappings;
-        private final List<InjectEntry> injects;
 
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManager model, Class<T> iface) {
@@ -81,7 +74,6 @@ class TaskSerDe {
             this.model = model;
             this.iface = iface;
             this.mappings = getterMappings(iface);
-            this.injects = injectEntries(iface);
         }
 
         protected Multimap<String, FieldEntry> getterMappings(Class<?> iface) {
@@ -90,9 +82,10 @@ class TaskSerDe {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
 
-                if (getterMethod.getAnnotation(ConfigInject.class) != null) {
-                    // InjectEntry
-                    continue;
+                if (isConfigInjectAnnotated(getterMethod)) {
+                    throw new ConfigException(
+                            "@ConfigInject (org.embulk.config.ConfigInject) has stopped working since Embulk v0.10.29. "
+                            + "Contact a developer of the plugin.");
                 }
 
                 Type fieldType = getterMethod.getGenericReturnType();
@@ -104,20 +97,6 @@ class TaskSerDe {
                 }
                 final Optional<String> defaultJsonString = getDefaultJsonString(getterMethod);
                 builder.put(jsonKey.get(), new FieldEntry(fieldName, fieldType, defaultJsonString));
-            }
-            return builder.build();
-        }
-
-        protected List<InjectEntry> injectEntries(Class<?> iface) {
-            ImmutableList.Builder<InjectEntry> builder = ImmutableList.builder();
-            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entries()) {
-                Method getterMethod = getter.getValue();
-                String fieldName = getter.getKey();
-                ConfigInject inject = getterMethod.getAnnotation(ConfigInject.class);
-                if (inject != null) {
-                    // InjectEntry
-                    builder.add(new InjectEntry(fieldName, getterMethod.getReturnType()));
-                }
             }
             return builder.build();
         }
@@ -185,16 +164,14 @@ class TaskSerDe {
                 }
             }
 
-            // inject
-            ImmutableSet.Builder<String> injectedFields = ImmutableSet.builder();
-            for (InjectEntry inject : injects) {
-                objects.put(inject.getName(), model.getInjectedInstance(inject.getType()));
-                injectedFields.add(inject.getName());
-            }
-
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] {iface},
-                    new TaskInvocationHandler(model, iface, objects, injectedFields.build()));
+                    new TaskInvocationHandler(model, iface, objects));
+        }
+
+        @SuppressWarnings("deprecation")  // For use of org.embulk.config.ConfigInject
+        private static boolean isConfigInjectAnnotated(final Method getterMethod) {
+            return getterMethod.getAnnotation(org.embulk.config.ConfigInject.class) != null;
         }
 
         private static class FieldEntry {
@@ -218,24 +195,6 @@ class TaskSerDe {
 
             public Optional<String> getDefaultJsonString() {
                 return defaultJsonString;
-            }
-        }
-
-        private static class InjectEntry {
-            private final String name;
-            private Class<?> type;
-
-            public InjectEntry(String name, Class<?> type) {
-                this.name = name;
-                this.type = type;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public Class<?> getType() {
-                return type;
             }
         }
     }

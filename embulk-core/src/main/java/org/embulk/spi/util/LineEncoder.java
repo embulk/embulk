@@ -9,10 +9,12 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigInject;
 import org.embulk.config.Task;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Deprecated  // Externalized to embulk-util-text
 public class LineEncoder implements AutoCloseable {
@@ -27,8 +29,12 @@ public class LineEncoder implements AutoCloseable {
         @ConfigDefault("\"CRLF\"")
         public Newline getNewline();
 
-        @ConfigInject
-        public BufferAllocator getBufferAllocator();
+        @Deprecated
+        default BufferAllocator getBufferAllocator() {
+            logger.warn("org.embulk.spi.util.LineEncoder is deprecated. "
+                        + "Contact a developer of the plugin to use embulk-util-text, instead.");
+            return Exec.getBufferAllocator();
+        }
     }
 
     private final String newline;
@@ -39,7 +45,7 @@ public class LineEncoder implements AutoCloseable {
     public LineEncoder(FileOutput out, EncoderTask task) {
         this.newline = task.getNewline().getString();
         this.underlyingFileOutput = out;
-        this.outputStream = new FileOutputOutputStream(underlyingFileOutput, task.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH_FINISH);
+        this.outputStream = new FileOutputOutputStream(underlyingFileOutput, Exec.getBufferAllocator(), FileOutputOutputStream.CloseMode.FLUSH_FINISH);
         CharsetEncoder encoder = task.getCharset()
                 .newEncoder()
                 .onMalformedInput(CodingErrorAction.REPLACE)  // TODO configurable?
@@ -110,4 +116,6 @@ public class LineEncoder implements AutoCloseable {
             throw new RuntimeException(ex);
         }
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(LineEncoder.class);
 }
