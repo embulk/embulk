@@ -89,7 +89,7 @@ module Embulk
         #      ruby_module::ClassMethods includes other modules.
         unless ruby_module::ClassMethods.method_defined?(:new_java)
           def self.new_java
-            Java.injector.getInstance(plugin_java_class)
+            Java::org.embulk.plugin.PluginManager.newPluginInstance(plugin_java_class, Embulk::Java::EmbulkSystemProperties)
           end
         end
       end

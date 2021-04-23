@@ -22,7 +22,6 @@ public class TestJRubyInitializer {
         final JRubyInitializer initializer = JRubyInitializer.of(
                 false,
                 true,
-                null,
                 LoggerFactory.getLogger(TestJRubyInitializer.class),
                 EmbulkSystemProperties.of(embulkSystemProperties));
 

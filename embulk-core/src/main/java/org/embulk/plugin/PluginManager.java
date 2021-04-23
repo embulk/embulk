@@ -1,7 +1,10 @@
 package org.embulk.plugin;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigException;
 import org.embulk.exec.GuessExecutor;
@@ -94,6 +97,48 @@ public class PluginManager {
         }
 
         throw buildPluginNotFoundException(iface, type, exceptions);
+    }
+
+    public static Object newPluginInstance(
+            final Class<?> clazz,
+            final EmbulkSystemProperties embulkSystemProperties)
+            throws PluginSourceNotMatchException {
+        final Constructor constructorWithProperties = getConstructorWithProperties(clazz);
+        if (constructorWithProperties != null) {
+            try {
+                return constructorWithProperties.newInstance(embulkSystemProperties);
+            } catch (final InstantiationException ex) {
+                throw new PluginSourceNotMatchException("Failed to instantiate from a plugin class: " + clazz, ex);
+            } catch (final IllegalAccessException ex) {
+                throw new PluginSourceNotMatchException("Failed to access in instantiating from a plugin class: " + clazz, ex);
+            } catch (final InvocationTargetException ex) {
+                throw new PluginSourceNotMatchException("Failed to instantiate for an exception from a plugin class: " + clazz, ex);
+            }
+        }
+
+        try {
+            return clazz.newInstance();
+        } catch (final InstantiationException ex) {
+            throw new PluginSourceNotMatchException("Failed to instantiate from a plugin class: " + clazz, ex);
+        } catch (final IllegalAccessException ex) {
+            throw new PluginSourceNotMatchException("Failed to access in instantiating from a plugin class: " + clazz, ex);
+        }
+    }
+
+    private static Constructor getConstructorWithProperties(final Class<?> clazz) {
+        try {
+            return clazz.getConstructor(EmbulkSystemProperties.class);
+        } catch (final NoSuchMethodException | SecurityException ex) {
+            // Pass through.
+        }
+
+        try {
+            return clazz.getConstructor(Properties.class);
+        } catch (final NoSuchMethodException | SecurityException ex) {
+            // Pass through.
+        }
+
+        return null;
     }
 
     private static ConfigException buildPluginNotFoundException(

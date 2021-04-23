@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import com.google.inject.Injector;
 import java.util.concurrent.ExecutionException;
 import org.embulk.exec.GuessExecutor;
 import org.embulk.plugin.PluginType;
@@ -39,11 +38,6 @@ public class ExecInternal {
             throw new NullPointerException("Exec is used outside of ExecInternal.doWith");
         }
         return sessionInternal;
-    }
-
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1313
-    public static Injector getInjector() {
-        return sessionInternal().getInjector();
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304

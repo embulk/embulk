@@ -1,6 +1,5 @@
 package org.embulk.jruby;
 
-import com.google.inject.Injector;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,30 +29,26 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     public static LazyScriptingContainerDelegate withGems(
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
-        return of(false, true, null, logger, embulkSystemProperties);
+        return of(false, true, logger, embulkSystemProperties);
     }
 
     public static LazyScriptingContainerDelegate withGemsIgnored(
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
-        return of(false, false, null, logger, embulkSystemProperties);
+        return of(false, false, logger, embulkSystemProperties);
     }
 
-    public static LazyScriptingContainerDelegate withInjector(
-            final Injector injector,
+    public static LazyScriptingContainerDelegate withEmbulkSpecific(
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
-        return of(true, true, injector, logger, embulkSystemProperties);
+        return of(true, true, logger, embulkSystemProperties);
     }
 
     private static LazyScriptingContainerDelegate of(
             final boolean isEmbulkSpecific,
             final boolean initializesGem,
-            final Injector injector,
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
-        // use_global_ruby_runtime is valid only when it's guaranteed that just one Injector is
-        // instantiated in this JVM.
         final boolean useGlobalRubyRuntime = embulkSystemProperties.getPropertyAsBoolean("use_global_ruby_runtime", false);
 
         final String jrubyProperty = embulkSystemProperties.getProperty("jruby");
@@ -86,7 +81,6 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
         final JRubyInitializer initializer = JRubyInitializer.of(
                 isEmbulkSpecific,
                 initializesGem,
-                isEmbulkSpecific ? injector : null,
                 logger,
                 embulkSystemProperties);
 

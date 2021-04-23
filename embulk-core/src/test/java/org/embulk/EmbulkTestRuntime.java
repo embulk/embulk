@@ -1,9 +1,5 @@
 package org.embulk;
 
-import com.google.inject.Binder;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import java.util.Properties;
 import java.util.Random;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ModelManager;
@@ -17,30 +13,23 @@ import org.embulk.spi.ExecInternal;
 import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.MockFormatterPlugin;
 import org.embulk.spi.MockParserPlugin;
+import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-public class EmbulkTestRuntime extends GuiceBinder {
-    public static class TestRuntimeModule implements Module {
-        @Override
-        public void configure(Binder binder) {
-            final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
-            new TestUtilityModule().configure(binder);
-        }
-    }
-
+public class EmbulkTestRuntime implements TestRule {
     private ExecSessionInternal exec;
+    private final RandomManager random;
 
     public EmbulkTestRuntime() {
-        super(new TestRuntimeModule());
-        Injector injector = getInjector();
         final ModelManager model = createModelManager();
         this.exec = ExecSessionInternal
-                .builderInternal(injector, PooledBufferAllocator.create(), new SimpleTempFileSpaceAllocator())
+                .builderInternal(PooledBufferAllocator.create(), new SimpleTempFileSpaceAllocator())
                 .setModelManager(model)
                 .registerParserPlugin("mock", MockParserPlugin.class)
                 .registerFormatterPlugin("mock", MockFormatterPlugin.class)
                 .build();
+        this.random = new RandomManager();
     }
 
     public ExecSessionInternal getExec() {
@@ -57,7 +46,7 @@ public class EmbulkTestRuntime extends GuiceBinder {
     }
 
     public Random getRandom() {
-        return getInstance(RandomManager.class).getRandom();
+        return this.random.getRandom();
     }
 
     public static PluginClassLoaderFactory buildPluginClassLoaderFactory() {
@@ -66,17 +55,11 @@ public class EmbulkTestRuntime extends GuiceBinder {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        final Statement superStatement = EmbulkTestRuntime.super.apply(base, description);
         return new Statement() {
             public void evaluate() throws Throwable {
                 try {
                     ExecInternal.doWith(exec, new ExecAction<Void>() {
                             public Void run() {
-                                try {
-                                    superStatement.evaluate();
-                                } catch (Throwable ex) {
-                                    throw new RuntimeExecutionException(ex);
-                                }
                                 return null;
                             }
                         });

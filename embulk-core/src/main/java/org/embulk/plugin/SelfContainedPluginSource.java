@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.google.inject.Injector;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.embulk.plugin.PluginClassLoaderFactory;
@@ -30,10 +29,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SelfContainedPluginSource implements PluginSource {
     public SelfContainedPluginSource(
-            final Injector injector,
             final EmbulkSystemProperties embulkSystemProperties,
             final PluginClassLoaderFactory pluginClassLoaderFactory) {
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
@@ -90,7 +87,8 @@ public class SelfContainedPluginSource implements PluginSource {
             if (FileInputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileInputPlugin fileInputPluginMainObject;
                 try {
-                    fileInputPluginMainObject = (FileInputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileInputPluginMainObject = (FileInputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (final ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-input.",
@@ -100,7 +98,8 @@ public class SelfContainedPluginSource implements PluginSource {
             } else if (FileOutputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileOutputPlugin fileOutputPluginMainObject;
                 try {
-                    fileOutputPluginMainObject = (FileOutputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileOutputPluginMainObject = (FileOutputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (final ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-output.",
@@ -112,7 +111,7 @@ public class SelfContainedPluginSource implements PluginSource {
                     throw new PluginSourceNotMatchException(
                             "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
                 }
-                pluginMainObject = this.injector.getInstance(pluginMainClass);
+                pluginMainObject = PluginManager.newPluginInstance(pluginMainClass, this.embulkSystemProperties);
             }
         } catch (final ExceptionInInitializerError ex) {
             throw new PluginSourceNotMatchException(
@@ -299,7 +298,6 @@ public class SelfContainedPluginSource implements PluginSource {
 
     private static final Logger logger = LoggerFactory.getLogger(SelfContainedPluginSource.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
 }

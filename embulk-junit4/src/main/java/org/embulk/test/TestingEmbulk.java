@@ -10,7 +10,6 @@ import static org.embulk.test.EmbulkTests.copyResource;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import com.google.inject.Injector;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -188,10 +187,6 @@ public class TestingEmbulk implements TestRule {
 
     public Path createTempFile(String suffix) {
         return tempFiles.createTempFile(suffix).toPath();
-    }
-
-    public Injector injector() {
-        return embed.getInjector();
     }
 
     public ConfigLoader configLoader() {

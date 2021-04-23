@@ -1,6 +1,5 @@
 package org.embulk.spi;
 
-import com.google.inject.Injector;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -48,7 +47,6 @@ public class ExecSessionInternal extends ExecSession {
     private static final DateTimeFormatter ISO8601_BASIC =
             DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss'Z'", Locale.ENGLISH).withZone(ZoneOffset.UTC);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final GuessExecutor guessExecutor;
 
@@ -74,7 +72,6 @@ public class ExecSessionInternal extends ExecSession {
     }
 
     public static class Builder {
-        private final Injector injector;
         private final BufferAllocator bufferAllocator;
         private final TempFileSpaceAllocator tempFileSpaceAllocator;
 
@@ -89,14 +86,12 @@ public class ExecSessionInternal extends ExecSession {
         private org.embulk.config.ModelManager modelManager;
 
         public Builder(
-                final Injector injector,
                 final BufferAllocator bufferAllocator,
                 final TempFileSpaceAllocator tempFileSpaceAllocator) {
-            this.injector = injector;
             this.bufferAllocator = bufferAllocator;
             this.tempFileSpaceAllocator = tempFileSpaceAllocator;
             this.embulkSystemProperties = null;
-            this.builtinPluginSourceBuilder = BuiltinPluginSource.builder(injector);
+            this.builtinPluginSourceBuilder = BuiltinPluginSource.builder();
             this.parentFirstPackages = null;
             this.parentFirstResources = null;
             this.transactionTime = null;
@@ -180,6 +175,7 @@ public class ExecSessionInternal extends ExecSession {
 
         public Builder setEmbulkSystemProperties(final EmbulkSystemProperties embulkSystemProperties) {
             this.embulkSystemProperties = embulkSystemProperties;
+            this.builtinPluginSourceBuilder.setEmbulkSystemProperties(embulkSystemProperties);
             return this;
         }
 
@@ -214,7 +210,6 @@ public class ExecSessionInternal extends ExecSession {
                 throw new IllegalStateException("ModelManager is not set in ExecSessionInternal.");
             }
             return new ExecSessionInternal(
-                    this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
                     this.bufferAllocator,
@@ -228,15 +223,13 @@ public class ExecSessionInternal extends ExecSession {
     }
 
     public static Builder builderInternal(
-            final Injector injector,
             final BufferAllocator bufferAllocator,
             final TempFileSpaceAllocator tempFileSpaceAllocator) {
-        return new Builder(injector, bufferAllocator, tempFileSpaceAllocator);
+        return new Builder(bufferAllocator, tempFileSpaceAllocator);
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private ExecSessionInternal(
-            final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
             final BufferAllocator bufferAllocator,
@@ -255,13 +248,12 @@ public class ExecSessionInternal extends ExecSession {
                         + "Use ExecSession.Builder#setParentFirstResources.");
         }
 
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.guessExecutor = guessExecutor;
         this.modelManager = modelManager;
 
-        this.jrubyScriptingContainerDelegate = LazyScriptingContainerDelegate.withInjector(
-                this.injector, LoggerFactory.getLogger("init"), this.embulkSystemProperties);
+        this.jrubyScriptingContainerDelegate = LazyScriptingContainerDelegate.withEmbulkSpecific(
+                LoggerFactory.getLogger("init"), this.embulkSystemProperties);
 
         this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
@@ -269,8 +261,8 @@ public class ExecSessionInternal extends ExecSession {
         this.pluginManager = PluginManager.with(
                 embulkSystemProperties,
                 builtinPluginSource,
-                new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
-                new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
+                new MavenPluginSource(embulkSystemProperties, pluginClassLoaderFactory),
+                new SelfContainedPluginSource(embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(this.jrubyScriptingContainerDelegate, pluginClassLoaderFactory));
 
         this.bufferAllocator = bufferAllocator;
@@ -283,7 +275,6 @@ public class ExecSessionInternal extends ExecSession {
     }
 
     private ExecSessionInternal(ExecSessionInternal copy, boolean preview) {
-        this.injector = copy.injector;
         this.embulkSystemProperties = copy.embulkSystemProperties;
         this.guessExecutor = copy.guessExecutor;
         this.modelManager = copy.modelManager;
@@ -309,11 +300,6 @@ public class ExecSessionInternal extends ExecSession {
     public ConfigSource getSessionExecConfig() {
         return newConfigSource()
                 .set("transaction_time", Instants.toString(this.transactionTime));
-    }
-
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1313
-    public Injector getInjector() {
-        return injector;
     }
 
     @Deprecated

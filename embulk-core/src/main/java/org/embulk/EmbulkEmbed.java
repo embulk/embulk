@@ -1,24 +1,15 @@
 package org.embulk;
 
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Stage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.embulk.config.ConfigDiff;
@@ -54,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 public class EmbulkEmbed {
     private EmbulkEmbed(
-            final Injector injector,
             final LinkedHashMap<String, Class<? extends DecoderPlugin>> decoderPlugins,
             final LinkedHashMap<String, Class<? extends EncoderPlugin>> encoderPlugins,
             final LinkedHashMap<String, Class<? extends ExecutorPlugin>> executorPlugins,
@@ -70,7 +60,6 @@ public class EmbulkEmbed {
             final BufferAllocator bufferAllocator,
             final TempFileSpaceAllocator tempFileSpaceAllocator,
             final BulkLoader alternativeBulkLoader) {
-        this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
         this.encoderPlugins = Collections.unmodifiableMap(encoderPlugins);
         this.executorPlugins = Collections.unmodifiableMap(executorPlugins);
@@ -112,7 +101,6 @@ public class EmbulkEmbed {
             this.parserPlugins = new LinkedHashMap<>();
             this.embulkSystemPropertiesBuilt = new Properties();
             this.alternativeBulkLoader = null;
-            this.moduleOverrides = new ArrayList<>();
             this.started = false;
         }
 
@@ -184,84 +172,17 @@ public class EmbulkEmbed {
             return this;
         }
 
-        public Bootstrap addModules(final Module... additionalModules) {
-            return this.addModules(Arrays.asList(additionalModules));
-        }
-
-        public Bootstrap addModules(final Iterable<? extends Module> additionalModules) {
-            return this.overrideModulesJavaUtil(
-                modules -> {
-                    final ArrayList<Module> concatenated = new ArrayList<>(modules);
-                    for (final Module module : additionalModules) {
-                        concatenated.add(module);
-                    }
-                    return Collections.unmodifiableList(concatenated);
-                });
-        }
-
-        /**
-         * Add a module overrider function with Google Guava's Function.
-         *
-         * <p>Caution: this method is not working as intended. It is kept just for binary compatibility.
-         *
-         * @param function  the module overrider function
-         * @return this
-         */
-        @Deprecated
-        public Bootstrap overrideModules(
-                final com.google.common.base.Function<? super List<Module>, ? extends Iterable<? extends Module>> function) {
-            // TODO: Enable this logging.
-            // logger.warn("EmbulkEmbed.Bootstrap#overrideModules is deprecated.",
-            //             new Throwable("Logging the stack trace to help identifying the caller."));
-            this.moduleOverrides.add(function::apply);
-            return this;
-        }
-
-        /**
-         * Add a module overrider function with java.util.function.Function.
-         *
-         * <p>This method is not disclosed intentionally. We doubt we need to provide the overriding feature to users.
-         *
-         * @param function  the module overrider function
-         * @return this
-         */
-        private Bootstrap overrideModulesJavaUtil(
-                final Function<? super List<Module>, ? extends Iterable<? extends Module>> function) {
-            this.moduleOverrides.add(function);
-            return this;
-        }
-
         public EmbulkEmbed initialize() {
             if (this.started) {
                 throw new IllegalStateException("System already initialized");
             }
             this.started = true;
 
-            final ArrayList<Module> modulesListBuilt = new ArrayList<>();
-
             final EmbulkSystemProperties embulkSystemProperties = EmbulkSystemProperties.of(this.embulkSystemPropertiesBuilt);
-            ArrayList<Module> userModules = new ArrayList<>();
-            for (final Function<? super List<Module>, ? extends Iterable<? extends Module>> override : this.moduleOverrides) {
-                final Iterable<? extends Module> overridden = override.apply(userModules);
-                userModules = new ArrayList<Module>();
-                for (final Module module : overridden) {
-                    userModules.add(module);
-                }
-            }
             final BufferAllocator bufferAllocator = createBufferAllocatorFromSystemConfig(embulkSystemProperties);
             final TempFileSpaceAllocator tempFileSpaceAllocator = new SimpleTempFileSpaceAllocator();
-            modulesListBuilt.addAll(userModules);
 
-            modulesListBuilt.add(new Module() {
-                    @Override
-                    public void configure(final Binder binder) {
-                        binder.disableCircularProxies();
-                    }
-                });
-
-            final Injector injector = Guice.createInjector(Stage.PRODUCTION, Collections.unmodifiableList(modulesListBuilt));
             return new EmbulkEmbed(
-                    injector,
                     decoderPlugins,
                     encoderPlugins,
                     executorPlugins,
@@ -284,8 +205,6 @@ public class EmbulkEmbed {
             return this.initialize();
         }
 
-        private final List<Function<? super List<Module>, ? extends Iterable<? extends Module>>> moduleOverrides;
-
         // We are trying to represent the "system config" in java.util.Properties, instead of ConfigSource.
         // TODO: Make this java.util.Properties use as system config. See: https://github.com/embulk/embulk/issues/1159
         private Properties embulkSystemPropertiesBuilt;
@@ -305,10 +224,6 @@ public class EmbulkEmbed {
         private final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins;
 
         private boolean started;
-    }
-
-    public Injector getInjector() {
-        return injector;
     }
 
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
@@ -406,7 +321,7 @@ public class EmbulkEmbed {
 
     private ExecSessionInternal newExecSessionInternal(final ConfigSource execConfig) {
         final ExecSessionInternal.Builder builder = ExecSessionInternal.builderInternal(
-                this.injector, this.bufferAllocator, this.tempFileSpaceAllocator);
+                this.bufferAllocator, this.tempFileSpaceAllocator);
         for (final Map.Entry<String, Class<? extends DecoderPlugin>> decoderPlugin : this.decoderPlugins.entrySet()) {
             builder.registerDecoderPlugin(decoderPlugin.getKey(), decoderPlugin.getValue());
         }
@@ -624,7 +539,6 @@ public class EmbulkEmbed {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbulkEmbed.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final BufferAllocator bufferAllocator;
     private final TempFileSpaceAllocator tempFileSpaceAllocator;
