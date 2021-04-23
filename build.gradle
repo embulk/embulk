@@ -243,7 +243,6 @@ dependencies {
     implementation "org.fusesource.jansi:jansi:1.18"
 
     embed(project(':embulk-deps')) {
-        exclude group: 'org.apache.commons', module: 'commons-lang3'  // Included in embulk-core.
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
     }
 }

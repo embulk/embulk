@@ -10,7 +10,7 @@ import org.embulk.deps.config.ConfigLoaderDelegate;
 public class ConfigLoader {
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     public ConfigLoader(ModelManager model) {
-        this.delegate = ConfigLoaderDelegate.of(model);
+        this.delegate = ConfigLoaderDelegate.of(model.getDelegate());
     }
 
     public ConfigSource newConfigSource() {

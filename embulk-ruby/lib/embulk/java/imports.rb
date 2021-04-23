@@ -44,7 +44,6 @@ module Embulk::Java
   include_package 'org.embulk'
 
   java_import 'org.embulk.spi.Buffer'
-  java_import 'org.embulk.config.DataSourceImpl'
   java_import 'org.embulk.spi.time.Timestamp'
   java_import 'org.embulk.spi.time.TimestampParseException'
   java_import 'org.embulk.spi.GuessPlugin'
