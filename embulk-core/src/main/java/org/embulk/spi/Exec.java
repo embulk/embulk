@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import com.google.inject.Injector;
+import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -43,6 +44,10 @@ public class Exec {
         return session().getTransactionTime();
     }
 
+    public static Instant getTransactionTimeInstant() {
+        return session().getTransactionTimeInstant();
+    }
+
     @Deprecated  // @see docs/design/slf4j.md
     @SuppressWarnings("deprecation")
     public static Logger getLogger(String name) {
@@ -57,6 +62,14 @@ public class Exec {
 
     public static BufferAllocator getBufferAllocator() {
         return session().getBufferAllocator();
+    }
+
+    public static PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output) {
+        return session().getPageBuilder(allocator, schema, output);
+    }
+
+    public static PageReader getPageReader(final Schema schema) {
+        return session().getPageReader(schema);
     }
 
     public static ModelManager getModelManager() {
