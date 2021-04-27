@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
 import com.google.inject.Injector;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -16,6 +17,7 @@ import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
+import org.embulk.spi.time.Instants;
 import org.embulk.spi.time.Timestamp;
 import org.embulk.spi.time.TimestampFormatter;
 import org.slf4j.ILoggerFactory;
@@ -138,6 +140,14 @@ public class ExecSession {
         return transactionTime;
     }
 
+    public Instant getTransactionTimeInstant() {
+        return this.transactionTime.getInstant();
+    }
+
+    public String getTransactionTimeString() {
+        return Instants.toString(this.transactionTime.getInstant());
+    }
+
     @Deprecated  // @see docs/design/slf4j.md
     public Logger getLogger(String name) {
         // TODO: Make it always return org.slf4j.LoggerFactory.getLogger(...).
@@ -152,6 +162,14 @@ public class ExecSession {
 
     public BufferAllocator getBufferAllocator() {
         return bufferAllocator;
+    }
+
+    public PageBuilder getPageBuilder(final BufferAllocator allocator, final Schema schema, final PageOutput output) {
+        return new PageBuilder(bufferAllocator, schema, output);
+    }
+
+    public PageReader getPageReader(final Schema schema) {
+        return new PageReader(schema);
     }
 
     public ModelManager getModelManager() {

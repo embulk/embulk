@@ -9,6 +9,10 @@ public class Timestamp implements Comparable<Timestamp> {
         this.instant = instant;
     }
 
+    public static Timestamp ofString(final String string) {
+        return new Timestamp(Instants.parseInstant(string));
+    }
+
     public static Timestamp ofInstant(final Instant instant) {
         return new Timestamp(instant);
     }

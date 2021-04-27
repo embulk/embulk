@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import org.embulk.deps.buffer.Slice;
 import org.embulk.spi.time.Timestamp;
 import org.msgpack.value.Value;
@@ -110,6 +111,14 @@ public class PageReader implements AutoCloseable {
         long sec = pageSlice.getLong(offset);
         int nsec = pageSlice.getInt(offset + 8);
         return Timestamp.ofEpochSecond(sec, nsec);
+    }
+
+    public Instant getTimestampInstant(final Column column) {
+        return this.getTimestamp(column).getInstant();
+    }
+
+    public Instant getTimestampInstant(final int columnIndex) {
+        return this.getTimestamp(columnIndex).getInstant();
     }
 
     public Value getJson(Column column) {
