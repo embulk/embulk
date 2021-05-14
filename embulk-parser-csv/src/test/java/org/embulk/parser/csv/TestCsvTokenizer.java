@@ -33,7 +33,6 @@ import org.embulk.spi.Column;
 import org.embulk.spi.FileInput;
 import org.embulk.spi.Schema;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.file.ListFileInput;
 import org.embulk.util.text.LineDecoder;
 import org.junit.Before;
@@ -47,10 +46,7 @@ public class TestCsvTokenizer {
     protected ConfigSource config;
     protected CsvParserPlugin.PluginTask task;
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new TypeModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     @Before
     public void setup() {

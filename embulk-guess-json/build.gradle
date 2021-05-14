@@ -23,7 +23,7 @@ dependencies {
     compileOnly project(":embulk-api")
     compileOnly project(":embulk-spi")
 
-    compile "org.embulk:embulk-util-config:0.2.1"
+    compile "org.embulk:embulk-util-config:0.3.0"
     compile "org.embulk:embulk-util-file:0.1.3"
     compile("org.embulk:embulk-util-json:0.1.0") {
         exclude group: "org.msgpack", module: "msgpack-core"

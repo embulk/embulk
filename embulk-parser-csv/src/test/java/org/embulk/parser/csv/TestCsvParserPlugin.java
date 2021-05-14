@@ -26,7 +26,6 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.text.Newline;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,10 +34,7 @@ public class TestCsvParserPlugin {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new TypeModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     @Test
     public void checkDefaultValues() {
