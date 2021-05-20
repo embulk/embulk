@@ -56,7 +56,6 @@ dependencies {
         exclude group: "org.slf4j", module: "slf4j-api"  // Included in embulk-core.
     }
     api("org.apache.maven:maven-resolver-provider:3.6.1") {
-        exclude group: "javax.inject", module: "javax.inject"  // Included in embulk-core.
         exclude group: "com.google.inject", module: "guice"  // Optional dependency for maven-resolver-provider. Not to use Guice.
         exclude group: "org.slf4j", module: "slf4j-api"  // Included in embulk-core.
     }
