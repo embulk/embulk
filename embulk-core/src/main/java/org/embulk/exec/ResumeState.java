@@ -1,7 +1,7 @@
 package org.embulk.exec;
 
-import com.google.common.base.Optional;
 import java.util.List;
+import java.util.Optional;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;

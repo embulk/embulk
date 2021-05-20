@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
@@ -14,11 +15,11 @@ public abstract class FiltersInternal {
     private FiltersInternal() {}
 
     public static List<PluginType> getPluginTypes(List<ConfigSource> configs) {
-        ImmutableList.Builder<PluginType> builder = ImmutableList.builder();
+        final ArrayList<PluginType> builder = new ArrayList<>();
         for (ConfigSource config : configs) {
             builder.add(config.get(PluginType.class, "type"));
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     public static List<FilterPlugin> newFilterPluginsFromConfigSources(ExecSessionInternal exec, List<ConfigSource> configs) {
@@ -26,11 +27,11 @@ public abstract class FiltersInternal {
     }
 
     public static List<FilterPlugin> newFilterPlugins(ExecSessionInternal exec, List<PluginType> pluginTypes) {
-        ImmutableList.Builder<FilterPlugin> builder = ImmutableList.builder();
+        final ArrayList<FilterPlugin> builder = new ArrayList<>();
         for (PluginType pluginType : pluginTypes) {
             builder.add(exec.newPlugin(FilterPlugin.class, pluginType));
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     public interface Control {
@@ -57,8 +58,8 @@ public abstract class FiltersInternal {
         private final List<FilterPlugin> plugins;
         private final List<ConfigSource> configs;
         private final FiltersInternal.Control finalControl;
-        private final ImmutableList.Builder<TaskSource> taskSources;
-        private final ImmutableList.Builder<Schema> filterSchemas;
+        private final ArrayList<TaskSource> taskSources;
+        private final ArrayList<Schema> filterSchemas;
         private int pos;
 
         RecursiveControl(List<FilterPlugin> plugins, List<ConfigSource> configs,
@@ -66,8 +67,8 @@ public abstract class FiltersInternal {
             this.plugins = plugins;
             this.configs = configs;
             this.finalControl = finalControl;
-            this.taskSources = ImmutableList.builder();
-            this.filterSchemas = ImmutableList.builder();
+            this.taskSources = new ArrayList<>();
+            this.filterSchemas = new ArrayList<>();
         }
 
         public void transaction(Schema inputSchema) {
@@ -81,7 +82,7 @@ public abstract class FiltersInternal {
                         }
                     });
             } else {
-                finalControl.run(taskSources.build(), filterSchemas.build());
+                finalControl.run(Collections.unmodifiableList(this.taskSources), Collections.unmodifiableList(this.filterSchemas));
             }
         }
     }

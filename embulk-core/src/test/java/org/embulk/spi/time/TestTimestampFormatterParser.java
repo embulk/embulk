@@ -2,66 +2,33 @@ package org.embulk.spi.time;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
-import org.embulk.EmbulkTestRuntime;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.Task;
-import org.embulk.spi.Exec;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class TestTimestampFormatterParser {
-    @Rule
-    public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
-
-    private interface FormatterTestTask extends Task, TimestampFormatter.Task {}
-
-    private interface ParserTestTask extends Task, TimestampParser.Task {}
-
-    private interface ParserColumnOption extends Task, TimestampParser.TimestampColumnOption {}
-
     @Test
     public void testSimpleFormat() throws Exception {
-        ConfigSource config = Exec.newConfigSource()
-                .set("default_timestamp_format", "%Y-%m-%d %H:%M:%S.%9N %z");  // %Z is OS-dependent
-        FormatterTestTask task = config.loadConfig(FormatterTestTask.class);
-
-        TimestampFormatter formatter = TimestampFormatter.of(task, Optional.<TimestampFormatter.TimestampColumnOption>absent());
+        final TimestampFormatter formatter = TimestampFormatter.of("%Y-%m-%d %H:%M:%S.%9N %z", "UTC");
         assertEquals("2014-11-19 02:46:29.123456000 +0000", formatter.format(Timestamp.ofEpochSecond(1416365189, 123456 * 1000)));
     }
 
     @Test
     public void testSimpleParse() throws Exception {
-        ConfigSource config = Exec.newConfigSource()
-                .set("default_timestamp_format", "%Y-%m-%d %H:%M:%S %z");  // %Z is OS-dependent
-        ParserTestTask task = config.loadConfig(ParserTestTask.class);
-
-        TimestampParser parser = TimestampParser.of(task, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
+        final TimestampParser parser = TimestampParser.of("%Y-%m-%d %H:%M:%S %z", "UTC");
         assertEquals(Timestamp.ofEpochSecond(1416365189, 0), parser.parse("2014-11-19 02:46:29 +0000"));
     }
 
     @Test
     public void testUnixtimeFormat() throws Exception {
-        ConfigSource config = Exec.newConfigSource()
-                .set("default_timestamp_format", "%s");
-
-        FormatterTestTask ftask = config.loadConfig(FormatterTestTask.class);
-        TimestampFormatter formatter = TimestampFormatter.of(ftask, Optional.<TimestampFormatter.TimestampColumnOption>absent());
+        final TimestampFormatter formatter = TimestampFormatter.of("%s", "UTC");
         assertEquals("1416365189", formatter.format(Timestamp.ofEpochSecond(1416365189)));
 
-        ParserTestTask ptask = config.loadConfig(ParserTestTask.class);
-        TimestampParser parser = TimestampParser.of(ptask, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
+        final TimestampParser parser = TimestampParser.of("%s", "UTC");
         assertEquals(Timestamp.ofEpochSecond(1416365189), parser.parse("1416365189"));
     }
 
     @Test
     public void testDefaultDate() throws Exception {
-        ConfigSource config = Exec.newConfigSource()
-                .set("default_timestamp_format", "%H:%M:%S %Z")
-                .set("default_date", "2016-02-03");
-
-        ParserTestTask ptask = config.loadConfig(ParserTestTask.class);
-        TimestampParser parser = TimestampParser.of(ptask, Exec.newConfigSource().loadConfig(ParserColumnOption.class));
+        final TimestampParser parser = TimestampParser.of("%H:%M:%S %Z", "UTC", "2016-02-03");
         assertEquals(Timestamp.ofEpochSecond(1454467589, 0), parser.parse("02:46:29 +0000"));
     }
 }

@@ -1,6 +1,7 @@
 package org.embulk.spi;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.embulk.spi.type.Type;
@@ -50,11 +51,11 @@ public class SchemaConfig {
     }
 
     public Schema toSchema() {
-        ImmutableList.Builder<Column> builder = ImmutableList.builder();
+        final ArrayList<Column> builder = new ArrayList<>();
         for (int i = 0; i < columns.size(); i++) {
             builder.add(columns.get(i).toColumn(i));
         }
-        return new Schema(builder.build());
+        return new Schema(Collections.unmodifiableList(builder));
     }
 
     @Override

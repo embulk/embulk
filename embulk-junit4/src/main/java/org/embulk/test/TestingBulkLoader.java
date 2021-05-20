@@ -1,8 +1,9 @@
 package org.embulk.test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.TaskReport;
 import org.embulk.exec.BulkLoader;
@@ -51,11 +52,11 @@ class TestingBulkLoader extends BulkLoader {
         }
 
         private static List<TaskReport> buildReports(List<Optional<TaskReport>> optionalReports, ExecSessionInternal session) {
-            ImmutableList.Builder<TaskReport> reports = ImmutableList.builder();
+            final ArrayList<TaskReport> reports = new ArrayList<>();
             for (Optional<TaskReport> report : optionalReports) {
-                reports.add(report.or(session.newTaskReport()));
+                reports.add(report.orElse(session.newTaskReport()));
             }
-            return reports.build();
+            return Collections.unmodifiableList(reports);
         }
 
         @Override

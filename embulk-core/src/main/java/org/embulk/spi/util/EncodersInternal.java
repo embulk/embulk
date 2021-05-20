@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskSource;
@@ -13,11 +14,11 @@ public abstract class EncodersInternal {
     private EncodersInternal() {}
 
     public static List<EncoderPlugin> newEncoderPlugins(ExecSessionInternal exec, List<ConfigSource> configs) {
-        ImmutableList.Builder<EncoderPlugin> builder = ImmutableList.builder();
+        final ArrayList<EncoderPlugin> builder = new ArrayList<>();
         for (ConfigSource config : configs) {
             builder.add(exec.newPlugin(EncoderPlugin.class, config.get(PluginType.class, "type")));
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     public interface Control {
@@ -44,7 +45,7 @@ public abstract class EncodersInternal {
         private final List<EncoderPlugin> plugins;
         private final List<ConfigSource> configs;
         private final EncodersInternal.Control finalControl;
-        private final ImmutableList.Builder<TaskSource> taskSources;
+        private final ArrayList<TaskSource> taskSources;
         private int pos;
 
         RecursiveControl(List<EncoderPlugin> plugins, List<ConfigSource> configs,
@@ -52,7 +53,7 @@ public abstract class EncodersInternal {
             this.plugins = plugins;
             this.configs = configs;
             this.finalControl = finalControl;
-            this.taskSources = ImmutableList.builder();
+            this.taskSources = new ArrayList<>();
         }
 
         public void transaction() {
@@ -65,7 +66,7 @@ public abstract class EncodersInternal {
                         }
                     });
             } else {
-                finalControl.run(taskSources.build());
+                finalControl.run(Collections.unmodifiableList(taskSources));
             }
         }
     }

@@ -1,6 +1,5 @@
 package org.embulk.spi.time;
 
-import com.google.common.base.Optional;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.deps.timestamp.DepsTimestampFormatter;
@@ -13,38 +12,15 @@ public class TimestampFormatter {
         this.zoneIdString = zoneIdString;
     }
 
-    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public TimestampFormatter(final Task task, final Optional<? extends TimestampColumnOption> columnOption) {
-        this(columnOption.isPresent()
-                     ? columnOption.get().getFormat().or(task.getDefaultTimestampFormat())
-                     : task.getDefaultTimestampFormat(),
-             columnOption.isPresent()
-                     ? columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId())
-                     : task.getDefaultTimeZoneId());
-    }
+    // The constructor has been removed:
+    // public TimestampFormatter(TimestampFormatter.Task, com.google.commom.base.Optional<? extends TimestampFormatter.TimestampColumnOption>)
 
     public static TimestampFormatter of(final String pattern, final String zoneIdString) {
         return new TimestampFormatter(pattern, zoneIdString);
     }
 
-    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public static TimestampFormatter of(final Task task, final Optional<? extends TimestampColumnOption> columnOption) {
-        final String pattern;
-        if (columnOption.isPresent()) {
-            pattern = columnOption.get().getFormat().or(task.getDefaultTimestampFormat());
-        } else {
-            pattern = task.getDefaultTimestampFormat();
-        }
-
-        final String zoneIdString;
-        if (columnOption.isPresent()) {
-            zoneIdString = columnOption.get().getTimeZoneId().or(task.getDefaultTimeZoneId());
-        } else {
-            zoneIdString = task.getDefaultTimeZoneId();
-        }
-
-        return new TimestampFormatter(pattern, zoneIdString);
-    }
+    // The method has been removed:
+    // public static TimestampFormatter of(TimestampFormatter.Task, com.google.common.base.Optional<? extends TimestampFormatter.TimestampColumnOption>)
 
     @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public interface Task {
@@ -59,18 +35,7 @@ public class TimestampFormatter {
         public String getDefaultTimestampFormat();
     }
 
-    @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public interface TimestampColumnOption {
-        @Config("timezone")
-        @ConfigDefault("null")
-        public Optional<String> getTimeZoneId();
-
-        // The method has been removed: public default org.joda.time.DateTimeZone getDefaultTimeZone()
-
-        @Config("format")
-        @ConfigDefault("null")
-        public Optional<String> getFormat();
-    }
+    // The interface has been removed: public interface TimestampFormatter.TimestampColumnOption
 
     // The method has been removed: public org.joda.time.DateTimeZone getTimeZone()
 

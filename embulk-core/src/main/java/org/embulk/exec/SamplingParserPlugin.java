@@ -3,7 +3,6 @@ package org.embulk.exec;
 import static java.util.Locale.ENGLISH;
 import static org.embulk.spi.util.Inputs.each;
 
-import com.google.common.base.Preconditions;
 import java.text.NumberFormat;
 import java.util.List;
 import org.embulk.config.Config;
@@ -142,7 +141,9 @@ public class SamplingParserPlugin implements ParserPlugin {
     @Override
     public void transaction(ConfigSource config, ParserPlugin.Control control) {
         final PluginTask task = loadPluginTask(config);
-        Preconditions.checkArgument(minSampleBufferBytes < task.getSampleBufferBytes(), "minSampleBufferBytes must be smaller than sample_buffer_bytes");
+        if (minSampleBufferBytes >= task.getSampleBufferBytes()) {
+            throw new IllegalArgumentException("minSampleBufferBytes must be smaller than sample_buffer_bytes");
+        }
 
         logger.info("Try to read {} bytes from input source", numberFormat.format(task.getSampleBufferBytes()));
         control.run(task.dump(), null);

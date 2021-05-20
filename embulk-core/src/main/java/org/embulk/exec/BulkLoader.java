@@ -1,8 +1,9 @@
 package org.embulk.exec;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
@@ -127,16 +128,16 @@ public class BulkLoader {
                             inputTaskCount, outputTaskCount, inputTaskStates.size(), outputTaskStates.size()));
                 }
             } else {
-                ImmutableList.Builder<TaskState> inputTaskStates = ImmutableList.builder();
-                ImmutableList.Builder<TaskState> outputTaskStates = ImmutableList.builder();
+                final ArrayList<TaskState> inputTaskStates = new ArrayList<>();
+                final ArrayList<TaskState> outputTaskStates = new ArrayList<>();
                 for (int i = 0; i < inputTaskCount; i++) {
                     inputTaskStates.add(new TaskState());
                 }
                 for (int i = 0; i < outputTaskCount; i++) {
                     outputTaskStates.add(new TaskState());
                 }
-                this.inputTaskStates = inputTaskStates.build();
-                this.outputTaskStates = outputTaskStates.build();
+                this.inputTaskStates = Collections.unmodifiableList(inputTaskStates);
+                this.outputTaskStates = Collections.unmodifiableList(outputTaskStates);
             }
         }
 
@@ -220,39 +221,39 @@ public class BulkLoader {
         }
 
         private List<Optional<TaskReport>> getInputTaskReports() {
-            ImmutableList.Builder<Optional<TaskReport>> builder = ImmutableList.builder();
+            final ArrayList<Optional<TaskReport>> builder = new ArrayList<>();
             for (TaskState inputTaskState : inputTaskStates) {
                 builder.add(inputTaskState.getTaskReport());
             }
-            return builder.build();
+            return Collections.unmodifiableList(builder);
         }
 
         private List<Optional<TaskReport>> getOutputTaskReports() {
-            ImmutableList.Builder<Optional<TaskReport>> builder = ImmutableList.builder();
+            final ArrayList<Optional<TaskReport>> builder = new ArrayList<>();
             for (TaskState outputTaskState : outputTaskStates) {
                 builder.add(outputTaskState.getTaskReport());
             }
-            return builder.build();
+            return Collections.unmodifiableList(builder);
         }
 
         public List<TaskReport> getAllInputTaskReports() {
-            ImmutableList.Builder<TaskReport> builder = ImmutableList.builder();
+            final ArrayList<TaskReport> builder = new ArrayList<>();
             for (TaskState inputTaskState : inputTaskStates) {
                 builder.add(inputTaskState.getTaskReport().get());
             }
-            return builder.build();
+            return Collections.unmodifiableList(builder);
         }
 
         public List<TaskReport> getAllOutputTaskReports() {
-            ImmutableList.Builder<TaskReport> builder = ImmutableList.builder();
+            final ArrayList<TaskReport> builder = new ArrayList<>();
             for (TaskState outputTaskState : outputTaskStates) {
                 builder.add(outputTaskState.getTaskReport().get());
             }
-            return builder.build();
+            return Collections.unmodifiableList(builder);
         }
 
         public List<Throwable> getExceptions() {
-            ImmutableList.Builder<Throwable> builder = ImmutableList.builder();
+            final ArrayList<Throwable> builder = new ArrayList<>();
             if (inputTaskStates != null) {  // null if not initialized yet
                 for (TaskState inputTaskState : inputTaskStates) {
                     Optional<Throwable> exception = inputTaskState.getException();
@@ -269,7 +270,7 @@ public class BulkLoader {
                     }
                 }
             }
-            return builder.build();
+            return Collections.unmodifiableList(builder);
         }
 
         public RuntimeException getRepresentativeException() {
@@ -304,7 +305,7 @@ public class BulkLoader {
                 configDiff.getNestedOrSetEmpty("out").merge(outputConfigDiff);
             }
 
-            ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
+            final ArrayList<Throwable> ignoredExceptions = new ArrayList<>();
             for (Throwable e : getExceptions()) {
                 ignoredExceptions.add(e);
             }
@@ -312,16 +313,16 @@ public class BulkLoader {
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(configDiff, false, ignoredExceptions.build());
+            return new ExecutionResult(configDiff, false, Collections.unmodifiableList(ignoredExceptions));
         }
 
         public ExecutionResult buildExecuteResultOfSkippedExecution(ConfigDiff configDiff) {
-            ImmutableList.Builder<Throwable> ignoredExceptions = ImmutableList.builder();
+            final ArrayList<Throwable> ignoredExceptions = new ArrayList<>();
             for (Throwable e : getExceptions()) {
                 ignoredExceptions.add(e);
             }
 
-            return new ExecutionResult(configDiff, true, ignoredExceptions.build());
+            return new ExecutionResult(configDiff, true, Collections.unmodifiableList(ignoredExceptions));
         }
 
         public ResumeState buildResumeState(ExecSessionInternal exec) {
@@ -471,8 +472,8 @@ public class BulkLoader {
         final BulkLoaderTask task = loadBulkLoaderTask(config);
         ProcessPluginSet plugins = new ProcessPluginSet(task);  // TODO don't create filter plugins
 
-        ImmutableList.Builder<TaskReport> successfulInputTaskReports = ImmutableList.builder();
-        ImmutableList.Builder<TaskReport> successfulOutputTaskReports = ImmutableList.builder();
+        final ArrayList<TaskReport> successfulInputTaskReports = new ArrayList<>();
+        final ArrayList<TaskReport> successfulOutputTaskReports = new ArrayList<>();
         for (Optional<TaskReport> inputTaskReport : resume.getInputTaskReports()) {
             if (inputTaskReport.isPresent()) {
                 successfulInputTaskReports.add(inputTaskReport.get());
@@ -491,7 +492,7 @@ public class BulkLoader {
             inputTaskSource = resume.getInputTaskSource();
         }
         plugins.getInputPlugin().cleanup(inputTaskSource, resume.getInputSchema(),
-                resume.getInputTaskReports().size(), successfulInputTaskReports.build());
+                resume.getInputTaskReports().size(), Collections.unmodifiableList(successfulInputTaskReports));
 
         final TaskSource outputTaskSource;
         if (plugins.getOutputPlugin() instanceof FileOutputRunner) {
@@ -500,7 +501,7 @@ public class BulkLoader {
             outputTaskSource = resume.getOutputTaskSource();
         }
         plugins.getOutputPlugin().cleanup(outputTaskSource, resume.getOutputSchema(),
-                resume.getOutputTaskReports().size(), successfulOutputTaskReports.build());
+                resume.getOutputTaskReports().size(), Collections.unmodifiableList(successfulOutputTaskReports));
     }
 
     private ExecutorPlugin newExecutorPlugin(BulkLoaderTask task) {

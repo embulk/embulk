@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import javax.validation.Validation;
 import org.apache.bval.jsr303.ApacheValidationProvider;
@@ -37,7 +36,6 @@ public class ModelManagerDelegateImpl extends ModelManagerDelegate {
         objectMapper.registerModule(new TypeJacksonModule());
         objectMapper.registerModule(new ColumnJacksonModule());
         objectMapper.registerModule(new SchemaJacksonModule());
-        objectMapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         objectMapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         this.configObjectMapper = objectMapper.copy();
         this.taskValidator = new TaskValidator(

@@ -3,9 +3,9 @@ package org.embulk.deps.config;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
@@ -14,14 +14,14 @@ class TypeDeserializer extends FromStringDeserializer<Type> {
     private static final Map<String, Type> stringToTypeMap;
 
     static {
-        ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
+        final LinkedHashMap<String, Type> builder = new LinkedHashMap<>();
         builder.put(Types.BOOLEAN.getName(), Types.BOOLEAN);
         builder.put(Types.LONG.getName(), Types.LONG);
         builder.put(Types.DOUBLE.getName(), Types.DOUBLE);
         builder.put(Types.STRING.getName(), Types.STRING);
         builder.put(Types.TIMESTAMP.getName(), Types.TIMESTAMP);
         builder.put(Types.JSON.getName(), Types.JSON);
-        stringToTypeMap = builder.build();
+        stringToTypeMap = Collections.unmodifiableMap(builder);
     }
 
     public TypeDeserializer() {
@@ -35,7 +35,7 @@ class TypeDeserializer extends FromStringDeserializer<Type> {
             throw new JsonMappingException(
                     String.format("Unknown type name '%s'. Supported types are: %s",
                                   value,
-                                  Joiner.on(", ").join(stringToTypeMap.keySet())));
+                                  String.join(", ", stringToTypeMap.keySet())));
         }
         return t;
     }

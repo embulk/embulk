@@ -17,6 +17,9 @@ dependencies {
     compile project(":embulk-core")
 
     compile project(":embulk-guess-csv")
+
+    // Guava is not included in Embulk since v0.10.34.
+    compile "com.google.guava:guava:18.0"
 }
 
 embulkPlugin {

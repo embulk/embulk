@@ -1,6 +1,5 @@
 package org.embulk.spi.time;
 
-import com.google.common.base.Optional;
 import java.time.DateTimeException;
 import java.time.Instant;
 import org.embulk.config.Config;
@@ -18,13 +17,7 @@ public class TimestampParser {
         this(formatString, defaultZoneIdString, null);
     }
 
-    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public TimestampParser(final Task task,
-                           final TimestampColumnOption columnOption) {
-        this(columnOption.getFormat().or(task.getDefaultTimestampFormat()),
-             columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId()),
-             columnOption.getDate().or(task.getDefaultDate()));
-    }
+    // The constructor has been removed: public TimestampParser(TimestampParser.Task, TimestampParser.TimestampColumnOption)
 
     @Deprecated  // "default_date" is deprecated, but the creator method is kept for plugin compatibility.
     public static TimestampParser of(final String pattern,
@@ -39,15 +32,7 @@ public class TimestampParser {
         return new TimestampParser(pattern, defaultZoneIdString);
     }
 
-    @Deprecated  // This constructor will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public static TimestampParser of(final Task task,
-                                     final TimestampColumnOption columnOption) {
-        final String pattern = columnOption.getFormat().or(task.getDefaultTimestampFormat());
-        return new TimestampParser(
-                    pattern,
-                    columnOption.getTimeZoneId().or(task.getDefaultTimeZoneId()),
-                    columnOption.getDate().or(task.getDefaultDate()));
-    }
+    // The method has been removed: public static TimestampParser of(TimestampParser.Task, TimestampParser.TimestampColumnOption)
 
     @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
     public interface Task {
@@ -66,22 +51,7 @@ public class TimestampParser {
         public String getDefaultDate();
     }
 
-    @Deprecated  // This interface will be removed sooner when Joda-Time is removed from Embulk during v0.10.
-    public interface TimestampColumnOption {
-        @Config("timezone")
-        @ConfigDefault("null")
-        public Optional<String> getTimeZoneId();
-
-        // The method has been removed: public default Optional<org.joda.time.DateTimeZone> getTimeZone()
-
-        @Config("format")
-        @ConfigDefault("null")
-        public Optional<String> getFormat();
-
-        @Config("date")
-        @ConfigDefault("null")
-        public Optional<String> getDate();
-    }
+    // The interface has been removed: public interface TimestampParser.TimestampColumnOption
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
     public final Timestamp parse(final String text) throws TimestampParseException {
