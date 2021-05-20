@@ -10,6 +10,14 @@ configurations {
 }
 
 dependencies {
-    api "org.msgpack:msgpack-core:0.8.11"
     api "org.slf4j:slf4j-api:1.7.30"
+
+    // It will be removed in the future, but not very soon from Embulk v1.0.0.
+    //
+    // Embulk still needs to have the entire "msgpack-core" in "embulk-api" because:
+    // * Signatures of some methods in "embulk-api" depend on "org.msgpack.value.Value".
+    //   It needs time for mitigating impacts to remove them.
+    // * "msgpack-core" will not split their "value" classes to another artifact very soon.
+    //   https://github.com/msgpack/msgpack-java/pull/571
+    api "org.msgpack:msgpack-core:0.8.24"
 }
