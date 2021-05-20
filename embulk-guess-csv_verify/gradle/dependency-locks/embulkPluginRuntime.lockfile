@@ -7,7 +7,6 @@ com.fasterxml.jackson.core:jackson-databind:2.6.7
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
 com.google.guava:guava:18.0
 com.ibm.icu:icu4j:54.1.1
-javax.inject:javax.inject:1
 javax.validation:validation-api:1.1.0.Final
 org.embulk:embulk-util-config:0.2.1
 org.embulk:embulk-util-file:0.1.3

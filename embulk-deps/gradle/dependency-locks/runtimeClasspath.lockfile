@@ -15,6 +15,7 @@ commons-lang:commons-lang:2.4
 io.airlift:slice:0.9
 io.netty:netty-buffer:4.0.44.Final
 io.netty:netty-common:4.0.44.Final
+javax.inject:javax.inject:1
 javax.validation:validation-api:1.1.0.Final
 org.apache.bval:bval-core:0.5
 org.apache.bval:bval-jsr303:0.5
