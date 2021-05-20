@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 /**
@@ -182,16 +183,34 @@ public class PageReader implements AutoCloseable {
 
     /**
      * @since 0.8.0
+     * @deprecated Use {@link #getJsonValue(org.embulk.spi.Column)} instead.
      */
+    @Deprecated
     public Value getJson(Column column) {
         return this.delegate.getJson(column);
     }
 
     /**
      * @since 0.8.0
+     * @deprecated Use {@link #getJsonValue(int)} instead.
      */
+    @Deprecated
     public Value getJson(int columnIndex) {
         return this.delegate.getJson(columnIndex);
+    }
+
+    /**
+     * @since 0.10.35
+     */
+    public JsonValue getJsonValue(Column column) {
+        return this.delegate.getJsonValue(column);
+    }
+
+    /**
+     * @since 0.10.35
+     */
+    public JsonValue getJsonValue(int columnIndex) {
+        return this.delegate.getJsonValue(columnIndex);
     }
 
     /**

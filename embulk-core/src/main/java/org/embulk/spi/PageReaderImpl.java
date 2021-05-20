@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import java.time.Instant;
 import org.embulk.deps.buffer.Slice;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class PageReaderImpl extends PageReader {
@@ -159,11 +160,21 @@ public class PageReaderImpl extends PageReader {
 
     @Override
     public Value getJson(int columnIndex) {
+        return this.getJsonValue(columnIndex).getMsgpackImmutableValue();
+    }
+
+    @Override
+    public JsonValue getJsonValue(final Column column) {
+        return this.getJsonValue(column.getIndex());
+    }
+
+    @Override
+    public JsonValue getJsonValue(int columnIndex) {
         if (isNull(columnIndex)) {
             return null;
         }
         int index = pageSlice.getInt(getOffset(columnIndex));
-        return page.getValueReference(index);
+        return page.getJsonValueReference(index);
     }
 
     private int getOffset(int columnIndex) {

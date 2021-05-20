@@ -19,6 +19,7 @@ package org.embulk.spi;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 /**
@@ -128,16 +129,34 @@ public class PageBuilder implements AutoCloseable {
 
     /**
      * @since 0.8.0
+     * @deprecated Use {@link #setJsonValue(org.embulk.spi.Column, org.embulk.spi.json.JsonValue)} instead.
      */
+    @Deprecated
     public void setJson(Column column, Value value) {
         this.delegate.setJson(column, value);
     }
 
     /**
      * @since 0.8.0
+     * @deprecated Use {@link #setJsonValue(int, org.embulk.spi.json.JsonValue)} instead.
      */
+    @Deprecated
     public void setJson(int columnIndex, Value value) {
         this.delegate.setJson(columnIndex, value);
+    }
+
+    /**
+     * @since 0.10.35
+     */
+    public void setJsonValue(Column column, JsonValue value) {
+        this.delegate.setJsonValue(column, value);
+    }
+
+    /**
+     * @since 0.10.35
+     */
+    public void setJsonValue(int columnIndex, JsonValue value) {
+        this.delegate.setJsonValue(columnIndex, value);
     }
 
     /**

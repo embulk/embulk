@@ -5,9 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.embulk.deps.buffer.Slice;
+import org.embulk.spi.json.JsonValue;
+import org.embulk.spi.json.JsonValueImpl;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
-import org.msgpack.value.ImmutableValue;
 import org.msgpack.value.Value;
 
 public class PageBuilderImpl extends PageBuilder {
@@ -25,7 +26,7 @@ public class PageBuilderImpl extends PageBuilder {
     private final byte[] nullBitSet;
     private final Row row;
     private List<String> stringReferences = new ArrayList<>();
-    private List<ImmutableValue> valueReferences = new ArrayList<>();
+    private List<JsonValue> jsonValueReferences = new ArrayList<>();
     private int referenceSize;
     private int nextVariableLengthDataOffset;
 
@@ -48,7 +49,7 @@ public class PageBuilderImpl extends PageBuilder {
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences = new ArrayList<>();
-        this.valueReferences = new ArrayList<>();
+        this.jsonValueReferences = new ArrayList<>();
         this.referenceSize = 0;
     }
 
@@ -104,12 +105,29 @@ public class PageBuilderImpl extends PageBuilder {
         }
     }
 
+    @Deprecated
+    @SuppressWarnings("deprecation")  // PageBuilder#setJson(Column, Value) has been deprecated.
     public void setJson(Column column, Value value) {
         // TODO check type?
         setJson(column.getIndex(), value);
     }
 
+    @Deprecated
+    @SuppressWarnings("deprecation")  // PageBuilder#setJson(int, Value) has been deprecated.
     public void setJson(int columnIndex, Value value) {
+        if (value == null) {
+            setNull(columnIndex);
+        } else {
+            row.setJson(columnIndex, JsonValueImpl.of(value.immutableValue()));
+        }
+    }
+
+    public void setJsonValue(Column column, JsonValue value) {
+        // TODO check type?
+        this.setJsonValue(column.getIndex(), value);
+    }
+
+    public void setJsonValue(int columnIndex, JsonValue value) {
         if (value == null) {
             setNull(columnIndex);
         } else {
@@ -174,9 +192,9 @@ public class PageBuilderImpl extends PageBuilder {
         clearNull(columnIndex);
     }
 
-    private void writeJson(int columnIndex, Value value) {
-        int index = valueReferences.size();
-        valueReferences.add(value.immutableValue());
+    private void writeJson(int columnIndex, JsonValue value) {
+        int index = jsonValueReferences.size();
+        jsonValueReferences.add(value);
         bufferSlice.setInt(getOffset(columnIndex), index);
         referenceSize += 256;  // TODO how to estimate size of the value?
         clearNull(columnIndex);
@@ -220,9 +238,9 @@ public class PageBuilderImpl extends PageBuilder {
             buffer.limit(position);
 
             // flush page
-            Page page = PageImpl.wrap(buffer)
-                    .setStringReferences(stringReferences)
-                    .setValueReferences(valueReferences);
+            final PageImpl page = (PageImpl) PageImpl.wrap(buffer);
+            page.setStringReferences(stringReferences);
+            page.setJsonValueReferences(jsonValueReferences);
             buffer = null;
             bufferSlice = null;
             output.add(page);
@@ -312,7 +330,7 @@ public class PageBuilderImpl extends PageBuilder {
             values[columnIndex].setString(value);
         }
 
-        private void setJson(int columnIndex, Value value) {
+        private void setJson(int columnIndex, JsonValue value) {
             values[columnIndex].setJson(value);
         }
 
@@ -336,7 +354,7 @@ public class PageBuilderImpl extends PageBuilder {
 
         void setString(String value);
 
-        void setJson(Value value);
+        void setJson(JsonValue value);
 
         void setTimestamp(Instant value);
 
@@ -369,7 +387,7 @@ public class PageBuilderImpl extends PageBuilder {
             throw new IllegalStateException("Not reach here");
         }
 
-        public void setJson(Value value) {
+        public void setJson(JsonValue value) {
             throw new IllegalStateException("Not reach here");
         }
 
@@ -469,14 +487,14 @@ public class PageBuilderImpl extends PageBuilder {
     }
 
     private static class JsonColumnValue extends AbstractColumnValue {
-        private Value value;
+        private JsonValue value;
 
         JsonColumnValue(Column column) {
             super(column);
         }
 
         @Override
-        public void setJson(Value value) {
+        public void setJson(JsonValue value) {
             this.value = value;
             this.isNull = false;
         }

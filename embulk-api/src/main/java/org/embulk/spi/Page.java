@@ -19,6 +19,7 @@ package org.embulk.spi;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.ImmutableValue;
 
 /**
@@ -50,7 +51,9 @@ public abstract class Page {
 
     /**
      * @since 0.8.0
+     * @deprecated Plugins should never use this. It had been available only for {@code embulk-executor-mapreduce}.
      */
+    @Deprecated
     public abstract Page setValueReferences(List<ImmutableValue> values);
 
     /**
@@ -60,7 +63,9 @@ public abstract class Page {
 
     /**
      * @since 0.8.0
+     * @deprecated Plugins should never use this. It had been available only for {@code embulk-executor-mapreduce}.
      */
+    @Deprecated
     public abstract List<ImmutableValue> getValueReferences();
 
     /**
@@ -70,8 +75,15 @@ public abstract class Page {
 
     /**
      * @since 0.8.0
+     * @deprecated Use {@link #getJsonValueReference(int)} instead.
      */
+    @Deprecated
     public abstract ImmutableValue getValueReference(int index);
+
+    /**
+     * @since 0.8.0
+     */
+    public abstract JsonValue getJsonValueReference(int index);
 
     /**
      * @since 0.4.0

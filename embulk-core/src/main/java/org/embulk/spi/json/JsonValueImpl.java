@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 The Embulk project
+ * Copyright 2021 The Embulk project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package org.embulk.spi.type;
+package org.embulk.spi.json;
 
-import org.embulk.spi.json.JsonValue;
+import org.msgpack.value.ImmutableValue;
 
-/**
- * Singleton type class for Embulk's JSON.
- *
- * <p>Plugins should not refer this class directly. Recommended to use constants in {@link Types} instead.
- *
- * @since 0.8.0
- */
-@SuppressWarnings("deprecation")
-public class JsonType extends AbstractType {
-    static final JsonType JSON = new JsonType();
-
-    private JsonType() {
-        super("json", JsonValue.class, 4);
+public class JsonValueImpl extends JsonValue {
+    private JsonValueImpl(final ImmutableValue msgpackValue) {
+        this.msgpackValue = msgpackValue;
     }
+
+    public static JsonValueImpl of(final ImmutableValue msgpackValue) {
+        return new JsonValueImpl(msgpackValue);
+    }
+
+    @Override
+    public ImmutableValue getMsgpackImmutableValue() {
+        return null;  // TODO
+    }
+
+    private final ImmutableValue msgpackValue;
 }
