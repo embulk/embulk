@@ -39,17 +39,6 @@ public class EmbulkRun {
                     return 1;
                 }
                 return 0;
-            case NEW:
-                final String categoryWithLanguage = commandLine.getArguments().get(0);
-                final String nameGiven = commandLine.getArguments().get(1);
-                try {
-                    final EmbulkNew embulkNew = new EmbulkNew(categoryWithLanguage, nameGiven, EmbulkVersion.VERSION);
-                    embulkNew.newPlugin();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    return 1;
-                }
-                return 0;
             case SELFUPDATE:
                 if (commandLine.getArguments().isEmpty()) {
                     System.err.println("'embulk selfupdate' requires the target version since v0.10.0. It no longer updates to the latest version.");

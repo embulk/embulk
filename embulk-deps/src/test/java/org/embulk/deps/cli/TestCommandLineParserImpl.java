@@ -68,7 +68,6 @@ public class TestCommandLineParserImpl {
                 + "   gem          Run \"gem\" to install a RubyGem plugin." + NEWLINE
                 + "   mkbundle     Create a new plugin bundle environment." + NEWLINE
                 + "   bundle       Update a plugin bundle environment." + NEWLINE
-                + "   new          Generate new plugin template" + NEWLINE
                 + NEWLINE
                 + "Common options:" + NEWLINE
                 + "   -h, --help                Print help" + NEWLINE
@@ -146,7 +145,6 @@ public class TestCommandLineParserImpl {
                 + "   gem          Run \"gem\" to install a RubyGem plugin." + NEWLINE
                 + "   mkbundle     Create a new plugin bundle environment." + NEWLINE
                 + "   bundle       Update a plugin bundle environment." + NEWLINE
-                + "   new          Generate new plugin template" + NEWLINE
                 + NEWLINE
                 + "Common options:" + NEWLINE
                 + "   -h, --help                Print help" + NEWLINE

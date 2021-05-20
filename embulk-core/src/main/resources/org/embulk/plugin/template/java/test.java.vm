@@ -1,5 +1,0 @@
-package ${javaPackageName};
-
-public class Test${javaClassName}
-{
-}

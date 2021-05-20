@@ -20,7 +20,6 @@ dependencies {
 
     // CLI
     api "commons-cli:commons-cli:1.4"
-    api "org.apache.velocity:velocity:1.7"
     api "org.jline:jline-terminal:3.16.0"
 
     // Config
