@@ -378,5 +378,4 @@ task release {
         tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
     }
     dependsOn "embulk-ruby:gemPush"
-    dependsOn "embulk-guess-csv_verify:gemPush"
 }
