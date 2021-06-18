@@ -27,7 +27,6 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.util.config.ConfigMapper;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.CharsetModule;
 import org.embulk.util.text.Newline;
 import org.junit.Rule;
 import org.junit.Test;
@@ -316,10 +315,7 @@ public class TestCsvFormatterPlugin {
         assertEquals("N/A", method.invoke(formatter, "N/A", delimiter, CsvFormatterPlugin.QuotePolicy.NONE, quote, escape, newline, "N/A"));
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new CharsetModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static final ConfigMapper CONFIG_MAPPER = CONFIG_MAPPER_FACTORY.createConfigMapper();
 }

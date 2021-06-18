@@ -36,7 +36,6 @@ import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
-import org.embulk.util.config.modules.CharsetModule;
 import org.embulk.util.text.LineEncoder;
 import org.embulk.util.text.Newline;
 import org.embulk.util.timestamp.TimestampFormatter;
@@ -370,10 +369,7 @@ public class CsvFormatterPlugin implements FormatterPlugin {
         }
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new CharsetModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static final Logger logger = LoggerFactory.getLogger(CsvFormatterPlugin.class);
 }
