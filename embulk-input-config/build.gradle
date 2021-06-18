@@ -27,9 +27,7 @@ dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:2.6.7"
     compile "com.fasterxml.jackson.core:jackson-databind:2.6.7"
     compile "org.embulk:embulk-util-config:0.3.0"
-    compile("org.embulk:embulk-util-json:0.1.0") {
-        exclude group: "org.msgpack", module: "msgpack-core"
-    }
+    compile "org.embulk:embulk-util-json:0.1.1"
     compile "org.embulk:embulk-util-timestamp:0.2.1"
 }
 
