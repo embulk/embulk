@@ -436,16 +436,14 @@ public class EmbulkRunner {
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private String dumpDataSourceInYaml(final DataSource modelObject) {
-        final org.embulk.config.ModelManager modelManager = this.embed.getModelManager();
-        final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
+        final Object object = this.embed.dumpObjectFromDataSource(modelObject);
         final YamlProcessor yamlProc = YamlProcessor.create(false);
         return yamlProc.dump(object);
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private String dumpResumeStateInYaml(final ResumeState modelObject) {
-        final org.embulk.config.ModelManager modelManager = this.embed.getModelManager();
-        final Object object = modelManager.readObject(Object.class, modelManager.writeObject(modelObject));
+        final Object object = this.embed.dumpObjectFromResumeState(modelObject);
         final YamlProcessor yamlProc = YamlProcessor.create(false);
         return yamlProc.dump(object);
     }

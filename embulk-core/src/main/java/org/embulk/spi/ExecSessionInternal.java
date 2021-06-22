@@ -75,6 +75,9 @@ public class ExecSessionInternal extends ExecSession {
         private Set<String> parentFirstResources;
         private Instant transactionTime;
 
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+        private org.embulk.config.ModelManager modelManager;
+
         public Builder(Injector injector) {
             this.injector = injector;
             this.embulkSystemProperties = null;
@@ -82,6 +85,7 @@ public class ExecSessionInternal extends ExecSession {
             this.parentFirstPackages = null;
             this.parentFirstResources = null;
             this.transactionTime = null;
+            this.modelManager = null;
         }
 
         public Builder fromExecConfig(ConfigSource configSource) {
@@ -90,6 +94,12 @@ public class ExecSessionInternal extends ExecSession {
             if (transactionTime.isPresent()) {
                 this.transactionTime = transactionTime.get();
             }
+            return this;
+        }
+
+        @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+        public Builder setModelManager(final org.embulk.config.ModelManager modelManager) {
+            this.modelManager = modelManager;
             return this;
         }
 
@@ -180,13 +190,17 @@ public class ExecSessionInternal extends ExecSession {
                             + "Use ExecSessionInternal.Builder#setEmbulkSystemProperties.");
                 this.embulkSystemProperties = this.injector.getInstance(EmbulkSystemProperties.class);
             }
+            if (this.modelManager == null) {
+                throw new IllegalStateException("ModelManager is not set in ExecSessionInternal.");
+            }
             return new ExecSessionInternal(
                     this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
                     this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
-                    this.parentFirstResources);
+                    this.parentFirstResources,
+                    this.modelManager);
         }
     }
 
@@ -194,13 +208,15 @@ public class ExecSessionInternal extends ExecSession {
         return new Builder(injector);
     }
 
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private ExecSessionInternal(
             final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
             final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
-            final Set<String> parentFirstResources) {
+            final Set<String> parentFirstResources,
+            final org.embulk.config.ModelManager modelManager) {
         if (parentFirstPackages == null) {
             logger.warn("Parent-first packages are not set when building ExecSession. "
                         + "Use ExecSession.Builder#setParentFirstPackages.");
@@ -212,7 +228,7 @@ public class ExecSessionInternal extends ExecSession {
 
         this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
-        this.modelManager = getModelManagerFromInjector(injector);
+        this.modelManager = modelManager;
 
         this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
@@ -356,11 +372,6 @@ public class ExecSessionInternal extends ExecSession {
     public void cleanup() {
         this.pluginClassLoaderFactory.clear();
         tempFileSpace.cleanup();
-    }
-
-    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    private static org.embulk.config.ModelManager getModelManagerFromInjector(final Injector injector) {
-        return injector.getInstance(org.embulk.config.ModelManager.class);
     }
 
     private static Optional<Instant> toInstantFromString(final String string) {

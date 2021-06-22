@@ -1,5 +1,8 @@
 package org.embulk;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -16,11 +19,19 @@ import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.ColumnJacksonModule;
 import org.embulk.spi.ExecAction;
 import org.embulk.spi.ExecInternal;
 import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.MockFormatterPlugin;
 import org.embulk.spi.MockParserPlugin;
+import org.embulk.spi.SchemaJacksonModule;
+import org.embulk.spi.time.TimestampJacksonModule;
+import org.embulk.spi.type.TypeJacksonModule;
+import org.embulk.spi.unit.LocalFileJacksonModule;
+import org.embulk.spi.unit.ToStringJacksonModule;
+import org.embulk.spi.unit.ToStringMapJacksonModule;
+import org.embulk.spi.util.CharsetJacksonModule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -42,9 +53,11 @@ public class EmbulkTestRuntime extends GuiceBinder {
     public EmbulkTestRuntime() {
         super(new TestRuntimeModule());
         Injector injector = getInjector();
-        ConfigSource execConfig = new DataSourceImpl(injector.getInstance(ModelManager.class));
+        final ModelManager model = createModelManager(injector);
+        ConfigSource execConfig = new DataSourceImpl(model);
         this.exec = ExecSessionInternal.builderInternal(injector)
                 .fromExecConfig(execConfig)
+                .setModelManager(model)
                 .registerParserPlugin("mock", MockParserPlugin.class)
                 .registerFormatterPlugin("mock", MockFormatterPlugin.class)
                 .build();
@@ -58,8 +71,9 @@ public class EmbulkTestRuntime extends GuiceBinder {
         return getInstance(BufferAllocator.class);
     }
 
+    @SuppressWarnings("deprecation")
     public ModelManager getModelManager() {
-        return getInstance(ModelManager.class);
+        return this.exec.getModelManager();
     }
 
     public Random getRandom() {
@@ -99,5 +113,21 @@ public class EmbulkTestRuntime extends GuiceBinder {
         public RuntimeExecutionException(Throwable cause) {
             super(cause);
         }
+    }
+
+    @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
+    private static org.embulk.config.ModelManager createModelManager(final Injector injector) {
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
+        mapper.registerModule(new CharsetJacksonModule());
+        mapper.registerModule(new LocalFileJacksonModule());
+        mapper.registerModule(new ToStringJacksonModule());
+        mapper.registerModule(new ToStringMapJacksonModule());
+        mapper.registerModule(new TypeJacksonModule());
+        mapper.registerModule(new ColumnJacksonModule());
+        mapper.registerModule(new SchemaJacksonModule());
+        mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
+        mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
+        return new org.embulk.config.ModelManager(injector, mapper);
     }
 }
