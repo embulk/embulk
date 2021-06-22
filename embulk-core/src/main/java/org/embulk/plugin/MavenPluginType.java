@@ -1,7 +1,5 @@
 package org.embulk.plugin;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,22 +65,18 @@ public final class MavenPluginType extends PluginType {
         return new MavenPluginType(parts[2], parts[1], null, parts[3]);
     }
 
-    @JsonValue
     public final Map<String, String> getJsonValue() {
         return this.fullMap;
     }
 
-    @JsonProperty("group")
     public final String getGroup() {
         return this.group;
     }
 
-    @JsonProperty("classifier")
     public final String getClassifier() {
         return this.classifier;
     }
 
-    @JsonProperty("version")
     public final String getVersion() {
         return this.version;
     }
@@ -110,7 +104,6 @@ public final class MavenPluginType extends PluginType {
                 && this.getVersion().equals(other.getVersion()));
     }
 
-    @JsonValue
     @Override
     public String toString() {
         return this.fullName;

@@ -1,6 +1,5 @@
 package org.embulk.plugin;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Objects;
 
 public final class DefaultPluginType extends PluginType {
@@ -15,7 +14,6 @@ public final class DefaultPluginType extends PluginType {
         return new DefaultPluginType(name);
     }
 
-    @JsonValue
     public final String getJsonValue() {
         return this.getName();
     }
