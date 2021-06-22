@@ -1,4 +1,4 @@
-package org.embulk.spi.unit;
+package org.embulk.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import org.embulk.spi.unit.LocalFile;
 
 public final class LocalFileJacksonModule extends SimpleModule {
     public LocalFileJacksonModule() {

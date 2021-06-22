@@ -1,4 +1,4 @@
-package org.embulk.spi.unit;
+package org.embulk.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.IOException;
+import org.embulk.spi.unit.ToString;
 
 @Deprecated
 public final class ToStringJacksonModule extends SimpleModule {

@@ -7,12 +7,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.Locale;
+import org.embulk.config.CharsetJacksonModule;
+import org.embulk.config.LocalFileJacksonModule;
+import org.embulk.config.TimestampJacksonModule;
+import org.embulk.config.ToStringJacksonModule;
+import org.embulk.config.ToStringMapJacksonModule;
 import org.embulk.spi.time.Instants;
-import org.embulk.spi.time.TimestampJacksonModule;
-import org.embulk.spi.unit.LocalFileJacksonModule;
-import org.embulk.spi.unit.ToStringJacksonModule;
-import org.embulk.spi.unit.ToStringMapJacksonModule;
-import org.embulk.spi.util.CharsetJacksonModule;
 import org.msgpack.value.Value;
 
 final class ValueFormatter {

@@ -1,4 +1,4 @@
-package org.embulk.spi.time;
+package org.embulk.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -11,32 +11,33 @@ import java.io.IOException;
 
 @Deprecated
 public final class TimestampJacksonModule extends SimpleModule {
+    @SuppressWarnings("deprecation")  // For use of org.embulk.spi.time.Timestamp
     public TimestampJacksonModule() {
-        this.addSerializer(Timestamp.class, new TimestampSerializer());
-        this.addDeserializer(Timestamp.class, new TimestampDeserializer());
+        this.addSerializer(org.embulk.spi.time.Timestamp.class, new TimestampSerializer());
+        this.addDeserializer(org.embulk.spi.time.Timestamp.class, new TimestampDeserializer());
     }
 
-    private static class TimestampSerializer extends JsonSerializer<Timestamp> {
+    private static class TimestampSerializer extends JsonSerializer<org.embulk.spi.time.Timestamp> {
         @Override
-        public void serialize(Timestamp value, JsonGenerator jgen, SerializerProvider provider)
+        public void serialize(org.embulk.spi.time.Timestamp value, JsonGenerator jgen, SerializerProvider provider)
                 throws IOException {
             jgen.writeString(value.toString());
         }
     }
 
-    private static class TimestampDeserializer extends FromStringDeserializer<Timestamp> {
+    private static class TimestampDeserializer extends FromStringDeserializer<org.embulk.spi.time.Timestamp> {
         public TimestampDeserializer() {
-            super(Timestamp.class);
+            super(org.embulk.spi.time.Timestamp.class);
         }
 
         @Override
-        protected Timestamp _deserialize(String value, DeserializationContext context)
+        protected org.embulk.spi.time.Timestamp _deserialize(String value, DeserializationContext context)
                 throws JsonMappingException {
             if (value == null) {
                 throw new JsonMappingException("TimestampDeserializer#_deserialize received null unexpectedly.");
             }
             try {
-                return Timestamp.ofString(value);
+                return org.embulk.spi.time.Timestamp.ofString(value);
             } catch (final NumberFormatException ex) {
                 throw new JsonMappingException("Invalid format as a Timestamp value: '" + value + "'", ex);
             } catch (final IllegalStateException ex) {
