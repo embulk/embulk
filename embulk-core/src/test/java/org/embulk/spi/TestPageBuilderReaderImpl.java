@@ -15,7 +15,6 @@ import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.junit.After;
@@ -25,28 +24,9 @@ import org.junit.Test;
 import org.msgpack.value.ImmutableMapValue;
 import org.msgpack.value.Value;
 
-public class TestPageBuilderReader {
+public class TestPageBuilderReaderImpl {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
-
-    public static class MockPageOutput implements PageOutput {
-        public List<Page> pages;
-
-        public MockPageOutput() {
-            this.pages = new ArrayList<>();
-        }
-
-        @Override
-        public void add(Page page) {
-            pages.add(page);
-        }
-
-        @Override
-        public void finish() {}
-
-        @Override
-        public void close() {}
-    }
 
     private BufferAllocator bufferAllocator;
     private PageReader reader;
@@ -159,7 +139,7 @@ public class TestPageBuilderReader {
     }
 
     private List<Page> buildPages(Schema schema, final Object... objects) {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator, schema, output);
         int idx = 0;
         while (idx < objects.length) {
@@ -233,7 +213,7 @@ public class TestPageBuilderReader {
 
     @Test
     public void testEmptySchema() {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator, Schema.builder().build(), output);
         builder.addRecord();
         builder.addRecord();
@@ -294,7 +274,7 @@ public class TestPageBuilderReader {
 
     @Test
     public void testDoubleWriteStringsToRow() {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         Schema schema = Schema.builder()
                 .add("col0", STRING)
                 .add("col1", STRING)
@@ -324,7 +304,7 @@ public class TestPageBuilderReader {
 
     @Test
     public void testDoubleWriteJsonsToRow() {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         Schema schema = Schema.builder()
                 .add("col0", JSON)
                 .add("col1", JSON)
@@ -354,7 +334,7 @@ public class TestPageBuilderReader {
 
     @Test
     public void testRepeatableClose() {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator,
                 Schema.builder().add("col1", STRING).build(), output);
         builder.close();
@@ -363,7 +343,7 @@ public class TestPageBuilderReader {
 
     @Test
     public void testRepeatableFlush() {
-        MockPageOutput output = new MockPageOutput();
+        final TestPageBuilderReader.MockPageOutput output = new TestPageBuilderReader.MockPageOutput();
         this.builder = new PageBuilder(bufferAllocator,
                 Schema.builder().add("col1", STRING).build(), output);
         builder.flush();

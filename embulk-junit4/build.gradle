@@ -10,7 +10,7 @@ configurations {
 }
 
 dependencies {
-    api "junit:junit:4.13"
+    api "junit:junit:4.13.2"
     api "org.hamcrest:hamcrest-library:1.3"
 
     api project(":embulk-api")
