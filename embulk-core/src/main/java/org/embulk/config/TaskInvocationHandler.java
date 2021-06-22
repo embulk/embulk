@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 class TaskInvocationHandler implements InvocationHandler {
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
@@ -17,14 +16,12 @@ class TaskInvocationHandler implements InvocationHandler {
 
     private final Class<?> iface;
     private final Map<String, Object> objects;
-    private final Set<String> injectedFields;
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects, Set<String> injectedFields) {
+    public TaskInvocationHandler(ModelManager model, Class<?> iface, Map<String, Object> objects) {
         this.model = model;
         this.iface = iface;
         this.objects = objects;
-        this.injectedFields = injectedFields;
     }
 
     /**
@@ -51,11 +48,6 @@ class TaskInvocationHandler implements InvocationHandler {
         return objects;
     }
 
-    // visible for ModelManager.AccessorSerializer
-    Set<String> getInjectedFields() {
-        return injectedFields;
-    }
-
     protected Object invokeGetter(Method method, String fieldName) {
         return objects.get(fieldName);
     }
@@ -69,11 +61,7 @@ class TaskInvocationHandler implements InvocationHandler {
     }
 
     private Map<String, Object> getSerializableFields() {
-        Map<String, Object> data = new HashMap<String, Object>(objects);
-        for (String injected : injectedFields) {
-            data.remove(injected);
-        }
-        return data;
+        return new HashMap<String, Object>(objects);
     }
 
     protected TaskSource invokeDump() {

@@ -93,7 +93,7 @@ public class EmbulkEmbed {
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
         this.previewExecutor = new PreviewExecutor();
 
-        this.modelManager = createModelManager(injector);
+        this.modelManager = createModelManager();
     }
 
     public static class Bootstrap {
@@ -546,7 +546,7 @@ public class EmbulkEmbed {
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    private static org.embulk.config.ModelManager createModelManager(final Injector injector) {
+    private static org.embulk.config.ModelManager createModelManager() {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
         mapper.registerModule(new CharsetJacksonModule());
@@ -558,7 +558,7 @@ public class EmbulkEmbed {
         mapper.registerModule(new SchemaJacksonModule());
         mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
         mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
-        return new org.embulk.config.ModelManager(injector, mapper);
+        return new org.embulk.config.ModelManager(mapper);
     }
 
     // TODO: Remove them finally.

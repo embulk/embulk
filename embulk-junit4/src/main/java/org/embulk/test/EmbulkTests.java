@@ -28,7 +28,7 @@ public class EmbulkTests {
         String path = System.getenv(envName);
         assumeThat(isNullOrEmpty(path), is(false));
         try {
-            return new ConfigLoader(new ModelManager(null, new ObjectMapper())).fromYamlFile(new File(path));
+            return new ConfigLoader(new ModelManager(new ObjectMapper())).fromYamlFile(new File(path));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
