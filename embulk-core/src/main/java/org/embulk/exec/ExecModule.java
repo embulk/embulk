@@ -1,8 +1,5 @@
 package org.embulk.exec;
 
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.module.guice.ObjectMapperModule;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -11,14 +8,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.config.CharsetJacksonModule;
-import org.embulk.config.ColumnJacksonModule;
-import org.embulk.config.LocalFileJacksonModule;
-import org.embulk.config.SchemaJacksonModule;
-import org.embulk.config.TimestampJacksonModule;
-import org.embulk.config.ToStringJacksonModule;
-import org.embulk.config.ToStringMapJacksonModule;
-import org.embulk.config.TypeJacksonModule;
 import org.embulk.deps.buffer.PooledBufferAllocator;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.TempFileSpaceAllocator;
@@ -44,21 +33,6 @@ public class ExecModule implements Module {
 
         binder.bind(BufferAllocator.class).toInstance(this.createBufferAllocatorFromSystemConfig());
         binder.bind(TempFileSpaceAllocator.class).toInstance(new SimpleTempFileSpaceAllocator());
-
-        // TODO: Remove the ObjectMapperModule Guice module.
-        // They should be no longer required once ModelManager is managed in ExecSessionInternal.
-        final ObjectMapperModule mapper = new ObjectMapperModule();
-        mapper.registerModule(new TimestampJacksonModule());  // Deprecated. TBD to remove or not.
-        mapper.registerModule(new CharsetJacksonModule());
-        mapper.registerModule(new LocalFileJacksonModule());
-        mapper.registerModule(new ToStringJacksonModule());
-        mapper.registerModule(new ToStringMapJacksonModule());
-        mapper.registerModule(new TypeJacksonModule());
-        mapper.registerModule(new ColumnJacksonModule());
-        mapper.registerModule(new SchemaJacksonModule());
-        mapper.registerModule(new GuavaModule());  // jackson-datatype-guava
-        mapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
-        mapper.configure(binder);
     }
 
     private BufferAllocator createBufferAllocatorFromSystemConfig() {

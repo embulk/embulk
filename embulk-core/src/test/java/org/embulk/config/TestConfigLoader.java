@@ -2,7 +2,6 @@ package org.embulk.config;
 
 import static org.junit.Assert.assertEquals;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +15,7 @@ public class TestConfigLoader {
 
     @Before
     public void setup() throws Exception {
-        this.loader = new ConfigLoader(new ModelManager(new ObjectMapper()));
+        this.loader = new ConfigLoader(new ModelManager());
     }
 
     @Test
