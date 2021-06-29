@@ -4,7 +4,7 @@ module Embulk
     require 'time'
 
     module Injected
-      # Following constats are set by org.embulk.jruby.JRubyScriptingModule:
+      # Following constats are set by org.embulk.jruby.JRubyInitializer:
       #   Injector
       #   ModelManager
       #   BufferAllocator

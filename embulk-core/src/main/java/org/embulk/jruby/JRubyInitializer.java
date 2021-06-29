@@ -197,6 +197,10 @@ final class JRubyInitializer {
             this.logger.warn("BUNDLE_GEMFILE has already been set: \"" + jruby.getBundleGemfile() + "\"");
         }
 
+        // Here, it does not modify ENV['GEM_HOME'] and ENV['GEM_PATH']. However, note that
+        // ENV['GEM_HOME'] and ENV['GEM_PATH'] can be used unexpectedly when Gem.clear_paths
+        // is called unexpectedly. Gem loads ENV['GEM_HOME'] when Gem.clear_paths is called.
+
         if (this.jrubyBundlerPluginSourceDirectory != null) {
             final String gemfilePath = this.buildGemfilePath(this.jrubyBundlerPluginSourceDirectory);
             if (hasBundleGemfile) {
@@ -218,13 +222,6 @@ final class JRubyInitializer {
                 // It expects the Embulk system property "gem_home" is set from org.embulk.cli.EmbulkSystemPropertiesBuilder.
                 //
                 // The system config "gem_home" is always prioritized.
-                //
-                // Overwrites GEM_HOME and GEM_PATH. GEM_PATH becomes same with GEM_HOME. Therefore
-                // with this code, there're no ways to set extra GEM_PATHs in addition to GEM_HOME.
-                // Here doesn't modify ENV['GEM_HOME'] so that a JVM process can create multiple
-                // JRubyScriptingModule instances. However, because Gem loads ENV['GEM_HOME'] when
-                // Gem.clear_paths is called, applications may use unexpected GEM_HOME if clear_path
-                // is used.
                 this.logger.info("Gem's home and path are set by system configs \"gem_home\": \"" + this.gemHome + "\", \"gem_path\": \"" + this.gemPath + "\"");
                 jruby.setGemPaths(this.gemHome, this.gemPath);
                 this.logger.debug("Gem.paths.home = \"" + jruby.getGemHome() + "\"");
