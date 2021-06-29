@@ -29,6 +29,7 @@ repositories {
 dependencies {
     jruby "org.jruby:jruby-complete:9.1.15.0"
     rubyTest project(":embulk-core")
+    rubyTest project(":embulk-deps")
 }
 
 task gemContents(type: Copy) {

@@ -203,7 +203,7 @@ module Embulk
 
     def to_java
       json = to_json
-      Java::Injected::ModelManager.readObject(Java::DataSourceImpl.java_class, json.to_java)
+      Java::Injected::ModelManager.readObjectAsDataSource(json.to_java)
     end
 
     def load_config(task_type)

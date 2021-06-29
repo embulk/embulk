@@ -8,11 +8,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Properties;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.ModelManager;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class ConfigLoaderDelegate {
-    public static ConfigLoaderDelegate of(final ModelManager model) {
+    public static ConfigLoaderDelegate of(final ModelManagerDelegate model) {
         try {
             return CONSTRUCTOR.newInstance(model);
         } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
@@ -64,7 +63,7 @@ public abstract class ConfigLoaderDelegate {
     static {
         final Class<ConfigLoaderDelegate> clazz = loadImplClass();
         try {
-            CONSTRUCTOR = clazz.getConstructor(ModelManager.class);
+            CONSTRUCTOR = clazz.getConstructor(ModelManagerDelegate.class);
         } catch (final NoSuchMethodException ex) {
             throw new LinkageError("Dependencies for Jackson are not loaded correctly: " + CLASS_NAME, ex);
         }
