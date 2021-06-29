@@ -23,7 +23,7 @@ dependencies {
     compileOnly project(":embulk-api")
     compileOnly project(":embulk-spi")
 
-    compile "org.embulk:embulk-util-config:0.3.0"
+    compile "org.embulk:embulk-util-config:0.3.1"
 
     testImplementation "junit:junit:4.12"
     testImplementation project(":embulk-api")
