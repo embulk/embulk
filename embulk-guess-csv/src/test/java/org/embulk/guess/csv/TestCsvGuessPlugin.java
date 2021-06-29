@@ -27,7 +27,6 @@ import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.TypeModule;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -391,8 +390,5 @@ public class TestCsvGuessPlugin {
         return new CsvGuessPlugin().guessLines(config, Arrays.asList(sampleLines));
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new TypeModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 }

@@ -44,7 +44,6 @@ import org.embulk.spi.FileInput;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.file.InputStreamFileInput;
 import org.embulk.util.json.JsonParser;
 import org.embulk.util.timestamp.TimestampFormatter;
@@ -499,8 +498,7 @@ public class TestJsonParserPlugin {
         return JSON_PARSER.parse(json);
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY =
-            ConfigMapperFactory.builder().addDefaultModules().addModule(new TypeModule()).build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static TimestampFormatter TIMESTAMP_FORMATTER = TimestampFormatter.builderWithJava("yyyy-MM-dd HH:mm:ss").build();
 

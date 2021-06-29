@@ -35,7 +35,6 @@ import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.GuessPlugin;
 import org.embulk.util.config.ConfigMapperFactory;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.file.ListFileInput;
 import org.embulk.util.guess.CharsetGuess;
 import org.embulk.util.guess.LineGuessHelper;
@@ -598,10 +597,7 @@ public class CsvGuessPlugin implements GuessPlugin {
         return data.toByteArray();
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new TypeModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static List<Character> DELIMITER_CANDIDATES = Collections.unmodifiableList(Arrays.asList(
             ',',

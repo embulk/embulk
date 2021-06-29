@@ -46,7 +46,6 @@ import org.embulk.util.config.Config;
 import org.embulk.util.config.ConfigDefault;
 import org.embulk.util.config.ConfigMapperFactory;
 import org.embulk.util.config.Task;
-import org.embulk.util.config.modules.TypeModule;
 import org.embulk.util.config.units.ColumnConfig;
 import org.embulk.util.config.units.SchemaConfig;
 import org.embulk.util.json.JsonParseException;
@@ -518,10 +517,7 @@ public class CsvParserPlugin implements ParserPlugin {
         }
     }
 
-    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder()
-            .addDefaultModules()
-            .addModule(new TypeModule())
-            .build();
+    private static final ConfigMapperFactory CONFIG_MAPPER_FACTORY = ConfigMapperFactory.builder().addDefaultModules().build();
 
     private static final Logger logger = LoggerFactory.getLogger(CsvParserPlugin.class);
 }
