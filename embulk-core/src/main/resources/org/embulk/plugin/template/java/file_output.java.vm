@@ -1,9 +1,5 @@
 package ${javaPackageName};
 
-import java.util.List;
-
-import com.google.common.base.Optional;
-
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -14,6 +10,9 @@ import org.embulk.config.TaskSource;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.TransactionalFileOutput;
+
+import java.util.List;
+import java.util.Optional;
 
 public class ${javaClassName}
         implements FileOutputPlugin
@@ -42,14 +41,14 @@ public class ${javaClassName}
         //
 
         //@Config("path_prefix")
-        //public String getPathPrefix();
+        //String getPathPrefix();
 
         //@Config("file_ext")
-        //public String getFileNameExtension();
+        //String getFileNameExtension();
 
         //@Config("sequence_format")
         //@ConfigDefault("\"%03d.%02d.\"")
-        //public String getSequenceFormat();
+        //String getSequenceFormat();
     }
 
     @Override
