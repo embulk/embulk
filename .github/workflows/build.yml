@@ -8,8 +8,8 @@ jobs:
       matrix:
         os:
         - ubuntu-latest
-        # - macOS-latest
-        # - windows-latest
+        - macOS-latest
+        - windows-latest
         gradle_task:
         - ":embulk-api:check"
         - ":embulk-spi:check"
