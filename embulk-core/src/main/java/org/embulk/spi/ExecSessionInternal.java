@@ -18,6 +18,7 @@ import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.jruby.JRubyPluginSource;
+import org.embulk.jruby.LazyScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.plugin.BuiltinPluginSource;
 import org.embulk.plugin.PluginClassLoaderFactory;
@@ -49,6 +50,8 @@ public class ExecSessionInternal extends ExecSession {
 
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
     private final org.embulk.config.ModelManager modelManager;
+
+    private final ScriptingContainerDelegate jrubyScriptingContainerDelegate;
 
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
     private final PluginManager pluginManager;
@@ -229,6 +232,9 @@ public class ExecSessionInternal extends ExecSession {
         this.embulkSystemProperties = embulkSystemProperties;
         this.modelManager = modelManager;
 
+        this.jrubyScriptingContainerDelegate = LazyScriptingContainerDelegate.withInjector(
+                this.injector, LoggerFactory.getLogger("init"), this.embulkSystemProperties);
+
         this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
                 (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
@@ -237,7 +243,7 @@ public class ExecSessionInternal extends ExecSession {
                 builtinPluginSource,
                 new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
-                new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));
+                new JRubyPluginSource(this.jrubyScriptingContainerDelegate, pluginClassLoaderFactory));
 
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
@@ -253,6 +259,7 @@ public class ExecSessionInternal extends ExecSession {
         this.injector = copy.injector;
         this.embulkSystemProperties = copy.embulkSystemProperties;
         this.modelManager = copy.modelManager;
+        this.jrubyScriptingContainerDelegate = copy.jrubyScriptingContainerDelegate;
         this.pluginClassLoaderFactory = copy.pluginClassLoaderFactory;
         this.pluginManager = copy.pluginManager;
         this.bufferAllocator = copy.bufferAllocator;

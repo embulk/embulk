@@ -99,7 +99,6 @@ public class EmbulkRun {
                 final EmbulkEmbed.Bootstrap bootstrap = new EmbulkEmbed.Bootstrap();
                 bootstrap.setEmbulkSystemProperties(embulkSystemProperties);
 
-                // see embulk-core/src/main/java/org/embulk/jruby/JRubyScriptingModule.
                 final EmbulkRunner runner = new EmbulkRunner(bootstrap.initialize(), embulkSystemProperties);
 
                 final Path configDiffPath = getPathFromProperties("config_diff_path", embulkSystemProperties);
@@ -340,8 +339,8 @@ public class EmbulkRun {
             }
         }
 
-        // NOTE: Same done in JRubyScriptingModule.
-        // Remember to update |org.embulk.jruby.JRubyScriptingModule| when these environment variables are changed.
+        // NOTE: Same done in JRubyInitializer.
+        // Remember to update |org.embulk.jruby.JRubyInitializer| when these environment variables are changed.
         if (jruby.callMethod(jruby.runScriptlet("ENV"), "has_key?", "BUNDLE_GEMFILE", Boolean.class)) {
             final String currentBundleGemFile =
                     jruby.callMethod(jruby.runScriptlet("ENV"), "fetch", "BUNDLE_GEMFILE", String.class);

@@ -32,7 +32,6 @@ import org.embulk.exec.PreviewResult;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
-import org.embulk.jruby.JRubyScriptingModule;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
@@ -515,7 +514,6 @@ public class EmbulkEmbed {
         built.add(new SystemConfigModule(embulkSystemProperties));
         built.add(new ExecModule(embulkSystemProperties));
         built.add(new ExtensionServiceLoaderModule(embulkSystemProperties));
-        built.add(new JRubyScriptingModule());
         return Collections.unmodifiableList(built);
     }
 
