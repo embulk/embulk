@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import com.google.inject.Injector;
 import java.util.concurrent.ExecutionException;
+import org.embulk.exec.GuessExecutor;
 import org.embulk.plugin.PluginType;
 
 /**
@@ -53,6 +54,10 @@ public class ExecInternal {
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1309
     public static <T> T newPlugin(final Class<T> iface, final PluginType type) {
         return sessionInternal().newPlugin(iface, type);
+    }
+
+    static GuessExecutor getGuessExecutor() {
+        return sessionInternal().getGuessExecutor();
     }
 
     private static final InheritableThreadLocal<ExecSessionInternal> sessionInternal =

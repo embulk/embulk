@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
@@ -17,6 +18,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.embulk.exec.GuessExecutor;
 import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.jruby.LazyScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegate;
@@ -47,6 +49,7 @@ public class ExecSessionInternal extends ExecSession {
 
     private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
+    private final GuessExecutor guessExecutor;
 
     @Deprecated  // https://github.com/embulk/embulk/issues/1304
     private final org.embulk.config.ModelManager modelManager;
@@ -72,6 +75,7 @@ public class ExecSessionInternal extends ExecSession {
     public static class Builder {
         private final Injector injector;
         private EmbulkSystemProperties embulkSystemProperties;
+        private GuessExecutor guessExecutor;
         private BuiltinPluginSource.Builder builtinPluginSourceBuilder;
         private Set<String> parentFirstPackages;
         private Set<String> parentFirstResources;
@@ -102,6 +106,11 @@ public class ExecSessionInternal extends ExecSession {
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         public Builder setModelManager(final org.embulk.config.ModelManager modelManager) {
             this.modelManager = modelManager;
+            return this;
+        }
+
+        public Builder setGuessExecutor(final GuessExecutor guessExecutor) {
+            this.guessExecutor = guessExecutor;
             return this;
         }
 
@@ -188,9 +197,9 @@ public class ExecSessionInternal extends ExecSession {
                 transactionTime = Instant.now();
             }
             if (this.embulkSystemProperties == null) {
-                logger.warn("EmbulkSystemProperties is not set when building ExecSessionInternal. "
+                logger.warn("EmbulkSystemProperties is not set when building ExecSessionInternal, then set to empty. "
                             + "Use ExecSessionInternal.Builder#setEmbulkSystemProperties.");
-                this.embulkSystemProperties = this.injector.getInstance(EmbulkSystemProperties.class);
+                this.embulkSystemProperties = EmbulkSystemProperties.of(new Properties());
             }
             if (this.modelManager == null) {
                 throw new IllegalStateException("ModelManager is not set in ExecSessionInternal.");
@@ -199,6 +208,7 @@ public class ExecSessionInternal extends ExecSession {
                     this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
+                    this.guessExecutor,
                     this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
                     this.parentFirstResources,
@@ -215,6 +225,7 @@ public class ExecSessionInternal extends ExecSession {
             final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
+            final GuessExecutor guessExecutor,
             final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
             final Set<String> parentFirstResources,
@@ -230,6 +241,7 @@ public class ExecSessionInternal extends ExecSession {
 
         this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
+        this.guessExecutor = guessExecutor;
         this.modelManager = modelManager;
 
         this.jrubyScriptingContainerDelegate = LazyScriptingContainerDelegate.withInjector(
@@ -258,6 +270,7 @@ public class ExecSessionInternal extends ExecSession {
     private ExecSessionInternal(ExecSessionInternal copy, boolean preview) {
         this.injector = copy.injector;
         this.embulkSystemProperties = copy.embulkSystemProperties;
+        this.guessExecutor = copy.guessExecutor;
         this.modelManager = copy.modelManager;
         this.jrubyScriptingContainerDelegate = copy.jrubyScriptingContainerDelegate;
         this.pluginClassLoaderFactory = copy.pluginClassLoaderFactory;
@@ -378,6 +391,10 @@ public class ExecSessionInternal extends ExecSession {
     public void cleanup() {
         this.pluginClassLoaderFactory.clear();
         tempFileSpace.cleanup();
+    }
+
+    GuessExecutor getGuessExecutor() {
+        return this.guessExecutor;
     }
 
     private static Optional<Instant> toInstantFromString(final String string) {
