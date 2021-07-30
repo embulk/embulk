@@ -16,6 +16,8 @@ import java.util.Optional;
 import java.util.Vector;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Loads classes and resources from self-contained JAR file resources, and a search path with {@link java.net.URLClassLoader}.
@@ -112,7 +114,13 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
 
         if (this.selfContainedJarCategory != null) {
             // TODO: Consider duplicated resources.
-            final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
+            final Resource resource;
+            try {
+                resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
+            } catch (final IllegalArgumentException ex) {
+                Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                return null;
+            }
             if (resource == null) {
                 return null;
             }
@@ -150,8 +158,13 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
 
         if (this.selfContainedJarCategory != null) {
             // Even if some resources are found from the delegation parent class loader, it looks into self-contained JAR files.
-            final Collection<Resource> resources =
-                    EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, this.selfContainedJarCategory);
+            final Collection<Resource> resources;
+            try {
+                resources = EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, this.selfContainedJarCategory);
+            } catch (final IllegalArgumentException ex) {
+                Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                return resourceUrls.elements();
+            }
 
             final Collection<URL> resourceUrlsFromSelfContainedJarFiles;
             try {
@@ -186,7 +199,13 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
         final String resourceName = className.replace('.', '/').concat(".class");
 
         // Class must be singular.
-        final Resource resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
+        final Resource resource;
+        try {
+            resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
+        } catch (final IllegalArgumentException ex) {
+            Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+            throw new ClassNotFoundException(className, ex);
+        }
         if (resource == null) {
             throw new ClassNotFoundException(className);
         }
@@ -274,6 +293,10 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
             final Attributes.Name attributeName) {
         final String mainAttribute = mainAttributes.getValue(attributeName);
         return (String) perEntryAttributes.orElse(mainAttributes).getOrDefault(attributeName, mainAttribute);
+    }
+
+    private static class Holder {  // Initialization-on-demand holder for a case if the logging driver is loaded lazily.
+        static final Logger logger = LoggerFactory.getLogger(SelfContainedJarAwareURLClassLoader.class);
     }
 
     private final AccessControlContext accessControlContext;
