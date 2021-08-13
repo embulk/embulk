@@ -118,7 +118,7 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
             try {
                 resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
             } catch (final IllegalArgumentException ex) {
-                Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
                 return null;
             }
             if (resource == null) {
@@ -162,7 +162,7 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
             try {
                 resources = EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, this.selfContainedJarCategory);
             } catch (final IllegalArgumentException ex) {
-                Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
                 return resourceUrls.elements();
             }
 
@@ -203,7 +203,7 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
         try {
             resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
         } catch (final IllegalArgumentException ex) {
-            Holder.logger.debug("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+            Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
             throw new ClassNotFoundException(className, ex);
         }
         if (resource == null) {
