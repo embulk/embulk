@@ -37,6 +37,21 @@ public class TestCsvGuessPlugin {
     @Rule
     public EmbulkTestRuntime runtime = new EmbulkTestRuntime();
 
+    @Test
+    public void testLargeLong() {
+        final ConfigDiff actual = guess(
+                "9223372036854775806,foo",
+                "9223372036854775807,bar");
+        final List<Map> columnsActual = (List<Map>) actual.getNested("parser").get(List.class, "columns");
+        assertEquals(2, columnsActual.size());
+        assertEquals(2, columnsActual.get(0).size());
+        assertEquals("c0", columnsActual.get(0).get("name"));
+        assertEquals("long", columnsActual.get(0).get("type"));
+        assertEquals(2, columnsActual.get(1).size());
+        assertEquals("c1", columnsActual.get(1).get("name"));
+        assertEquals("string", columnsActual.get(1).get("type"));
+    }
+
     /*
   class TestDelimiter < self
     data(
