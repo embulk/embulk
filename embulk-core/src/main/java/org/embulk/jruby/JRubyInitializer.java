@@ -1,6 +1,5 @@
 package org.embulk.jruby;
 
-import com.google.inject.Injector;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,9 +14,9 @@ import org.slf4j.LoggerFactory;
 
 final class JRubyInitializer {
     private JRubyInitializer(
+            final EmbulkSystemProperties embulkSystemProperties,
             final boolean isEmbulkSpecific,
             final boolean initializesGem,
-            final Injector injector,
             final Logger logger,
             final String gemHome,
             final String gemPath,
@@ -26,9 +25,9 @@ final class JRubyInitializer {
             final List<String> jrubyOptions,
             final String jrubyBundlerPluginSourceDirectory,
             final boolean requiresSigdump) {
+        this.embulkSystemProperties = embulkSystemProperties;
         this.isEmbulkSpecific = isEmbulkSpecific;
         this.initializesGem = initializesGem;
-        this.injector = injector;
         this.logger = logger;
         this.gemHome = gemHome;
         this.gemPath = gemPath;
@@ -42,7 +41,6 @@ final class JRubyInitializer {
     static JRubyInitializer of(
             final boolean isEmbulkSpecific,
             final boolean initializesGem,
-            final Injector injector,
             final Logger logger,
             final EmbulkSystemProperties embulkSystemProperties) {
         final String gemHome = embulkSystemProperties.getProperty("gem_home", null);
@@ -78,9 +76,9 @@ final class JRubyInitializer {
         }
 
         return new JRubyInitializer(
+                embulkSystemProperties,
                 isEmbulkSpecific,
                 initializesGem,
-                injector,
                 logger,
                 gemHome,
                 gemPath,
@@ -152,10 +150,10 @@ final class JRubyInitializer {
 
                 final Object java = jruby.runScriptlet("Embulk::Java");
                 jruby.callMethod(java, "const_set", "BufferAllocator", Exec.getBufferAllocator());
+                jruby.callMethod(java, "const_set", "EmbulkSystemProperties", this.embulkSystemProperties);
 
                 final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
-                jruby.callMethod(injected, "const_set", "Injector", injector);
-                constSetModelManager(jruby, injected, injector);
+                constSetModelManager(jruby, injected);
                 jruby.callMethod(injected, "const_set", "BufferAllocator", Exec.getBufferAllocator());
 
                 jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
@@ -278,16 +276,14 @@ final class JRubyInitializer {
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
-    private static void constSetModelManager(
-            final ScriptingContainerDelegate jruby,
-            final Object injected,
-            final Injector injector) {
+    private static void constSetModelManager(final ScriptingContainerDelegate jruby, final Object injected) {
         jruby.callMethod(injected, "const_set", "ModelManager", ExecInternal.getModelManager());
     }
 
+    private final EmbulkSystemProperties embulkSystemProperties;
+
     private final boolean isEmbulkSpecific;
     private final boolean initializesGem;
-    private final Injector injector;
     private final Logger logger;
     private final String gemHome;
     private final String gemPath;

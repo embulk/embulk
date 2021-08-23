@@ -32,7 +32,6 @@ dependencies {
     api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
-    api "com.fasterxml.jackson.module:jackson-module-guice:2.6.7"
 
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
@@ -58,7 +57,7 @@ dependencies {
     }
     api("org.apache.maven:maven-resolver-provider:3.6.1") {
         exclude group: "javax.inject", module: "javax.inject"  // Included in embulk-core.
-        exclude group: "com.google.inject", module: "guice"  // Included in embulk-core.
+        exclude group: "com.google.inject", module: "guice"  // Optional dependency for maven-resolver-provider. Not to use Guice.
         exclude group: "org.slf4j", module: "slf4j-api"  // Included in embulk-core.
     }
 

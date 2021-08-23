@@ -1,6 +1,5 @@
 package org.embulk.plugin.maven;
 
-import com.google.inject.Injector;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,6 +9,7 @@ import org.embulk.deps.maven.MavenPluginPaths;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
+import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.plugin.PluginType;
@@ -33,10 +33,8 @@ import org.slf4j.LoggerFactory;
 
 public class MavenPluginSource implements PluginSource {
     public MavenPluginSource(
-            final Injector injector,
             final EmbulkSystemProperties embulkSystemProperties,
             final PluginClassLoaderFactory pluginClassLoaderFactory) {
-        this.injector = injector;
         this.embulkSystemProperties = embulkSystemProperties;
         this.pluginClassLoaderFactory = pluginClassLoaderFactory;
     }
@@ -119,7 +117,8 @@ public class MavenPluginSource implements PluginSource {
             if (FileInputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileInputPlugin fileInputPluginMainObject;
                 try {
-                    fileInputPluginMainObject = (FileInputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileInputPluginMainObject = (FileInputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-input.",
@@ -129,7 +128,8 @@ public class MavenPluginSource implements PluginSource {
             } else if (FileOutputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileOutputPlugin fileOutputPluginMainObject;
                 try {
-                    fileOutputPluginMainObject = (FileOutputPlugin) this.injector.getInstance(pluginMainClass);
+                    fileOutputPluginMainObject = (FileOutputPlugin) PluginManager.newPluginInstance(
+                            pluginMainClass, this.embulkSystemProperties);
                 } catch (ClassCastException ex) {
                     throw new PluginSourceNotMatchException(
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-output.",
@@ -141,7 +141,7 @@ public class MavenPluginSource implements PluginSource {
                     throw new PluginSourceNotMatchException(
                             "Plugin class \"" + pluginMainClass.getName() + "\" is not a valid " + category + " plugin.");
                 }
-                pluginMainObject = this.injector.getInstance(pluginMainClass);
+                pluginMainObject = PluginManager.newPluginInstance(pluginMainClass, this.embulkSystemProperties);
             }
         } catch (ExceptionInInitializerError ex) {
             throw new PluginSourceNotMatchException(
@@ -180,7 +180,6 @@ public class MavenPluginSource implements PluginSource {
 
     private static final Logger logger = LoggerFactory.getLogger(MavenPluginSource.class);
 
-    private final Injector injector;
     private final EmbulkSystemProperties embulkSystemProperties;
     private final PluginClassLoaderFactory pluginClassLoaderFactory;
 }

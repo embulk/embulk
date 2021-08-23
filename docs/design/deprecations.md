@@ -64,7 +64,7 @@ It is to be removed by v0.10 or earlier.
 
 `ExecSession` should be constructed through `ExecSession.Builder`, not directly by the constructor.
 
-The constructor is to be removed by v0.10 or earlier. Note that `ExecSession` is to be constructed only in the Embulk core, not to be constructed from plugins.
+The constructor has been removed since v0.10.32. Note that `ExecSession` is to be constructed only in the Embulk core, not to be constructed from plugins.
 
 * `org.embulk.spi.ExecSession(com.google.inject.Injector, org.embulk.config.ConfigSource)`
 

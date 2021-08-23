@@ -17,5 +17,4 @@ dependencies {
     api project(":embulk-core")
     compileOnly "org.slf4j:slf4j-api:1.7.12"
     compileOnly "com.google.guava:guava:18.0"
-    compileOnly "com.google.inject:guice:4.0"
 }
