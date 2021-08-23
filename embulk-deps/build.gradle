@@ -30,12 +30,16 @@ dependencies {
     api "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
     api "com.fasterxml.jackson.core:jackson-core:2.6.7"
     api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
-    api "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7"
+    api("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7") {
+        exclude group: "com.google.guava", module: "guava"
+    }
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
 
     api "javax.validation:validation-api:1.1.0.Final"
     api "org.apache.bval:bval-jsr303:0.5"
-    api "org.apache.commons:commons-lang3:3.4"
+
+    // 3.8.1 is required from Apache Maven.
+    api "org.apache.commons:commons-lang3:3.8.1"
 
     // Guess
     api "com.ibm.icu:icu4j:54.1.1"
