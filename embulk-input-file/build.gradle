@@ -26,11 +26,10 @@ dependencies {
     compile "org.embulk:embulk-util-config:0.3.1"
     compile "org.embulk:embulk-util-file:0.1.3"
 
-    testImplementation "junit:junit:4.12"
+    testImplementation "junit:junit:4.13.2"
     testImplementation project(":embulk-api")
     testImplementation project(":embulk-spi")
     testImplementation project(":embulk-core")
-    testImplementation project(":embulk-core").sourceSets.test.output
     testImplementation project(":embulk-deps")
     testImplementation project(":embulk-junit4")
 }

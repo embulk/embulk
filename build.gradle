@@ -124,20 +124,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         from rootProject.file("LICENSE")
     }
 
-    // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
-    // TODO: Merge them into embulk-junit4 in some manner.
-    if (project.name == "embulk-core") {
-        task testsJar(type: Jar, dependsOn: classes) {
-            classifier = 'tests'
-            from sourceSets.test.output
-            from rootProject.file("LICENSE")
-        }
-
-        artifacts {
-            archives testsJar
-        }
-    }
-
     publishing {
         publications {
             maven(MavenPublication) {
@@ -147,12 +133,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
                 from components.java
                 // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
                 // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
-
-                // embulk-core:tests need to be released because some plugins use embulk-core:tests for their testing.
-                // TODO: Merge them into embulk-junit4 in some manner.
-                if (project.name == "embulk-core") {
-                    artifact testsJar
-                }
 
                 pom {  // https://central.sonatype.org/pages/requirements.html
                     name = "${project.name}"
