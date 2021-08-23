@@ -29,6 +29,7 @@ import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginType;
 import org.embulk.plugin.SelfContainedPluginSource;
 import org.embulk.plugin.maven.MavenPluginSource;
+import org.embulk.spi.TempFileSpaceAllocator;
 import org.embulk.spi.time.Instants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +75,9 @@ public class ExecSessionInternal extends ExecSession {
 
     public static class Builder {
         private final Injector injector;
+        private final BufferAllocator bufferAllocator;
+        private final TempFileSpaceAllocator tempFileSpaceAllocator;
+
         private EmbulkSystemProperties embulkSystemProperties;
         private GuessExecutor guessExecutor;
         private BuiltinPluginSource.Builder builtinPluginSourceBuilder;
@@ -84,8 +88,13 @@ public class ExecSessionInternal extends ExecSession {
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
         private org.embulk.config.ModelManager modelManager;
 
-        public Builder(Injector injector) {
+        public Builder(
+                final Injector injector,
+                final BufferAllocator bufferAllocator,
+                final TempFileSpaceAllocator tempFileSpaceAllocator) {
             this.injector = injector;
+            this.bufferAllocator = bufferAllocator;
+            this.tempFileSpaceAllocator = tempFileSpaceAllocator;
             this.embulkSystemProperties = null;
             this.builtinPluginSourceBuilder = BuiltinPluginSource.builder(injector);
             this.parentFirstPackages = null;
@@ -208,6 +217,8 @@ public class ExecSessionInternal extends ExecSession {
                     this.injector,
                     this.transactionTime,
                     this.embulkSystemProperties,
+                    this.bufferAllocator,
+                    this.tempFileSpaceAllocator,
                     this.guessExecutor,
                     this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
@@ -216,8 +227,11 @@ public class ExecSessionInternal extends ExecSession {
         }
     }
 
-    public static Builder builderInternal(Injector injector) {
-        return new Builder(injector);
+    public static Builder builderInternal(
+            final Injector injector,
+            final BufferAllocator bufferAllocator,
+            final TempFileSpaceAllocator tempFileSpaceAllocator) {
+        return new Builder(injector, bufferAllocator, tempFileSpaceAllocator);
     }
 
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
@@ -225,6 +239,8 @@ public class ExecSessionInternal extends ExecSession {
             final Injector injector,
             final Instant transactionTime,
             final EmbulkSystemProperties embulkSystemProperties,
+            final BufferAllocator bufferAllocator,
+            final TempFileSpaceAllocator tempFileSpaceAllocator,
             final GuessExecutor guessExecutor,
             final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
@@ -257,11 +273,10 @@ public class ExecSessionInternal extends ExecSession {
                 new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(this.jrubyScriptingContainerDelegate, pluginClassLoaderFactory));
 
-        this.bufferAllocator = injector.getInstance(BufferAllocator.class);
+        this.bufferAllocator = bufferAllocator;
 
         this.transactionTime = transactionTime;
 
-        final TempFileSpaceAllocator tempFileSpaceAllocator = injector.getInstance(TempFileSpaceAllocator.class);
         this.tempFileSpace = tempFileSpaceAllocator.newSpace(ISO8601_BASIC.format(this.transactionTime));
 
         this.preview = false;

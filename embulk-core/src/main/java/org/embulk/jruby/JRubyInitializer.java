@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.Exec;
 import org.embulk.spi.ExecInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,10 +150,13 @@ final class JRubyInitializer {
                     }
                 }
 
+                final Object java = jruby.runScriptlet("Embulk::Java");
+                jruby.callMethod(java, "const_set", "BufferAllocator", Exec.getBufferAllocator());
+
                 final Object injected = jruby.runScriptlet("Embulk::Java::Injected");
                 jruby.callMethod(injected, "const_set", "Injector", injector);
                 constSetModelManager(jruby, injected, injector);
-                jruby.callMethod(injected, "const_set", "BufferAllocator", injector.getInstance(BufferAllocator.class));
+                jruby.callMethod(injected, "const_set", "BufferAllocator", Exec.getBufferAllocator());
 
                 jruby.callMethod(jruby.runScriptlet("Embulk"), "logger=", jruby.callMethod(
                                      jruby.runScriptlet("Embulk::Logger"),
