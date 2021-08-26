@@ -1,3 +1,0 @@
-type: remove_columns
-remove: [invalid, time, comment]
-accept_unmatched_columns: true

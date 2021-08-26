@@ -1,3 +1,0 @@
-type: remove_columns
-keep: [invalid, id, account, purchase]
-accept_unmatched_columns: true
