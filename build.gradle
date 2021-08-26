@@ -22,26 +22,26 @@ def subprojectNamesOfCoreArtifacts = [
     "embulk-junit4",
 ]
 
-def subprojectNamesOfStandardPlugins = [
-    "embulk-decoder-bzip2",
-    "embulk-decoder-gzip",
-    "embulk-encoder-bzip2",
-    "embulk-encoder-gzip",
-    "embulk-filter-remove_columns",
-    "embulk-filter-rename",
-    "embulk-formatter-csv",
-    "embulk-guess-bzip2",
-    "embulk-guess-csv",
-    "embulk-guess-csv_all_strings",
-    "embulk-guess-gzip",
-    "embulk-guess-json",
-    "embulk-input-config",
-    "embulk-input-file",
-    "embulk-output-file",
-    "embulk-output-null",
-    "embulk-output-stdout",
-    "embulk-parser-csv",
-    "embulk-parser-json",
+def embeddedPlugins = [
+    [ group: "org.embulk", name: "embulk-decoder-bzip2", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-decoder-gzip", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-encoder-bzip2", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-encoder-gzip", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-filter-remove_columns", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-filter-rename", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-formatter-csv", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-guess-bzip2", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-guess-csv", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-guess-csv_all_strings", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-guess-gzip", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-guess-json", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-input-config", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-input-file", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-output-file", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-output-null", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-output-stdout", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-parser-csv", version: "0.10.33" ],
+    [ group: "org.embulk", name: "embulk-parser-json", version: "0.10.33" ],
 ]
 
 configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name) }) {
@@ -214,16 +214,16 @@ configurations {
 dependencies {
     implementation project(':embulk-core')
 
-    subprojectNamesOfStandardPlugins.each { pluginName ->
-        embed(project(":${pluginName}"))
-    }
-
     // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
     implementation "ch.qos.logback:logback-classic:1.2.3"
     implementation "org.fusesource.jansi:jansi:1.18"
 
     embed(project(':embulk-deps')) {
         exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
+    }
+
+    embeddedPlugins.each { pluginArtifact ->
+        embed pluginArtifact
     }
 }
 
@@ -264,10 +264,6 @@ jar {
               ":embulk-core:jar",
               ":embulk-deps:jar"
 
-    subprojectNamesOfStandardPlugins.each { pluginName ->
-        dependsOn ":${pluginName}:jar"
-    }
-
     // Expands all dependencies including "embulk-core"
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
@@ -291,14 +287,14 @@ jar {
                    'Specification-Version': project.version,
                    'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
                    "Main-Class": "org.embulk.cli.Main",
-                   "Embulk-Plugins": String.join(" ", subprojectNamesOfStandardPlugins),
+                   "Embulk-Plugins": String.join(" ", embeddedPlugins.collect { artifact -> artifact["name"] }),
 
                    // "json" should be registered before "csv".
                    // charset and newline guess plugins are loaded and invoked by CsvGuessPlugin
                    "Embulk-Default-Guess-Plugins": "gzip,bzip2,json,csv"
 
-        def pluginAttributes = subprojectNamesOfStandardPlugins.collectEntries { pluginName ->
-            [ ("Embulk-Plugin-${pluginName}".toString()): listEmbedDependencies(pluginName, "/lib/") ]
+        def pluginAttributes = embeddedPlugins.collectEntries { artifact ->
+            [ ("Embulk-Plugin-${artifact['name']}".toString()): listEmbedDependencies(artifact["name"], "/lib/") ]
         }
         attributes(pluginAttributes)
     }
@@ -349,10 +345,6 @@ task release {
     dependsOn "releaseCheck"
     dependsOn "executableJar"
     subprojectNamesOfCoreArtifacts.each { subprojectName ->
-        dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
-        tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
-    }
-    subprojectNamesOfStandardPlugins.each { subprojectName ->
         dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
         tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
     }
