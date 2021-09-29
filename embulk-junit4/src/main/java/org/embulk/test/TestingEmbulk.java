@@ -521,6 +521,7 @@ public class TestingEmbulk implements TestRule {
                     .set("delimiter", ",")
                     .set("quote", "\"")
                     .set("escape", "\"")
+                    .set("skip_header_lines", 1)  // Skip the header because the input csv must have "columnName:columnType" defined in the header.
                     .set("columns", newSchemaConfig());
         }
 
