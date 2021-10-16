@@ -112,16 +112,6 @@ final class MavenPluginRegistry {
         return Paths.get(m2Repo);
     }
 
-    private static String lookupCategory(final Class<?> pluginInterface) throws PluginSourceNotMatchException {
-        for (final Map.Entry<Class<?>, String> entry : CATEGORIES.entrySet()) {
-            if (entry.getKey().isAssignableFrom(pluginInterface)) {
-                return entry.getValue();
-            }
-        }
-        // unsupported plugin category
-        throw new PluginSourceNotMatchException("Plugin interface " + pluginInterface + " is not supported.");
-    }
-
     private static final Map<Class<?>, String> CATEGORIES;
 
     static {
