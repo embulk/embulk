@@ -13,8 +13,6 @@ import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FileOutputRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MavenPluginSource implements PluginSource {
     public MavenPluginSource(
@@ -97,10 +95,6 @@ public class MavenPluginSource implements PluginSource {
                     ex);
         }
 
-        logger.info("Loaded plugin {} ({})",
-                    "embulk-" + category + "-" + mavenPluginType.getName(),
-                    mavenPluginType.getFullName());
-
         try {
             return pluginInterface.cast(pluginMainObject);
         } catch (ClassCastException ex) {
@@ -109,8 +103,6 @@ public class MavenPluginSource implements PluginSource {
                     ex);
         }
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(MavenPluginSource.class);
 
     private final EmbulkSystemProperties embulkSystemProperties;
     private final Map<Class<?>, MavenPluginRegistry> registries;

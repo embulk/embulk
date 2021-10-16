@@ -23,6 +23,8 @@ import org.embulk.spi.GuessPlugin;
 import org.embulk.spi.InputPlugin;
 import org.embulk.spi.OutputPlugin;
 import org.embulk.spi.ParserPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Caches Maven-based plugin's loaded classes such as embulk-ruby's Embulk::PluginRegistry.
@@ -96,7 +98,11 @@ final class MavenPluginRegistry {
                  pluginPaths.getPluginJarPath(),
                  pluginPaths.getPluginDependencyJarPaths(),
                  this.pluginClassLoaderFactory)) {
-            return loader.getPluginMainClass();
+            final Class<?> loadedClass = loader.getPluginMainClass();
+            logger.info("Loaded plugin {} ({})",
+                        "embulk-" + this.category + "-" + pluginType.getName(),
+                        pluginType.getFullName());
+            return loadedClass;
         } catch (final InvalidJarPluginException ex) {
             throw new PluginSourceNotMatchException(ex);
         }
@@ -127,6 +133,8 @@ final class MavenPluginRegistry {
         categories.put(ExecutorPlugin.class, "executor");
         CATEGORIES = Collections.unmodifiableMap(categories);
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(MavenPluginRegistry.class);
 
     private final HashMap<MavenPluginType, Class<?>> cacheMap;
 
