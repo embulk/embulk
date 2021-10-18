@@ -102,12 +102,11 @@ public final class MavenPluginType extends PluginType {
             return false;
         }
         MavenPluginType other = (MavenPluginType) objectOther;
-        return (this.getSourceType().equals(other.getSourceType())
-                && this.getName().equals(other.getName())
-                && this.getGroup().equals(other.getGroup())
-                && ((this.getClassifier() == null && other.getClassifier() == null)
-                        || (this.getClassifier() != null && this.getClassifier().equals(other.getClassifier())))
-                && this.getVersion().equals(other.getVersion()));
+        return Objects.equals(this.getSourceType(), other.getSourceType())
+                && Objects.equals(this.getName(), other.getName())
+                && Objects.equals(this.group, other.group)
+                && Objects.equals(this.classifier, other.classifier)
+                && Objects.equals(this.version, other.version);
     }
 
     @JsonValue
