@@ -1,26 +1,15 @@
 package org.embulk.plugin;
 
+import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
 import org.embulk.plugin.PluginType;
-import org.embulk.plugin.jar.InvalidJarPluginException;
-import org.embulk.plugin.jar.JarPluginLoader;
-import org.embulk.spi.DecoderPlugin;
-import org.embulk.spi.EncoderPlugin;
-import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.FileInputPlugin;
 import org.embulk.spi.FileInputRunner;
 import org.embulk.spi.FileOutputPlugin;
 import org.embulk.spi.FileOutputRunner;
-import org.embulk.spi.FilterPlugin;
-import org.embulk.spi.FormatterPlugin;
-import org.embulk.spi.GuessPlugin;
-import org.embulk.spi.InputPlugin;
-import org.embulk.spi.OutputPlugin;
-import org.embulk.spi.ParserPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,52 +21,27 @@ public class SelfContainedPluginSource implements PluginSource {
             final EmbulkSystemProperties embulkSystemProperties,
             final PluginClassLoaderFactory pluginClassLoaderFactory) {
         this.embulkSystemProperties = embulkSystemProperties;
-        this.pluginClassLoaderFactory = pluginClassLoaderFactory;
+        this.registries = SelfContainedPluginRegistry.generateRegistries(embulkSystemProperties, pluginClassLoaderFactory);
     }
 
     @Override
     public <T> T newPlugin(final Class<T> pluginInterface, final PluginType pluginType) throws PluginSourceNotMatchException {
-        final String category;
-        if (InputPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "input";
-        } else if (OutputPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "output";
-        } else if (ParserPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "parser";
-        } else if (FormatterPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "formatter";
-        } else if (DecoderPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "decoder";
-        } else if (EncoderPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "encoder";
-        } else if (FilterPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "filter";
-        } else if (GuessPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "guess";
-        } else if (ExecutorPlugin.class.isAssignableFrom(pluginInterface)) {
-            category = "executor";
-        } else {
-            // unsupported plugin category
-            throw new PluginSourceNotMatchException("Plugin interface " + pluginInterface + " is not supported.");
-        }
-
         if (pluginType.getSourceType() != PluginSource.Type.DEFAULT) {
             throw new PluginSourceNotMatchException();
         }
 
+        final DefaultPluginType defaultPluginType = (DefaultPluginType) pluginType;
+
+        final SelfContainedPluginRegistry registry = this.registries.get(pluginInterface);
+        if (registry == null) {
+            // unsupported plugin category
+            throw new PluginSourceNotMatchException("Plugin interface " + pluginInterface + " is not supported.");
+        }
+        final String category = registry.getCategory();
+
         this.rejectTraditionalStandardPluginsFromEmbulkSystemProperties(category, pluginType.getName());
 
-        final String selfContainedPluginName = "embulk-" + category + "-" + pluginType.getName();
-        if (!EmbulkSelfContainedJarFiles.has(selfContainedPluginName)) {
-            throw new PluginSourceNotMatchException();
-        }
-
-        final Class<?> pluginMainClass;
-        try (final JarPluginLoader loader = JarPluginLoader.loadSelfContained(selfContainedPluginName, this.pluginClassLoaderFactory)) {
-            pluginMainClass = loader.getPluginMainClass();
-        } catch (final InvalidJarPluginException ex) {
-            throw new PluginSourceNotMatchException(ex);
-        }
+        final Class<?> pluginMainClass = registry.lookup(defaultPluginType);
 
         final Object pluginMainObject;
         try {
@@ -299,5 +263,5 @@ public class SelfContainedPluginSource implements PluginSource {
     private static final Logger logger = LoggerFactory.getLogger(SelfContainedPluginSource.class);
 
     private final EmbulkSystemProperties embulkSystemProperties;
-    private final PluginClassLoaderFactory pluginClassLoaderFactory;
+    private final Map<Class<?>, SelfContainedPluginRegistry> registries;
 }
