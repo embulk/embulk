@@ -292,6 +292,7 @@ class EmbulkSystemPropertiesBuilder {
         // A path in the command line should be an absolute path, or a relative path from the working directory.
         final Optional<Path> ofCommandLine = normalizePathInCommandLineProperties(propertyName);
         if (ofCommandLine.isPresent()) {
+            logger.info("{} is set from command-line: {}", propertyName, ofCommandLine.get().toString());
             return ofCommandLine.get();
         }
 
@@ -301,6 +302,7 @@ class EmbulkSystemPropertiesBuilder {
         final Optional<Path> ofEmbulkPropertiesFile =
                 normalizePathInEmbulkPropertiesFile(propertyName, embulkPropertiesFromFile, embulkHome);
         if (ofEmbulkPropertiesFile.isPresent()) {
+            logger.info("{} is set from embulk.properties: {}", propertyName, ofEmbulkPropertiesFile.get().toString());
             return ofEmbulkPropertiesFile.get();
         }
 
@@ -309,11 +311,14 @@ class EmbulkSystemPropertiesBuilder {
         // A path in an environment variable should be an absolute path.
         final Optional<Path> ofEnv = normalizePathInEnv(envName);
         if (ofEnv.isPresent()) {
+            logger.info("{} is set from environment variable {}: {}", propertyName, envName, ofEnv.get().toString());
             return ofEnv.get();
         }
 
         // 4) If none of the above does not match, use the specific sub directory of "embulk_home".
-        return embulkHome.resolve(subPath);
+        final Path ofSubPath = embulkHome.resolve(subPath);
+        logger.info("{} is set as a sub directory of embulk_home: {}", propertyName, ofSubPath);
+        return ofSubPath;
     }
 
     private List<Path> findSubdirectories(
@@ -324,6 +329,10 @@ class EmbulkSystemPropertiesBuilder {
         // 1) If a system config <propertyName> is set from the command line, it is the most prioritized.
         final List<Path> ofCommandLine = normalizePathsInCommandLineProperties(propertyName, true);
         if (!ofCommandLine.isEmpty()) {
+            logger.info(
+                    "{} is set from command-line: {}",
+                    propertyName,
+                    ofCommandLine.stream().map(path -> path.toString()).collect(Collectors.joining(File.pathSeparator)));
             return ofCommandLine;
         }
 
@@ -331,16 +340,26 @@ class EmbulkSystemPropertiesBuilder {
         final List<Path> ofEmbulkPropertiesFile =
                 normalizePathsInEmbulkPropertiesFile(propertyName, embulkPropertiesFromFile, embulkHome, true);
         if (!ofEmbulkPropertiesFile.isEmpty()) {
+            logger.info(
+                    "{} is set from embulk.properties: {}",
+                    propertyName,
+                    ofEmbulkPropertiesFile.stream().map(path -> path.toString()).collect(Collectors.joining(File.pathSeparator)));
             return ofEmbulkPropertiesFile;
         }
 
         // 3) If an environment variable <envName> is set, it is the third prioritized.
         final List<Path> ofEnv = normalizePathsInEnv(envName, true);
         if (!ofEnv.isEmpty()) {
+            logger.info(
+                    "{} is set from environment variable \"{}\": {}",
+                    propertyName,
+                    envName,
+                    ofEnv.stream().map(path -> path.toString()).collect(Collectors.joining(File.pathSeparator)));
             return ofEnv;
         }
 
         // 4) If none of the above does not match, return an empty list.
+        logger.info("{} is set empty.", propertyName);
         return Collections.unmodifiableList(new ArrayList<>());
     }
 
