@@ -73,6 +73,10 @@ public final class MavenPluginType extends PluginType {
         return this.group;
     }
 
+    public final String getArtifactId(final String category) {
+        return "embulk-" + category + "-" + this.getName();
+    }
+
     public final String getClassifier() {
         return this.classifier;
     }

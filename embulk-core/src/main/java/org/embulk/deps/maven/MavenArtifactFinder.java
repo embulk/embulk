@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.plugin.MavenPluginType;
 
 public abstract class MavenArtifactFinder {
     public static MavenArtifactFinder create(final Path localMavenRepositoryPath) throws FileNotFoundException {
@@ -32,10 +33,8 @@ public abstract class MavenArtifactFinder {
      * @see <a href="https://github.com/eclipse/aether-demo/blob/322fa556494335faaf3ad3b7dbe8f89aaaf6222d/aether-demo-snippets/src/main/java/org/eclipse/aether/examples/GetDirectDependencies.java">aether-demo's GetDirectDependencies.java</a>
      */
     public abstract MavenPluginPaths findMavenPluginJarsWithDirectDependencies(
-            final String groupId,
-            final String artifactId,
-            final String classifier,
-            final String version)
+            final MavenPluginType pluginType,
+            final String category)
             throws FileNotFoundException;
 
     @SuppressWarnings("unchecked")

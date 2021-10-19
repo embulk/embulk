@@ -22,6 +22,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.embulk.plugin.MavenPluginType;
 
 public class MavenArtifactFinderImpl extends MavenArtifactFinder {
     public MavenArtifactFinderImpl(final Path localMavenRepositoryPath) throws FileNotFoundException {
@@ -54,12 +55,12 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
     }
 
     @Override
-    public final MavenPluginPaths findMavenPluginJarsWithDirectDependencies(
-            final String groupId,
-            final String artifactId,
-            final String classifier,
-            final String version)
+    public final MavenPluginPaths findMavenPluginJarsWithDirectDependencies(final MavenPluginType pluginType, final String category)
             throws FileNotFoundException {
+        final String groupId = pluginType.getGroup();
+        final String artifactId = pluginType.getArtifactId(category);
+        final String classifier = pluginType.getClassifier();
+        final String version = pluginType.getVersion();
         final ArtifactDescriptorResult result;
         try {
             result = this.describeMavenArtifact(groupId, artifactId, classifier, "jar", version);
@@ -78,7 +79,7 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
             }
         }
         final Path artifactPath = this.findMavenArtifact(result.getArtifact());
-        return MavenPluginPaths.of(artifactPath, dependencyPaths);
+        return MavenPluginPaths.of(pluginType, artifactPath, dependencyPaths);
     }
 
     private Path findMavenArtifact(final Artifact artifact) throws MavenArtifactNotFoundException {

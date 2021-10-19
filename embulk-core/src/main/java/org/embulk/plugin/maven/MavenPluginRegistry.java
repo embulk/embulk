@@ -85,11 +85,7 @@ final class MavenPluginRegistry {
 
         final MavenPluginPaths pluginPaths;
         try {
-            pluginPaths = mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(
-                    pluginType.getGroup(),
-                    "embulk-" + category + "-" + pluginType.getName(),
-                    pluginType.getClassifier(),
-                    pluginType.getVersion());
+            pluginPaths = mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(pluginType, category);
         } catch (final FileNotFoundException ex) {
             throw new PluginSourceNotMatchException(ex);
         }
