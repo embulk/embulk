@@ -12,13 +12,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginSource;
@@ -83,18 +79,7 @@ final class PluginTypeJacksonModule extends SimpleModule {
             if (typeJson.isTextual()) {
                 return createFromString(((TextNode) typeJson).textValue());
             } else if (typeJson.isObject()) {
-                final HashMap<String, String> stringMap = new HashMap<String, String>();
-                final ObjectNode typeObject = (ObjectNode) typeJson;
-                final Iterator<Map.Entry<String, JsonNode>> fieldIterator = typeObject.fields();
-                while (fieldIterator.hasNext()) {
-                    final Map.Entry<String, JsonNode> field = fieldIterator.next();
-                    final JsonNode fieldValue = field.getValue();
-                    if (fieldValue instanceof ContainerNode) {
-                        throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
-                    }
-                    stringMap.put(field.getKey(), fieldValue.textValue());
-                }
-                return createFromStringMap(stringMap);
+                return createFromObjectNode((ObjectNode) typeJson);
             } else {
                 throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
             }
@@ -110,24 +95,24 @@ final class PluginTypeJacksonModule extends SimpleModule {
         return DefaultPluginType.create(name);
     }
 
-    private static PluginType createFromStringMap(Map<String, String> stringMap) {
+    private static PluginType createFromObjectNode(final ObjectNode typeObject) {
         final PluginSource.Type sourceType;
-        if (stringMap.containsKey("source")) {
-            sourceType = PluginSource.Type.of(stringMap.get("source"));
+        if (typeObject.has("source")) {
+            sourceType = PluginSource.Type.of(getTextual(typeObject, "source", "type"));
         } else {
             sourceType = PluginSource.Type.DEFAULT;
         }
 
         switch (sourceType) {
             case DEFAULT: {
-                final String name = stringMap.get("name");
+                final String name = getTextual(typeObject, "name", "type");
                 return createFromString(name);
             }
             case MAVEN: {
-                final String name = stringMap.get("name");
-                final String group = stringMap.get("group");
-                final String classifier = stringMap.get("classifier");
-                final String version = stringMap.get("version");
+                final String name = getTextual(typeObject, "name", "type");
+                final String group = getTextual(typeObject, "group", "type");
+                final String classifier = getTextual(typeObject, "classifier", "type");
+                final String version = getTextual(typeObject, "version", "type");
                 return MavenPluginType.create(name, group, classifier, version);
             }
             default:
@@ -139,7 +124,18 @@ final class PluginTypeJacksonModule extends SimpleModule {
         return createFromString(name);
     }
 
-    static PluginType createFromStringMapForTesting(final Map<String, String> stringMap) {
-        return createFromStringMap(stringMap);
+    static PluginType createFromObjectNodeForTesting(final ObjectNode typeObject) {
+        return createFromObjectNode(typeObject);
+    }
+
+    private static String getTextual(final ObjectNode object, final String fieldName, final String parent) {
+        final JsonNode json = object.get(fieldName);
+        if (json == null) {
+            return null;
+        }
+        if (!json.isTextual()) {
+            throw new IllegalArgumentException("\"" + fieldName + "\" in \"" + parent + "\" must be a textual value.");
+        }
+        return json.textValue();
     }
 }

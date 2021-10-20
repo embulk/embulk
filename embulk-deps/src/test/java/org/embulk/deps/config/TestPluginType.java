@@ -5,7 +5,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Properties;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.plugin.DefaultPluginType;
@@ -29,11 +30,11 @@ public class TestPluginType {
 
     @Test
     public void testMapping1() {
-        HashMap<String, String> mapping = new HashMap<String, String>();
+        final ObjectNode mapping = OBJECT_MAPPER.createObjectNode();
         mapping.put("source", "default");
         mapping.put("name", "c");
 
-        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromObjectNodeForTesting(mapping);
         assertTrue(type instanceof DefaultPluginType);
         assertEquals(PluginSource.Type.DEFAULT, type.getSourceType());
         assertTrue(type.equals(type));
@@ -44,13 +45,13 @@ public class TestPluginType {
 
     @Test
     public void testMapping2() {
-        HashMap<String, String> mapping = new HashMap<String, String>();
+        final ObjectNode mapping = OBJECT_MAPPER.createObjectNode();
         mapping.put("source", "maven");
         mapping.put("name", "e");
         mapping.put("group", "org.embulk.foobar");
         mapping.put("version", "0.1.2");
 
-        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromObjectNodeForTesting(mapping);
         assertTrue(type instanceof MavenPluginType);
         assertEquals(PluginSource.Type.MAVEN, type.getSourceType());
         MavenPluginType mavenType = (MavenPluginType) type;
@@ -64,14 +65,14 @@ public class TestPluginType {
 
     @Test
     public void testMappingMavenWithClassifier() {
-        HashMap<String, String> mapping = new HashMap<String, String>();
+        final ObjectNode mapping = OBJECT_MAPPER.createObjectNode();
         mapping.put("source", "maven");
         mapping.put("name", "e");
         mapping.put("group", "org.embulk.foobar");
         mapping.put("version", "0.1.2");
         mapping.put("classifier", "bar");
 
-        PluginType type = PluginTypeJacksonModule.createFromStringMapForTesting(mapping);
+        PluginType type = PluginTypeJacksonModule.createFromObjectNodeForTesting(mapping);
         assertTrue(type instanceof MavenPluginType);
         assertEquals(PluginSource.Type.MAVEN, type.getSourceType());
         MavenPluginType mavenType = (MavenPluginType) type;
@@ -140,4 +141,6 @@ public class TestPluginType {
         assertEquals("alpha", mavenType2.getClassifier());
         assertEquals("maven:com.example:some:0.4.1:alpha", mavenType2.getFullName());
     }
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 }
