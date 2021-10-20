@@ -2,8 +2,6 @@ package org.embulk.plugin.maven;
 
 import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.plugin.DefaultPluginType;
-import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginManager;
 import org.embulk.plugin.PluginSource;
@@ -32,22 +30,7 @@ public class MavenPluginSource implements PluginSource {
         }
         final String category = registry.getCategory();
 
-        final MavenPluginType mavenPluginType;
-        switch (pluginType.getSourceType()) {
-            case DEFAULT:
-                mavenPluginType = MavenPluginType.createFromDefaultPluginType(
-                        category, (DefaultPluginType) pluginType, this.embulkSystemProperties);
-                break;
-
-            case MAVEN:
-                mavenPluginType = (MavenPluginType) pluginType;
-                break;
-
-            default:
-                throw new PluginSourceNotMatchException();
-        }
-
-        final Class<?> pluginMainClass = registry.lookup(mavenPluginType);
+        final Class<?> pluginMainClass = registry.lookup(pluginType);
 
         final Object pluginMainObject;
         try {

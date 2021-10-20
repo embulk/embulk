@@ -9,9 +9,12 @@ import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.maven.MavenArtifactFinder;
 import org.embulk.deps.maven.MavenPluginPaths;
+import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
+import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginSourceNotMatchException;
+import org.embulk.plugin.PluginType;
 import org.embulk.plugin.jar.InvalidJarPluginException;
 import org.embulk.plugin.jar.JarPluginLoader;
 import org.embulk.spi.DecoderPlugin;
@@ -58,15 +61,31 @@ final class MavenPluginRegistry {
         return Collections.unmodifiableMap(registries);
     }
 
-    Class<?> lookup(final MavenPluginType pluginType) throws PluginSourceNotMatchException  {
+    Class<?> lookup(final PluginType pluginType) throws PluginSourceNotMatchException  {
         synchronized (this.cacheMap) {  // Synchronize between this.cacheMap.get() and this.cacheMap.put().
             final Class<?> pluginMainClass = this.cacheMap.get(pluginType);
             if (pluginMainClass != null) {
                 return pluginMainClass;
             }
 
-            final Class<?> loadedPluginMainClass = this.search(pluginType);
-            this.cacheMap.put(pluginType, loadedPluginMainClass);
+            final MavenPluginPaths pluginPaths = this.findPluginPaths(pluginType);
+            final MavenPluginType mavenPluginType = pluginPaths.getPluginType();
+
+            final Class<?> loadedPluginMainClass;
+            try (final JarPluginLoader loader = JarPluginLoader.load(
+                     pluginPaths.getPluginJarPath(),
+                     pluginPaths.getPluginDependencyJarPaths(),
+                     this.pluginClassLoaderFactory)) {
+                loadedPluginMainClass = loader.getPluginMainClass();
+            } catch (final InvalidJarPluginException ex) {
+                throw new PluginSourceNotMatchException(ex);
+            }
+
+            logger.info("Loaded plugin {} ({})",
+                        "embulk-" + this.category + "-" + mavenPluginType.getName(),
+                        mavenPluginType.getFullName());
+
+            this.cacheMap.put(mavenPluginType, loadedPluginMainClass);
             return loadedPluginMainClass;
         }
     }
@@ -75,7 +94,7 @@ final class MavenPluginRegistry {
         return this.category;
     }
 
-    private Class<?> search(final MavenPluginType pluginType) throws PluginSourceNotMatchException {
+    private MavenPluginPaths findPluginPaths(final PluginType pluginType) throws PluginSourceNotMatchException {
         final MavenArtifactFinder mavenArtifactFinder;
         try {
             mavenArtifactFinder = MavenArtifactFinder.create(this.getLocalMavenRepository());
@@ -83,25 +102,47 @@ final class MavenPluginRegistry {
             throw new PluginSourceNotMatchException(ex);
         }
 
-        final MavenPluginPaths pluginPaths;
-        try {
-            pluginPaths = mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(pluginType, category);
-        } catch (final FileNotFoundException ex) {
-            throw new PluginSourceNotMatchException(ex);
-        }
+        if (pluginType.getSourceType() == PluginSource.Type.DEFAULT) {
+            final MavenPluginType nonDefaultMavenPluginType = MavenPluginType.createFromDefaultPluginType(
+                    "plugins.", this.category, (DefaultPluginType) pluginType, this.embulkSystemProperties);
+            if (nonDefaultMavenPluginType != null) {
+                try {
+                    return mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(nonDefaultMavenPluginType, this.category);
+                } catch (final FileNotFoundException ex) {
+                    logger.warn("Plugin {} specified in \"plugins.{}.{}\" was not found. Falling back to \"plugins.default.{}.{}\".",
+                                nonDefaultMavenPluginType.getFullName(),
+                                this.category,
+                                pluginType.getName(),
+                                this.category,
+                                pluginType.getName(),
+                                ex);
+                    // Pass-through.
+                }
+            }
 
-        try (final JarPluginLoader loader = JarPluginLoader.load(
-                 pluginPaths.getPluginJarPath(),
-                 pluginPaths.getPluginDependencyJarPaths(),
-                 this.pluginClassLoaderFactory)) {
-            final Class<?> loadedClass = loader.getPluginMainClass();
-            logger.info("Loaded plugin {} ({})",
-                        "embulk-" + this.category + "-" + pluginType.getName(),
-                        pluginType.getFullName());
-            return loadedClass;
-        } catch (final InvalidJarPluginException ex) {
-            throw new PluginSourceNotMatchException(ex);
+            final MavenPluginType defaultMavenPluginType = MavenPluginType.createFromDefaultPluginType(
+                    "plugins.default.", this.category, (DefaultPluginType) pluginType, this.embulkSystemProperties);
+            if (defaultMavenPluginType != null) {
+                try {
+                    return mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(defaultMavenPluginType, this.category);
+                } catch (final FileNotFoundException ex) {
+                    logger.warn("Plugin {} specified in \"plugins.default.{}.{}\" was not found.",
+                                defaultMavenPluginType.getFullName(),
+                                this.category,
+                                pluginType.getName(),
+                                ex);
+                    throw new PluginSourceNotMatchException(ex);
+                }
+            }
+        } else if (pluginType.getSourceType() == PluginSource.Type.MAVEN) {
+            final MavenPluginType mavenPluginType = (MavenPluginType) pluginType;
+            try {
+                return mavenArtifactFinder.findMavenPluginJarsWithDirectDependencies(mavenPluginType, this.category);
+            } catch (final FileNotFoundException ex) {
+                throw new PluginSourceNotMatchException(ex);
+            }
         }
+        throw new PluginSourceNotMatchException();
     }
 
     private Path getLocalMavenRepository() throws PluginSourceNotMatchException {

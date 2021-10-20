@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.embulk.EmbulkSystemProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class MavenPluginType extends PluginType {
     private MavenPluginType(final String name, final String group, final String classifier, final String version) {
@@ -43,20 +45,21 @@ public final class MavenPluginType extends PluginType {
     }
 
     public static MavenPluginType createFromDefaultPluginType(
+            final String prefix,
             final String category,
             final DefaultPluginType defaultPluginType,
-            final EmbulkSystemProperties embulkSystemProperties)
-            throws PluginSourceNotMatchException {
-        final String propertyName = "plugins." + category + "." + defaultPluginType.getName();
+            final EmbulkSystemProperties embulkSystemProperties) {
+        final String propertyName = prefix + category + "." + defaultPluginType.getName();
         final String declaration = embulkSystemProperties.getProperty(propertyName);
         if (declaration == null) {
-            throw new PluginSourceNotMatchException("Embulk system property \"" + propertyName + "\" is not set.");
+            logger.info("Embulk system property \"{}\" is not set.", propertyName);
+            return null;
         }
 
         final String[] parts = declaration.split(":");  // "maven:com.example:name:1.2.3[:classifier]"
         if ((parts.length != 4 && parts.length != 5) || !"maven".equals(parts[0])) {
-            throw new PluginSourceNotMatchException(
-                    "Embulk system property \"" + propertyName + "\" is invalid: \"" + declaration + "\"");
+            logger.warn("Embulk system property \"{}\" is invalid: \"{}\"", propertyName, declaration);
+            return null;
         }
 
         if (parts.length == 5) {
@@ -111,6 +114,8 @@ public final class MavenPluginType extends PluginType {
     public String toString() {
         return this.fullName;
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(MavenPluginType.class);
 
     private final String group;
     private final String classifier;  // |classifier| can be null.

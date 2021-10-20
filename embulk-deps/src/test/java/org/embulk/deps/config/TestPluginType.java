@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.HashMap;
 import java.util.Properties;
@@ -88,45 +87,33 @@ public class TestPluginType {
     public void testMavenFail1() {
         final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("qux");
 
-        try {
-            MavenPluginType.createFromDefaultPluginType("input", type, EmbulkSystemProperties.of(new Properties()));
-        } catch (final PluginSourceNotMatchException ex) {
-            assertEquals("Embulk system property \"plugins.input.qux\" is not set.", ex.getMessage());
-            return;
-        }
-        fail("PluginSourceNotMatchException is not thrown.");
+        assertEquals(
+                null,
+                MavenPluginType.createFromDefaultPluginType("plugins.", "input", type, EmbulkSystemProperties.of(new Properties())));
     }
 
     @Test
     public void testMavenFail2() {
         final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("foo");
 
-        try {
-            final Properties properties = new Properties();
-            properties.setProperty("plugins.filter.foo", "maven:foo");
-            MavenPluginType.createFromDefaultPluginType("filter", type, EmbulkSystemProperties.of(properties));
-        } catch (final PluginSourceNotMatchException ex) {
-            assertEquals("Embulk system property \"plugins.filter.foo\" is invalid: \"maven:foo\"",
-                         ex.getMessage());
-            return;
-        }
-        fail("PluginSourceNotMatchException is not thrown.");
+        final Properties properties = new Properties();
+        properties.setProperty("plugins.filter.foo", "maven:foo");
+
+        assertEquals(
+                null,
+                MavenPluginType.createFromDefaultPluginType("plugins.", "filter", type, EmbulkSystemProperties.of(properties)));
     }
 
     @Test
     public void testMavenFail3() {
         final DefaultPluginType type = (DefaultPluginType) PluginTypeJacksonModule.createFromStringForTesting("test");
 
-        try {
-            final Properties properties = new Properties();
-            properties.setProperty("plugins.output.test", "nonmaven:org.embulk.foo:test:0.2.4");
-            MavenPluginType.createFromDefaultPluginType("output", type, EmbulkSystemProperties.of(properties));
-        } catch (final PluginSourceNotMatchException ex) {
-            assertEquals("Embulk system property \"plugins.output.test\" is invalid: \"nonmaven:org.embulk.foo:test:0.2.4\"",
-                         ex.getMessage());
-            return;
-        }
-        fail("PluginSourceNotMatchException is not thrown.");
+        final Properties properties = new Properties();
+        properties.setProperty("plugins.output.test", "nonmaven:org.embulk.foo:test:0.2.4");
+
+        assertEquals(
+                null,
+                MavenPluginType.createFromDefaultPluginType("plugins.", "output", type, EmbulkSystemProperties.of(properties)));
     }
 
     @Test
@@ -138,7 +125,7 @@ public class TestPluginType {
         properties1.setProperty("plugins.filter.some", "maven:com.example:some:0.4.1:alpha");
 
         final MavenPluginType mavenType1 =
-                MavenPluginType.createFromDefaultPluginType("input", type, EmbulkSystemProperties.of(properties1));
+                MavenPluginType.createFromDefaultPluginType("plugins.", "input", type, EmbulkSystemProperties.of(properties1));
         assertEquals("some", mavenType1.getName());
         assertEquals("org.embulk.baz", mavenType1.getGroup());
         assertEquals("0.2.3", mavenType1.getVersion());
@@ -146,7 +133,7 @@ public class TestPluginType {
         assertEquals("maven:org.embulk.baz:some:0.2.3", mavenType1.getFullName());
 
         final MavenPluginType mavenType2 =
-                MavenPluginType.createFromDefaultPluginType("filter", type, EmbulkSystemProperties.of(properties1));
+                MavenPluginType.createFromDefaultPluginType("plugins.", "filter", type, EmbulkSystemProperties.of(properties1));
         assertEquals("some", mavenType2.getName());
         assertEquals("com.example", mavenType2.getGroup());
         assertEquals("0.4.1", mavenType2.getVersion());
