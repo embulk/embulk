@@ -50,7 +50,7 @@ public class EmbulkTestRuntime implements TestRule {
     }
 
     public static PluginClassLoaderFactory buildPluginClassLoaderFactory() {
-        return PluginClassLoaderFactoryImpl.of(EmbulkEmbed.PARENT_FIRST_PACKAGES, EmbulkEmbed.PARENT_FIRST_RESOURCES);
+        return PluginClassLoaderFactoryImpl.forTesting(EmbulkEmbed.PARENT_FIRST_PACKAGES, EmbulkEmbed.PARENT_FIRST_RESOURCES);
     }
 
     @Override

@@ -1,22 +1,40 @@
 package org.embulk.plugin;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
+import org.embulk.EmbulkSystemProperties;
 
 public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
     private PluginClassLoaderFactoryImpl(
             final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
+            final Collection<String> parentFirstResources,
+            final boolean hold) {
         this.parentFirstPackages = parentFirstPackages;
         this.parentFirstResources = parentFirstResources;
-        this.createdPluginClassLoaders = new ArrayList<>();
+        if (hold) {
+            this.createdPluginClassLoaders = new HashMap<>();
+        } else {
+            this.createdPluginClassLoaders = new WeakHashMap<>();
+        }
     }
 
     public static PluginClassLoaderFactoryImpl of(
+            final EmbulkSystemProperties embulkSystemProperties,
             final Collection<String> parentFirstPackages,
             final Collection<String> parentFirstResources) {
-        return new PluginClassLoaderFactoryImpl(parentFirstPackages, parentFirstResources);
+        // Set plugins.classloaders.hold = true to hold created PluginClassLoader instances in memory.
+        final boolean hold = embulkSystemProperties.getPropertyAsBoolean("plugins.classloaders.hold", true);
+
+        return new PluginClassLoaderFactoryImpl(parentFirstPackages, parentFirstResources, hold);
+    }
+
+    public static PluginClassLoaderFactoryImpl forTesting(
+            final Collection<String> parentFirstPackages,
+            final Collection<String> parentFirstResources) {
+        return new PluginClassLoaderFactoryImpl(parentFirstPackages, parentFirstResources, false);
     }
 
     @Override
@@ -26,7 +44,7 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
                 urls,
                 parentFirstPackages,
                 parentFirstResources);
-        this.createdPluginClassLoaders.add(created);
+        this.createdPluginClassLoaders.put(created, true);
         return created;
     }
 
@@ -37,7 +55,7 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
                 selfContainedPluginName,
                 this.parentFirstPackages,
                 this.parentFirstResources);
-        this.createdPluginClassLoaders.add(created);
+        this.createdPluginClassLoaders.put(created, true);
         return created;
     }
 
@@ -45,8 +63,10 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
     public void clear() {
         // "close()" is intentionally not called for them considering: https://bugs.openjdk.java.net/browse/JDK-8246714
         /*
-        for (final PluginClassLoader pluginClassLoader : this.createdPluginClassLoaders) {
-            pluginClassLoader.close();
+        for (final PluginClassLoader pluginClassLoader : this.createdPluginClassLoaders.keySet()) {
+            if (pluginClassLoader != null) {
+                pluginClassLoader.close();
+            }
         }
         */
         this.createdPluginClassLoaders.clear();
@@ -56,5 +76,5 @@ public class PluginClassLoaderFactoryImpl implements PluginClassLoaderFactory {
     private final Collection<String> parentFirstResources;
 
     // Created PluginClassLoaders are maintained in the list so that they are not garbage-collected accidentally.
-    private final ArrayList<PluginClassLoader> createdPluginClassLoaders;
+    private final Map<PluginClassLoader, Boolean> createdPluginClassLoaders;
 }

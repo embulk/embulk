@@ -256,6 +256,7 @@ public class ExecSessionInternal extends ExecSession {
                 LoggerFactory.getLogger("init"), this.embulkSystemProperties);
 
         this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
+                this.embulkSystemProperties,
                 (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
                 (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
         this.pluginManager = PluginManager.with(
