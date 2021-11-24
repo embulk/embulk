@@ -1,5 +1,6 @@
 package org.embulk.spi;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -122,12 +123,20 @@ public class PageBuilder implements AutoCloseable {
         setTimestamp(column.getIndex(), value);
     }
 
+    public void setTimestamp(Column column, final Instant value) {
+        this.setTimestamp(column, Timestamp.ofInstant(value));
+    }
+
     public void setTimestamp(int columnIndex, Timestamp value) {
         if (value == null) {
             setNull(columnIndex);
         } else {
             row.setTimestamp(columnIndex, value);
         }
+    }
+
+    public void setTimestamp(int columnIndex, final Instant value) {
+        this.setTimestamp(columnIndex, Timestamp.ofInstant(value));
     }
 
     private void writeNull(int columnIndex) {
