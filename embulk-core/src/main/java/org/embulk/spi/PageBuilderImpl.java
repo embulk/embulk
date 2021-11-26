@@ -406,6 +406,31 @@ public class PageBuilderImpl extends PageBuilder {
         }
 
         @Override
+        public void setLong(final long value) {
+            throw new IllegalStateException("Setting a LONG value to a BOOLEAN column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setDouble(final double value) {
+            throw new IllegalStateException("Setting a DOUBLE value to a BOOLEAN column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setString(final String value) {
+            throw new IllegalStateException("Setting a STRING value to a BOOLEAN column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setJson(final Value value) {
+            throw new IllegalStateException("Setting a JSON value to a BOOLEAN column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setTimestamp(final Instant value) {
+            throw new IllegalStateException("Setting a TIMESTAMP value to a BOOLEAN column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
         public void writeNotNull(PageBuilderImpl pageBuilder) {
             pageBuilder.writeBoolean(column.getIndex(), value);
         }
@@ -419,9 +444,34 @@ public class PageBuilderImpl extends PageBuilder {
         }
 
         @Override
+        public void setBoolean(final boolean value) {
+            throw new IllegalStateException("Setting a BOOLEAN value to a LONG column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
         public void setLong(long value) {
             this.value = value;
             this.isNull = false;
+        }
+
+        @Override
+        public void setDouble(final double value) {
+            throw new IllegalStateException("Setting a DOUBLE value to a LONG column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setString(final String value) {
+            throw new IllegalStateException("Setting a STRING value to a LONG column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setJson(final Value value) {
+            throw new IllegalStateException("Setting a JSON value to a LONG column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setTimestamp(final Instant value) {
+            throw new IllegalStateException("Setting a TIMESTAMP value to a LONG column: " + this.column.getName() + ", " + this.column.getType());
         }
 
         @Override
@@ -438,9 +488,34 @@ public class PageBuilderImpl extends PageBuilder {
         }
 
         @Override
+        public void setBoolean(final boolean value) {
+            throw new IllegalStateException("Setting a BOOLEAN value to a DOUBLE column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setLong(final long value) {
+            throw new IllegalStateException("Setting a LONG value to a DOUBLE column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
         public void setDouble(double value) {
             this.value = value;
             this.isNull = false;
+        }
+
+        @Override
+        public void setString(final String value) {
+            throw new IllegalStateException("Setting a STRING value to a DOUBLE column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setJson(final Value value) {
+            throw new IllegalStateException("Setting a JSON value to a DOUBLE column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setTimestamp(final Instant value) {
+            throw new IllegalStateException("Setting a TIMESTAMP value to a DOUBLE column: " + this.column.getName() + ", " + this.column.getType());
         }
 
         @Override
@@ -457,9 +532,34 @@ public class PageBuilderImpl extends PageBuilder {
         }
 
         @Override
+        public void setBoolean(final boolean value) {
+            throw new IllegalStateException("Setting a BOOLEAN value to a STRING column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setLong(final long value) {
+            throw new IllegalStateException("Setting a LONG value to a STRING column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setDouble(final double value) {
+            throw new IllegalStateException("Setting a DOUBLE value to a STRING column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
         public void setString(String value) {
             this.value = value;
             this.isNull = false;
+        }
+
+        @Override
+        public void setJson(final Value value) {
+            throw new IllegalStateException("Setting a JSON value to a STRING column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setTimestamp(final Instant value) {
+            throw new IllegalStateException("Setting a TIMESTAMP value to a STRING column: " + this.column.getName() + ", " + this.column.getType());
         }
 
         @Override
@@ -476,9 +576,34 @@ public class PageBuilderImpl extends PageBuilder {
         }
 
         @Override
+        public void setBoolean(final boolean value) {
+            throw new IllegalStateException("Setting a BOOLEAN value to a JSON column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setLong(final long value) {
+            throw new IllegalStateException("Setting a LONG value to a JSON column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setDouble(final double value) {
+            throw new IllegalStateException("Setting a DOUBLE value to a JSON column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setString(final String value) {
+            throw new IllegalStateException("Setting a STRING value to a JSON column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
         public void setJson(Value value) {
             this.value = value;
             this.isNull = false;
+        }
+
+        @Override
+        public void setTimestamp(final Instant value) {
+            throw new IllegalStateException("Setting a TIMESTAMP value to a JSON column: " + this.column.getName() + ", " + this.column.getType());
         }
 
         @Override
@@ -492,6 +617,31 @@ public class PageBuilderImpl extends PageBuilder {
 
         TimestampColumnValue(Column column) {
             super(column);
+        }
+
+        @Override
+        public void setBoolean(final boolean value) {
+            throw new IllegalStateException("Setting a BOOLEAN value to a TIMESTAMP column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setLong(final long value) {
+            throw new IllegalStateException("Setting a LONG value to a TIMESTAMP column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setDouble(final double value) {
+            throw new IllegalStateException("Setting a DOUBLE value to a TIMESTAMP column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setString(final String value) {
+            throw new IllegalStateException("Setting a STRING value to a TIMESTAMP column: " + this.column.getName() + ", " + this.column.getType());
+        }
+
+        @Override
+        public void setJson(final Value value) {
+            throw new IllegalStateException("Setting a JSON value to a TIMESTAMP column: " + this.column.getName() + ", " + this.column.getType());
         }
 
         @Override
