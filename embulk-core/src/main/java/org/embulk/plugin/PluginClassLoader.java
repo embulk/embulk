@@ -1,7 +1,5 @@
 package org.embulk.plugin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,9 +10,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 import java.util.stream.Collectors;
 import org.embulk.deps.SelfContainedJarAwareURLClassLoader;
 import org.slf4j.Logger;
@@ -31,9 +29,9 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
 
         this.hasJep320LoggedWithStackTrace = false;
 
-        this.parentFirstPackagePrefixes = ImmutableList.copyOf(
+        this.parentFirstPackagePrefixes = Collections.unmodifiableList(
                 parentFirstPackages.stream().map(pkg -> pkg + ".").collect(Collectors.toList()));
-        this.parentFirstResourcePrefixes = ImmutableList.copyOf(
+        this.parentFirstResourcePrefixes = Collections.unmodifiableList(
                 parentFirstResources.stream().map(pkg -> pkg + "/").collect(Collectors.toList()));
     }
 
@@ -198,24 +196,30 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
 
     @Override
     public Enumeration<URL> getResources(String name) throws IOException {
-        List<Iterator<URL>> resources = new ArrayList<>();
+        final Vector<URL> resources = new Vector<>();
 
         boolean parentFirst = isParentFirstPath(name);
 
         if (!parentFirst) {
-            Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
-            resources.add(childResources);
+            final Enumeration<URL> childResources = findResources(name);
+            while (childResources.hasMoreElements()) {
+                resources.add(childResources.nextElement());
+            }
         }
 
-        Iterator<URL> parentResources = Iterators.forEnumeration(getParent().getResources(name));
-        resources.add(parentResources);
+        final Enumeration<URL> parentResources = getParent().getResources(name);
+        while (parentResources.hasMoreElements()) {
+            resources.add(parentResources.nextElement());
+        }
 
         if (parentFirst) {
-            Iterator<URL> childResources = Iterators.forEnumeration(findResources(name));
-            resources.add(childResources);
+            final Enumeration<URL> childResources = findResources(name);
+            while (childResources.hasMoreElements()) {
+                resources.add(childResources.nextElement());
+            }
         }
 
-        return Iterators.asEnumeration(Iterators.concat(resources.iterator()));
+        return resources.elements();
     }
 
     private boolean isParentFirstPackage(String name) {
