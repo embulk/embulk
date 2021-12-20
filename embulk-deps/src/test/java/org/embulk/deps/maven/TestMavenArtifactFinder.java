@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.embulk.plugin.MavenPluginType;
 import org.junit.Test;
 
 public class TestMavenArtifactFinder {
@@ -13,7 +14,7 @@ public class TestMavenArtifactFinder {
         final Path basePath = getMavenPath();
         final MavenArtifactFinderImpl finder = new MavenArtifactFinderImpl(basePath);
         final MavenPluginPaths paths = finder.findMavenPluginJarsWithDirectDependencies(
-                "org.embulk.example", "embulk-example-maven-artifact", null, "0.1.2");
+                MavenPluginType.create("maven-artifact", "org.embulk.example", null, "0.1.2"), "example");
         assertEquals(buildExpectedPath(basePath, GROUP_DIRECTORY, "embulk-example-maven-artifact", "0.1.2"),
                      paths.getPluginJarPath());
 
