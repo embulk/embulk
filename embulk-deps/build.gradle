@@ -37,9 +37,6 @@ dependencies {
     // 3.8.1 is required from Apache Maven.
     api "org.apache.commons:commons-lang3:3.8.1"
 
-    // Guess
-    api "com.ibm.icu:icu4j:54.1.1"
-
     // JSON (embulk-util-json)
     api("org.embulk:embulk-util-json:0.1.0") {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
