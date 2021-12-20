@@ -6,11 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import org.embulk.config.ConfigSource;
@@ -94,11 +95,11 @@ public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
 
     @Override
     public ConfigSource fromPropertiesYamlLiteral(Properties props, String keyPrefix) {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        final LinkedHashMap<String, String> builder = new LinkedHashMap<>();
         for (String propName : props.stringPropertyNames()) {
             builder.put(propName, props.getProperty(propName));
         }
-        return fromPropertiesYamlLiteral(builder.build(), keyPrefix);
+        return fromPropertiesYamlLiteral(Collections.unmodifiableMap(builder), keyPrefix);
     }
 
     @Override
