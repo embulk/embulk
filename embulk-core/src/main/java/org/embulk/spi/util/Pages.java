@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.embulk.spi.Column;
@@ -17,12 +18,14 @@ import org.embulk.spi.Schema;
 @Deprecated
 public class Pages {
     public static List<Object[]> toObjects(Schema schema, Page page) {
-        return toObjects(schema, ImmutableList.of(page));
+        final ArrayList<Page> pages = new ArrayList<>();
+        pages.add(page);
+        return toObjects(schema, Collections.unmodifiableList(pages));
     }
 
     // TODO use streaming and return Iterable
     public static List<Object[]> toObjects(final Schema schema, final Iterable<Page> pages, final boolean useInstant) {
-        ImmutableList.Builder<Object[]> builder = ImmutableList.builder();
+        final ArrayList<Object[]> builder = new ArrayList<>();
         Iterator<Page> ite = pages.iterator();
         try (PageReader reader = new PageReader(schema)) {
             while (ite.hasNext()) {
@@ -32,7 +35,7 @@ public class Pages {
                 }
             }
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages) {
