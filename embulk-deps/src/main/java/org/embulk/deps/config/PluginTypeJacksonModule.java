@@ -12,17 +12,19 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ContainerNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginSource;
 import org.embulk.plugin.PluginType;
+import org.embulk.plugin.maven.MavenExcludeDependency;
+import org.embulk.plugin.maven.MavenIncludeDependency;
 
 final class PluginTypeJacksonModule extends SimpleModule {
     public PluginTypeJacksonModule() {
@@ -83,18 +85,7 @@ final class PluginTypeJacksonModule extends SimpleModule {
             if (typeJson.isTextual()) {
                 return createFromString(((TextNode) typeJson).textValue());
             } else if (typeJson.isObject()) {
-                final HashMap<String, String> stringMap = new HashMap<String, String>();
-                final ObjectNode typeObject = (ObjectNode) typeJson;
-                final Iterator<Map.Entry<String, JsonNode>> fieldIterator = typeObject.fields();
-                while (fieldIterator.hasNext()) {
-                    final Map.Entry<String, JsonNode> field = fieldIterator.next();
-                    final JsonNode fieldValue = field.getValue();
-                    if (fieldValue instanceof ContainerNode) {
-                        throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
-                    }
-                    stringMap.put(field.getKey(), fieldValue.textValue());
-                }
-                return createFromStringMap(stringMap);
+                return createFromObjectNode((ObjectNode) typeJson);
             } else {
                 throw new IllegalArgumentException("\"type\" must be a string or a 1-depth mapping.");
             }
@@ -110,25 +101,27 @@ final class PluginTypeJacksonModule extends SimpleModule {
         return DefaultPluginType.create(name);
     }
 
-    private static PluginType createFromStringMap(Map<String, String> stringMap) {
+    private static PluginType createFromObjectNode(final ObjectNode typeObject) {
         final PluginSource.Type sourceType;
-        if (stringMap.containsKey("source")) {
-            sourceType = PluginSource.Type.of(stringMap.get("source"));
+        if (typeObject.has("source")) {
+            sourceType = PluginSource.Type.of(getTextual(typeObject, "source", "type"));
         } else {
             sourceType = PluginSource.Type.DEFAULT;
         }
 
         switch (sourceType) {
             case DEFAULT: {
-                final String name = stringMap.get("name");
+                final String name = getTextual(typeObject, "name", "type");
                 return createFromString(name);
             }
             case MAVEN: {
-                final String name = stringMap.get("name");
-                final String group = stringMap.get("group");
-                final String classifier = stringMap.get("classifier");
-                final String version = stringMap.get("version");
-                return MavenPluginType.create(name, group, classifier, version);
+                final String name = getTextual(typeObject, "name", "type");
+                final String group = getTextual(typeObject, "group", "type");
+                final String classifier = getTextual(typeObject, "classifier", "type");
+                final String version = getTextual(typeObject, "version", "type");
+                final Set<MavenExcludeDependency> excludeDependencies = getExcludeDependencies(typeObject, "type");
+                final Set<MavenIncludeDependency> includeDependencies = getIncludeDependencies(typeObject, "type");
+                return MavenPluginType.create(name, group, classifier, version, excludeDependencies, includeDependencies);
             }
             default:
                 throw new IllegalArgumentException("\"source\" must be one of: [\"default\", \"maven\"]");
@@ -139,7 +132,89 @@ final class PluginTypeJacksonModule extends SimpleModule {
         return createFromString(name);
     }
 
-    static PluginType createFromStringMapForTesting(final Map<String, String> stringMap) {
-        return createFromStringMap(stringMap);
+    static PluginType createFromObjectNodeForTesting(final ObjectNode typeObject) {
+        return createFromObjectNode(typeObject);
+    }
+
+    private static Set<MavenExcludeDependency> getExcludeDependencies(final ObjectNode object, final String parent) {
+        final LinkedHashSet<MavenExcludeDependency> excludeDependencies = new LinkedHashSet<>();
+
+        final JsonNode excludeDependenciesJson = object.get("exclude_dependencies");
+        if (excludeDependenciesJson != null) {
+            if (!excludeDependenciesJson.isArray()) {
+                throw new IllegalArgumentException("\"exclude_dependencies\" in \"" + parent + "\" must be an array.");
+            }
+            for (final JsonNode excludeDependencyJson : (ArrayNode) excludeDependenciesJson) {
+                excludeDependencies.add(getExcludeDependency(excludeDependencyJson));
+            }
+        }
+
+        final JsonNode overrideDependenciesJson = object.get("override_dependencies");
+        if (overrideDependenciesJson != null) {
+            if (!overrideDependenciesJson.isArray()) {
+                throw new IllegalArgumentException("\"override_dependencies\" in \"" + parent + "\" must be an array.");
+            }
+            for (final JsonNode overrideDependencyJson : (ArrayNode) overrideDependenciesJson) {
+                excludeDependencies.add(getOverrideDependency(overrideDependencyJson).toMavenExcludeDependency());
+            }
+        }
+
+        return Collections.unmodifiableSet(excludeDependencies);
+    }
+
+    private static Set<MavenIncludeDependency> getIncludeDependencies(final ObjectNode object, final String parent) {
+        final LinkedHashSet<MavenIncludeDependency> includeDependencies = new LinkedHashSet<>();
+
+        final JsonNode overrideDependenciesJson = object.get("override_dependencies");
+        if (overrideDependenciesJson != null) {
+            if (!overrideDependenciesJson.isArray()) {
+                throw new IllegalArgumentException("\"override_dependencies\" in \"" + parent + "\" must be an array.");
+            }
+            for (final JsonNode overrideDependencyJson : (ArrayNode) overrideDependenciesJson) {
+                includeDependencies.add(getOverrideDependency(overrideDependencyJson));
+            }
+        }
+
+        return Collections.unmodifiableSet(includeDependencies);
+    }
+
+    private static MavenExcludeDependency getExcludeDependency(final JsonNode json) {
+        if (json.isArray()) {
+            throw new IllegalArgumentException("Elements in \"exclude_dependencies\" must not be an array.");
+        }
+        if (json.isObject()) {
+            final ObjectNode excludeDependencyObject = (ObjectNode) json;
+            final String artifactId = getTextual(excludeDependencyObject, "artifactId", "exclude_dependencies");
+            final String groupId = getTextual(excludeDependencyObject, "groupId", "exclude_dependencies");
+            final String classifier = getTextual(excludeDependencyObject, "classifier", "exclude_dependencies");
+            return MavenExcludeDependency.of(groupId, artifactId, classifier);
+        }
+        return MavenExcludeDependency.fromString(json.asText());
+    }
+
+    private static MavenIncludeDependency getOverrideDependency(final JsonNode json) {
+        if (json.isArray()) {
+            throw new IllegalArgumentException("Elements in \"override_dependencies\" must not be an array.");
+        }
+        if (json.isObject()) {
+            final ObjectNode overrideDependencyObject = (ObjectNode) json;
+            final String artifactId = getTextual(overrideDependencyObject, "artifactId", "override_dependencies");
+            final String groupId = getTextual(overrideDependencyObject, "groupId", "override_dependencies");
+            final String version = getTextual(overrideDependencyObject, "version", "override_dependencies");
+            final String classifier = getTextual(overrideDependencyObject, "classifier", "override_dependencies");
+            return MavenIncludeDependency.of(groupId, artifactId, version, classifier);
+        }
+        return MavenIncludeDependency.fromString(json.asText());
+    }
+
+    private static String getTextual(final ObjectNode object, final String fieldName, final String parent) {
+        final JsonNode json = object.get(fieldName);
+        if (json == null) {
+            return null;
+        }
+        if (!json.isTextual()) {
+            throw new IllegalArgumentException("\"" + fieldName + "\" in \"" + parent + "\" must be a textual value.");
+        }
+        return json.textValue();
     }
 }

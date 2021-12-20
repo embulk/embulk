@@ -2,18 +2,39 @@ package org.embulk.plugin;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.embulk.EmbulkSystemProperties;
+import org.embulk.plugin.maven.MavenExcludeDependency;
+import org.embulk.plugin.maven.MavenIncludeDependency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class MavenPluginType extends PluginType {
-    private MavenPluginType(final String name, final String group, final String classifier, final String version) {
+    private MavenPluginType(
+            final String name,
+            final String group,
+            final String classifier,
+            final String version,
+            final Set<MavenExcludeDependency> excludeDependencies,
+            final Set<MavenIncludeDependency> includeDependencies) {
         super("maven", name);
         this.group = group;
         this.classifier = classifier;
         this.version = version;
+
+        if (excludeDependencies != null) {
+            this.excludeDependencies = Collections.unmodifiableSet(new LinkedHashSet<>(excludeDependencies));
+        } else {
+            this.excludeDependencies = Collections.emptySet();
+        }
+        if (includeDependencies != null) {
+            this.includeDependencies = Collections.unmodifiableSet(new LinkedHashSet<>(includeDependencies));
+        } else {
+            this.includeDependencies = Collections.emptySet();
+        }
 
         final StringBuilder fullNameBuilder = new StringBuilder();
         fullNameBuilder.append("maven:");
@@ -38,10 +59,20 @@ public final class MavenPluginType extends PluginType {
 
     public static MavenPluginType create(
             final String name, final String group, final String classifier, final String version) {
+        return create(name, group, classifier, version, null, null);
+    }
+
+    public static MavenPluginType create(
+            final String name,
+            final String group,
+            final String classifier,
+            final String version,
+            final Set<MavenExcludeDependency> excludeDependencies,
+            final Set<MavenIncludeDependency> includeDependencies) {
         if (name == null || group == null || version == null) {
             throw new NullPointerException("\"name\", \"group\" and \"version\" must be present.");
         }
-        return new MavenPluginType(name, group, classifier, version);
+        return new MavenPluginType(name, group, classifier, version, excludeDependencies, includeDependencies);
     }
 
     public static MavenPluginType createFromDefaultPluginType(
@@ -63,9 +94,9 @@ public final class MavenPluginType extends PluginType {
         }
 
         if (parts.length == 5) {
-            return new MavenPluginType(parts[2], parts[1], parts[4], parts[3]);
+            return new MavenPluginType(parts[2], parts[1], parts[4], parts[3], null, null);
         }
-        return new MavenPluginType(parts[2], parts[1], null, parts[3]);
+        return new MavenPluginType(parts[2], parts[1], null, parts[3], null, null);
     }
 
     public final Map<String, String> getJsonValue() {
@@ -88,13 +119,21 @@ public final class MavenPluginType extends PluginType {
         return this.version;
     }
 
+    public final Set<MavenExcludeDependency> getExcludeDependencies() {
+        return this.excludeDependencies;
+    }
+
+    public final Set<MavenIncludeDependency> getIncludeDependencies() {
+        return this.includeDependencies;
+    }
+
     public final String getFullName() {
         return this.fullName;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(getSourceType(), getName(), this.group, this.classifier, this.version);
+        return Objects.hash(getSourceType(), getName(), this.group, this.classifier, this.version, this.excludeDependencies, this.includeDependencies);
     }
 
     @Override
@@ -107,7 +146,9 @@ public final class MavenPluginType extends PluginType {
                 && Objects.equals(this.getName(), other.getName())
                 && Objects.equals(this.group, other.group)
                 && Objects.equals(this.classifier, other.classifier)
-                && Objects.equals(this.version, other.version);
+                && Objects.equals(this.version, other.version)
+                && Objects.equals(this.excludeDependencies, other.excludeDependencies)
+                && Objects.equals(this.includeDependencies, other.includeDependencies);
     }
 
     @Override
@@ -120,6 +161,10 @@ public final class MavenPluginType extends PluginType {
     private final String group;
     private final String classifier;  // |classifier| can be null.
     private final String version;
+
+    private final Set<MavenExcludeDependency> excludeDependencies;
+    private final Set<MavenIncludeDependency> includeDependencies;
+
     private final String fullName;
     private final Map<String, String> fullMap;
 }

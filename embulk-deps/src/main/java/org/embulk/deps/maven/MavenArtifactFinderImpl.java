@@ -7,6 +7,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Set;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -23,6 +24,8 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.embulk.plugin.MavenPluginType;
+import org.embulk.plugin.maven.MavenExcludeDependency;
+import org.embulk.plugin.maven.MavenIncludeDependency;
 
 public class MavenArtifactFinderImpl extends MavenArtifactFinder {
     public MavenArtifactFinderImpl(final Path localMavenRepositoryPath) throws FileNotFoundException {
@@ -61,6 +64,8 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
         final String artifactId = pluginType.getArtifactId(category);
         final String classifier = pluginType.getClassifier();
         final String version = pluginType.getVersion();
+        final Set<MavenExcludeDependency> excludeDependencies = pluginType.getExcludeDependencies();
+        final Set<MavenIncludeDependency> includeDependencies = pluginType.getIncludeDependencies();
         final ArtifactDescriptorResult result;
         try {
             result = this.describeMavenArtifact(groupId, artifactId, classifier, "jar", version);
@@ -74,10 +79,25 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
         for (final Dependency dependency : result.getDependencies()) {
             final String scope = dependency.getScope();
             if (scope.equals("compile") || scope.equals("runtime")) {
-                final Path dependencyPath = this.findMavenArtifact(dependency.getArtifact());
-                dependencyPaths.add(dependencyPath);
+                final Artifact artifact = dependency.getArtifact();
+                if (!excludeDependencies.contains(MavenExcludeDependency.of(artifact.getGroupId(), artifact.getArtifactId(), artifact.getClassifier()))) {
+                    final Path dependencyPath = this.findMavenArtifact(artifact);
+                    dependencyPaths.add(dependencyPath);
+                }
             }
         }
+
+        for (final MavenIncludeDependency dependency : includeDependencies) {
+            final Artifact artifact = new DefaultArtifact(
+                    dependency.getGroupId(),
+                    dependency.getArtifactId(),
+                    dependency.getClassifier().orElse(null),
+                    "jar",
+                    dependency.getVersion());
+            final Path dependencyPath = this.findMavenArtifact(artifact);
+            dependencyPaths.add(dependencyPath);
+        }
+
         final Path artifactPath = this.findMavenArtifact(result.getArtifact());
         return MavenPluginPaths.of(pluginType, artifactPath, dependencyPaths);
     }
