@@ -1,13 +1,15 @@
 package org.embulk.deps.config;
 
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.embulk.config.Config;
 import org.embulk.config.TaskSource;
@@ -31,18 +33,18 @@ class TaskInvocationHandler implements InvocationHandler {
      *
      * It expects to be called only from TaskSerDe. Multimap is used inside org.embulk.config.
      */
-    static Multimap<String, Method> fieldGetters(Class<?> iface) {
-        ImmutableMultimap.Builder<String, Method> builder = ImmutableMultimap.builder();
+    static List<Map.Entry<String, Method>> fieldGetters(final Class<?> iface) {
+        final ArrayList<Map.Entry<String, Method>> builder = new ArrayList<>();
         for (Method method : iface.getMethods()) {
             String methodName = method.getName();
             String fieldName = getterFieldNameOrNull(methodName);
             if (fieldName != null && hasExpectedArgumentLength(method, 0)
                     && (!method.isDefault() || method.getAnnotation(Config.class) != null)) {
                 // If the method has default implementation, and @Config is not annotated there, the method is kept.
-                builder.put(fieldName, method);
+                builder.add(new AbstractMap.SimpleImmutableEntry<>(fieldName, method));
             }
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     // visible for ModelManagerDelegateImpl.AccessorSerializer
