@@ -29,8 +29,8 @@ public final class DefaultPluginType extends PluginType {
             return false;
         }
         final DefaultPluginType other = (DefaultPluginType) objectOther;
-        return (this.getSourceType().equals(other.getSourceType())
-                && this.getName().equals(other.getName()));
+        return Objects.equals(this.getSourceType(), other.getSourceType())
+                && Objects.equals(this.getName(), other.getName());
     }
 
     @Override
