@@ -29,6 +29,12 @@ import org.slf4j.LoggerFactory;
  */
 class SelfUpdate {
     static void toSpecific(final String runningVersion, final String targetVersion, final boolean forced) throws IOException {
+        logger.info("================================== [ NOTICE ] ==================================");
+        logger.info(" Embulk `selfupdate` will not be available at some point in v0.11.*.");
+        logger.info(" Be prepared by controlling Embulk versions with your own deployment strategies.");
+        logger.info(" See https://github.com/embulk/embulk/issues/1495 for the details.");
+        logger.info("================================================================================");
+
         final Path pathRunning = identifyRunningJarPath();
         update(targetVersion, forced, pathRunning, "Embulk/" + runningVersion);
     }
