@@ -3,6 +3,22 @@ jruby_args=""
 default_optimize=""
 overwrite_optimize=""
 
+echo "" 1>&2
+echo "================================== [ NOTICE ] ==================================" 1>&2
+echo " Embulk will not be executable as a single command, such as 'embulk run'." 1>&2
+echo " It will happen at some point in v0.11.*." 1>&2
+echo "" 1>&2
+echo " Get ready for the removal by running Embulk with your own 'java' command line." 1>&2
+echo " Running Embulk with your own 'java' command line has already been available." 1>&2
+echo "" 1>&2
+echo " For instance in Java 1.8 :" 1>&2
+echo "  java -XX:+AggressiveOpts -XX:+UseConcMarkSweepGC -jar embulk-X.Y.Z.jar run ..." 1>&2
+echo "  java -XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none -jar embulk-X.Y.Z.jar guess ..." 1>&2
+echo "" 1>&2
+echo " See https://github.com/embulk/embulk/issues/1496 for the details." 1>&2
+echo "================================================================================" 1>&2
+echo "" 1>&2
+
 while true; do
     case "$1" in
         -E*)
@@ -59,25 +75,14 @@ case "$java_fullversion" in
         ;;
     [a-z]*\ full\ version\ \"1.8*\")
         ;;
-    [a-z]*\ full\ version\ \"9*\")
-        echo "[WARN] Embulk does not guarantee running with Java 9." 1>&2
-        echo "[WARN] Executing Java with: \"--add-modules java.xml.bind --add-modules=java.se.ee\"" 1>&2
-        echo "" 1>&2
-        java_args="--add-modules java.xml.bind --add-modules=java.se.ee $java_args"
-        ;;
-    [a-z]*\ full\ version\ \"10*\")
-        echo "[WARN] Embulk does not guarantee running with Java 10." 1>&2
-        echo "[WARN] Executing Java with: \"--add-modules java.xml.bind --add-modules=java.se.ee\"" 1>&2
-        echo "" 1>&2
-        java_args="--add-modules java.xml.bind --add-modules=java.se.ee $java_args"
-        ;;
-    [a-z]*\ full\ version\ \"11*\")
-        echo "[ERROR] Embulk does not support Java 11 yet." 1>&2
-        exit 1
-        ;;
     *)
-        echo "[WARN] Unrecognized Java version: $java_fullversion" 1>&2
-        echo "" 1>&2
+        echo "[ERROR] The Java version is not recognized by the self-executable single 'embulk' command." 1>&2
+        echo "[ERROR]   $java_fullversion" 1>&2
+        echo "[ERROR]" 1>&2
+        echo "[ERROR] Build your own 'java' command line instead of running Embulk as a single command." 1>&2
+        echo "[ERROR]" 1>&2
+        echo "[ERROR] See https://github.com/embulk/embulk/issues/1496 for the details." 1>&2
+        exit 1
 esac
 
 if test "$overwrite_optimize" = "true" -o "$default_optimize" -a "$overwrite_optimize" != "false"; then

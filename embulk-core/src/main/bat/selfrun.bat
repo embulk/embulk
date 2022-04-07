@@ -5,6 +5,22 @@ rem NOTE: Just quotes are available for [ for /f "delims=" %%w ('...') ].
 
 setlocal
 
+echo. 1>&2
+echo ================================== [ NOTICE ] ================================== 1>&2
+echo  Embulk will not be executable as a single command, such as 'embulk run'. 1>&2
+echo  It will happen at some point in v0.11.*. 1>&2
+echo. 1>&2
+echo  Get ready for the removal by running Embulk with your own 'java' command line. 1>&2
+echo  Running Embulk with your own 'java' command line has already been available. 1>&2
+echo. 1>&2
+echo  For instance in Java 1.8 : 1>&2
+echo   java -XX:+AggressiveOpts -XX:+UseConcMarkSweepGC -jar embulk-X.Y.Z.jar run ... 1>&2
+echo   java -XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none -jar embulk-X.Y.Z.jar guess ... 1>&2
+echo. 1>&2
+echo  See https://github.com/embulk/embulk/issues/1496 for the details. 1>&2
+echo ================================================================================ 1>&2
+echo. 1>&2
+
 rem Do not use %0 to identify the JAR (bat) file.
 rem %0 is just "embulk" when run by just "> embulk" while %0 is "embulk.bat" when run by "> embulk.bat".
 set this=%~f0
@@ -41,12 +57,6 @@ echo %java_fullversion% | find " full version ""1.7" > NUL
 if not ERRORLEVEL 1 (set java_version=7)
 echo %java_fullversion% | find " full version ""1.8" > NUL
 if not ERRORLEVEL 1 (set java_version=8)
-echo %java_fullversion% | find " full version ""9" > NUL
-if not ERRORLEVEL 1 (set java_version=9)
-echo %java_fullversion% | find " full version ""10" > NUL
-if not ERRORLEVEL 1 (set java_version=10)
-echo %java_fullversion% | find " full version ""11" > NUL
-if not ERRORLEVEL 1 (set java_version=11)
 if not defined java_version (set java_version=0)
 
 if %java_version% EQU 7 (
@@ -56,25 +66,14 @@ if %java_version% EQU 7 (
 ) else if %java_version% EQU 8 (
     rem Do nothing for Java 8
 
-) else if %java_version% EQU 9 (
-    echo [WARN] Embulk does not guarantee running with Java 9. 1>&2
-    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
-    echo. 1>&2
-    set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
-
-) else if %java_version% EQU 10 (
-    echo [WARN] Embulk does not guarantee running with Java 10. 1>&2
-    echo [WARN] Executing Java with: "--add-modules java.xml.bind --add-modules=java.se.ee" 1>&2
-    echo. 1>&2
-    set java_args=--add-modules java.xml.bind --add-modules=java.se.ee %java_args%
-
-) else if %java_version% EQU 11 (
-    echo [ERROR] Embulk does not support Java 11 yet. 1>&2
-    exit 1
-
 ) else (
-    echo [WARN] Unrecognized Java version: %java_fullversion% 1>&2
-    echo. 1>&2
+    echo [ERROR] The Java version is not recognized by the self-executable single 'embulk' command. 1>&2
+    echo [ERROR]   %java_fullversion% 1>&2
+    echo [ERROR] 1>&2
+    echo [ERROR] Build your own 'java' command line instead of running Embulk as a single command. 1>&2
+    echo [ERROR] 1>&2
+    echo [ERROR] See https://github.com/embulk/embulk/issues/1496 for the details. 1>&2
+    exit 1
 
 )
 
