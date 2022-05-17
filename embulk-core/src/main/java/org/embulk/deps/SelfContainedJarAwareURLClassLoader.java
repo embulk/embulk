@@ -118,7 +118,9 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
             try {
                 resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
             } catch (final IllegalArgumentException ex) {
-                Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                Holder.logger.info("Unexpected self-contained JAR category \"{}\" is requested for resource \"{}\".",
+                                   this.selfContainedJarCategory, resourceName);
+                Holder.logger.debug("[NOT AN IMMEDIATE ERROR] Unexpected self-contained JAR category.", ex);
                 return null;
             }
             if (resource == null) {
@@ -162,7 +164,9 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
             try {
                 resources = EmbulkSelfContainedJarFiles.getMultipleResources(resourceName, this.selfContainedJarCategory);
             } catch (final IllegalArgumentException ex) {
-                Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+                Holder.logger.info("Unexpected self-contained JAR category \"{}\" is requested for resource \"{}\".",
+                                   this.selfContainedJarCategory, resourceName);
+                Holder.logger.debug("[NOT AN IMMEDIATE ERROR] Unexpected self-contained JAR category.", ex);
                 return resourceUrls.elements();
             }
 
@@ -203,7 +207,9 @@ public class SelfContainedJarAwareURLClassLoader extends URLClassLoader {
         try {
             resource = EmbulkSelfContainedJarFiles.getSingleResource(resourceName, this.selfContainedJarCategory);
         } catch (final IllegalArgumentException ex) {
-            Holder.logger.warn("Unexpected self-contained JAR category is requested: " + this.selfContainedJarCategory, ex);
+            Holder.logger.info("Unexpected self-contained JAR category \"{}\" is requested for class \"{}\"",
+                               this.selfContainedJarCategory, className);
+            Holder.logger.debug("[NOT AN IMMEDIATE ERROR] Unexpected self-contained JAR category.", ex);
             throw new ClassNotFoundException(className, ex);
         }
         if (resource == null) {
