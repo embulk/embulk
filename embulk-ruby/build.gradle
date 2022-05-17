@@ -74,10 +74,12 @@ task installDependencyGems(type: JavaExec, dependsOn: "gemContents") {
     main = "org.jruby.Main"
     args = ["-rjars/setup", "-S", "gem", "install", "msgpack:1.1.0"]
     environment "GEM_HOME": "${buildDir}/dependencyGems"
-    // This environment variable is necessary to avoid `gem install` error
-    // on a Windows in GitHub Actions.
+    // TODO: Remove this environment variable DEBUG_RESOLVER once a newer OpenJDK is available.
+    // This environment variable is necessary to avoid `gem install` error on a Windows in GitHub Actions.
+    //
     // See also:
     // https://github.com/jruby/jruby/issues/7182#issuecomment-1109615503
+    // https://bugs.openjdk.java.net/browse/JDK-8285445
     environment "DEBUG_RESOLVER": "1"
 }
 
