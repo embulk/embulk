@@ -23,9 +23,19 @@ public class PageImpl extends Page {
     private final Buffer buffer;
     private List<String> stringReferences;
     private List<ImmutableValue> valueReferences;
+    private final LineageMetadata pageLineage;
+    //private final List<LineageMetadata> recordLineage;
 
     protected PageImpl(Buffer buffer) {
         this.buffer = buffer;
+        this.pageLineage = LineageMetadata.EMPTY;
+        // this.recordLineage = null;
+    }
+
+    PageImpl(final Buffer buffer, final LineageMetadata pageLineage, final List<LineageMetadata> recordLineage) {
+        this.buffer = buffer;
+        this.pageLineage = pageLineage;
+        //this.recordLineage = ;
     }
 
     @SuppressWarnings("deprecation")  // Page.allocate(int) is deprecated.
@@ -70,6 +80,16 @@ public class PageImpl extends Page {
     @Override
     public ImmutableValue getValueReference(int index) {
         return valueReferences.get(index);
+    }
+
+    // @Override
+    public LineageMetadata getPageLineage() {
+        return this.pageLineage;
+    }
+
+    // @Override
+    public LineageMetadata getRecordLineage(final int recordIndex) {
+        return this.pageLineage;
     }
 
     @Override

@@ -65,4 +65,8 @@ public interface FileInput extends AutoCloseable {
     default Optional<String> hintOfCurrentInputFileNameForLogging() {
         return Optional.empty();
     }
+
+    default LineageMetadata lineageMetadata() {
+        return LineageMetadata.of();
+    }
 }

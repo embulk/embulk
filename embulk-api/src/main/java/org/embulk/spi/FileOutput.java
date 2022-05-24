@@ -52,4 +52,8 @@ public interface FileOutput extends AutoCloseable {
      */
     @Override
     void close();
+
+    default LineageMetadata lineageMetadata() {
+        return LineageMetadata.of();
+    }
 }
