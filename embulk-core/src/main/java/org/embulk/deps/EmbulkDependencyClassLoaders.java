@@ -62,7 +62,7 @@ public final class EmbulkDependencyClassLoaders {
                 System.err.println(
                         "Hidden dependencies are uninitialized. Maybe using classes loaded by Embulk's top-level ClassLoader.");
             }
-            DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(DEPENDENCIES, CLASS_LOADER);
+            DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(DEPENDENCIES, CLASS_LOADER, USE_SELF_CONTAINED_JAR_FILES.get());
         }
     }
 

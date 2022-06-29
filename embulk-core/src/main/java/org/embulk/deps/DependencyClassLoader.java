@@ -10,9 +10,9 @@ import java.util.Collection;
  * Loads classes of embulk-core's hidden dependencies.
  */
 final class DependencyClassLoader extends SelfContainedJarAwareURLClassLoader {
-    DependencyClassLoader(final Collection<Path> jarPaths, final ClassLoader parent) {
+    DependencyClassLoader(final Collection<Path> jarPaths, final ClassLoader parent, final boolean useSelfContainedJarFile) {
         // The delegation parent ClassLoader is processed by the super class URLClassLoader.
-        super(toUrls(jarPaths), parent, EmbulkSelfContainedJarFiles.CORE);
+        super(toUrls(jarPaths), parent, useSelfContainedJarFile ? EmbulkSelfContainedJarFiles.CORE : null);
     }
 
     @Override
