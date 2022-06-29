@@ -1,4 +1,19 @@
+# Required to use "Java features" from the Ruby side.
 require 'java'
+
+# Required to access JRuby-specific internal features, such as `JRuby.runtime`.
+require 'jruby' if Gem::Version.new(JRUBY_VERSION) >= Gem::Version.new('9.3')
+
+# Both of 'java' and 'jruby' should be loaded in Embulk's use-case in nature.
+#
+# Embulk had loaded only 'java' explicitly until Embulk v0.10.35.
+# It was because loading 'java' automatically loaded also 'jruby' until JRuby 9.2.
+# But, it has changed since JRuby 9.3. JRuby 9.3+ needs loading 'jruby' explicitly.
+#
+# See also: https://github.com/jruby/jruby/issues/7221#issuecomment-1133646241
+#
+# Here, Embulk limits loading 'jruby' only in JRuby 9.3+ to ensure compatibility.
+# We may remove the limitation in the future.
 
 #
 # this file is loaded by embulk/java/bootstrap.rb
