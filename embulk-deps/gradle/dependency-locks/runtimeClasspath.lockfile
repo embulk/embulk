@@ -4,7 +4,6 @@
 com.fasterxml.jackson.core:jackson-annotations:2.6.7
 com.fasterxml.jackson.core:jackson-core:2.6.7
 com.fasterxml.jackson.core:jackson-databind:2.6.7
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.6.7
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
 com.ibm.icu:icu4j:54.1.1
 commons-beanutils:commons-beanutils-core:1.8.3
