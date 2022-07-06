@@ -14,10 +14,10 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Optional;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -103,7 +103,7 @@ final class ResumeStateJacksonModule extends SimpleModule {
                 final ArrayList<Optional<TaskReport>> inputTaskReports = new ArrayList<>();
                 for (final JsonNode inputTaskReportNode : (ArrayNode) inputTaskReportsNode) {
                     if (inputTaskReportNode == null || inputTaskReportNode.isNull()) {
-                        inputTaskReports.add(Optional.<TaskReport>absent());
+                        inputTaskReports.add(Optional.<TaskReport>empty());
                     } else {
                         inputTaskReports.add(Optional.of(this.model.readObject(TaskReport.class, inputTaskReportNode.traverse())));
                     }
@@ -117,7 +117,7 @@ final class ResumeStateJacksonModule extends SimpleModule {
                 final ArrayList<Optional<TaskReport>> outputTaskReports = new ArrayList<>();
                 for (final JsonNode outputTaskReportNode : (ArrayNode) outputTaskReportsNode) {
                     if (outputTaskReportNode == null || outputTaskReportNode.isNull()) {
-                        outputTaskReports.add(Optional.<TaskReport>absent());
+                        outputTaskReports.add(Optional.<TaskReport>empty());
                     } else {
                         outputTaskReports.add(Optional.of(this.model.readObject(TaskReport.class, outputTaskReportNode.traverse())));
                     }
