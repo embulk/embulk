@@ -32,6 +32,9 @@ import org.embulk.exec.ResumeState;
 import org.embulk.exec.SystemConfigModule;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.JRubyScriptingModule;
+import org.embulk.plugin.PluginClassLoaderFactory;
+import org.embulk.plugin.PluginClassLoaderFactoryImpl;
+import org.embulk.plugin.maven.MavenPluginSource;
 import org.embulk.spi.BufferAllocator;
 import org.embulk.spi.DecoderPlugin;
 import org.embulk.spi.EncoderPlugin;
@@ -62,7 +65,8 @@ public class EmbulkEmbed {
             final LinkedHashMap<String, Class<? extends InputPlugin>> inputPlugins,
             final LinkedHashMap<String, Class<? extends OutputPlugin>> outputPlugins,
             final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins,
-            final EmbulkSystemProperties embulkSystemProperties) {
+            final EmbulkSystemProperties embulkSystemProperties,
+            final boolean keepsMavenPluginSource) {
         this.injector = injector;
         this.decoderPlugins = Collections.unmodifiableMap(decoderPlugins);
         this.encoderPlugins = Collections.unmodifiableMap(encoderPlugins);
@@ -76,6 +80,16 @@ public class EmbulkEmbed {
         this.outputPlugins = Collections.unmodifiableMap(outputPlugins);
         this.parserPlugins = Collections.unmodifiableMap(parserPlugins);
         this.embulkSystemProperties = embulkSystemProperties;
+        this.keepsMavenPluginSource = keepsMavenPluginSource;
+        if (keepsMavenPluginSource) {
+            this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
+                    (PARENT_FIRST_PACKAGES != null) ? PARENT_FIRST_PACKAGES : Collections.unmodifiableSet(new HashSet<>()),
+                    (PARENT_FIRST_RESOURCES != null) ? PARENT_FIRST_RESOURCES : Collections.unmodifiableSet(new HashSet<>()));
+            this.mavenPluginSource = new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory);
+        } else {
+            this.pluginClassLoaderFactory = null;
+            this.mavenPluginSource = null;
+        }
 
         this.bulkLoader = injector.getInstance(BulkLoader.class);
         this.guessExecutor = injector.getInstance(GuessExecutor.class);
@@ -98,6 +112,7 @@ public class EmbulkEmbed {
             this.embulkSystemPropertiesBuilt = new Properties();
             this.moduleOverrides = new ArrayList<>();
             this.started = false;
+            this.keepsMavenPluginSource = false;
         }
 
         public Bootstrap builtinDecoderPlugin(final String name, final Class<? extends DecoderPlugin> decoderImpl) {
@@ -157,6 +172,11 @@ public class EmbulkEmbed {
 
         public Bootstrap setEmbulkSystemProperties(final Properties propertiesGiven) {
             this.embulkSystemPropertiesBuilt = propertiesGiven;
+            return this;
+        }
+
+        public Bootstrap keepMavenPluginSource() {
+            this.keepsMavenPluginSource = true;
             return this;
         }
 
@@ -247,7 +267,8 @@ public class EmbulkEmbed {
                     inputPlugins,
                     outputPlugins,
                     parserPlugins,
-                    embulkSystemProperties);
+                    embulkSystemProperties,
+                    this.keepsMavenPluginSource);
         }
 
         @Deprecated
@@ -274,6 +295,8 @@ public class EmbulkEmbed {
         private final LinkedHashMap<String, Class<? extends ParserPlugin>> parserPlugins;
 
         private boolean started;
+
+        private boolean keepsMavenPluginSource;
     }
 
     public Injector getInjector() {
@@ -399,6 +422,10 @@ public class EmbulkEmbed {
         }
         for (final Map.Entry<String, Class<? extends ParserPlugin>> parserPlugin : this.parserPlugins.entrySet()) {
             builder.registerParserPlugin(parserPlugin.getKey(), parserPlugin.getValue());
+        }
+        if (this.keepsMavenPluginSource) {
+            builder.setPluginClassLoaderFactory(this.pluginClassLoaderFactory);
+            builder.setMavenPluginSource(this.mavenPluginSource);
         }
         return builder
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
@@ -545,4 +572,8 @@ public class EmbulkEmbed {
     private final BulkLoader bulkLoader;
     private final GuessExecutor guessExecutor;
     private final PreviewExecutor previewExecutor;
+
+    private final boolean keepsMavenPluginSource;
+    private final PluginClassLoaderFactory pluginClassLoaderFactory;
+    private final MavenPluginSource mavenPluginSource;
 }
