@@ -246,10 +246,10 @@ public class ExecSessionInternal extends ExecSession {
                 embulkSystemProperties,
                 builtinPluginSource,
                 (mavenPluginSource == null)
-                        ? new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory)
+                        ? new MavenPluginSource(injector, embulkSystemProperties, this.pluginClassLoaderFactory)
                         : mavenPluginSource,
-                new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
-                new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));
+                new SelfContainedPluginSource(injector, embulkSystemProperties, this.pluginClassLoaderFactory),
+                new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), this.pluginClassLoaderFactory));
 
         this.bufferAllocator = injector.getInstance(BufferAllocator.class);
 
