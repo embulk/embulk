@@ -75,6 +75,9 @@ public class ExecSessionInternal extends ExecSession {
         private Set<String> parentFirstResources;
         private Instant transactionTime;
 
+        private PluginClassLoaderFactory pluginClassLoaderFactory;
+        private MavenPluginSource mavenPluginSource;
+
         public Builder(Injector injector) {
             this.injector = injector;
             this.embulkSystemProperties = null;
@@ -82,6 +85,9 @@ public class ExecSessionInternal extends ExecSession {
             this.parentFirstPackages = null;
             this.parentFirstResources = null;
             this.transactionTime = null;
+
+            this.pluginClassLoaderFactory = null;
+            this.mavenPluginSource = null;
         }
 
         public Builder fromExecConfig(ConfigSource configSource) {
@@ -163,6 +169,16 @@ public class ExecSessionInternal extends ExecSession {
             return this;
         }
 
+        public Builder setPluginClassLoaderFactory(final PluginClassLoaderFactory pluginClassLoaderFactory) {
+            this.pluginClassLoaderFactory = pluginClassLoaderFactory;
+            return this;
+        }
+
+        public Builder setMavenPluginSource(final MavenPluginSource mavenPluginSource) {
+            this.mavenPluginSource = mavenPluginSource;
+            return this;
+        }
+
         @Deprecated  // TODO: Add setTransactionTime(Instant) if needed. But no one looks using it. May not be needed.
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
         public Builder setTransactionTime(final org.embulk.spi.time.Timestamp timestamp) {
@@ -186,7 +202,9 @@ public class ExecSessionInternal extends ExecSession {
                     this.embulkSystemProperties,
                     this.builtinPluginSourceBuilder.build(),
                     this.parentFirstPackages,
-                    this.parentFirstResources);
+                    this.parentFirstResources,
+                    this.pluginClassLoaderFactory,
+                    this.mavenPluginSource);
         }
     }
 
@@ -200,7 +218,9 @@ public class ExecSessionInternal extends ExecSession {
             final EmbulkSystemProperties embulkSystemProperties,
             final BuiltinPluginSource builtinPluginSource,
             final Set<String> parentFirstPackages,
-            final Set<String> parentFirstResources) {
+            final Set<String> parentFirstResources,
+            final PluginClassLoaderFactory pluginClassLoaderFactory,
+            final MavenPluginSource mavenPluginSource) {
         if (parentFirstPackages == null) {
             logger.warn("Parent-first packages are not set when building ExecSession. "
                         + "Use ExecSession.Builder#setParentFirstPackages.");
@@ -214,13 +234,20 @@ public class ExecSessionInternal extends ExecSession {
         this.embulkSystemProperties = embulkSystemProperties;
         this.modelManager = getModelManagerFromInjector(injector);
 
-        this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
-                (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
-                (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
+        if (pluginClassLoaderFactory == null) {
+            this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
+                    (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
+                    (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
+        } else {
+            this.pluginClassLoaderFactory = pluginClassLoaderFactory;
+        }
+
         this.pluginManager = PluginManager.with(
                 embulkSystemProperties,
                 builtinPluginSource,
-                new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
+                (mavenPluginSource == null)
+                        ? new MavenPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory)
+                        : mavenPluginSource,
                 new SelfContainedPluginSource(injector, embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(injector.getInstance(ScriptingContainerDelegate.class), pluginClassLoaderFactory));
 
