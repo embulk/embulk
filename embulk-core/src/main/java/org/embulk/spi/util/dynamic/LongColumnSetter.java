@@ -32,10 +32,8 @@ public class LongColumnSetter extends AbstractDynamicColumnSetter {
         try {
             final double roundedDouble = Math.rint(v);
             final double diff = v - roundedDouble;
-            if (diff == 0.5) {
-                lv = (long) (v + 0.5);
-            } else if (diff == -0.5) {
-                lv = (long) (v - 0.5);
+            if (Math.abs(diff) == 0.5) {
+                lv = (long) (v + Math.copySign(0.5, v));
             } else {
                 lv = (long) roundedDouble;
             }
