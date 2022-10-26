@@ -14,6 +14,7 @@ import org.embulk.spi.ExecSessionInternal;
 import org.embulk.spi.MockFormatterPlugin;
 import org.embulk.spi.MockParserPlugin;
 import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -22,27 +23,33 @@ public class EmbulkTestRuntime implements TestRule {
     private final RandomManager random;
 
     public EmbulkTestRuntime() {
-        final ModelManager model = createModelManager();
-        this.exec = ExecSessionInternal
-                .builderInternal(PooledBufferAllocator.create(), new SimpleTempFileSpaceAllocator())
-                .setModelManager(model)
-                .registerParserPlugin("mock", MockParserPlugin.class)
-                .registerFormatterPlugin("mock", MockFormatterPlugin.class)
-                .build();
         this.random = new RandomManager();
     }
 
+    private void reset() {
+        this.exec = null;
+    }
+
     public ExecSessionInternal getExec() {
-        return exec;
+        if (this.exec == null) {
+            final ModelManager model = createModelManager();
+            this.exec = ExecSessionInternal
+                    .builderInternal(PooledBufferAllocator.create(), new SimpleTempFileSpaceAllocator())
+                    .setModelManager(model)
+                    .registerParserPlugin("mock", MockParserPlugin.class)
+                    .registerFormatterPlugin("mock", MockFormatterPlugin.class)
+                    .build();
+        }
+        return this.exec;
     }
 
     public BufferAllocator getBufferAllocator() {
-        return this.exec.getBufferAllocator();
+        return this.getExec().getBufferAllocator();
     }
 
     @SuppressWarnings("deprecation")
     public ModelManager getModelManager() {
-        return this.exec.getModelManager();
+        return this.getExec().getModelManager();
     }
 
     public Random getRandom() {
@@ -55,21 +62,34 @@ public class EmbulkTestRuntime implements TestRule {
 
     @Override
     public Statement apply(Statement base, Description description) {
+        final Statement statement = new EmbulkTestWatcher().apply(base, description);
         return new Statement() {
             public void evaluate() throws Throwable {
                 try {
-                    ExecInternal.doWith(exec, new ExecAction<Void>() {
+                    ExecInternal.doWith(getExec(), new ExecAction<Void>() {
                             public Void run() {
+                                try {
+                                    statement.evaluate();
+                                } catch (final Throwable ex) {
+                                    throw new RuntimeExecutionException(ex);
+                                }
                                 return null;
                             }
                         });
                 } catch (RuntimeException ex) {
                     throw ex.getCause();
                 } finally {
-                    exec.cleanup();
+                    getExec().cleanup();
                 }
             }
         };
+    }
+
+    private class EmbulkTestWatcher extends TestWatcher {
+        @Override
+        protected void starting(final Description description) {
+            reset();
+        }
     }
 
     private static class RuntimeExecutionException extends RuntimeException {
