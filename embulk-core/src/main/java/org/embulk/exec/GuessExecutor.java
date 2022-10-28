@@ -239,6 +239,12 @@ public class GuessExecutor {
             throw new GuessedNoticeError(mergedGuessed);
         }
 
+        @Override
+        public TaskReport runWithResult(final TaskSource taskSource, final Schema schema, final FileInput input, final PageOutput output)
+        {
+            return null;
+        }
+
         private static Buffer readSample(FileInput fileInput, int sampleSize) {
             Buffer sample = BufferImpl.allocate(sampleSize);
             try {

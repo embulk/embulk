@@ -2,8 +2,6 @@ package org.embulk.exec;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -31,6 +29,10 @@ import org.embulk.spi.TaskState;
 import org.embulk.spi.util.FiltersInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class BulkLoader {
     private final EmbulkSystemProperties embulkSystemProperties;
@@ -312,7 +314,33 @@ public class BulkLoader {
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(configDiff, false, ignoredExceptions.build());
+            final List<TaskReport> allInputTaskReports = this.getAllInputTaskReports();
+            List<StatisticsFileResult> statisticsFileResults = new ArrayList<>();
+            long totalRecords = 0;
+            long successRecords = 0;
+            long errorRecords = 0;
+            for (TaskReport taskReport : allInputTaskReports) {
+                final Long totalRecordsTaskReport = taskReport.get(Long.class, "total_records", 0L);
+                final Long successRecordsTaskReport = taskReport.get(Long.class, "success_records", 0L);
+                final Long errorRecordsTaskReport = taskReport.get(Long.class, "error_records", 0L);
+                final String fileName = taskReport.get(String.class, "file_name", "");
+                if (!fileName.isEmpty()) {
+                    statisticsFileResults.add(StatisticsFileResult.StatisticsFileResultBuilder
+                            .aStatisticsFileResult()
+                            .withFileName(fileName)
+                            .withTotalRecords(totalRecordsTaskReport)
+                            .withSuccessRecords(successRecordsTaskReport)
+                            .withErrorRecords(errorRecordsTaskReport)
+                            .build());
+                }
+                totalRecords += totalRecordsTaskReport;
+                successRecords += successRecordsTaskReport;
+                errorRecords += errorRecordsTaskReport;
+            }
+
+            final StatisticsResult statisticsResult = new StatisticsResult(totalRecords, successRecords, errorRecords, statisticsFileResults);
+
+            return new ExecutionResult(configDiff, false, ignoredExceptions.build(), statisticsResult);
         }
 
         public ExecutionResult buildExecuteResultOfSkippedExecution(ConfigDiff configDiff) {

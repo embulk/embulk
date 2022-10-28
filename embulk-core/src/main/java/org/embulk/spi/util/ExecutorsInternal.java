@@ -1,6 +1,5 @@
 package org.embulk.spi.util;
 
-import java.util.List;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.AbortTransactionResource;
@@ -13,8 +12,15 @@ import org.embulk.spi.PageOutput;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.Schema;
 import org.embulk.spi.TransactionalPageOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public abstract class ExecutorsInternal {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutorsInternal.class);
+
     private ExecutorsInternal() {}
 
     public interface ProcessStateCallback {
@@ -49,6 +55,7 @@ public abstract class ExecutorsInternal {
         final TransactionalPageOutput tran = outputPlugin.open(outputTaskSource, outputSchema, taskIndex);
 
         callback.started();
+        logger.info("local debug");
         // here needs to use try-with-resource to add exception happend at close() or abort()
         // to suppressed exception. otherwise exception happend at close() or abort() overwrites
         // essential exception.

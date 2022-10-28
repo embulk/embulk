@@ -4,6 +4,7 @@ import java.time.Instant;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.type.Type;
@@ -66,5 +67,11 @@ public class MockParserPlugin implements ParserPlugin {
             }
             pageBuilder.finish();
         }
+    }
+
+    @Override
+    public TaskReport runWithResult(final TaskSource taskSource, final Schema schema, final FileInput input, final PageOutput output)
+    {
+        return null;
     }
 }

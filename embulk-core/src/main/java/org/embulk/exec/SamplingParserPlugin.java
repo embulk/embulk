@@ -160,6 +160,12 @@ public class SamplingParserPlugin implements ParserPlugin {
         throw new SampledNoticeError(buffer);
     }
 
+    @Override
+    public TaskReport runWithResult(final TaskSource taskSource, final Schema schema, final FileInput input, final PageOutput output)
+    {
+        return null;
+    }
+
     public static Buffer readSample(FileInput fileInput, int sampleBufferBytes) {
         return readSample(fileInput, BufferImpl.allocate(sampleBufferBytes), 0, sampleBufferBytes);
     }

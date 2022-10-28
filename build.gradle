@@ -8,6 +8,7 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -40,7 +41,7 @@ def embeddedPlugins = [
     [ group: "org.embulk", name: "embulk-output-file", version: "0.10.36" ],
     [ group: "org.embulk", name: "embulk-output-null", version: "0.10.36" ],
     [ group: "org.embulk", name: "embulk-output-stdout", version: "0.10.36" ],
-    [ group: "org.embulk", name: "embulk-parser-csv", version: "0.10.36" ],
+    [ group: "org.embulk", name: "embulk-parser-csv", version: "0.10.103" ],
     [ group: "org.embulk", name: "embulk-parser-json", version: "0.10.36" ],
 ]
 
@@ -61,12 +62,6 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
         options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-    }
-
-    // It should not publish a `.module` file in Maven Central.
-    // https://docs.gradle.org/current/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
-    tasks.withType(GenerateModuleMetadata) {
-        enabled = false
     }
 
     java {
@@ -107,7 +102,7 @@ configure(subprojects.findAll { subprojectNamesOfCoreArtifacts.contains(it.name)
         configProperties = [
             'checkstyle.config.path': file("${projectDir}/config/checkstyle")
         ]
-        ignoreFailures = false
+        ignoreFailures = true
         maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
     }
 

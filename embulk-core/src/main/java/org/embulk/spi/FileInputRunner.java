@@ -1,9 +1,5 @@
 package org.embulk.spi;
 
-import static org.embulk.exec.GuessExecutor.createSampleBufferConfigFromExecConfig;
-
-import java.util.ArrayList;
-import java.util.List;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -16,8 +12,18 @@ import org.embulk.exec.GuessExecutor;
 import org.embulk.exec.SamplingParserPlugin;
 import org.embulk.plugin.PluginType;
 import org.embulk.spi.util.DecodersInternal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.embulk.exec.GuessExecutor.createSampleBufferConfigFromExecConfig;
 
 public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugin {
+    private static final Logger logger = LoggerFactory.getLogger(FileInputRunner.class);
+
     private final FileInputPlugin fileInputPlugin;
 
     public FileInputRunner(FileInputPlugin fileInputPlugin) {
@@ -129,17 +135,34 @@ public class FileInputRunner implements InputPlugin, ConfigurableGuessInputPlugi
         final RunnerTask task = loadRunnerTaskFromTaskSource(taskSource);
         List<DecoderPlugin> decoderPlugins = newDecoderPlugins(task);
         ParserPlugin parserPlugin = newParserPlugin(task);
+        TaskReport taskParserReport = null;
 
         final TransactionalFileInput tran = fileInputPlugin.open(task.getFileInputTaskSource(), taskIndex);
         try (CloseResource closer = new CloseResource(tran)) {
             try (AbortTransactionResource aborter = new AbortTransactionResource(tran)) {
                 FileInput fileInput = DecodersInternal.open(decoderPlugins, task.getDecoderTaskSources(), tran);
                 closer.closeThis(fileInput);
-                parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
+                try {
+                    Method[] allMethods = ParserPlugin.class.getDeclaredMethods();
+                    for (Method method : allMethods) {
+                        String mname = method.getName();
+                        if ("runWithResult".equals(mname)) {
+                            method.setAccessible(true);
+                            taskParserReport = (TaskReport) method.invoke(parserPlugin, task.getParserTaskSource(), schema, fileInput, output);
+                            taskParserReport.set("task_index", taskIndex);
+                            taskParserReport.set("file_name", taskSource.getNested("FileInputTaskSource").get(List.class, "Files").get(taskIndex).toString());
+                            logger.info("Result of CSV parser {}", taskParserReport);
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.info("error when calling runWithResult", e);
+                    logger.info("call back to old parser spi");
+                    parserPlugin.run(task.getParserTaskSource(), schema, fileInput, output);
+                }
 
-                TaskReport report = tran.commit();  // TODO check output.finish() is called. wrap
+                tran.commit();  // TODO check output.finish() is called. wrap
                 aborter.dontAbort();
-                return report;
+                return taskParserReport;
             }
         }
     }

@@ -17,6 +17,7 @@
 package org.embulk.spi;
 
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 
 /**
@@ -69,4 +70,6 @@ public interface ParserPlugin {
      * @since 0.4.0
      */
     void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output);
+
+    TaskReport runWithResult(TaskSource taskSource, Schema schema, FileInput input, PageOutput output);
 }
