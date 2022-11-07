@@ -1,0 +1,204 @@
+---
+EEP: unnumbered
+Title: EEP Purpose and Guidelines
+Author: dmikurube
+Status: Draft
+Type: Process
+Created: 2022-11-07
+---
+
+What is an EEP?
+================
+
+EEP stands for Embulk Enhancement Proposal. An EEP is a design document providing information to the Embulk community, or describing a new feature for Embulk or its processes or environment. The EEP should provide a concise technical specification of the feature and a rationale for the feature.
+
+We intend EEPs to be the primary mechanisms for proposing major new features, for collecting community input on an issue, and for documenting the design decisions that have gone into Embulk. The EEP author is responsible for building consensus within the community, and documenting dissenting opinions.
+
+Because the EEPs are maintained as Markdown files in Embulk's core Git repository, their revision history is the historical record of the feature proposal. This historical record is available by the normal git commands for retrieving older revisions, and can also be browsed [on GitHub](https://github.com/embulk/embulk).
+
+Jfyi, the EEP concept and workflow started largely inspired by [Python PEP](https://peps.python.org/pep-0001/), which is placed in the public domain, or under the [CC0-1.0-Universal](https://creativecommons.org/publicdomain/zero/1.0/deed.en) license.
+
+EEP Audience
+============
+
+The typical primary audience for EEPs are the core developers of Embulk, and the core team, as well as developers of Embulk plugins, and related librarires.
+
+However, other parts of the Embulk community may also choose to use the process (particularly for Informational EEPs) to document expected SPI conventions and to manage complex design coordination problems that require collaboration across multiple projects.
+
+EEP Types
+=========
+
+There are three kinds of EEP:
+
+1. A **Standards Track** EEP describes a new feature or implementation for Embulk. It may also describe an interoperability standard that will be supported outside the standard library for current Embulk versions before a subsequent EEP adds standard library support in a future version.
+2. An **Informational** EEP describes an Embulk design issue, or provides general guidelines or information to the Embulk community, but does not propose a new feature. Informational EEPs do not necessarily represent an Embulk community consensus or recommendation, so users and implementers are free to ignore Informational EEPs or follow their advice.
+3. A **Process** EEP describes a process surrounding Embulk, or proposes a change to (or an event in) a process. Process EEPs are like Standards Track EEPs, but apply to areas other than the Embulk software implementation itself. They may propose an implementation, but not to Embulk's codebase; they often require community consensus; unlike Informational EEPs, they are more than recommendations, and users are typically not free to ignore them. Examples include procedures, guidelines, changes to the decision-making process, and changes to the tools or environment used in Embulk development. Any meta-EEP is also considered a Process EEP.
+
+EEP Workflow
+=============
+
+Core committers
+----------------
+
+Embulk's "core committers" refers to a set of people who have permissions to make changes directly in the codebase of the Embulk core.
+
+Core team
+----------
+
+Embulk's "core team" refers to a union of the following three sets of people, which may have intersections.
+
+* core committers (explained above)
+* key plugin developers
+* key user representatives
+
+BDFL
+-----
+
+The Embulk community does not intend to have the [Benevolent Dictator For Life](https://en.wikipedia.org/wiki/Benevolent_dictator_for_life), so-called "BDFL".
+
+The community may still need a final decision maker until the community setup gets mature. Dai Mikurube ([@dmikurube](https://github.com/dmikurube)) is taking the part reluctantly for a while as of 2022, as the longest core maintainer who took over from the original authors. However, he wishes that future decisions would be made by the core team and the community, and he would be deposed.
+
+EEP Editors
+------------
+
+The EEP editors check if an EEP proposal is ready to start technical discussions. For example, the editors may reject an EEP proposal if it seems to be too unfocused or, too broad, or not to be following the EEP style. Minor errors may be corrected by the editors, though.
+
+The core team members also take the editor role on EEPs.
+
+Start with an idea for Embulk
+------------------------------
+
+The EEP process begins with a new idea for Embulk. It is highly recommended that a single EEP contain a single key proposal, or a single new idea; the more focused the EEP, the more successful it tends to be. The editors reserve the right to reject EEP proposals if they appear too unfocused, or too broad. If in doubt, split your EEP into several well-focused ones. Quick kaizens and bug fixes don't need an EEP. Issues and pull requests can be submitted directly to the [Embulk's core Git repository](https://github.com/embulk/embulk).
+
+Each EEP must have a champion -- someone who writes the EEP using the style and format described below, shepherds the discussions in the appropriate forums, and attempts to build community consensus around the idea. The EEP champion (a.k.a. Author) should first attempt to ascertain whether the idea is EEP-able. Posting to the ["Ideas" category of Embulk's GitHub Discussions](https://github.com/orgs/embulk/discussions/categories/ideas) is usually the best way to go about this.
+
+Vetting an idea publicly before going as far as writing an EEP is meant to save the potential author time. Many ideas have been brought forward for changing Embulk that have been rejected for various reasons. Asking the Embulk community first if an idea is original helps prevent too much time being spent on something that is guaranteed to be rejected based on prior discussions (searching the internet does not always do the trick). It also helps to make sure the idea is applicable to the entire community and not just the author. Just because an idea sounds good to the author does not mean it will work for most people in most areas where Embulk is used.
+
+Once the champion has asked the Embulk community as to whether an idea has any chance of acceptance, a draft EEP should be presented to the appropriate venue mentioned above. This gives the author a chance to flesh out the draft EEP to make properly formatted, of high quality, and to address initial concerns about the proposal.
+
+Submitting an EEP
+------------------
+
+Following the initial discussion above, the workflow varies based on whether any of the EEP's co-authors are in the core committers. If one or more of the EEP's co-authors are core committers, they are responsible for following the process outlined below. Otherwise (i.e. none of the co-authors are core committers), then the EEP author(s) will need to find a sponsor for the EEP.
+
+Ideally, a core committer sponsor is identified, but non-core commiter sponsors may also be selected from the core team based on a discussion in the core team. The sponsor's job is to provide guidance to the EEP author to help them through the logistics of the EEP process (somewhat acting like a mentor). Being a sponsor does **not** disqualify that person from becoming a co-author later on. The sponsor of a EEP is recorded in the "Sponsor:" field of the header.
+
+Once the sponsor or the core committer(s) co-authoring the EEP deem the EEP ready for submission, the proposal should be submitted as a draft EEP as a [pull request for Embulk's core Git repository](https://github.com/embulk/embulk/pulls). The draft must be written in the EEP style as described below, else it will fail review immediately (although minor errors may be corrected by the editors).
+
+The standard EEP workflow is:
+
+* You, the EEP author, fork [Embulk's core Git repository](https://github.com/embulk/embulk), and create a file named `draft-(summary-of-your-proposal).md` under `/docs/eeps/` that contains your new EEP.
+
+* In the "Type:" header field, enter "Standards Track", "Informational", or "Process" as appropriate, and for the "Status:" field enter "Draft". For full details, see the section of "EEP Header Preamble".
+
+* Push this to your GitHub fork, and submit it as a pull request.
+
+* The core team will review your pull request.
+  * If the reviewers conclude not to adopt the proposal at the moment, the pull request will be just declined.
+    * It normally should not happen because the pull request should already have passed the initial discussion above, and should have a sponsor.
+  * If the pull request does not seem ready for approval, the reviewers will send it back to the author for revision.
+  * Once the reviewers conclude to consider adopting the proposal, the pull request will be merged.
+    * The core committers may or may not assign your EEP a number when merging.
+    * A number will be assigned to the EEP, and its status will be "Accepted" immediately, if the core committers conclude that the EEP is promising enough. The filename needs to be renamed to `XXXX.md`, where "XXXX" is the assigned EEP number.
+    * No number will be assigned to the EEP, and its status will be kept "Draft" at that time, if the core committers consider it is worth discussing more, but do not conclude to accept immediately.
+
+The core team would try not to deny publication of a EEP unreasonably. Reasons for denying EEP status include duplication of effort, being technically unsound, not providing proper motivation or addressing backwards compatibility, or not in keeping with the Embulk design principle.
+
+Discussing an EEP
+------------------
+
+Discussions for a Draft or Accepted EEP are not very formalized yet. The core team will try their best to discuss it in a public place, for example, GitHub Discussions, GitHub Issues, some publicly-visible chat, or else...
+
+Status of an EEP
+-----------------
+
+An EEP has one of the following status.
+
+* "Draft" if the EEP is not yet almost fixed, and some more discussions are needed.
+* "Accepted" if the EEP is assumed mostly fixed, and to be ready for implementation.
+* "Final" if the EEP has already been implemented, and released in Embulk.
+* "Rejected" if the EEP is not to be implemented, or is withdrawn.
+* "Replaced" if the EEP has reached "Final" once, but is overridden by another EEP.
+* An Informational and Process EEP may also have a status of "Active" if they are never meant to be completed.
+
+Note that any transition can happen between these status except for "Replaced" and "Active".
+
+EEP Maintenance
+----------------
+
+EEPs will be no longer substantially modified after they have reached the "Final" state. Once resolution is reached, an EEP is considered a historical document rather than a living specification. If a later EEP overrides an existing "Final" EEP, the existing EEP will be transitioned to "Replaced".
+
+Note that "Draft" or "Accepted" EEPs may be still modified according to discussions.
+
+"Active" (Informational and Process) EEPs may be updated over time to reflect changes to development practices and other details. The precise process followed in these cases will depend on the nature and purpose of the EEP in question.
+
+What belongs in a successful EEP?
+==================================
+
+Each EEP should have the following parts/sections:
+
+1. Preamble -- [RFC-2822](https://www.rfc-editor.org/rfc/rfc2822) style headers containing meta-data about the EEP, including the EEP number, a short descriptive title, the authors, the type and status of the EEP, etc. The preamble must be wedged between lines consisting of three dashes (`---`).
+
+2. Abstract -- a short (~200 word) description of the technical issue being addressed.
+
+3. Motivation -- The motivation is critical for EEPs that want to change the Embulk core, or ecosystem. It should clearly explain why the existing Embulk framework is inadequate to address the problem that the EEP solves. This can include collecting documented support for the EEP from important projects in the Embulk ecosystem. EEP submissions without sufficient motivation may be rejected.
+
+4. Rationale -- The rationale fleshes out the specification by describing why particular design decisions were made. It should describe alternative designs that were considered even though they were rejected. Recording them along with their reasoning helps people who come up with similar ideas later. The rationale should provide evidence of consensus within the community, and discuss important objections or concerns raised during discussion.
+
+5. Plugin SPI Changes -- Any modification on the existing Embulk plugin SPI should be described technically detailed enough. Note that an EEP must come first before any modification (addition, update, and/or removal) on the Embulk plugin SPI.
+
+6. Backwards Compatibility -- All EEPs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The EEP must explain how the author proposes to deal with these incompatibilities. EEP submissions without a sufficient backwards compatibility treatise may be rejected outright.
+
+7. Security Implications -- If there are security concerns in relation to the EEP, those concerns should be explicitly written out to make sure reviewers of the EEP are aware of them.
+
+8. Open Issues -- While an EEP is in Draft, ideas can come up which warrant further discussion. Those ideas should be recorded so people know that they are being thought about, but do not have a concrete resolution. This helps make sure all issues required for the EEP to be ready for consideration are complete and reduces people duplicating prior discussion.
+
+9. Copyright/license -- Every new EEP must be placed under the [CC0-1.0-Universal](https://creativecommons.org/publicdomain/zero/1.0/deed.en).
+
+EEP Formats and Templates
+==========================
+
+EEPs are UTF-8 encoded text files using the [GitHub Flavored Markdown](https://github.github.com/gfm/) format.
+
+EEP Header Preamble
+====================
+
+Each EEP must begin with an [RFC-2822](https://www.rfc-editor.org/rfc/rfc2822) style header preamble, which are sandwiched in the middle of lines consisting of three dashes (`---`). The headers must appear in the following order. Headers marked with "*" are optional and are described below. All other headers are required.
+
+```
+  ---
+  EEP: <eep number> (should be "unnumbered" in Draft EEPs)
+  Title: <eep title>
+  Author: <comma-separated list of authors' GitHub account(s)>
+* Sponsor: <comma-separated list of sponsors' GitHub account(s)>
+  Status: <Draft | Accepted | Final | Rejected | Replaced | Active >
+  Type: <Standards Track | Informational | Process>
+* Content-Type: text/markdown
+  Created: <date created on, in yyyy-mm-dd format>
+* Post-History: <comma-separated list of dates, in yyyy-mm-dd format>
+* Replaces: <eep number>
+  ---
+```
+
+Auxiliary Files
+================
+
+EEPs may include auxiliary files such as diagrams. Such files should be named `eep-XXXX-Y.ext`, where `XXXX` is the EEP number, `Y` is a serial number (starting at 1), and `ext` is replaced by the actual file extension (e.g. `png`). When the EEP is Draft, the file names should be named `draft-(summary-of-your-proposal)-Y.ext`.
+
+Alternatively, all support files may be placed in a subdirectory called `eep-XXXX/` where `XXXX` is the EEP number, or `draft-(summary-of-your-proposal)/`. When using a subdirectory, there are no constraints on the names used in files.
+
+Transferring EEP Ownership
+===========================
+
+It occasionally becomes necessary to transfer ownership of EEPs to a new champion. In general, it is preferable to retain the original author as a co-author of the transferred EEP, but that's really up to the original author.
+
+A good reason to transfer ownership is because the original author no longer has the time or interest in updating it or following through with the EEP process, or has fallen off the face of the 'net (i.e. is unreachable or not responding to email).
+
+A bad reason to transfer ownership is because the author doesn't agree with the direction of the EEP. One aim of the EEP process is to try to build consensus around an EEP, but if that's not possible, an author can always submit a competing EEP.
+
+If you are interested in assuming ownership of a EEP, you can also do this via pull requests.
+
+Copyright and License
+======================
+
+This document is placed under the CC0-1.0-Universal license, whichever is more permissive.
