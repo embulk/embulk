@@ -21,7 +21,7 @@ Jfyi, the EEP concept and workflow started largely inspired by [Python PEP](http
 EEP Audience
 ============
 
-The typical primary audience for EEPs are the core developers of Embulk, and the core team, as well as developers of Embulk plugins, and related librarires.
+The typical primary audience for EEPs are developers of the Embulk core, as well as developers of Embulk plugins, and related libraries.
 
 However, other parts of the Embulk community may also choose to use the process (particularly for Informational EEPs) to document expected SPI conventions and to manage complex design coordination problems that require collaboration across multiple projects.
 
@@ -81,7 +81,7 @@ Submitting an EEP
 
 Following the initial discussion above, the workflow varies based on whether any of the EEP's co-authors are in the core committers. If one or more of the EEP's co-authors are core committers, they are responsible for following the process outlined below. Otherwise (i.e. none of the co-authors are core committers), then the EEP author(s) will need to find a sponsor for the EEP.
 
-Ideally, a core committer sponsor is identified, but non-core commiter sponsors may also be selected from the core team based on a discussion in the core team. The sponsor's job is to provide guidance to the EEP author to help them through the logistics of the EEP process (somewhat acting like a mentor). Being a sponsor does **not** disqualify that person from becoming a co-author later on. The sponsor of a EEP is recorded in the "Sponsor:" field of the header.
+Ideally, a core committer sponsor is identified, but non-core committer sponsors may also be selected from the core team based on a discussion in the core team. The sponsor's job is to provide guidance to the EEP author to help them through the logistics of the EEP process (somewhat acting like a mentor). Being a sponsor does **not** disqualify that person from becoming a co-author later on. The sponsor of a EEP is recorded in the "Sponsor:" field of the header.
 
 Once the sponsor or the core committer(s) co-authoring the EEP deem the EEP ready for submission, the proposal should be submitted as a draft EEP as a [pull request for Embulk's core Git repository](https://github.com/embulk/embulk/pulls). The draft must be written in the EEP style as described below, else it will fail review immediately (although minor errors may be corrected by the editors).
 
@@ -99,7 +99,7 @@ The standard EEP workflow is:
   * If the pull request does not seem ready for approval, the reviewers will send it back to the author for revision.
   * Once the reviewers conclude to consider adopting the proposal, the pull request will be merged.
     * The core committers may or may not assign your EEP a number when merging.
-    * A number will be assigned to the EEP, and its status will be "Accepted" immediately, if the core committers conclude that the EEP is promising enough. The filename needs to be renamed to `XXXX.md`, where "XXXX" is the assigned EEP number.
+    * A number will be assigned to the EEP, and its status will be "Accepted" immediately, if the core committers conclude that the EEP is promising enough. The filename needs to be renamed to `eep-XXXX.md`, where "XXXX" is the assigned EEP number.
     * No number will be assigned to the EEP, and its status will be kept "Draft" at that time, if the core committers consider it is worth discussing more, but do not conclude to accept immediately.
 
 The core team would try not to deny publication of a EEP unreasonably. Reasons for denying EEP status include duplication of effort, being technically unsound, not providing proper motivation or addressing backwards compatibility, or not in keeping with the Embulk design principle.
