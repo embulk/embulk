@@ -176,9 +176,14 @@ Each EEP must begin with an [RFC-2822](https://www.rfc-editor.org/rfc/rfc2822) s
 * Content-Type: text/markdown
   Created: <date created on, in yyyy-mm-dd format>
 * Post-History: <comma-separated list of dates, in yyyy-mm-dd format>
+* Replaced-By: <eep number>
 * Replaces: <eep number>
   ---
 ```
+
+The Sponsor field records which developer (basically in the core team) is sponsoring the EEP. If one of the authors of the EEP is a core team member then no sponsor is necessary and thus this field should be left out.
+
+EEPs may also have a Replaced-By header indicating that a EEP has been rendered obsolete by a later document; the value is the number of the EEP that replaces the current document. The newer EEP must have a Replaces header containing the number of the EEP that it rendered obsolete.
 
 Auxiliary Files
 ================
