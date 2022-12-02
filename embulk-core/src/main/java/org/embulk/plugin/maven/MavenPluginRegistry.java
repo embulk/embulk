@@ -61,15 +61,15 @@ final class MavenPluginRegistry {
         return Collections.unmodifiableMap(registries);
     }
 
-    Class<?> lookup(final PluginType pluginType) throws PluginSourceNotMatchException  {
+    Class<?> lookup(final PluginType pluginType) throws PluginSourceNotMatchException {
+        final MavenPluginPaths pluginPaths = this.findPluginPaths(pluginType);
+        final MavenPluginType mavenPluginType = pluginPaths.getPluginType();
+
         synchronized (this.cacheMap) {  // Synchronize between this.cacheMap.get() and this.cacheMap.put().
-            final Class<?> pluginMainClass = this.cacheMap.get(pluginType);
+            final Class<?> pluginMainClass = this.cacheMap.get(mavenPluginType);
             if (pluginMainClass != null) {
                 return pluginMainClass;
             }
-
-            final MavenPluginPaths pluginPaths = this.findPluginPaths(pluginType);
-            final MavenPluginType mavenPluginType = pluginPaths.getPluginType();
 
             final Class<?> loadedPluginMainClass;
             try (final JarPluginLoader loader = JarPluginLoader.load(
