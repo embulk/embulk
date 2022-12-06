@@ -17,17 +17,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
@@ -69,7 +74,7 @@ class TaskSerDe {
         private final ModelManagerDelegateImpl model;
 
         private final Class<?> iface;
-        private final Multimap<String, FieldEntry> mappings;
+        private final Map<String, List<FieldEntry>> mappings;
 
         public TaskDeserializer(ObjectMapper nestedObjectMapper, ModelManagerDelegateImpl model, Class<T> iface) {
             this.nestedObjectMapper = nestedObjectMapper;
@@ -78,9 +83,9 @@ class TaskSerDe {
             this.mappings = getterMappings(iface);
         }
 
-        protected Multimap<String, FieldEntry> getterMappings(Class<?> iface) {
-            ImmutableMultimap.Builder<String, FieldEntry> builder = ImmutableMultimap.builder();
-            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface).entries()) {
+        protected Map<String, List<FieldEntry>> getterMappings(Class<?> iface) {
+            final LinkedHashMap<String, ArrayList<FieldEntry>> builder = new LinkedHashMap<>();
+            for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface)) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
 
@@ -98,9 +103,24 @@ class TaskSerDe {
                     continue;
                 }
                 final Optional<String> defaultJsonString = getDefaultJsonString(getterMethod);
-                builder.put(jsonKey.get(), new FieldEntry(fieldName, fieldType, defaultJsonString));
+                builder.compute(jsonKey.get(), (key, oldValue) -> {
+                    final ArrayList<FieldEntry> newValue;
+                    if (oldValue == null) {
+                        newValue = new ArrayList<>();
+                    } else {
+                        newValue = oldValue;
+                    }
+                    newValue.add(new FieldEntry(fieldName, fieldType, defaultJsonString));
+                    return newValue;
+                });
             }
-            return builder.build();
+            return Collections.unmodifiableMap(StreamSupport.stream(builder.entrySet().spliterator(), false)
+                    .map(entry -> new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
+                    .collect(Collectors.toMap(
+                            Map.Entry<String, List<FieldEntry>>::getKey,
+                            Map.Entry<String, List<FieldEntry>>::getValue,
+                            (e1, e2) -> e1,
+                            LinkedHashMap::new)));
         }
 
         protected Optional<String> getJsonKey(final Method getterMethod, final String fieldName) {
@@ -115,7 +135,12 @@ class TaskSerDe {
         @SuppressWarnings("unchecked")
         public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
-            HashMultimap<String, FieldEntry> unusedMappings = HashMultimap.<String, FieldEntry>create(mappings);
+            final ArrayList<Map.Entry<String, FieldEntry>> unusedMappings = new ArrayList<>();
+            for (final Map.Entry<String, List<FieldEntry>> entry : this.mappings.entrySet()) {
+                for (final FieldEntry fieldEntry : entry.getValue()) {
+                    unusedMappings.add(new AbstractMap.SimpleImmutableEntry(entry.getKey(), fieldEntry));
+                }
+            }
 
             String key;
             JsonToken current = jp.getCurrentToken();
@@ -129,7 +154,7 @@ class TaskSerDe {
             for (; key != null; key = jp.nextFieldName()) {
                 JsonToken t = jp.nextToken(); // to get to value
                 final Collection<FieldEntry> fields = mappings.get(key);
-                if (fields.isEmpty()) {
+                if (fields == null || fields.isEmpty()) {
                     jp.skipChildren();
                 } else {
                     final JsonNode children = nestedObjectMapper.readValue(jp, JsonNode.class);
@@ -139,7 +164,7 @@ class TaskSerDe {
                             throw new JsonMappingException("Setting null to a task field is not allowed. Use Optional<T> to represent null.");
                         }
                         objects.put(field.getName(), value);
-                        if (!unusedMappings.remove(key, field)) {
+                        if (!unusedMappings.remove(new AbstractMap.SimpleImmutableEntry(key, field))) {
                             throw new JsonMappingException(String.format(
                                     "FATAL: Expected to be a bug in Embulk. Mapping \"%s: (%s) %s\" might have already been processed, or not in %s.",
                                     key,
@@ -152,7 +177,7 @@ class TaskSerDe {
             }
 
             // set default values
-            for (Map.Entry<String, FieldEntry> unused : unusedMappings.entries()) {
+            for (final Map.Entry<String, FieldEntry> unused : unusedMappings) {
                 FieldEntry field = unused.getValue();
                 if (field.getDefaultJsonString().isPresent()) {
                     Object value = nestedObjectMapper.readValue(field.getDefaultJsonString().get(), new GenericTypeReference(field.getType()));
@@ -197,6 +222,25 @@ class TaskSerDe {
 
             public Optional<String> getDefaultJsonString() {
                 return defaultJsonString;
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(this.name, this.type, this.defaultJsonString);
+            }
+
+            @Override
+            public boolean equals(final Object otherObject) {
+                if (this == otherObject) {
+                    return true;
+                }
+                if (!(otherObject instanceof FieldEntry)) {
+                    return false;
+                }
+                final FieldEntry other = (FieldEntry) otherObject;
+                return Objects.equals(this.name, other.name)
+                        && Objects.equals(this.type, other.type)
+                        && Objects.equals(this.defaultJsonString, other.defaultJsonString);
             }
         }
     }

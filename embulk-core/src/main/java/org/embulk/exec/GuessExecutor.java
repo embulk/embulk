@@ -1,6 +1,5 @@
 package org.embulk.exec;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -216,12 +215,12 @@ public class GuessExecutor {
             Buffer sample = readSample(input, guessParserSampleBufferBytes);
 
             // load guess plugins
-            ImmutableList.Builder<GuessPlugin> builder = ImmutableList.builder();
+            final ArrayList<GuessPlugin> builder = new ArrayList<>();
             for (PluginType guessType : task.getGuessPluginTypes()) {
                 GuessPlugin guess = ExecInternal.newPlugin(GuessPlugin.class, guessType);
                 builder.add(guess);
             }
-            List<GuessPlugin> guesses = builder.build();
+            final List<GuessPlugin> guesses = Collections.unmodifiableList(builder);
 
             // run guess plugins
             ConfigSource mergedConfig = originalConfig.deepCopy();
@@ -262,12 +261,12 @@ public class GuessExecutor {
                 return guessed;
             } else {
                 List<ConfigSource> assumedDecoders = originalConfig.get(ConfigSourceList.class, "decoders", new ConfigSourceList());
-                ImmutableList.Builder<ConfigSource> added = ImmutableList.builder();
+                final ArrayList<ConfigSource> added = new ArrayList<>();
                 for (ConfigSource assuemed : assumedDecoders) {
                     added.add(Exec.newConfigSource());
                 }
                 added.addAll(guessedDecoders);
-                return guessed.set("decoders", added.build());
+                return guessed.set("decoders", Collections.unmodifiableList(added));
             }
         }
 

@@ -1,13 +1,16 @@
 package org.embulk.exec;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 import java.util.List;
+import java.util.MissingFormatArgumentException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicLong;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.TaskReport;
@@ -64,6 +67,30 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             logger.info("Using local thread executor with max_threads={} / tasks={}", maxThreads, inputTaskCount);
             return new DirectExecutor(maxThreads, inputTaskCount);
         }
+    }
+
+    private static class ExecutorThreadFactory implements ThreadFactory {
+        private ExecutorThreadFactory(final String nameFormat) {
+            try {
+                String.format(nameFormat, 0);
+            } catch (final IllegalFormatException ex) {
+                throw new MissingFormatArgumentException(
+                        "ExecutorThreadFactory must be initialized with nameFormat including '%d'.");
+            }
+            this.nameFormat = nameFormat;
+            this.count = new AtomicLong(0);
+        }
+
+        @Override
+        public Thread newThread(final Runnable runnable) {
+            final Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+            thread.setName(String.format(this.nameFormat, this.count.getAndIncrement()));
+            thread.setDaemon(true);
+            return thread;
+        }
+
+        private final String nameFormat;
+        private final AtomicLong count;
     }
 
     private abstract static class AbstractLocalExecutor implements Executor, AutoCloseable {
@@ -146,11 +173,7 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
 
         public DirectExecutor(int maxThreads, int taskCount) {
             super(taskCount, taskCount);
-            this.executor = Executors.newFixedThreadPool(maxThreads,
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("embulk-executor-%d")
-                            .setDaemon(true)
-                            .build());
+            this.executor = Executors.newFixedThreadPool(maxThreads, new ExecutorThreadFactory("embulk-executor-%d"));
         }
 
         @Override
@@ -203,16 +226,8 @@ public class LocalExecutorPlugin implements ExecutorPlugin {
             this.inputTaskCount = inputTaskCount;
             this.scatterCount = scatterCount;
             this.inputExecutor = Executors.newFixedThreadPool(
-                    Math.max(maxThreads / scatterCount, 1),
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("embulk-input-executor-%d")
-                            .setDaemon(true)
-                            .build());
-            this.outputExecutor = Executors.newCachedThreadPool(
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("embulk-output-executor-%d")
-                            .setDaemon(true)
-                            .build());
+                    Math.max(maxThreads / scatterCount, 1), new ExecutorThreadFactory("embulk-input-executor-%d"));
+            this.outputExecutor = Executors.newCachedThreadPool(new ExecutorThreadFactory("embulk-output-executor-%d"));
         }
 
         @Override

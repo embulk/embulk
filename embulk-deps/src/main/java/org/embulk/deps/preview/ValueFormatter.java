@@ -2,7 +2,6 @@ package org.embulk.deps.preview;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import java.text.NumberFormat;
 import java.time.Instant;
@@ -28,7 +27,6 @@ final class ValueFormatter {
         this.objectMapper.registerModule(new ToStringJacksonModule());
         this.objectMapper.registerModule(new ToStringMapJacksonModule());
         // PreviewPrinter would not need TypeJacksonModule, ColumnJacksonModule, and SchemaJacksonModule.
-        this.objectMapper.registerModule(new GuavaModule());
         this.objectMapper.registerModule(new Jdk8Module());
     }
 

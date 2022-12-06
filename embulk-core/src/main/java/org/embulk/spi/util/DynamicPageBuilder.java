@@ -1,8 +1,8 @@
 package org.embulk.spi.util;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.embulk.config.Config;
@@ -34,27 +34,6 @@ public class DynamicPageBuilder implements AutoCloseable {
         public Map<String, ConfigSource> getColumnOptions();
     }
 
-    public static interface ColumnOption extends Task {
-        // DynamicPageBuilder is used for inputs, then datetime parsing.
-        // Ruby's strptime does not accept numeric prefixes in specifiers such as "%6N".
-        @Config("timestamp_format")
-        @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%N\"")
-        public String getTimestampFormatString();
-
-        // org.embulk.spi.time.TimestampFormat is deprecated, but the getter returns TimestampFormat for compatibility.
-        // It won't be removed very soon at least until Embulk v0.10.
-        @Deprecated
-        public default org.embulk.spi.time.TimestampFormat getTimestampFormat() {
-            return new org.embulk.spi.time.TimestampFormat(getTimestampFormatString());
-        }
-
-        @Config("timezone")
-        @ConfigDefault("null")
-        public Optional<String> getTimeZoneId();
-
-        // The method has been removed: public default Optional<org.joda.time.DateTimeZone> getTimeZone()
-    }
-
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1321
     private DynamicPageBuilder(
             final DynamicColumnSetterFactory factory,
@@ -63,15 +42,15 @@ public class DynamicPageBuilder implements AutoCloseable {
             final PageOutput output) {
         this.pageBuilder = new PageBuilder(allocator, schema, output);
         this.schema = schema;
-        ImmutableList.Builder<DynamicColumnSetter> setters = ImmutableList.builder();
-        ImmutableMap.Builder<String, DynamicColumnSetter> lookup = ImmutableMap.builder();
+        final ArrayList<DynamicColumnSetter> setters = new ArrayList<>();
+        final LinkedHashMap<String, DynamicColumnSetter> lookup = new LinkedHashMap<>();
         for (Column c : schema.getColumns()) {
             DynamicColumnSetter setter = factory.newColumnSetter(pageBuilder, c);
             setters.add(setter);
             lookup.put(c.getName(), setter);
         }
-        this.setters = setters.build().toArray(new DynamicColumnSetter[0]);
-        this.columnLookup = lookup.build();
+        this.setters = setters.toArray(new DynamicColumnSetter[0]);
+        this.columnLookup = Collections.unmodifiableMap(lookup);
     }
 
     public static DynamicPageBuilder createWithTimestampMetadataFromBuilderTask(
