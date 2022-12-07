@@ -2,18 +2,19 @@ package org.embulk.spi.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
+import org.embulk.spi.TestUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,8 +57,13 @@ public class TestLineDecoder {
     }
 
     private static LineDecoder newDecoder(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
-        ListFileInput input = new ListFileInput(ImmutableList.of(buffers));
+        ListFileInput input = new ListFileInput(toListListBuffer(TestUtils.listOf(buffers)));
         return new LineDecoder(input, getExampleConfig(charset, newline, lineDelimiter));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<List<Buffer>> toListListBuffer(final List<?> list) {
+        return (List<List<Buffer>>) list;
     }
 
     private static List<String> doDecode(Charset charset, Newline newline, List<Buffer> buffers) {
@@ -65,7 +71,7 @@ public class TestLineDecoder {
     }
 
     private static List<String> doDecode(Charset charset, Newline newline, LineDelimiter lineDelimiter, List<Buffer> buffers) {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        final ArrayList<String> builder = new ArrayList<>();
         LineDecoder decoder = newDecoder(charset, newline, lineDelimiter, buffers);
         decoder.nextFile();
         while (true) {
@@ -75,7 +81,7 @@ public class TestLineDecoder {
             }
             builder.add(line);
         }
-        return builder.build();
+        return Collections.unmodifiableList(builder);
     }
 
     private static List<Buffer> bufferList(Charset charset, String... sources) throws UnsupportedCharsetException {
@@ -93,7 +99,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "test1\ntest2\ntest3\n"));
-        assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
+        assertEquals(TestUtils.listOf("test1", "test2", "test3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -102,7 +108,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\r\ntest3\r\n"));
-        assertEquals(ImmutableList.of("test1", "test2", "test3"), decoded);
+        assertEquals(TestUtils.listOf("test1", "test2", "test3"), decoded);
     }
 
     @Test
@@ -110,7 +116,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "test1"));
-        assertEquals(ImmutableList.of("test1"), decoded);
+        assertEquals(TestUtils.listOf("test1"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -119,7 +125,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "t", "1", "\n", "t", "2"));
-        assertEquals(ImmutableList.of("t1", "t2"), decoded);
+        assertEquals(TestUtils.listOf("t1", "t2"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -128,7 +134,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 bufferList(StandardCharsets.UTF_8, "t", "1", "\r\n", "t", "2", "\r", "\n", "t3"));
-        assertEquals(ImmutableList.of("t1", "t2", "t3"), decoded);
+        assertEquals(TestUtils.listOf("t1", "t2", "t3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -137,7 +143,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "てすと1\nテスト2\nてすと3\n"));
-        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+        assertEquals(TestUtils.listOf("てすと1", "テスト2", "てすと3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -146,7 +152,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "てすと1"));
-        assertEquals(ImmutableList.of("てすと1"), decoded);
+        assertEquals(TestUtils.listOf("てすと1"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -155,7 +161,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.LF,
                 bufferList(StandardCharsets.UTF_8, "て", "1", "\n", "す", "2"));
-        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -164,7 +170,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_8, Newline.CRLF,
                 bufferList(StandardCharsets.UTF_8, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
-        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2", "と3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -173,7 +179,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_16LE, Newline.LF,
                 bufferList(StandardCharsets.UTF_16LE, "てすと1\nテスト2\nてすと3\n"));
-        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+        assertEquals(TestUtils.listOf("てすと1", "テスト2", "てすと3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -182,7 +188,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_16LE, Newline.LF,
                 bufferList(StandardCharsets.UTF_16LE, "てすと1"));
-        assertEquals(ImmutableList.of("てすと1"), decoded);
+        assertEquals(TestUtils.listOf("てすと1"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -191,7 +197,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_16LE, Newline.LF,
                 bufferList(StandardCharsets.UTF_16LE, "て", "1", "\n", "す", "2"));
-        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -200,7 +206,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 StandardCharsets.UTF_16LE, Newline.CRLF,
                 bufferList(StandardCharsets.UTF_16LE, "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
-        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2", "と3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -209,7 +215,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 Charset.forName("ms932"), Newline.LF,
                 bufferList(Charset.forName("ms932"), "てすと1\nテスト2\nてすと3\n"));
-        assertEquals(ImmutableList.of("てすと1", "テスト2", "てすと3"), decoded);
+        assertEquals(TestUtils.listOf("てすと1", "テスト2", "てすと3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -218,7 +224,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 Charset.forName("ms932"), Newline.LF,
                 bufferList(Charset.forName("ms932"), "てすと1"));
-        assertEquals(ImmutableList.of("てすと1"), decoded);
+        assertEquals(TestUtils.listOf("てすと1"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -227,7 +233,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 Charset.forName("ms932"), Newline.LF,
                 bufferList(Charset.forName("ms932"), "て", "1", "\n", "す", "2"));
-        assertEquals(ImmutableList.of("て1", "す2"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -236,7 +242,7 @@ public class TestLineDecoder {
         List<String> decoded = doDecode(
                 Charset.forName("ms932"), Newline.CRLF,
                 bufferList(Charset.forName("ms932"), "て", "1", "\r\n", "す", "2", "\r", "\n", "と3"));
-        assertEquals(ImmutableList.of("て1", "す2", "と3"), decoded);
+        assertEquals(TestUtils.listOf("て1", "す2", "と3"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -246,7 +252,7 @@ public class TestLineDecoder {
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.CR,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
-        assertEquals(ImmutableList.of("test1\r\ntest2", "test3\ntest4"), decoded);
+        assertEquals(TestUtils.listOf("test1\r\ntest2", "test3\ntest4"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -256,7 +262,7 @@ public class TestLineDecoder {
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.LF,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
-        assertEquals(ImmutableList.of("test1\r\ntest2\rtest3", "test4"), decoded);
+        assertEquals(TestUtils.listOf("test1\r\ntest2\rtest3", "test4"), decoded);
     }
 
     @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
@@ -266,6 +272,6 @@ public class TestLineDecoder {
                 StandardCharsets.UTF_8, Newline.CRLF,
                 LineDelimiter.CRLF,
                 bufferList(StandardCharsets.UTF_8, "test1\r\ntest2\rtest3\ntest4"));
-        assertEquals(ImmutableList.of("test1", "test2\rtest3\ntest4"), decoded);
+        assertEquals(TestUtils.listOf("test1", "test2\rtest3\ntest4"), decoded);
     }
 }

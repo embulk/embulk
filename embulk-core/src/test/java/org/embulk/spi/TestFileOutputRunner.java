@@ -6,8 +6,6 @@ import static org.msgpack.value.ValueFactory.newInteger;
 import static org.msgpack.value.ValueFactory.newMap;
 import static org.msgpack.value.ValueFactory.newString;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,18 +84,18 @@ public class TestFileOutputRunner {
         MockFileOutputPlugin fileOutputPlugin = new MockFileOutputPlugin();
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
-        ImmutableList<ImmutableMap<String, Object>> columns = ImmutableList.of(
-                ImmutableMap.<String,Object>of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
+        final List<?> columns = TestUtils.listOf(
+                TestUtils.mapOf("name", "col1", "type", "boolean", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col2", "type", "long", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col3", "type", "double", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col4", "type", "string", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col5", "type", "timestamp", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col6", "type", "json", "option", TestUtils.mapOf()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")
                 .set("formatter",
-                        ImmutableMap.of("type", "mock", "columns", columns));
+                        TestUtils.mapOf("type", "mock", "columns", columns));
         final Schema schema = config.getNested("formatter")
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
@@ -149,18 +147,18 @@ public class TestFileOutputRunner {
         MockFileOutputPlugin fileOutputPlugin = new MockFileOutputPlugin();
         final FileOutputRunner runner = new FileOutputRunner(fileOutputPlugin);
 
-        ImmutableList<ImmutableMap<String, Object>> columns = ImmutableList.of(
-                ImmutableMap.<String,Object>of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                ImmutableMap.<String,Object>of("name", "col6", "type", "json", "option", ImmutableMap.of()));
+        final List<?> columns = TestUtils.listOf(
+                TestUtils.mapOf("name", "col1", "type", "boolean", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col2", "type", "long", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col3", "type", "double", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col4", "type", "string", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col5", "type", "timestamp", "option", TestUtils.mapOf()),
+                TestUtils.mapOf("name", "col6", "type", "json", "option", TestUtils.mapOf()));
         ConfigSource config = Exec
                 .newConfigSource()
                 .set("type", "unused?")
                 .set("formatter",
-                        ImmutableMap.of("type", "mock", "columns", columns));
+                        TestUtils.mapOf("type", "mock", "columns", columns));
         final Schema schema = config.getNested("formatter")
                 .loadConfig(MockParserPlugin.PluginTask.class)
                 .getSchemaConfig().toSchema();
