@@ -68,5 +68,4 @@ dependencies {
     testImplementation project(":embulk-core")
     testImplementation project(":embulk-junit4")
     testImplementation "junit:junit:4.13.2"
-    testImplementation "com.google.guava:guava:18.0"
 }
