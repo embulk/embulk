@@ -224,9 +224,7 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:1.2.3"
     implementation "org.fusesource.jansi:jansi:1.18"
 
-    embed(project(':embulk-deps')) {
-        exclude group: 'com.google.guava', module: 'guava'  // Included in embulk-core.
-    }
+    embed project(":embulk-deps")
 
     embeddedPlugins.each { pluginArtifact ->
         embed pluginArtifact
