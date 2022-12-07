@@ -1,7 +1,5 @@
 package org.embulk.test;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import java.util.List;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigSource;
@@ -27,7 +25,9 @@ public final class PreviewResultInputPlugin implements InputPlugin {
 
     @Override
     public ConfigDiff transaction(ConfigSource config, Control control) {
-        checkState(previewResult != null, "PreviewResult object must be set");
+        if (previewResult == null) {
+            throw new IllegalStateException("PreviewResult object must be set");
+        }
         return resume(config.loadConfig(Task.class).dump(), previewResult.getSchema(), 1, control);
     }
 
