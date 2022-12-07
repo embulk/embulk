@@ -50,10 +50,6 @@ public class TestConfigSource {
     }
 
     private static interface OptionalFields extends Task {
-        @Config("guava_optional")
-        @ConfigDefault("null")
-        public com.google.common.base.Optional<String> getGuavaOptional();
-
         @Config("java_util_optional")
         @ConfigDefault("null")
         public java.util.Optional<String> getJavaUtilOptional();
@@ -121,12 +117,9 @@ public class TestConfigSource {
 
     @Test
     public void testOptionalPresent() {
-        config.set("guava_optional", "Guava");
         config.set("java_util_optional", "JavaUtil");
 
         final OptionalFields loaded = config.loadConfig(OptionalFields.class);
-        assertTrue(loaded.getGuavaOptional().isPresent());
-        assertEquals("Guava", loaded.getGuavaOptional().get());
         assertTrue(loaded.getJavaUtilOptional().isPresent());
         assertEquals("JavaUtil", loaded.getJavaUtilOptional().get());
     }
@@ -134,7 +127,6 @@ public class TestConfigSource {
     @Test
     public void testOptionalAbsent() {
         final OptionalFields loaded = config.loadConfig(OptionalFields.class);
-        assertFalse(loaded.getGuavaOptional().isPresent());
         assertFalse(loaded.getJavaUtilOptional().isPresent());
     }
 
