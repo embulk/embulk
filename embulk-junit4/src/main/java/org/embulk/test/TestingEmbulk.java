@@ -1,26 +1,19 @@
 package org.embulk.test;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.Files.newBufferedReader;
-import static java.util.Locale.ENGLISH;
-import static org.embulk.test.EmbulkTests.copyResource;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import org.embulk.EmbulkEmbed;
@@ -202,9 +195,9 @@ public class TestingEmbulk implements TestRule {
                 .fromYamlString(EmbulkTests.readResource(name));
     }
 
-    private static final List<String> SUPPORTED_TYPES = ImmutableList.of(
+    private static final List<String> SUPPORTED_TYPES = Collections.unmodifiableList(Arrays.asList(
             "boolean", "long", "double", "string", "timestamp", "json"
-    );
+    ));
 
     public static interface RunResult {
         ConfigDiff getConfigDiff();
@@ -222,42 +215,52 @@ public class TestingEmbulk implements TestRule {
 
     public class InputBuilder {
         private ConfigSource inConfig = null;
-        private List<ConfigSource> filtersConfig = ImmutableList.of();
+        private List<ConfigSource> filtersConfig = Collections.emptyList();
         private ConfigSource execConfig = newConfig();
         private Path outputPath = null;
 
         private InputBuilder() {}
 
         public InputBuilder in(ConfigSource inConfig) {
-            checkNotNull(inConfig, "inConfig");
+            if (inConfig == null) {
+                throw new NullPointerException("inConfig");
+            }
             this.inConfig = inConfig.deepCopy();
             return this;
         }
 
         public InputBuilder filters(List<ConfigSource> filtersConfig) {
-            checkNotNull(filtersConfig, "filtersConfig");
-            ImmutableList.Builder<ConfigSource> builder = ImmutableList.builder();
+            if (filtersConfig == null) {
+                throw new NullPointerException("filtersConfig");
+            }
+            final ArrayList<ConfigSource> builder = new ArrayList<>();
             for (ConfigSource filter : filtersConfig) {
                 builder.add(filter.deepCopy());
             }
-            this.filtersConfig = builder.build();
+            this.filtersConfig = Collections.unmodifiableList(builder);
             return this;
         }
 
         public InputBuilder exec(ConfigSource execConfig) {
-            checkNotNull(execConfig, "execConfig");
+            if (execConfig == null) {
+                throw new NullPointerException("execConfig");
+            }
             this.execConfig = execConfig.deepCopy();
             return this;
         }
 
         public InputBuilder outputPath(Path outputPath) {
-            checkNotNull(outputPath, "outputPath");
+            if (outputPath == null) {
+                throw new NullPointerException("outputPath");
+            }
             this.outputPath = outputPath;
             return this;
         }
 
         public ConfigDiff guess() {
-            checkState(inConfig != null, "in config must be set");
+            if (inConfig == null) {
+                throw new IllegalStateException("in config must be set");
+            }
 
             // config = {exec: execConfig, in: inConfig}
             ConfigSource config = newConfig()
@@ -276,8 +279,12 @@ public class TestingEmbulk implements TestRule {
          * @throws IOException in case of failures in file operations
          */
         public PreviewResult preview() throws IOException {
-            checkState(inConfig != null, "inputPath must be set");
-            checkState(outputPath != null, "outputPath must be set");
+            if (inConfig == null) {
+                throw new IllegalStateException("inputPath must be set");
+            }
+            if (outputPath == null) {
+                throw new IllegalStateException("outputPath must be set");
+            }
 
             // Execute preview to get PreviewResult
             ConfigSource previewConfig = newConfig()
@@ -288,7 +295,9 @@ public class TestingEmbulk implements TestRule {
             PreviewResultInputPlugin.setPreviewResult(result);
 
             String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            if (!fileName.endsWith(".csv")) {
+                throw new IllegalArgumentException("outputPath must end with .csv");
+            }
             Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
             Files.createDirectories(dir);
 
@@ -309,11 +318,17 @@ public class TestingEmbulk implements TestRule {
         }
 
         public RunResult run() throws IOException {
-            checkState(inConfig != null, "in config must be set");
-            checkState(outputPath != null, "outputPath must be set");
+            if (inConfig == null) {
+                throw new IllegalStateException("in config must be set");
+            }
+            if (outputPath == null) {
+                throw new IllegalStateException("outputPath must be set");
+            }
 
             String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            if (!fileName.endsWith(".csv")) {
+                throw new IllegalArgumentException("outputPath must end with .csv");
+            }
             Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
 
             Files.createDirectories(dir);
@@ -355,38 +370,50 @@ public class TestingEmbulk implements TestRule {
         private ParserBuilder() {}
 
         public ParserBuilder parser(ConfigSource parserConfig) {
-            checkNotNull(parserConfig, "parserConfig");
+            if (parserConfig == null) {
+                throw new NullPointerException("parserConfig");
+            }
             this.parserConfig = parserConfig.deepCopy();
             return this;
         }
 
         public ParserBuilder exec(ConfigSource execConfig) {
-            checkNotNull(execConfig, "execConfig");
+            if (execConfig == null) {
+                throw new NullPointerException("execConfig");
+            }
             this.execConfig = execConfig.deepCopy();
             return this;
         }
 
         public ParserBuilder inputPath(Path inputPath) {
-            checkNotNull(inputPath, "inputPath");
+            if (inputPath == null) {
+                throw new NullPointerException("inputPath");
+            }
             this.inputPath = inputPath;
             return this;
         }
 
         public ParserBuilder inputResource(String resourceName) throws IOException {
-            checkNotNull(resourceName, "resourceName");
+            if (resourceName == null) {
+                throw new NullPointerException("resourceName");
+            }
             Path path = createTempFile("csv");
-            copyResource(resourceName, path);
+            EmbulkTests.copyResource(resourceName, path);
             return inputPath(path);
         }
 
         public ParserBuilder outputPath(Path outputPath) {
-            checkNotNull(outputPath, "outputPath");
+            if (outputPath == null) {
+                throw new NullPointerException("outputPath");
+            }
             this.outputPath = outputPath;
             return this;
         }
 
         public ConfigDiff guess() {
-            checkState(inputPath != null, "inputPath must be set");
+            if (inputPath == null) {
+                throw new IllegalStateException("inputPath must be set");
+            }
 
             // in: config
             ConfigSource inConfig = newConfig()
@@ -404,12 +431,20 @@ public class TestingEmbulk implements TestRule {
         }
 
         public RunResult run() throws IOException {
-            checkState(parserConfig != null, "parser config must be set");
-            checkState(inputPath != null, "inputPath must be set");
-            checkState(outputPath != null, "outputPath must be set");
+            if (parserConfig == null) {
+                throw new IllegalStateException("parser config must be set");
+            }
+            if (inputPath == null) {
+                throw new IllegalStateException("inputPath must be set");
+            }
+            if (outputPath == null) {
+                throw new IllegalStateException("outputPath must be set");
+            }
 
             String fileName = outputPath.getFileName().toString();
-            checkArgument(fileName.endsWith(".csv"), "outputPath must end with .csv");
+            if (!fileName.endsWith(".csv")) {
+                throw new IllegalArgumentException("outputPath must end with .csv");
+            }
             Path dir = outputPath.getParent().resolve(fileName.substring(0, fileName.length() - 4));
 
             Files.createDirectories(dir);
@@ -456,42 +491,58 @@ public class TestingEmbulk implements TestRule {
         public OutputBuilder() {}
 
         public OutputBuilder out(ConfigSource outConfig) {
-            checkNotNull(outConfig, "outConfig");
+            if (outConfig == null) {
+                throw new NullPointerException("outConfig");
+            }
             this.outConfig = outConfig;
             return this;
         }
 
         public OutputBuilder exec(ConfigSource execConfig) {
-            checkNotNull(execConfig, "execConfig");
+            if (execConfig == null) {
+                throw new NullPointerException("execConfig");
+            }
             this.execConfig = execConfig;
             return this;
         }
 
         public OutputBuilder inputPath(Path inputPath) {
-            checkNotNull(inputPath, "inputPath");
+            if (inputPath == null) {
+                throw new NullPointerException("inputPath");
+            }
             this.inputPath = inputPath;
             return this;
         }
 
         public OutputBuilder inputResource(String resourceName) throws IOException {
-            checkNotNull(resourceName, "resourceName");
+            if (resourceName == null) {
+                throw new NullPointerException("resourceName");
+            }
             Path path = createTempFile("csv");
-            copyResource(resourceName, path);
+            EmbulkTests.copyResource(resourceName, path);
             return inputPath(path);
         }
 
         public OutputBuilder inputSchema(SchemaConfig inputSchema) {
-            checkNotNull(inputSchema, "inputSchema");
+            if (inputSchema == null) {
+                throw new NullPointerException("inputSchema");
+            }
             this.inputSchema = inputSchema;
             return this;
         }
 
         public RunResult run() throws IOException {
-            checkState(outConfig != null, "out config must be set");
-            checkState(inputPath != null, "inputPath must be set");
+            if (outConfig == null) {
+                throw new IllegalStateException("out config must be set");
+            }
+            if (inputPath == null) {
+                throw new IllegalStateException("inputPath must be set");
+            }
 
             String fileName = inputPath.toAbsolutePath().toString();
-            checkArgument(fileName.endsWith(".csv"), "inputPath must end with .csv");
+            if (!fileName.endsWith(".csv")) {
+                throw new IllegalArgumentException("inputPath must end with .csv");
+            }
 
             // exec: config
             execConfig.set("min_output_tasks", 1);
@@ -526,15 +577,15 @@ public class TestingEmbulk implements TestRule {
         }
 
         private SchemaConfig newSchemaConfig() {
-            ImmutableList.Builder<ColumnConfig> schema = ImmutableList.builder();
-            try (BufferedReader reader = newBufferedReader(inputPath, UTF_8)) {
+            final ArrayList<ColumnConfig> schema = new ArrayList<>();
+            try (final BufferedReader reader = Files.newBufferedReader(inputPath, StandardCharsets.UTF_8)) {
                 for (String column : reader.readLine().split(",")) {
                     ColumnConfig columnConfig = newColumnConfig(column);
                     if (columnConfig != null) {
                         schema.add(columnConfig);
                     }
                 }
-                return new SchemaConfig(schema.build());
+                return new SchemaConfig(Collections.unmodifiableList(schema));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -542,10 +593,12 @@ public class TestingEmbulk implements TestRule {
 
         private ColumnConfig newColumnConfig(String column) {
             String[] tuple = column.split(":", 2);
-            checkArgument(tuple.length == 2, "tuple must be a pair of column name and type");
+            if (tuple.length != 2) {
+                throw new IllegalArgumentException("tuple must be a pair of column name and type");
+            }
             String type = tuple[1];
             if (!SUPPORTED_TYPES.contains(type)) {
-                throw new IllegalArgumentException(String.format(ENGLISH,
+                throw new IllegalArgumentException(String.format(Locale.ENGLISH,
                             "Unknown column type %s. Supported types are boolean, long, double, string, timestamp and json: %s",
                             tuple[1], column));
             }
@@ -579,7 +632,7 @@ public class TestingEmbulk implements TestRule {
             Collections.sort(fragments);
             for (Path fragment : fragments) {
                 try (InputStream in = Files.newInputStream(fragment)) {
-                    ByteStreams.copy(in, out);
+                    copyStream(in, out);
                 }
             }
         }
@@ -685,4 +738,15 @@ public class TestingEmbulk implements TestRule {
 
     // TODO add runFilter(ConfigSource filterConfig, Path inputPath, Path outputPath) where inputPath is a path to
     // a CSV file whose column types can be naturally guessed using csv guess plugin.
+
+    private static void copyStream(final InputStream input, final OutputStream output) throws IOException {
+        final byte[] buffer = new byte[1024];
+        while (true) {
+            final int bytesRead = input.read(buffer);
+            if (bytesRead == -1) {
+                break;
+            }
+            output.write(buffer, 0, bytesRead);
+        }
+    }
 }

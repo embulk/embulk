@@ -10,10 +10,6 @@ configurations {
 }
 
 dependencies {
-    // TODO: Remove Guava.
-    // It is needed only to use Immutable* in test cases for ease.
-    implementation "com.google.guava:guava:18.0"
-
     api "junit:junit:4.13.2"
     api "org.hamcrest:hamcrest-library:1.3"
 
