@@ -16,7 +16,9 @@
 
 package org.embulk.spi;
 
+import java.util.Optional;
 import org.embulk.config.ConfigSource;
+import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 
 /**
@@ -69,4 +71,19 @@ public interface ParserPlugin {
      * @since 0.4.0
      */
     void run(TaskSource taskSource, Schema schema, FileInput input, PageOutput output);
+
+    /**
+     * Runs each parsing task and return TaskReport
+     *
+     * @param taskSource  a configuration processed for the task from {@link org.embulk.config.ConfigSource}
+     * @param schema  {@link org.embulk.spi.Schema} to be parsed to
+     * @param input  {@link org.embulk.spi.FileOutput} that is read from a File Input Plugin, or a Decoder Plugin
+     * @param output  {@link org.embulk.spi.PageOutput} to write parsed input so that the input is read from an Output Plugin, or
+     *     another Filter Plugin
+     * @return the {@link TaskReport} in {@link java.util.Optional}
+     */
+    default Optional<TaskReport> runThenReturnTaskReport(TaskSource taskSource, Schema schema, FileInput input, PageOutput output) {
+        this.run(taskSource, schema, input, output);
+        return Optional.empty();
+    }
 }

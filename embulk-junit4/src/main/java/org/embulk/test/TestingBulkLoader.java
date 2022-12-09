@@ -44,7 +44,7 @@ class TestingBulkLoader extends BulkLoader {
 
         public TestingExecutionResult(ExecutionResult orig,
                 ResumeState resumeState, ExecSessionInternal session) {
-            super(orig.getConfigDiff(), orig.isSkipped(), orig.getIgnoredExceptions());
+            super(orig.getConfigDiff(), orig.isSkipped(), orig.getIgnoredExceptions(), new ArrayList<>(), new ArrayList<>());
             this.inputSchema = resumeState.getInputSchema();
             this.outputSchema = resumeState.getOutputSchema();
             this.inputTaskReports = buildReports(resumeState.getInputTaskReports(), session);
