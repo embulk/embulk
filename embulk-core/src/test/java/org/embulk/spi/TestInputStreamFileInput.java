@@ -3,10 +3,10 @@ package org.embulk.spi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.util.InputStreamFileInput;
 import org.junit.Rule;
@@ -153,10 +153,11 @@ public class TestInputStreamFileInput {
         subject.close();
     }
 
+    @SuppressWarnings("unchecked")
     private InputStreamFileInput.IteratorProvider provider(
             InputStream... inputStreams) throws IOException {
         return new InputStreamFileInput.IteratorProvider(
-                ImmutableList.copyOf(inputStreams));
+                (List<InputStream>) TestUtils.copyListOf(inputStreams));
     }
 
     private String bufferToString(Buffer buffer) throws IOException {

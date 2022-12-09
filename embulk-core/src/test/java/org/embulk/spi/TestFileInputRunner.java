@@ -2,8 +2,6 @@ package org.embulk.spi;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,13 +96,13 @@ public class TestFileInputRunner {
 
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
-                ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
+                TestUtils.mapOf("type", "mock", "columns", TestUtils.listOf(
+                        TestUtils.mapOf("name", "col1", "type", "boolean", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col2", "type", "long", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col3", "type", "double", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col4", "type", "string", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col5", "type", "timestamp", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col6", "type", "json", "option", TestUtils.mapOf()))));
 
         final MockPageOutput output = new MockPageOutput();
         runner.transaction(config, new InputPlugin.Control() {
@@ -147,13 +145,13 @@ public class TestFileInputRunner {
 
         ConfigSource config = Exec.newConfigSource().set(
                 "parser",
-                ImmutableMap.of("type", "mock", "columns", ImmutableList.of(
-                        ImmutableMap.of("name", "col1", "type", "boolean", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col2", "type", "long", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col3", "type", "double", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col4", "type", "string", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col5", "type", "timestamp", "option", ImmutableMap.of()),
-                        ImmutableMap.of("name", "col6", "type", "json", "option", ImmutableMap.of()))));
+                TestUtils.mapOf("type", "mock", "columns", TestUtils.listOf(
+                        TestUtils.mapOf("name", "col1", "type", "boolean", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col2", "type", "long", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col3", "type", "double", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col4", "type", "string", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col5", "type", "timestamp", "option", TestUtils.mapOf()),
+                        TestUtils.mapOf("name", "col6", "type", "json", "option", TestUtils.mapOf()))));
 
         final MockPageOutput output = new MockPageOutput();
 
