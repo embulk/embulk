@@ -17,13 +17,15 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
             final ClassLoader classLoader,
             final LocalContextScope delegateLocalContextScope,
             final LocalVariableBehavior delegateLocalVariableBehavior,
-            final JRubyInitializer initializer) {
+            final JRubyInitializer initializer,
+            final Logger logger) {
         this.impl = null;
 
         this.classLoader = classLoader;
         this.delegateLocalContextScope = delegateLocalContextScope;
         this.delegateLocalVariableBehavior = delegateLocalVariableBehavior;
         this.initializer = initializer;
+        this.logger = logger;
     }
 
     public static LazyScriptingContainerDelegate withGems(
@@ -104,7 +106,8 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
                             ? ScriptingContainerDelegate.LocalContextScope.SINGLETON
                             : ScriptingContainerDelegate.LocalContextScope.SINGLETHREAD,
                     ScriptingContainerDelegate.LocalVariableBehavior.PERSISTENT,
-                    initializer);
+                    initializer,
+                    logger);
             if (useGlobalRubyRuntime) {
                 // In case the global JRuby instance is used, the instance should be always initialized.
                 // Ruby tests (in embulk-ruby/) are examples.
@@ -315,6 +318,7 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
                     this.classLoader, this.delegateLocalContextScope, this.delegateLocalVariableBehavior);
             if (this.initializer != null) {
                 this.initializer.initialize(this.impl);
+                this.logger.info("Loaded JRuby runtime {}", this.impl.getJRubyVersion());
             }
         }
         return this.impl;
@@ -326,4 +330,6 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     private final LocalContextScope delegateLocalContextScope;
     private final LocalVariableBehavior delegateLocalVariableBehavior;
     private final JRubyInitializer initializer;
+
+    private final Logger logger;
 }
