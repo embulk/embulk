@@ -17,6 +17,7 @@
 package org.embulk.config;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Base interface of {@link ConfigSource}, {@link ConfigDiff}, {@link TaskSource}, and {@link TaskReport}.
@@ -61,6 +62,64 @@ public interface DataSource {
     boolean has(String attrName);
 
     /**
+     * Returns {@code true} if it has a list attribute named {@code attrName}.
+     *
+     * <p>Do not use this method if you want your plugin to keep working with Embulk v0.9. A plugin that calls it
+     * would work only on Embulk v0.10.41 or later.
+     *
+     * <p>An implementation of {@link DataSource} should implement its own {@code hasList} in its own efficient way.
+     * The {@code default} implementation in {@link DataSource} is a "polyfill". It works, but in an inefficient way.
+     *
+     * @param attrName  name of the list attribute to look for
+     * @return {@code true} if it has a list attribute named {@code attrName}
+     *
+     * @since 0.10.41
+     */
+    default boolean hasList(final String attrName) {
+        if (!this.has(attrName)) {
+            return false;
+        }
+
+        try {
+            // If #get(List.class, attrName) succeeds, it as a list attribute at |attrName|.
+            // Note that it is an inefficient way to check.
+            this.get(List.class, attrName);
+        } catch (final Exception ex) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns {@code true} if it has a nested attribute named {@code attrName}.
+     *
+     * <p>Do not use this method if you want your plugin to keep working with Embulk v0.9. A plugin that calls it
+     * would work only on Embulk v0.10.41 or later.
+     *
+     * <p>An implementation of {@link DataSource} should implement its own {@code hasNested} in its own efficient way.
+     * The {@code default} implementation in {@link DataSource} is a "polyfill". It works, but in an inefficient way.
+     *
+     * @param attrName  name of the nested attribute to look for
+     * @return {@code true} if it has a nested attribute named {@code attrName}
+     *
+     * @since 0.10.41
+     */
+    default boolean hasNested(String attrName) {
+        if (!this.has(attrName)) {
+            return false;
+        }
+
+        try {
+            // If #getNested(attrName) succeeds, it as a nested attribute at |attrName|.
+            // Note that it is an inefficient way to check.
+            this.getNested(attrName);
+        } catch (final Exception ex) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Returns an attribute value of {@code attrName} as {@code type}.
      *
      * @param <E>   the class to get the value as
@@ -84,6 +143,32 @@ public interface DataSource {
      * @since 0.4.0
      */
     <E> E get(Class<E> type, String attrName, E defaultValue);
+
+    /**
+     * Returns listed attribute values under {@code attrName} as {@code List<type>}.
+     *
+     * <p>It returns an empty list if the attribute does not exist. It does not throw an exception for such a case
+     * unlike {@link #getNested(String)}. It is because an empty list is observed often in the wild, and users have
+     * to take care in representing an empty list in YAML (explicit {@code "[]"}).
+     *
+     * <p>Do not use this method if you want your plugin to keep working with Embulk v0.9. A plugin that calls it
+     * would work only on Embulk v0.10.41 or later.
+     *
+     * <p>An implementation of {@link DataSource} should implement its own {@code getListOf} in its own appropriate way.
+     * The {@code default} implementation in {@link DataSource} is a "polyfill". It somehow works, but is not perfect.
+     * It does not check nor convert the type of each element in the list.
+     *
+     * @param <E>   the class to get the attribute values in {@link java.util.List} as
+     * @param type  the class to get the attribute values in {@link java.util.List} as
+     * @param attrName  name of the listed attribute values to look for
+     * @return the listed attribute values under {@code attrName}
+     *
+     * @since 0.10.41
+     */
+    @SuppressWarnings("unchecked")
+    default <E> List<E> getListOf(Class<E> type, String attrName) {
+        return (List<E>) this.get(List.class, attrName);
+    }
 
     /**
      * Returns a nested value under {@code attrName}.
@@ -186,5 +271,20 @@ public interface DataSource {
     default String toJson() {
         throw new UnsupportedOperationException(
                 "ConfigSource#toJson is not implemented with: " + this.getClass().getCanonicalName());
+    }
+
+    /**
+     * Returns a {@link java.util.Map} representation of itself.
+     *
+     * <p>Do not use this method if you want your plugin to keep working with Embulk v0.9. A plugin that calls it
+     * would work only on Embulk v0.10.41 or later.
+     *
+     * @return its {@link java.util.Map} representation
+     *
+     * @since 0.10.41
+     */
+    default Map<String, Object> toMap() {
+        throw new UnsupportedOperationException(
+                "ConfigSource#toMap is not implemented with: " + this.getClass().getCanonicalName());
     }
 }
