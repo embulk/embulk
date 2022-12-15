@@ -126,7 +126,7 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
         }
         final ArrayList<E> list = new ArrayList<>();
         for (final JsonNode element : (Iterable<JsonNode>) () -> json.elements()) {
-            model.readObject(type, element.traverse());
+            list.add(model.readObject(type, element.traverse()));
         }
         return Collections.unmodifiableList(list);
     }
