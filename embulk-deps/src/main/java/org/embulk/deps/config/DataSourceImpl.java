@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.embulk.config.ConfigDiff;
@@ -71,6 +72,32 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
     }
 
     @Override
+    public boolean hasList(final String attrName) {
+        if (!this.data.has(attrName)) {
+            return false;
+        }
+
+        final JsonNode json = this.data.get(attrName);
+        if (json == null) {
+            return false;
+        }
+        return json.isArray();
+    }
+
+    @Override
+    public boolean hasNested(final String attrName) {
+        if (!this.data.has(attrName)) {
+            return false;
+        }
+
+        final JsonNode json = this.data.get(attrName);
+        if (json == null) {
+            return false;
+        }
+        return json.isObject();
+    }
+
+    @Override
     public <E> E get(Class<E> type, String attrName) {
         JsonNode json = data.get(attrName);
         if (json == null) {
@@ -86,6 +113,22 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
             return defaultValue;
         }
         return model.readObject(type, json.traverse());
+    }
+
+    @Override
+    public <E> List<E> getListOf(final Class<E> type, final String attrName) {
+        final JsonNode json = this.data.get(attrName);
+        if (json == null) {
+            return Collections.emptyList();
+        }
+        if (!json.isArray()) {
+            throw new ConfigException("Attribute " + attrName + " must be an array");
+        }
+        final ArrayList<E> list = new ArrayList<>();
+        for (final JsonNode element : (Iterable<JsonNode>) () -> json.elements()) {
+            list.add(model.readObject(type, element.traverse()));
+        }
+        return Collections.unmodifiableList(list);
     }
 
     @Override
@@ -204,6 +247,11 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
         return this.model.writeObject(this.data);
     }
 
+    @Override
+    public Map<String, Object> toMap() {
+        return jsonObjectToMap(this.data);
+    }
+
     private static void mergeJsonObject(ObjectNode src, ObjectNode other) {
         Iterator<Map.Entry<String, JsonNode>> ite = other.fields();
         while (ite.hasNext()) {
@@ -234,6 +282,44 @@ public class DataSourceImpl implements ConfigSource, TaskSource, TaskReport, Con
                 src.remove(i);
                 src.insert(i, v);
             }
+        }
+    }
+
+    private static Map<String, Object> jsonObjectToMap(final ObjectNode object) {
+        final LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+        for (final Map.Entry<String, JsonNode> field : (Iterable<Map.Entry<String, JsonNode>>) () -> object.fields()) {
+            map.put(field.getKey(), jsonToPlain(field.getValue()));
+        }
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static List<Object> jsonArrayToList(final ArrayNode array) {
+        final ArrayList<Object> list = new ArrayList<>();
+        for (final JsonNode element : (Iterable<JsonNode>) () -> array.elements()) {
+            list.add(jsonToPlain(element));
+        }
+        return Collections.unmodifiableList(list);
+    }
+
+    private static Object jsonToPlain(final JsonNode json) {
+        if (json == null || json.isNull()) {
+            return null;
+        } else if (json.isBoolean()) {
+            return json.booleanValue();
+        } else if (json.isInt()) {
+            return json.intValue();
+        } else if (json.isLong()) {
+            return json.longValue();
+        } else if (json.isDouble()) {
+            return json.doubleValue();
+        } else if (json.isTextual()) {
+            return json.textValue();
+        } else if (json.isArray()) {
+            return jsonArrayToList((ArrayNode) json);
+        } else if (json.isObject()) {
+            return jsonObjectToMap((ObjectNode) json);
+        } else {
+            throw new ConfigException("Unexpected JSON node type: " + json.getNodeType().toString());
         }
     }
 

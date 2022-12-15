@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -116,6 +118,130 @@ public class TestConfigSource {
     }
 
     @Test
+    public void testGetList() {
+        setExample(this.config);
+
+        assertFalse(this.config.hasList("does_not_exist"));
+        assertFalse(this.config.hasList("boolean"));
+        assertFalse(this.config.hasList("int"));
+        assertFalse(this.config.hasList("string"));
+        assertFalse(this.config.hasList("double"));
+        assertTrue(this.config.hasList("variety_list"));
+        assertTrue(this.config.hasList("string_list"));
+        assertTrue(this.config.hasList("nested_list"));
+        assertFalse(this.config.hasList("nested"));
+
+        final List<?> varietyList = this.config.get(List.class, "variety_list");
+        assertEquals(4, varietyList.size());
+        assertTrue(varietyList.get(0) instanceof String);
+        assertEquals("hoge", varietyList.get(0));
+        assertTrue(varietyList.get(1) instanceof String);
+        assertEquals("fuga", varietyList.get(1));
+        assertTrue(varietyList.get(2) instanceof Map);
+        assertTrue(varietyList.get(3) instanceof List);
+
+        final List<String> stringList = this.config.getListOf(String.class, "string_list");
+        assertEquals(2, stringList.size());
+        assertEquals("hoge", stringList.get(0));
+        assertEquals("fuga", stringList.get(1));
+
+        final List<ConfigSource> nestedList = this.config.getListOf(ConfigSource.class, "nested_list");
+        assertEquals(2, nestedList.size());
+        final ConfigSource nested0 = nestedList.get(0);
+        assertEquals(1, nested0.getAttributeNames().size());
+        assertEquals("some", nested0.getAttributeNames().get(0));
+        assertEquals("what", nested0.get(String.class, "some"));
+        final ConfigSource nested1 = nestedList.get(1);
+        assertEquals(1, nested1.getAttributeNames().size());
+        assertEquals("else", nested1.getAttributeNames().get(0));
+        assertEquals("where", nested1.get(String.class, "else"));
+    }
+
+    @Test
+    public void testGetListOfWrongType() {
+        setExample(this.config);
+
+        try {
+            this.config.getListOf(String.class, "variety_list");
+        } catch (final RuntimeException ex) {
+            assertTrue(ex.getMessage().startsWith(
+                    "com.fasterxml.jackson.databind.JsonMappingException: "
+                    + "Can not deserialize instance of java.lang.String out of START_OBJECT token"));
+        }
+    }
+
+    @Test
+    public void testNested() {
+        setExample(this.config);
+
+        assertFalse(this.config.hasNested("does_not_exist"));
+        assertFalse(this.config.hasNested("boolean"));
+        assertFalse(this.config.hasNested("int"));
+        assertFalse(this.config.hasNested("string"));
+        assertFalse(this.config.hasNested("double"));
+        assertFalse(this.config.hasNested("variety_list"));
+        assertFalse(this.config.hasNested("string_list"));
+        assertFalse(this.config.hasNested("nested_list"));
+        assertTrue(this.config.hasNested("nested"));
+
+        final ConfigSource nested = this.config.getNested("nested");
+        assertEquals(2, nested.getAttributeNames().size());
+        assertEquals("value1", nested.get(String.class, "key1"));
+        assertEquals("value2", nested.get(String.class, "key2"));
+    }
+
+    @Test
+    public void testToMap() {
+        setExample(this.config);
+
+        final Map<String, Object> map = this.config.toMap();
+        assertEquals(8, map.size());
+        assertTrue(map.get("boolean") instanceof Boolean);
+        assertEquals(true, map.get("boolean"));
+        assertTrue(map.get("int") instanceof Integer);
+        assertEquals(12, map.get("int"));
+        assertTrue(map.get("double") instanceof Double);
+        assertEquals(42914.1420, map.get("double"));
+        assertTrue(map.get("string") instanceof String);
+        assertEquals("foo", map.get("string"));
+
+        assertTrue(map.get("variety_list") instanceof List);
+        final List<?> varietyList = (List<?>) map.get("variety_list");
+        assertEquals(4, varietyList.size());
+        assertEquals("hoge", varietyList.get(0));
+        assertEquals("fuga", varietyList.get(1));
+        assertTrue(varietyList.get(2) instanceof Map);
+        final Map<String, Object> mapUnderVarietyList = (Map<String, Object>) varietyList.get(2);
+        assertEquals(1, mapUnderVarietyList.size());
+        assertEquals("something", mapUnderVarietyList.get("subkey1"));
+        assertTrue(varietyList.get(3) instanceof List);
+        final List<Object> listUnderVarietyList = (List<Object>) varietyList.get(3);
+        assertEquals(1, listUnderVarietyList.size());
+        assertEquals("somewhat", listUnderVarietyList.get(0));
+
+        assertTrue(map.get("string_list") instanceof List);
+        final List<?> stringList = (List<?>) map.get("string_list");
+        assertEquals(2, stringList.size());
+        assertEquals("hoge", stringList.get(0));
+        assertEquals("fuga", stringList.get(1));
+
+        assertTrue(map.get("nested_list") instanceof List);
+        final List<?> nestedList = (List<?>) map.get("nested_list");
+        assertEquals(2, nestedList.size());
+        final Map<String, Object> nestedList0 = (Map<String, Object>) nestedList.get(0);
+        assertEquals(1, nestedList0.size());
+        assertEquals("what", nestedList0.get("some"));
+        final Map<String, Object> nestedList1 = (Map<String, Object>) nestedList.get(1);
+        assertEquals(1, nestedList1.size());
+        assertEquals("where", nestedList1.get("else"));
+
+        assertTrue(map.get("nested") instanceof Map);
+        final Map<String, Object> nested = (Map<String, Object>) map.get("nested");
+        assertEquals("value1", nested.get("key1"));
+        assertEquals("value2", nested.get("key2"));
+    }
+
+    @Test
     public void testOptionalPresent() {
         config.set("java_util_optional", "JavaUtil");
 
@@ -211,5 +337,42 @@ public class TestConfigSource {
     public void testFromJson() {
         String json = "{\"type\":\"test\"}";
         // TODO
+    }
+
+    private static void setExample(final ConfigSource config) {
+        config.set("boolean", true);
+        config.set("int", 12);
+        config.set("double", 42914.1420);
+        config.set("string", "foo");
+
+        final ArrayList<Object> varietyList = new ArrayList<>();
+        varietyList.add("hoge");
+        varietyList.add("fuga");
+        final ConfigSource nestedUnderVarietyList = Exec.newConfigSource();
+        nestedUnderVarietyList.set("subkey1", "something");
+        varietyList.add(nestedUnderVarietyList);
+        final ArrayList<String> listUnderVarietyList = new ArrayList<>();
+        listUnderVarietyList.add("somewhat");
+        varietyList.add(listUnderVarietyList);
+        config.set("variety_list", varietyList);
+
+        final ArrayList<String> stringList = new ArrayList<>();
+        stringList.add("hoge");
+        stringList.add("fuga");
+        config.set("string_list", stringList);
+
+        final ArrayList<ConfigSource> nestedList = new ArrayList<>();
+        final ConfigSource nested0UnderNestedList = Exec.newConfigSource();
+        nested0UnderNestedList.set("some", "what");
+        nestedList.add(nested0UnderNestedList);
+        final ConfigSource nested1UnderNestedList = Exec.newConfigSource();
+        nested1UnderNestedList.set("else", "where");
+        nestedList.add(nested1UnderNestedList);
+        config.set("nested_list", nestedList);
+
+        final ConfigSource nested = Exec.newConfigSource();
+        nested.set("key1", "value1");
+        nested.set("key2", "value2");
+        config.set("nested", nested);
     }
 }
