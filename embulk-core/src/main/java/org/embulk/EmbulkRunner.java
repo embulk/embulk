@@ -328,6 +328,8 @@ public class EmbulkRunner {
 
         final ConfigDiff configDiff = executionResult.getConfigDiff();
         rootLogger.info("Committed.");
+        rootLogger.info("Input Reports: " + executionResult.getInputTaskReports());
+        rootLogger.info("Output Reports: " + executionResult.getOutputTaskReports());
         rootLogger.info("Next config diff: " + configDiff.toString());
 
         writeConfig(configDiffPath, configDiff);
