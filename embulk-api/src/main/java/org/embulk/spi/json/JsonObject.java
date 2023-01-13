@@ -69,7 +69,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
             throw new IllegalArgumentException("Even numbers of arguments must be specified to JsonObject#of(...).");
         }
         for (int i = 0; i < values.length; i += 2) {
-            if (!(values[i * 2] instanceof JsonString)) {
+            if (!(values[i] instanceof JsonString)) {
                 throw new IllegalArgumentException("JsonString must be specified as a key for JsonObject#of(...).");
             }
         }
@@ -258,36 +258,6 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          */
         public Builder putEntryWithJsonStringKey(final Map.Entry<JsonString, JsonValue> entry) {
             this.put(entry.getKey(), entry.getValue());
-            return this;
-        }
-
-        /**
-         * Puts {@link java.util.Map.Entry}s of {@link String} keys and {@link JsonValue} values.
-         *
-         * @param entries  entries of keys and values
-         * @return this builder itself
-         *
-         * @since 0.10.42
-         */
-        public Builder putAllEntries(final Iterable<? extends Map.Entry<String, JsonValue>> entries) {
-            for (final Map.Entry<String, JsonValue> entry : entries) {
-                this.put(JsonString.of(entry.getKey()), entry.getValue());
-            }
-            return this;
-        }
-
-        /**
-         * Puts {@link java.util.Map.Entry}s of {@link JsonString} keys and {@link JsonValue} values.
-         *
-         * @param entries  entries of keys and values
-         * @return this builder itself
-         *
-         * @since 0.10.42
-         */
-        public Builder putAllEntriesWithJsonStringKeys(final Iterable<? extends Map.Entry<JsonString, JsonValue>> entries) {
-            for (final Map.Entry<JsonString, JsonValue> entry : entries) {
-                this.put(entry.getKey(), entry.getValue());
-            }
             return this;
         }
 
