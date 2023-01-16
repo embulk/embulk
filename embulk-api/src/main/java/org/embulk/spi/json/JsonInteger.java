@@ -50,7 +50,7 @@ public final class JsonInteger implements JsonValue {
     /**
      * Returns a JSON integer number that is represented by the specified primitive {@code long}, with the specified JSON literal.
      *
-     * <p>The literal is just subsidiary information used when stringifying this JSON integer number as JSON by {@link #toJson}.
+     * <p>The literal is just subsidiary information used when stringifying this JSON integer number as JSON by {@link #toJson()}.
      *
      * @param value  the integer number
      * @param literal  the JSON literal of the integer number
@@ -333,7 +333,7 @@ public final class JsonInteger implements JsonValue {
     /**
      * Returns the stringified JSON representation of this JSON integer number.
      *
-     * <p>If this JSON integer number is created with a literal by {@link #withLiteral}, it returns the literal.
+     * <p>If this JSON integer number is created with a literal by {@link #withLiteral(long, String)}, it returns the literal.
      *
      * @return the stringified JSON representation of this JSON integer number
      *

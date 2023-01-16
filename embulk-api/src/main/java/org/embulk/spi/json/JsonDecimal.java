@@ -49,7 +49,7 @@ public final class JsonDecimal implements JsonValue {
     /**
      * Returns a JSON decimal number that is represented by the specified primitive {@code double}, with the specified JSON literal.
      *
-     * <p>The literal is just subsidiary information used when stringifying this JSON decimal number as JSON by {@link #toJson}.
+     * <p>The literal is just subsidiary information used when stringifying this JSON decimal number as JSON by {@link #toJson()}.
      *
      * @param value  the decimal number
      * @param literal  the JSON literal of the decimal number
@@ -363,7 +363,7 @@ rrowing Primitive Conversion</a>
      *
      * <p>If this JSON decimal number is {@code NaN} or {@code Infinity}, it returns {@code "null"}.
      *
-     * <p>If this JSON decimal number is created with a literal by {@link #withLiteral}, it returns the literal.
+     * <p>If this JSON decimal number is created with a literal by {@link #withLiteral(double, String)}, it returns the literal.
      *
      * @return the stringified JSON representation of this JSON decimal number
      *
