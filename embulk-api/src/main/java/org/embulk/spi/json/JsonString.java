@@ -48,7 +48,7 @@ public final class JsonString implements JsonValue {
     /**
      * Returns a JSON string that is represented by the specified {@link String}, with the specified JSON literal.
      *
-     * <p>The literal is just subsidiary information used when stringifying this JSON string as JSON by {@link #toJson}.
+     * <p>The literal is just subsidiary information used when stringifying this JSON string as JSON by {@link #toJson()}.
      *
      * @param value  the string
      * @param literal  the JSON literal of the string
@@ -109,7 +109,8 @@ public final class JsonString implements JsonValue {
     /**
      * Returns the stringified JSON representation of this JSON string.
      *
-     * <p>If this JSON string is created with a literal by {@link #withLiteral}, it returns the literal.
+     * <p>If this JSON string is created with a literal by {@link #withLiteral(String, String)}, it returns the literal. Otherwise,
+     * it returns an escaped and quoted representation, which is valid as JSON, of this JSON string.
      *
      * @return the stringified JSON representation of this JSON string
      *
@@ -126,13 +127,17 @@ public final class JsonString implements JsonValue {
     /**
      * Returns the string representation of this JSON string.
      *
+     * <p>It returns an escaped and quoted representation like {@code "string"}, which is valid as JSON, of this JSON string.
+     *
+     * <p>It does not consider a literal by {@link #withLiteral(String, String)} unlike {@link #toJson()}.
+     *
      * @return the string representation of this JSON string
      *
      * @since 0.10.42
      */
     @Override
     public String toString() {
-        return this.value;
+        return escapeStringForJsonLiteral(this.value).toString();
     }
 
     /**
@@ -158,7 +163,7 @@ public final class JsonString implements JsonValue {
 
         if (otherObject instanceof JsonString) {
             final JsonString otherString = (JsonString) otherObject;
-            return Objects.equals(this.value, otherString.toString());
+            return Objects.equals(this.value, otherString.value);
         }
         return false;
     }

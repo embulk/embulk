@@ -45,14 +45,14 @@ public class TestJsonString {
         assertEquals("hoge", string.getString());
         assertEquals("hoge", string.getChars());
         assertEquals("\"hoge\"", string.toJson());
-        assertEquals("hoge", string.toString());
+        assertEquals("\"hoge\"", string.toString());
         assertEquals(JsonString.of("hoge"), string);
         assertEquals("hoge".hashCode(), string.hashCode());
     }
 
     @Test
     public void testWithLiteral() {
-        final JsonString string = JsonString.withLiteral("hoge\n", "\"hoge\\n\"");
+        final JsonString string = JsonString.withLiteral("hoge\n", "\"\\u0068oge\\n\"");
         assertEquals(JsonValue.Type.STRING, string.getType());
         assertFalse(string.isNull());
         assertFalse(string.isBoolean());
@@ -70,8 +70,8 @@ public class TestJsonString {
         assertThrows(ClassCastException.class, () -> string.asJsonObject());
         assertEquals("hoge\n", string.getString());
         assertEquals("hoge\n", string.getChars());
-        assertEquals("\"hoge\\n\"", string.toJson());
-        assertEquals("hoge\n", string.toString());
+        assertEquals("\"\\u0068oge\\n\"", string.toJson());
+        assertEquals("\"hoge\\n\"", string.toString());
         assertEquals(JsonString.of("hoge\n"), string);
         assertEquals("hoge\n".hashCode(), string.hashCode());
     }
@@ -99,7 +99,9 @@ public class TestJsonString {
         assertEquals(
                 "\"\\\\foo\\\"bar\\nbaz\\bqux\\ffoo\\nbar\\rbaz\\tqux\\u0000foo\\u0001bar\\u0002baz\\u001fqux\"",
                 string.toJson());
-        assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux", string.toString());
+        assertEquals(
+                "\"\\\\foo\\\"bar\\nbaz\\bqux\\ffoo\\nbar\\rbaz\\tqux\\u0000foo\\u0001bar\\u0002baz\\u001fqux\"",
+                string.toString());
         assertEquals(JsonString.of("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux"), string);
         assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux".hashCode(), string.hashCode());
     }
