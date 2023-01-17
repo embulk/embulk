@@ -108,6 +108,7 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
+        // Tests that changing the original array does NOT affect the JsonArray instance.
         values[0] = JsonInteger.of(1234);
 
         assertEquals(3, jsonArray.size());
@@ -153,6 +154,7 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
+        // Tests that changing the original array does NOT affect the JsonArray instance.
         values.add(JsonInteger.of(1234));
 
         assertEquals(3, jsonArray.size());
@@ -199,6 +201,7 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
+        // Tests that changing the original array DOES affect the JsonArray instance that is created by #ofUnsafe.
         values[0] = JsonInteger.of(1234);
 
         assertEquals(3, jsonArray.size());
