@@ -27,14 +27,14 @@ public class TestJsonNull {
     @Test
     public void test() {
         final JsonNull jsonNull = JsonNull.of();
-        assertEquals(JsonValue.Type.NULL, jsonNull.getType());
-        assertTrue(jsonNull.isNull());
-        assertFalse(jsonNull.isBoolean());
-        assertFalse(jsonNull.isInteger());
-        assertFalse(jsonNull.isDecimal());
-        assertFalse(jsonNull.isString());
-        assertFalse(jsonNull.isArray());
-        assertFalse(jsonNull.isObject());
+        assertEquals(JsonValue.EntityType.NULL, jsonNull.getEntityType());
+        assertTrue(jsonNull.isJsonNull());
+        assertFalse(jsonNull.isJsonBoolean());
+        assertFalse(jsonNull.isJsonInteger());
+        assertFalse(jsonNull.isJsonDecimal());
+        assertFalse(jsonNull.isJsonString());
+        assertFalse(jsonNull.isJsonArray());
+        assertFalse(jsonNull.isJsonObject());
         assertEquals(jsonNull, jsonNull.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonInteger());

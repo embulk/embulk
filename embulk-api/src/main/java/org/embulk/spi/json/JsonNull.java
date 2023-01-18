@@ -40,15 +40,15 @@ public final class JsonNull implements JsonValue {
     }
 
     /**
-     * Returns {@link JsonValue.Type#NULL}, which is the type of {@link JsonNull}.
+     * Returns {@link JsonValue.EntityType#NULL}, which is the entity type of {@link JsonNull}.
      *
-     * @return {@link JsonValue.Type#NULL}, which is the type of {@link JsonNull}
+     * @return {@link JsonValue.EntityType#NULL}, which is the entity type of {@link JsonNull}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.NULL;
+    public EntityType getEntityType() {
+        return EntityType.NULL;
     }
 
     /**
@@ -102,7 +102,7 @@ public final class JsonNull implements JsonValue {
         if (!(otherObject instanceof JsonValue)) {
             return false;
         }
-        return ((JsonValue) otherObject).isNull();
+        return ((JsonValue) otherObject).isJsonNull();
     }
 
     /**

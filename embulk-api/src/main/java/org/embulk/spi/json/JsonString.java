@@ -61,15 +61,15 @@ public final class JsonString implements JsonValue {
     }
 
     /**
-     * Returns {@link JsonValue.Type#STRING}, which is the type of {@link JsonString}.
+     * Returns {@link JsonValue.EntityType#STRING}, which is the entity type of {@link JsonString}.
      *
-     * @return {@link JsonValue.Type#STRING}, which is the type of {@link JsonString}
+     * @return {@link JsonValue.EntityType#STRING}, which is the entity type of {@link JsonString}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.STRING;
+    public EntityType getEntityType() {
+        return EntityType.STRING;
     }
 
     /**
@@ -157,7 +157,7 @@ public final class JsonString implements JsonValue {
         }
 
         final JsonValue other = (JsonValue) otherObject;
-        if (!other.isString()) {
+        if (!other.isJsonString()) {
             return false;
         }
 

@@ -19,61 +19,81 @@ package org.embulk.spi.json;
 /**
  * Represents a value in JSON: {@code null}, {@code true}, {@code false}, numbers, strings, arrays, or objects.
  *
+ * <p>Every implementation class of this {@code interface} should be {@code final}. It means that developers must not
+ * extend the existing {@link JsonValue} implementation classes by themselves.
+ *
+ * <p>Each implementation class of this {@code interface} should correspond to each {@link EntityType} constant by 1:1.
+ * For example, only {@link JsonInteger} should be corresponding to {@link EntityType#INTEGER}, only {@link JsonDecimal}
+ * should be corresponding to {@link EntityType#DECIMAL}, and only {@link JsonObject} should be corresponding to
+ * {@link EntityType#OBJECT}.
+ *
+ * <p>On the other hand, developers should keep it in mind that the future Embulk may have some more {@link JsonValue}
+ * implementation classes. For example, another implementation of integers backed by {@link java.math.BigInteger}, and
+ * another implementation of decimals backed by {@link java.math.BigDecimal} are under consideration. When it happens,
+ * new implementation classes like {@code JsonBigInteger} and {@code JsonBigDecimal}, and new entity types like
+ * {@code EntityType#BIG_INTEGER} and {@code EntityType#BIG_DECIMAL} would be added.
+ *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format</a>
  *
  * @since 0.10.42
  */
 public interface JsonValue {
     /**
-     * A type of a JSON value.
+     * A type of a JSON value entity, which should correspond to the implementation class of the JSON value instance.
+     *
+     * <p>Note that the entity type may not be equivalent to the value type as JSON. For example, both {@code 42} and
+     * {@code 3.141592} are typed as just "numbers" as JSON. As {@link JsonValue}, however, they are normally represented
+     * by different implementation classes, and then typed as different entity types. {@code 42} is usually represented by
+     * {@link JsonInteger} as {@code JsonInteger.of(42)}, then typed as {@link EntityType#INTEGER}. {@code 3.141592} is
+     * represented by {@link JsonDecimal} as {@code JsonDecimal.of(3.141592)}, then typed as {@link EntityType#DECIMAL}.
      *
      * @since 0.10.42
      */
-    public static enum Type {
+    public static enum EntityType {
         /**
-         * The singleton instance that represents the type of {@code null} in JSON.
+         * The singleton instance of the entity type for {@code null} in JSON, which is represented by {@link JsonNull}.
          *
          * @since 0.10.42
          */
         NULL,
 
         /**
-         * The singleton instance that represents the type of {@code true} or {@code false} in JSON.
+         * The singleton instance of the entity type for {@code true} or {@code false} in JSON, which is represented by {@link JsonBoolean}.
          *
          * @since 0.10.42
          */
         BOOLEAN,
 
         /**
-         * The singleton instance that represents the type of integer numbers in JSON.
+         * The singleton instance of the entity type for integral numbers in JSON, which is represented by {@link JsonInteger}.
          *
          * @since 0.10.42
          */
         INTEGER,
 
         /**
-         * The singleton instance that represents the type of decimal numbers in JSON.
+         * The singleton instance of the entity type for decimal numbers in JSON, which is represented by {@link JsonDecimal}.
          *
          * @since 0.10.42
          */
         DECIMAL,
 
         /**
-         * The singleton instance that represents the type of strings in JSON.
+         * The singleton instance of the entity type for strings in JSON, which is represented by {@link JsonString}.
          *
          * @since 0.10.42
          */
         STRING,
 
         /**
-         * The singleton instance that represents the type of arrays in JSON.
+         * The singleton instance of the entity type for arrays in JSON, which is represented by {@link JsonArray}.
          *
          * @since 0.10.42
          */
         ARRAY,
 
         /**
-         * The singleton instance that represents the type of objects in JSON.
+         * The singleton instance of the entity type for objects in JSON, which is represented by {@link JsonObject}.
          *
          * @since 0.10.42
          */
@@ -81,7 +101,7 @@ public interface JsonValue {
         ;
 
         /**
-         * Returns {@code true} if the JSON value is {@code null}.
+         * Returns {@code true} if the JSON value is {@code null}, which is represented by {@link JsonNull}.
          *
          * @since 0.10.42
          */
@@ -90,7 +110,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is {@code true} or {@code false}.
+         * Returns {@code true} if the JSON value is {@code true} or {@code false}, which is represented by {@link JsonBoolean}.
          *
          * @since 0.10.42
          */
@@ -99,7 +119,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is a number represented as an integer.
+         * Returns {@code true} if the JSON value is an integral number, which is represented by {@link JsonInteger}.
          *
          * @since 0.10.42
          */
@@ -108,7 +128,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is a number represented as a decimal.
+         * Returns {@code true} if the JSON value is a number, which is represented by {@link JsonDecimal}.
          *
          * @since 0.10.42
          */
@@ -117,7 +137,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is a string.
+         * Returns {@code true} if the JSON value is a string, which is represented by {@link JsonString}.
          *
          * @since 0.10.42
          */
@@ -126,7 +146,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is an array.
+         * Returns {@code true} if the JSON value is an array, which is represented by {@link JsonArray}.
          *
          * @since 0.10.42
          */
@@ -135,7 +155,7 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is an object.
+         * Returns {@code true} if the JSON value is an object, which is represented by {@link JsonObject}.
          *
          * @since 0.10.42
          */
@@ -145,110 +165,110 @@ public interface JsonValue {
     }
 
     /**
-     * Returns the type of this JSON value.
+     * Returns the entity type of this JSON value.
      *
-     * @return the type of this JSON value
+     * @return the entity type of this JSON value
      *
      * @since 0.10.42
      */
-    Type getType();
+    EntityType getEntityType();
 
     /**
-     * Returns {@code true} if the type of this JSON value is {@code null}.
+     * Returns {@code true} if this JSON value is {@code null}, which is {@link JsonNull}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonNull} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is {@code null}
+     * @return {@code true} if this JSON value is {@code null}, which is {@link JsonNull}
      *
      * @since 0.10.42
      */
-    default boolean isNull() {
-        return this.getType().isNull();
+    default boolean isJsonNull() {
+        return this.getEntityType().isNull();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is {@code true} or {@code false}.
+     * Returns {@code true} if this JSON value is {@code true} or {@code false}, which is {@link JsonBoolean}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonBoolean} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is {@code true} or {@code false}
+     * @return {@code true} if this JSON value is {@code true} or {@code false}, which is {@link JsonBoolean}
      *
      * @since 0.10.42
      */
-    default boolean isBoolean() {
-        return this.getType().isBoolean();
+    default boolean isJsonBoolean() {
+        return this.getEntityType().isBoolean();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is a number that is represented as an integer.
+     * Returns {@code true} if this JSON value is an integral number, which is {@link JsonInteger}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonInteger} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is a number that is represented as an integer
+     * @return {@code true} if this JSON value is an integral number, which is {@link JsonInteger}
      *
      * @since 0.10.42
      */
-    default boolean isInteger() {
-        return this.getType().isInteger();
+    default boolean isJsonInteger() {
+        return this.getEntityType().isInteger();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is a number that is represented as a decimal.
+     * Returns {@code true} if this JSON value is a number, which is {@link JsonDecimal}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonDecimal} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is a number that is represented as a decimal
+     * @return {@code true} if this JSON value is a number, which is {@link JsonDecimal}
      *
      * @since 0.10.42
      */
-    default boolean isDecimal() {
-        return this.getType().isDecimal();
+    default boolean isJsonDecimal() {
+        return this.getEntityType().isDecimal();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is a string.
+     * Returns {@code true} if this JSON value is a string, which is {@link JsonString}.
      *
      * If this method returns {@code true}, {@link #asJsonString} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is a string
+     * @return {@code true} if this JSON value is a string, which is {@link JsonString}
      *
      * @since 0.10.42
      */
-    default boolean isString() {
-        return this.getType().isString();
+    default boolean isJsonString() {
+        return this.getEntityType().isString();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is an array.
+     * Returns {@code true} if this JSON value is an array, which is {@link JsonArray}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonArray} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is an array
+     * @return {@code true} if this JSON value is an array, which is {@link JsonArray}
      *
      * @since 0.10.42
      */
-    default boolean isArray() {
-        return this.getType().isArray();
+    default boolean isJsonArray() {
+        return this.getEntityType().isArray();
     }
 
     /**
-     * Returns {@code true} if the type of this JSON value is an object.
+     * Returns {@code true} if this JSON value is an object, which is {@link JsonObject}.
      *
      * <p>If this method returns {@code true}, {@link #asJsonObject} never throws exceptions.
      *
-     * @return {@code true} if type of this JSON value is an object
+     * @return {@code true} if this JSON value is an object, which is {@link JsonObject}
      *
      * @since 0.10.42
      */
-    default boolean isObject() {
-        return this.getType().isObject();
+    default boolean isJsonObject() {
+        return this.getEntityType().isObject();
     }
 
     /**
-     * Returns this value as {@link JsonNull}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonNull}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonNull}
-     * @throws ClassCastException  if this JSON value is not {@code null}
+     * @throws ClassCastException  if this JSON value is not {@code null}, not {@link JsonNull}
      *
      * @since 0.10.42
      */
@@ -257,10 +277,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonBoolean}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonBoolean}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonBoolean}
-     * @throws ClassCastException  if this JSON value is not {@code true} nor {@code false}
+     * @throws ClassCastException  if this JSON value is not {@code true} nor {@code false}, not {@link JsonBoolean}
      *
      * @since 0.10.42
      */
@@ -269,10 +289,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonInteger}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonInteger}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonInteger}
-     * @throws ClassCastException  if this JSON value is not a number represented as an integer
+     * @throws ClassCastException  if this JSON value is not an integral number, not {@link JsonInteger}
      *
      * @since 0.10.42
      */
@@ -281,10 +301,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonDecimal}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonDecimal}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonDecimal}
-     * @throws ClassCastException  if this JSON value is not a number represented as a decimal
+     * @throws ClassCastException  if this JSON value is not a number, not {@link JsonDecimal}
      *
      * @since 0.10.42
      */
@@ -293,10 +313,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonString}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonString}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonString}
-     * @throws ClassCastException  if this JSON value is not a number represented as a string
+     * @throws ClassCastException  if this JSON value is not a string, not {@link JsonString}
      *
      * @since 0.10.42
      */
@@ -305,10 +325,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonArray}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonArray}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonArray}
-     * @throws ClassCastException  if this JSON value is not a number represented as an array
+     * @throws ClassCastException  if this JSON value is not an array, not {@link JsonArray}
      *
      * @since 0.10.42
      */
@@ -317,10 +337,10 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@code JsonObject}, or throws {@code ClassCastException} otherwise.
+     * Returns this value as {@link JsonObject}, or throws {@link ClassCastException} otherwise.
      *
      * @return itself as {@link JsonObject}
-     * @throws ClassCastException  if this JSON value is not a number represented as an object
+     * @throws ClassCastException  if this JSON value is not an object, not {@link JsonObject}
      *
      * @since 0.10.42
      */

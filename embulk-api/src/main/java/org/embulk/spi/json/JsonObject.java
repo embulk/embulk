@@ -321,15 +321,15 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     }
 
     /**
-     * Returns {@link JsonValue.Type#OBJECT}, which is the type of {@link JsonObject}.
+     * Returns {@link JsonValue.EntityType#OBJECT}, which is the entity type of {@link JsonObject}.
      *
-     * @return {@link JsonValue.Type#OBJECT}, which is the type of {@link JsonObject}
+     * @return {@link JsonValue.EntityType#OBJECT}, which is the entity type of {@link JsonObject}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.OBJECT;
+    public EntityType getEntityType() {
+        return EntityType.OBJECT;
     }
 
     /**
@@ -396,7 +396,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
 
         final StringBuilder builder = new StringBuilder();
         builder.append("{");
-        if (this.values[0].isString()) {
+        if (this.values[0].isJsonString()) {
             builder.append(this.values[0].toJson());
         } else {
             throw new IllegalStateException("Keys in JsonObject must be String.");
@@ -405,7 +405,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         builder.append(this.values[1].toJson());
         for (int i = 2; i < this.values.length; i += 2) {
             builder.append(",");
-            if (this.values[i].isString()) {
+            if (this.values[i].isJsonString()) {
                 builder.append(this.values[i].toJson());
             } else {
                 throw new IllegalStateException("Keys in JsonObject must be String.");
@@ -462,7 +462,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         }
 
         final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isObject()) {
+        if (!otherValue.isJsonObject()) {
             return false;
         }
 
@@ -520,7 +520,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
                 throw new NoSuchElementException();
             }
 
-            if (!this.values[this.index].isString()) {
+            if (!this.values[this.index].isJsonString()) {
                 throw new IllegalStateException("Keys in JsonObject must be String.");
             }
             final String key = ((JsonString) this.values[index]).getString();

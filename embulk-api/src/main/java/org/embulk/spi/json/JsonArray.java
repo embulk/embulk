@@ -89,15 +89,15 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     }
 
     /**
-     * Returns {@link JsonValue.Type#ARRAY}, which is the type of {@link JsonArray}.
+     * Returns {@link JsonValue.EntityType#ARRAY}, which is the entity type of {@link JsonArray}.
      *
-     * @return {@link JsonValue.Type#ARRAY}, which is the type of {@link JsonArray}
+     * @return {@link JsonValue.EntityType#ARRAY}, which is the entity type of {@link JsonArray}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.ARRAY;
+    public EntityType getEntityType() {
+        return EntityType.ARRAY;
     }
 
     /**
@@ -208,7 +208,7 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
             return Arrays.equals(this.values, other.values);
         }
 
-        if (!otherValue.isArray()) {
+        if (!otherValue.isJsonArray()) {
             return false;
         }
         final JsonArray other = otherValue.asJsonArray();

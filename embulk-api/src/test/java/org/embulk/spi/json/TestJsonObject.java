@@ -32,14 +32,14 @@ public class TestJsonObject {
     @Test
     public void testEmpty() {
         final JsonObject jsonObject = JsonObject.of();
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -61,14 +61,14 @@ public class TestJsonObject {
     public void testOf() {
         final JsonObject jsonObject = JsonObject.of(
                 JsonString.of("foo"), JsonInteger.of(456), JsonString.of("bar"), JsonInteger.of(456));
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -100,14 +100,14 @@ public class TestJsonObject {
                 new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()),
                 new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
                 new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)));
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -142,14 +142,14 @@ public class TestJsonObject {
                 new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("foo"), JsonNull.of()),
                 new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
                 new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("baz"), JsonInteger.of(678)));
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -185,14 +185,14 @@ public class TestJsonObject {
         map.put("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE));
         map.put("baz", JsonInteger.of(678));
         final JsonObject jsonObject = JsonObject.ofMap(map);
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -228,14 +228,14 @@ public class TestJsonObject {
         map.put(JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE));
         map.put(JsonString.of("baz"), JsonInteger.of(678));
         final JsonObject jsonObject = JsonObject.ofMapWithJsonStringKeys(map);
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
@@ -281,14 +281,14 @@ public class TestJsonObject {
                 .putAllWithJsonStringKeys(map2)
                 .build();
 
-        assertEquals(JsonValue.Type.OBJECT, jsonObject.getType());
-        assertFalse(jsonObject.isNull());
-        assertFalse(jsonObject.isBoolean());
-        assertFalse(jsonObject.isInteger());
-        assertFalse(jsonObject.isDecimal());
-        assertFalse(jsonObject.isString());
-        assertFalse(jsonObject.isArray());
-        assertTrue(jsonObject.isObject());
+        assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
+        assertFalse(jsonObject.isJsonNull());
+        assertFalse(jsonObject.isJsonBoolean());
+        assertFalse(jsonObject.isJsonInteger());
+        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonString());
+        assertFalse(jsonObject.isJsonArray());
+        assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
