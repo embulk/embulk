@@ -20,7 +20,6 @@ import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -120,16 +119,23 @@ public final class FakeJsonObject extends AbstractMap<String, JsonValue> impleme
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Fake!
+        if (otherObject instanceof JsonObject) {
+            final JsonObject other = (JsonObject) otherObject;
+            return Objects.equals(this.entrySet(), other.entrySet());
+        }
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof FakeJsonObject)) {
             return false;
         }
 
-        final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isJsonObject()) {
-            return false;
-        }
+        final FakeJsonObject other = (FakeJsonObject) otherObject;
 
-        return this.entrySet().equals(otherValue.asJsonObject().entrySet());
+        // The equality of JsonObject should be checked like a Map, not by the internal key-value array.
+        // For example, the order of the internal key-value array should not impact the equality of JsonObject.
+        return Objects.equals(this.entrySet(), other.entrySet());
     }
 
     @Override

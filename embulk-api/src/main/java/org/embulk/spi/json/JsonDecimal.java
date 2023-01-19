@@ -404,15 +404,15 @@ rrowing Primitive Conversion</a>
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        final JsonValue otherValue = (JsonValue) otherObject;
 
-        if (!otherValue.isJsonDecimal()) {
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof JsonDecimal)) {
             return false;
         }
-        return value == otherValue.asJsonDecimal().doubleValue();
+
+        final JsonDecimal other = (JsonDecimal) otherObject;
+
+        return this.value == other.value;
     }
 
     /**

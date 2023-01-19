@@ -96,13 +96,8 @@ public final class JsonNull implements JsonValue {
      */
     @Override
     public boolean equals(final Object otherObject) {
-        if (otherObject == this) {
-            return true;
-        }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        return ((JsonValue) otherObject).isJsonNull();
+        // Only the singleton instance is accepted. No arbitrary instantiation.
+        return this == INSTANCE && otherObject == INSTANCE;
     }
 
     /**

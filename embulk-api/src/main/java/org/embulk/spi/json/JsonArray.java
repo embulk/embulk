@@ -189,6 +189,9 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     /**
      * Compares the specified object with this JSON array for equality.
      *
+     * <p>Note that it can return {@code true} only when {@link JsonArray} is given. It checks the equality as a JSON array.
+     * It does not return {@code true} for a general {@link java.util.List} even though the given list contains the same elements.
+     *
      * @return {@code true} if the specified object is equal to this JSON array
      *
      * @since 0.10.42
@@ -198,30 +201,16 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        final JsonValue otherValue = (JsonValue) otherObject;
 
-        if (otherValue instanceof JsonArray) {
-            final JsonArray other = (JsonArray) otherValue;
-            return Arrays.equals(this.values, other.values);
-        }
-
-        if (!otherValue.isJsonArray()) {
-            return false;
-        }
-        final JsonArray other = otherValue.asJsonArray();
-        if (this.size() != other.size()) {
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof JsonArray)) {
             return false;
         }
 
-        for (int i = 0; i < this.size(); i++) {
-            if (!this.get(i).equals(other.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        final JsonArray other = (JsonArray) otherObject;
+
+        // The equality of JsonArray should be checked exactly as Java arrays, unlike JsonObject.
+        return Arrays.equals(this.values, other.values);
     }
 
     /**

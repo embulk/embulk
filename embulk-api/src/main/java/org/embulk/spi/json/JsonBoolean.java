@@ -131,18 +131,8 @@ public final class JsonBoolean implements JsonValue {
      */
     @Override
     public boolean equals(final Object otherObject) {
-        if (otherObject == this) {
-            return true;
-        }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-
-        final JsonValue other = (JsonValue) otherObject;
-        if (!other.isJsonBoolean()) {
-            return false;
-        }
-        return value == other.asJsonBoolean().booleanValue();
+        // Only the singleton instances FALSE and TRUE are accepted. No arbitrary instantiation.
+        return ((this == FALSE && otherObject == FALSE) || (this == TRUE && otherObject == TRUE));
     }
 
     /**

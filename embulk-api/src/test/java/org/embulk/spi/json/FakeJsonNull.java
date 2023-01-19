@@ -42,13 +42,13 @@ public final class FakeJsonNull implements JsonValue {
 
     @Override
     public boolean equals(final Object otherObject) {
-        if (otherObject == this) {
+        // Fake!
+        if (otherObject instanceof JsonNull) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        return ((JsonValue) otherObject).isJsonNull();
+
+        // Only the singleton instance is accepted. No arbitrary instantiation.
+        return this == INSTANCE && otherObject == INSTANCE;
     }
 
     @Override

@@ -129,20 +129,21 @@ public final class FakeJsonInteger implements JsonValue {
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Fake!
+        if (otherObject instanceof JsonInteger) {
+            final JsonInteger other = (JsonInteger) otherObject;
+            return this.value == other.longValue();
+        }
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof FakeJsonInteger)) {
             return false;
         }
 
-        final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isJsonInteger()) {
-            return false;
-        }
+        final FakeJsonInteger other = (FakeJsonInteger) otherObject;
 
-        final JsonInteger other = otherValue.asJsonInteger();
-        if (!other.isLongValue()) {
-            return false;
-        }
-        return this.value == other.longValue();
+        return this.value == other.value;
     }
 
     @Override

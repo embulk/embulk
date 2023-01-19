@@ -152,20 +152,15 @@ public final class JsonString implements JsonValue {
         if (this == otherObject) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof JsonString)) {
             return false;
         }
 
-        final JsonValue other = (JsonValue) otherObject;
-        if (!other.isJsonString()) {
-            return false;
-        }
+        final JsonString other = (JsonString) otherObject;
 
-        if (otherObject instanceof JsonString) {
-            final JsonString otherString = (JsonString) otherObject;
-            return Objects.equals(this.value, otherString.value);
-        }
-        return false;
+        return Objects.equals(this.value, other.value);
     }
 
     /**

@@ -18,7 +18,6 @@ package org.embulk.spi.json;
 
 import java.util.AbstractList;
 import java.util.Arrays;
-import java.util.List;
 
 public final class FakeJsonArray extends AbstractList<JsonValue> implements JsonValue {
     private FakeJsonArray(final JsonValue[] values) {
@@ -86,30 +85,22 @@ public final class FakeJsonArray extends AbstractList<JsonValue> implements Json
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        final JsonValue otherValue = (JsonValue) otherObject;
 
-        if (otherValue instanceof FakeJsonArray) {
-            final FakeJsonArray other = (FakeJsonArray) otherValue;
-            return Arrays.equals(this.values, other.values);
+        // Fake!
+        if (otherObject instanceof JsonArray) {
+            final JsonArray other = (JsonArray) otherObject;
+            return Arrays.equals(this.values, other.toArray(new JsonValue[other.size()]));
         }
 
-        if (!otherValue.isJsonArray()) {
-            return false;
-        }
-        final JsonArray other = otherValue.asJsonArray();
-        if (this.size() != other.size()) {
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof FakeJsonArray)) {
             return false;
         }
 
-        for (int i = 0; i < this.size(); i++) {
-            if (!this.get(i).equals(other.get(i))) {
-                return false;
-            }
-        }
-        return true;
+        final FakeJsonArray other = (FakeJsonArray) otherObject;
+
+        // The equality of FakeJsonArray should be checked exactly as Java arrays, unlike JsonObject.
+        return Arrays.equals(this.values, other.values);
     }
 
     @Override

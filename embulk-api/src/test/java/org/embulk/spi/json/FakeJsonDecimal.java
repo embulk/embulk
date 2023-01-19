@@ -147,15 +147,21 @@ public final class FakeJsonDecimal implements JsonValue {
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
-        }
-        final JsonValue otherValue = (JsonValue) otherObject;
 
-        if (!otherValue.isJsonDecimal()) {
+        // Fake!
+        if (otherObject instanceof JsonDecimal) {
+            final JsonDecimal other = (JsonDecimal) otherObject;
+            return this.value == other.doubleValue();
+        }
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof FakeJsonDecimal)) {
             return false;
         }
-        return value == otherValue.asJsonDecimal().doubleValue();
+
+        final FakeJsonDecimal other = (FakeJsonDecimal) otherObject;
+
+        return this.value == other.value;
     }
 
     @Override

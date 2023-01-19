@@ -52,18 +52,13 @@ public final class FakeJsonBoolean implements JsonValue {
 
     @Override
     public boolean equals(final Object otherObject) {
-        if (otherObject == this) {
-            return true;
-        }
-        if (!(otherObject instanceof JsonValue)) {
-            return false;
+        // Fake!
+        if (otherObject instanceof JsonBoolean) {
+            return this.value == ((JsonBoolean) otherObject).booleanValue();
         }
 
-        final JsonValue other = (JsonValue) otherObject;
-        if (!other.isJsonBoolean()) {
-            return false;
-        }
-        return value == other.asJsonBoolean().booleanValue();
+        // Only the singleton instances FAKE_FALSE and FAKE_TRUE are accepted. No arbitrary instantiation.
+        return ((this == FAKE_FALSE && otherObject == FAKE_FALSE) || (this == FAKE_TRUE && otherObject == FAKE_TRUE));
     }
 
     @Override

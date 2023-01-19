@@ -55,20 +55,20 @@ public final class FakeJsonString implements JsonValue {
         if (this == otherObject) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Fake!
+        if (otherObject instanceof JsonString) {
+            return Objects.equals(this.value, ((JsonString) otherObject).getString());
+        }
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof FakeJsonString)) {
             return false;
         }
 
-        final JsonValue other = (JsonValue) otherObject;
-        if (!other.isJsonString()) {
-            return false;
-        }
+        final FakeJsonString other = (FakeJsonString) otherObject;
 
-        if (otherObject instanceof FakeJsonString) {
-            final FakeJsonString otherString = (FakeJsonString) otherObject;
-            return Objects.equals(this.value, otherString.value);
-        }
-        return false;
+        return Objects.equals(this.value, other.value);
     }
 
     @Override

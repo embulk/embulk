@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -448,6 +449,9 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     /**
      * Compares the specified object with this JSON object for equality.
      *
+     * <p>Note that it can return {@code true} only when {@link JsonObject} is given. It checks the equality as a JSON object.
+     * It does not return {@code true} for a general {@link java.util.Map} even though the given map contains the same mapping.
+     *
      * @return {@code true} if the specified object is equal to this JSON object
      *
      * @since 0.10.42
@@ -457,16 +461,17 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof JsonObject)) {
             return false;
         }
 
-        final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isJsonObject()) {
-            return false;
-        }
+        final JsonObject other = (JsonObject) otherObject;
 
-        return this.entrySet().equals(otherValue.asJsonObject().entrySet());
+        // The equality of JsonObject should be checked like a Map, not by the internal key-value array.
+        // For example, the order of the internal key-value array should not impact the equality of JsonObject.
+        return Objects.equals(this.entrySet(), other.entrySet());
     }
 
     /**
