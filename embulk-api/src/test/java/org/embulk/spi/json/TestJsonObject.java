@@ -18,6 +18,7 @@ package org.embulk.spi.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -214,11 +215,26 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // Ordered differently.
+        assertEquals(JsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                     jsonObject);
+
+        // Different value.
+        assertNotEquals(JsonObject.of(
+                                JsonString.of("foo"), JsonNull.of(),
+                                JsonString.of("baz"), JsonInteger.of(789),
+                                JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                        jsonObject);
     }
 
     @Test
@@ -257,11 +273,26 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // Ordered differently.
+        assertEquals(JsonObject.of(
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("foo"), JsonNull.of()),
+                     jsonObject);
+
+        // Different value.
+        assertNotEquals(JsonObject.of(
+                               JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                               JsonString.of("baz"), JsonInteger.of(234),
+                               JsonString.of("foo"), JsonNull.of()),
+                        jsonObject);
     }
 
     @Test
