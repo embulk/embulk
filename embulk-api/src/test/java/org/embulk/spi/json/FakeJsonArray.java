@@ -1,0 +1,128 @@
+/*
+ * Copyright 2022 The Embulk project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.embulk.spi.json;
+
+import java.util.AbstractList;
+import java.util.Arrays;
+import java.util.List;
+
+public final class FakeJsonArray extends AbstractList<JsonValue> implements JsonValue {
+    private FakeJsonArray(final JsonValue[] values) {
+        this.values = values;
+    }
+
+    public static FakeJsonArray of(final JsonValue... values) {
+        if (values.length == 0) {
+            return EMPTY;
+        }
+        return new FakeJsonArray(Arrays.copyOf(values, values.length));
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.ARRAY;
+    }
+
+    @Override
+    public int size() {
+        return this.values.length;
+    }
+
+    @Override
+    public JsonValue get(final int index) {
+        return this.values[index];
+    }
+
+    @Override
+    public String toJson() {
+        if (this.values.length == 0) {
+            return "[]";
+        }
+
+        final StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        builder.append(this.values[0].toJson());
+        for (int i = 1; i < this.values.length; i++) {
+            builder.append(",");
+            builder.append(this.values[i].toJson());
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
+    @Override
+    public String toString() {
+        if (this.values.length == 0) {
+            return "[]";
+        }
+
+        final StringBuilder builder = new StringBuilder();
+        builder.append("[");
+        builder.append(this.values[0].toString());
+        for (int i = 1; i < this.values.length; i++) {
+            builder.append(",");
+            builder.append(this.values[i].toString());
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
+    @Override
+    public boolean equals(final Object otherObject) {
+        if (otherObject == this) {
+            return true;
+        }
+        if (!(otherObject instanceof JsonValue)) {
+            return false;
+        }
+        final JsonValue otherValue = (JsonValue) otherObject;
+
+        if (otherValue instanceof FakeJsonArray) {
+            final FakeJsonArray other = (FakeJsonArray) otherValue;
+            return Arrays.equals(this.values, other.values);
+        }
+
+        if (!otherValue.isJsonArray()) {
+            return false;
+        }
+        final JsonArray other = otherValue.asJsonArray();
+        if (this.size() != other.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < this.size(); i++) {
+            if (!this.get(i).equals(other.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        for (int i = 0; i < this.values.length; i++) {
+            final JsonValue value = this.values[i];
+            hash = 31 * hash + value.hashCode();
+        }
+        return hash;
+    }
+
+    private static final FakeJsonArray EMPTY = new FakeJsonArray(new JsonValue[0]);
+
+    private final JsonValue[] values;
+}

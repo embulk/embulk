@@ -21,10 +21,17 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonArray {
+    @Test
+    public void testFinal() {
+        // JsonArray must be final.
+        assertTrue(Modifier.isFinal(JsonArray.class.getModifiers()));
+    }
+
     @Test
     public void testEmpty() {
         final JsonArray jsonArray = JsonArray.of();
@@ -48,6 +55,9 @@ public class TestJsonArray {
         assertEquals("[]", jsonArray.toJson());
         assertEquals("[]", jsonArray.toString());
         assertEquals(JsonArray.of(), jsonArray);
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(FakeJsonArray.of()));
     }
 
     @Test
@@ -74,6 +84,9 @@ public class TestJsonArray {
         assertEquals("[987]", jsonArray.toJson());
         assertEquals("[987]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987)), jsonArray);
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987))));
     }
 
     @Test
@@ -120,6 +133,9 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
     @Test
@@ -166,6 +182,9 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
 
@@ -213,6 +232,9 @@ public class TestJsonArray {
         assertEquals("[1234,\"foo\",true]", jsonArray.toJson());  // Updated
         assertEquals("[1234,\"foo\",true]", jsonArray.toString());  // Updated
         assertEquals(JsonArray.of(JsonInteger.of(1234), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);  // Updated
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(1234), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
     @Test
@@ -258,5 +280,12 @@ public class TestJsonArray {
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toJson());
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonInteger.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
+
+        // JsonArray#equals must normally reject a fake imitation of JsonArray.
+        assertFalse(jsonArray.equals(
+                            FakeJsonArray.of(
+                                    JsonInteger.of(987),
+                                    JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")),
+                                    JsonBoolean.TRUE)));
     }
 }

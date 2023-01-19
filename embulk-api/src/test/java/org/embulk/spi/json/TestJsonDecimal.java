@@ -21,11 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonDecimal {
+    @Test
+    public void testFinal() {
+        // JsonDecimal must be final.
+        assertTrue(Modifier.isFinal(JsonDecimal.class.getModifiers()));
+    }
+
     @Test
     public void testBasicDoubleValue() {
         final JsonDecimal decimal = JsonDecimal.of(1234567890.123456);
@@ -65,5 +72,8 @@ public class TestJsonDecimal {
         assertEquals("1.234567890123456E9", decimal.toJson());
         assertEquals("1.234567890123456E9", decimal.toString());
         assertEquals(JsonDecimal.of(1234567890.123456), decimal);
+
+        // JsonDecimal#equals must normally reject a fake imitation of JsonDecimal.
+        assertFalse(decimal.equals(FakeJsonDecimal.of(decimal.doubleValue())));
     }
 }
