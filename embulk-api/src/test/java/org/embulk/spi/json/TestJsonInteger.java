@@ -29,14 +29,14 @@ public class TestJsonInteger {
     @Test
     public void testBasicByteValue() {
         final JsonInteger integer = JsonInteger.of(123L);
-        assertEquals(JsonValue.Type.INTEGER, integer.getType());
-        assertFalse(integer.isNull());
-        assertFalse(integer.isBoolean());
-        assertTrue(integer.isInteger());
-        assertFalse(integer.isDecimal());
-        assertFalse(integer.isString());
-        assertFalse(integer.isArray());
-        assertFalse(integer.isObject());
+        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        assertFalse(integer.isJsonNull());
+        assertFalse(integer.isJsonBoolean());
+        assertTrue(integer.isJsonInteger());
+        assertFalse(integer.isJsonDecimal());
+        assertFalse(integer.isJsonString());
+        assertFalse(integer.isJsonArray());
+        assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
         assertEquals(integer, integer.asJsonInteger());
@@ -70,14 +70,14 @@ public class TestJsonInteger {
     @Test
     public void testBasicShortValue() {
         final JsonInteger integer = JsonInteger.of(12345L);
-        assertEquals(JsonValue.Type.INTEGER, integer.getType());
-        assertFalse(integer.isNull());
-        assertFalse(integer.isBoolean());
-        assertTrue(integer.isInteger());
-        assertFalse(integer.isDecimal());
-        assertFalse(integer.isString());
-        assertFalse(integer.isArray());
-        assertFalse(integer.isObject());
+        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        assertFalse(integer.isJsonNull());
+        assertFalse(integer.isJsonBoolean());
+        assertTrue(integer.isJsonInteger());
+        assertFalse(integer.isJsonDecimal());
+        assertFalse(integer.isJsonString());
+        assertFalse(integer.isJsonArray());
+        assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
         assertEquals(integer, integer.asJsonInteger());
@@ -111,14 +111,14 @@ public class TestJsonInteger {
     @Test
     public void testBasicIntValue() {
         final JsonInteger integer = JsonInteger.of(1234567890L);
-        assertEquals(JsonValue.Type.INTEGER, integer.getType());
-        assertFalse(integer.isNull());
-        assertFalse(integer.isBoolean());
-        assertTrue(integer.isInteger());
-        assertFalse(integer.isDecimal());
-        assertFalse(integer.isString());
-        assertFalse(integer.isArray());
-        assertFalse(integer.isObject());
+        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        assertFalse(integer.isJsonNull());
+        assertFalse(integer.isJsonBoolean());
+        assertTrue(integer.isJsonInteger());
+        assertFalse(integer.isJsonDecimal());
+        assertFalse(integer.isJsonString());
+        assertFalse(integer.isJsonArray());
+        assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
         assertEquals(integer, integer.asJsonInteger());
@@ -152,14 +152,14 @@ public class TestJsonInteger {
     @Test
     public void testBasicLongValue() {
         final JsonInteger integer = JsonInteger.of(1234567890123456L);
-        assertEquals(JsonValue.Type.INTEGER, integer.getType());
-        assertFalse(integer.isNull());
-        assertFalse(integer.isBoolean());
-        assertTrue(integer.isInteger());
-        assertFalse(integer.isDecimal());
-        assertFalse(integer.isString());
-        assertFalse(integer.isArray());
-        assertFalse(integer.isObject());
+        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        assertFalse(integer.isJsonNull());
+        assertFalse(integer.isJsonBoolean());
+        assertTrue(integer.isJsonInteger());
+        assertFalse(integer.isJsonDecimal());
+        assertFalse(integer.isJsonString());
+        assertFalse(integer.isJsonArray());
+        assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
         assertEquals(integer, integer.asJsonInteger());
@@ -193,14 +193,14 @@ public class TestJsonInteger {
     @Test
     public void testWithLiteral() {
         final JsonInteger integer = JsonInteger.withLiteral(1234567890123456L, "999999999999999999991234567890123456");
-        assertEquals(JsonValue.Type.INTEGER, integer.getType());
-        assertFalse(integer.isNull());
-        assertFalse(integer.isBoolean());
-        assertTrue(integer.isInteger());
-        assertFalse(integer.isDecimal());
-        assertFalse(integer.isString());
-        assertFalse(integer.isArray());
-        assertFalse(integer.isObject());
+        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        assertFalse(integer.isJsonNull());
+        assertFalse(integer.isJsonBoolean());
+        assertTrue(integer.isJsonInteger());
+        assertFalse(integer.isJsonDecimal());
+        assertFalse(integer.isJsonString());
+        assertFalse(integer.isJsonArray());
+        assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
         assertEquals(integer, integer.asJsonInteger());

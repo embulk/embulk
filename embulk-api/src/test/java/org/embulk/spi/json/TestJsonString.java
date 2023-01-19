@@ -27,14 +27,14 @@ public class TestJsonString {
     @Test
     public void testBasic() {
         final JsonString string = JsonString.of("hoge");
-        assertEquals(JsonValue.Type.STRING, string.getType());
-        assertFalse(string.isNull());
-        assertFalse(string.isBoolean());
-        assertFalse(string.isInteger());
-        assertFalse(string.isDecimal());
-        assertTrue(string.isString());
-        assertFalse(string.isArray());
-        assertFalse(string.isObject());
+        assertEquals(JsonValue.EntityType.STRING, string.getEntityType());
+        assertFalse(string.isJsonNull());
+        assertFalse(string.isJsonBoolean());
+        assertFalse(string.isJsonInteger());
+        assertFalse(string.isJsonDecimal());
+        assertTrue(string.isJsonString());
+        assertFalse(string.isJsonArray());
+        assertFalse(string.isJsonObject());
         assertThrows(ClassCastException.class, () -> string.asJsonNull());
         assertThrows(ClassCastException.class, () -> string.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> string.asJsonInteger());
@@ -53,14 +53,14 @@ public class TestJsonString {
     @Test
     public void testWithLiteral() {
         final JsonString string = JsonString.withLiteral("hoge\n", "\"\\u0068oge\\n\"");
-        assertEquals(JsonValue.Type.STRING, string.getType());
-        assertFalse(string.isNull());
-        assertFalse(string.isBoolean());
-        assertFalse(string.isInteger());
-        assertFalse(string.isDecimal());
-        assertTrue(string.isString());
-        assertFalse(string.isArray());
-        assertFalse(string.isObject());
+        assertEquals(JsonValue.EntityType.STRING, string.getEntityType());
+        assertFalse(string.isJsonNull());
+        assertFalse(string.isJsonBoolean());
+        assertFalse(string.isJsonInteger());
+        assertFalse(string.isJsonDecimal());
+        assertTrue(string.isJsonString());
+        assertFalse(string.isJsonArray());
+        assertFalse(string.isJsonObject());
         assertThrows(ClassCastException.class, () -> string.asJsonNull());
         assertThrows(ClassCastException.class, () -> string.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> string.asJsonInteger());
@@ -79,14 +79,14 @@ public class TestJsonString {
     @Test
     public void testEscape() {
         final JsonString string = JsonString.of("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux");
-        assertEquals(JsonValue.Type.STRING, string.getType());
-        assertFalse(string.isNull());
-        assertFalse(string.isBoolean());
-        assertFalse(string.isInteger());
-        assertFalse(string.isDecimal());
-        assertTrue(string.isString());
-        assertFalse(string.isArray());
-        assertFalse(string.isObject());
+        assertEquals(JsonValue.EntityType.STRING, string.getEntityType());
+        assertFalse(string.isJsonNull());
+        assertFalse(string.isJsonBoolean());
+        assertFalse(string.isJsonInteger());
+        assertFalse(string.isJsonDecimal());
+        assertTrue(string.isJsonString());
+        assertFalse(string.isJsonArray());
+        assertFalse(string.isJsonObject());
         assertThrows(ClassCastException.class, () -> string.asJsonNull());
         assertThrows(ClassCastException.class, () -> string.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> string.asJsonInteger());

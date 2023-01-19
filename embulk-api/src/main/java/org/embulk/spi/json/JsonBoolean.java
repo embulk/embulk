@@ -58,15 +58,15 @@ public final class JsonBoolean implements JsonValue {
     }
 
     /**
-     * Returns {@link JsonValue.Type#BOOLEAN}, which is the type of {@link JsonBoolean}.
+     * Returns {@link JsonValue.EntityType#BOOLEAN}, which is the entity type of {@link JsonBoolean}.
      *
-     * @return {@link JsonValue.Type#BOOLEAN}, which is the type of {@link JsonBoolean}
+     * @return {@link JsonValue.EntityType#BOOLEAN}, which is the entity type of {@link JsonBoolean}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.BOOLEAN;
+    public EntityType getEntityType() {
+        return EntityType.BOOLEAN;
     }
 
     /**
@@ -139,7 +139,7 @@ public final class JsonBoolean implements JsonValue {
         }
 
         final JsonValue other = (JsonValue) otherObject;
-        if (!other.isBoolean()) {
+        if (!other.isJsonBoolean()) {
             return false;
         }
         return value == other.asJsonBoolean().booleanValue();

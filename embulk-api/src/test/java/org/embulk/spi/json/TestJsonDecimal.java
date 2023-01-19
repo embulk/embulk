@@ -29,14 +29,14 @@ public class TestJsonDecimal {
     @Test
     public void testBasicDoubleValue() {
         final JsonDecimal decimal = JsonDecimal.of(1234567890.123456);
-        assertEquals(JsonValue.Type.DECIMAL, decimal.getType());
-        assertFalse(decimal.isNull());
-        assertFalse(decimal.isBoolean());
-        assertFalse(decimal.isInteger());
-        assertTrue(decimal.isDecimal());
-        assertFalse(decimal.isString());
-        assertFalse(decimal.isArray());
-        assertFalse(decimal.isObject());
+        assertEquals(JsonValue.EntityType.DECIMAL, decimal.getEntityType());
+        assertFalse(decimal.isJsonNull());
+        assertFalse(decimal.isJsonBoolean());
+        assertFalse(decimal.isJsonInteger());
+        assertTrue(decimal.isJsonDecimal());
+        assertFalse(decimal.isJsonString());
+        assertFalse(decimal.isJsonArray());
+        assertFalse(decimal.isJsonObject());
         assertThrows(ClassCastException.class, () -> decimal.asJsonNull());
         assertThrows(ClassCastException.class, () -> decimal.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> decimal.asJsonInteger());

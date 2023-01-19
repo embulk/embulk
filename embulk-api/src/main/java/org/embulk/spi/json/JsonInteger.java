@@ -63,15 +63,15 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns {@link JsonValue.Type#INTEGER}, which is the type of {@link JsonInteger}.
+     * Returns {@link JsonValue.EntityType#INTEGER}, which is the entity type of {@link JsonInteger}.
      *
-     * @return {@link JsonValue.Type#INTEGER}, which is the type of {@link JsonInteger}
+     * @return {@link JsonValue.EntityType#INTEGER}, which is the entity type of {@link JsonInteger}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.INTEGER;
+    public EntityType getEntityType() {
+        return EntityType.INTEGER;
     }
 
     /**
@@ -376,7 +376,7 @@ public final class JsonInteger implements JsonValue {
         }
 
         final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isInteger()) {
+        if (!otherValue.isJsonInteger()) {
             return false;
         }
 

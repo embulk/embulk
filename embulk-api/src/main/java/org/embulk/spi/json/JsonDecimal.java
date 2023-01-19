@@ -62,15 +62,15 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns {@link JsonValue.Type#DECIMAL}, which is the type of {@link JsonDecimal}.
+     * Returns {@link JsonValue.EntityType#DECIMAL}, which is the entity type of {@link JsonDecimal}.
      *
-     * @return {@link JsonValue.Type#DECIMAL}, which is the type of {@link JsonDecimal}
+     * @return {@link JsonValue.EntityType#DECIMAL}, which is the entity type of {@link JsonDecimal}
      *
      * @since 0.10.42
      */
     @Override
-    public Type getType() {
-        return Type.DECIMAL;
+    public EntityType getEntityType() {
+        return EntityType.DECIMAL;
     }
 
     /**
@@ -409,7 +409,7 @@ rrowing Primitive Conversion</a>
         }
         final JsonValue otherValue = (JsonValue) otherObject;
 
-        if (!otherValue.isDecimal()) {
+        if (!otherValue.isJsonDecimal()) {
             return false;
         }
         return value == otherValue.asJsonDecimal().doubleValue();

@@ -27,14 +27,14 @@ public class TestJsonBoolean {
     @Test
     public void testFalse() {
         final JsonBoolean jsonBoolean = JsonBoolean.of(false);
-        assertEquals(JsonValue.Type.BOOLEAN, jsonBoolean.getType());
-        assertFalse(jsonBoolean.isNull());
-        assertTrue(jsonBoolean.isBoolean());
-        assertFalse(jsonBoolean.isInteger());
-        assertFalse(jsonBoolean.isDecimal());
-        assertFalse(jsonBoolean.isString());
-        assertFalse(jsonBoolean.isArray());
-        assertFalse(jsonBoolean.isObject());
+        assertEquals(JsonValue.EntityType.BOOLEAN, jsonBoolean.getEntityType());
+        assertFalse(jsonBoolean.isJsonNull());
+        assertTrue(jsonBoolean.isJsonBoolean());
+        assertFalse(jsonBoolean.isJsonInteger());
+        assertFalse(jsonBoolean.isJsonDecimal());
+        assertFalse(jsonBoolean.isJsonString());
+        assertFalse(jsonBoolean.isJsonArray());
+        assertFalse(jsonBoolean.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonNull());
         assertEquals(jsonBoolean, jsonBoolean.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonInteger());
@@ -52,14 +52,14 @@ public class TestJsonBoolean {
     @Test
     public void testTrue() {
         final JsonBoolean jsonBoolean = JsonBoolean.of(true);
-        assertEquals(JsonValue.Type.BOOLEAN, jsonBoolean.getType());
-        assertFalse(jsonBoolean.isNull());
-        assertTrue(jsonBoolean.isBoolean());
-        assertFalse(jsonBoolean.isInteger());
-        assertFalse(jsonBoolean.isDecimal());
-        assertFalse(jsonBoolean.isString());
-        assertFalse(jsonBoolean.isArray());
-        assertFalse(jsonBoolean.isObject());
+        assertEquals(JsonValue.EntityType.BOOLEAN, jsonBoolean.getEntityType());
+        assertFalse(jsonBoolean.isJsonNull());
+        assertTrue(jsonBoolean.isJsonBoolean());
+        assertFalse(jsonBoolean.isJsonInteger());
+        assertFalse(jsonBoolean.isJsonDecimal());
+        assertFalse(jsonBoolean.isJsonString());
+        assertFalse(jsonBoolean.isJsonArray());
+        assertFalse(jsonBoolean.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonNull());
         assertEquals(jsonBoolean, jsonBoolean.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonInteger());
