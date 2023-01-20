@@ -21,8 +21,10 @@ public final class FakeJsonNull implements JsonValue {
         // No direct instantiation.
     }
 
+    public static final FakeJsonNull FAKE_NULL = new FakeJsonNull();
+
     public static FakeJsonNull ofFake() {
-        return INSTANCE;
+        return FAKE_NULL;
     }
 
     @Override
@@ -53,13 +55,11 @@ public final class FakeJsonNull implements JsonValue {
         }
 
         // Only the singleton instance is accepted. No arbitrary instantiation.
-        return this == INSTANCE && otherObject == INSTANCE;
+        return this == FAKE_NULL && otherObject == FAKE_NULL;
     }
 
     @Override
     public int hashCode() {
         return 0;
     }
-
-    private static final FakeJsonNull INSTANCE = new FakeJsonNull();
 }

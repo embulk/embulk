@@ -29,6 +29,13 @@ public final class JsonNull implements JsonValue {
     }
 
     /**
+     * The singleton instance that represents {@code null} in JSON.
+     *
+     * @since 0.10.42
+     */
+    public static final JsonNull NULL = new JsonNull();
+
+    /**
      * Returns the singleton instance of {@link JsonNull}.
      *
      * @return the singleton instance of {@link JsonNull}
@@ -36,7 +43,7 @@ public final class JsonNull implements JsonValue {
      * @since 0.10.42
      */
     public static JsonNull of() {
-        return INSTANCE;
+        return NULL;
     }
 
     /**
@@ -110,7 +117,7 @@ public final class JsonNull implements JsonValue {
     @Override
     public boolean equals(final Object otherObject) {
         // Only the singleton instance is accepted. No arbitrary instantiation.
-        return this == INSTANCE && otherObject == INSTANCE;
+        return this == NULL && otherObject == NULL;
     }
 
     /**
@@ -124,6 +131,4 @@ public final class JsonNull implements JsonValue {
     public int hashCode() {
         return 0;
     }
-
-    private static final JsonNull INSTANCE = new JsonNull();
 }

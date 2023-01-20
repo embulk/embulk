@@ -52,6 +52,7 @@ public class TestJsonNull {
         assertEquals(1, jsonNull.presumeReferenceSizeInBytes());
         assertEquals("null", jsonNull.toJson());
         assertEquals("null", jsonNull.toString());
+        assertEquals(JsonNull.NULL, jsonNull);
         assertEquals(JsonNull.of(), jsonNull);
 
         // JsonNull#equals must normally reject a fake imitation of JsonNull.
