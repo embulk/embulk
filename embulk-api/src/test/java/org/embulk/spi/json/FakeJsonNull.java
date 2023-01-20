@@ -31,6 +31,11 @@ public final class FakeJsonNull implements JsonValue {
     }
 
     @Override
+    public int presumeReferenceSizeInBytes() {
+        return 1;
+    }
+
+    @Override
     public String toJson() {
         return "null";
     }

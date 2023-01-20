@@ -84,6 +84,18 @@ public final class JsonDouble implements JsonNumber {
     }
 
     /**
+     * Returns {@code 8} for the size of {@code double} in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return {@code 8}
+     *
+     * @see <a href="https://github.com/airlift/slice/blob/0.9/src/main/java/io/airlift/slice/SizeOf.java#L42">SIZE_OF_DOUBLE in Airlift's Slice</a>
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 8;
+    }
+
+    /**
      * Returns {@code true} if this JSON number is integral.
      *
      * <p>Note that it does not guarantee this JSON number can be represented as a Java primitive exact {@code long}.

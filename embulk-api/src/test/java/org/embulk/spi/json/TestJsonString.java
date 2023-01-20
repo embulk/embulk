@@ -49,6 +49,7 @@ public class TestJsonString {
         assertEquals(string, string.asJsonString());
         assertThrows(ClassCastException.class, () -> string.asJsonArray());
         assertThrows(ClassCastException.class, () -> string.asJsonObject());
+        assertEquals(12, string.presumeReferenceSizeInBytes());
         assertEquals("hoge", string.getString());
         assertEquals("hoge", string.getChars());
         assertEquals("\"hoge\"", string.toJson());
@@ -78,6 +79,7 @@ public class TestJsonString {
         assertEquals(string, string.asJsonString());
         assertThrows(ClassCastException.class, () -> string.asJsonArray());
         assertThrows(ClassCastException.class, () -> string.asJsonObject());
+        assertEquals(14, string.presumeReferenceSizeInBytes());
         assertEquals("hoge\n", string.getString());
         assertEquals("hoge\n", string.getChars());
         assertEquals("\"\\u0068oge\\n\"", string.toJson());
@@ -107,6 +109,7 @@ public class TestJsonString {
         assertEquals(string, string.asJsonString());
         assertThrows(ClassCastException.class, () -> string.asJsonArray());
         assertThrows(ClassCastException.class, () -> string.asJsonObject());
+        assertEquals(100, string.presumeReferenceSizeInBytes());
         assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux", string.getString());
         assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux", string.getChars());
         assertEquals(

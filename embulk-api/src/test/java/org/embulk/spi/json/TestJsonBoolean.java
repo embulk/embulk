@@ -49,6 +49,7 @@ public class TestJsonBoolean {
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonObject());
+        assertEquals(1, jsonBoolean.presumeReferenceSizeInBytes());
         assertEquals(false, jsonBoolean.booleanValue());
         assertEquals("false", jsonBoolean.toJson());
         assertEquals("false", jsonBoolean.toString());
@@ -78,6 +79,7 @@ public class TestJsonBoolean {
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonBoolean.asJsonObject());
+        assertEquals(1, jsonBoolean.presumeReferenceSizeInBytes());
         assertEquals(true, jsonBoolean.booleanValue());
         assertEquals("true", jsonBoolean.toJson());
         assertEquals("true", jsonBoolean.toString());

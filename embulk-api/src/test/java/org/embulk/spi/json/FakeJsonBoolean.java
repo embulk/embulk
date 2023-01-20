@@ -30,6 +30,11 @@ public final class FakeJsonBoolean implements JsonValue {
         return EntityType.BOOLEAN;
     }
 
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 1;
+    }
+
     public boolean booleanValue() {
         return this.value;
     }

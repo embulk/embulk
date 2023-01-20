@@ -82,6 +82,19 @@ public final class JsonBoolean implements JsonValue {
     }
 
     /**
+     * Returns {@code 1} for the size of {@code byte} in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return {@code 1}
+     *
+     * @see <a href="https://github.com/airlift/slice/blob/0.9/src/main/java/io/airlift/slice/SizeOf.java#L37">SIZE_OF_BYTE in Airlift's Slice</a>
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        // BOOLEAN is stored in Page as a byte.
+        return 1;
+    }
+
+    /**
      * Returns this JSON {@code true} or {@code false} as a primitive {@code boolean}.
      *
      * @return the {@code boolean} representation of this JSON {@code true} or {@code false}

@@ -346,6 +346,20 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     }
 
     /**
+     * Returns the approximate size of this JSON object in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return the approximate size of this JSON object in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        int sum = 4;
+        for (int i = 0; i < this.values.length; i++) {
+            sum += this.values[i].presumeReferenceSizeInBytes();
+        }
+        return sum;
+    }
+
+    /**
      * Returns the number of JSON key-value mappings in this object.
      *
      * @return the number of JSON key-value mappings in this object

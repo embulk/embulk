@@ -349,6 +349,13 @@ public interface JsonValue {
     }
 
     /**
+     * Returns the approximate size of this JSON value in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return the approximate size of this JSON value in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference
+     */
+    int presumeReferenceSizeInBytes();
+
+    /**
      * Compares the specified object with this JSON value for equality.
      *
      * @return {@code true} if the specified object is equal to this JSON value

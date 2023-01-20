@@ -86,6 +86,18 @@ public final class JsonLong implements JsonNumber {
     }
 
     /**
+     * Returns {@code 8} for the size of {@code long} in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return {@code 8}
+     *
+     * @see <a href="https://github.com/airlift/slice/blob/0.9/src/main/java/io/airlift/slice/SizeOf.java#L40">SIZE_OF_LONG in Airlift's Slice</a>
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 8;
+    }
+
+    /**
      * Returns {@code true} to represent this JSON number is integral.
      *
      * @return {@code true}

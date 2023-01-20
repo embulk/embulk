@@ -113,6 +113,20 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     }
 
     /**
+     * Returns the approximate size of this JSON array in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return the approximate size of this JSON array in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        int sum = 4;
+        for (int i = 0; i < this.values.length; i++) {
+            sum += this.values[i].presumeReferenceSizeInBytes();
+        }
+        return sum;
+    }
+
+    /**
      * Returns the number of JSON values in this array.
      *
      * @return the number of JSON values in this array

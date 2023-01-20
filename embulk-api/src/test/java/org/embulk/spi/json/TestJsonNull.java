@@ -49,6 +49,7 @@ public class TestJsonNull {
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonObject());
+        assertEquals(1, jsonNull.presumeReferenceSizeInBytes());
         assertEquals("null", jsonNull.toJson());
         assertEquals("null", jsonNull.toString());
         assertEquals(JsonNull.of(), jsonNull);

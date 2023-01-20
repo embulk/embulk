@@ -32,6 +32,11 @@ public final class FakeJsonString implements JsonValue {
         return EntityType.STRING;
     }
 
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return this.value.length() * 2 + 4;
+    }
+
     public String getString() {
         return this.value;
     }

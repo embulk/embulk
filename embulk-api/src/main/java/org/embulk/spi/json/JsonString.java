@@ -85,6 +85,17 @@ public final class JsonString implements JsonValue {
     }
 
     /**
+     * Returns the approximate size of this JSON string in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * @return the approximate size of this JSON string in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        // Indeed, null is stored in Page as a special form as |nullBitSet|, but considered as 1 here in JsonValue just for ease.
+        return this.value.length() * 2 + 4;
+    }
+
+    /**
      * Returns this JSON string as {@link String}.
      *
      * @return the {@link String} representation of this JSON string

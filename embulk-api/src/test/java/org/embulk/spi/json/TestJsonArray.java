@@ -50,6 +50,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(4, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(0, jsonArray.size());
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(0));
         assertEquals("[]", jsonArray.toJson());
@@ -78,6 +79,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(12, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(1, jsonArray.size());
         assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(1));
@@ -111,6 +113,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(23, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(3, jsonArray.size());
         assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
@@ -160,6 +163,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(23, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(3, jsonArray.size());
         assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
@@ -187,7 +191,6 @@ public class TestJsonArray {
         assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
-
     @Test
     public void testMultiUnsafe() {
         final JsonValue[] values = new JsonValue[3];
@@ -210,6 +213,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(23, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(3, jsonArray.size());
         assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
@@ -259,6 +263,7 @@ public class TestJsonArray {
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
+        assertEquals(47, jsonArray.presumeReferenceSizeInBytes());
         assertEquals(3, jsonArray.size());
         assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), jsonArray.get(1));
