@@ -20,74 +20,73 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * Represents a integer number in JSON.
- *
- * <p>It represents the integer number as a Java primitive {@code long}, which is the same as Embulk's {@code LONG} column type.
+ * Represents a integral number in JSON, represented by a Java primitive {@code long}, which is the same as Embulk's {@code LONG} column type.
  *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format</a>
  *
  * @since 0.10.42
  */
-public final class JsonInteger implements JsonValue {
-    private JsonInteger(final long value, final String literal) {
+public final class JsonLong implements JsonValue {
+    private JsonLong(final long value, final String literal) {
         // No direct instantiation.
         this.value = value;
         this.literal = literal;
     }
 
     /**
-     * Returns a JSON integer number that is represented by the specified primitive {@code long}.
+     * Returns a JSON integral number represented by the specified Java primitive {@code long}.
      *
-     * @param value  the integer number
-     * @return a JSON integer number represented by the specified primitive {@code long}
-     *
-     * @since 0.10.42
-     */
-    public static JsonInteger of(final long value) {
-        return new JsonInteger(value, null);
-    }
-
-    /**
-     * Returns a JSON integer number that is represented by the specified primitive {@code long}, with the specified JSON literal.
-     *
-     * <p>The literal is just subsidiary information used when stringifying this JSON integer number as JSON by {@link #toJson()}.
-     *
-     * @param value  the integer number
-     * @param literal  the JSON literal of the integer number
-     * @return a JSON integer number represented by the specified primitive {@code long}
+     * @param value  the integral number
+     * @return a JSON integral number represented by the specified Java primitive {@code long}
      *
      * @since 0.10.42
      */
-    public static JsonInteger withLiteral(final long value, final String literal) {
-        return new JsonInteger(value, literal);
+    public static JsonLong of(final long value) {
+        return new JsonLong(value, null);
     }
 
     /**
-     * Returns {@link JsonValue.EntityType#INTEGER}, which is the entity type of {@link JsonInteger}.
+     * Returns a JSON integral number represented by the specified Java primitive {@code long}, with the specified JSON literal.
      *
-     * @return {@link JsonValue.EntityType#INTEGER}, which is the entity type of {@link JsonInteger}
+     * <p>The literal is just subsidiary information used when stringifying this integral number as JSON by {@link #toJson()}.
+     * The literal does not impact the equality definition by {@link #equals(Object)}.
+     *
+     * @param value  the integral number
+     * @param literal  the JSON literal of the integral number
+     * @return a JSON integral number represented by the specified Java primitive {@code long}
+     *
+     * @since 0.10.42
+     */
+    public static JsonLong withLiteral(final long value, final String literal) {
+        return new JsonLong(value, literal);
+    }
+
+    /**
+     * Returns {@link JsonValue.EntityType#LONG}, which is the entity type of {@link JsonLong}.
+     *
+     * @return {@link JsonValue.EntityType#LONG}, which is the entity type of {@link JsonLong}
      *
      * @since 0.10.42
      */
     @Override
     public EntityType getEntityType() {
-        return EntityType.INTEGER;
+        return EntityType.LONG;
     }
 
     /**
-     * Returns this value as {@link JsonInteger}.
+     * Returns this value as {@link JsonLong}.
      *
-     * @return itself as {@link JsonInteger}
+     * @return itself as {@link JsonLong}
      *
      * @since 0.10.42
      */
     @Override
-    public JsonInteger asJsonInteger() {
+    public JsonLong asJsonLong() {
         return this;
     }
 
     /**
-     * Returns {@code true} to represent this JSON number is an integer number.
+     * Returns {@code true} to represent this JSON number is integral.
      *
      * @return {@code true}
      *
@@ -98,9 +97,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON integer number is in the range of {@code byte}, [-2<sup>7</sup> to 2<sup>7</sup>-1].
+     * Returns {@code true} if the JSON integral number is in the range of {@code byte}, [-2<sup>7</sup> to 2<sup>7</sup>-1].
      *
-     * @return {@code true} if the JSON integer number is in the range of {@code byte}
+     * @return {@code true} if the JSON integral number is in the range of {@code byte}
      *
      * @since 0.10.42
      */
@@ -109,9 +108,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON integer number is in the range of {@code short}, [-2<sup>15</sup> to 2<sup>15</sup>-1].
+     * Returns {@code true} if the JSON integral number is in the range of {@code short}, [-2<sup>15</sup> to 2<sup>15</sup>-1].
      *
-     * @return {@code true} if the JSON integer number is in the range of {@code short}
+     * @return {@code true} if the JSON integral number is in the range of {@code short}
      *
      * @since 0.10.42
      */
@@ -120,9 +119,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON integer number is in the range of {@code int}, [-2<sup>31</sup> to 2<sup>31</sup>-1].
+     * Returns {@code true} if the JSON integral number is in the range of {@code int}, [-2<sup>31</sup> to 2<sup>31</sup>-1].
      *
-     * @return {@code true} if the JSON integer number is in the range of {@code int}
+     * @return {@code true} if the JSON integral number is in the range of {@code int}
      *
      * @since 0.10.42
      */
@@ -142,13 +141,13 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code byte}.
+     * Returns this JSON integral number as a Java primitive {@code byte}.
      *
      * <p>It narrows down {@code long} to {@code byte} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON integer number, and can cause the sign of the resulting value to differ from the sign
-     * of this JSON integer number.
+     * about the magnitude of this JSON integral number, and can cause the sign of the resulting value to differ from the sign
+     * of this JSON integral number.
      *
-     * @return the {@code byte} representation of this JSON integer number
+     * @return the {@code byte} representation of this JSON integral number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -159,12 +158,12 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code byte}.
+     * Returns this JSON integral number as a Java primitive {@code byte}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON integer number is out of the range of {@code byte}.
+     * <p>It throws {@link ArithmeticException} if the JSON integral number is out of the range of {@code byte}.
      *
-     * @return the {@code byte} representation of this JSON integer number
-     * @throws ArithmeticException  if the JSON integer number does not fir in a primitive {@code byte}
+     * @return the {@code byte} representation of this JSON integral number
+     * @throws ArithmeticException  if the JSON integral number does not fit in a Java primitive {@code byte}
      *
      * @since 0.10.42
      */
@@ -176,13 +175,13 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code short}.
+     * Returns this JSON integral number as a Java primitive {@code short}.
      *
      * <p>It narrows down {@code long} to {@code short} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON integer number, and can cause the sign of the resulting value to differ from the sign
-     * of this JSON integer number.
+     * about the magnitude of this JSON integral number, and can cause the sign of the resulting value to differ from the sign
+     * of this JSON integral number.
      *
-     * @return the {@code short} representation of this JSON integer number
+     * @return the {@code short} representation of this JSON integral number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -193,12 +192,12 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code short}.
+     * Returns this JSON integral number as a Java primitive {@code short}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON integer number is out of the range of {@code short}.
+     * <p>It throws {@link ArithmeticException} if the JSON integral number is out of the range of {@code short}.
      *
-     * @return the {@code short} representation of this JSON integer number
-     * @throws ArithmeticException  if the JSON integer number does not fir in a primitive {@code short}
+     * @return the {@code short} representation of this JSON integral number
+     * @throws ArithmeticException  if the JSON integral number does not fit in a Java primitive {@code short}
      *
      * @since 0.10.42
      */
@@ -210,13 +209,13 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code int}.
+     * Returns this JSON integral number as a Java primitive {@code int}.
      *
      * <p>It narrows down {@code long} to {@code int} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON integer number, and can cause the sign of the resulting value to differ from the sign
-     * of this JSON integer number.
+     * about the magnitude of this JSON integral number, and can cause the sign of the resulting value to differ from the sign
+     * of this JSON integral number.
      *
-     * @return the {@code int} representation of this JSON integer number
+     * @return the {@code int} representation of this JSON integral number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -227,12 +226,12 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code int}.
+     * Returns this JSON integral number as a Java primitive {@code int}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON integer number is out of the range of {@code int}.
+     * <p>It throws {@link ArithmeticException} if the JSON integral number is out of the range of {@code int}.
      *
-     * @return the {@code int} representation of this JSON integer number
-     * @throws ArithmeticException  if the JSON integer number does not fir in a primitive {@code int}
+     * @return the {@code int} representation of this JSON integral number
+     * @throws ArithmeticException  if the JSON integral number does not fit in a Java primitive {@code int}
      *
      * @since 0.10.42
      */
@@ -244,9 +243,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code long}.
+     * Returns this JSON integral number as a Java primitive {@code long}.
      *
-     * @return the {@code long} representation of this JSON integer number
+     * @return the {@code long} representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -255,9 +254,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code long}.
+     * Returns this JSON integral number as a Java primitive {@code long}.
      *
-     * @return the {@code long} representation of this JSON integer number
+     * @return the {@code long} representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -266,9 +265,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a {@link java.math.BigInteger}.
+     * Returns this JSON integral number as a {@link java.math.BigInteger}.
      *
-     * @return the {@link java.math.BigInteger} representation of this JSON integer number
+     * @return the {@link java.math.BigInteger} representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -277,9 +276,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a {@link java.math.BigInteger}.
+     * Returns this JSON integral number as a {@link java.math.BigInteger}.
      *
-     * @return the {@link java.math.BigInteger} representation of this JSON integer number
+     * @return the {@link java.math.BigInteger} representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -288,12 +287,12 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code float}.
+     * Returns this JSON integral number as a Java primitive {@code float}.
      *
      * <p>It widens {@code long} to {@code float} as a Java primitive. Note that this conversion can lose precision of
-     * this JSON integer number.
+     * this JSON integral number.
      *
-     * @return the {@code float} representation of this JSON integer number
+     * @return the {@code float} representation of this JSON integral number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.2">Java Language Specification - 5.1.2. Widening Primitive Conversion</a>
      *
@@ -304,12 +303,12 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a primitive {@code double}.
+     * Returns this JSON integral number as a Java primitive {@code double}.
      *
      * <p>It widens {@code long} to {@code double} as a Java primitive. Note that this conversion can lose precision of
-     * this JSON integer number.
+     * this JSON integral number.
      *
-     * @return the {@code double} representation of this JSON integer number
+     * @return the {@code double} representation of this JSON integral number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.2">Java Language Specification - 5.1.2. Widening Primitive Conversion</a>
      *
@@ -320,9 +319,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns this JSON integer number as a {@link java.math.BigDecimal}.
+     * Returns this JSON integral number as a {@link java.math.BigDecimal}.
      *
-     * @return the {@link java.math.BigDecimal} representation of this JSON integer number
+     * @return the {@link java.math.BigDecimal} representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -331,11 +330,11 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns the stringified JSON representation of this JSON integer number.
+     * Returns the stringified JSON representation of this JSON integral number.
      *
-     * <p>If this JSON integer number is created with a literal by {@link #withLiteral(long, String)}, it returns the literal.
+     * <p>If this JSON integral number is created with a literal by {@link #withLiteral(long, String)}, it returns the literal.
      *
-     * @return the stringified JSON representation of this JSON integer number
+     * @return the stringified JSON representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -348,9 +347,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Returns the string representation of this JSON integer number.
+     * Returns the string representation of this JSON integral number.
      *
-     * @return the string representation of this JSON integer number
+     * @return the string representation of this JSON integral number
      *
      * @since 0.10.42
      */
@@ -360,9 +359,9 @@ public final class JsonInteger implements JsonValue {
     }
 
     /**
-     * Compares the specified object with this JSON integer number for equality.
+     * Compares the specified object with this JSON integral number for equality.
      *
-     * @return {@code true} if the specified object is equal to this JSON integer number
+     * @return {@code true} if the specified object is equal to this JSON integral number
      *
      * @since 0.10.42
      */
@@ -373,19 +372,19 @@ public final class JsonInteger implements JsonValue {
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof JsonInteger)) {
+        if (!(otherObject instanceof JsonLong)) {
             return false;
         }
 
-        final JsonInteger other = (JsonInteger) otherObject;
+        final JsonLong other = (JsonLong) otherObject;
 
         return this.value == other.value;
     }
 
     /**
-     * Returns the hash code value for this JSON integer number.
+     * Returns the hash code value for this JSON integral number.
      *
-     * @return the hash code value for this JSON integer number
+     * @return the hash code value for this JSON integral number
      *
      * @since 0.10.42
      */

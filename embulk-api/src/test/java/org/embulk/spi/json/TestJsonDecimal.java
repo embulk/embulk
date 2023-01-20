@@ -39,14 +39,14 @@ public class TestJsonDecimal {
         assertEquals(JsonValue.EntityType.DECIMAL, decimal.getEntityType());
         assertFalse(decimal.isJsonNull());
         assertFalse(decimal.isJsonBoolean());
-        assertFalse(decimal.isJsonInteger());
+        assertFalse(decimal.isJsonLong());
         assertTrue(decimal.isJsonDecimal());
         assertFalse(decimal.isJsonString());
         assertFalse(decimal.isJsonArray());
         assertFalse(decimal.isJsonObject());
         assertThrows(ClassCastException.class, () -> decimal.asJsonNull());
         assertThrows(ClassCastException.class, () -> decimal.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> decimal.asJsonInteger());
+        assertThrows(ClassCastException.class, () -> decimal.asJsonLong());
         assertEquals(decimal, decimal.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> decimal.asJsonString());
         assertThrows(ClassCastException.class, () -> decimal.asJsonArray());

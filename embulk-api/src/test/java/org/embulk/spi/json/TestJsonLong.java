@@ -26,27 +26,27 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
-public class TestJsonInteger {
+public class TestJsonLong {
     @Test
     public void testFinal() {
-        // JsonInteger must be final.
-        assertTrue(Modifier.isFinal(JsonInteger.class.getModifiers()));
+        // JsonLong must be final.
+        assertTrue(Modifier.isFinal(JsonLong.class.getModifiers()));
     }
 
     @Test
     public void testBasicByteValue() {
-        final JsonInteger integer = JsonInteger.of(123L);
-        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        final JsonLong integer = JsonLong.of(123L);
+        assertEquals(JsonValue.EntityType.LONG, integer.getEntityType());
         assertFalse(integer.isJsonNull());
         assertFalse(integer.isJsonBoolean());
-        assertTrue(integer.isJsonInteger());
+        assertTrue(integer.isJsonLong());
         assertFalse(integer.isJsonDecimal());
         assertFalse(integer.isJsonString());
         assertFalse(integer.isJsonArray());
         assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
-        assertEquals(integer, integer.asJsonInteger());
+        assertEquals(integer, integer.asJsonLong());
         assertThrows(ClassCastException.class, () -> integer.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
@@ -71,26 +71,26 @@ public class TestJsonInteger {
         assertEquals(BigDecimal.valueOf(123L), integer.bigDecimalValue());
         assertEquals("123", integer.toJson());
         assertEquals("123", integer.toString());
-        assertEquals(JsonInteger.of(123L), integer);
+        assertEquals(JsonLong.of(123L), integer);
 
-        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
-        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
+        // JsonLong#equals must normally reject a fake imitation of JsonLong.
+        assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
 
     @Test
     public void testBasicShortValue() {
-        final JsonInteger integer = JsonInteger.of(12345L);
-        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        final JsonLong integer = JsonLong.of(12345L);
+        assertEquals(JsonValue.EntityType.LONG, integer.getEntityType());
         assertFalse(integer.isJsonNull());
         assertFalse(integer.isJsonBoolean());
-        assertTrue(integer.isJsonInteger());
+        assertTrue(integer.isJsonLong());
         assertFalse(integer.isJsonDecimal());
         assertFalse(integer.isJsonString());
         assertFalse(integer.isJsonArray());
         assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
-        assertEquals(integer, integer.asJsonInteger());
+        assertEquals(integer, integer.asJsonLong());
         assertThrows(ClassCastException.class, () -> integer.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
@@ -115,26 +115,26 @@ public class TestJsonInteger {
         assertEquals(BigDecimal.valueOf(12345L), integer.bigDecimalValue());
         assertEquals("12345", integer.toJson());
         assertEquals("12345", integer.toString());
-        assertEquals(JsonInteger.of(12345L), integer);
+        assertEquals(JsonLong.of(12345L), integer);
 
-        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
-        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
+        // JsonLong#equals must normally reject a fake imitation of JsonLong.
+        assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
 
     @Test
     public void testBasicIntValue() {
-        final JsonInteger integer = JsonInteger.of(1234567890L);
-        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        final JsonLong integer = JsonLong.of(1234567890L);
+        assertEquals(JsonValue.EntityType.LONG, integer.getEntityType());
         assertFalse(integer.isJsonNull());
         assertFalse(integer.isJsonBoolean());
-        assertTrue(integer.isJsonInteger());
+        assertTrue(integer.isJsonLong());
         assertFalse(integer.isJsonDecimal());
         assertFalse(integer.isJsonString());
         assertFalse(integer.isJsonArray());
         assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
-        assertEquals(integer, integer.asJsonInteger());
+        assertEquals(integer, integer.asJsonLong());
         assertThrows(ClassCastException.class, () -> integer.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
@@ -159,26 +159,26 @@ public class TestJsonInteger {
         assertEquals(BigDecimal.valueOf(1234567890L), integer.bigDecimalValue());
         assertEquals("1234567890", integer.toJson());
         assertEquals("1234567890", integer.toString());
-        assertEquals(JsonInteger.of(1234567890L), integer);
+        assertEquals(JsonLong.of(1234567890L), integer);
 
-        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
-        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
+        // JsonLong#equals must normally reject a fake imitation of JsonLong.
+        assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
 
     @Test
     public void testBasicLongValue() {
-        final JsonInteger integer = JsonInteger.of(1234567890123456L);
-        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        final JsonLong integer = JsonLong.of(1234567890123456L);
+        assertEquals(JsonValue.EntityType.LONG, integer.getEntityType());
         assertFalse(integer.isJsonNull());
         assertFalse(integer.isJsonBoolean());
-        assertTrue(integer.isJsonInteger());
+        assertTrue(integer.isJsonLong());
         assertFalse(integer.isJsonDecimal());
         assertFalse(integer.isJsonString());
         assertFalse(integer.isJsonArray());
         assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
-        assertEquals(integer, integer.asJsonInteger());
+        assertEquals(integer, integer.asJsonLong());
         assertThrows(ClassCastException.class, () -> integer.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
@@ -203,26 +203,26 @@ public class TestJsonInteger {
         assertEquals(BigDecimal.valueOf(1234567890123456L), integer.bigDecimalValue());
         assertEquals("1234567890123456", integer.toJson());
         assertEquals("1234567890123456", integer.toString());
-        assertEquals(JsonInteger.of(1234567890123456L), integer);
+        assertEquals(JsonLong.of(1234567890123456L), integer);
 
-        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
-        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
+        // JsonLong#equals must normally reject a fake imitation of JsonLong.
+        assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
 
     @Test
     public void testWithLiteral() {
-        final JsonInteger integer = JsonInteger.withLiteral(1234567890123456L, "999999999999999999991234567890123456");
-        assertEquals(JsonValue.EntityType.INTEGER, integer.getEntityType());
+        final JsonLong integer = JsonLong.withLiteral(1234567890123456L, "999999999999999999991234567890123456");
+        assertEquals(JsonValue.EntityType.LONG, integer.getEntityType());
         assertFalse(integer.isJsonNull());
         assertFalse(integer.isJsonBoolean());
-        assertTrue(integer.isJsonInteger());
+        assertTrue(integer.isJsonLong());
         assertFalse(integer.isJsonDecimal());
         assertFalse(integer.isJsonString());
         assertFalse(integer.isJsonArray());
         assertFalse(integer.isJsonObject());
         assertThrows(ClassCastException.class, () -> integer.asJsonNull());
         assertThrows(ClassCastException.class, () -> integer.asJsonBoolean());
-        assertEquals(integer, integer.asJsonInteger());
+        assertEquals(integer, integer.asJsonLong());
         assertThrows(ClassCastException.class, () -> integer.asJsonDecimal());
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
@@ -247,9 +247,9 @@ public class TestJsonInteger {
         assertEquals(BigDecimal.valueOf(1234567890123456L), integer.bigDecimalValue());
         assertEquals("999999999999999999991234567890123456", integer.toJson());
         assertEquals("1234567890123456", integer.toString());
-        assertEquals(JsonInteger.of(1234567890123456L), integer);
+        assertEquals(JsonLong.of(1234567890123456L), integer);
 
-        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
-        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
+        // JsonLong#equals must normally reject a fake imitation of JsonLong.
+        assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
 }
