@@ -356,15 +356,6 @@ public interface JsonValue {
     int presumeReferenceSizeInBytes();
 
     /**
-     * Compares the specified object with this JSON value for equality.
-     *
-     * @return {@code true} if the specified object is equal to this JSON value
-     *
-     * @since 0.10.42
-     */
-    boolean equals(Object other);
-
-    /**
      * Returns the stringified JSON representation of this JSON value.
      *
      * <p>{@code NaN} and {@code Infinity} of {@link JsonDouble} are converted to {@code "null"}.
