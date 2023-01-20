@@ -26,7 +26,7 @@ import java.math.BigInteger;
  *
  * @since 0.10.42
  */
-public final class JsonLong implements JsonValue {
+public final class JsonLong implements JsonNumber {
     private JsonLong(final long value, final String literal) {
         // No direct instantiation.
         this.value = value;
@@ -92,6 +92,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isIntegral() {
         return true;
     }
@@ -103,6 +104,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isByteValue() {
         return ((long) Byte.MIN_VALUE) <= this.value && this.value <= ((long) Byte.MAX_VALUE);
     }
@@ -114,6 +116,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isShortValue() {
         return ((long) Short.MIN_VALUE) <= this.value && this.value <= ((long) Short.MAX_VALUE);
     }
@@ -125,6 +128,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isIntValue() {
         return ((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE);
     }
@@ -136,6 +140,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isLongValue() {
         return true;
     }
@@ -153,6 +158,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public byte byteValue() {
         return (byte) this.value;
     }
@@ -167,6 +173,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public byte byteValueExact() {
         if (!this.isByteValue()) {
             throw new ArithmeticException("Out of the range of byte: " + this.value);
@@ -187,6 +194,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public short shortValue() {
         return (short) this.value;
     }
@@ -201,6 +209,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public short shortValueExact() {
         if (!this.isShortValue()) {
             throw new ArithmeticException("Out of the range of short: " + this.value);
@@ -221,6 +230,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public int intValue() {
         return (int) this.value;
     }
@@ -235,6 +245,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public int intValueExact() {
         if (!this.isIntValue()) {
             throw new ArithmeticException("Out of the range of int: " + this.value);
@@ -249,6 +260,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public long longValue() {
         return (long) this.value;
     }
@@ -260,6 +272,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public long longValueExact() {
         return (long) this.value;
     }
@@ -271,6 +284,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public BigInteger bigIntegerValue() {
         return BigInteger.valueOf(this.value);
     }
@@ -282,6 +296,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public BigInteger bigIntegerValueExact() {
         return BigInteger.valueOf(this.value);
     }
@@ -298,6 +313,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public float floatValue() {
         return (float) this.value;
     }
@@ -314,6 +330,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public double doubleValue() {
         return (double) this.value;
     }
@@ -325,6 +342,7 @@ public final class JsonLong implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public BigDecimal bigDecimalValue() {
         return BigDecimal.valueOf(this.value);
     }

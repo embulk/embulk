@@ -26,7 +26,7 @@ import java.math.BigInteger;
  *
  * @since 0.10.42
  */
-public final class JsonDouble implements JsonValue {
+public final class JsonDouble implements JsonNumber {
     private JsonDouble(final double value, final String literal) {
         this.value = value;
         this.literal = literal;
@@ -93,6 +93,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isIntegral() {
         return !Double.isNaN(this.value) && !Double.isInfinite(this.value) && this.value == Math.rint(this.value);
     }
@@ -104,6 +105,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isByteValue() {
         return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE);
     }
@@ -115,6 +117,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isShortValue() {
         return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE);
     }
@@ -126,6 +129,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isIntValue() {
         return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE);
     }
@@ -137,6 +141,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public boolean isLongValue() {
         return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE);
     }
@@ -153,6 +158,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public byte byteValue() {
         return (byte) this.value;
     }
@@ -168,6 +174,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public byte byteValueExact() {
         if (!this.isIntegral()) {
             throw new ArithmeticException("Not an integer: " + this.value);
@@ -190,6 +197,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public short shortValue() {
         return (short) this.value;
     }
@@ -205,6 +213,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public short shortValueExact() {
         if (!this.isIntegral()) {
             throw new ArithmeticException("Not an integer: " + this.value);
@@ -227,6 +236,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public int intValue() {
         return (int) this.value;
     }
@@ -242,6 +252,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public int intValueExact() {
         if (!this.isIntegral()) {
             throw new ArithmeticException("Not an integer: " + this.value);
@@ -264,6 +275,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public long longValue() {
         return (long) this.value;
     }
@@ -279,6 +291,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public long longValueExact() {
         if (!this.isIntegral()) {
             throw new ArithmeticException("Not an integer: " + this.value);
@@ -299,6 +312,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public BigInteger bigIntegerValue() {
         return BigDecimal.valueOf(this.value).toBigInteger();
     }
@@ -313,6 +327,7 @@ public final class JsonDouble implements JsonValue {
      *
      * @since 0.10.42
      */
+    @Override
     public BigInteger bigIntegerValueExact() {
         return BigDecimal.valueOf(this.value).toBigIntegerExact();
     }
@@ -330,6 +345,7 @@ rrowing Primitive Conversion</a>
      *
      * @since 0.10.42
      */
+    @Override
     public float floatValue() {
         return (float) this.value;
     }
@@ -342,6 +358,7 @@ rrowing Primitive Conversion</a>
      *
      * @return the {@code double} representation of this JSON number
      */
+    @Override
     public double doubleValue() {
         return this.value;
     }
@@ -351,6 +368,7 @@ rrowing Primitive Conversion</a>
      *
      * @return the {@link java.math.BigDecimal} representation of this JSON number
      */
+    @Override
     public BigDecimal bigDecimalValue() {
         return BigDecimal.valueOf(this.value);
     }
