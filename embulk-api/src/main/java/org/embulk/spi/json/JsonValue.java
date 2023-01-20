@@ -23,8 +23,8 @@ package org.embulk.spi.json;
  * extend the existing {@link JsonValue} implementation classes by themselves.
  *
  * <p>Each implementation class of this {@code interface} should correspond to each {@link EntityType} constant by 1:1.
- * For example, only {@link JsonLong} should be corresponding to {@link EntityType#LONG}, only {@link JsonDecimal}
- * should be corresponding to {@link EntityType#DECIMAL}, and only {@link JsonObject} should be corresponding to
+ * For example, only {@link JsonLong} should be corresponding to {@link EntityType#LONG}, only {@link JsonDouble}
+ * should be corresponding to {@link EntityType#DOUBLE}, and only {@link JsonObject} should be corresponding to
  * {@link EntityType#OBJECT}.
  *
  * <p>On the other hand, developers should keep it in mind that the future Embulk may have some more {@link JsonValue}
@@ -45,7 +45,7 @@ public interface JsonValue {
      * {@code 3.141592} are typed as just "numbers" as JSON. As {@link JsonValue}, however, they are normally represented
      * by different implementation classes, and then typed as different entity types. {@code 42} is usually represented by
      * {@link JsonLong} as {@code JsonLong.of(42)}, then typed as {@link EntityType#LONG}. {@code 3.141592} is
-     * represented by {@link JsonDecimal} as {@code JsonDecimal.of(3.141592)}, then typed as {@link EntityType#DECIMAL}.
+     * represented by {@link JsonDouble} as {@code JsonDouble.of(3.141592)}, then typed as {@link EntityType#DOUBLE}.
      *
      * @since 0.10.42
      */
@@ -72,11 +72,11 @@ public interface JsonValue {
         LONG,
 
         /**
-         * The singleton instance of the entity type for decimal numbers in JSON, which is represented by {@link JsonDecimal}.
+         * The singleton instance of the entity type for numbers in JSON, which is represented by {@link JsonDouble}.
          *
          * @since 0.10.42
          */
-        DECIMAL,
+        DOUBLE,
 
         /**
          * The singleton instance of the entity type for strings in JSON, which is represented by {@link JsonString}.
@@ -128,12 +128,12 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is a number, which is represented by {@link JsonDecimal}.
+         * Returns {@code true} if the JSON value is a number, which is represented by {@link JsonDouble}.
          *
          * @since 0.10.42
          */
-        public boolean isDecimal() {
-            return this == DECIMAL;
+        public boolean isDouble() {
+            return this == DOUBLE;
         }
 
         /**
@@ -213,16 +213,16 @@ public interface JsonValue {
     }
 
     /**
-     * Returns {@code true} if this JSON value is a number, which is {@link JsonDecimal}.
+     * Returns {@code true} if this JSON value is a number, which is {@link JsonDouble}.
      *
-     * <p>If this method returns {@code true}, {@link #asJsonDecimal} never throws exceptions.
+     * <p>If this method returns {@code true}, {@link #asJsonDouble} never throws exceptions.
      *
-     * @return {@code true} if this JSON value is a number, which is {@link JsonDecimal}
+     * @return {@code true} if this JSON value is a number, which is {@link JsonDouble}
      *
      * @since 0.10.42
      */
-    default boolean isJsonDecimal() {
-        return this.getEntityType().isDecimal();
+    default boolean isJsonDouble() {
+        return this.getEntityType().isDouble();
     }
 
     /**
@@ -301,15 +301,15 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@link JsonDecimal}, or throws {@link ClassCastException} otherwise.
+     * Returns this value as {@link JsonDouble}, or throws {@link ClassCastException} otherwise.
      *
-     * @return itself as {@link JsonDecimal}
-     * @throws ClassCastException  if this JSON value is not a number, not {@link JsonDecimal}
+     * @return itself as {@link JsonDouble}
+     * @throws ClassCastException  if this JSON value is not a number, not {@link JsonDouble}
      *
      * @since 0.10.42
      */
-    default JsonDecimal asJsonDecimal() {
-        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonDecimal.");
+    default JsonDouble asJsonDouble() {
+        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonDouble.");
     }
 
     /**
@@ -360,7 +360,7 @@ public interface JsonValue {
     /**
      * Returns the stringified JSON representation of this JSON value.
      *
-     * <p>{@code NaN} and {@code Infinity} of {@link JsonDecimal} are converted to {@code "null"}.
+     * <p>{@code NaN} and {@code Infinity} of {@link JsonDouble} are converted to {@code "null"}.
      *
      * @return the stringified JSON representation of this JSON value
      *

@@ -38,14 +38,14 @@ public class TestJsonNull {
         assertTrue(jsonNull.isJsonNull());
         assertFalse(jsonNull.isJsonBoolean());
         assertFalse(jsonNull.isJsonLong());
-        assertFalse(jsonNull.isJsonDecimal());
+        assertFalse(jsonNull.isJsonDouble());
         assertFalse(jsonNull.isJsonString());
         assertFalse(jsonNull.isJsonArray());
         assertFalse(jsonNull.isJsonObject());
         assertEquals(jsonNull, jsonNull.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonNull.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonNull.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonNull.asJsonObject());

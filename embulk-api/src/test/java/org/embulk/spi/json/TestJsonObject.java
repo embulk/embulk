@@ -44,14 +44,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -76,14 +76,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -121,14 +121,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -169,14 +169,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -219,14 +219,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -283,14 +283,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -340,7 +340,7 @@ public class TestJsonObject {
     public void testBuilder() {
         final LinkedHashMap<String, JsonValue> map1 = new LinkedHashMap<>();
         map1.put("hoge", JsonString.withLiteral("foo", "\"\\u0066oo\""));
-        map1.put("fuga", JsonDecimal.of(123.4));
+        map1.put("fuga", JsonDouble.of(123.4));
         final LinkedHashMap<JsonString, JsonValue> map2 = new LinkedHashMap<>();
         map2.put(JsonString.of("piyo"), JsonLong.of(345));
         map2.put(JsonString.of("hogera"), JsonString.of("bar"));
@@ -357,14 +357,14 @@ public class TestJsonObject {
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
         assertFalse(jsonObject.isJsonLong());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -383,7 +383,7 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("hoge", JsonString.of("foo")), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("fuga", JsonDecimal.of(123.4)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("fuga", JsonDouble.of(123.4)), it.next());
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("piyo", JsonLong.of(345)), it.next());
         assertTrue(it.hasNext());
@@ -398,7 +398,7 @@ public class TestJsonObject {
                              JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("qux"), JsonNull.of(),
                              JsonString.of("hoge"), JsonString.of("foo"),
-                             JsonString.of("fuga"), JsonDecimal.of(123.4),
+                             JsonString.of("fuga"), JsonDouble.of(123.4),
                              JsonString.of("piyo"), JsonLong.of(345),
                              JsonString.of("hogera"), JsonString.of("bar")),
                      jsonObject);
@@ -410,7 +410,7 @@ public class TestJsonObject {
                              JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("qux"), JsonNull.of(),
                              JsonString.of("hoge"), JsonString.of("foo"),
-                             JsonString.of("fuga"), JsonDecimal.of(123.4),
+                             JsonString.of("fuga"), JsonDouble.of(123.4),
                              JsonString.of("piyo"), JsonLong.of(345),
                              JsonString.of("hogera"), JsonString.of("bar"))));
     }

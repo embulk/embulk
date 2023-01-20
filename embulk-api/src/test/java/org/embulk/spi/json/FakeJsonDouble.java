@@ -19,18 +19,18 @@ package org.embulk.spi.json;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public final class FakeJsonDecimal implements JsonValue {
-    private FakeJsonDecimal(final double value) {
+public final class FakeJsonDouble implements JsonValue {
+    private FakeJsonDouble(final double value) {
         this.value = value;
     }
 
-    public static FakeJsonDecimal of(final double value) {
-        return new FakeJsonDecimal(value);
+    public static FakeJsonDouble of(final double value) {
+        return new FakeJsonDouble(value);
     }
 
     @Override
     public EntityType getEntityType() {
-        return EntityType.DECIMAL;
+        return EntityType.DOUBLE;
     }
 
     public boolean isIntegral() {
@@ -149,17 +149,17 @@ public final class FakeJsonDecimal implements JsonValue {
         }
 
         // Fake!
-        if (otherObject instanceof JsonDecimal) {
-            final JsonDecimal other = (JsonDecimal) otherObject;
+        if (otherObject instanceof JsonDouble) {
+            final JsonDouble other = (JsonDouble) otherObject;
             return this.value == other.doubleValue();
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof FakeJsonDecimal)) {
+        if (!(otherObject instanceof FakeJsonDouble)) {
             return false;
         }
 
-        final FakeJsonDecimal other = (FakeJsonDecimal) otherObject;
+        final FakeJsonDouble other = (FakeJsonDouble) otherObject;
 
         return this.value == other.value;
     }

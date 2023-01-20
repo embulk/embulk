@@ -20,78 +20,76 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * Represents a decimal number in JSON.
- *
- * <p>It represents the decimal number as a Java primitive {@code double}, which is the same as Embulk's {@code DOUBLE} column type.
+ * Represents a number in JSON, represented by a Java primitive {@code double}, which is the same as Embulk's {@code DOUBLE} column type.
  *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format</a>
  *
  * @since 0.10.42
  */
-public final class JsonDecimal implements JsonValue {
-    private JsonDecimal(final double value, final String literal) {
+public final class JsonDouble implements JsonValue {
+    private JsonDouble(final double value, final String literal) {
         this.value = value;
         this.literal = literal;
     }
 
     /**
-     * Returns a JSON decimal number that is represented by the specified primitive {@code double}.
+     * Returns a JSON number represented by the specified Java primitive {@code double}.
      *
-     * @param value  the decimal number
-     * @return a JSON decimal number represented by the specified primitive {@code double}
-     *
-     * @since 0.10.42
-     */
-    public static JsonDecimal of(final double value) {
-        return new JsonDecimal(value, null);
-    }
-
-    /**
-     * Returns a JSON decimal number that is represented by the specified primitive {@code double}, with the specified JSON literal.
-     *
-     * <p>The literal is just subsidiary information used when stringifying this JSON decimal number as JSON by {@link #toJson()}.
-     *
-     * @param value  the decimal number
-     * @param literal  the JSON literal of the decimal number
-     * @return a JSON decimal number represented by the specified primitive {@code double}
+     * @param value  the number
+     * @return a JSON number represented by the specified Java primitive {@code double}
      *
      * @since 0.10.42
      */
-    public static JsonDecimal withLiteral(final double value, final String literal) {
-        return new JsonDecimal(value, literal);
+    public static JsonDouble of(final double value) {
+        return new JsonDouble(value, null);
     }
 
     /**
-     * Returns {@link JsonValue.EntityType#DECIMAL}, which is the entity type of {@link JsonDecimal}.
+     * Returns a JSON number that is represented by the specified Java primitive {@code double}, with the specified JSON literal.
      *
-     * @return {@link JsonValue.EntityType#DECIMAL}, which is the entity type of {@link JsonDecimal}
+     * <p>The literal is just subsidiary information used when stringifying this JSON number as JSON by {@link #toJson()}.
+     *
+     * @param value  the number
+     * @param literal  the JSON literal of the number
+     * @return a JSON number represented by the specified Java primitive {@code double}
+     *
+     * @since 0.10.42
+     */
+    public static JsonDouble withLiteral(final double value, final String literal) {
+        return new JsonDouble(value, literal);
+    }
+
+    /**
+     * Returns {@link JsonValue.EntityType#DOUBLE}, which is the entity type of {@link JsonDouble}.
+     *
+     * @return {@link JsonValue.EntityType#DOUBLE}, which is the entity type of {@link JsonDouble}
      *
      * @since 0.10.42
      */
     @Override
     public EntityType getEntityType() {
-        return EntityType.DECIMAL;
+        return EntityType.DOUBLE;
     }
 
     /**
-     * Returns this value as {@link JsonDecimal}.
+     * Returns this value as {@link JsonDouble}.
      *
-     * @return itself as {@link JsonDecimal}
+     * @return itself as {@link JsonDouble}
      *
      * @since 0.10.42
      */
     @Override
-    public JsonDecimal asJsonDecimal() {
+    public JsonDouble asJsonDouble() {
         return this;
     }
 
     /**
-     * Returns {@code true} if this JSON decimal number is an integer number.
+     * Returns {@code true} if this JSON number is integral.
      *
-     * <p>Note that it does not guarantee this JSON decimal number can be represented as a primitive exact {@code long}.
-     * This JSON decimal number can be out of the range of {@code long}.
+     * <p>Note that it does not guarantee this JSON number can be represented as a Java primitive exact {@code long}.
+     * This JSON number can be out of the range of the Java primitive {@code long}.
      *
-     * @return {@code true} if this JSON decimal number is an integer number
+     * @return {@code true} if this JSON number is integral
      *
      * @since 0.10.42
      */
@@ -100,9 +98,9 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON decimal number is an integer number in the range of {@code byte}, [-2<sup>7</sup> to 2<sup>7</sup>-1].
+     * Returns {@code true} if the JSON number is integral in the range of {@code byte}, [-2<sup>7</sup> to 2<sup>7</sup>-1].
      *
-     * @return {@code true} if the JSON decimal number is an integer number in the range of {@code byte}
+     * @return {@code true} if the JSON number is integral in the range of {@code byte}
      *
      * @since 0.10.42
      */
@@ -111,9 +109,9 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON decimal number is an integer number in the range of {@code short}, [-2<sup>15</sup> to 2<sup>15</sup>-1].
+     * Returns {@code true} if the JSON number is integral in the range of {@code short}, [-2<sup>15</sup> to 2<sup>15</sup>-1].
      *
-     * @return {@code true} if the JSON decimal number is an integer number in the range of {@code short}
+     * @return {@code true} if the JSON number is integral in the range of {@code short}
      *
      * @since 0.10.42
      */
@@ -122,9 +120,9 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON decimal number is an integer number in the range of {@code int}, [-2<sup>31</sup> to 2<sup>31</sup>-1].
+     * Returns {@code true} if the JSON number is integral in the range of {@code int}, [-2<sup>31</sup> to 2<sup>31</sup>-1].
      *
-     * @return {@code true} if the JSON decimal number is an integer number in the range of {@code int}
+     * @return {@code true} if the JSON number is integral in the range of {@code int}
      *
      * @since 0.10.42
      */
@@ -133,9 +131,9 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns {@code true} if the JSON decimal number is an integer number in the range of {@code long}, [-2<sup>63</sup> to 2<sup>63</sup>-1].
+     * Returns {@code true} if the JSON number is integral in the range of {@code long}, [-2<sup>63</sup> to 2<sup>63</sup>-1].
      *
-     * @return {@code true} if the JSON decimal number is an integer number in the range of {@code long}
+     * @return {@code true} if the JSON number is integral in the range of {@code long}
      *
      * @since 0.10.42
      */
@@ -144,12 +142,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code byte}.
+     * Returns this JSON number as a Java primitive {@code byte}.
      *
      * <p>It narrows down {@code double} to {@code byte} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON decimal number, precision, and range.
+     * about the magnitude of this JSON number, precision, and range.
      *
-     * @return the {@code byte} representation of this JSON decimal number
+     * @return the {@code byte} representation of this JSON number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -160,13 +158,13 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code byte}.
+     * Returns this JSON number as a Java primitive {@code byte}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON decimal number is out of the range of {@code byte}, or has a
+     * <p>It throws {@link ArithmeticException} if the JSON number is out of the range of {@code byte}, or has a
      * non-zero fractional part.
      *
-     * @return the {@code byte} representation of this JSON decimal number
-     * @throws ArithmeticException  if the JSON decimal number is out of the range of {@code byte}, or has a non-zero fractional part
+     * @return the {@code byte} representation of this JSON number
+     * @throws ArithmeticException  if the JSON number is out of the range of {@code byte}, or has a non-zero fractional part
      *
      * @since 0.10.42
      */
@@ -181,12 +179,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code short}.
+     * Returns this JSON number as a Java primitive {@code short}.
      *
      * <p>It narrows down {@code double} to {@code short} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON decimal number, precision, and range.
+     * about the magnitude of this JSON number, precision, and range.
      *
-     * @return the {@code short} representation of this JSON decimal number
+     * @return the {@code short} representation of this JSON number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -197,13 +195,13 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code short}.
+     * Returns this JSON number as a Java primitive {@code short}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON decimal number is out of the range of {@code short}, or has a
+     * <p>It throws {@link ArithmeticException} if the JSON number is out of the range of {@code short}, or has a
      * non-zero fractional part.
      *
-     * @return the {@code short} representation of this JSON decimal number
-     * @throws ArithmeticException  if the JSON decimal number is out of the range of {@code short}, or has a non-zero fractional part
+     * @return the {@code short} representation of this JSON number
+     * @throws ArithmeticException  if the JSON number is out of the range of {@code short}, or has a non-zero fractional part
      *
      * @since 0.10.42
      */
@@ -218,12 +216,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code int}.
+     * Returns this JSON number as a Java primitive {@code int}.
      *
      * <p>It narrows down {@code double} to {@code int} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON decimal number, precision, and range.
+     * about the magnitude of this JSON number, precision, and range.
      *
-     * @return the {@code int} representation of this JSON decimal number
+     * @return the {@code int} representation of this JSON number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -234,13 +232,13 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code int}.
+     * Returns this JSON number as a Java primitive {@code int}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON decimal number is out of the range of {@code int}, or has a
+     * <p>It throws {@link ArithmeticException} if the JSON number is out of the range of {@code int}, or has a
      * non-zero fractional part.
      *
-     * @return the {@code int} representation of this JSON decimal number
-     * @throws ArithmeticException  if the JSON decimal number is out of the range of {@code int}, or has a non-zero fractional part
+     * @return the {@code int} representation of this JSON number
+     * @throws ArithmeticException  if the JSON number is out of the range of {@code int}, or has a non-zero fractional part
      *
      * @since 0.10.42
      */
@@ -255,12 +253,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code long}.
+     * Returns this JSON number as a Java primitive {@code long}.
      *
      * <p>It narrows down {@code double} to {@code long} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude of this JSON decimal number, precision, and range.
+     * about the magnitude of this JSON number, precision, and range.
      *
-     * @return the {@code long} representation of this JSON decimal number
+     * @return the {@code long} representation of this JSON number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Narrowing Primitive Conversion</a>
      *
@@ -271,13 +269,13 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code long}.
+     * Returns this JSON number as a Java primitive {@code long}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON decimal number is out of the range of {@code long}, or has a
+     * <p>It throws {@link ArithmeticException} if the JSON number is out of the range of {@code long}, or has a
      * non-zero fractional part.
      *
-     * @return the {@code long} representation of this JSON decimal number
-     * @throws ArithmeticException  if the JSON decimal number is out of the range of {@code long}, or has a non-zero fractional part
+     * @return the {@code long} representation of this JSON number
+     * @throws ArithmeticException  if the JSON number is out of the range of {@code long}, or has a non-zero fractional part
      *
      * @since 0.10.42
      */
@@ -292,12 +290,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a {@link java.math.BigInteger}.
+     * Returns this JSON number as a {@link java.math.BigInteger}.
      *
-     * <p>Note that this conversion loses the fractional part and the precision of the decimal number.
+     * <p>Note that this conversion loses the fractional part and the precision of the number.
      * This is a convenience method for {@code bigDecimalValue().toBigInteger()}.
      *
-     * @return the {@link java.math.BigInteger} representation of this JSON decimal number
+     * @return the {@link java.math.BigInteger} representation of this JSON number
      *
      * @since 0.10.42
      */
@@ -306,12 +304,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a {@link java.math.BigInteger}.
+     * Returns this JSON number as a {@link java.math.BigInteger}.
      *
-     * <p>It throws {@link ArithmeticException} if the JSON decimal number has a non-zero fractional part.
+     * <p>It throws {@link ArithmeticException} if the JSON number has a non-zero fractional part.
      *
-     * @return the {@link java.math.BigInteger} representation of this JSON decimal number
-     * @throws ArithmeticException  if the JSON decimal number has a non-zero fractional part
+     * @return the {@link java.math.BigInteger} representation of this JSON number
+     * @throws ArithmeticException  if the JSON number has a non-zero fractional part
      *
      * @since 0.10.42
      */
@@ -320,13 +318,12 @@ public final class JsonDecimal implements JsonValue {
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code float}.
+     * Returns this JSON number as a Java primitive {@code float}.
      *
      * <p>It narrows down {@code double} to {@code float} as a Java primitive. Note that this conversion can lose information
-     * about the magnitude and the precision of the decimal number.
+     * about the magnitude and the precision of the number.
      *
-     *
-     * @return the {@code float} representation of this JSON decimal number
+     * @return the {@code float} representation of this JSON number
      *
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.1.3">Java Language Specification - 5.1.3. Na
 rrowing Primitive Conversion</a>
@@ -338,34 +335,34 @@ rrowing Primitive Conversion</a>
     }
 
     /**
-     * Returns this JSON decimal number as a primitive {@code double}, as-is.
+     * Returns this JSON number as a Java primitive {@code double}, as-is.
      *
-     * <p>This method does not lose any information because {@link JsonDecimal} represents the decimal number as a primitive
+     * <p>This method does not lose any information because {@link JsonDouble} represents the number as a Java primitive
      * {@code double} inside.
      *
-     * @return the {@code double} representation of this JSON decimal number
+     * @return the {@code double} representation of this JSON number
      */
     public double doubleValue() {
         return this.value;
     }
 
     /**
-     * Returns this JSON decimal number as {@link java.math.BigDecimal}.
+     * Returns this JSON number as {@link java.math.BigDecimal}.
      *
-     * @return the {@link java.math.BigDecimal} representation of this JSON decimal number
+     * @return the {@link java.math.BigDecimal} representation of this JSON number
      */
     public BigDecimal bigDecimalValue() {
         return BigDecimal.valueOf(this.value);
     }
 
     /**
-     * Returns the stringified JSON representation of this JSON decimal number.
+     * Returns the stringified JSON representation of this JSON number.
      *
-     * <p>If this JSON decimal number is {@code NaN} or {@code Infinity}, it returns {@code "null"}.
+     * <p>If this JSON number is {@code NaN} or {@code Infinity}, it returns {@code "null"}.
      *
-     * <p>If this JSON decimal number is created with a literal by {@link #withLiteral(double, String)}, it returns the literal.
+     * <p>If this JSON number is created with a literal by {@link #withLiteral(double, String)}, it returns the literal.
      *
-     * @return the stringified JSON representation of this JSON decimal number
+     * @return the stringified JSON representation of this JSON number
      *
      * @since 0.10.42
      */
@@ -381,9 +378,9 @@ rrowing Primitive Conversion</a>
     }
 
     /**
-     * Returns the string representation of this JSON decimal number.
+     * Returns the string representation of this JSON number.
      *
-     * @return the string representation of this JSON decimal number
+     * @return the string representation of this JSON number
      *
      * @since 0.10.42
      */
@@ -393,9 +390,9 @@ rrowing Primitive Conversion</a>
     }
 
     /**
-     * Compares the specified object with this JSON decimal number for equality.
+     * Compares the specified object with this JSON number for equality.
      *
-     * @return {@code true} if the specified object is equal to this JSON decimal number
+     * @return {@code true} if the specified object is equal to this JSON number
      *
      * @since 0.10.42
      */
@@ -406,19 +403,19 @@ rrowing Primitive Conversion</a>
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof JsonDecimal)) {
+        if (!(otherObject instanceof JsonDouble)) {
             return false;
         }
 
-        final JsonDecimal other = (JsonDecimal) otherObject;
+        final JsonDouble other = (JsonDouble) otherObject;
 
         return this.value == other.value;
     }
 
     /**
-     * Returns the hash code value for this JSON decimal number.
+     * Returns the hash code value for this JSON number.
      *
-     * @return the hash code value for this JSON decimal number
+     * @return the hash code value for this JSON number
      *
      * @since 0.10.42
      */
@@ -429,5 +426,6 @@ rrowing Primitive Conversion</a>
     }
 
     private final double value;
+
     private final String literal;
 }
