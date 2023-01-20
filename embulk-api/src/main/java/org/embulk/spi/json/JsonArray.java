@@ -115,11 +115,24 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     /**
      * Returns the approximate size of this JSON array in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
      *
+     * <p>This approximate size is used only as a threshold whether {@link org.embulk.spi.PageBuilder} is flushed, or not.
+     * It is not accurate, it does not need to be accurate, and it is impossible in general to tell an accurate size that
+     * a Java object occupies in the Java heap. But, a reasonable approximate would help to keep {@link org.embulk.spi.Page}
+     * performant in the Java heap.
+     *
+     * <p>It is better to flush more frequently for bigger JSON value objects, less often for smaller JSON value objects,
+     * but no infinite accumulation even for empty JSON value objects.
+     *
      * @return the approximate size of this JSON array in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference
+     *
+     * @see "org.embulk.spi.PageBuilderImpl#addRecord"
      */
     @Override
     public int presumeReferenceSizeInBytes() {
+        // No clear reason for the number 4.
+        // But at least, it should not be 0 so that the approximate size of an empty array would not be 0.
         int sum = 4;
+
         for (int i = 0; i < this.values.length; i++) {
             sum += this.values[i].presumeReferenceSizeInBytes();
         }

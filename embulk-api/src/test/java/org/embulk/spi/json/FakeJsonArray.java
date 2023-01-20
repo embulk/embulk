@@ -38,7 +38,7 @@ public final class FakeJsonArray extends AbstractList<JsonValue> implements Json
 
     @Override
     public int presumeReferenceSizeInBytes() {
-        int sum = 0;
+        int sum = 4;
         for (int i = 0; i < this.values.length; i++) {
             sum += this.values[i].presumeReferenceSizeInBytes();
         }
