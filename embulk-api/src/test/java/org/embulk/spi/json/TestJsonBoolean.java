@@ -21,9 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonBoolean {
+    @Test
+    public void testFinal() {
+        // JsonBoolean must be final.
+        assertTrue(Modifier.isFinal(JsonBoolean.class.getModifiers()));
+    }
+
     @Test
     public void testFalse() {
         final JsonBoolean jsonBoolean = JsonBoolean.of(false);
@@ -47,6 +54,10 @@ public class TestJsonBoolean {
         assertEquals("false", jsonBoolean.toString());
         assertEquals(JsonBoolean.FALSE, jsonBoolean);
         assertTrue(JsonBoolean.FALSE == jsonBoolean);
+
+        // JsonBoolean#equals must normally reject a fake imitation of JsonBoolean.
+        assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_FALSE));
+        assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_TRUE));
     }
 
     @Test
@@ -72,5 +83,9 @@ public class TestJsonBoolean {
         assertEquals("true", jsonBoolean.toString());
         assertEquals(JsonBoolean.TRUE, jsonBoolean);
         assertTrue(JsonBoolean.TRUE == jsonBoolean);
+
+        // JsonBoolean#equals must normally reject a fake imitation of JsonBoolean.
+        assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_FALSE));
+        assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_TRUE));
     }
 }

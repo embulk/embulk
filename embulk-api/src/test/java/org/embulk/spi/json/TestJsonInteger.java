@@ -21,11 +21,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonInteger {
+    @Test
+    public void testFinal() {
+        // JsonInteger must be final.
+        assertTrue(Modifier.isFinal(JsonInteger.class.getModifiers()));
+    }
+
     @Test
     public void testBasicByteValue() {
         final JsonInteger integer = JsonInteger.of(123L);
@@ -65,6 +72,9 @@ public class TestJsonInteger {
         assertEquals("123", integer.toJson());
         assertEquals("123", integer.toString());
         assertEquals(JsonInteger.of(123L), integer);
+
+        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
+        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
     }
 
     @Test
@@ -106,6 +116,9 @@ public class TestJsonInteger {
         assertEquals("12345", integer.toJson());
         assertEquals("12345", integer.toString());
         assertEquals(JsonInteger.of(12345L), integer);
+
+        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
+        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
     }
 
     @Test
@@ -147,6 +160,9 @@ public class TestJsonInteger {
         assertEquals("1234567890", integer.toJson());
         assertEquals("1234567890", integer.toString());
         assertEquals(JsonInteger.of(1234567890L), integer);
+
+        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
+        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
     }
 
     @Test
@@ -188,6 +204,9 @@ public class TestJsonInteger {
         assertEquals("1234567890123456", integer.toJson());
         assertEquals("1234567890123456", integer.toString());
         assertEquals(JsonInteger.of(1234567890123456L), integer);
+
+        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
+        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
     }
 
     @Test
@@ -229,5 +248,8 @@ public class TestJsonInteger {
         assertEquals("999999999999999999991234567890123456", integer.toJson());
         assertEquals("1234567890123456", integer.toString());
         assertEquals(JsonInteger.of(1234567890123456L), integer);
+
+        // JsonInteger#equals must normally reject a fake imitation of JsonInteger.
+        assertFalse(integer.equals(FakeJsonInteger.of(integer.longValue())));
     }
 }

@@ -18,158 +18,59 @@ package org.embulk.spi.json;
 
 import java.util.Objects;
 
-/**
- * Represents a string in JSON.
- *
- * <p>It represents the string as a {@link String}, which is the same as Embulk's {@code STRING} column type.
- *
- * @see <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format</a>
- *
- * @since 0.10.42
- */
-public final class JsonString implements JsonValue {
-    private JsonString(final String value, final String literal) {
+public final class FakeJsonString implements JsonValue {
+    private FakeJsonString(final String value) {
         this.value = value;
-        this.literal = literal;
     }
 
-    /**
-     * Returns a JSON string that is represented by the specified {@link String}.
-     *
-     * @param value  the string
-     * @return a JSON string represented by the specified {@link String}
-     *
-     * @since 0.10.42
-     */
-    public static JsonString of(final String value) {
-        return new JsonString(value.intern(), null);
+    public static FakeJsonString of(final String value) {
+        return new FakeJsonString(value.intern());
     }
 
-    /**
-     * Returns a JSON string that is represented by the specified {@link String}, with the specified JSON literal.
-     *
-     * <p>The literal is just subsidiary information used when stringifying this JSON string as JSON by {@link #toJson()}.
-     *
-     * @param value  the string
-     * @param literal  the JSON literal of the string
-     * @return a JSON string represented by the specified {@link String}
-     *
-     * @since 0.10.42
-     */
-    public static JsonString withLiteral(final String value, final String literal) {
-        return new JsonString(value.intern(), literal.intern());
-    }
-
-    /**
-     * Returns {@link JsonValue.EntityType#STRING}, which is the entity type of {@link JsonString}.
-     *
-     * @return {@link JsonValue.EntityType#STRING}, which is the entity type of {@link JsonString}
-     *
-     * @since 0.10.42
-     */
     @Override
     public EntityType getEntityType() {
         return EntityType.STRING;
     }
 
-    /**
-     * Returns this value as {@link JsonString}.
-     *
-     * @return itself as {@link JsonString}
-     *
-     * @since 0.10.42
-     */
-    @Override
-    public JsonString asJsonString() {
-        return this;
-    }
-
-    /**
-     * Returns this JSON string as {@link String}.
-     *
-     * @return the {@link String} representation of this JSON string
-     *
-     * @since 0.10.42
-     */
     public String getString() {
         return this.value;
     }
 
-    /**
-     * Returns this JSON string as {@link CharSequence}.
-     *
-     * @return the {@link CharSequence} representation of this JSON string
-     *
-     * @since 0.10.42
-     */
     public CharSequence getChars() {
         return this.value;
     }
 
-    /**
-     * Returns the stringified JSON representation of this JSON string.
-     *
-     * <p>If this JSON string is created with a literal by {@link #withLiteral(String, String)}, it returns the literal. Otherwise,
-     * it returns an escaped and quoted representation, which is valid as JSON, of this JSON string.
-     *
-     * @return the stringified JSON representation of this JSON string
-     *
-     * @since 0.10.42
-     */
     @Override
     public String toJson() {
-        if (this.literal != null) {
-            return this.literal;
-        }
         return escapeStringForJsonLiteral(this.value).toString();
     }
 
-    /**
-     * Returns the string representation of this JSON string.
-     *
-     * <p>It returns an escaped and quoted representation like {@code "string"}, which is valid as JSON, of this JSON string.
-     *
-     * <p>It does not consider a literal by {@link #withLiteral(String, String)} unlike {@link #toJson()}.
-     *
-     * @return the string representation of this JSON string
-     *
-     * @since 0.10.42
-     */
     @Override
     public String toString() {
         return escapeStringForJsonLiteral(this.value).toString();
     }
 
-    /**
-     * Compares the specified object with this JSON string for equality.
-     *
-     * @return {@code true} if the specified object is equal to this JSON string
-     *
-     * @since 0.10.42
-     */
     @Override
     public boolean equals(final Object otherObject) {
         if (this == otherObject) {
             return true;
         }
 
+        // Fake!
+        if (otherObject instanceof JsonString) {
+            return Objects.equals(this.value, ((JsonString) otherObject).getString());
+        }
+
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof JsonString)) {
+        if (!(otherObject instanceof FakeJsonString)) {
             return false;
         }
 
-        final JsonString other = (JsonString) otherObject;
+        final FakeJsonString other = (FakeJsonString) otherObject;
 
         return Objects.equals(this.value, other.value);
     }
 
-    /**
-     * Returns the hash code value for this JSON string.
-     *
-     * @return the hash code value for this JSON string
-     *
-     * @since 0.10.42
-     */
     @Override
     public int hashCode() {
         return Objects.hashCode(this.value);
@@ -258,5 +159,4 @@ public final class JsonString implements JsonValue {
     }
 
     private final String value;
-    private final String literal;
 }

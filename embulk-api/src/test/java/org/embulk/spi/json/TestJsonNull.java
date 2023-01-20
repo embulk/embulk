@@ -21,9 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonNull {
+    @Test
+    public void testFinal() {
+        // JsonNull must be final.
+        assertTrue(Modifier.isFinal(JsonNull.class.getModifiers()));
+    }
+
     @Test
     public void test() {
         final JsonNull jsonNull = JsonNull.of();
@@ -45,5 +52,8 @@ public class TestJsonNull {
         assertEquals("null", jsonNull.toJson());
         assertEquals("null", jsonNull.toString());
         assertEquals(JsonNull.of(), jsonNull);
+
+        // JsonNull#equals must normally reject a fake imitation of JsonNull.
+        assertFalse(jsonNull.equals(FakeJsonNull.ofFake()));
     }
 }

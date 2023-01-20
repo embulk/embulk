@@ -371,20 +371,15 @@ public final class JsonInteger implements JsonValue {
         if (otherObject == this) {
             return true;
         }
-        if (!(otherObject instanceof JsonValue)) {
+
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (!(otherObject instanceof JsonInteger)) {
             return false;
         }
 
-        final JsonValue otherValue = (JsonValue) otherObject;
-        if (!otherValue.isJsonInteger()) {
-            return false;
-        }
+        final JsonInteger other = (JsonInteger) otherObject;
 
-        final JsonInteger other = otherValue.asJsonInteger();
-        if (!other.isLongValue()) {
-            return false;
-        }
-        return this.value == other.longValue();
+        return this.value == other.value;
     }
 
     /**

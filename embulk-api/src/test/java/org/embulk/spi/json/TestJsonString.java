@@ -21,9 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonString {
+    @Test
+    public void testFinal() {
+        // JsonString must be final.
+        assertTrue(Modifier.isFinal(JsonString.class.getModifiers()));
+    }
+
     @Test
     public void testBasic() {
         final JsonString string = JsonString.of("hoge");
@@ -48,6 +55,9 @@ public class TestJsonString {
         assertEquals("\"hoge\"", string.toString());
         assertEquals(JsonString.of("hoge"), string);
         assertEquals("hoge".hashCode(), string.hashCode());
+
+        // JsonString#equals must normally reject a fake imitation of JsonString.
+        assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
 
     @Test
@@ -74,6 +84,9 @@ public class TestJsonString {
         assertEquals("\"hoge\\n\"", string.toString());
         assertEquals(JsonString.of("hoge\n"), string);
         assertEquals("hoge\n".hashCode(), string.hashCode());
+
+        // JsonString#equals must normally reject a fake imitation of JsonString.
+        assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
 
     @Test
@@ -104,5 +117,8 @@ public class TestJsonString {
                 string.toString());
         assertEquals(JsonString.of("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux"), string);
         assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux".hashCode(), string.hashCode());
+
+        // JsonString#equals must normally reject a fake imitation of JsonString.
+        assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
 }

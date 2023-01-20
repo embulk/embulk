@@ -18,9 +18,11 @@ package org.embulk.spi.json;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Modifier;
 import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,6 +31,12 @@ import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
 
 public class TestJsonObject {
+    @Test
+    public void testFinal() {
+        // JsonObject must be final.
+        assertTrue(Modifier.isFinal(JsonObject.class.getModifiers()));
+    }
+
     @Test
     public void testEmpty() {
         final JsonObject jsonObject = JsonObject.of();
@@ -55,6 +63,9 @@ public class TestJsonObject {
         assertEquals("{}", jsonObject.toJson());
         assertEquals("{}", jsonObject.toString());
         assertEquals(JsonObject.of(), jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of()));
     }
 
     @Test
@@ -88,10 +99,16 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":456,\"bar\":456}", jsonObject.toJson());
         assertEquals("{\"foo\":456,\"bar\":456}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                          JsonString.of("foo"), JsonInteger.of(456),
                          JsonString.of("bar"), JsonInteger.of(456)),
                      jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                         JsonString.of("foo"), JsonInteger.of(456),
+                         JsonString.of("bar"), JsonInteger.of(456))));
     }
 
     @Test
@@ -134,6 +151,12 @@ public class TestJsonObject {
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonInteger.of(678))));
     }
 
     @Test
@@ -171,11 +194,18 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonInteger.of(678))));
     }
 
     @Test
@@ -214,11 +244,32 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // Ordered differently.
+        assertEquals(JsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                     jsonObject);
+
+        // Different value.
+        assertNotEquals(JsonObject.of(
+                                JsonString.of("foo"), JsonNull.of(),
+                                JsonString.of("baz"), JsonInteger.of(789),
+                                JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                        jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE))));
     }
 
     @Test
@@ -257,11 +308,32 @@ public class TestJsonObject {
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
+
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonInteger.of(678)),
                      jsonObject);
+
+        // Ordered differently.
+        assertEquals(JsonObject.of(
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("foo"), JsonNull.of()),
+                     jsonObject);
+
+        // Different value.
+        assertNotEquals(JsonObject.of(
+                               JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                               JsonString.of("baz"), JsonInteger.of(234),
+                               JsonString.of("foo"), JsonNull.of()),
+                        jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE))));
     }
 
     @Test
@@ -330,6 +402,17 @@ public class TestJsonObject {
                              JsonString.of("piyo"), JsonInteger.of(345),
                              JsonString.of("hogera"), JsonString.of("bar")),
                      jsonObject);
+
+        // JsonObject#equals must normally reject a fake imitation of JsonObject.
+        assertFalse(jsonObject.equals(FakeJsonObject.of(
+                             JsonString.of("foo"), JsonNull.of(),
+                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("qux"), JsonNull.of(),
+                             JsonString.of("hoge"), JsonString.of("foo"),
+                             JsonString.of("fuga"), JsonDecimal.of(123.4),
+                             JsonString.of("piyo"), JsonInteger.of(345),
+                             JsonString.of("hogera"), JsonString.of("bar"))));
     }
 
     @Test
