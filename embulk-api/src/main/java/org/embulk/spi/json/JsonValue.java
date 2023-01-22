@@ -23,8 +23,8 @@ package org.embulk.spi.json;
  * extend the existing {@link JsonValue} implementation classes by themselves.
  *
  * <p>Each implementation class of this {@code interface} should correspond to each {@link EntityType} constant by 1:1.
- * For example, only {@link JsonInteger} should be corresponding to {@link EntityType#INTEGER}, only {@link JsonDecimal}
- * should be corresponding to {@link EntityType#DECIMAL}, and only {@link JsonObject} should be corresponding to
+ * For example, only {@link JsonLong} should be corresponding to {@link EntityType#LONG}, only {@link JsonDouble}
+ * should be corresponding to {@link EntityType#DOUBLE}, and only {@link JsonObject} should be corresponding to
  * {@link EntityType#OBJECT}.
  *
  * <p>On the other hand, developers should keep it in mind that the future Embulk may have some more {@link JsonValue}
@@ -44,8 +44,8 @@ public interface JsonValue {
      * <p>Note that the entity type may not be equivalent to the value type as JSON. For example, both {@code 42} and
      * {@code 3.141592} are typed as just "numbers" as JSON. As {@link JsonValue}, however, they are normally represented
      * by different implementation classes, and then typed as different entity types. {@code 42} is usually represented by
-     * {@link JsonInteger} as {@code JsonInteger.of(42)}, then typed as {@link EntityType#INTEGER}. {@code 3.141592} is
-     * represented by {@link JsonDecimal} as {@code JsonDecimal.of(3.141592)}, then typed as {@link EntityType#DECIMAL}.
+     * {@link JsonLong} as {@code JsonLong.of(42)}, then typed as {@link EntityType#LONG}. {@code 3.141592} is
+     * represented by {@link JsonDouble} as {@code JsonDouble.of(3.141592)}, then typed as {@link EntityType#DOUBLE}.
      *
      * @since 0.10.42
      */
@@ -65,18 +65,18 @@ public interface JsonValue {
         BOOLEAN,
 
         /**
-         * The singleton instance of the entity type for integral numbers in JSON, which is represented by {@link JsonInteger}.
+         * The singleton instance of the entity type for integral numbers in JSON, which is represented by {@link JsonLong}.
          *
          * @since 0.10.42
          */
-        INTEGER,
+        LONG,
 
         /**
-         * The singleton instance of the entity type for decimal numbers in JSON, which is represented by {@link JsonDecimal}.
+         * The singleton instance of the entity type for numbers in JSON, which is represented by {@link JsonDouble}.
          *
          * @since 0.10.42
          */
-        DECIMAL,
+        DOUBLE,
 
         /**
          * The singleton instance of the entity type for strings in JSON, which is represented by {@link JsonString}.
@@ -119,21 +119,21 @@ public interface JsonValue {
         }
 
         /**
-         * Returns {@code true} if the JSON value is an integral number, which is represented by {@link JsonInteger}.
+         * Returns {@code true} if the JSON value is an integral number, which is represented by {@link JsonLong}.
          *
          * @since 0.10.42
          */
-        public boolean isInteger() {
-            return this == INTEGER;
+        public boolean isLong() {
+            return this == LONG;
         }
 
         /**
-         * Returns {@code true} if the JSON value is a number, which is represented by {@link JsonDecimal}.
+         * Returns {@code true} if the JSON value is a number, which is represented by {@link JsonDouble}.
          *
          * @since 0.10.42
          */
-        public boolean isDecimal() {
-            return this == DECIMAL;
+        public boolean isDouble() {
+            return this == DOUBLE;
         }
 
         /**
@@ -200,29 +200,29 @@ public interface JsonValue {
     }
 
     /**
-     * Returns {@code true} if this JSON value is an integral number, which is {@link JsonInteger}.
+     * Returns {@code true} if this JSON value is an integral number, which is {@link JsonLong}.
      *
-     * <p>If this method returns {@code true}, {@link #asJsonInteger} never throws exceptions.
+     * <p>If this method returns {@code true}, {@link #asJsonLong} never throws exceptions.
      *
-     * @return {@code true} if this JSON value is an integral number, which is {@link JsonInteger}
+     * @return {@code true} if this JSON value is an integral number, which is {@link JsonLong}
      *
      * @since 0.10.42
      */
-    default boolean isJsonInteger() {
-        return this.getEntityType().isInteger();
+    default boolean isJsonLong() {
+        return this.getEntityType().isLong();
     }
 
     /**
-     * Returns {@code true} if this JSON value is a number, which is {@link JsonDecimal}.
+     * Returns {@code true} if this JSON value is a number, which is {@link JsonDouble}.
      *
-     * <p>If this method returns {@code true}, {@link #asJsonDecimal} never throws exceptions.
+     * <p>If this method returns {@code true}, {@link #asJsonDouble} never throws exceptions.
      *
-     * @return {@code true} if this JSON value is a number, which is {@link JsonDecimal}
+     * @return {@code true} if this JSON value is a number, which is {@link JsonDouble}
      *
      * @since 0.10.42
      */
-    default boolean isJsonDecimal() {
-        return this.getEntityType().isDecimal();
+    default boolean isJsonDouble() {
+        return this.getEntityType().isDouble();
     }
 
     /**
@@ -289,27 +289,27 @@ public interface JsonValue {
     }
 
     /**
-     * Returns this value as {@link JsonInteger}, or throws {@link ClassCastException} otherwise.
+     * Returns this value as {@link JsonLong}, or throws {@link ClassCastException} otherwise.
      *
-     * @return itself as {@link JsonInteger}
-     * @throws ClassCastException  if this JSON value is not an integral number, not {@link JsonInteger}
+     * @return itself as {@link JsonLong}
+     * @throws ClassCastException  if this JSON value is not an integral number, not {@link JsonLong}
      *
      * @since 0.10.42
      */
-    default JsonInteger asJsonInteger() {
-        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonInteger.");
+    default JsonLong asJsonLong() {
+        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonLong.");
     }
 
     /**
-     * Returns this value as {@link JsonDecimal}, or throws {@link ClassCastException} otherwise.
+     * Returns this value as {@link JsonDouble}, or throws {@link ClassCastException} otherwise.
      *
-     * @return itself as {@link JsonDecimal}
-     * @throws ClassCastException  if this JSON value is not a number, not {@link JsonDecimal}
+     * @return itself as {@link JsonDouble}
+     * @throws ClassCastException  if this JSON value is not a number, not {@link JsonDouble}
      *
      * @since 0.10.42
      */
-    default JsonDecimal asJsonDecimal() {
-        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonDecimal.");
+    default JsonDouble asJsonDouble() {
+        throw new ClassCastException(this.getClass().getSimpleName() + " cannot be cast to JsonDouble.");
     }
 
     /**
@@ -360,7 +360,7 @@ public interface JsonValue {
     /**
      * Returns the stringified JSON representation of this JSON value.
      *
-     * <p>{@code NaN} and {@code Infinity} of {@link JsonDecimal} are converted to {@code "null"}.
+     * <p>{@code NaN} and {@code Infinity} of {@link JsonDouble} are converted to {@code "null"}.
      *
      * @return the stringified JSON representation of this JSON value
      *

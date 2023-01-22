@@ -43,15 +43,15 @@ public class TestJsonObject {
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -71,19 +71,19 @@ public class TestJsonObject {
     @Test
     public void testOf() {
         final JsonObject jsonObject = JsonObject.of(
-                JsonString.of("foo"), JsonInteger.of(456), JsonString.of("bar"), JsonInteger.of(456));
+                JsonString.of("foo"), JsonLong.of(456), JsonString.of("bar"), JsonLong.of(456));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -92,43 +92,43 @@ public class TestJsonObject {
         assertEquals(4, jsonObject.getKeyValueArray().length);
         final Iterator<Map.Entry<String, JsonValue>> it = jsonObject.entrySet().iterator();
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonInteger.of(456)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonLong.of(456)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonInteger.of(456)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonLong.of(456)), it.next());
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":456,\"bar\":456}", jsonObject.toJson());
         assertEquals("{\"foo\":456,\"bar\":456}", jsonObject.toString());
 
         assertEquals(JsonObject.of(
-                         JsonString.of("foo"), JsonInteger.of(456),
-                         JsonString.of("bar"), JsonInteger.of(456)),
+                         JsonString.of("foo"), JsonLong.of(456),
+                         JsonString.of("bar"), JsonLong.of(456)),
                      jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
-                         JsonString.of("foo"), JsonInteger.of(456),
-                         JsonString.of("bar"), JsonInteger.of(456))));
+                         JsonString.of("foo"), JsonLong.of(456),
+                         JsonString.of("bar"), JsonLong.of(456))));
     }
 
     @Test
     public void testOfEntries() {
         final JsonObject jsonObject = JsonObject.ofEntries(
                 new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()),
-                new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
-                new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)));
+                new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
+                new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -139,44 +139,44 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)), it.next());
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toString());
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678)),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678))));
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678))));
     }
 
     @Test
     public void testSingleOfEntriesWithJsonStringKeys() {
         final JsonObject jsonObject = JsonObject.ofEntriesWithJsonStringKeys(
                 new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("foo"), JsonNull.of()),
-                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
-                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("baz"), JsonInteger.of(678)));
+                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
+                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("baz"), JsonLong.of(678)));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -187,9 +187,9 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)), it.next());
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
@@ -197,36 +197,36 @@ public class TestJsonObject {
 
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678)),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678))));
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678))));
     }
 
     @Test
     public void testOfMap() {
         final LinkedHashMap<String, JsonValue> map = new LinkedHashMap<>();
         map.put("foo", JsonNull.of());
-        map.put("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE));
-        map.put("baz", JsonInteger.of(678));
+        map.put("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE));
+        map.put("baz", JsonLong.of(678));
         final JsonObject jsonObject = JsonObject.ofMap(map);
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -237,9 +237,9 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)), it.next());
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
@@ -247,50 +247,50 @@ public class TestJsonObject {
 
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678)),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
 
         // Ordered differently.
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("baz"), JsonInteger.of(678),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                             JsonString.of("baz"), JsonLong.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
                      jsonObject);
 
         // Different value.
         assertNotEquals(JsonObject.of(
                                 JsonString.of("foo"), JsonNull.of(),
-                                JsonString.of("baz"), JsonInteger.of(789),
-                                JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)),
+                                JsonString.of("baz"), JsonLong.of(789),
+                                JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
                         jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("baz"), JsonInteger.of(678),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE))));
+                             JsonString.of("baz"), JsonLong.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE))));
     }
 
     @Test
     public void testOfMapWithJsonStringKeys() {
         final LinkedHashMap<JsonString, JsonValue> map = new LinkedHashMap<>();
         map.put(JsonString.of("foo"), JsonNull.of());
-        map.put(JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE));
-        map.put(JsonString.of("baz"), JsonInteger.of(678));
+        map.put(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE));
+        map.put(JsonString.of("baz"), JsonLong.of(678));
         final JsonObject jsonObject = JsonObject.ofMapWithJsonStringKeys(map);
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -301,9 +301,9 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)), it.next());
         assertFalse(it.hasNext());
         assertThrows(NoSuchElementException.class, () -> it.next());
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678}", jsonObject.toJson());
@@ -311,43 +311,43 @@ public class TestJsonObject {
 
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678)),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
 
         // Ordered differently.
         assertEquals(JsonObject.of(
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("foo"), JsonNull.of()),
                      jsonObject);
 
         // Different value.
         assertNotEquals(JsonObject.of(
-                               JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                               JsonString.of("baz"), JsonInteger.of(234),
+                               JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                               JsonString.of("baz"), JsonLong.of(234),
                                JsonString.of("foo"), JsonNull.of()),
                         jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("baz"), JsonInteger.of(678),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE))));
+                             JsonString.of("baz"), JsonLong.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE))));
     }
 
     @Test
     public void testBuilder() {
         final LinkedHashMap<String, JsonValue> map1 = new LinkedHashMap<>();
         map1.put("hoge", JsonString.withLiteral("foo", "\"\\u0066oo\""));
-        map1.put("fuga", JsonDecimal.of(123.4));
+        map1.put("fuga", JsonDouble.of(123.4));
         final LinkedHashMap<JsonString, JsonValue> map2 = new LinkedHashMap<>();
-        map2.put(JsonString.of("piyo"), JsonInteger.of(345));
+        map2.put(JsonString.of("piyo"), JsonLong.of(345));
         map2.put(JsonString.of("hogera"), JsonString.of("bar"));
         final JsonObject jsonObject = JsonObject.builder()
                 .put("foo", JsonNull.of())
-                .put(JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE))
-                .putEntry(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)))
+                .put(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE))
+                .putEntry(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)))
                 .putEntryWithJsonStringKey(new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("qux"), JsonNull.of()))
                 .putAll(map1)
                 .putAllWithJsonStringKeys(map2)
@@ -356,15 +356,15 @@ public class TestJsonObject {
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
-        assertFalse(jsonObject.isJsonInteger());
-        assertFalse(jsonObject.isJsonDecimal());
+        assertFalse(jsonObject.isJsonLong());
+        assertFalse(jsonObject.isJsonDouble());
         assertFalse(jsonObject.isJsonString());
         assertFalse(jsonObject.isJsonArray());
         assertTrue(jsonObject.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonObject.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
@@ -375,17 +375,17 @@ public class TestJsonObject {
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonInteger.of(678)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)), it.next());
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("qux", JsonNull.of()), it.next());
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("hoge", JsonString.of("foo")), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("fuga", JsonDecimal.of(123.4)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("fuga", JsonDouble.of(123.4)), it.next());
         assertTrue(it.hasNext());
-        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("piyo", JsonInteger.of(345)), it.next());
+        assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("piyo", JsonLong.of(345)), it.next());
         assertTrue(it.hasNext());
         assertEquals(new AbstractMap.SimpleEntry<String, JsonValue>("hogera", JsonString.of("bar")), it.next());
         assertFalse(it.hasNext());
@@ -394,24 +394,24 @@ public class TestJsonObject {
         assertEquals("{\"foo\":null,\"bar\":[123,true],\"baz\":678,\"qux\":null,\"hoge\":\"foo\",\"fuga\":123.4,\"piyo\":345,\"hogera\":\"bar\"}", jsonObject.toString());
         assertEquals(JsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("qux"), JsonNull.of(),
                              JsonString.of("hoge"), JsonString.of("foo"),
-                             JsonString.of("fuga"), JsonDecimal.of(123.4),
-                             JsonString.of("piyo"), JsonInteger.of(345),
+                             JsonString.of("fuga"), JsonDouble.of(123.4),
+                             JsonString.of("piyo"), JsonLong.of(345),
                              JsonString.of("hogera"), JsonString.of("bar")),
                      jsonObject);
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
                              JsonString.of("foo"), JsonNull.of(),
-                             JsonString.of("bar"), JsonArray.of(JsonInteger.of(123), JsonBoolean.TRUE),
-                             JsonString.of("baz"), JsonInteger.of(678),
+                             JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("qux"), JsonNull.of(),
                              JsonString.of("hoge"), JsonString.of("foo"),
-                             JsonString.of("fuga"), JsonDecimal.of(123.4),
-                             JsonString.of("piyo"), JsonInteger.of(345),
+                             JsonString.of("fuga"), JsonDouble.of(123.4),
+                             JsonString.of("piyo"), JsonLong.of(345),
                              JsonString.of("hogera"), JsonString.of("bar"))));
     }
 

@@ -19,38 +19,38 @@ package org.embulk.spi.json;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-public final class FakeJsonInteger implements JsonValue {
-    private FakeJsonInteger(final long value) {
+public final class FakeJsonDouble implements JsonValue {
+    private FakeJsonDouble(final double value) {
         this.value = value;
     }
 
-    public static FakeJsonInteger of(final long value) {
-        return new FakeJsonInteger(value);
+    public static FakeJsonDouble of(final double value) {
+        return new FakeJsonDouble(value);
     }
 
     @Override
     public EntityType getEntityType() {
-        return EntityType.INTEGER;
+        return EntityType.DOUBLE;
     }
 
     public boolean isIntegral() {
-        return true;
+        return !Double.isNaN(this.value) && !Double.isInfinite(this.value) && this.value == Math.rint(this.value);
     }
 
     public boolean isByteValue() {
-        return ((long) Byte.MIN_VALUE) <= this.value && this.value <= ((long) Byte.MAX_VALUE);
+        return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE);
     }
 
     public boolean isShortValue() {
-        return ((long) Short.MIN_VALUE) <= this.value && this.value <= ((long) Short.MAX_VALUE);
+        return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE);
     }
 
     public boolean isIntValue() {
-        return ((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE);
+        return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE);
     }
 
     public boolean isLongValue() {
-        return true;
+        return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE);
     }
 
     public byte byteValue() {
@@ -58,7 +58,10 @@ public final class FakeJsonInteger implements JsonValue {
     }
 
     public byte byteValueExact() {
-        if (!this.isByteValue()) {
+        if (!this.isIntegral()) {
+            throw new ArithmeticException("Not an integer: " + this.value);
+        }
+        if (((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE)) {
             throw new ArithmeticException("Out of the range of byte: " + this.value);
         }
         return (byte) this.value;
@@ -69,7 +72,10 @@ public final class FakeJsonInteger implements JsonValue {
     }
 
     public short shortValueExact() {
-        if (!this.isShortValue()) {
+        if (!this.isIntegral()) {
+            throw new ArithmeticException("Not an integer: " + this.value);
+        }
+        if (((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE)) {
             throw new ArithmeticException("Out of the range of short: " + this.value);
         }
         return (short) this.value;
@@ -80,7 +86,10 @@ public final class FakeJsonInteger implements JsonValue {
     }
 
     public int intValueExact() {
-        if (!this.isIntValue()) {
+        if (!this.isIntegral()) {
+            throw new ArithmeticException("Not an integer: " + this.value);
+        }
+        if (((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE)) {
             throw new ArithmeticException("Out of the range of int: " + this.value);
         }
         return (int) this.value;
@@ -91,15 +100,21 @@ public final class FakeJsonInteger implements JsonValue {
     }
 
     public long longValueExact() {
+        if (!this.isIntegral()) {
+            throw new ArithmeticException("Not an integer: " + this.value);
+        }
+        if (((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE)) {
+            throw new ArithmeticException("Out of the range of long: " + this.value);
+        }
         return (long) this.value;
     }
 
     public BigInteger bigIntegerValue() {
-        return BigInteger.valueOf(this.value);
+        return BigDecimal.valueOf(this.value).toBigInteger();
     }
 
     public BigInteger bigIntegerValueExact() {
-        return BigInteger.valueOf(this.value);
+        return BigDecimal.valueOf(this.value).toBigIntegerExact();
     }
 
     public float floatValue() {
@@ -107,7 +122,7 @@ public final class FakeJsonInteger implements JsonValue {
     }
 
     public double doubleValue() {
-        return (double) this.value;
+        return this.value;
     }
 
     public BigDecimal bigDecimalValue() {
@@ -116,12 +131,15 @@ public final class FakeJsonInteger implements JsonValue {
 
     @Override
     public String toJson() {
-        return Long.toString(this.value);
+        if (Double.isNaN(this.value) || Double.isInfinite(this.value)) {
+            return "null";
+        }
+        return Double.toString(this.value);
     }
 
     @Override
     public String toString() {
-        return Long.toString(this.value);
+        return Double.toString(this.value);
     }
 
     @Override
@@ -131,28 +149,26 @@ public final class FakeJsonInteger implements JsonValue {
         }
 
         // Fake!
-        if (otherObject instanceof JsonInteger) {
-            final JsonInteger other = (JsonInteger) otherObject;
-            return this.value == other.longValue();
+        if (otherObject instanceof JsonDouble) {
+            final JsonDouble other = (JsonDouble) otherObject;
+            return this.value == other.doubleValue();
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof FakeJsonInteger)) {
+        if (!(otherObject instanceof FakeJsonDouble)) {
             return false;
         }
 
-        final FakeJsonInteger other = (FakeJsonInteger) otherObject;
+        final FakeJsonDouble other = (FakeJsonDouble) otherObject;
 
         return this.value == other.value;
     }
 
     @Override
     public int hashCode() {
-        if (((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE)) {
-            return (int) value;
-        }
-        return (int) (value ^ (value >>> 32));
+        final long bits = Double.doubleToLongBits(this.value);
+        return (int) (bits ^ (bits >>> 32));
     }
 
-    private final long value;
+    private final double value;
 }

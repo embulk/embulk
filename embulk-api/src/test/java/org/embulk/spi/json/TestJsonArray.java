@@ -38,15 +38,15 @@ public class TestJsonArray {
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
@@ -62,229 +62,229 @@ public class TestJsonArray {
 
     @Test
     public void testSingle() {
-        final JsonArray jsonArray = JsonArray.of(JsonInteger.of(987));
+        final JsonArray jsonArray = JsonArray.of(JsonLong.of(987));
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
         assertEquals(1, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(1));
         assertEquals("[987]", jsonArray.toJson());
         assertEquals("[987]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987)), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987)), jsonArray);
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
-        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987))));
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987))));
     }
 
     @Test
     public void testMultiOfArray() {
         final JsonValue[] values = new JsonValue[3];
-        values[0] = JsonInteger.of(987);
+        values[0] = JsonLong.of(987);
         values[1] = JsonString.of("foo");
         values[2] = JsonBoolean.TRUE;
         final JsonArray jsonArray = JsonArray.of(values);
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
         // Tests that changing the original array does NOT affect the JsonArray instance.
-        values[0] = JsonInteger.of(1234);
+        values[0] = JsonLong.of(1234);
 
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
-        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
     @Test
     public void testMultiOfList() {
         final ArrayList<JsonValue> values = new ArrayList<>();
-        values.add(JsonInteger.of(987));
+        values.add(JsonLong.of(987));
         values.add(JsonString.of("foo"));
         values.add(JsonBoolean.TRUE);
         final JsonArray jsonArray = JsonArray.ofList(values);
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
         // Tests that changing the original array does NOT affect the JsonArray instance.
-        values.add(JsonInteger.of(1234));
+        values.add(JsonLong.of(1234));
 
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
-        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
 
     @Test
     public void testMultiUnsafe() {
         final JsonValue[] values = new JsonValue[3];
-        values[0] = JsonInteger.of(987);
+        values[0] = JsonLong.of(987);
         values[1] = JsonString.of("foo");
         values[2] = JsonBoolean.TRUE;
         final JsonArray jsonArray = JsonArray.ofUnsafe(values);
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
         // Tests that changing the original array DOES affect the JsonArray instance that is created by #ofUnsafe.
-        values[0] = JsonInteger.of(1234);
+        values[0] = JsonLong.of(1234);
 
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(1234), jsonArray.get(0));  // Updated
+        assertEquals(JsonLong.of(1234), jsonArray.get(0));  // Updated
         assertEquals(JsonString.of("foo"), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[1234,\"foo\",true]", jsonArray.toJson());  // Updated
         assertEquals("[1234,\"foo\",true]", jsonArray.toString());  // Updated
-        assertEquals(JsonArray.of(JsonInteger.of(1234), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);  // Updated
+        assertEquals(JsonArray.of(JsonLong.of(1234), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);  // Updated
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
-        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonInteger.of(1234), JsonString.of("foo"), JsonBoolean.TRUE)));
+        assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(1234), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
 
     @Test
     public void testNested() {
         final JsonValue[] values = new JsonValue[3];
-        values[0] = JsonInteger.of(987);
+        values[0] = JsonLong.of(987);
         values[1] = JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz"));
         values[2] = JsonBoolean.TRUE;
         final JsonArray jsonArray = JsonArray.of(values);
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());
         assertFalse(jsonArray.isJsonNull());
         assertFalse(jsonArray.isJsonBoolean());
-        assertFalse(jsonArray.isJsonInteger());
-        assertFalse(jsonArray.isJsonDecimal());
+        assertFalse(jsonArray.isJsonLong());
+        assertFalse(jsonArray.isJsonDouble());
         assertFalse(jsonArray.isJsonString());
         assertTrue(jsonArray.isJsonArray());
         assertFalse(jsonArray.isJsonObject());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonNull());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonBoolean());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonInteger());
-        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDecimal());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonLong());
+        assertThrows(ClassCastException.class, () -> jsonArray.asJsonDouble());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonString());
         assertEquals(jsonArray, jsonArray.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonArray.asJsonObject());
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toJson());
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
 
-        values[0] = JsonInteger.of(1234);
+        values[0] = JsonLong.of(1234);
 
         assertEquals(3, jsonArray.size());
-        assertEquals(JsonInteger.of(987), jsonArray.get(0));
+        assertEquals(JsonLong.of(987), jsonArray.get(0));
         assertEquals(JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), jsonArray.get(1));
         assertEquals(JsonBoolean.TRUE, jsonArray.get(2));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> jsonArray.get(3));
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toJson());
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toString());
-        assertEquals(JsonArray.of(JsonInteger.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
+        assertEquals(JsonArray.of(JsonLong.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(
                             FakeJsonArray.of(
-                                    JsonInteger.of(987),
+                                    JsonLong.of(987),
                                     JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")),
                                     JsonBoolean.TRUE)));
     }
