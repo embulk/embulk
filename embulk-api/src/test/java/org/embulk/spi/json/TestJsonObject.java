@@ -55,6 +55,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(4, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(0, jsonObject.size());
         assertEquals(0, jsonObject.entrySet().size());
         assertEquals(0, jsonObject.getKeyValueArray().length);
@@ -87,6 +88,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(40, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(2, jsonObject.size());
         assertEquals(2, jsonObject.entrySet().size());
         assertEquals(4, jsonObject.getKeyValueArray().length);
@@ -132,6 +134,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(56, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(3, jsonObject.size());
         assertEquals(3, jsonObject.entrySet().size());
         assertEquals(6, jsonObject.getKeyValueArray().length);
@@ -180,6 +183,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(56, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(3, jsonObject.size());
         assertEquals(3, jsonObject.entrySet().size());
         assertEquals(6, jsonObject.getKeyValueArray().length);
@@ -230,6 +234,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(56, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(3, jsonObject.size());
         assertEquals(3, jsonObject.entrySet().size());
         assertEquals(6, jsonObject.getKeyValueArray().length);
@@ -294,6 +299,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(56, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(3, jsonObject.size());
         assertEquals(3, jsonObject.entrySet().size());
         assertEquals(6, jsonObject.getKeyValueArray().length);
@@ -368,6 +374,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
+        assertEquals(155, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(8, jsonObject.size());
         assertEquals(8, jsonObject.entrySet().size());
         assertEquals(16, jsonObject.getKeyValueArray().length);

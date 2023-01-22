@@ -51,6 +51,15 @@ public final class FakeJsonObject extends AbstractMap<String, JsonValue> impleme
     }
 
     @Override
+    public int presumeReferenceSizeInBytes() {
+        int sum = 4;
+        for (int i = 0; i < this.values.length; i++) {
+            sum += this.values[i].presumeReferenceSizeInBytes();
+        }
+        return sum;
+    }
+
+    @Override
     public int size() {
         return this.values.length / 2;
     }

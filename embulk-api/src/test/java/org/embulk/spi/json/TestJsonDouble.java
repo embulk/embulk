@@ -51,6 +51,7 @@ public class TestJsonDouble {
         assertThrows(ClassCastException.class, () -> jsonDouble.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonDouble.asJsonArray());
         assertThrows(ClassCastException.class, () -> jsonDouble.asJsonObject());
+        assertEquals(8, jsonDouble.presumeReferenceSizeInBytes());
         assertFalse(jsonDouble.isIntegral());
         assertFalse(jsonDouble.isByteValue());
         assertFalse(jsonDouble.isShortValue());

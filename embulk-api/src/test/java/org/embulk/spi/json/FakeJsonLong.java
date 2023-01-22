@@ -33,6 +33,11 @@ public final class FakeJsonLong implements JsonValue {
         return EntityType.LONG;
     }
 
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 8;
+    }
+
     public boolean isIntegral() {
         return true;
     }

@@ -84,6 +84,28 @@ public final class JsonDouble implements JsonNumber {
     }
 
     /**
+     * Returns {@code 8} for the size of {@code double} in bytes presumed to occupy in {@link org.embulk.spi.Page} as a reference.
+     *
+     * <p>This approximate size is used only as a threshold whether {@link org.embulk.spi.PageBuilder} is flushed, or not.
+     * It is not accurate, it does not need to be accurate, and it is impossible in general to tell an accurate size that
+     * a Java object occupies in the Java heap. But, a reasonable approximate would help to keep {@link org.embulk.spi.Page}
+     * performant in the Java heap.
+     *
+     * <p>It is better to flush more frequently for bigger JSON value objects, less often for smaller JSON value objects,
+     * but no infinite accumulation even for empty JSON value objects.
+     *
+     * @return {@code 8}
+     *
+     * @see "org.embulk.spi.PageBuilderImpl#addRecord"
+     *
+     * @see <a href="https://github.com/airlift/slice/blob/0.9/src/main/java/io/airlift/slice/SizeOf.java#L42">SIZE_OF_DOUBLE in Airlift's Slice</a>
+     */
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 8;
+    }
+
+    /**
      * Returns {@code true} if this JSON number is integral.
      *
      * <p>Note that it does not guarantee this JSON number can be represented as a Java primitive exact {@code long}.

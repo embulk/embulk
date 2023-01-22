@@ -33,6 +33,11 @@ public final class FakeJsonDouble implements JsonValue {
         return EntityType.DOUBLE;
     }
 
+    @Override
+    public int presumeReferenceSizeInBytes() {
+        return 8;
+    }
+
     public boolean isIntegral() {
         return !Double.isNaN(this.value) && !Double.isInfinite(this.value) && this.value == Math.rint(this.value);
     }
