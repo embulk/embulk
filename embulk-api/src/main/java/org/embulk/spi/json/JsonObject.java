@@ -361,13 +361,17 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * odd number, the <i>i</i>-th argument represents a key that must be {@link JsonString}, and the <i>i+1</i>-th
      * argument represents a value for the key at the <i>i</i>-th argument.
      *
-     * @param keyValues  the JSON keys and values to be contained in the JSON object
+     * @param keyValues  the JSON keys and values to be contained in the JSON object, not null
      * @return a JSON object containing the specified JSON key-value mappings
      * @throws IllegalArgumentException  if odd numbers of arguments are specified, or non-{@link JsonString} is specified as key
+     * @throws NullPointerException  if any key or any value is {@code null}
      *
      * @since 0.10.42
      */
     public static JsonObject of(final JsonValue... keyValues) {
+        if (keyValues == null) {
+            throw new NullPointerException("key-value is null.");
+        }
         if (keyValues.length == 0) {
             return EMPTY;
         }
@@ -378,6 +382,9 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         final JsonValue[] values = new JsonValue[keyValues.length / 2];
 
         for (int i = 0; i < keyValues.length / 2; i++) {
+            if (keyValues[i * 2] == null || keyValues[i * 2 + 1] == null) {
+                throw new NullPointerException("keys or values has null.");
+            }
             if (!(keyValues[i * 2] instanceof JsonString)) {
                 throw new IllegalArgumentException("JsonString must be specified as a key for JsonObject#of(...).");
             }
@@ -392,18 +399,31 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      *
      * <p>The specified entries themselves are not stored in the JSON object.
      *
-     * @param entries  {@link java.util.Map.Entry}s containing {@link String} keys and {@link JsonValue} values from which the JSON object is populated
+     * @param entries  {@link java.util.Map.Entry}s containing {@link String} keys and {@link JsonValue} values from which the JSON object is populated, not null
      * @return a JSON object containing the specified JSON key-value mappings
+     * @throws NullPointerException  if the entries, any key or any value is {@code null}
      *
      * @since 0.10.42
      */
     @SafeVarargs
     public static JsonObject ofEntries(final Map.Entry<String, JsonValue>... entries) {
+        if (entries == null) {
+            throw new NullPointerException("entries is null.");
+        }
         final String[] keys = new String[entries.length];
         final JsonValue[] values = new JsonValue[entries.length];
         for (int i = 0; i < entries.length; ++i) {
+            if (entries[i] == null) {
+                throw new NullPointerException("entries has null.");
+            }
             keys[i] = entries[i].getKey();
+            if (keys[i] == null) {
+                throw new NullPointerException("entries has null key.");
+            }
             values[i] = entries[i].getValue();
+            if (values[i] == null) {
+                throw new NullPointerException("entries has null value.");
+            }
         }
         return new JsonObject(keys, values);
     }
@@ -413,18 +433,32 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      *
      * <p>The specified entries themselves are not stored in the JSON object.
      *
-     * @param entries  {@link java.util.Map.Entry}s containing {@link JsonString} keys and {@link JsonValue} values from which the JSON object is populated
+     * @param entries  {@link java.util.Map.Entry}s containing {@link JsonString} keys and {@link JsonValue} values from which the JSON object is populated, not null
      * @return a JSON object containing the specified JSON key-value mappings
+     * @throws NullPointerException  if the entries, any key or any value is {@code null}
      *
      * @since 0.10.42
      */
     @SafeVarargs
     public static JsonObject ofEntriesWithJsonStringKeys(final Map.Entry<JsonString, JsonValue>... entries) {
+        if (entries == null) {
+            throw new NullPointerException("entries is null.");
+        }
         final String[] keys = new String[entries.length];
         final JsonValue[] values = new JsonValue[entries.length];
         for (int i = 0; i < entries.length; ++i) {
-            keys[i] = entries[i].getKey().getString();
+            if (entries[i] == null) {
+                throw new NullPointerException("entries has null.");
+            }
+            final JsonString key = entries[i].getKey();
+            if (key == null) {
+                throw new NullPointerException("entries has null key.");
+            }
+            keys[i] = key.getString();
             values[i] = entries[i].getValue();
+            if (values[i] == null) {
+                throw new NullPointerException("entries has null value.");
+            }
         }
         return new JsonObject(keys, values);
     }
@@ -434,18 +468,28 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      *
      * <p>The specified map itself is not stored in the JSON object.
      *
-     * @param map  a {@link java.util.Map} containing {@link String} keys and {@link JsonValue} values from which the JSON object is populated
+     * @param map  a {@link java.util.Map} containing {@link String} keys and {@link JsonValue} values from which the JSON object is populated, not null
      * @return a JSON object containing the specified JSON key-value mappings
+     * @throws NullPointerException  if the map, any key or any value is {@code null}
      *
      * @since 0.10.42
      */
     public static JsonObject ofMap(final Map<String, JsonValue> map) {
+        if (map == null) {
+            throw new NullPointerException("map is null.");
+        }
         final String[] keys = new String[map.size()];
         final JsonValue[] values = new JsonValue[map.size()];
         int index = 0;
         for (final Map.Entry<String, JsonValue> pair : map.entrySet()) {
             keys[index] = pair.getKey();
+            if (keys[index] == null) {
+                throw new NullPointerException("map has null key.");
+            }
             values[index] = pair.getValue();
+            if (values[index] == null) {
+                throw new NullPointerException("map has null value.");
+            }
             index++;
         }
         return new JsonObject(keys, values);
@@ -456,18 +500,29 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      *
      * <p>The specified map itself is not stored in the JSON object.
      *
-     * @param map  a {@link java.util.Map} containing {@link JsonString} keys and {@link JsonValue} values from which the JSON object is populated
+     * @param map  a {@link java.util.Map} containing {@link JsonString} keys and {@link JsonValue} values from which the JSON object is populated, not null
      * @return a JSON object containing the specified JSON key-value mappings
+     * @throws NullPointerException  if the map, any key or any value is {@code null}
      *
      * @since 0.10.42
      */
     public static JsonObject ofMapWithJsonStringKeys(final Map<JsonString, JsonValue> map) {
+        if (map == null) {
+            throw new NullPointerException("map is null.");
+        }
         final String[] keys = new String[map.size()];
         final JsonValue[] values = new JsonValue[map.size()];
         int index = 0;
         for (final Map.Entry<JsonString, JsonValue> pair : map.entrySet()) {
-            keys[index] = pair.getKey().getString();
+            final JsonString key = pair.getKey();
+            if (key == null) {
+                throw new NullPointerException("map has null key.");
+            }
+            keys[index] = key.getString();
             values[index] = pair.getValue();
+            if (values[index] == null) {
+                throw new NullPointerException("map has null value.");
+            }
             index++;
         }
         return new JsonObject(keys, values);
@@ -524,13 +579,20 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         /**
          * Puts a pair of a {@link String} key and a {@link JsonValue} value.
          *
-         * @param key  the key
-         * @param value  the value
+         * @param key  the key, not null
+         * @param value  the value, not null
          * @return this builder itself
+         * @throws NullPointerException  if the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder put(final String key, final JsonValue value) {
+            if (key == null) {
+                throw new NullPointerException("key is null.");
+            }
+            if (value == null) {
+                throw new NullPointerException("value is null.");
+            }
             this.map.put(key, value);
             return this;
         }
@@ -538,13 +600,20 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         /**
          * Puts a pair of a {@link JsonString} key and a {@link JsonValue} value.
          *
-         * @param key  the key
-         * @param value  the value
+         * @param key  the key, not null
+         * @param value  the value, not null
          * @return this builder itself
+         * @throws NullPointerException  if the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder put(final JsonString key, final JsonValue value) {
+            if (key == null) {
+                throw new NullPointerException("key is null.");
+            }
+            if (value == null) {
+                throw new NullPointerException("value is null.");
+            }
             this.map.put(key.getString(), value);
             return this;
         }
@@ -552,38 +621,66 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         /**
          * Puts a {@link java.util.Map.Entry} of a {@link String} key and a {@link JsonValue} value.
          *
-         * @param entry  an entry of a key and a value
+         * @param entry  an entry of a key and a value, not null
          * @return this builder itself
+         * @throws NullPointerException  if the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder putEntry(final Map.Entry<String, JsonValue> entry) {
-            this.put(entry.getKey(), entry.getValue());
+            if (entry == null) {
+                throw new NullPointerException("entry is null.");
+            }
+            final String key = entry.getKey();
+            if (key == null) {
+                throw new NullPointerException("entry has null key.");
+            }
+            final JsonValue value = entry.getValue();
+            if (value == null) {
+                throw new NullPointerException("entry has null value.");
+            }
+            this.put(key, value);
             return this;
         }
 
         /**
          * Puts a {@link java.util.Map.Entry} of a {@link JsonString} key and a {@link JsonValue} value.
          *
-         * @param entry  an entry of a key and a value
+         * @param entry  an entry of a key and a value, not null
          * @return this builder itself
+         * @throws NullPointerException  if the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder putEntryWithJsonStringKey(final Map.Entry<JsonString, JsonValue> entry) {
-            this.put(entry.getKey().getString(), entry.getValue());
+            if (entry == null) {
+                throw new NullPointerException("entry is null.");
+            }
+            final JsonString key = entry.getKey();
+            if (key == null) {
+                throw new NullPointerException("entry has null key.");
+            }
+            final JsonValue value = entry.getValue();
+            if (value == null) {
+                throw new NullPointerException("entry has null value.");
+            }
+            this.put(key.getString(), value);
             return this;
         }
 
         /**
          * Copies all of the JSON key-value mappings from the specified {@link java.util.Map} to this JSON object.
          *
-         * @param map  a {@link java.util.Map}
+         * @param map  a {@link java.util.Map}, not null
          * @return this builder itself
+         * @throws NullPointerException  if the map, the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder putAll(final Map<String, JsonValue> map) {
+            if (map == null) {
+                throw new NullPointerException("map is null.");
+            }
             for (final Map.Entry<String, JsonValue> entry : map.entrySet()) {
                 this.putEntry(entry);
             }
@@ -593,12 +690,16 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         /**
          * Copies all of the JSON key-value mappings from the specified {@link java.util.Map} to this JSON object.
          *
-         * @param map  a {@link java.util.Map}
+         * @param map  a {@link java.util.Map}, not null
          * @return this builder itself
+         * @throws NullPointerException  if the map, the key or the value is {@code null}
          *
          * @since 0.10.42
          */
         public Builder putAllWithJsonStringKeys(final Map<JsonString, JsonValue> map) {
+            if (map == null) {
+                throw new NullPointerException("map is null.");
+            }
             for (final Map.Entry<JsonString, JsonValue> entry : map.entrySet()) {
                 this.putEntryWithJsonStringKey(entry);
             }
@@ -618,6 +719,12 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * @since 0.10.42
      */
     public static Map.Entry<String, JsonValue> entry(final String key, final JsonValue value) {
+        if (key == null) {
+            throw new NullPointerException("key is null.");
+        }
+        if (value == null) {
+            throw new NullPointerException("value is null.");
+        }
         return new AbstractMap.SimpleEntry<String, JsonValue>(key, value);
     }
 
@@ -631,6 +738,12 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * @since 0.10.42
      */
     public static Map.Entry<JsonString, JsonValue> entry(final JsonString key, final JsonValue value) {
+        if (key == null) {
+            throw new NullPointerException("key is null.");
+        }
+        if (value == null) {
+            throw new NullPointerException("value is null.");
+        }
         return new AbstractMap.SimpleEntry<JsonString, JsonValue>(key, value);
     }
 
@@ -883,7 +996,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     private static String[] buildKeys(final String... keys) {
         for (final String key : keys) {
             if (key == null) {
-                throw new NullPointerException("null in keys.");
+                throw new NullPointerException("key is null.");
             }
         }
         return keys;
@@ -892,7 +1005,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     private static JsonValue[] buildValues(final JsonValue... values) {
         for (final JsonValue value : values) {
             if (value == null) {
-                throw new NullPointerException("null in values.");
+                throw new NullPointerException("value is null.");
             }
         }
         return values;

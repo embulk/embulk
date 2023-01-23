@@ -71,6 +71,11 @@ public class TestJsonObject {
 
     @Test
     public void testOf() {
+        assertThrows(NullPointerException.class, () -> JsonObject.of(
+                JsonString.of("foo"), null, JsonString.of("bar"), JsonLong.of(456)));
+        assertThrows(NullPointerException.class, () -> JsonObject.of(
+                JsonString.of("foo"), JsonLong.of(456), null, JsonLong.of(456)));
+
         final JsonObject jsonObject = JsonObject.of(
                 JsonString.of("foo"), JsonLong.of(456), JsonString.of("bar"), JsonLong.of(456));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
@@ -115,10 +120,19 @@ public class TestJsonObject {
 
     @Test
     public void testOfEntries() {
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntries((Map.Entry<String, JsonValue>[]) null));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntries(
+                new AbstractMap.SimpleEntry<String, JsonValue>(null, JsonString.of("foo"))));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntries(
+                new AbstractMap.SimpleEntry<String, JsonValue>("foo", null)));
+
+        assertThrows(NullPointerException.class, () -> JsonObject.entry((String) null, JsonString.of("foo")));
+        assertThrows(NullPointerException.class, () -> JsonObject.entry("foo", null));
+
         final JsonObject jsonObject = JsonObject.ofEntries(
-                new AbstractMap.SimpleEntry<String, JsonValue>("foo", JsonNull.of()),
-                new AbstractMap.SimpleEntry<String, JsonValue>("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
-                new AbstractMap.SimpleEntry<String, JsonValue>("baz", JsonLong.of(678)));
+                JsonObject.entry("foo", JsonNull.of()),
+                JsonObject.entry("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
+                JsonObject.entry("baz", JsonLong.of(678)));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
@@ -164,10 +178,19 @@ public class TestJsonObject {
 
     @Test
     public void testSingleOfEntriesWithJsonStringKeys() {
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntriesWithJsonStringKeys((Map.Entry<JsonString, JsonValue>[]) null));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntriesWithJsonStringKeys(
+                new AbstractMap.SimpleEntry<JsonString, JsonValue>(null, JsonString.of("foo"))));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofEntriesWithJsonStringKeys(
+                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("foo"), null)));
+
+        assertThrows(NullPointerException.class, () -> JsonObject.entry((JsonString) null, JsonString.of("foo")));
+        assertThrows(NullPointerException.class, () -> JsonObject.entry(JsonString.of("foo"), null));
+
         final JsonObject jsonObject = JsonObject.ofEntriesWithJsonStringKeys(
-                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("foo"), JsonNull.of()),
-                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
-                new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("baz"), JsonLong.of(678)));
+                JsonObject.entry(JsonString.of("foo"), JsonNull.of()),
+                JsonObject.entry(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE)),
+                JsonObject.entry(JsonString.of("baz"), JsonLong.of(678)));
         assertEquals(JsonValue.EntityType.OBJECT, jsonObject.getEntityType());
         assertFalse(jsonObject.isJsonNull());
         assertFalse(jsonObject.isJsonBoolean());
@@ -214,6 +237,16 @@ public class TestJsonObject {
 
     @Test
     public void testOfMap() {
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMap(null));
+
+        final LinkedHashMap<String, JsonValue> mapNullKey = new LinkedHashMap<>();
+        mapNullKey.put(null, JsonString.of("foo"));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMap(mapNullKey));
+
+        final LinkedHashMap<String, JsonValue> mapNullValue = new LinkedHashMap<>();
+        mapNullValue.put("foo", null);
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMap(mapNullValue));
+
         final LinkedHashMap<String, JsonValue> map = new LinkedHashMap<>();
         map.put("foo", JsonNull.of());
         map.put("bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE));
@@ -279,6 +312,16 @@ public class TestJsonObject {
 
     @Test
     public void testOfMapWithJsonStringKeys() {
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMapWithJsonStringKeys(null));
+
+        final LinkedHashMap<JsonString, JsonValue> mapNullKey = new LinkedHashMap<>();
+        mapNullKey.put(null, JsonString.of("foo"));
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMapWithJsonStringKeys(mapNullKey));
+
+        final LinkedHashMap<JsonString, JsonValue> mapNullValue = new LinkedHashMap<>();
+        mapNullValue.put(JsonString.of("foo"), null);
+        assertThrows(NullPointerException.class, () -> JsonObject.ofMapWithJsonStringKeys(mapNullValue));
+
         final LinkedHashMap<JsonString, JsonValue> map = new LinkedHashMap<>();
         map.put(JsonString.of("foo"), JsonNull.of());
         map.put(JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE));
@@ -331,6 +374,7 @@ public class TestJsonObject {
         // Different value.
         assertNotEquals(JsonObject.of(
                                JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+
                                JsonString.of("baz"), JsonLong.of(234),
                                JsonString.of("foo"), JsonNull.of()),
                         jsonObject);
@@ -340,6 +384,41 @@ public class TestJsonObject {
                              JsonString.of("foo"), JsonNull.of(),
                              JsonString.of("baz"), JsonLong.of(678),
                              JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE))));
+    }
+
+    @Test
+    public void testBuilderNull() {
+        final JsonObject.Builder builder = JsonObject.builder();
+        assertThrows(NullPointerException.class, () -> builder.put((String) null, JsonString.of("foo")));
+        assertThrows(NullPointerException.class, () -> builder.put((JsonString) null, JsonString.of("foo")));
+        assertThrows(NullPointerException.class, () -> builder.put("foo", null));
+        assertThrows(NullPointerException.class, () -> builder.put(JsonString.of("foo"), null));
+        assertThrows(NullPointerException.class, () -> builder.putEntry(null));
+        assertThrows(NullPointerException.class, () -> builder.putEntry(
+                         new AbstractMap.SimpleEntry<String, JsonValue>("foo", null)));
+        assertThrows(NullPointerException.class, () -> builder.putEntry(
+                         new AbstractMap.SimpleEntry<String, JsonValue>(null, JsonString.of("foo"))));
+        assertThrows(NullPointerException.class, () -> builder.putEntryWithJsonStringKey(null));
+        assertThrows(NullPointerException.class, () -> builder.putEntryWithJsonStringKey(
+                         new AbstractMap.SimpleEntry<JsonString, JsonValue>(JsonString.of("foo"), null)));
+        assertThrows(NullPointerException.class, () -> builder.putEntryWithJsonStringKey(
+                         new AbstractMap.SimpleEntry<JsonString, JsonValue>(null, JsonString.of("foo"))));
+
+        final LinkedHashMap<String, JsonValue> mapNullKey = new LinkedHashMap<>();
+        mapNullKey.put(null, JsonString.of("foo"));
+        assertThrows(NullPointerException.class, () -> builder.putAll(mapNullKey));
+
+        final LinkedHashMap<String, JsonValue> mapNullValue = new LinkedHashMap<>();
+        mapNullValue.put("foo", null);
+        assertThrows(NullPointerException.class, () -> builder.putAll(mapNullValue));
+
+        final LinkedHashMap<JsonString, JsonValue> mapJsonNullKey = new LinkedHashMap<>();
+        mapJsonNullKey.put(null, JsonString.of("foo"));
+        assertThrows(NullPointerException.class, () -> builder.putAllWithJsonStringKeys(mapJsonNullKey));
+
+        final LinkedHashMap<JsonString, JsonValue> mapJsonNullValue = new LinkedHashMap<>();
+        mapJsonNullValue.put(JsonString.of("foo"), null);
+        assertThrows(NullPointerException.class, () -> builder.putAllWithJsonStringKeys(mapJsonNullValue));
     }
 
     @Test
