@@ -534,6 +534,9 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * <p><strong>This method is not safe.</strong> If the specified array is modified after creating a {@link JsonObject}
      * instance with this method, the created {@link JsonObject} instance can unintentionally behave differently.
      *
+     * <p>It has no {@code null} checks. If either of the specified arrays is {@code null}, or contains {@code null},
+     * the created {@link JsonObject} can behave unexpectedly.
+     *
      * @param keys  the array of strings to be the internal representation as the keys in the new {@link JsonObject}
      * @param values  the array of JSON values to be the internal representation as the values in the new {@link JsonObject}
      * @return a JSON object containing the specified array as the internal representation
