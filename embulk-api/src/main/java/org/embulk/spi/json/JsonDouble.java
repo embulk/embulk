@@ -22,12 +22,20 @@ import java.math.BigInteger;
 /**
  * Represents a number in JSON, represented by a Java primitive {@code double}, which is the same as Embulk's {@code DOUBLE} column type.
  *
+ * <p>It does not accept {@code NaN} (Not-a-Number) and the infinity.
+ *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc8259">RFC 8259 - The JavaScript Object Notation (JSON) Data Interchange Format</a>
  *
  * @since 0.10.42
  */
 public final class JsonDouble implements JsonNumber {
     private JsonDouble(final double value, final String literal) {
+        if (Double.isNaN(value)) {
+            throw new ArithmeticException("JsonDouble does not accept NaN.");
+        }
+        if (Double.isInfinite(value)) {
+            throw new ArithmeticException("JsonDouble does not accept the infinity.");
+        }
         this.value = value;
         this.literal = literal;
     }
@@ -37,6 +45,7 @@ public final class JsonDouble implements JsonNumber {
      *
      * @param value  the number
      * @return a JSON number represented by the specified Java primitive {@code double}
+     * @throws ArithmeticException  if the specified number is {@code NaN} (Not-a-Number) or infinite
      *
      * @since 0.10.42
      */
@@ -52,6 +61,7 @@ public final class JsonDouble implements JsonNumber {
      * @param value  the number
      * @param literal  the JSON literal of the number
      * @return a JSON number represented by the specified Java primitive {@code double}
+     * @throws ArithmeticException  if the specified number is {@code NaN} (Not-a-Number) or infinite
      *
      * @since 0.10.42
      */
@@ -117,7 +127,10 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public boolean isIntegral() {
-        return !Double.isNaN(this.value) && !Double.isInfinite(this.value) && this.value == Math.rint(this.value);
+        // |this.value| must not be NaN nor infinite. If JsonDouble supports NaN or the infinity in the future, check also:
+        //
+        //     !Double.isNaN(this.value) && !Double.isInfinite(this.value)
+        return this.value == Math.rint(this.value);
     }
 
     /**
@@ -198,11 +211,8 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public byte byteValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
-        }
-        if (((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of byte: " + this.value);
+        if (!this.isByteValue()) {
+            throw new ArithmeticException("Out of the range of byte, or not integral: " + this.value);
         }
         return (byte) this.value;
     }
@@ -237,11 +247,8 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public short shortValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
-        }
-        if (((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of short: " + this.value);
+        if (!this.isShortValue()) {
+            throw new ArithmeticException("Out of the range of short, or not integral: " + this.value);
         }
         return (short) this.value;
     }
@@ -276,11 +283,8 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public int intValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
-        }
-        if (((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of int: " + this.value);
+        if (!this.isIntValue()) {
+            throw new ArithmeticException("Out of the range of int, or not integral: " + this.value);
         }
         return (int) this.value;
     }
@@ -315,11 +319,8 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public long longValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
-        }
-        if (((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of long: " + this.value);
+        if (!this.isLongValue()) {
+            throw new ArithmeticException("Out of the range of long, or not integral: " + this.value);
         }
         return (long) this.value;
     }
@@ -398,8 +399,6 @@ rrowing Primitive Conversion</a>
     /**
      * Returns the stringified JSON representation of this JSON number.
      *
-     * <p>If this JSON number is {@code NaN} or {@code Infinity}, it returns {@code "null"}.
-     *
      * <p>If this JSON number is created with a literal by {@link #withLiteral(double, String)}, it returns the literal.
      *
      * @return the stringified JSON representation of this JSON number
@@ -408,9 +407,7 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public String toJson() {
-        if (Double.isNaN(this.value) || Double.isInfinite(this.value)) {
-            return "null";
-        }
+        // |this.value| must not be NaN nor infinite. Consider the output if JsonDouble supports NaN or the infinity in the future.
         if (this.literal != null) {
             return this.literal;
         }
@@ -426,6 +423,7 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public String toString() {
+        // |this.value| must not be NaN nor infinite. Consider the output if JsonDouble supports NaN or the infinity in the future.
         return Double.toString(this.value);
     }
 
