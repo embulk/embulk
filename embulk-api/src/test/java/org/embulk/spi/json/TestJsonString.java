@@ -32,6 +32,12 @@ public class TestJsonString {
     }
 
     @Test
+    public void testNull() {
+        assertThrows(NullPointerException.class, () -> JsonString.of(null));
+        assertThrows(NullPointerException.class, () -> JsonString.withLiteral(null, "foo"));
+    }
+
+    @Test
     public void testBasic() {
         final JsonString string = JsonString.of("hoge");
         assertEquals(JsonValue.EntityType.STRING, string.getEntityType());

@@ -29,6 +29,9 @@ import java.util.Objects;
  */
 public final class JsonString implements JsonValue {
     private JsonString(final String value, final String literal) {
+        if (value == null) {
+            throw new NullPointerException("string is null.");
+        }
         this.value = value;
         this.literal = literal;
     }
@@ -36,8 +39,9 @@ public final class JsonString implements JsonValue {
     /**
      * Returns a JSON string that is represented by the specified {@link String}.
      *
-     * @param value  the string
+     * @param value  the string, not null
      * @return a JSON string represented by the specified {@link String}
+     * @throws NullPointerException  if the string is {@code null}
      *
      * @since 0.10.42
      */
@@ -50,9 +54,10 @@ public final class JsonString implements JsonValue {
      *
      * <p>The literal is just subsidiary information used when stringifying this JSON string as JSON by {@link #toJson()}.
      *
-     * @param value  the string
+     * @param value  the string, not null
      * @param literal  the JSON literal of the string
      * @return a JSON string represented by the specified {@link String}
+     * @throws NullPointerException  if the string is {@code null}
      *
      * @since 0.10.42
      */
