@@ -24,7 +24,7 @@ public final class FakeJsonString implements JsonValue {
     }
 
     public static FakeJsonString of(final String value) {
-        return new FakeJsonString(value.intern());
+        return new FakeJsonString(value);
     }
 
     @Override

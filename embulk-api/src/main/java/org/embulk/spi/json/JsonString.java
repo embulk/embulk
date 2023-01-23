@@ -42,7 +42,7 @@ public final class JsonString implements JsonValue {
      * @since 0.10.42
      */
     public static JsonString of(final String value) {
-        return new JsonString(value.intern(), null);
+        return new JsonString(value, null);
     }
 
     /**
@@ -57,7 +57,7 @@ public final class JsonString implements JsonValue {
      * @since 0.10.42
      */
     public static JsonString withLiteral(final String value, final String literal) {
-        return new JsonString(value.intern(), literal.intern());
+        return new JsonString(value, literal);
     }
 
     /**
