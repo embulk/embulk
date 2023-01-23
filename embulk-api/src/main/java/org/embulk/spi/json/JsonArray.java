@@ -97,6 +97,9 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
      * <p><strong>This method is not safe.</strong> If the specified array is modified after creating a {@link JsonArray}
      * instance with this method, the created {@link JsonArray} instance can unintentionally behave differently.
      *
+     * <p>It has no {@code null} checks. If the specified array is {@code null}, or contains {@code null},
+     * the created {@link JsonArray} can behave unexpectedly.
+     *
      * @param array  the array of JSON values to be the internal representation as-is in the new {@link JsonArray}
      * @return a JSON array containing the specified array as the internal representation
      *
