@@ -33,6 +33,18 @@ public class TestJsonArray {
     }
 
     @Test
+    public void testNull() {
+        assertThrows(NullPointerException.class, () -> JsonArray.of((JsonValue[]) null));
+        assertThrows(NullPointerException.class, () -> JsonArray.of(null, JsonString.of("foo")));
+        assertThrows(NullPointerException.class, () -> JsonArray.ofList(null));
+
+        final ArrayList<JsonValue> valuesNull = new ArrayList<>();
+        valuesNull.add(JsonLong.of(987));
+        valuesNull.add(null);
+        assertThrows(NullPointerException.class, () -> JsonArray.ofList(valuesNull));
+    }
+
+    @Test
     public void testEmpty() {
         final JsonArray jsonArray = JsonArray.of();
         assertEquals(JsonValue.EntityType.ARRAY, jsonArray.getEntityType());

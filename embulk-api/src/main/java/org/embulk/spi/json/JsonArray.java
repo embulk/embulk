@@ -46,14 +46,23 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     /**
      * Returns a JSON array containing an arbitrary number of JSON values.
      *
-     * @param values  the JSON values to be contained in the JSON array
+     * @param values  the JSON values to be contained in the JSON array, not null
      * @return a JSON array containing the specified JSON values
+     * @throws NullPointerException  if the array, or any value is {@code null}
      *
      * @since 0.10.42
      */
     public static JsonArray of(final JsonValue... values) {
+        if (values == null) {
+            throw new NullPointerException("values is null.");
+        }
         if (values.length == 0) {
             return EMPTY;
+        }
+        for (final JsonValue value : values) {
+            if (value == null) {
+                throw new NullPointerException("values has null.");
+            }
         }
         return new JsonArray(Arrays.copyOf(values, values.length));
     }
@@ -61,14 +70,23 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     /**
      * Returns a JSON array containing an arbitrary number of JSON values.
      *
-     * @param values  the JSON values to be contained in the JSON array
+     * @param values  the JSON values to be contained in the JSON array, not null
      * @return a JSON array containing the specified JSON values
+     * @throws NullPointerException  if the list, or any value is {@code null}
      *
      * @since 0.10.42
      */
     public static JsonArray ofList(final List<? extends JsonValue> values) {
+        if (values == null) {
+            throw new NullPointerException("values is null.");
+        }
         if (values.isEmpty()) {
             return EMPTY;
+        }
+        for (final JsonValue value : values) {
+            if (value == null) {
+                throw new NullPointerException("values has null.");
+            }
         }
         return new JsonArray(values.toArray(new JsonValue[values.size()]));
     }
@@ -78,6 +96,9 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
      *
      * <p><strong>This method is not safe.</strong> If the specified array is modified after creating a {@link JsonArray}
      * instance with this method, the created {@link JsonArray} instance can unintentionally behave differently.
+     *
+     * <p>It has no {@code null} checks. If the specified array is {@code null}, or contains {@code null},
+     * the created {@link JsonArray} can behave unexpectedly.
      *
      * @param array  the array of JSON values to be the internal representation as-is in the new {@link JsonArray}
      * @return a JSON array containing the specified array as the internal representation
