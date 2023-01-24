@@ -18,7 +18,6 @@ package org.embulk.spi.json;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +33,8 @@ import java.util.Set;
  * @since 0.10.42
  */
 public final class JsonObject extends AbstractMap<String, JsonValue> implements JsonValue {
-    private JsonObject(final JsonValue[] values) {
+    private JsonObject(final String[] keys, final JsonValue[] values) {
+        this.keys = keys;
         this.values = values;
     }
 
@@ -56,25 +56,30 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * odd number, the <i>i</i>-th argument represents a key that must be {@link JsonString}, and the <i>i+1</i>-th
      * argument represents a value for the key at the <i>i</i>-th argument.
      *
-     * @param values  the JSON keys and values to be contained in the JSON object
+     * @param keyValues  the JSON keys and values to be contained in the JSON object
      * @return a JSON object containing the specified JSON key-value mappings
      * @throws IllegalArgumentException  if odd numbers of arguments are specified, or non-{@link JsonString} is specified as key
      *
      * @since 0.10.42
      */
-    public static JsonObject of(final JsonValue... values) {
-        if (values.length == 0) {
+    public static JsonObject of(final JsonValue... keyValues) {
+        if (keyValues.length == 0) {
             return EMPTY;
         }
-        if (values.length % 2 != 0) {
+        if (keyValues.length % 2 != 0) {
             throw new IllegalArgumentException("Even numbers of arguments must be specified to JsonObject#of(...).");
         }
-        for (int i = 0; i < values.length; i += 2) {
-            if (!(values[i] instanceof JsonString)) {
+        final String[] keys = new String[keyValues.length / 2];
+        final JsonValue[] values = new JsonValue[keyValues.length / 2];
+
+        for (int i = 0; i < keyValues.length / 2; i++) {
+            if (!(keyValues[i * 2] instanceof JsonString)) {
                 throw new IllegalArgumentException("JsonString must be specified as a key for JsonObject#of(...).");
             }
+            keys[i] = ((JsonString) keyValues[i * 2]).getString();
+            values[i] = keyValues[i * 2 + 1];
         }
-        return new JsonObject(Arrays.copyOf(values, values.length));
+        return new JsonObject(keys, values);
     }
 
     /**
@@ -89,12 +94,13 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @SafeVarargs
     public static JsonObject ofEntries(final Map.Entry<String, JsonValue>... entries) {
-        final JsonValue[] values = new JsonValue[entries.length * 2];
+        final String[] keys = new String[entries.length];
+        final JsonValue[] values = new JsonValue[entries.length];
         for (int i = 0; i < entries.length; ++i) {
-            values[i * 2] = JsonString.of(entries[i].getKey());
-            values[i * 2 + 1] = entries[i].getValue();
+            keys[i] = entries[i].getKey();
+            values[i] = entries[i].getValue();
         }
-        return new JsonObject(values);
+        return new JsonObject(keys, values);
     }
 
     /**
@@ -109,12 +115,13 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @SafeVarargs
     public static JsonObject ofEntriesWithJsonStringKeys(final Map.Entry<JsonString, JsonValue>... entries) {
-        final JsonValue[] values = new JsonValue[entries.length * 2];
+        final String[] keys = new String[entries.length];
+        final JsonValue[] values = new JsonValue[entries.length];
         for (int i = 0; i < entries.length; ++i) {
-            values[i * 2] = entries[i].getKey();
-            values[i * 2 + 1] = entries[i].getValue();
+            keys[i] = entries[i].getKey().getString();
+            values[i] = entries[i].getValue();
         }
-        return new JsonObject(values);
+        return new JsonObject(keys, values);
     }
 
     /**
@@ -128,15 +135,15 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * @since 0.10.42
      */
     public static JsonObject ofMap(final Map<String, JsonValue> map) {
-        final JsonValue[] values = new JsonValue[map.size() * 2];
+        final String[] keys = new String[map.size()];
+        final JsonValue[] values = new JsonValue[map.size()];
         int index = 0;
         for (final Map.Entry<String, JsonValue> pair : map.entrySet()) {
-            values[index] = JsonString.of(pair.getKey());
-            index++;
+            keys[index] = pair.getKey();
             values[index] = pair.getValue();
             index++;
         }
-        return new JsonObject(values);
+        return new JsonObject(keys, values);
     }
 
     /**
@@ -150,30 +157,31 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * @since 0.10.42
      */
     public static JsonObject ofMapWithJsonStringKeys(final Map<JsonString, JsonValue> map) {
-        final JsonValue[] values = new JsonValue[map.size() * 2];
+        final String[] keys = new String[map.size()];
+        final JsonValue[] values = new JsonValue[map.size()];
         int index = 0;
         for (final Map.Entry<JsonString, JsonValue> pair : map.entrySet()) {
-            values[index] = pair.getKey();
-            index++;
+            keys[index] = pair.getKey().getString();
             values[index] = pair.getValue();
             index++;
         }
-        return new JsonObject(values);
+        return new JsonObject(keys, values);
     }
 
     /**
-     * Returns a JSON object containing the specified array as its internal representation.
+     * Returns a JSON object containing the specified arrays as its internal representation.
      *
      * <p><strong>This method is not safe.</strong> If the specified array is modified after creating a {@link JsonObject}
      * instance with this method, the created {@link JsonObject} instance can unintentionally behave differently.
      *
-     * @param values  the array of JSON keys and values to be the internal representation as-is in the new {@link JsonObject}
+     * @param keys  the array of strings to be the internal representation as the keys in the new {@link JsonObject}
+     * @param values  the array of JSON values to be the internal representation as the values in the new {@link JsonObject}
      * @return a JSON object containing the specified array as the internal representation
      *
      * @since 0.10.42
      */
-    public static JsonObject ofUnsafe(final JsonValue... values) {
-        return new JsonObject(values);
+    public static JsonObject ofUnsafe(final String[] keys, final JsonValue[] values) {
+        return new JsonObject(keys, values);
     }
 
     /**
@@ -205,7 +213,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          * @since 0.10.42
          */
         public JsonObject build() {
-            return JsonObject.ofMapWithJsonStringKeys(this.map);
+            return JsonObject.ofMap(this.map);
         }
 
         /**
@@ -218,7 +226,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          * @since 0.10.42
          */
         public Builder put(final String key, final JsonValue value) {
-            this.map.put(JsonString.of(key), value);
+            this.map.put(key, value);
             return this;
         }
 
@@ -232,7 +240,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          * @since 0.10.42
          */
         public Builder put(final JsonString key, final JsonValue value) {
-            this.map.put(key, value);
+            this.map.put(key.getString(), value);
             return this;
         }
 
@@ -245,7 +253,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          * @since 0.10.42
          */
         public Builder putEntry(final Map.Entry<String, JsonValue> entry) {
-            this.put(JsonString.of(entry.getKey()), entry.getValue());
+            this.put(entry.getKey(), entry.getValue());
             return this;
         }
 
@@ -258,7 +266,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
          * @since 0.10.42
          */
         public Builder putEntryWithJsonStringKey(final Map.Entry<JsonString, JsonValue> entry) {
-            this.put(entry.getKey(), entry.getValue());
+            this.put(entry.getKey().getString(), entry.getValue());
             return this;
         }
 
@@ -292,7 +300,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
             return this;
         }
 
-        private final LinkedHashMap<JsonString, JsonValue> map;
+        private final LinkedHashMap<String, JsonValue> map;
     }
 
     /**
@@ -367,6 +375,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         int sum = 4;
 
         for (int i = 0; i < this.values.length; i++) {
+            sum += this.keys[i].length() * 2 + 4;
             sum += this.values[i].presumeReferenceSizeInBytes();
         }
         return sum;
@@ -381,7 +390,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @Override
     public int size() {
-        return this.values.length / 2;
+        return this.keys.length;
     }
 
     /**
@@ -395,7 +404,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @Override
     public Set<Map.Entry<String, JsonValue>> entrySet() {
-        return new EntrySet(this.values);
+        return new EntrySet(this.keys, this.values);
     }
 
     /**
@@ -406,7 +415,12 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      * For example, if this value represents <code>{"k1": "v1", "k2": "v2"}</code>, this method returns ["k1", "v1", "k2", "v2"].
      */
     public JsonValue[] getKeyValueArray() {
-        return Arrays.copyOf(this.values, this.values.length);
+        final JsonValue[] keyValues = new JsonValue[this.keys.length * 2];
+        for (int i = 0; i < this.keys.length; i++) {
+            keyValues[i * 2] = JsonString.of(this.keys[i]);
+            keyValues[i * 2 + 1] = this.values[i];
+        }
+        return keyValues;
     }
 
     /**
@@ -418,28 +432,20 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @Override
     public String toJson() {
-        if (this.values.length == 0) {
+        if (this.keys.length == 0) {
             return "{}";
         }
 
         final StringBuilder builder = new StringBuilder();
         builder.append("{");
-        if (this.values[0].isJsonString()) {
-            builder.append(this.values[0].toJson());
-        } else {
-            throw new IllegalStateException("Keys in JsonObject must be String.");
-        }
+        builder.append(JsonString.escapeStringForJsonLiteral(this.keys[0]));
         builder.append(":");
-        builder.append(this.values[1].toJson());
-        for (int i = 2; i < this.values.length; i += 2) {
+        builder.append(this.values[0].toJson());
+        for (int i = 1; i < this.keys.length; i++) {
             builder.append(",");
-            if (this.values[i].isJsonString()) {
-                builder.append(this.values[i].toJson());
-            } else {
-                throw new IllegalStateException("Keys in JsonObject must be String.");
-            }
+            builder.append(JsonString.escapeStringForJsonLiteral(this.keys[i]));
             builder.append(":");
-            builder.append(this.values[i + 1].toJson());
+            builder.append(this.values[i].toJson());
         }
         builder.append("}");
         return builder.toString();
@@ -454,20 +460,20 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
      */
     @Override
     public String toString() {
-        if (this.values.length == 0) {
+        if (this.keys.length == 0) {
             return "{}";
         }
 
         final StringBuilder builder = new StringBuilder();
         builder.append("{");
-        builder.append(this.values[0].toString());
+        builder.append(JsonString.escapeStringForJsonLiteral(this.keys[0]));
         builder.append(":");
-        builder.append(this.values[1].toString());
-        for (int i = 2; i < this.values.length; i += 2) {
+        builder.append(this.values[0].toString());
+        for (int i = 1; i < this.keys.length; i++) {
             builder.append(",");
-            builder.append(this.values[i].toString());
+            builder.append(JsonString.escapeStringForJsonLiteral(this.keys[i]));
             builder.append(":");
-            builder.append(this.values[i + 1].toString());
+            builder.append(this.values[i].toString());
         }
         builder.append("}");
         return builder.toString();
@@ -511,39 +517,42 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     @Override
     public int hashCode() {
         int hash = 0;
-        for (int i = 0; i < this.values.length; i += 2) {
-            hash += this.values[i].hashCode() ^ this.values[i + 1].hashCode();
+        for (int i = 0; i < this.keys.length; i++) {
+            hash += this.keys[i].hashCode() ^ this.values[i].hashCode();
         }
         return hash;
     }
 
     private static class EntrySet extends AbstractSet<Map.Entry<String, JsonValue>> {
-        EntrySet(final JsonValue[] values) {
+        EntrySet(final String[] keys, final JsonValue[] values) {
+            this.keys = keys;
             this.values = values;
         }
 
         @Override
         public int size() {
-            return this.values.length / 2;
+            return this.keys.length;
         }
 
         @Override
         public Iterator<Map.Entry<String, JsonValue>> iterator() {
-            return new EntryIterator(this.values);
+            return new EntryIterator(this.keys, this.values);
         }
 
+        private final String[] keys;
         private final JsonValue[] values;
     }
 
     private static class EntryIterator implements Iterator<Map.Entry<String, JsonValue>> {
-        EntryIterator(final JsonValue[] values) {
+        EntryIterator(final String[] keys, final JsonValue[] values) {
+            this.keys = keys;
             this.values = values;
             this.index = 0;
         }
 
         @Override
         public boolean hasNext() {
-            return this.index < this.values.length;
+            return this.index < this.keys.length;
         }
 
         @Override
@@ -552,23 +561,22 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
                 throw new NoSuchElementException();
             }
 
-            if (!this.values[this.index].isJsonString()) {
-                throw new IllegalStateException("Keys in JsonObject must be String.");
-            }
-            final String key = ((JsonString) this.values[index]).getString();
-            final JsonValue value = this.values[index + 1];
+            final String key = this.keys[index];
+            final JsonValue value = this.values[index];
             final Map.Entry<String, JsonValue> pair = new AbstractMap.SimpleImmutableEntry<>(key, value);
 
-            this.index += 2;
+            this.index++;
             return pair;
         }
 
+        private final String[] keys;
         private final JsonValue[] values;
 
         private int index;
     }
 
-    private static final JsonObject EMPTY = new JsonObject(new JsonValue[0]);
+    private static final JsonObject EMPTY = new JsonObject(new String[0], new JsonValue[0]);
 
+    private final String[] keys;
     private final JsonValue[] values;
 }

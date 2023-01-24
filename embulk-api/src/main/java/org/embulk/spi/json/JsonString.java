@@ -272,7 +272,7 @@ public final class JsonString implements JsonValue {
         builder.append("\"");
     }
 
-    private static String escapeStringForJsonLiteral(final String original) {
+    static String escapeStringForJsonLiteral(final String original) {
         final StringBuilder builder = new StringBuilder();
         appendEscapedStringForJsonLiteral(original, builder);
         return builder.toString();
