@@ -436,4 +436,181 @@ public class TestJsonObject {
                 IllegalArgumentException.class, () -> JsonObject.of(JsonBoolean.TRUE, JsonBoolean.TRUE));
         assertEquals("JsonString must be specified as a key for JsonObject#of(...).", ex3.getMessage());
     }
+
+    @Test
+    public void testOf1() {
+        final JsonObject o1 = JsonObject.of("k1", JsonLong.of(1));
+        assertEquals(1, o1.size());
+        assertEquals(JsonLong.of(1), o1.get("k1"));
+    }
+
+    @Test
+    public void testOf2() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2));
+        assertEquals(2, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+    }
+
+    @Test
+    public void testOf3() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3));
+        assertEquals(3, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+    }
+
+    @Test
+    public void testOf4() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4));
+        assertEquals(4, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+    }
+
+    @Test
+    public void testOf5() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5));
+        assertEquals(5, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+    }
+
+    @Test
+    public void testOf6() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5),
+                "k6", JsonLong.of(6));
+        assertEquals(6, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+        assertEquals(JsonLong.of(6), o.get("k6"));
+    }
+
+    @Test
+    public void testOf7() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5),
+                "k6", JsonLong.of(6),
+                "k7", JsonLong.of(7));
+        assertEquals(7, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+        assertEquals(JsonLong.of(6), o.get("k6"));
+        assertEquals(JsonLong.of(7), o.get("k7"));
+    }
+
+    @Test
+    public void testOf8() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5),
+                "k6", JsonLong.of(6),
+                "k7", JsonLong.of(7),
+                "k8", JsonLong.of(8));
+        assertEquals(8, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+        assertEquals(JsonLong.of(6), o.get("k6"));
+        assertEquals(JsonLong.of(7), o.get("k7"));
+        assertEquals(JsonLong.of(8), o.get("k8"));
+    }
+
+    @Test
+    public void testOf9() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5),
+                "k6", JsonLong.of(6),
+                "k7", JsonLong.of(7),
+                "k8", JsonLong.of(8),
+                "k9", JsonLong.of(9));
+        assertEquals(9, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+        assertEquals(JsonLong.of(6), o.get("k6"));
+        assertEquals(JsonLong.of(7), o.get("k7"));
+        assertEquals(JsonLong.of(8), o.get("k8"));
+        assertEquals(JsonLong.of(9), o.get("k9"));
+    }
+
+    @Test
+    public void testOf10() {
+        final JsonObject o = JsonObject.of(
+                "k1", JsonLong.of(1),
+                "k2", JsonLong.of(2),
+                "k3", JsonLong.of(3),
+                "k4", JsonLong.of(4),
+                "k5", JsonLong.of(5),
+                "k6", JsonLong.of(6),
+                "k7", JsonLong.of(7),
+                "k8", JsonLong.of(8),
+                "k9", JsonLong.of(9),
+                "k10", JsonLong.of(10));
+        assertEquals(10, o.size());
+        assertEquals(JsonLong.of(1), o.get("k1"));
+        assertEquals(JsonLong.of(2), o.get("k2"));
+        assertEquals(JsonLong.of(3), o.get("k3"));
+        assertEquals(JsonLong.of(4), o.get("k4"));
+        assertEquals(JsonLong.of(5), o.get("k5"));
+        assertEquals(JsonLong.of(6), o.get("k6"));
+        assertEquals(JsonLong.of(7), o.get("k7"));
+        assertEquals(JsonLong.of(8), o.get("k8"));
+        assertEquals(JsonLong.of(9), o.get("k9"));
+        assertEquals(JsonLong.of(10), o.get("k10"));
+    }
+
+    @Test
+    public void testOfNulls() {
+        assertThrows(NullPointerException.class, () -> JsonObject.of("k1", null));
+        assertThrows(NullPointerException.class, () -> JsonObject.of(null, JsonNull.of()));
+        assertThrows(NullPointerException.class, () -> JsonObject.of("k1", JsonString.of("f"), null, JsonNull.of()));
+        assertThrows(NullPointerException.class, () -> JsonObject.of("k1", JsonLong.of(13423), "k2", null));
+    }
 }

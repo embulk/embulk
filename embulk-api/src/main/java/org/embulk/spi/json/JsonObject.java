@@ -50,6 +50,311 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     }
 
     /**
+     * Returns a JSON object containing the specified single JSON key-value mapping.
+     *
+     * @param k1  the mapping's key, not null
+     * @param v1  the mapping's value, not null
+     * @return a JSON object containing the specified mapping
+     * @throws NullPointerException  if the key or the value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1) {
+        return new JsonObject(
+                buildKeys(k1),
+                buildValues(v1));
+    }
+
+    /**
+     * Returns a JSON object containing the specified two JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2) {
+        return new JsonObject(
+                buildKeys(k1, k2),
+                buildValues(v1, v2));
+    }
+
+    /**
+     * Returns a JSON object containing the specified three JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3),
+                buildValues(v1, v2, v3));
+    }
+
+    /**
+     * Returns a JSON object containing the specified four JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4),
+                buildValues(v1, v2, v3, v4));
+    }
+
+    /**
+     * Returns a JSON object containing the specified five JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5),
+                buildValues(v1, v2, v3, v4, v5));
+    }
+
+    /**
+     * Returns a JSON object containing the specified six JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @param k6 the sixth mapping's key, not null
+     * @param v6 the sixth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5,
+            final String k6, final JsonValue v6) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5, k6),
+                buildValues(v1, v2, v3, v4, v5, v6));
+    }
+
+    /**
+     * Returns a JSON object containing the specified seven JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @param k6 the sixth mapping's key, not null
+     * @param v6 the sixth mapping's value, not null
+     * @param k7 the seventh mapping's key, not null
+     * @param v7 the seventh mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5,
+            final String k6, final JsonValue v6,
+            final String k7, final JsonValue v7) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5, k6, k7),
+                buildValues(v1, v2, v3, v4, v5, v6, v7));
+    }
+
+    /**
+     * Returns a JSON object containing the specified eight JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @param k6 the sixth mapping's key, not null
+     * @param v6 the sixth mapping's value, not null
+     * @param k7 the seventh mapping's key, not null
+     * @param v7 the seventh mapping's value, not null
+     * @param k8 the eighth mapping's key, not null
+     * @param v8 the eighth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5,
+            final String k6, final JsonValue v6,
+            final String k7, final JsonValue v7,
+            final String k8, final JsonValue v8) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5, k6, k7, k8),
+                buildValues(v1, v2, v3, v4, v5, v6, v7, v8));
+    }
+
+    /**
+     * Returns a JSON object containing the specified nine JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @param k6 the sixth mapping's key, not null
+     * @param v6 the sixth mapping's value, not null
+     * @param k7 the seventh mapping's key, not null
+     * @param v7 the seventh mapping's value, not null
+     * @param k8 the eighth mapping's key, not null
+     * @param v8 the eighth mapping's value, not null
+     * @param k9 the ninth mapping's key, not null
+     * @param v9 the ninth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5,
+            final String k6, final JsonValue v6,
+            final String k7, final JsonValue v7,
+            final String k8, final JsonValue v8,
+            final String k9, final JsonValue v9) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5, k6, k7, k8, k9),
+                buildValues(v1, v2, v3, v4, v5, v6, v7, v8, v9));
+    }
+
+    /**
+     * Returns a JSON object containing the specified ten JSON key-value mappings.
+     *
+     * @param k1 the first mapping's key, not null
+     * @param v1 the first mapping's value, not null
+     * @param k2 the second mapping's key, not null
+     * @param v2 the second mapping's value, not null
+     * @param k3 the third mapping's key, not null
+     * @param v3 the third mapping's value, not null
+     * @param k4 the fourth mapping's key, not null
+     * @param v4 the fourth mapping's value, not null
+     * @param k5 the fifth mapping's key, not null
+     * @param v5 the fifth mapping's value, not null
+     * @param k6 the sixth mapping's key, not null
+     * @param v6 the sixth mapping's value, not null
+     * @param k7 the seventh mapping's key, not null
+     * @param v7 the seventh mapping's value, not null
+     * @param k8 the eighth mapping's key, not null
+     * @param v8 the eighth mapping's value, not null
+     * @param k9 the ninth mapping's key, not null
+     * @param v9 the ninth mapping's value, not null
+     * @param k10 the tenth mapping's key, not null
+     * @param v10 the tenth mapping's value, not null
+     * @return a JSON object containing the specified mappings
+     * @throws NullPointerException  if any key or any value is {@code null}
+     *
+     * @since 0.10.42
+     */
+    public static JsonObject of(
+            final String k1, final JsonValue v1,
+            final String k2, final JsonValue v2,
+            final String k3, final JsonValue v3,
+            final String k4, final JsonValue v4,
+            final String k5, final JsonValue v5,
+            final String k6, final JsonValue v6,
+            final String k7, final JsonValue v7,
+            final String k8, final JsonValue v8,
+            final String k9, final JsonValue v9,
+            final String k10, final JsonValue v10) {
+        return new JsonObject(
+                buildKeys(k1, k2, k3, k4, k5, k6, k7, k8, k9, k10),
+                buildValues(v1, v2, v3, v4, v5, v6, v7, v8, v9, v10));
+    }
+
+    /**
      * Returns a JSON object containing an arbitrary number of JSON key-value mappings.
      *
      * <p>Keys and values are specified as varargs. Even numbers of arguments must be specified. Where <i>i</i> as an
@@ -573,6 +878,24 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         private final JsonValue[] values;
 
         private int index;
+    }
+
+    private static String[] buildKeys(final String... keys) {
+        for (final String key : keys) {
+            if (key == null) {
+                throw new NullPointerException("null in keys.");
+            }
+        }
+        return keys;
+    }
+
+    private static JsonValue[] buildValues(final JsonValue... values) {
+        for (final JsonValue value : values) {
+            if (value == null) {
+                throw new NullPointerException("null in values.");
+            }
+        }
+        return values;
     }
 
     private static final JsonObject EMPTY = new JsonObject(new String[0], new JsonValue[0]);
