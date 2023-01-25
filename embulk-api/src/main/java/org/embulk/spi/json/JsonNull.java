@@ -16,6 +16,9 @@
 
 package org.embulk.spi.json;
 
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableNilValueImpl;
+
 /**
  * Represents {@code null} in JSON.
  *
@@ -103,6 +106,25 @@ public final class JsonNull implements JsonValue {
     @Override
     public String toJson() {
         return "null";
+    }
+
+    /**
+     * Returns the corresponding MessagePack's Nil value of this JSON {@code null}.
+     *
+     * @return the corresponding MessagePack's Nil value of this JSON {@code null}
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @Override
+    public Value toMsgpack() {
+        return ImmutableNilValueImpl.get();
     }
 
     /**

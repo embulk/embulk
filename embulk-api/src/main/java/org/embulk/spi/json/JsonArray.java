@@ -19,6 +19,8 @@ package org.embulk.spi.json;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.List;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableArrayValueImpl;
 
 /**
  * Represents an array in JSON.
@@ -30,6 +32,7 @@ import java.util.List;
 public final class JsonArray extends AbstractList<JsonValue> implements JsonValue {
     private JsonArray(final JsonValue[] values) {
         this.values = values;
+        this.msgpackArrayCache = null;
     }
 
     /**
@@ -211,6 +214,35 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     }
 
     /**
+     * Returns the corresponding MessagePack's Array value of this JSON array.
+     *
+     * @return the corresponding MessagePack's Array value of this JSON array
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @SuppressWarnings("deprecation")  // To call #toMsgpack() of other JsonValue.
+    @Override
+    public Value toMsgpack() {
+        if (this.msgpackArrayCache != null) {
+            return this.msgpackArrayCache;
+        }
+
+        final Value[] msgpackValues = new Value[this.values.length];
+        for (int i = 0; i < this.values.length; i++) {
+            msgpackValues[i] = this.values[i].toMsgpack();
+        }
+        this.msgpackArrayCache = new ImmutableArrayValueImpl(msgpackValues);
+        return this.msgpackArrayCache;
+    }
+
+    /**
      * Returns the string representation of this JSON array.
      *
      * @return the string representation of this JSON array
@@ -281,4 +313,6 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     private static final JsonArray EMPTY = new JsonArray(new JsonValue[0]);
 
     private final JsonValue[] values;
+
+    private ImmutableArrayValueImpl msgpackArrayCache;
 }

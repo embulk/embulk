@@ -18,10 +18,12 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableDoubleValueImpl;
 
 public final class FakeJsonDouble implements JsonValue {
     private FakeJsonDouble(final double value) {
-        this.value = value;
+        this.value = new ImmutableDoubleValueImpl(value);
     }
 
     public static FakeJsonDouble of(final double value) {
@@ -39,112 +41,103 @@ public final class FakeJsonDouble implements JsonValue {
     }
 
     public boolean isIntegral() {
-        return !Double.isNaN(this.value) && !Double.isInfinite(this.value) && this.value == Math.rint(this.value);
+        final double inner = this.value.toDouble();
+        return inner == Math.rint(inner);
     }
 
     public boolean isByteValue() {
-        return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE);
+        return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Byte.MAX_VALUE);
     }
 
     public boolean isShortValue() {
-        return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE);
+        return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Short.MAX_VALUE);
     }
 
     public boolean isIntValue() {
-        return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE);
+        return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Integer.MAX_VALUE);
     }
 
     public boolean isLongValue() {
-        return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE);
+        return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Long.MAX_VALUE);
     }
 
     public byte byteValue() {
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     public byte byteValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
+        if (!this.isByteValue()) {
+            throw new ArithmeticException("Out of the range of byte, or not integral: " + this.value);
         }
-        if (((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of byte: " + this.value);
-        }
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     public short shortValue() {
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     public short shortValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
+        if (!this.isShortValue()) {
+            throw new ArithmeticException("Out of the range of short, or not integral: " + this.value);
         }
-        if (((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of short: " + this.value);
-        }
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     public int intValue() {
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     public int intValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
+        if (!this.isIntValue()) {
+            throw new ArithmeticException("Out of the range of int, or not integral: " + this.value);
         }
-        if (((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of int: " + this.value);
-        }
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     public long longValue() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     public long longValueExact() {
-        if (!this.isIntegral()) {
-            throw new ArithmeticException("Not an integer: " + this.value);
+        if (!this.isLongValue()) {
+            throw new ArithmeticException("Out of the range of long, or not integral: " + this.value);
         }
-        if (((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE)) {
-            throw new ArithmeticException("Out of the range of long: " + this.value);
-        }
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     public BigInteger bigIntegerValue() {
-        return BigDecimal.valueOf(this.value).toBigInteger();
+        return BigDecimal.valueOf(this.value.toDouble()).toBigInteger();
     }
 
     public BigInteger bigIntegerValueExact() {
-        return BigDecimal.valueOf(this.value).toBigIntegerExact();
+        return BigDecimal.valueOf(this.value.toDouble()).toBigIntegerExact();
     }
 
     public float floatValue() {
-        return (float) this.value;
+        return this.value.toFloat();
     }
 
     public double doubleValue() {
-        return this.value;
+        return this.value.toDouble();
     }
 
     public BigDecimal bigDecimalValue() {
-        return BigDecimal.valueOf(this.value);
+        return BigDecimal.valueOf(this.value.toDouble());
     }
 
     @Override
     public String toJson() {
-        if (Double.isNaN(this.value) || Double.isInfinite(this.value)) {
-            return "null";
-        }
-        return Double.toString(this.value);
+        return Double.toString(this.value.toDouble());
+    }
+
+    @Deprecated
+    public Value toMsgpack() {
+        return this.value;
     }
 
     @Override
     public String toString() {
-        return Double.toString(this.value);
+        return Double.toString(this.value.toDouble());
     }
 
     @Override
@@ -156,7 +149,7 @@ public final class FakeJsonDouble implements JsonValue {
         // Fake!
         if (otherObject instanceof JsonDouble) {
             final JsonDouble other = (JsonDouble) otherObject;
-            return this.value == other.doubleValue();
+            return this.doubleValue() == other.doubleValue();
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
@@ -166,14 +159,13 @@ public final class FakeJsonDouble implements JsonValue {
 
         final FakeJsonDouble other = (FakeJsonDouble) otherObject;
 
-        return this.value == other.value;
+        return this.value.equals(other.value);
     }
 
     @Override
     public int hashCode() {
-        final long bits = Double.doubleToLongBits(this.value);
-        return (int) (bits ^ (bits >>> 32));
+        return this.value.hashCode();
     }
 
-    private final double value;
+    private final ImmutableDoubleValueImpl value;
 }

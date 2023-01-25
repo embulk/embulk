@@ -16,6 +16,9 @@
 
 package org.embulk.spi.json;
 
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableBooleanValueImpl;
+
 public final class FakeJsonBoolean implements JsonValue {
     private FakeJsonBoolean(final boolean value) {
         this.value = value;
@@ -45,6 +48,14 @@ public final class FakeJsonBoolean implements JsonValue {
             return "true";
         }
         return "false";
+    }
+
+    @Deprecated
+    public Value toMsgpack() {
+        if (this.value) {
+            return ImmutableBooleanValueImpl.TRUE;
+        }
+        return ImmutableBooleanValueImpl.FALSE;
     }
 
     @Override

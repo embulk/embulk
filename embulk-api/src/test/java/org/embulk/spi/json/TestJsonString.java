@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonString {
     @Test
@@ -63,6 +64,8 @@ public class TestJsonString {
         assertEquals(JsonString.of("hoge"), string);
         assertEquals("hoge".hashCode(), string.hashCode());
 
+        assertEquals(ValueFactory.newString("hoge"), string.toMsgpack());
+
         // JsonString#equals must normally reject a fake imitation of JsonString.
         assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
@@ -92,6 +95,8 @@ public class TestJsonString {
         assertEquals("\"hoge\\n\"", string.toString());
         assertEquals(JsonString.of("hoge\n"), string);
         assertEquals("hoge\n".hashCode(), string.hashCode());
+
+        assertEquals(ValueFactory.newString("hoge\n"), string.toMsgpack());
 
         // JsonString#equals must normally reject a fake imitation of JsonString.
         assertFalse(string.equals(FakeJsonString.of(string.getString())));
@@ -126,6 +131,10 @@ public class TestJsonString {
                 string.toString());
         assertEquals(JsonString.of("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux"), string);
         assertEquals("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux".hashCode(), string.hashCode());
+
+        assertEquals(
+                ValueFactory.newString("\\foo\"bar\nbaz\bqux\ffoo\nbar\rbaz\tqux\0foo\u0001bar\u0002baz\u001fqux"),
+                string.toMsgpack());
 
         // JsonString#equals must normally reject a fake imitation of JsonString.
         assertFalse(string.equals(FakeJsonString.of(string.getString())));

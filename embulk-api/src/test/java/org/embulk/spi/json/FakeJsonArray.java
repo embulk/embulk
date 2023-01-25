@@ -18,10 +18,13 @@ package org.embulk.spi.json;
 
 import java.util.AbstractList;
 import java.util.Arrays;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableArrayValueImpl;
 
 public final class FakeJsonArray extends AbstractList<JsonValue> implements JsonValue {
     private FakeJsonArray(final JsonValue[] values) {
         this.values = values;
+        this.msgpackArrayCache = null;
     }
 
     public static FakeJsonArray of(final JsonValue... values) {
@@ -70,6 +73,21 @@ public final class FakeJsonArray extends AbstractList<JsonValue> implements Json
         }
         builder.append("]");
         return builder.toString();
+    }
+
+    @SuppressWarnings("deprecation")  // To call #toMsgpack() of other JsonValue.
+    @Override
+    public Value toMsgpack() {
+        if (this.msgpackArrayCache != null) {
+            return this.msgpackArrayCache;
+        }
+
+        final Value[] msgpackValues = new Value[this.values.length];
+        for (int i = 0; i < this.values.length; i++) {
+            msgpackValues[i] = this.values[i].toMsgpack();
+        }
+        this.msgpackArrayCache = new ImmutableArrayValueImpl(msgpackValues);
+        return this.msgpackArrayCache;
     }
 
     @Override
@@ -125,4 +143,6 @@ public final class FakeJsonArray extends AbstractList<JsonValue> implements Json
     private static final FakeJsonArray EMPTY = new FakeJsonArray(new JsonValue[0]);
 
     private final JsonValue[] values;
+
+    private ImmutableArrayValueImpl msgpackArrayCache;
 }

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonBoolean {
     @Test
@@ -56,6 +57,8 @@ public class TestJsonBoolean {
         assertEquals(JsonBoolean.FALSE, jsonBoolean);
         assertTrue(JsonBoolean.FALSE == jsonBoolean);
 
+        assertEquals(ValueFactory.newBoolean(false), jsonBoolean.toMsgpack());
+
         // JsonBoolean#equals must normally reject a fake imitation of JsonBoolean.
         assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_FALSE));
         assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_TRUE));
@@ -85,6 +88,8 @@ public class TestJsonBoolean {
         assertEquals("true", jsonBoolean.toString());
         assertEquals(JsonBoolean.TRUE, jsonBoolean);
         assertTrue(JsonBoolean.TRUE == jsonBoolean);
+
+        assertEquals(ValueFactory.newBoolean(true), jsonBoolean.toMsgpack());
 
         // JsonBoolean#equals must normally reject a fake imitation of JsonBoolean.
         assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_FALSE));

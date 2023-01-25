@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Modifier;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonNull {
     @Test
@@ -54,6 +55,8 @@ public class TestJsonNull {
         assertEquals("null", jsonNull.toString());
         assertEquals(JsonNull.NULL, jsonNull);
         assertEquals(JsonNull.of(), jsonNull);
+
+        assertEquals(ValueFactory.newNil(), jsonNull.toMsgpack());
 
         // JsonNull#equals must normally reject a fake imitation of JsonNull.
         assertFalse(jsonNull.equals(FakeJsonNull.ofFake()));

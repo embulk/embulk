@@ -18,10 +18,12 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableLongValueImpl;
 
 public final class FakeJsonLong implements JsonValue {
     private FakeJsonLong(final long value) {
-        this.value = value;
+        this.value = new ImmutableLongValueImpl(value);
     }
 
     public static FakeJsonLong of(final long value) {
@@ -43,15 +45,15 @@ public final class FakeJsonLong implements JsonValue {
     }
 
     public boolean isByteValue() {
-        return ((long) Byte.MIN_VALUE) <= this.value && this.value <= ((long) Byte.MAX_VALUE);
+        return this.value.isInByteRange();
     }
 
     public boolean isShortValue() {
-        return ((long) Short.MIN_VALUE) <= this.value && this.value <= ((long) Short.MAX_VALUE);
+        return this.value.isInShortRange();
     }
 
     public boolean isIntValue() {
-        return ((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE);
+        return this.value.isInIntRange();
     }
 
     public boolean isLongValue() {
@@ -59,74 +61,79 @@ public final class FakeJsonLong implements JsonValue {
     }
 
     public byte byteValue() {
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     public byte byteValueExact() {
         if (!this.isByteValue()) {
             throw new ArithmeticException("Out of the range of byte: " + this.value);
         }
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     public short shortValue() {
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     public short shortValueExact() {
         if (!this.isShortValue()) {
             throw new ArithmeticException("Out of the range of short: " + this.value);
         }
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     public int intValue() {
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     public int intValueExact() {
         if (!this.isIntValue()) {
             throw new ArithmeticException("Out of the range of int: " + this.value);
         }
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     public long longValue() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     public long longValueExact() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     public BigInteger bigIntegerValue() {
-        return BigInteger.valueOf(this.value);
+        return this.value.toBigInteger();
     }
 
     public BigInteger bigIntegerValueExact() {
-        return BigInteger.valueOf(this.value);
+        return this.value.toBigInteger();
     }
 
     public float floatValue() {
-        return (float) this.value;
+        return this.value.toFloat();
     }
 
     public double doubleValue() {
-        return (double) this.value;
+        return this.value.toDouble();
     }
 
     public BigDecimal bigDecimalValue() {
-        return BigDecimal.valueOf(this.value);
+        return BigDecimal.valueOf(this.value.toLong());
     }
 
     @Override
     public String toJson() {
-        return Long.toString(this.value);
+        return Long.toString(this.value.toLong());
+    }
+
+    @Deprecated
+    public Value toMsgpack() {
+        return this.value;
     }
 
     @Override
     public String toString() {
-        return Long.toString(this.value);
+        return Long.toString(this.value.toLong());
     }
 
     @Override
@@ -138,7 +145,7 @@ public final class FakeJsonLong implements JsonValue {
         // Fake!
         if (otherObject instanceof JsonLong) {
             final JsonLong other = (JsonLong) otherObject;
-            return this.value == other.longValue();
+            return this.longValue() == other.longValue();
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
@@ -148,16 +155,13 @@ public final class FakeJsonLong implements JsonValue {
 
         final FakeJsonLong other = (FakeJsonLong) otherObject;
 
-        return this.value == other.value;
+        return this.value.equals(other.value);
     }
 
     @Override
     public int hashCode() {
-        if (((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE)) {
-            return (int) value;
-        }
-        return (int) (value ^ (value >>> 32));
+        return this.value.hashCode();
     }
 
-    private final long value;
+    private final ImmutableLongValueImpl value;
 }
