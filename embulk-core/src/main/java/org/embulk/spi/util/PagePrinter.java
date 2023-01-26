@@ -93,7 +93,7 @@ public class PagePrinter {
         }
 
         public void jsonColumn(Column column) {
-            string = reader.getJson(column).toString();
+            this.string = this.reader.getJsonValue(column).toString();
         }
     }
 

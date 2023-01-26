@@ -3,6 +3,7 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class DoubleColumnSetter extends AbstractDynamicColumnSetter {
@@ -58,8 +59,14 @@ public class DoubleColumnSetter extends AbstractDynamicColumnSetter {
         pageBuilder.setDouble(column, sec + frac);
     }
 
+    @Deprecated
     @Override
     public void set(Value v) {
+        defaultValue.setDouble(pageBuilder, column);
+    }
+
+    @Override
+    public void set(final JsonValue v) {
         defaultValue.setDouble(pageBuilder, column);
     }
 }

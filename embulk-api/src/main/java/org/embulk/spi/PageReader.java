@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 /**
@@ -181,17 +182,55 @@ public class PageReader implements AutoCloseable {
     }
 
     /**
+     * Returns a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param column  the column to get the JSON value
+     * @return the JSON value in the {@code msgpack-java} representation
+     * @deprecated Use {@link #getJsonValue(int)} instead.
+     *
      * @since 0.8.0
      */
+    @Deprecated
     public Value getJson(Column column) {
         return this.delegate.getJson(column);
     }
 
     /**
+     * Returns a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param columnIndex  the index of the column to get the JSON value
+     * @return the JSON value in the {@code msgpack-java} representation
+     * @deprecated Use {@link #getJsonValue(int)} instead.
+     *
      * @since 0.8.0
      */
+    @Deprecated
     public Value getJson(int columnIndex) {
         return this.delegate.getJson(columnIndex);
+    }
+
+    /**
+     * Returns a JSON value at the specified column.
+     *
+     * @param column  the column to get the JSON value
+     * @return the JSON value in the {@code msgpack-java} representation
+     *
+     * @since 0.10.42
+     */
+    public JsonValue getJsonValue(final Column column) {
+        return this.delegate.getJsonValue(column);
+    }
+
+    /**
+     * Returns a JSON value at the specified column.
+     *
+     * @param columnIndex  the index of the column to get the JSON value
+     * @return the JSON value in the {@code msgpack-java} representation
+     *
+     * @since 0.10.42
+     */
+    public JsonValue getJsonValue(final int columnIndex) {
+        return this.delegate.getJsonValue(columnIndex);
     }
 
     /**
