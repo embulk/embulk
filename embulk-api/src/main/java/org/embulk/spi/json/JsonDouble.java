@@ -18,6 +18,7 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.FloatValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableDoubleValueImpl;
 
@@ -40,6 +41,16 @@ public final class JsonDouble implements JsonNumber {
         }
         this.value = new ImmutableDoubleValueImpl(value);
         this.literal = literal;
+    }
+
+    private JsonDouble(final ImmutableDoubleValueImpl msgpackValue) {
+        this.value = msgpackValue;
+        this.literal = null;
+    }
+
+    static JsonDouble fromMsgpack(final FloatValue msgpackValue) {
+        // This cast should always succeed.
+        return new JsonDouble((ImmutableDoubleValueImpl) msgpackValue.immutableValue());
     }
 
     /**

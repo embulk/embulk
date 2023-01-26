@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import org.msgpack.value.MapValue;
+import org.msgpack.value.StringValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableMapValueImpl;
 import org.msgpack.value.impl.ImmutableStringValueImpl;
@@ -40,6 +42,36 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
         this.keys = keys;
         this.values = values;
         this.msgpackMapCache = null;
+    }
+
+    private JsonObject(final String[] keys, final JsonValue[] values, final ImmutableMapValueImpl msgpackValue) {
+        this.keys = keys;
+        this.values = values;
+        this.msgpackMapCache = msgpackValue;
+    }
+
+    @SuppressWarnings("deprecation")
+    static JsonObject fromMsgpack(final MapValue msgpackValue) {
+        // This cast should always succeed.
+        final ImmutableMapValueImpl immutable = (ImmutableMapValueImpl) msgpackValue.immutableValue();
+
+        final int size = immutable.size();
+        final String[] keys = new String[size];
+        final JsonValue[] values = new JsonValue[size];
+
+        final Value[] array = immutable.getKeyValueArray();
+        for (int i = 0; i < size; i++) {
+            final Value keyMsgpack = array[i * 2];
+            if (!keyMsgpack.isStringValue()) {
+                throw new IllegalArgumentException("MessagePack's Map has a non-String key.");
+            }
+            keys[i] = ((StringValue) keyMsgpack).asString();
+
+            final Value valueMsgpack = array[i * 2 + 1];
+            values[i] = JsonValue.fromMsgpack(valueMsgpack);
+        }
+
+        return new JsonObject(keys, values, immutable);
     }
 
     /**

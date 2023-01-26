@@ -19,6 +19,7 @@ package org.embulk.spi.json;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.List;
+import org.msgpack.value.ArrayValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableArrayValueImpl;
 
@@ -33,6 +34,26 @@ public final class JsonArray extends AbstractList<JsonValue> implements JsonValu
     private JsonArray(final JsonValue[] values) {
         this.values = values;
         this.msgpackArrayCache = null;
+    }
+
+    private JsonArray(final JsonValue[] values, final ImmutableArrayValueImpl msgpackValue) {
+        this.values = values;
+        this.msgpackArrayCache = msgpackValue;
+    }
+
+    @SuppressWarnings("deprecation")
+    static JsonArray fromMsgpack(final ArrayValue msgpackValue) {
+        // This cast should always succeed.
+        final ImmutableArrayValueImpl immutable = (ImmutableArrayValueImpl) msgpackValue.immutableValue();
+
+        final int size = immutable.size();
+        final JsonValue[] values = new JsonValue[size];
+
+        for (int i = 0; i < size; i++) {
+            values[i] = JsonValue.fromMsgpack(immutable.get(i));
+        }
+
+        return new JsonArray(values, immutable);
     }
 
     /**

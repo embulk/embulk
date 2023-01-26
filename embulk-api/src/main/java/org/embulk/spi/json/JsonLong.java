@@ -18,6 +18,8 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.ImmutableIntegerValue;
+import org.msgpack.value.IntegerValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableLongValueImpl;
 
@@ -33,6 +35,19 @@ public final class JsonLong implements JsonNumber {
         // No direct instantiation.
         this.value = new ImmutableLongValueImpl(value);
         this.literal = literal;
+    }
+
+    private JsonLong(final ImmutableLongValueImpl msgpackValue) {
+        this.value = msgpackValue;
+        this.literal = null;
+    }
+
+    static JsonLong fromMsgpack(final IntegerValue msgpackValue) {
+        final ImmutableIntegerValue immutableInteger = (ImmutableIntegerValue) msgpackValue.immutableValue();
+        if (immutableInteger instanceof ImmutableLongValueImpl) {
+            return new JsonLong((ImmutableLongValueImpl) immutableInteger);
+        }
+        throw new IllegalArgumentException("MessagePack's Integer type is not long.");
     }
 
     /**

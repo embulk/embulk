@@ -393,4 +393,51 @@ public interface JsonValue {
      */
     @Deprecated
     Value toMsgpack();
+
+    /**
+     * Returns a new JSON value based on the specified MessagePack's value.
+     *
+     * @param msgpackValue  the MessagePack's value
+     * @return the new JSON value
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    public static JsonValue fromMsgpack(final Value msgpackValue) {
+        if (msgpackValue == null) {
+            throw new NullPointerException("msgpackValue is null.");
+        }
+
+        switch (msgpackValue.getValueType()) {
+            case NIL:
+                return JsonNull.NULL;
+            case BOOLEAN:
+                if (msgpackValue.asBooleanValue().getBoolean()) {
+                    return JsonBoolean.TRUE;
+                }
+                return JsonBoolean.FALSE;
+            case INTEGER:
+                return JsonLong.fromMsgpack(msgpackValue.asIntegerValue());
+            case FLOAT:
+                return JsonDouble.fromMsgpack(msgpackValue.asFloatValue());
+            case STRING:
+                return JsonString.fromMsgpack(msgpackValue.asStringValue());
+            case BINARY:
+                throw new IllegalArgumentException("MessagePack's Binary type is not supported.");
+            case ARRAY:
+                return JsonArray.fromMsgpack(msgpackValue.asArrayValue());
+            case MAP:
+                return JsonObject.fromMsgpack(msgpackValue.asMapValue());
+            case EXTENSION:
+                throw new IllegalArgumentException("MessagePack's Extension type is not supported.");
+            default:
+                throw new IllegalArgumentException("MessagePack's type is unknown.");
+        }
+    }
 }
