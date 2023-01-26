@@ -139,4 +139,12 @@ public class TestJsonString {
         // JsonString#equals must normally reject a fake imitation of JsonString.
         assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(JsonString.of(""), JsonValue.fromMsgpack(ValueFactory.newString("")));
+        assertEquals(JsonString.of("hogehoge"), JsonValue.fromMsgpack(ValueFactory.newString("hogehoge")));
+        assertEquals(JsonString.of("\n"), JsonValue.fromMsgpack(ValueFactory.newString("\n")));
+        assertEquals(JsonString.of("\0"), JsonValue.fromMsgpack(ValueFactory.newString("\0")));
+    }
 }

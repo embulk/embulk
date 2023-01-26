@@ -330,4 +330,19 @@ public class TestJsonArray {
                                     JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")),
                                     JsonBoolean.TRUE)));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(
+                JsonValue.fromMsgpack(ValueFactory.newArray(
+                        ValueFactory.newInteger(987),
+                        ValueFactory.newArray(
+                                ValueFactory.newString("foo"), ValueFactory.newString("bar"), ValueFactory.newString("baz")),
+                        ValueFactory.newBoolean(true))),
+                JsonArray.of(
+                        JsonLong.of(987),
+                        JsonArray.of(
+                                JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")),
+                        JsonBoolean.TRUE));
+    }
 }

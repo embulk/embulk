@@ -61,4 +61,9 @@ public class TestJsonNull {
         // JsonNull#equals must normally reject a fake imitation of JsonNull.
         assertFalse(jsonNull.equals(FakeJsonNull.ofFake()));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(JsonNull.NULL, JsonValue.fromMsgpack(ValueFactory.newNil()));
+    }
 }
