@@ -17,6 +17,7 @@
 package org.embulk.spi.json;
 
 import java.util.Objects;
+import org.msgpack.value.StringValue;
 import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableStringValueImpl;
 
@@ -36,6 +37,16 @@ public final class JsonString implements JsonValue {
         }
         this.value = new ImmutableStringValueImpl(value);
         this.literal = literal;
+    }
+
+    private JsonString(final ImmutableStringValueImpl msgpackValue) {
+        this.value = msgpackValue;
+        this.literal = null;
+    }
+
+    static JsonString fromMsgpack(final StringValue msgpackValue) {
+        // This cast should always succeed.
+        return new JsonString((ImmutableStringValueImpl) msgpackValue.immutableValue());
     }
 
     /**

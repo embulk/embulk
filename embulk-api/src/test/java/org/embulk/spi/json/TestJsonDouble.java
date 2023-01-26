@@ -837,4 +837,12 @@ public class TestJsonDouble {
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(JsonDouble.of(0.0), JsonValue.fromMsgpack(ValueFactory.newFloat(0.0)));
+        assertEquals(JsonDouble.of(-0.0), JsonValue.fromMsgpack(ValueFactory.newFloat(-0.0)));
+        assertEquals(JsonDouble.of(12.41041), JsonValue.fromMsgpack(ValueFactory.newFloat(12.41041)));
+        assertEquals(JsonDouble.of(Double.MIN_VALUE), JsonValue.fromMsgpack(ValueFactory.newFloat(Double.MIN_VALUE)));
+    }
 }

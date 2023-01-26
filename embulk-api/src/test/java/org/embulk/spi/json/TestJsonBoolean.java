@@ -95,4 +95,10 @@ public class TestJsonBoolean {
         assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_FALSE));
         assertFalse(jsonBoolean.equals(FakeJsonBoolean.FAKE_TRUE));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(JsonBoolean.FALSE, JsonValue.fromMsgpack(ValueFactory.newBoolean(false)));
+        assertEquals(JsonBoolean.TRUE, JsonValue.fromMsgpack(ValueFactory.newBoolean(true)));
+    }
 }

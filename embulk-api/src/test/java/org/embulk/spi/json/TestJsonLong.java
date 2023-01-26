@@ -268,4 +268,12 @@ public class TestJsonLong {
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(JsonLong.of(0), JsonValue.fromMsgpack(ValueFactory.newInteger(0)));
+        assertEquals(JsonLong.of(-0), JsonValue.fromMsgpack(ValueFactory.newInteger(-0)));
+        assertEquals(JsonLong.of(42), JsonValue.fromMsgpack(ValueFactory.newInteger(42)));
+        assertEquals(JsonLong.of(Long.MAX_VALUE), JsonValue.fromMsgpack(ValueFactory.newInteger(Long.MAX_VALUE)));
+    }
 }

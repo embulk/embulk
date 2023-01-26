@@ -735,4 +735,31 @@ public class TestJsonObject {
         assertThrows(NullPointerException.class, () -> JsonObject.of("k1", JsonString.of("f"), null, JsonNull.of()));
         assertThrows(NullPointerException.class, () -> JsonObject.of("k1", JsonLong.of(13423), "k2", null));
     }
+
+    @Test
+    public void testFromMsgpack() {
+        assertEquals(
+                JsonObject.of(
+                             "foo", JsonNull.of(),
+                             "bar", JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
+                             "baz", JsonObject.of(
+                                     "sub1", JsonString.of("v1"),
+                                     "sub2", JsonLong.of(42)),
+                             "qux", JsonNull.of(),
+                             "hoge", JsonString.of("foo"),
+                             "fuga", JsonDouble.of(123.4),
+                             "piyo", JsonLong.of(345),
+                             "hogera", JsonString.of("bar")),
+                JsonValue.fromMsgpack(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newMap(
+                                     ValueFactory.newString("sub1"), ValueFactory.newString("v1"),
+                                     ValueFactory.newString("sub2"), ValueFactory.newInteger(42)),
+                             ValueFactory.newString("qux"), ValueFactory.newNil(),
+                             ValueFactory.newString("hoge"), ValueFactory.newString("foo"),
+                             ValueFactory.newString("fuga"), ValueFactory.newFloat(123.4),
+                             ValueFactory.newString("piyo"), ValueFactory.newInteger(345),
+                             ValueFactory.newString("hogera"), ValueFactory.newString("bar"))));
+    }
 }
