@@ -18,6 +18,8 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableLongValueImpl;
 
 /**
  * Represents a integral number in JSON, represented by a Java primitive {@code long}, which is the same as Embulk's {@code LONG} column type.
@@ -29,7 +31,7 @@ import java.math.BigInteger;
 public final class JsonLong implements JsonNumber {
     private JsonLong(final long value, final String literal) {
         // No direct instantiation.
-        this.value = value;
+        this.value = new ImmutableLongValueImpl(value);
         this.literal = literal;
     }
 
@@ -128,7 +130,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public boolean isByteValue() {
-        return ((long) Byte.MIN_VALUE) <= this.value && this.value <= ((long) Byte.MAX_VALUE);
+        return this.value.isInByteRange();
     }
 
     /**
@@ -140,7 +142,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public boolean isShortValue() {
-        return ((long) Short.MIN_VALUE) <= this.value && this.value <= ((long) Short.MAX_VALUE);
+        return this.value.isInShortRange();
     }
 
     /**
@@ -152,7 +154,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public boolean isIntValue() {
-        return ((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE);
+        return this.value.isInIntRange();
     }
 
     /**
@@ -182,7 +184,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public byte byteValue() {
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     /**
@@ -200,7 +202,7 @@ public final class JsonLong implements JsonNumber {
         if (!this.isByteValue()) {
             throw new ArithmeticException("Out of the range of byte: " + this.value);
         }
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     /**
@@ -218,7 +220,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public short shortValue() {
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     /**
@@ -236,7 +238,7 @@ public final class JsonLong implements JsonNumber {
         if (!this.isShortValue()) {
             throw new ArithmeticException("Out of the range of short: " + this.value);
         }
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     /**
@@ -254,7 +256,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public int intValue() {
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     /**
@@ -272,7 +274,7 @@ public final class JsonLong implements JsonNumber {
         if (!this.isIntValue()) {
             throw new ArithmeticException("Out of the range of int: " + this.value);
         }
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     /**
@@ -284,7 +286,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public long longValue() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     /**
@@ -296,7 +298,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public long longValueExact() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     /**
@@ -308,7 +310,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public BigInteger bigIntegerValue() {
-        return BigInteger.valueOf(this.value);
+        return this.value.toBigInteger();
     }
 
     /**
@@ -320,7 +322,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public BigInteger bigIntegerValueExact() {
-        return BigInteger.valueOf(this.value);
+        return this.value.toBigInteger();
     }
 
     /**
@@ -337,7 +339,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public float floatValue() {
-        return (float) this.value;
+        return this.value.toFloat();
     }
 
     /**
@@ -354,7 +356,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public double doubleValue() {
-        return (double) this.value;
+        return this.value.toDouble();
     }
 
     /**
@@ -366,7 +368,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public BigDecimal bigDecimalValue() {
-        return BigDecimal.valueOf(this.value);
+        return BigDecimal.valueOf(this.value.toLong());
     }
 
     /**
@@ -383,7 +385,26 @@ public final class JsonLong implements JsonNumber {
         if (this.literal != null) {
             return this.literal;
         }
-        return Long.toString(this.value);
+        return Long.toString(this.value.toLong());
+    }
+
+    /**
+     * Returns the corresponding MessagePack's Integer value of this JSON integral number.
+     *
+     * @return the corresponding MessagePack's Integer value of this JSON integral number
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @Override
+    public Value toMsgpack() {
+        return this.value;
     }
 
     /**
@@ -395,7 +416,7 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public String toString() {
-        return Long.toString(this.value);
+        return Long.toString(this.value.toLong());
     }
 
     /**
@@ -418,7 +439,7 @@ public final class JsonLong implements JsonNumber {
 
         final JsonLong other = (JsonLong) otherObject;
 
-        return this.value == other.value;
+        return this.value.equals(other.value);
     }
 
     /**
@@ -430,13 +451,10 @@ public final class JsonLong implements JsonNumber {
      */
     @Override
     public int hashCode() {
-        if (((long) Integer.MIN_VALUE) <= this.value && this.value <= ((long) Integer.MAX_VALUE)) {
-            return (int) value;
-        }
-        return (int) (value ^ (value >>> 32));
+        return this.value.hashCode();
     }
 
-    private final long value;
+    private final ImmutableLongValueImpl value;
 
     private final String literal;
 }

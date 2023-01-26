@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonObject {
     @Test
@@ -64,6 +65,8 @@ public class TestJsonObject {
         assertEquals("{}", jsonObject.toJson());
         assertEquals("{}", jsonObject.toString());
         assertEquals(JsonObject.of(), jsonObject);
+
+        assertEquals(ValueFactory.emptyMap(), jsonObject.toMsgpack());
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of()));
@@ -111,6 +114,11 @@ public class TestJsonObject {
                          JsonString.of("foo"), JsonLong.of(456),
                          JsonString.of("bar"), JsonLong.of(456)),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                         ValueFactory.newString("foo"), ValueFactory.newInteger(456),
+                         ValueFactory.newString("bar"), ValueFactory.newInteger(456)),
+                     jsonObject.toMsgpack());
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
@@ -168,6 +176,12 @@ public class TestJsonObject {
                              JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newInteger(678)),
+                     jsonObject.toMsgpack());
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
@@ -227,6 +241,12 @@ public class TestJsonObject {
                              JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newInteger(678)),
+                     jsonObject.toMsgpack());
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(
@@ -288,6 +308,12 @@ public class TestJsonObject {
                              JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newInteger(678)),
+                     jsonObject.toMsgpack());
 
         // Ordered differently.
         assertEquals(JsonObject.of(
@@ -363,6 +389,12 @@ public class TestJsonObject {
                              JsonString.of("bar"), JsonArray.of(JsonLong.of(123), JsonBoolean.TRUE),
                              JsonString.of("baz"), JsonLong.of(678)),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newInteger(678)),
+                     jsonObject.toMsgpack());
 
         // Ordered differently.
         assertEquals(JsonObject.of(
@@ -488,6 +520,17 @@ public class TestJsonObject {
                              JsonString.of("piyo"), JsonLong.of(345),
                              JsonString.of("hogera"), JsonString.of("bar")),
                      jsonObject);
+
+        assertEquals(ValueFactory.newMap(
+                             ValueFactory.newString("foo"), ValueFactory.newNil(),
+                             ValueFactory.newString("bar"), ValueFactory.newArray(ValueFactory.newInteger(123), ValueFactory.newBoolean(true)),
+                             ValueFactory.newString("baz"), ValueFactory.newInteger(678),
+                             ValueFactory.newString("qux"), ValueFactory.newNil(),
+                             ValueFactory.newString("hoge"), ValueFactory.newString("foo"),
+                             ValueFactory.newString("fuga"), ValueFactory.newFloat(123.4),
+                             ValueFactory.newString("piyo"), ValueFactory.newInteger(345),
+                             ValueFactory.newString("hogera"), ValueFactory.newString("bar")),
+                     jsonObject.toMsgpack());
 
         // JsonObject#equals must normally reject a fake imitation of JsonObject.
         assertFalse(jsonObject.equals(FakeJsonObject.of(

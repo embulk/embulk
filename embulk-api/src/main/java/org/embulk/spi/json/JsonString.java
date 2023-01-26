@@ -17,6 +17,8 @@
 package org.embulk.spi.json;
 
 import java.util.Objects;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableStringValueImpl;
 
 /**
  * Represents a string in JSON.
@@ -32,7 +34,7 @@ public final class JsonString implements JsonValue {
         if (value == null) {
             throw new NullPointerException("string is null.");
         }
-        this.value = value;
+        this.value = new ImmutableStringValueImpl(value);
         this.literal = literal;
     }
 
@@ -107,7 +109,7 @@ public final class JsonString implements JsonValue {
     @Override
     public int presumeReferenceSizeInBytes() {
         // Indeed, null is stored in Page as a special form as |nullBitSet|, but considered as 1 here in JsonValue just for ease.
-        return this.value.length() * 2 + 4;
+        return this.value.asString().length() * 2 + 4;
     }
 
     /**
@@ -118,7 +120,7 @@ public final class JsonString implements JsonValue {
      * @since 0.10.42
      */
     public String getString() {
-        return this.value;
+        return this.value.asString();
     }
 
     /**
@@ -129,7 +131,7 @@ public final class JsonString implements JsonValue {
      * @since 0.10.42
      */
     public CharSequence getChars() {
-        return this.value;
+        return this.value.asString();
     }
 
     /**
@@ -147,7 +149,26 @@ public final class JsonString implements JsonValue {
         if (this.literal != null) {
             return this.literal;
         }
-        return escapeStringForJsonLiteral(this.value).toString();
+        return escapeStringForJsonLiteral(this.value.asString());
+    }
+
+    /**
+     * Returns the corresponding MessagePack's String value of this JSON string.
+     *
+     * @return the corresponding MessagePack's String value of this JSON string
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @Override
+    public Value toMsgpack() {
+        return this.value;
     }
 
     /**
@@ -163,7 +184,7 @@ public final class JsonString implements JsonValue {
      */
     @Override
     public String toString() {
-        return escapeStringForJsonLiteral(this.value).toString();
+        return escapeStringForJsonLiteral(this.value.asString());
     }
 
     /**
@@ -186,7 +207,7 @@ public final class JsonString implements JsonValue {
 
         final JsonString other = (JsonString) otherObject;
 
-        return Objects.equals(this.value, other.value);
+        return Objects.equals(this.value.asString(), other.value.asString());
     }
 
     /**
@@ -198,7 +219,7 @@ public final class JsonString implements JsonValue {
      */
     @Override
     public int hashCode() {
-        return Objects.hashCode(this.value);
+        return Objects.hashCode(this.value.asString());
     }
 
     static void appendEscapedStringForJsonLiteral(final String original, final StringBuilder builder) {
@@ -283,6 +304,7 @@ public final class JsonString implements JsonValue {
         return builder.toString();
     }
 
-    private final String value;
+    private final ImmutableStringValueImpl value;
+
     private final String literal;
 }

@@ -16,6 +16,8 @@
 
 package org.embulk.spi.json;
 
+import org.msgpack.value.Value;
+
 /**
  * Represents a value in JSON: {@code null}, {@code true}, {@code false}, numbers, strings, arrays, or objects.
  *
@@ -375,4 +377,20 @@ public interface JsonValue {
      * @since 0.10.42
      */
     String toJson();
+
+    /**
+     * Returns the corresponding MessagePack's value object of this JSON value.
+     *
+     * @return the corresponding MessagePack's value object of this JSON value
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    Value toMsgpack();
 }

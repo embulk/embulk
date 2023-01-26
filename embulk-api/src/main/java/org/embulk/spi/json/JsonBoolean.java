@@ -16,6 +16,9 @@
 
 package org.embulk.spi.json;
 
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableBooleanValueImpl;
+
 /**
  * Represents {@code true} or {@code false} in JSON.
  *
@@ -128,6 +131,28 @@ public final class JsonBoolean implements JsonValue {
             return "true";
         }
         return "false";
+    }
+
+    /**
+     * Returns the corresponding MessagePack's Boolean value of this JSON {@code true} or {@code false}.
+     *
+     * @return the corresponding MessagePack's Boolean value of this JSON {@code true} or {@code false}
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @Override
+    public Value toMsgpack() {
+        if (this.value) {
+            return ImmutableBooleanValueImpl.TRUE;
+        }
+        return ImmutableBooleanValueImpl.FALSE;
     }
 
     /**

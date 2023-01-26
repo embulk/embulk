@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonArray {
     @Test
@@ -69,6 +70,8 @@ public class TestJsonArray {
         assertEquals("[]", jsonArray.toString());
         assertEquals(JsonArray.of(), jsonArray);
 
+        assertEquals(ValueFactory.emptyArray(), jsonArray.toMsgpack());
+
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(FakeJsonArray.of()));
     }
@@ -98,6 +101,8 @@ public class TestJsonArray {
         assertEquals("[987]", jsonArray.toJson());
         assertEquals("[987]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonLong.of(987)), jsonArray);
+
+        assertEquals(ValueFactory.newArray(ValueFactory.newInteger(987)), jsonArray.toMsgpack());
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987))));
@@ -149,6 +154,10 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
 
+        assertEquals(
+                ValueFactory.newArray(ValueFactory.newInteger(987), ValueFactory.newString("foo"), ValueFactory.newBoolean(true)),
+                jsonArray.toMsgpack());
+
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
@@ -198,6 +207,10 @@ public class TestJsonArray {
         assertEquals("[987,\"foo\",true]", jsonArray.toJson());
         assertEquals("[987,\"foo\",true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);
+
+        assertEquals(
+                ValueFactory.newArray(ValueFactory.newInteger(987), ValueFactory.newString("foo"), ValueFactory.newBoolean(true)),
+                jsonArray.toMsgpack());
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(987), JsonString.of("foo"), JsonBoolean.TRUE)));
@@ -249,6 +262,10 @@ public class TestJsonArray {
         assertEquals("[1234,\"foo\",true]", jsonArray.toString());  // Updated
         assertEquals(JsonArray.of(JsonLong.of(1234), JsonString.of("foo"), JsonBoolean.TRUE), jsonArray);  // Updated
 
+        assertEquals(
+                ValueFactory.newArray(ValueFactory.newInteger(1234), ValueFactory.newString("foo"), ValueFactory.newBoolean(true)),
+                jsonArray.toMsgpack());
+
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(FakeJsonArray.of(JsonLong.of(1234), JsonString.of("foo"), JsonBoolean.TRUE)));
     }
@@ -297,6 +314,14 @@ public class TestJsonArray {
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toJson());
         assertEquals("[987,[\"foo\",\"bar\",\"baz\"],true]", jsonArray.toString());
         assertEquals(JsonArray.of(JsonLong.of(987), JsonArray.of(JsonString.of("foo"), JsonString.of("bar"), JsonString.of("baz")), JsonBoolean.TRUE), jsonArray);
+
+        assertEquals(
+                ValueFactory.newArray(
+                        ValueFactory.newInteger(987),
+                        ValueFactory.newArray(
+                                ValueFactory.newString("foo"), ValueFactory.newString("bar"), ValueFactory.newString("baz")),
+                        ValueFactory.newBoolean(true)),
+                jsonArray.toMsgpack());
 
         // JsonArray#equals must normally reject a fake imitation of JsonArray.
         assertFalse(jsonArray.equals(

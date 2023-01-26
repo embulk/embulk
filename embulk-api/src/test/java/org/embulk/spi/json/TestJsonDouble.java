@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonDouble {
     @Test
@@ -87,6 +88,8 @@ public class TestJsonDouble {
         assertEquals("1.234567890123456E9", jsonDouble.toString());
         assertEquals(JsonDouble.of(1234567890.123456), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(1234567890.123456), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -137,6 +140,8 @@ public class TestJsonDouble {
         assertEquals("0.0", jsonDouble.toJson());
         assertEquals("0.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(0.0), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(0.0), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -189,6 +194,8 @@ public class TestJsonDouble {
         assertEquals("-0.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(0.0), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(-0.0), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -237,6 +244,8 @@ public class TestJsonDouble {
         assertEquals("1.0", jsonDouble.toJson());
         assertEquals("1.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(1.0), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(1.0), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -287,6 +296,8 @@ public class TestJsonDouble {
         assertEquals("-1.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(-1.0), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(-1.0), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -333,6 +344,8 @@ public class TestJsonDouble {
         assertEquals("3.1415", jsonDouble.toJson());
         assertEquals("3.1415", jsonDouble.toString());
         assertEquals(JsonDouble.of(3.1415), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(3.1415), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -382,6 +395,8 @@ public class TestJsonDouble {
         assertTrue(jsonDouble.toString().startsWith("3.1415926535897"));
         assertEquals(JsonDouble.of(Math.PI), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(Math.PI), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -427,6 +442,8 @@ public class TestJsonDouble {
         assertEquals("19245.0", jsonDouble.toJson());
         assertEquals("19245.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(19245.0), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(19245.0), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -474,6 +491,8 @@ public class TestJsonDouble {
         assertEquals("19245.12", jsonDouble.toString());
         assertEquals(JsonDouble.of(19245.12), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(19245.12), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -520,6 +539,8 @@ public class TestJsonDouble {
         assertEquals("9351902.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(9351902.0), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(9351902.0), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -565,6 +586,8 @@ public class TestJsonDouble {
         assertEquals("9351902.523", jsonDouble.toJson());
         assertEquals("9351902.523", jsonDouble.toString());
         assertEquals(JsonDouble.of(9351902.523), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(9351902.523), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -613,6 +636,8 @@ public class TestJsonDouble {
         assertEquals("3.123456789E10", jsonDouble.toString());
         assertEquals(JsonDouble.of(31234567890.0), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(31234567890.0), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -657,6 +682,8 @@ public class TestJsonDouble {
         assertEquals("3.123456789012E10", jsonDouble.toJson());
         assertEquals("3.123456789012E10", jsonDouble.toString());
         assertEquals(JsonDouble.of(31234567890.12), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(31234567890.12), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -705,6 +732,8 @@ public class TestJsonDouble {
         assertEquals("9.223372036854776E21", jsonDouble.toString());
         assertEquals(JsonDouble.of(9.223372036854776E21), jsonDouble);
 
+        assertEquals(ValueFactory.newFloat(9_223_372_036_854_775_807_000.0), jsonDouble.toMsgpack());
+
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
     }
@@ -751,6 +780,8 @@ public class TestJsonDouble {
         assertEquals("9.223372036854776E21", jsonDouble.toJson());
         assertEquals("9.223372036854776E21", jsonDouble.toString());
         assertEquals(JsonDouble.of(9.223372036854776E21), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(9_223_372_036_854_775_807_000.12), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
@@ -800,6 +831,8 @@ public class TestJsonDouble {
         assertEquals("4.9E-324", jsonDouble.toJson());
         assertEquals("4.9E-324", jsonDouble.toString());
         assertEquals(JsonDouble.of(Double.MIN_VALUE), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(Double.MIN_VALUE), jsonDouble.toMsgpack());
 
         // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
         assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));

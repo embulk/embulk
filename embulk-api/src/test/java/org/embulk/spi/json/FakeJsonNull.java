@@ -16,6 +16,9 @@
 
 package org.embulk.spi.json;
 
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableNilValueImpl;
+
 public final class FakeJsonNull implements JsonValue {
     private FakeJsonNull() {
         // No direct instantiation.
@@ -40,6 +43,11 @@ public final class FakeJsonNull implements JsonValue {
     @Override
     public String toJson() {
         return "null";
+    }
+
+    @Deprecated
+    public Value toMsgpack() {
+        return ImmutableNilValueImpl.get();
     }
 
     @Override

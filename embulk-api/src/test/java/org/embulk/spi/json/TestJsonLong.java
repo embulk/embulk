@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
+import org.msgpack.value.ValueFactory;
 
 public class TestJsonLong {
     @Test
@@ -74,6 +75,8 @@ public class TestJsonLong {
         assertEquals("123", integer.toString());
         assertEquals(JsonLong.of(123L), integer);
 
+        assertEquals(ValueFactory.newInteger(123L), integer.toMsgpack());
+
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
@@ -118,6 +121,8 @@ public class TestJsonLong {
         assertEquals("12345", integer.toJson());
         assertEquals("12345", integer.toString());
         assertEquals(JsonLong.of(12345L), integer);
+
+        assertEquals(ValueFactory.newInteger(12345L), integer.toMsgpack());
 
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
@@ -164,6 +169,8 @@ public class TestJsonLong {
         assertEquals("1234567890", integer.toString());
         assertEquals(JsonLong.of(1234567890L), integer);
 
+        assertEquals(ValueFactory.newInteger(1234567890L), integer.toMsgpack());
+
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
@@ -209,6 +216,8 @@ public class TestJsonLong {
         assertEquals("1234567890123456", integer.toString());
         assertEquals(JsonLong.of(1234567890123456L), integer);
 
+        assertEquals(ValueFactory.newInteger(1234567890123456L), integer.toMsgpack());
+
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));
     }
@@ -253,6 +262,8 @@ public class TestJsonLong {
         assertEquals("999999999999999999991234567890123456", integer.toJson());
         assertEquals("1234567890123456", integer.toString());
         assertEquals(JsonLong.of(1234567890123456L), integer);
+
+        assertEquals(ValueFactory.newInteger(1234567890123456L), integer.toMsgpack());
 
         // JsonLong#equals must normally reject a fake imitation of JsonLong.
         assertFalse(integer.equals(FakeJsonLong.of(integer.longValue())));

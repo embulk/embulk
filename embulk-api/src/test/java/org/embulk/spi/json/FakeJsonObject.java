@@ -23,11 +23,15 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableMapValueImpl;
+import org.msgpack.value.impl.ImmutableStringValueImpl;
 
 public final class FakeJsonObject extends AbstractMap<String, JsonValue> implements JsonValue {
     private FakeJsonObject(final String[] keys, final JsonValue[] values) {
         this.keys = keys;
         this.values = values;
+        this.msgpackMapCache = null;
     }
 
     public static FakeJsonObject of(final JsonValue... keyValues) {
@@ -103,6 +107,21 @@ public final class FakeJsonObject extends AbstractMap<String, JsonValue> impleme
         }
         builder.append("}");
         return builder.toString();
+    }
+
+    @Deprecated
+    public Value toMsgpack() {
+        if (this.msgpackMapCache != null) {
+            return this.msgpackMapCache;
+        }
+
+        final Value[] msgpackKeyValues = new Value[this.keys.length * 2];
+        for (int i = 0; i < this.keys.length; i++) {
+            msgpackKeyValues[i * 2] = new ImmutableStringValueImpl(this.keys[i]);
+            msgpackKeyValues[i * 2 + 1] = this.values[i].toMsgpack();
+        }
+        this.msgpackMapCache = new ImmutableMapValueImpl(msgpackKeyValues);
+        return this.msgpackMapCache;
     }
 
     @Override
@@ -215,4 +234,6 @@ public final class FakeJsonObject extends AbstractMap<String, JsonValue> impleme
 
     private final String[] keys;
     private final JsonValue[] values;
+
+    private ImmutableMapValueImpl msgpackMapCache;
 }

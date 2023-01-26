@@ -18,6 +18,8 @@ package org.embulk.spi.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableDoubleValueImpl;
 
 /**
  * Represents a number in JSON, represented by a Java primitive {@code double}, which is the same as Embulk's {@code DOUBLE} column type.
@@ -36,7 +38,7 @@ public final class JsonDouble implements JsonNumber {
         if (Double.isInfinite(value)) {
             throw new ArithmeticException("JsonDouble does not accept the infinity.");
         }
-        this.value = value;
+        this.value = new ImmutableDoubleValueImpl(value);
         this.literal = literal;
     }
 
@@ -130,7 +132,8 @@ public final class JsonDouble implements JsonNumber {
         // |this.value| must not be NaN nor infinite. If JsonDouble supports NaN or the infinity in the future, check also:
         //
         //     !Double.isNaN(this.value) && !Double.isInfinite(this.value)
-        return this.value == Math.rint(this.value);
+        final double inner = this.value.toDouble();
+        return inner == Math.rint(inner);
     }
 
     /**
@@ -142,7 +145,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public boolean isByteValue() {
-        return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value && this.value <= ((double) Byte.MAX_VALUE);
+        return this.isIntegral() && ((double) Byte.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Byte.MAX_VALUE);
     }
 
     /**
@@ -154,7 +157,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public boolean isShortValue() {
-        return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value && this.value <= ((double) Short.MAX_VALUE);
+        return this.isIntegral() && ((double) Short.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Short.MAX_VALUE);
     }
 
     /**
@@ -166,7 +169,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public boolean isIntValue() {
-        return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value && this.value <= ((double) Integer.MAX_VALUE);
+        return this.isIntegral() && ((double) Integer.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Integer.MAX_VALUE);
     }
 
     /**
@@ -178,7 +181,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public boolean isLongValue() {
-        return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value && this.value <= ((double) Long.MAX_VALUE);
+        return this.isIntegral() && ((double) Long.MIN_VALUE) <= this.value.toDouble() && this.value.toDouble() <= ((double) Long.MAX_VALUE);
     }
 
     /**
@@ -195,7 +198,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public byte byteValue() {
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     /**
@@ -214,7 +217,7 @@ public final class JsonDouble implements JsonNumber {
         if (!this.isByteValue()) {
             throw new ArithmeticException("Out of the range of byte, or not integral: " + this.value);
         }
-        return (byte) this.value;
+        return this.value.toByte();
     }
 
     /**
@@ -231,7 +234,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public short shortValue() {
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     /**
@@ -250,7 +253,7 @@ public final class JsonDouble implements JsonNumber {
         if (!this.isShortValue()) {
             throw new ArithmeticException("Out of the range of short, or not integral: " + this.value);
         }
-        return (short) this.value;
+        return this.value.toShort();
     }
 
     /**
@@ -267,7 +270,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public int intValue() {
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     /**
@@ -286,7 +289,7 @@ public final class JsonDouble implements JsonNumber {
         if (!this.isIntValue()) {
             throw new ArithmeticException("Out of the range of int, or not integral: " + this.value);
         }
-        return (int) this.value;
+        return this.value.toInt();
     }
 
     /**
@@ -303,7 +306,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public long longValue() {
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     /**
@@ -322,7 +325,7 @@ public final class JsonDouble implements JsonNumber {
         if (!this.isLongValue()) {
             throw new ArithmeticException("Out of the range of long, or not integral: " + this.value);
         }
-        return (long) this.value;
+        return this.value.toLong();
     }
 
     /**
@@ -337,7 +340,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public BigInteger bigIntegerValue() {
-        return BigDecimal.valueOf(this.value).toBigInteger();
+        return BigDecimal.valueOf(this.value.toDouble()).toBigInteger();
     }
 
     /**
@@ -352,7 +355,7 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public BigInteger bigIntegerValueExact() {
-        return BigDecimal.valueOf(this.value).toBigIntegerExact();
+        return BigDecimal.valueOf(this.value.toDouble()).toBigIntegerExact();
     }
 
     /**
@@ -370,7 +373,7 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public float floatValue() {
-        return (float) this.value;
+        return this.value.toFloat();
     }
 
     /**
@@ -383,7 +386,7 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public double doubleValue() {
-        return this.value;
+        return this.value.toDouble();
     }
 
     /**
@@ -393,7 +396,7 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public BigDecimal bigDecimalValue() {
-        return BigDecimal.valueOf(this.value);
+        return BigDecimal.valueOf(this.value.toDouble());
     }
 
     /**
@@ -411,7 +414,26 @@ rrowing Primitive Conversion</a>
         if (this.literal != null) {
             return this.literal;
         }
-        return Double.toString(this.value);
+        return Double.toString(this.value.toDouble());
+    }
+
+    /**
+     * Returns the corresponding MessagePack's Float value of this JSON number.
+     *
+     * @return the corresponding MessagePack's Float value of this JSON number
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @Override
+    public Value toMsgpack() {
+        return this.value;
     }
 
     /**
@@ -424,7 +446,7 @@ rrowing Primitive Conversion</a>
     @Override
     public String toString() {
         // |this.value| must not be NaN nor infinite. Consider the output if JsonDouble supports NaN or the infinity in the future.
-        return Double.toString(this.value);
+        return Double.toString(this.value.toDouble());
     }
 
     /**
@@ -447,7 +469,7 @@ rrowing Primitive Conversion</a>
 
         final JsonDouble other = (JsonDouble) otherObject;
 
-        return this.value == other.value;
+        return this.value.equals(other.value);
     }
 
     /**
@@ -459,11 +481,10 @@ rrowing Primitive Conversion</a>
      */
     @Override
     public int hashCode() {
-        final long bits = Double.doubleToLongBits(this.value);
-        return (int) (bits ^ (bits >>> 32));
+        return this.value.hashCode();
     }
 
-    private final double value;
+    private final ImmutableDoubleValueImpl value;
 
     private final String literal;
 }

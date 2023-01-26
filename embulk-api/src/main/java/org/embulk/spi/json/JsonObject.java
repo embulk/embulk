@@ -24,6 +24,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import org.msgpack.value.Value;
+import org.msgpack.value.impl.ImmutableMapValueImpl;
+import org.msgpack.value.impl.ImmutableStringValueImpl;
 
 /**
  * Represents an object in JSON.
@@ -36,6 +39,7 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     private JsonObject(final String[] keys, final JsonValue[] values) {
         this.keys = keys;
         this.values = values;
+        this.msgpackMapCache = null;
     }
 
     /**
@@ -873,6 +877,36 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
     }
 
     /**
+     * Returns the corresponding MessagePack's Map value of this JSON string.
+     *
+     * @return the corresponding MessagePack's Map value of this JSON string
+     *
+     * @see <a href="https://github.com/embulk/embulk/pull/1538">Draft EEP: JSON Column Type</a>
+     *
+     * @deprecated Do not use this method. It is to be removed at some point after Embulk v1.0.0.
+     *     It is here only to ensure a migration period from MessagePack-based JSON values to new
+     *     JSON values of {@link JsonValue}.
+     *
+     * @since 0.10.42
+     */
+    @Deprecated
+    @SuppressWarnings("deprecation")  // To call #toMsgpack() of other JsonValue.
+    @Override
+    public Value toMsgpack() {
+        if (this.msgpackMapCache != null) {
+            return this.msgpackMapCache;
+        }
+
+        final Value[] msgpackKeyValues = new Value[this.keys.length * 2];
+        for (int i = 0; i < this.keys.length; i++) {
+            msgpackKeyValues[i * 2] = new ImmutableStringValueImpl(this.keys[i]);
+            msgpackKeyValues[i * 2 + 1] = this.values[i].toMsgpack();
+        }
+        this.msgpackMapCache = new ImmutableMapValueImpl(msgpackKeyValues);
+        return this.msgpackMapCache;
+    }
+
+    /**
      * Returns the string representation of this JSON object.
      *
      * @return the string representation of this JSON object
@@ -1018,4 +1052,6 @@ public final class JsonObject extends AbstractMap<String, JsonValue> implements 
 
     private final String[] keys;
     private final JsonValue[] values;
+
+    private ImmutableMapValueImpl msgpackMapCache;
 }
