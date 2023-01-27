@@ -140,6 +140,15 @@ public class TestJsonString {
         assertFalse(string.equals(FakeJsonString.of(string.getString())));
     }
 
+    @SuppressWarnings("checkstyle:IllegalTokenText")
+    @Test
+    public void testExample() {
+        final JsonString string = JsonString.withLiteral("foo\n", "\"foo\\u000a\"");
+        assertEquals("foo\n", string.getString());
+        assertEquals("\"foo\\n\"", string.toString());
+        assertEquals("\"foo\\u000a\"", string.toJson());
+    }
+
     @Test
     public void testFromMsgpack() {
         assertEquals(JsonString.of(""), JsonValue.fromMsgpack(ValueFactory.newString("")));

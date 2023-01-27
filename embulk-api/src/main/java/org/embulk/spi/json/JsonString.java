@@ -52,6 +52,8 @@ public final class JsonString implements JsonValue {
     /**
      * Returns a JSON string that is represented by the specified {@link String}.
      *
+     * <p>This method does not automatically apply {@link String#intern()} for {@code value}.
+     *
      * @param value  the string, not null
      * @return a JSON string represented by the specified {@link String}
      * @throws NullPointerException  if the string is {@code null}
@@ -65,7 +67,10 @@ public final class JsonString implements JsonValue {
     /**
      * Returns a JSON string that is represented by the specified {@link String}, with the specified JSON literal.
      *
+     * <p>This method does not automatically apply {@link String#intern()} for {@code value}.
+     *
      * <p>The literal is just subsidiary information used when stringifying this JSON string as JSON by {@link #toJson()}.
+     * Note that the literal usually need to be quoted, for example, {@code JsonString.withLiteral("foo\n", "\"foo\\n\"")}.
      *
      * @param value  the string, not null
      * @param literal  the JSON literal of the string
