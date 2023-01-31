@@ -124,8 +124,10 @@ public final class JsonString implements JsonValue {
      */
     @Override
     public int presumeReferenceSizeInBytes() {
-        // Indeed, null is stored in Page as a special form as |nullBitSet|, but considered as 1 here in JsonValue just for ease.
-        return this.value.asString().length() * 2 + 4;
+        if (this.literal == null) {
+            return this.value.asString().length() * 2 + 4;
+        }
+        return (this.value.asString().length()) * 2 + (this.literal.length() * 2) + 4;
     }
 
     /**

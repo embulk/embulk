@@ -95,6 +95,53 @@ public class TestJsonDouble {
     }
 
     @Test
+    public void testLiteral() {
+        final JsonDouble jsonDouble = JsonDouble.withLiteral(1234567890.123456, "1234567890.1234567890123456789");
+        assertEquals(JsonValue.EntityType.DOUBLE, jsonDouble.getEntityType());
+        assertFalse(jsonDouble.isJsonNull());
+        assertFalse(jsonDouble.isJsonBoolean());
+        assertFalse(jsonDouble.isJsonLong());
+        assertTrue(jsonDouble.isJsonDouble());
+        assertFalse(jsonDouble.isJsonString());
+        assertFalse(jsonDouble.isJsonArray());
+        assertFalse(jsonDouble.isJsonObject());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonNull());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonBoolean());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonLong());
+        assertEquals(jsonDouble, jsonDouble.asJsonDouble());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonString());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonArray());
+        assertThrows(ClassCastException.class, () -> jsonDouble.asJsonObject());
+        assertEquals(68, jsonDouble.presumeReferenceSizeInBytes());
+        assertFalse(jsonDouble.isIntegral());
+        assertFalse(jsonDouble.isByteValue());
+        assertFalse(jsonDouble.isShortValue());
+        assertFalse(jsonDouble.isIntValue());
+        assertFalse(jsonDouble.isLongValue());
+        assertEquals((byte) -46, jsonDouble.byteValue());  // Overflow & fractional
+        assertThrows(ArithmeticException.class, () -> jsonDouble.byteValueExact());
+        assertEquals((short) 722, jsonDouble.shortValue());  // Overflow & fractional
+        assertThrows(ArithmeticException.class, () -> jsonDouble.shortValueExact());
+        assertEquals((int) 1234567890, jsonDouble.intValue());  // Fractional
+        assertThrows(ArithmeticException.class, () -> jsonDouble.intValueExact());
+        assertEquals(1234567890L, jsonDouble.longValue());  // Fractional
+        assertThrows(ArithmeticException.class, () -> jsonDouble.longValueExact());
+        assertEquals(BigInteger.valueOf(1234567890L), jsonDouble.bigIntegerValue());
+        assertThrows(ArithmeticException.class, () -> jsonDouble.bigIntegerValueExact());
+        assertEquals((float) 1234567890.123456, jsonDouble.floatValue(), 0.001);
+        assertEquals(1234567890.123456, jsonDouble.doubleValue(), 0.001);
+        assertEquals(BigDecimal.valueOf(1234567890.123456), jsonDouble.bigDecimalValue());
+        assertEquals("1234567890.1234567890123456789", jsonDouble.toJson());
+        assertEquals("1.234567890123456E9", jsonDouble.toString());
+        assertEquals(JsonDouble.of(1234567890.123456), jsonDouble);
+
+        assertEquals(ValueFactory.newFloat(1234567890.123456), jsonDouble.toMsgpack());
+
+        // JsonDouble#equals must normally reject a fake imitation of JsonDouble.
+        assertFalse(jsonDouble.equals(FakeJsonDouble.of(jsonDouble.doubleValue())));
+    }
+
+    @Test
     public void testZero() {
         final JsonDouble jsonDouble = JsonDouble.of(0.0);
         assertEquals(JsonValue.EntityType.DOUBLE, jsonDouble.getEntityType());

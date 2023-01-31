@@ -88,7 +88,7 @@ public class TestJsonString {
         assertEquals(string, string.asJsonString());
         assertThrows(ClassCastException.class, () -> string.asJsonArray());
         assertThrows(ClassCastException.class, () -> string.asJsonObject());
-        assertEquals(14, string.presumeReferenceSizeInBytes());
+        assertEquals(40, string.presumeReferenceSizeInBytes());
         assertEquals("hoge\n", string.getString());
         assertEquals("hoge\n", string.getChars());
         assertEquals("\"\\u0068oge\\n\"", string.toJson());
