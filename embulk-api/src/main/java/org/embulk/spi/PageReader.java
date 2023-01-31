@@ -186,7 +186,7 @@ public class PageReader implements AutoCloseable {
      *
      * @param column  the column to get the JSON value
      * @return the JSON value in the {@code msgpack-java} representation
-     * @deprecated Use {@link #getJsonValue(int)} instead.
+     * @deprecated Use {@link #getJsonValue(org.embulk.spi.Column)} instead.
      *
      * @since 0.8.0
      */
@@ -213,7 +213,7 @@ public class PageReader implements AutoCloseable {
      * Returns a JSON value at the specified column.
      *
      * @param column  the column to get the JSON value
-     * @return the JSON value in the {@code msgpack-java} representation
+     * @return the JSON value
      *
      * @since 0.10.42
      */
@@ -225,7 +225,7 @@ public class PageReader implements AutoCloseable {
      * Returns a JSON value at the specified column.
      *
      * @param columnIndex  the index of the column to get the JSON value
-     * @return the JSON value in the {@code msgpack-java} representation
+     * @return the JSON value
      *
      * @since 0.10.42
      */

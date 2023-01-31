@@ -159,7 +159,7 @@ public class PageBuilder implements AutoCloseable {
      *
      * @param columnIndex  the index of the column to set the JSON value
      * @param value  the JSON value in the {@code msgpack-java} representation
-     * @deprecated Use {@link #setJson(org.embulk.spi.Column, org.embulk.spi.json.JsonValue)} instead.
+     * @deprecated Use {@link #setJson(int, org.embulk.spi.json.JsonValue)} instead.
      *
      * @since 0.8.0
      */
