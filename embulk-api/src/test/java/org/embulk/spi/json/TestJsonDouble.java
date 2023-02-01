@@ -87,6 +87,8 @@ public class TestJsonDouble {
         assertEquals("1.234567890123456E9", jsonDouble.toJson());
         assertEquals("1.234567890123456E9", jsonDouble.toString());
         assertEquals(JsonDouble.of(1234567890.123456), jsonDouble);
+        assertNotEquals(JsonDouble.of(1234567890.123457), jsonDouble);
+        assertNotEquals(JsonLong.of(1234567890L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(1234567890.123456), jsonDouble.toMsgpack());
 
@@ -140,6 +142,13 @@ public class TestJsonDouble {
         assertEquals("0.0", jsonDouble.toJson());
         assertEquals("0.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(0.0), jsonDouble);
+        assertEquals(JsonDouble.of(-0.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(0.000001), jsonDouble);
+        assertNotEquals(JsonDouble.of(-0.000001), jsonDouble);
+        assertEquals(JsonLong.of(0L), jsonDouble);
+        assertEquals(JsonLong.of(-0L), jsonDouble);
+        assertNotEquals(JsonLong.of(1L), jsonDouble);
+        assertNotEquals(JsonLong.of(-1L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(0.0), jsonDouble.toMsgpack());
 
@@ -193,6 +202,13 @@ public class TestJsonDouble {
         assertEquals("-0.0", jsonDouble.toJson());
         assertEquals("-0.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(0.0), jsonDouble);
+        assertEquals(JsonDouble.of(-0.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(0.000001), jsonDouble);
+        assertNotEquals(JsonDouble.of(-0.000001), jsonDouble);
+        assertEquals(JsonLong.of(0L), jsonDouble);
+        assertEquals(JsonLong.of(-0L), jsonDouble);
+        assertNotEquals(JsonLong.of(1L), jsonDouble);
+        assertNotEquals(JsonLong.of(-1L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(-0.0), jsonDouble.toMsgpack());
 
@@ -244,6 +260,10 @@ public class TestJsonDouble {
         assertEquals("1.0", jsonDouble.toJson());
         assertEquals("1.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(1.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(0.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(1.0000001), jsonDouble);
+        assertEquals(JsonLong.of(1L), jsonDouble);
+        assertNotEquals(JsonLong.of(0L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(1.0), jsonDouble.toMsgpack());
 
@@ -295,6 +315,11 @@ public class TestJsonDouble {
         assertEquals("-1.0", jsonDouble.toJson());
         assertEquals("-1.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(-1.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(0.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(-0.999999), jsonDouble);
+        assertEquals(JsonLong.of(-1L), jsonDouble);
+        assertNotEquals(JsonLong.of(0L), jsonDouble);
+        assertNotEquals(JsonLong.of(1L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(-1.0), jsonDouble.toMsgpack());
 
@@ -344,6 +369,9 @@ public class TestJsonDouble {
         assertEquals("3.1415", jsonDouble.toJson());
         assertEquals("3.1415", jsonDouble.toString());
         assertEquals(JsonDouble.of(3.1415), jsonDouble);
+        assertNotEquals(JsonDouble.of(3.1416), jsonDouble);
+        assertNotEquals(JsonLong.of(3L), jsonDouble);
+        assertNotEquals(JsonLong.of(4L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(3.1415), jsonDouble.toMsgpack());
 
@@ -394,6 +422,9 @@ public class TestJsonDouble {
         assertTrue(jsonDouble.toJson().startsWith("3.1415926535897"));
         assertTrue(jsonDouble.toString().startsWith("3.1415926535897"));
         assertEquals(JsonDouble.of(Math.PI), jsonDouble);
+        assertNotEquals(JsonDouble.of(Math.PI + 0.00001), jsonDouble);
+        assertNotEquals(JsonLong.of(3L), jsonDouble);
+        assertNotEquals(JsonLong.of(4L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(Math.PI), jsonDouble.toMsgpack());
 
@@ -442,6 +473,9 @@ public class TestJsonDouble {
         assertEquals("19245.0", jsonDouble.toJson());
         assertEquals("19245.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(19245.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(19245.000001), jsonDouble);
+        assertEquals(JsonLong.of(19245L), jsonDouble);
+        assertNotEquals(JsonLong.of(19246L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(19245.0), jsonDouble.toMsgpack());
 
@@ -490,6 +524,8 @@ public class TestJsonDouble {
         assertEquals("19245.12", jsonDouble.toJson());
         assertEquals("19245.12", jsonDouble.toString());
         assertEquals(JsonDouble.of(19245.12), jsonDouble);
+        assertNotEquals(JsonDouble.of(19245.0), jsonDouble);
+        assertNotEquals(JsonLong.of(19245L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(19245.12), jsonDouble.toMsgpack());
 
@@ -538,6 +574,9 @@ public class TestJsonDouble {
         assertEquals("9351902.0", jsonDouble.toJson());
         assertEquals("9351902.0", jsonDouble.toString());
         assertEquals(JsonDouble.of(9351902.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(9351902.001), jsonDouble);
+        assertEquals(JsonLong.of(9351902L), jsonDouble);
+        assertNotEquals(JsonLong.of(9351903L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(9351902.0), jsonDouble.toMsgpack());
 
@@ -586,6 +625,8 @@ public class TestJsonDouble {
         assertEquals("9351902.523", jsonDouble.toJson());
         assertEquals("9351902.523", jsonDouble.toString());
         assertEquals(JsonDouble.of(9351902.523), jsonDouble);
+        assertNotEquals(JsonDouble.of(9351902.0), jsonDouble);
+        assertNotEquals(JsonLong.of(9351902L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(9351902.523), jsonDouble.toMsgpack());
 
@@ -635,6 +676,9 @@ public class TestJsonDouble {
         assertEquals("3.123456789E10", jsonDouble.toJson());
         assertEquals("3.123456789E10", jsonDouble.toString());
         assertEquals(JsonDouble.of(31234567890.0), jsonDouble);
+        assertNotEquals(JsonDouble.of(31234567890.1), jsonDouble);
+        assertEquals(JsonLong.of(31234567890L), jsonDouble);
+        assertNotEquals(JsonLong.of(31234567891L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(31234567890.0), jsonDouble.toMsgpack());
 
@@ -679,9 +723,12 @@ public class TestJsonDouble {
         assertEquals((float) 31234567890.12, jsonDouble.floatValue(), 0.001);
         assertEquals(31234567890.12, jsonDouble.doubleValue(), 0.001);
         assertEquals(BigDecimal.valueOf(31234567890.12), jsonDouble.bigDecimalValue());
+
         assertEquals("3.123456789012E10", jsonDouble.toJson());
         assertEquals("3.123456789012E10", jsonDouble.toString());
         assertEquals(JsonDouble.of(31234567890.12), jsonDouble);
+        assertNotEquals(JsonDouble.of(31234567890.0), jsonDouble);
+        assertNotEquals(JsonLong.of(31234567890L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(31234567890.12), jsonDouble.toMsgpack());
 
@@ -731,6 +778,7 @@ public class TestJsonDouble {
         assertEquals("9.223372036854776E21", jsonDouble.toJson());
         assertEquals("9.223372036854776E21", jsonDouble.toString());
         assertEquals(JsonDouble.of(9.223372036854776E21), jsonDouble);
+        assertNotEquals(JsonDouble.of(9.223372036854777E21), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(9_223_372_036_854_775_807_000.0), jsonDouble.toMsgpack());
 
@@ -780,6 +828,7 @@ public class TestJsonDouble {
         assertEquals("9.223372036854776E21", jsonDouble.toJson());
         assertEquals("9.223372036854776E21", jsonDouble.toString());
         assertEquals(JsonDouble.of(9.223372036854776E21), jsonDouble);
+        assertNotEquals(JsonDouble.of(9.223372036854777E21), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(9_223_372_036_854_775_807_000.12), jsonDouble.toMsgpack());
 
@@ -831,6 +880,8 @@ public class TestJsonDouble {
         assertEquals("4.9E-324", jsonDouble.toJson());
         assertEquals("4.9E-324", jsonDouble.toString());
         assertEquals(JsonDouble.of(Double.MIN_VALUE), jsonDouble);
+        assertNotEquals(JsonDouble.of(Double.MIN_VALUE * 2), jsonDouble);
+        assertNotEquals(JsonLong.of(0L), jsonDouble);
 
         assertEquals(ValueFactory.newFloat(Double.MIN_VALUE), jsonDouble.toMsgpack());
 

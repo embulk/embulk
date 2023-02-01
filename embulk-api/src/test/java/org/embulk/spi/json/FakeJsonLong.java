@@ -142,20 +142,24 @@ public final class FakeJsonLong implements JsonValue {
             return true;
         }
 
+        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
+        if (otherObject instanceof FakeJsonLong) {
+            final FakeJsonLong other = (FakeJsonLong) otherObject;
+            return this.value.equals(other.value);
+        }
+
         // Fake!
         if (otherObject instanceof JsonLong) {
             final JsonLong other = (JsonLong) otherObject;
             return this.longValue() == other.longValue();
         }
 
-        // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof FakeJsonLong)) {
-            return false;
+        if (otherObject instanceof JsonDouble) {
+            final JsonDouble other = (JsonDouble) otherObject;
+            return other.isLongValue() && this.value.toLong() == other.longValue();
         }
 
-        final FakeJsonLong other = (FakeJsonLong) otherObject;
-
-        return this.value.equals(other.value);
+        return false;
     }
 
     @Override

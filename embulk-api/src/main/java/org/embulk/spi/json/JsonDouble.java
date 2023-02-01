@@ -474,13 +474,17 @@ rrowing Primitive Conversion</a>
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof JsonDouble)) {
-            return false;
+        if (otherObject instanceof JsonDouble) {
+            final JsonDouble other = (JsonDouble) otherObject;
+            return this.value.equals(other.value);
         }
 
-        final JsonDouble other = (JsonDouble) otherObject;
+        if (otherObject instanceof JsonLong) {
+            final JsonLong other = (JsonLong) otherObject;
+            return this.isLongValue() && this.value.toLong() == other.longValue();
+        }
 
-        return this.value.equals(other.value);
+        return false;
     }
 
     /**

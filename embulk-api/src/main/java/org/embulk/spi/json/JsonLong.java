@@ -448,13 +448,17 @@ public final class JsonLong implements JsonNumber {
         }
 
         // Check by `instanceof` in case against unexpected arbitrary extension of JsonValue.
-        if (!(otherObject instanceof JsonLong)) {
-            return false;
+        if (otherObject instanceof JsonLong) {
+            final JsonLong other = (JsonLong) otherObject;
+            return this.value.equals(other.value);
         }
 
-        final JsonLong other = (JsonLong) otherObject;
+        if (otherObject instanceof JsonDouble) {
+            final JsonDouble other = (JsonDouble) otherObject;
+            return other.isLongValue() && this.value.toLong() == other.longValue();
+        }
 
-        return this.value.equals(other.value);
+        return false;
     }
 
     /**
