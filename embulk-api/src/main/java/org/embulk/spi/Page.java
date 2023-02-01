@@ -97,6 +97,7 @@ public abstract class Page {
     /**
      * Returns a string from the string references in this {@link Page} at {@code index}.
      *
+     * @param index  the index of the string reference to return
      * @return the string from the string references in this {@link Page} at {@code index}
      *
      * @since 0.4.0
@@ -108,6 +109,7 @@ public abstract class Page {
      *
      * <p>The JSON value is converted to the {@code msgpack-java} representatino from {@link org.embulk.spi.json.JsonValue} in this {@link Page}.
      *
+     * @param index  the index of the JSON value reference to return
      * @return the JSON value from the JSON value references in this {@link Page} at {@code index} in the {@code msgpack-java} representation
      * @deprecated Use {@link #getJsonValueReference(int)} instead.
      *
@@ -119,6 +121,7 @@ public abstract class Page {
     /**
      * Returns a JSON value from the JSON value references in this {@link Page} at {@code index}.
      *
+     * @param index  the index of the JSON value reference to return
      * @return the JSON value from the JSON value references in this {@link Page} at {@code index}
      *
      * @since 0.10.42
