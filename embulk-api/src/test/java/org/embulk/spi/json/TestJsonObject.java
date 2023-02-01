@@ -485,7 +485,7 @@ public class TestJsonObject {
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonString());
         assertThrows(ClassCastException.class, () -> jsonObject.asJsonArray());
         assertEquals(jsonObject, jsonObject.asJsonObject());
-        assertEquals(155, jsonObject.presumeReferenceSizeInBytes());
+        assertEquals(175, jsonObject.presumeReferenceSizeInBytes());
         assertEquals(8, jsonObject.size());
         assertEquals(8, jsonObject.entrySet().size());
         assertEquals(16, jsonObject.getKeyValueArray().length);

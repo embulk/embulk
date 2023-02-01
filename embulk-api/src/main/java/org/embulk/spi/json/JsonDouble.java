@@ -125,7 +125,10 @@ public final class JsonDouble implements JsonNumber {
      */
     @Override
     public int presumeReferenceSizeInBytes() {
-        return 8;
+        if (this.literal == null) {
+            return 8;
+        }
+        return this.literal.length() * 2 + 8;
     }
 
     /**

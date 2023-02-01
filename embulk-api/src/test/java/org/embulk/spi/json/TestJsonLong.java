@@ -253,7 +253,7 @@ public class TestJsonLong {
         assertThrows(ClassCastException.class, () -> integer.asJsonString());
         assertThrows(ClassCastException.class, () -> integer.asJsonArray());
         assertThrows(ClassCastException.class, () -> integer.asJsonObject());
-        assertEquals(8, integer.presumeReferenceSizeInBytes());
+        assertEquals(80, integer.presumeReferenceSizeInBytes());
         assertTrue(integer.isIntegral());
         assertFalse(integer.isByteValue());
         assertFalse(integer.isShortValue());
