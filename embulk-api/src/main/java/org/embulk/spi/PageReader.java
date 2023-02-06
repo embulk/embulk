@@ -195,6 +195,20 @@ public class PageReader implements AutoCloseable {
     }
 
     /**
+     * @since 0.10.38
+     */
+    public LineageMetadata getPageLineage() {
+        return this.delegate.getPageLineage();
+    }
+
+    /**
+     * @since 0.10.38
+     */
+    public LineageMetadata getRecordLineage() {
+        return this.delegate.getRecordLineage();
+    }
+
+    /**
      * @since 0.4.0
      */
     public boolean nextRecord() {

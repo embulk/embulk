@@ -170,6 +170,26 @@ public class PageReaderImpl extends PageReader {
         return position + columnOffsets[columnIndex];
     }
 
+    /**
+     * Returns the lineage metadata at the current record.
+     *
+     * @since 0.10.38
+     */
+    // @Override
+    public LineageMetadata getPageLineage() {
+        return LineageMetadata.EMPTY;
+    }
+
+    /**
+     * Returns the lineage metadata at the current record.
+     *
+     * @since 0.10.38
+     */
+    // @Override
+    public LineageMetadata getRecordLineage() {
+        return LineageMetadata.EMPTY;
+    }
+
     @Override
     public boolean nextRecord() {
         if (pageRecordCount <= readCount) {

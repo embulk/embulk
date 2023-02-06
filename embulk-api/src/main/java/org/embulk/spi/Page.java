@@ -74,6 +74,20 @@ public abstract class Page {
     public abstract ImmutableValue getValueReference(int index);
 
     /**
+     * @since 0.10.38
+     */
+    public LineageMetadata getPageLineage() {
+        return LineageMetadata.EMPTY;
+    }
+
+    /**
+     * @since 0.10.38
+     */
+    public LineageMetadata getRecordLineage(int recordIndex) {
+        return LineageMetadata.EMPTY;
+    }
+
+    /**
      * @since 0.4.0
      */
     public abstract void release();
