@@ -128,6 +128,12 @@ final class JRubyInitializer {
             }
 
             if (this.isEmbulkSpecific) {
+                try {
+                    jruby.runScriptlet("require 'msgpack'");
+                } catch (final RuntimeException ex) {
+                    this.logger.error("Failed to load the mandatory 'msgpack' gem in JRuby.", ex);
+                }
+
                 // Loading 'embulk/version' triggers a version check with embulk.gem v0.10.25 or later.
                 // (Even in Embulk v0.10.24 or earlier, 'embulk/version' is loaded soon below from 'embulk/logger'.)
                 jruby.runScriptlet("require 'embulk/version'");
@@ -141,9 +147,9 @@ final class JRubyInitializer {
                         jruby.runScriptlet("require 'sigdump/setup'");
                     } catch (final RuntimeException ex) {
                         if ("org.jruby.embed.EvalFailedException".equals(ex.getClass().getCanonicalName())) {
-                            this.logger.warn("Failed to load 'sigdump' gem into JRuby. " + ex.getMessage());
+                            this.logger.warn("Failed to load the 'sigdump' gem in JRuby. " + ex.getMessage());
                         } else {
-                            this.logger.error("Failed unexpectedly to load 'sigdump' gem into JRuby.", ex);
+                            this.logger.error("Failed to load the 'sigdump' gem in JRuby, unexpectedly.", ex);
                         }
                     }
                 }
