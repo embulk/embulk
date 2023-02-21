@@ -3,6 +3,7 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class StringColumnSetter extends AbstractDynamicColumnSetter {
@@ -54,8 +55,14 @@ public class StringColumnSetter extends AbstractDynamicColumnSetter {
         pageBuilder.setString(column, timestampFormatter.format(org.embulk.spi.time.Timestamp.ofInstant(v)));
     }
 
+    @Deprecated
     @Override
     public void set(Value v) {
+        pageBuilder.setString(column, v.toJson());
+    }
+
+    @Override
+    public void set(final JsonValue v) {
         pageBuilder.setString(column, v.toJson());
     }
 }

@@ -19,6 +19,7 @@ package org.embulk.spi;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 /**
@@ -127,16 +128,56 @@ public class PageBuilder implements AutoCloseable {
     }
 
     /**
+     * Sets a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param column  the column to set the JSON value
+     * @param value  the JSON value in the {@code msgpack-java} representation
+     * @deprecated Use {@link #setJson(org.embulk.spi.Column, org.embulk.spi.json.JsonValue)} instead.
+     *
      * @since 0.8.0
      */
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public void setJson(Column column, Value value) {
         this.delegate.setJson(column, value);
     }
 
     /**
+     * Sets a JSON value at the specified column.
+     *
+     * @param column  the column to set the JSON value
+     * @param value  the JSON value
+     *
+     * @since 0.10.42
+     */
+    public void setJson(final Column column, final JsonValue value) {
+        this.delegate.setJson(column, value);
+    }
+
+    /**
+     * Sets a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param columnIndex  the index of the column to set the JSON value
+     * @param value  the JSON value in the {@code msgpack-java} representation
+     * @deprecated Use {@link #setJson(int, org.embulk.spi.json.JsonValue)} instead.
+     *
      * @since 0.8.0
      */
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public void setJson(int columnIndex, Value value) {
+        this.delegate.setJson(columnIndex, value);
+    }
+
+    /**
+     * Sets a JSON value at the specified column.
+     *
+     * @param columnIndex  the index of the column to set the JSON value
+     * @param value  the JSON value
+     *
+     * @since 0.10.42
+     */
+    public void setJson(final int columnIndex, final JsonValue value) {
         this.delegate.setJson(columnIndex, value);
     }
 

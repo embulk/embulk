@@ -24,27 +24,31 @@ public class Pages {
     }
 
     // TODO use streaming and return Iterable
-    public static List<Object[]> toObjects(final Schema schema, final Iterable<Page> pages, final boolean useInstant) {
+    public static List<Object[]> toObjects(final Schema schema, final Iterable<Page> pages, final boolean useInstant, final boolean useJsonValue) {
         final ArrayList<Object[]> builder = new ArrayList<>();
         Iterator<Page> ite = pages.iterator();
         try (PageReader reader = new PageReader(schema)) {
             while (ite.hasNext()) {
                 reader.setPage(ite.next());
                 while (reader.nextRecord()) {
-                    builder.add(toObjects(reader, useInstant));
+                    builder.add(toObjects(reader, useInstant, useJsonValue));
                 }
             }
         }
         return Collections.unmodifiableList(builder);
     }
 
-    public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages) {
-        return toObjects(schema, pages, false);
+    public static List<Object[]> toObjects(final Schema schema, final Iterable<Page> pages, final boolean useInstant) {
+        return toObjects(schema, pages, useInstant, false);
     }
 
-    public static Object[] toObjects(final PageReader record, final boolean useInstant) {
+    public static List<Object[]> toObjects(Schema schema, Iterable<Page> pages) {
+        return toObjects(schema, pages, false, false);
+    }
+
+    public static Object[] toObjects(final PageReader record, final boolean useInstant, final boolean useJsonValue) {
         final Object[] values = new Object[record.getSchema().getColumns().size()];
-        record.getSchema().visitColumns(new ObjectColumnVisitor(record, useInstant) {
+        record.getSchema().visitColumns(new ObjectColumnVisitor(record, useInstant, useJsonValue) {
                 @Override
                 public void visit(Column column, Object object) {
                     values[column.getIndex()] = object;
@@ -53,8 +57,12 @@ public class Pages {
         return values;
     }
 
+    public static Object[] toObjects(final PageReader record, final boolean useInstant) {
+        return toObjects(record, useInstant, false);
+    }
+
     public static Object[] toObjects(final PageReader record) {
-        return toObjects(record, false);
+        return toObjects(record, false, false);
     }
 
     /**
@@ -66,14 +74,20 @@ public class Pages {
     public abstract static class ObjectColumnVisitor implements ColumnVisitor {
         private final PageReader record;
         private final boolean useInstant;
+        private final boolean useJsonValue;
 
-        public ObjectColumnVisitor(final PageReader record, final boolean useInstant) {
+        public ObjectColumnVisitor(final PageReader record, final boolean useInstant, final boolean useJsonValue) {
             this.record = record;
             this.useInstant = useInstant;
+            this.useJsonValue = useJsonValue;
+        }
+
+        public ObjectColumnVisitor(final PageReader record, final boolean useInstant) {
+            this(record, useInstant, false);
         }
 
         public ObjectColumnVisitor(PageReader record) {
-            this(record, false);
+            this(record, false, false);
         }
 
         public abstract void visit(Column column, Object obj);
@@ -133,7 +147,11 @@ public class Pages {
             if (record.isNull(column)) {
                 visit(column, null);
             } else {
-                visit(column, record.getJson(column));
+                if (this.useJsonValue) {
+                    visit(column, record.getJsonValue(column));
+                } else {
+                    visit(column, record.getJson(column));
+                }
             }
         }
     }

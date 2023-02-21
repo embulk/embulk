@@ -1,6 +1,7 @@
 package org.embulk.spi.util;
 
 import java.time.Instant;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public interface DynamicColumnSetter {
@@ -23,5 +24,11 @@ public interface DynamicColumnSetter {
         this.set(org.embulk.spi.time.Timestamp.ofInstant(value));
     }
 
+    @Deprecated
     void set(Value value);
+
+    @SuppressWarnings("deprecation")
+    default void set(final JsonValue value) {
+        this.set(value.toMsgpack());
+    }
 }

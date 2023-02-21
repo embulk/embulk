@@ -2,6 +2,7 @@ package org.embulk.spi;
 
 import java.time.Instant;
 import org.embulk.deps.buffer.Slice;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class PageReaderImpl extends PageReader {
@@ -151,19 +152,59 @@ public class PageReaderImpl extends PageReader {
         return Instant.ofEpochSecond(sec, nsec);
     }
 
+    /**
+     * Returns a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param column  the column to get the JSON value
+     * @return the JSON value
+     * @deprecated Use {@link #getJsonValue(Column)} instead.
+     */
+    @Deprecated
     @Override
+    @SuppressWarnings("deprecation")
     public Value getJson(Column column) {
-        // TODO check type?
         return getJson(column.getIndex());
     }
 
+    /**
+     * Returns a JSON value at the specified column in the {@code msgpack-java} representation.
+     *
+     * @param columnIndex  the index the column to get the JSON value
+     * @return the JSON value
+     * @deprecated Use {@link #getJsonValue(int)} instead.
+     */
+    @Deprecated
     @Override
+    @SuppressWarnings("deprecation")
     public Value getJson(int columnIndex) {
-        if (isNull(columnIndex)) {
+        return this.getJsonValue(columnIndex).toMsgpack();
+    }
+
+    /**
+     * Returns a JSON value at the specified column.
+     *
+     * @param column  the column to get the JSON value
+     * @return the JSON value
+     */
+    @Override
+    public JsonValue getJsonValue(final Column column) {
+        // TODO check type?
+        return this.getJsonValue(column.getIndex());
+    }
+
+    /**
+     * Returns a JSON value at the specified column.
+     *
+     * @param columnIndex  the index the column to get the JSON value
+     * @return the JSON value
+     */
+    @Override
+    public JsonValue getJsonValue(final int columnIndex) {
+        if (this.isNull(columnIndex)) {
             return null;
         }
         int index = pageSlice.getInt(getOffset(columnIndex));
-        return page.getValueReference(index);
+        return this.page.getJsonValueReference(index);
     }
 
     private int getOffset(int columnIndex) {

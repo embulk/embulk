@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class BooleanColumnSetter extends AbstractDynamicColumnSetter {
@@ -65,8 +66,14 @@ public class BooleanColumnSetter extends AbstractDynamicColumnSetter {
         defaultValue.setBoolean(pageBuilder, column);
     }
 
+    @Deprecated
     @Override
     public void set(Value v) {
+        defaultValue.setBoolean(pageBuilder, column);
+    }
+
+    @Override
+    public void set(final JsonValue v) {
         defaultValue.setBoolean(pageBuilder, column);
     }
 }

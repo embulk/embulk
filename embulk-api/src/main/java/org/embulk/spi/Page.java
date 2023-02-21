@@ -19,6 +19,7 @@ package org.embulk.spi;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.ImmutableValue;
 
 /**
@@ -44,34 +45,88 @@ import org.msgpack.value.ImmutableValue;
  */
 public abstract class Page {
     /**
+     * Sets the list of string references in this {@link Page}.
+     *
+     * @param values  the list of string references to set
+     * @return this {@link Page} itself
+     * @deprecated Do not call this method directly from plugins.
+     *
      * @since 0.4.0
      */
+    @Deprecated
     public abstract Page setStringReferences(List<String> values);
 
     /**
+     * Sets the list of JSON value references in this {@link Page} in the {@code msgpack-java} representation.
+     *
+     * <p>The JSON values are converted to {@link org.embulk.spi.json.JsonValue} from the {@code msgpack-java} representation.
+     *
+     * @param values  the list of JSON value references to set in the {@code msgpack-java} representation
+     * @return this {@link Page} itself
+     * @deprecated Do not call this method directly from plugins.
+     *
      * @since 0.8.0
      */
+    @Deprecated
     public abstract Page setValueReferences(List<ImmutableValue> values);
 
     /**
+     * Returns the list of string references in this {@link Page}.
+     *
+     * @return the list of string references in this {@link Page}
+     * @deprecated Do not call this method directly from plugins.
+     *
      * @since 0.6.0
      */
+    @Deprecated
     public abstract List<String> getStringReferences();
 
     /**
+     * Returns the list of JSON value references in this {@link Page} in the {@code msgpack-java} representation.
+     *
+     * <p>The JSON values are converted to the {@code msgpack-java} representation from {@link org.embulk.spi.json.JsonValue} in this {@link Page}.
+     *
+     * @return the list of JSON value references in this {@link Page} in the {@code msgpack-java} representation
+     * @deprecated Do not call this method directly from plugins.
+     *
      * @since 0.8.0
      */
+    @Deprecated
     public abstract List<ImmutableValue> getValueReferences();
 
     /**
+     * Returns a string from the string references in this {@link Page} at {@code index}.
+     *
+     * @param index  the index of the string reference to return
+     * @return the string from the string references in this {@link Page} at {@code index}
+     *
      * @since 0.4.0
      */
     public abstract String getStringReference(int index);
 
     /**
+     * Returns a JSON value from the JSON value references in this {@link Page} at {@code index} in the {@code msgpack-java} representation.
+     *
+     * <p>The JSON value is converted to the {@code msgpack-java} representatino from {@link org.embulk.spi.json.JsonValue} in this {@link Page}.
+     *
+     * @param index  the index of the JSON value reference to return
+     * @return the JSON value from the JSON value references in this {@link Page} at {@code index} in the {@code msgpack-java} representation
+     * @deprecated Use {@link #getJsonValueReference(int)} instead.
+     *
      * @since 0.8.0
      */
+    @Deprecated
     public abstract ImmutableValue getValueReference(int index);
+
+    /**
+     * Returns a JSON value from the JSON value references in this {@link Page} at {@code index}.
+     *
+     * @param index  the index of the JSON value reference to return
+     * @return the JSON value from the JSON value references in this {@link Page} at {@code index}
+     *
+     * @since 0.10.42
+     */
+    public abstract JsonValue getJsonValueReference(int index);
 
     /**
      * @since 0.4.0

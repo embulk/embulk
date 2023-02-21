@@ -3,6 +3,7 @@ package org.embulk.spi.util.dynamic;
 import java.time.Instant;
 import org.embulk.spi.Column;
 import org.embulk.spi.PageBuilder;
+import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
 public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
@@ -63,8 +64,14 @@ public class TimestampColumnSetter extends AbstractDynamicColumnSetter {
         pageBuilder.setTimestamp(column, v);
     }
 
+    @Deprecated
     @Override
     public void set(Value v) {
+        defaultValue.setTimestamp(pageBuilder, column);
+    }
+
+    @Override
+    public void set(final JsonValue v) {
         defaultValue.setTimestamp(pageBuilder, column);
     }
 }
