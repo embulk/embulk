@@ -15,5 +15,5 @@ dependencies {
 
     api project(":embulk-api")
     api project(":embulk-core")
-    compileOnly "org.slf4j:slf4j-api:1.7.12"
+    compileOnly "org.slf4j:slf4j-api:2.0.6"
 }

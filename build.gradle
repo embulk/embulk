@@ -221,7 +221,13 @@ dependencies {
     implementation project(':embulk-core')
 
     // Logback and jansi are included only in the executable package. (jansi for logback colors to work on Windows.)
-    implementation "ch.qos.logback:logback-classic:1.2.3"
+
+    // Logback 1.4.x seems to be the latest as of Feb, 2023. But actually, their version strategy is:
+    // * Logback 1.3.x for Java 8 and Java EE (javax.*)
+    // * Logback 1.4.x for Java 11 and Jakarta EE (jakarta.*)
+    // https://logback.qos.ch/dependencies.html
+    implementation "ch.qos.logback:logback-classic:1.3.5"
+
     implementation "org.fusesource.jansi:jansi:1.18"
 
     embed project(":embulk-deps")
