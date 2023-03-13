@@ -10,7 +10,6 @@ configurations {
 }
 
 dependencies {
-    compileOnly project(":embulk-api")
     compileOnly project(":embulk-spi")
     compileOnly project(":embulk-core")
 
@@ -63,7 +62,6 @@ dependencies {
     // Timestamp
     api "org.embulk:embulk-util-timestamp:0.2.1"
 
-    testImplementation project(":embulk-api")
     testImplementation project(":embulk-spi")
     testImplementation project(":embulk-core")
     testImplementation project(":embulk-junit4")

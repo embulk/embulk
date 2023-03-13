@@ -28,7 +28,7 @@ import org.slf4j.Logger;
  *
  * <p>Some methods, {@code getInjector}, {@code getModelManager}, and {@code newPlugin} have been removed since {@code v0.10.18}.
  *
- * <p>Accessing {@link ExecSession} from plugins is however discouraged though {@link ExecSession} is in {@code embulk-api},
+ * <p>Accessing {@link ExecSession} from plugins is however discouraged though {@link ExecSession} is in {@code embulk-spi},
  * so accessible from plugins.
  */
 public abstract class ExecSession {

@@ -146,7 +146,7 @@ public class Timestamp implements Comparable<Timestamp> {
         // This is the same implementation with org.embulk.spi.time.Instants#toString(Instant),
         // but this org.embulk.spi.time.Timestamp has to have its own implementation because
         //
-        // 1) org.embulk.spi.time.Timestamp is moved to embulk-api, which does not depend on others.
+        // 1) org.embulk.spi.time.Timestamp is moved to embulk-spi, which does not depend on others.
         // 2) org.embulk.spi.time.Timestamp is deprecated, and to be removed in the (remote) future.
         //    So, embulk-core should not call Timestamp#toString.
         //
@@ -189,7 +189,7 @@ public class Timestamp implements Comparable<Timestamp> {
         // This is the same implementation with org.embulk.spi.time.Instants#parseInstant(String),
         // but this org.embulk.spi.time.Timestamp has to have its own implementation because
         //
-        // 1) org.embulk.spi.time.Timestamp is moved to embulk-api, which does not depend on others.
+        // 1) org.embulk.spi.time.Timestamp is moved to embulk-spi, which does not depend on others.
         // 2) org.embulk.spi.time.Timestamp is deprecated, and to be removed in the (remote) future.
         //    So, embulk-core should not call Timestamp#ofString.
         //
