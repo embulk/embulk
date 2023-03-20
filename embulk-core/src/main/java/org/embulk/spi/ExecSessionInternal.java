@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * Provides access inside Embulk through a transactional session.
  *
  * <p>It is internal implementation of {@link ExecSession} although some methods, such as {@code newPlugin}, are to be
- * removed from {@link ExecSession} soon during Embulk v0.10 when {@link ExecSession} moves to {@code embulk-api} from
+ * removed from {@link ExecSession} soon during Embulk v0.10 when {@link ExecSession} moves to {@code embulk-spi} from
  * {@code embulk-core}. Even after the removal, they stay in this {@link ExecSessionInternal} to be called through
  * {@link ExecInternal}.
  */

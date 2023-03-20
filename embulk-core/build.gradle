@@ -14,7 +14,6 @@ dependencies {
     // Embulk plugins have expected that embulk-core's dependencies are declared as "compile" in pom.xml.
     // Although those dependencies would be finally removed from embulk-core's direct dependencies,
     // those "compile" declaration would be kept so that plugin developers won't be confused unnecessarily.
-    api project(":embulk-api")
     api project(":embulk-spi")
 
     testImplementation "junit:junit:4.13.2"

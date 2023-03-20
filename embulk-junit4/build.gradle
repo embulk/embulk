@@ -13,7 +13,7 @@ dependencies {
     api "junit:junit:4.13.2"
     api "org.hamcrest:hamcrest-library:1.3"
 
-    api project(":embulk-api")
+    api project(":embulk-spi")
     api project(":embulk-core")
     compileOnly "org.slf4j:slf4j-api:2.0.6"
 }
