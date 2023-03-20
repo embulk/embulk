@@ -1,0 +1,39 @@
+name: Sync master to main
+on:
+  push:
+    branches:
+      - "master"
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    outputs:
+      hash-master: ${{ steps.hash-master.outputs.hash-master }}
+      hash-main: ${{ steps.hash-main.outputs.hash-main }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: hash-master
+      name: Hash the master branch
+      run: |
+        hash_master=$( git rev-parse origin/master )
+        echo "$hash_master"
+        echo "hash-master=$hash_master" >> $GITHUB_OUTPUT
+    - id: hash-main
+      name: Hash the main branch
+      run: |
+        hash_main=$( git rev-parse origin/main )
+        echo "$hash_main"
+        echo "hash-main=$hash_main" >> $GITHUB_OUTPUT
+  sync:
+    needs: diff
+    if: needs.diff.outputs.hash-master != needs.diff.outputs.hash-main
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Checkout master
+      run: git checkout master
+    - name: Sync master to main
+      run: git push origin master:main
