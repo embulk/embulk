@@ -1,4 +1,10 @@
-apply plugin: "java"
+plugins {
+    id "java"
+    id "java-library"
+    id "maven-publish"
+    id "signing"
+    id "checkstyle"
+}
 
 String buildRubyStyleVersionFromJavaStyleVersion(String javaStyleVersion) {
     if (javaStyleVersion.contains("-")) {
