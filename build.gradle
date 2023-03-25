@@ -3,7 +3,6 @@ plugins {
     id "java-library"
     id "maven-publish"
     id "jacoco"
-    id "org.ajoberstar.grgit" version "4.0.1"
     id "org.embulk.embulk-plugins" version "0.4.2" apply false
 }
 
@@ -329,18 +328,6 @@ task releaseCheck {
     doFirst {
         if (rootProject.version.endsWith("-SNAPSHOT")) {
             throw new GradleException("Not for release. The version in build.gradle is SNAPSHOT: ${rootProject.version}")
-        }
-        def grgit = org.ajoberstar.grgit.Grgit.open(dir: "${rootProject.projectDir}")
-        if (!grgit.status().clean) {
-            throw new GradleException("Not for release. The working tree is dirty.")
-        }
-        def described = grgit.describe(commit: "HEAD").toString().trim()
-        if (described != "v${rootProject.version}") {
-            throw new GradleException("Not for release. git-describe returned a name different from the version in build.gradle: ${described} v.s. v${rootProject.version}")
-        }
-        if (described.contains("-")) {
-            // HEAD may not be tagged with annotation properly.
-            throw new GradleException("Not for release. git-describe returned a name with a hyphen: ${described}")
         }
         // TODO: Revisit if we would check the format of tag annotation.
     }
