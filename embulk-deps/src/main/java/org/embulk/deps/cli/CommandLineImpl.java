@@ -15,7 +15,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.embulk.EmbulkVersion;
 import org.embulk.cli.Command;
-import org.jline.terminal.TerminalBuilder;
 import org.slf4j.Logger;
 
 final class CommandLineImpl extends org.embulk.cli.CommandLine {
@@ -278,7 +277,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
         final HelpFormatter formatter = new HelpFormatterWithPlaceholders("Usage: ", 22);
         formatter.printHelp(
                 writer,
-                TerminalHolder.WIDTH,
+                TERMINAL_WIDTH,
                 usage,
                 header,
                 options,
@@ -381,25 +380,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
         }
     }
 
-    private static class TerminalHolder {  // Initialization-on-demand holder idiom.
-        private static final int WIDTH = getTerminalWidth(78);
-
-        private static int getTerminalWidth(final int defaultWidth) {
-            java.util.logging.Logger.getLogger("org.jline").setLevel(java.util.logging.Level.OFF);
-
-            final int retrievedWidth;
-            try {
-                retrievedWidth = TerminalBuilder.builder().system(true).build().getWidth();
-            } catch (final Throwable ex) {
-                return defaultWidth;
-            }
-
-            if (retrievedWidth <= 40) {
-                return defaultWidth;
-            }
-            return retrievedWidth;
-        }
-    }
+    private static final int TERMINAL_WIDTH = 78;
 
     private static final String COMMANDS_HELP =
             "\nCommands:\n"
