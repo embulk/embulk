@@ -13,7 +13,7 @@ public class CharsetDetector {
     public static CharsetDetector create() {
         logger.warn(
                 "Class org.embulk.deps.guess.CharsetDetector is no longer available. "
-                + "It always returns \"UTF-8\" unconditionally.Use an appropriate guess plugin explicitly.");
+                + "It always returns \"UTF-8\" unconditionally. Use an appropriate guess plugin explicitly.");
         return new CharsetDetector();
     }
 
