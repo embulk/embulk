@@ -42,7 +42,6 @@ dependencies {
 
     // CLI
     api "commons-cli:commons-cli:1.4"
-    api "org.jline:jline-terminal:3.16.0"
 
     // Config
     api "org.yaml:snakeyaml:1.18"
