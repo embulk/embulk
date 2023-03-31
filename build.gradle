@@ -42,14 +42,18 @@ configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 
+    // depsEmbedded is internal dependencies for the Embulk core (embulk-deps).
     depsEmbedded {
         resolutionStrategy.activateDependencyLocking()
     }
 
+    // pluginEmbedded is the "standard" plugins embedded in the executable Embulk binary distribution.
     pluginEmbedded {
         resolutionStrategy.activateDependencyLocking()
     }
 
+    // embedded is depsEmbedded + pluginEmbedded.
+    // JAR files of them are contained in the executable Embulk binary distribution as-is like "/lib/(something).jar".
     embedded {
         extendsFrom(depsEmbedded, pluginEmbedded)
     }
