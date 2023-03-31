@@ -1,0 +1,637 @@
+Embulk
+Copyright 2014-2023 Sadayuki Furuhashi, and the Embulk project.
+
+This product includes software developed by
+Sadayuki Furuhashi, and the Embulk project (https://www.embulk.org/).
+
+
+
+The executable distribution of this product includes
+the API for SLF4J (The Simple Logging Facade for Java), developed by
+QOS.ch Sarl (Switzerland), licensed under
+the MIT License (http://www.opensource.org/licenses/mit-license.php).
+
+* Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
+
+
+
+The executable distribution of this product includes
+Logback, developed by QOS.ch, dual-licensed under
+the Eclipse Public License v1.0, or the GNU Lesser General Public License version 2.1.
+
+* Copyright (C) 1999-2015, QOS.ch. All rights reserved.
+
+Note that this product adopts the Eclipse Public License v1.0 for Logback.
+Refer to the license of Logback at META-INF/LICENSE-logback.
+
+
+
+The executable distribution of this product includes
+MessagePack for Java, licensed under
+the Apache License, Version 2.0.
+
+* The NOTICE file of MessagePack for Java is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Jackson JSON processor, developed by
+Tatu Saloranta, tatu.saloranta@iki.fi, licensed under
+the Apache License, Version 2.0.
+
+* Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+* The NOTICE file of Jackson JSON processor is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Slice, developed by the Airlift project, licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+Netty/Common and Netty/Buffer, developed by
+The Netty Project (http://netty.io/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2011 The Netty Project
+* The NOTICE.txt file of Netty is embedded in this NOTICE below.
+
+Note that Netty/Common contains modified portions of some other products.
+
+Netty/Common contains the extensions to Java Collections Framework which has
+been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene.
+Refer to the license at META-INF/LICENSE-jsr166, instead of license/LICENSE.jsr166y.txt.
+
+Netty/Common contains a modified portion of 'SLF4J', a simple logging facade for Java.
+Refer to the license of SLF4J at META-INF/LICENSE-slf4j, instead of license/LICENSE.slf4j.txt.
+
+Netty/Common contains a modified portion of Nitsan Wakart's 'JCTools',
+Java Concurrency Tools for the JVM.
+Refer to the license of JCTools at META-INF/LICENSE-jctools, instead of license/LICENSE.jctools.txt.
+
+
+
+The executable distribution of this product includes
+SnakeYAML, licensed under the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+Apache Commons BeanUtils, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2000-2010 The Apache Software Foundation
+* The NOTICE.txt file of Apache Commons BeanUtils is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Apache Commons CLI, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2001-2017 The Apache Software Foundation
+* The NOTICE.txt file of Apache Commons CLI is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Apache Commons Compress, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2002-2015 The Apache Software Foundation
+* The NOTICE.txt file of Apache Commons Compress is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+the JSR-330: Dependency Injection for Java, developed by
+The JSR-330 Expert Group (https://code.google.com/archive/p/atinject/), licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+the Bean Validation API 1.1, developed by
+the JSR-349 Expert Group (https://beanvalidation.org/1.1/), licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+Apache BVal, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2010-2012 The Apache Software Foundation.
+* The NOTICE files of Apache BVal :: bval-jsr303 and Apache BVal :: bval-core are embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Apache Commons Lang, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2001-2018 The Apache Software Foundation
+* The NOTICE.txt file of Apache Commons Lang is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Apache Maven, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2010-2019 The Apache Software Foundation
+* The NOTICE files of Apache Maven are embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Codehaus Plexus Utils, developed by
+The Apache Software Foundation (http://www.apache.org/), licensed under
+the Apache License, Version 2.0.
+
+* The NOTICE file of Codehaus Plexus-Utils is embedded in this NOTICE below.
+
+
+
+The executable distribution of this product includes
+Codehaus Plexus Interpolation, licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+Codehaus Plexus Component Annotations, licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
+Embulk Utilities for Guess, licensed under
+the Apache License, Version 2.0.
+
+* Copyright 2020-2023 The Embulk project
+* The NOTICE file of Embulk Utilities for Guess is embedded in this NOTICE below.
+
+
+
+NOTICE of MessagePack for Java
+-------------------------------
+
+This product includes the software developed by third-party:
+
+ * Google Guava https://code.google.com/p/guava-libraries/  (APL2)
+ * sbt-extras: https://github.com/paulp/sbt-extras  (BSD)  (LICENSE.sbt-extras.txt)
+
+
+
+NOTICE of Jackson JSON processor
+---------------------------------
+
+# Jackson JSON processor
+
+Jackson is a high-performance, Free/Open Source JSON processing library.
+It was originally written by Tatu Saloranta (tatu.saloranta@iki.fi), and has
+been in development since 2007.
+It is currently developed by a community of developers, as well as supported
+commercially by FasterXML.com.
+
+## Licensing
+
+Jackson core and extension components may be licensed under different licenses.
+To find the details that apply to this artifact see the accompanying LICENSE file.
+For more information, including possible other licensing options, contact
+FasterXML.com (http://fasterxml.com).
+
+## Credits
+
+A list of contributors may be found from CREDITS file, which is included
+in some artifacts (usually source distributions); but is always available
+from the source code management (SCM) system project uses.
+
+
+
+NOTICE.txt of Netty
+--------------------
+
+                            The Netty Project
+                            =================
+
+Please visit the Netty web site for more information:
+
+  * http://netty.io/
+
+Copyright 2011 The Netty Project
+
+The Netty Project licenses this file to you under the Apache License,
+version 2.0 (the "License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at:
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations
+under the License.
+
+Also, please refer to each LICENSE.<component>.txt file, which is located in
+the 'license' directory of the distribution file, for the license terms of the
+components that this product depends on.
+
+-------------------------------------------------------------------------------
+This product contains the extensions to Java Collections Framework which has
+been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene:
+
+  * LICENSE:
+    * license/LICENSE.jsr166y.txt (Public Domain)
+  * HOMEPAGE:
+    * http://gee.cs.oswego.edu/cgi-bin/viewcvs.cgi/jsr166/
+    * http://viewvc.jboss.org/cgi-bin/viewvc.cgi/jbosscache/experimental/jsr166/
+
+This product contains a modified version of Robert Harder's Public Domain
+Base64 Encoder and Decoder, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.base64.txt (Public Domain)
+  * HOMEPAGE:
+    * http://iharder.sourceforge.net/current/java/base64/
+
+This product contains a modified portion of 'Webbit', an event based
+WebSocket and HTTP server, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.webbit.txt (BSD License)
+  * HOMEPAGE:
+    * https://github.com/joewalnes/webbit
+
+This product contains a modified portion of 'SLF4J', a simple logging
+facade for Java, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.slf4j.txt (MIT License)
+  * HOMEPAGE:
+    * http://www.slf4j.org/
+
+
+This product contains a modified version of Roland Kuhn's ASL2
+AbstractNodeQueue, which is based on Dmitriy Vyukov's non-intrusive MPSC queue.
+It can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.abstractnodequeue.txt (Public Domain)
+  * HOMEPAGE:
+    * https://github.com/akka/akka/blob/wip-2.2.3-for-scala-2.11/akka-actor/src/main/java/akka/dispatch/AbstractNodeQueue.java
+
+This product contains a modified portion of Nitsan Wakart's 'JCTools', Java Concurrency Tools for the JVM,
+ which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.jctools.txt (ASL2 License)
+  * HOMEPAGE:
+    * https://github.com/JCTools/JCTools
+
+
+This product optionally depends on 'JZlib', a re-implementation of zlib in
+pure Java, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.jzlib.txt (BSD style License)
+  * HOMEPAGE:
+    * http://www.jcraft.com/jzlib/
+
+This product optionally depends on 'Protocol Buffers', Google's data
+interchange format, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.protobuf.txt (New BSD License)
+  * HOMEPAGE:
+    * http://code.google.com/p/protobuf/
+
+This product optionally depends on 'Bouncy Castle Crypto APIs' to generate
+a temporary self-signed X.509 certificate when the JVM does not provide the
+equivalent functionality.  It can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.bouncycastle.txt (MIT License)
+  * HOMEPAGE:
+    * http://www.bouncycastle.org/
+
+This product optionally depends on 'Snappy', a compression library produced
+by Google Inc, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.snappy.txt (New BSD License)
+  * HOMEPAGE:
+    * http://code.google.com/p/snappy/
+
+This product optionally depends on 'JBoss Marshalling', an alternative Java
+serialization API, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.jboss-marshalling.txt (GNU LGPL 2.1)
+  * HOMEPAGE:
+    * http://www.jboss.org/jbossmarshalling
+
+This product optionally depends on 'Caliper', Google's micro-
+benchmarking framework, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.caliper.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * http://code.google.com/p/caliper/
+
+This product optionally depends on 'Apache Commons Logging', a logging
+framework, which can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.commons-logging.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * http://commons.apache.org/logging/
+
+This product optionally depends on 'Apache Log4J', a logging framework, which
+can be obtained at:
+
+  * LICENSE:
+    * license/LICENSE.log4j.txt (Apache License 2.0)
+  * HOMEPAGE:
+    * http://logging.apache.org/log4j/
+
+
+
+NOTICE of Apache BVal :: bval-jsr303
+-------------------------------------
+
+Apache BVal :: bval-jsr303
+Copyright 2010-2012 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+
+The following copyright notice(s) were affixed to portions of this code
+with which this file is now or was at one time distributed.
+
+This product includes software developed by agimatec GmbH.
+Copyright 2007-2010 Agimatec GmbH. All rights reserved.
+
+
+
+NOTICE of Apache BVal :: bval-core
+-----------------------------------
+
+Apache BVal :: bval-core
+Copyright 2010-2012 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+The following copyright notice(s) were affixed to portions of this code
+with which this file is now or was at one time distributed.
+
+This product includes software developed by agimatec GmbH.
+Copyright 2007-2010 Agimatec GmbH. All rights reserved.
+
+
+
+NOTICE.txt of Apache Commons BeanUtils
+---------------------------------------
+
+Apache Commons BeanUtils
+Copyright 2000-2010 The Apache Software Foundation
+
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE.txt of Apache Commons CLI
+---------------------------------
+
+Apache Commons CLI
+Copyright 2001-2017 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE.txt of Apache Commons Compress
+--------------------------------------
+
+Apache Commons Compress
+Copyright 2002-2015 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+The files in the package org.apache.commons.compress.archivers.sevenz
+were derived from the LZMA SDK, version 9.20 (C/ and CPP/7zip/),
+which has been placed in the public domain:
+
+"LZMA SDK is placed in the public domain." (http://www.7-zip.org/sdk.html)
+
+
+
+NOTICE.txt of Apache Commons Lang
+----------------------------------
+
+Apache Commons Lang
+Copyright 2001-2018 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact
+-------------------------
+
+Maven Artifact
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Builder Support
+--------------------------------
+
+Maven Builder Support
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Model Builder
+------------------------------
+
+Maven Model Builder
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Model
+----------------------
+
+Maven Model
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Repository Metadata Model
+------------------------------------------
+
+Maven Repository Metadata Model
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact Resolver Provider
+-------------------------------------------
+
+Maven Artifact Resolver Provider
+Copyright 2001-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact Resolver API
+--------------------------------------
+
+Maven Artifact Resolver API
+Copyright 2010-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact Resolver Implementation
+-------------------------------------------------
+
+Maven Artifact Resolver Implementation
+Copyright 2010-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact Resolver SPI
+--------------------------------------
+
+Maven Artifact Resolver SPI
+Copyright 2010-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Maven Artifact Resolver Utilities
+--------------------------------------------
+
+Maven Artifact Resolver Utilities
+Copyright 2010-2019 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+
+NOTICE of Codehaus Plexus-Utils
+--------------------------------
+
+This product includes software developed by the Indiana University
+  Extreme! Lab (http://www.extreme.indiana.edu/).
+
+This product includes software developed by
+The Apache Software Foundation (http://www.apache.org/).
+
+This product includes software developed by
+ThoughtWorks (http://www.thoughtworks.com).
+
+This product includes software developed by
+javolution (http://javolution.org/).
+
+This product includes software developed by
+Rome (https://rome.dev.java.net/).
+
+
+
+NOTICE of Embulk Utilities for Guess
+-------------------------------------
+
+Embulk Utilities for Guess
+Copyright 2020-2023 The Embulk project
+
+This product includes software developed at
+The Embulk project (https://www.embulk.org/).
+
+
+This product includes a modified portion of ICU4J 57.2, developed by
+International Business Machines Corporation and others, licensed under
+the ICU License.
+
+* Copyright (C) 2005-2016, International Business Machines Corporation and others.
+* The LICENSE file of ICU4J is bundled at META-INF/LICENSE-icu4j.
+
+The included modified portion contain only the following files from ICU4J 57.2.
+They are all licensed under the ICU License, not any "Third-Party Software Licenses".
+1. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetDetector.java
+2. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetMatch.java
+3. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecog_2022.java
+4. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecog_UTF8.java
+5. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecog_Unicode.java
+6. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecog_mbcs.java
+7. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecog_sbcs.java
+8. /icu4j/main/classes/core/src/com/ibm/icu/text/CharsetRecognizer.java
+
+The ICU License of ICU 57.2 is considered compatible as the X license, hence
+the MIT License. See the un-HTML'ed quote of icu4j/readme.html from ICU4J 57.2.
+
+> The ICU projects (ICU4C and ICU4J) use the X license. The X
+> license is suitable for commercial use and is a recommended free software license
+> that is compatible with the GNU GPL license. This became
+> effective with release 1.8.1 of ICU4C and release 1.3.1 of ICU4J in
+> mid-2001. All new ICU releases will adopt the X license; previous ICU
+> releases continue to utilize the IPL (IBM Public License). Users
+> of previous releases of ICU who want to adopt new ICU releases will
+> need to accept the terms and conditions of the X license.
+>
+> The main effect of the change is to provide GPL compatibility.
+> The X license is listed as GPL compatible, see the GNU page at 
+> http://www.gnu.org/licenses/license-list.html#GPLCompatibleLicenses.
+> This means that GPL projects can now use ICU code, it does not
+> mean that projects using ICU become subject to GPL.
+> 
+>  The IBM version contains the essential text of the license, omitting the
+> X-specific trademarks and copyright notices. The full copy of
+> ICU's license is included in the download
+> package.

@@ -8,6 +8,7 @@ public enum Command {
     GEM("gem"),
     GUESS("guess"),
     IRB("irb"),
+    LICENSE("license"),
     MIGRATE("migrate"),
     MKBUNDLE("mkbundle"),
     NEW("new"),
