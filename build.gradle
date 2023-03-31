@@ -39,7 +39,20 @@ def embeddedPlugins = [
 ]
 
 configurations {
-    embed
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
+
+    depsEmbedded {
+        resolutionStrategy.activateDependencyLocking()
+    }
+
+    pluginEmbedded {
+        resolutionStrategy.activateDependencyLocking()
+    }
+
+    embedded {
+        extendsFrom(depsEmbedded, pluginEmbedded)
+    }
 }
 
 dependencies {
@@ -51,18 +64,18 @@ dependencies {
     // https://logback.qos.ch/dependencies.html
     implementation "ch.qos.logback:logback-classic:1.3.5"
 
-    embed project(":embulk-deps")
+    depsEmbedded project(":embulk-deps")
 
     embeddedPlugins.each { pluginArtifact ->
-        embed pluginArtifact
+        pluginEmbedded pluginArtifact
     }
 }
 
-def listEmbedDependencies = { rootModuleName, prefix ->
+def listEmbeddedDependencies = { rootModuleName, prefix ->
     def firstArtifact = []  // The artifact of rootModuleName -- the list should contain only one.
     def followingArtifacts = []  // Artifacts depended from the artifact of rootModuleName.
 
-    configurations.embed.resolvedConfiguration.firstLevelModuleDependencies.each { firstLevelDependency ->
+    configurations.embedded.resolvedConfiguration.firstLevelModuleDependencies.each { firstLevelDependency ->
         if (firstLevelDependency.moduleName == rootModuleName) {
             firstLevelDependency.allModuleArtifacts.each { requiredArtifact ->
                 if (requiredArtifact.name == rootModuleName) {
@@ -76,12 +89,12 @@ def listEmbedDependencies = { rootModuleName, prefix ->
 
     if (firstArtifact.isEmpty()) {
         if (followingArtifacts.isEmpty()) {
-            throw new GradleException('Failed to collect libraries to embed: no dependencies found')
+            throw new GradleException('Failed to collect libraries to embedded: no dependencies found')
         } else {
-            throw new GradleException('Failed to collect libraries to embed: specified root module is not found')
+            throw new GradleException('Failed to collect libraries to embedded: specified root module is not found')
         }
     } else if (firstArtifact.size() > 1) {
-        throw new GradleException('Failed to collect libraries to embed: multiple root modules are found')
+        throw new GradleException('Failed to collect libraries to embedded: multiple root modules are found')
     }
 
     // It guarantees that the artifact of rootModuleName comes first.
@@ -102,9 +115,9 @@ jar {
     // Includes COPYING.
     from "${rootProject.projectDir}/COPYING"
 
-    // Includes all hidden dependency librarires under "embed" into "lib/".
-    into('/lib') {
-        from configurations.embed
+    // Includes all hidden dependency librarires under "embedded" into "lib/".
+    into("/lib") {
+        from configurations.embedded
     }
 
     // NOTE: This 'Implementation-Version' in the manifest is referred to provide the Embulk version at runtime.
@@ -115,7 +128,7 @@ jar {
                    'Implementation-Vendor-Id': project.group,
                    'Specification-Title': 'embulk',
                    'Specification-Version': project.version,
-                   'Embulk-Resource-Class-Path': listEmbedDependencies('embulk-deps', '/lib/'),
+                   'Embulk-Resource-Class-Path': listEmbeddedDependencies('embulk-deps', '/lib/'),
                    "Main-Class": "org.embulk.cli.Main",
                    "Embulk-Plugins": String.join(" ", embeddedPlugins.collect { artifact -> artifact["name"] }),
 
@@ -124,7 +137,7 @@ jar {
                    "Embulk-Default-Guess-Plugins": "gzip,bzip2,json,csv"
 
         def pluginAttributes = embeddedPlugins.collectEntries { artifact ->
-            [ ("Embulk-Plugin-${artifact['name']}".toString()): listEmbedDependencies(artifact["name"], "/lib/") ]
+            [ ("Embulk-Plugin-${artifact['name']}".toString()): listEmbeddedDependencies(artifact["name"], "/lib/") ]
         }
         attributes(pluginAttributes)
     }
