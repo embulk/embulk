@@ -391,6 +391,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             + "   preview      Dry-run a bulk load transaction, and preview it.\n"
             + "   guess        Guess missing parameters to complete configuration.\n"
             + "   example      Create example files for a quick trial of Embulk.\n"
+            + "   license      Print out the license notice.\n"
             + "   selfupdate   Upgrade Embulk to the specified version.\n"
             + "   gem          Run \"gem\" to install a RubyGem plugin.\n"
             + "   mkbundle     Create a new plugin bundle environment.\n"

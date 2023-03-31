@@ -64,6 +64,7 @@ public class TestCommandLineParserImpl {
                 + "   preview      Dry-run a bulk load transaction, and preview it." + NEWLINE
                 + "   guess        Guess missing parameters to complete configuration." + NEWLINE
                 + "   example      Create example files for a quick trial of Embulk." + NEWLINE
+                + "   license      Print out the license notice." + NEWLINE
                 + "   selfupdate   Upgrade Embulk to the specified version." + NEWLINE
                 + "   gem          Run \"gem\" to install a RubyGem plugin." + NEWLINE
                 + "   mkbundle     Create a new plugin bundle environment." + NEWLINE
@@ -141,6 +142,7 @@ public class TestCommandLineParserImpl {
                 + "   preview      Dry-run a bulk load transaction, and preview it." + NEWLINE
                 + "   guess        Guess missing parameters to complete configuration." + NEWLINE
                 + "   example      Create example files for a quick trial of Embulk." + NEWLINE
+                + "   license      Print out the license notice." + NEWLINE
                 + "   selfupdate   Upgrade Embulk to the specified version." + NEWLINE
                 + "   gem          Run \"gem\" to install a RubyGem plugin." + NEWLINE
                 + "   mkbundle     Create a new plugin bundle environment." + NEWLINE
