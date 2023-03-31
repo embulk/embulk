@@ -3,7 +3,7 @@
 # This file is expected to be part of source control.
 com.fasterxml.jackson.core:jackson-annotations:2.6.7
 com.fasterxml.jackson.core:jackson-core:2.6.7
-com.fasterxml.jackson.core:jackson-databind:2.6.7
+com.fasterxml.jackson.core:jackson-databind:2.6.7.5
 com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
 commons-beanutils:commons-beanutils-core:1.8.3
 commons-cli:commons-cli:1.4

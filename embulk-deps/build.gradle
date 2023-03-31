@@ -49,7 +49,7 @@ dependencies {
     // Jackson & Config
     api "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
     api "com.fasterxml.jackson.core:jackson-core:2.6.7"
-    api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+    api "com.fasterxml.jackson.core:jackson-databind:2.6.7.5"
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
 
     api "javax.validation:validation-api:1.1.0.Final"
@@ -63,7 +63,6 @@ dependencies {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
         exclude group: "org.msgpack", module: "msgpack-core"
     }
-    api "com.fasterxml.jackson.core:jackson-core:2.6.7"
 
     // Maven
     api "org.apache.maven:maven-artifact:3.6.1"
