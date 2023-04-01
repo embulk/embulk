@@ -62,7 +62,7 @@ Note that Netty/Common contains modified portions of some other products.
 
 Netty/Common contains the extensions to Java Collections Framework which has
 been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene.
-Refer to the license at META-INF/LICENSE-jsr166, instead of license/LICENSE.jsr166y.txt.
+Refer to the license at META-INF/LICENSE-jsr166y, instead of license/LICENSE.jsr166y.txt.
 
 Netty/Common contains a modified portion of 'SLF4J', a simple logging facade for Java.
 Refer to the license of SLF4J at META-INF/LICENSE-slf4j, instead of license/LICENSE.slf4j.txt.
