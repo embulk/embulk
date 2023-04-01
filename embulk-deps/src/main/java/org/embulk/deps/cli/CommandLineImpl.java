@@ -61,6 +61,8 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
                 return ofCommand(command, originalArgs, 1, 1, GUESS_OPTIONS, GUESS_USAGE, GUESS_HEADER, logger);
             case EXAMPLE:
                 return ofCommand(command, originalArgs, 0, 1, EXAMPLE_OPTIONS, EXAMPLE_USAGE, EXAMPLE_HEADER, logger);
+            case LICENSE:
+                return ofCommand(command, originalArgs, 0, 0, LICENSE_OPTIONS, LICENSE_USAGE, LICENSE_HEADER, logger);
             case MKBUNDLE:
                 return ofCommand(command, originalArgs, 1, 1, MKBUNDLE_OPTIONS, MKBUNDLE_USAGE, MKBUNDLE_HEADER, logger);
             case SELFUPDATE:
@@ -389,6 +391,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             + "   preview      Dry-run a bulk load transaction, and preview it.\n"
             + "   guess        Guess missing parameters to complete configuration.\n"
             + "   example      Create example files for a quick trial of Embulk.\n"
+            + "   license      Print out the license notice.\n"
             + "   selfupdate   Upgrade Embulk to the specified version.\n"
             + "   gem          Run \"gem\" to install a RubyGem plugin.\n"
             + "   mkbundle     Create a new plugin bundle environment.\n"
@@ -558,6 +561,15 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
     private static final String EXAMPLE_HEADER =
             "\n"
             + "\"embulk example\" creates example files for a quick trial of Embulk.\n"
+            + "\n";
+
+    private static final String LICENSE_USAGE = "embulk [common options] license";
+
+    private static final OptionsWithPlaceholders LICENSE_OPTIONS = COMMON_OPTIONS.clone();
+
+    private static final String LICENSE_HEADER =
+            "\n"
+            + "\"embulk license\" prints the license notice.\n"
             + "\n";
 
     private static final String MKBUNDLE_USAGE = "embulk [common options] mkbundle [command options] <directory>";

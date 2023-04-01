@@ -17,25 +17,25 @@ def subprojectNamesOfCoreArtifacts = [
 ]
 
 def embeddedPlugins = [
-    [ group: "org.embulk", name: "embulk-decoder-bzip2", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-decoder-gzip", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-encoder-bzip2", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-encoder-gzip", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-filter-remove_columns", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-filter-rename", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-formatter-csv", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-guess-bzip2", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-guess-csv", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-guess-csv_all_strings", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-guess-gzip", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-guess-json", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-input-config", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-input-file", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-output-file", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-output-null", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-output-stdout", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-parser-csv", version: "0.10.40" ],
-    [ group: "org.embulk", name: "embulk-parser-json", version: "0.10.40" ],
+    [ group: "org.embulk", name: "embulk-decoder-bzip2", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-decoder-gzip", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-encoder-bzip2", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-encoder-gzip", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-filter-remove_columns", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-filter-rename", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-formatter-csv", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-guess-bzip2", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-guess-csv", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-guess-csv_all_strings", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-guess-gzip", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-guess-json", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-input-config", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-input-file", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-output-file", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-output-null", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-output-stdout", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-parser-csv", version: "0.10.41" ],
+    [ group: "org.embulk", name: "embulk-parser-json", version: "0.10.41" ],
 ]
 
 configurations {
@@ -112,12 +112,22 @@ jar {
               ":embulk-deps:jar"
 
     // Expands all dependencies including "embulk-core"
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        // Exclude dependencies' LICENSE and NOTICE files here. They should be included in a different way.
+        exclude "META-INF/LICENSE*"
+        exclude "META-INF/NOTICE*"
     }
 
-    // Includes COPYING.
-    from "${rootProject.projectDir}/COPYING"
+    metaInf {
+        from rootProject.file("LICENSE")
+        from rootProject.file("LICENSE-icu4j")
+        from rootProject.file("LICENSE-jctools")
+        from rootProject.file("LICENSE-jsr166y")
+        from rootProject.file("LICENSE-logback")
+        from rootProject.file("LICENSE-slf4j")
+        from rootProject.file("NOTICE-executable")
+        rename ("NOTICE-executable", "NOTICE")
+    }
 
     // Includes all hidden dependency librarires under "embedded" into "lib/".
     into("/lib") {

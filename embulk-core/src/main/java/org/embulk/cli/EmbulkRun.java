@@ -39,6 +39,8 @@ public class EmbulkRun {
                     return 1;
                 }
                 return 0;
+            case LICENSE:
+                return License.printLicenseNotice(System.out);
             case SELFUPDATE:
                 if (commandLine.getArguments().isEmpty()) {
                     System.err.println("'embulk selfupdate' requires the target version since v0.10.0. It no longer updates to the latest version.");

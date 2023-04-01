@@ -49,7 +49,7 @@ dependencies {
     // Jackson & Config
     api "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
     api "com.fasterxml.jackson.core:jackson-core:2.6.7"
-    api "com.fasterxml.jackson.core:jackson-databind:2.6.7"
+    api "com.fasterxml.jackson.core:jackson-databind:2.6.7.5"
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
 
     api "javax.validation:validation-api:1.1.0.Final"
@@ -59,11 +59,10 @@ dependencies {
     api "org.apache.commons:commons-lang3:3.8.1"
 
     // JSON (embulk-util-json)
-    api("org.embulk:embulk-util-json:0.1.0") {
+    api("org.embulk:embulk-util-json:0.2.1") {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
         exclude group: "org.msgpack", module: "msgpack-core"
     }
-    api "com.fasterxml.jackson.core:jackson-core:2.6.7"
 
     // Maven
     api "org.apache.maven:maven-artifact:3.6.1"
@@ -79,7 +78,7 @@ dependencies {
     }
 
     // Timestamp
-    api "org.embulk:embulk-util-timestamp:0.2.1"
+    api "org.embulk:embulk-util-timestamp:0.2.2"
 
     testImplementation project(":embulk-spi")
     testImplementation project(":embulk-core")
