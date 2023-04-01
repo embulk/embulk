@@ -25,11 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Runs the selfupdate subcommand of Embulk.
- *
- * <p>It uses {@link java.net.HttpURLConnection} so that CLI classes do not need additional dependedcies.
- *
- * <p>TODO: Support HTTP(S) proxy. The original Ruby version did not support as well, though.
+ * Runs the license subcommand of Embulk.
  */
 class License {
     static int printLicenseNotice(final PrintStream out) {
