@@ -6,16 +6,13 @@ plugins {
     id "checkstyle"
 }
 
-group = rootProject.group
-version = rootProject.version
-description = "A test helper for Embulk plugins with JUnit 4."
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
 }
+
+group = rootProject.group
+version = rootProject.version
+description = "Embulk: Test helper for plugins with JUnit 4"
 
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
@@ -23,11 +20,15 @@ configurations {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.encoding = "UTF-8"
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+
     withJavadocJar()
     withSourcesJar()
 }
@@ -45,6 +46,10 @@ javadoc {
     options {
         locale = "en_US"
         encoding = "UTF-8"
+        overview = "src/main/html/overview.html"
+        links "https://docs.oracle.com/javase/8/docs/api/"
+        links "https://junit.org/junit4/javadoc/latest/"
+        links "https://hamcrest.org/JavaHamcrest/javadoc/1.3/"
     }
 }
 
@@ -160,6 +165,10 @@ publishing {
 }
 
 signing {
+    if (project.hasProperty("signingKey") && project.hasProperty("signingPassword")) {
+        logger.lifecycle("Signing with an in-memory key.")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign publishing.publications.maven
 }
 

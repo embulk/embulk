@@ -1,9 +1,5 @@
 plugins {
     id "java"
-    id "java-library"
-    id "maven-publish"
-    id "signing"
-    id "checkstyle"
 }
 
 group = rootProject.group
