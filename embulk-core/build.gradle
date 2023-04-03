@@ -6,16 +6,13 @@ plugins {
     id "checkstyle"
 }
 
-group = rootProject.group
-version = rootProject.version
-description = "The core classes of Embulk, a pluggable multi-source/destination bulk data loader."
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
 }
+
+group = rootProject.group
+version = rootProject.version
+description = "Embulk: Core classes"
 
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
@@ -29,11 +26,14 @@ tasks.withType(JavaCompile) {
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+
     withJavadocJar()
     withSourcesJar()
 }
 
-// determine which dependencies have updates: $ gradle dependencyUpdates
 dependencies {
     // Embulk plugins have expected that embulk-core's dependencies are declared as "compile" in pom.xml.
     // Although those dependencies would be finally removed from embulk-core's direct dependencies,
@@ -53,6 +53,8 @@ javadoc {
     options {
         locale = "en_US"
         encoding = "UTF-8"
+        overview = "src/main/html/overview.html"
+        links "https://docs.oracle.com/javase/8/docs/api/"
     }
 }
 
@@ -171,6 +173,10 @@ publishing {
 }
 
 signing {
+    if (project.hasProperty("signingKey") && project.hasProperty("signingPassword")) {
+        logger.lifecycle("Signing with an in-memory key.")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign publishing.publications.maven
 }
 

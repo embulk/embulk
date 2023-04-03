@@ -6,16 +6,13 @@ plugins {
     id "checkstyle"
 }
 
-group = rootProject.group
-version = rootProject.version
-description = "Java SPI for Embulk plugins to inherit for providing their roles."
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
 }
+
+group = rootProject.group
+version = rootProject.version
+description = "Embulk: Service Provider Interface (SPI) for Java plugins"
 
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
@@ -23,16 +20,22 @@ configurations {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.encoding = "UTF-8"
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+
     withJavadocJar()
     withSourcesJar()
 }
 
 dependencies {
+    // Dependencies of "embulk-spi" should be "api" so that their scope would be "compile" in "pom.xml".
+
     api "org.slf4j:slf4j-api:2.0.6"
 
     // It will be removed in the future, but not very soon from Embulk v1.0.0.
@@ -55,6 +58,7 @@ javadoc {
         overview = "src/main/html/overview.html"
         links "https://docs.oracle.com/javase/8/docs/api/"
         links "https://www.slf4j.org/apidocs/"
+        links "https://www.javadoc.io/doc/org.msgpack/msgpack-core/0.8.24/"
     }
 }
 
@@ -170,6 +174,10 @@ publishing {
 }
 
 signing {
+    if (project.hasProperty("signingKey") && project.hasProperty("signingPassword")) {
+        logger.lifecycle("Signing with an in-memory key.")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign publishing.publications.maven
 }
 
@@ -188,6 +196,15 @@ tasks.withType(Test) {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+        showStandardStreams = true
+        outputs.upToDateWhen { false }
+    }
 }
 
 tasks.withType(Checkstyle) {

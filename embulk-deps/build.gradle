@@ -6,16 +6,13 @@ plugins {
     id "checkstyle"
 }
 
-group = rootProject.group
-version = rootProject.version
-description = "Dependencies of Embulk to be loaded behind an inner class loader."
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
 }
+
+group = rootProject.group
+version = rootProject.version
+description = "Embulk: Core dependencies"
 
 configurations {
     compileClasspath.resolutionStrategy.activateDependencyLocking()
@@ -23,11 +20,15 @@ configurations {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.encoding = "UTF-8"
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+
     withJavadocJar()
     withSourcesJar()
 }
@@ -89,6 +90,8 @@ javadoc {
     options {
         locale = "en_US"
         encoding = "UTF-8"
+        overview = "src/main/html/overview.html"
+        links "https://docs.oracle.com/javase/8/docs/api/"
     }
 }
 
@@ -204,6 +207,10 @@ publishing {
 }
 
 signing {
+    if (project.hasProperty("signingKey") && project.hasProperty("signingPassword")) {
+        logger.lifecycle("Signing with an in-memory key.")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign publishing.publications.maven
 }
 
