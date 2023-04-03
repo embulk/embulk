@@ -1,7 +1,7 @@
 package org.embulk.spi;
 
 import java.time.Instant;
-import org.embulk.deps.buffer.Slice;
+import org.embulk.exec.Slice;
 import org.embulk.spi.json.JsonValue;
 import org.msgpack.value.Value;
 
@@ -27,7 +27,7 @@ public class PageReaderImpl extends PageReader {
 
     public static int getRecordCount(Page page) {
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
+        final Slice pageSlice = Slice.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.capacity());
         return pageSlice.getInt(0);  // see page format
     }
 
@@ -37,7 +37,7 @@ public class PageReaderImpl extends PageReader {
         this.page = SENTINEL;
 
         Buffer pageBuffer = page.buffer();
-        Slice pageSlice = Slice.createWithWrappedBuffer(pageBuffer);
+        final Slice pageSlice = Slice.wrappedBuffer(pageBuffer.array(), pageBuffer.offset(), pageBuffer.capacity());
 
         pageRecordCount = pageSlice.getInt(0);  // see page format
         readCount = 0;

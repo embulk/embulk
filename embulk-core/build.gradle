@@ -23,8 +23,9 @@ configurations {
 }
 
 tasks.withType(JavaCompile) {
+    // "-XDenableSunApiLintControl" enables `@SuppressWarnings("sunapi")` to suppress warnings against sun.misc.Unsafe.
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" << "-XDenableSunApiLintControl"
     options.encoding = "UTF-8"
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 }
 
 java {
@@ -58,6 +59,7 @@ javadoc {
 jar {
     metaInf {
         from rootProject.file("LICENSE")
+        from project.file("NOTICE")
     }
 
     manifest {
@@ -72,12 +74,14 @@ jar {
 sourcesJar {
     metaInf {
         from rootProject.file("LICENSE")
+        from project.file("NOTICE")
     }
 }
 
 javadocJar {
     metaInf {
         from rootProject.file("LICENSE")
+        from project.file("NOTICE")
     }
 }
 
