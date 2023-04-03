@@ -1,0 +1,19 @@
+embulk-core
+Copyright 2014-2023 Sadayuki Furuhashi, and the Embulk project.
+
+This product includes software developed by
+Sadayuki Furuhashi, and the Embulk project (https://www.embulk.org/).
+
+
+
+This product includes a modified portion of
+Airlift Slice (https://github.com/airlift/slice), licensed under
+the Apache License, Version 2.0.
+
+
+
+This product includes a modified portion of
+Google Guava (https://github.com/google/guava), licensed under
+the Apache License, Version 2.0.
+
+* Copyright (C) 2007 The Guava Authors

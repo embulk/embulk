@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.embulk.deps.buffer.Slice;
+import org.embulk.exec.Slice;
 import org.embulk.spi.json.JsonValue;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
@@ -44,7 +44,7 @@ public class PageBuilderImpl extends PageBuilder {
 
     private void newBuffer() {
         this.buffer = allocator.allocate(PageFormat.PAGE_HEADER_SIZE + fixedRecordSize);
-        this.bufferSlice = Slice.createWithWrappedBuffer(buffer);
+        this.bufferSlice = Slice.wrappedBuffer(buffer.array(), buffer.offset(), buffer.capacity());
         this.count = 0;
         this.position = PageFormat.PAGE_HEADER_SIZE;
         this.stringReferences = new ArrayList<>();

@@ -6,6 +6,20 @@ Sadayuki Furuhashi, and the Embulk project (https://www.embulk.org/).
 
 
 
+This product includes a modified portion of
+Airlift Slice (https://github.com/airlift/slice), licensed under
+the Apache License, Version 2.0.
+
+
+
+This product includes a modified portion of
+Google Guava (https://github.com/google/guava), licensed under
+the Apache License, Version 2.0.
+
+* Copyright (C) 2007 The Guava Authors
+
+
+
 The executable distribution of this product includes
 the API for SLF4J (The Simple Logging Facade for Java), developed by
 QOS.ch Sarl (Switzerland), licensed under
@@ -41,12 +55,6 @@ the Apache License, Version 2.0.
 
 * Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
 * The NOTICE file of Jackson JSON processor is embedded in this NOTICE below.
-
-
-
-The executable distribution of this product includes
-Slice, developed by the Airlift project, licensed under
-the Apache License, Version 2.0.
 
 
 
