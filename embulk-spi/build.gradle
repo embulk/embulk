@@ -36,7 +36,7 @@ java {
 dependencies {
     // Dependencies of "embulk-spi" should be "api" so that their scope would be "compile" in "pom.xml".
 
-    api "org.slf4j:slf4j-api:2.0.6"
+    api "org.slf4j:slf4j-api:2.0.7"
 
     // It will be removed in the future, but not very soon from Embulk v1.0.0.
     //

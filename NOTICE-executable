@@ -27,6 +27,8 @@ the MIT License (http://www.opensource.org/licenses/mit-license.php).
 
 * Copyright (c) 2004-2022 QOS.ch Sarl (Switzerland)
 
+Refer to the license at META-INF/LICENSE-slf4j.
+
 
 
 The executable distribution of this product includes
@@ -73,7 +75,7 @@ been derived from the works by JSR-166 EG, Doug Lea, and Jason T. Greene.
 Refer to the license at META-INF/LICENSE-jsr166y, instead of license/LICENSE.jsr166y.txt.
 
 Netty/Common contains a modified portion of 'SLF4J', a simple logging facade for Java.
-Refer to the license of SLF4J at META-INF/LICENSE-slf4j, instead of license/LICENSE.slf4j.txt.
+Refer to the license of SLF4J at META-INF/LICENSE-slf4j-netty, instead of license/LICENSE.slf4j.txt.
 
 Netty/Common contains a modified portion of Nitsan Wakart's 'JCTools',
 Java Concurrency Tools for the JVM.

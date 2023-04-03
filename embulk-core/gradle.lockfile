@@ -2,5 +2,5 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 org.msgpack:msgpack-core:0.8.24=compileClasspath,runtimeClasspath
-org.slf4j:slf4j-api:2.0.6=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.7=compileClasspath,runtimeClasspath
 empty=
