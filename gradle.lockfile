@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-ch.qos.logback:logback-classic:1.3.5=compileClasspath,runtimeClasspath
-ch.qos.logback:logback-core:1.3.5=compileClasspath,runtimeClasspath
+ch.qos.logback:logback-classic:1.3.6=compileClasspath,runtimeClasspath
+ch.qos.logback:logback-core:1.3.6=compileClasspath,runtimeClasspath
 com.fasterxml.jackson.core:jackson-annotations:2.6.7=depsEmbedded,pluginEmbedded
 com.fasterxml.jackson.core:jackson-core:2.6.7=depsEmbedded,pluginEmbedded
 com.fasterxml.jackson.core:jackson-databind:2.6.7.5=depsEmbedded,pluginEmbedded
@@ -58,6 +58,6 @@ org.embulk:embulk-util-rubytime:0.3.3=depsEmbedded,pluginEmbedded
 org.embulk:embulk-util-text:0.1.2=pluginEmbedded
 org.embulk:embulk-util-timestamp:0.2.2=depsEmbedded,pluginEmbedded
 org.msgpack:msgpack-core:0.8.24=compileClasspath,runtimeClasspath
-org.slf4j:slf4j-api:2.0.6=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.7=compileClasspath,runtimeClasspath
 org.yaml:snakeyaml:1.18=depsEmbedded
 empty=

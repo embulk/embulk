@@ -31,6 +31,6 @@ org.embulk:embulk-util-json:0.2.1=compileClasspath,runtimeClasspath
 org.embulk:embulk-util-rubytime:0.3.3=compileClasspath,runtimeClasspath
 org.embulk:embulk-util-timestamp:0.2.2=compileClasspath,runtimeClasspath
 org.msgpack:msgpack-core:0.8.24=compileClasspath
-org.slf4j:slf4j-api:2.0.6=compileClasspath
+org.slf4j:slf4j-api:2.0.7=compileClasspath
 org.yaml:snakeyaml:1.18=compileClasspath,runtimeClasspath
 empty=
