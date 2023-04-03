@@ -1,0 +1,9 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+junit:junit:4.13.2=compileClasspath,runtimeClasspath
+org.hamcrest:hamcrest-core:1.3=compileClasspath,runtimeClasspath
+org.hamcrest:hamcrest-library:1.3=compileClasspath,runtimeClasspath
+org.msgpack:msgpack-core:0.8.24=compileClasspath,runtimeClasspath
+org.slf4j:slf4j-api:2.0.6=compileClasspath,runtimeClasspath
+empty=
