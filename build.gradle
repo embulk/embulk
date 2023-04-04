@@ -113,9 +113,20 @@ jar {
 
     // Expands all dependencies including "embulk-core"
     from(configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }) {
+        // META-INF/INDEX.LIST from dependencies should be definitely excluded in the all-in-one executable JAR file.
+        exclude "META-INF/INDEX.LIST"
+
         // Exclude dependencies' LICENSE and NOTICE files here. They should be included in a different way.
         exclude "META-INF/LICENSE*"
         exclude "META-INF/NOTICE*"
+
+        // Exclude module-info.class from dependencies.
+        //
+        // It should be okay while Embulk basically expects Java 8, and it should not break things even for Java 9+.
+        // But, it is nice to revisit module-info.class when Embulk officially supports modern Java versions.
+        //
+        // TODO: Provide module-info.class unified for the all-in-one executable JAR file for the Java 9+ Module System.
+        exclude "META-INF/versions/*/module-info.class"
     }
 
     metaInf {
