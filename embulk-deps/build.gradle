@@ -34,8 +34,9 @@ java {
 }
 
 dependencies {
-    compileOnly project(":embulk-spi")
     compileOnly project(":embulk-core")
+    compileOnly "org.slf4j:slf4j-api:2.0.7"
+    compileOnly "org.msgpack:msgpack-core:0.8.24"
 
     // Buffer
     api "io.netty:netty-buffer:4.0.44.Final"
@@ -185,6 +186,17 @@ publishing {
                     connection = "scm:git:git://github.com/embulk/embulk.git"
                     developerConnection = "scm:git:git@github.com:embulk/embulk.git"
                     url = "https://github.com/embulk/embulk"
+                }
+
+                withXml {
+                    project.configurations.compileOnly.allDependencies.each { dependency ->
+                        asNode().dependencies[0].appendNode("dependency").with {
+                            it.appendNode("groupId", dependency.group)
+                            it.appendNode("artifactId", dependency.name)
+                            it.appendNode("version", dependency.version)
+                            it.appendNode("scope", "provided")
+                        }
+                    }
                 }
             }
         }
