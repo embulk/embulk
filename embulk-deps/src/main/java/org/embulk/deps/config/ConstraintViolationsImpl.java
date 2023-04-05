@@ -2,6 +2,7 @@ package org.embulk.deps.config;
 
 import java.util.Set;
 import javax.validation.ConstraintViolation;
+import org.embulk.config.ConstraintViolations;
 
 public class ConstraintViolationsImpl<T> extends ConstraintViolations {
     @SuppressWarnings("unchecked")

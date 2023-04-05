@@ -1,4 +1,4 @@
-package org.embulk.deps.config;
+package org.embulk.config;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +7,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Properties;
-import org.embulk.config.ConfigSource;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class ConfigLoaderDelegate {

@@ -14,7 +14,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
-import org.embulk.deps.config.YamlProcessor;
+import org.embulk.config.YamlProcessor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewPrinter;
 import org.embulk.exec.PreviewResult;

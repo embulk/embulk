@@ -1,6 +1,7 @@
 package org.embulk.deps.config;
 
 import java.io.InputStream;
+import org.embulk.config.YamlProcessor;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
