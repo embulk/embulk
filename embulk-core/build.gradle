@@ -1,6 +1,5 @@
 plugins {
     id "java"
-    id "java-library"
     id "maven-publish"
     id "signing"
     id "checkstyle"
@@ -15,6 +14,13 @@ version = rootProject.version
 description = "Embulk: Core classes"
 
 configurations {
+    // The "spi" configuration is used to make the scope in pom.xml to "provided".
+    spi {
+        resolutionStrategy.activateDependencyLocking()
+        transitive = false
+    }
+
+    implementation.extendsFrom(spi)
     compileClasspath.resolutionStrategy.activateDependencyLocking()
     runtimeClasspath.resolutionStrategy.activateDependencyLocking()
 }
@@ -35,10 +41,25 @@ java {
 }
 
 dependencies {
-    // Embulk plugins have expected that embulk-core's dependencies are declared as "compile" in pom.xml.
-    // Although those dependencies would be finally removed from embulk-core's direct dependencies,
-    // those "compile" declaration would be kept so that plugin developers won't be confused unnecessarily.
-    api project(":embulk-spi")
+    // The compiled class files of "embulk-spi" are mixed into the "embulk-core" JAR file, and
+    // the "embulk-core" Maven artifact has the dependency on "embulk-spi" as "provided" in pom.xml.
+    //
+    // The artifacts are structured like this so that they can bypass the restriction of Java (9+)
+    // Module System that multiple JAR files (modules) cannot contain the same Java package classes.
+    //
+    // This mixing is not necessary when using Embulk with the executable all-in-one binary. But,
+    // it would not work well with Java 9+ in case of using Embulk with self-hosted deployment of
+    // the separated artifacts, embulk-spi, embulk-core, and else.
+    spi project(":embulk-spi")
+
+    // The transitive dependencies of "embulk-spi" are listed explicitly in dependencies { ... }.
+    //
+    // The explicit dependencies may include newer versions than the dependencies of "embulk-spi",
+    // especially after "embulk-spi" goes out for another Git repository. Note that "embulk-core"
+    // may need to have newer versions of "slf4j-api" or "msgpack-core" before updating them in
+    // "embulk-spi".
+    implementation "org.slf4j:slf4j-api:2.0.7"
+    implementation "org.msgpack:msgpack-core:0.8.24"
 
     testImplementation "junit:junit:4.13.2"
     testImplementation project(":embulk-junit4")
@@ -59,6 +80,11 @@ javadoc {
 }
 
 jar {
+    // The compiled class files of "embulk-spi" are mixed into the "embulk-core" JAR file.
+    from {
+        project(":embulk-spi").sourceSets.main.output
+    }
+
     metaInf {
         from rootProject.file("LICENSE")
         from project.file("NOTICE")
@@ -151,6 +177,29 @@ publishing {
                     connection = "scm:git:git://github.com/embulk/embulk.git"
                     developerConnection = "scm:git:git@github.com:embulk/embulk.git"
                     url = "https://github.com/embulk/embulk"
+                }
+
+                // The "embulk-core" Maven artifact has the dependency on "embulk-spi" as "provided" in pom.xml.
+                withXml {
+                    def spiDependencies = []
+                    project.configurations.spi.allDependencies.each { dependency ->
+                        spiDependencies.add(dependency.group + ":" + dependency.name)
+                    }
+                    asNode().dependencies[0].each { dependency ->
+                        if ((dependency.groupId[0].value()[0] + ":" + dependency.artifactId[0].value()[0]) in spiDependencies) {
+                            println "[MODIFY] " + dependency.groupId[0].value()[0] +
+                                    ":" + dependency.artifactId[0].value()[0] +
+                                    ":" + dependency.version[0].value()[0] +
+                                    " @ " + dependency.scope[0].value()[0] +
+                                     " => provided"
+                            dependency.scope[0].setValue("provided")
+                        } else {
+                            println "[ KEEP ] " + dependency.groupId[0].value()[0] +
+                                    ":" + dependency.artifactId[0].value()[0] +
+                                    ":" + dependency.version[0].value()[0] +
+                                    " @ " + dependency.scope[0].value()[0]
+                        }
+                    }
                 }
             }
         }
