@@ -1,4 +1,4 @@
-package org.embulk.deps.preview;
+package org.embulk.exec;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -11,9 +11,11 @@ final class VerticalPreviewPrinter extends PreviewPrinter {
         this.out = out;
         this.schema = schema;
 
-        this.valueFormatter = new ValueFormatter();
-
         this.format = "%" + maxColumnNameLength(schema) + "s (%" + maxColumnTypeNameLength(schema) + "s) : %s%n";
+    }
+
+    static VerticalPreviewPrinter of(final PrintStream out, final Schema schema) {
+        return new VerticalPreviewPrinter(out, schema);
     }
 
     @Override
@@ -62,8 +64,6 @@ final class VerticalPreviewPrinter extends PreviewPrinter {
 
     private final PrintStream out;
     private final Schema schema;
-
-    private final ValueFormatter valueFormatter;
 
     private final String format;
 }
