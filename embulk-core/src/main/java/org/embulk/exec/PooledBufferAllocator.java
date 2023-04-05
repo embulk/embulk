@@ -1,4 +1,4 @@
-package org.embulk.deps.buffer;
+package org.embulk.exec;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
