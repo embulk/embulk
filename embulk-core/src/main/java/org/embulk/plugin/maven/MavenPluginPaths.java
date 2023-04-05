@@ -1,4 +1,4 @@
-package org.embulk.deps.maven;
+package org.embulk.plugin.maven;
 
 import java.nio.file.Path;
 import java.util.Arrays;

@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.deps.maven.MavenArtifactFinder;
-import org.embulk.deps.maven.MavenPluginPaths;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;

@@ -1,4 +1,4 @@
-package org.embulk.deps.maven;
+package org.embulk.plugin.maven;
 
 import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;

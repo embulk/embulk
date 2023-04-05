@@ -1,4 +1,4 @@
-package org.embulk.deps.maven;
+package org.embulk.plugin.maven;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

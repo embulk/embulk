@@ -24,8 +24,10 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.embulk.plugin.MavenPluginType;
+import org.embulk.plugin.maven.MavenArtifactFinder;
 import org.embulk.plugin.maven.MavenExcludeDependency;
 import org.embulk.plugin.maven.MavenIncludeDependency;
+import org.embulk.plugin.maven.MavenPluginPaths;
 
 public class MavenArtifactFinderImpl extends MavenArtifactFinder {
     public MavenArtifactFinderImpl(final Path localMavenRepositoryPath) throws FileNotFoundException {
