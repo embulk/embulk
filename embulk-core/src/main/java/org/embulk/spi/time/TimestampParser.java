@@ -4,12 +4,11 @@ import java.time.DateTimeException;
 import java.time.Instant;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.deps.timestamp.DepsTimestampFormatter;
 
 @Deprecated  // Externalized to embulk-util-timestamp: https://github.com/embulk/embulk/issues/1298
 public class TimestampParser {
     private TimestampParser(final String formatString, final String defaultZoneIdString, final String defaultDateString) {
-        this.delegate = DepsTimestampFormatter.of(formatString, utcToNull(formatString, defaultZoneIdString), defaultDateString);
+        this.delegate = TimestampFormatterDelegate.of(formatString, utcToNull(formatString, defaultZoneIdString), defaultDateString);
         this.defaultZoneIdString = defaultZoneIdString;
     }
 
@@ -73,7 +72,7 @@ public class TimestampParser {
         return defaultZoneIdString;
     }
 
-    private final DepsTimestampFormatter delegate;
+    private final TimestampFormatterDelegate delegate;
 
     private final String defaultZoneIdString;  // Saved only for deprecated #getTimeZone().
 }

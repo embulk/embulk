@@ -1,12 +1,12 @@
-package org.embulk.deps.timestamp;
+package org.embulk.spi.time;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
-public abstract class DepsTimestampFormatter {
-    public static DepsTimestampFormatter of(final String pattern, final String defaultZone, final String defaultDate) {
+public abstract class TimestampFormatterDelegate {
+    public static TimestampFormatterDelegate of(final String pattern, final String defaultZone, final String defaultDate) {
         try {
             return CONSTRUCTOR.newInstance(pattern, defaultZone, defaultDate);
         } catch (final IllegalAccessException | IllegalArgumentException | InstantiationException ex) {
@@ -23,11 +23,11 @@ public abstract class DepsTimestampFormatter {
         }
     }
 
-    public static DepsTimestampFormatter of(final String pattern, final String defaultZone) {
+    public static TimestampFormatterDelegate of(final String pattern, final String defaultZone) {
         return of(pattern, defaultZone, null);
     }
 
-    public static DepsTimestampFormatter of(final String pattern) {
+    public static TimestampFormatterDelegate of(final String pattern) {
         return of(pattern, null, null);
     }
 
@@ -36,19 +36,19 @@ public abstract class DepsTimestampFormatter {
     public abstract Instant parse(String text);
 
     @SuppressWarnings("unchecked")
-    private static Class<DepsTimestampFormatter> loadImplClass() {
+    private static Class<TimestampFormatterDelegate> loadImplClass() {
         try {
-            return (Class<DepsTimestampFormatter>) CLASS_LOADER.loadClass(CLASS_NAME);
+            return (Class<TimestampFormatterDelegate>) CLASS_LOADER.loadClass(CLASS_NAME);
         } catch (final ClassNotFoundException ex) {
             throw new LinkageError("Dependencies for Timestamp are not loaded correctly: " + CLASS_NAME, ex);
         }
     }
 
     private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
-    private static final String CLASS_NAME = "org.embulk.deps.timestamp.DepsTimestampFormatterImpl";
+    private static final String CLASS_NAME = "org.embulk.deps.timestamp.TimestampFormatterDelegateImpl";
 
     static {
-        final Class<DepsTimestampFormatter> clazz = loadImplClass();
+        final Class<TimestampFormatterDelegate> clazz = loadImplClass();
         try {
             CONSTRUCTOR = clazz.getConstructor(String.class, String.class, String.class);
         } catch (final NoSuchMethodException ex) {
@@ -56,5 +56,5 @@ public abstract class DepsTimestampFormatter {
         }
     }
 
-    private static final Constructor<DepsTimestampFormatter> CONSTRUCTOR;
+    private static final Constructor<TimestampFormatterDelegate> CONSTRUCTOR;
 }

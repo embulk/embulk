@@ -2,13 +2,12 @@ package org.embulk.spi.time;
 
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.deps.timestamp.DepsTimestampFormatter;
 import org.embulk.spi.util.LineEncoder;
 
 @Deprecated  // Externalized to embulk-util-timestamp: https://github.com/embulk/embulk/issues/1298
 public class TimestampFormatter {
     private TimestampFormatter(final String pattern, final String zoneIdString) {
-        this.delegate = DepsTimestampFormatter.of(pattern, utcToNull(pattern, zoneIdString));
+        this.delegate = TimestampFormatterDelegate.of(pattern, utcToNull(pattern, zoneIdString));
         this.zoneIdString = zoneIdString;
     }
 
@@ -62,7 +61,7 @@ public class TimestampFormatter {
         return zoneIdString;
     }
 
-    private final DepsTimestampFormatter delegate;
+    private final TimestampFormatterDelegate delegate;
 
     private final String zoneIdString;  // Saved only for deprecated #getTimeZone().
 }
