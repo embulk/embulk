@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.deps.EmbulkSelfContainedJarFiles;
+import org.embulk.cli.SelfContainedJarFiles;
 import org.embulk.plugin.DefaultPluginType;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginSourceNotMatchException;
@@ -73,7 +73,7 @@ final class SelfContainedPluginRegistry {
 
     private Class<?> search(final DefaultPluginType pluginType) throws PluginSourceNotMatchException {
         final String selfContainedPluginName = "embulk-" + this.category + "-" + pluginType.getName();
-        if (!EmbulkSelfContainedJarFiles.has(selfContainedPluginName)) {
+        if (!SelfContainedJarFiles.has(selfContainedPluginName)) {
             throw new PluginSourceNotMatchException();
         }
 

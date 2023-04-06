@@ -1,4 +1,4 @@
-package org.embulk.deps;
+package org.embulk.cli;
 
 import java.io.IOException;
 import java.io.InputStream;

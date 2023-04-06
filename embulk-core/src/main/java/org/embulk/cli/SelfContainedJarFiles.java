@@ -1,4 +1,4 @@
-package org.embulk.deps;
+package org.embulk.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,8 +17,8 @@ import java.util.jar.Manifest;
  * <p>{@link org.embulk.EmbulkDependencyClassLoader} is introduced only to control the visibility from plugins,
  * not for customizability. It is intentionally designed to be a singleton.
  */
-public final class EmbulkSelfContainedJarFiles {
-    private EmbulkSelfContainedJarFiles() {
+public final class SelfContainedJarFiles {
+    private SelfContainedJarFiles() {
         // No instantiation.
     }
 
@@ -105,12 +105,12 @@ public final class EmbulkSelfContainedJarFiles {
 
     static Resource getSingleResource(final String targetResourceName, final String category) {
         if (category == null) {
-            throw new NullPointerException("EmbulkSelfContainedJarFiles.getSingleResources received null.");
+            throw new NullPointerException("SelfContainedJarFiles.getSingleResources received null.");
         }
         final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
         if (jarResourceNames == null) {
             throw new IllegalArgumentException(
-                    "EmbulkSelfContainedJarFiles.getSingleResources received unexpected category: " + category);
+                    "SelfContainedJarFiles.getSingleResources received unexpected category: " + category);
         }
 
         String foundJarResourceName = null;
@@ -131,12 +131,12 @@ public final class EmbulkSelfContainedJarFiles {
 
     static Collection<Resource> getMultipleResources(final String targetResourceName, final String category) {
         if (category == null) {
-            throw new NullPointerException("EmbulkSelfContainedJarFiles.getMultipleResources received null.");
+            throw new NullPointerException("SelfContainedJarFiles.getMultipleResources received null.");
         }
         final List<String> jarResourceNames = JAR_RESOURCE_NAMES.get(category);
         if (jarResourceNames == null) {
             throw new IllegalArgumentException(
-                    "EmbulkSelfContainedJarFiles.getMultipleResources received unexpected category: " + category);
+                    "SelfContainedJarFiles.getMultipleResources received unexpected category: " + category);
         }
 
         final ArrayList<Resource> resourcesToReturn = new ArrayList<>();

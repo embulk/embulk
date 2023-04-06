@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
-import org.embulk.deps.EmbulkSelfContainedJarFiles;
+import org.embulk.cli.SelfContainedJarFiles;
 import org.embulk.plugin.PluginClassLoader;
 import org.embulk.plugin.PluginClassLoaderFactory;
 
@@ -55,7 +55,7 @@ public class JarPluginLoader implements AutoCloseable {
             final String selfContainedPluginName,
             final PluginClassLoaderFactory classLoaderFactory)
             throws InvalidJarPluginException {
-        final Manifest manifest = EmbulkSelfContainedJarFiles.getFirstManifest(selfContainedPluginName);
+        final Manifest manifest = SelfContainedJarFiles.getFirstManifest(selfContainedPluginName);
         final Attributes manifestAttributes = manifest.getMainAttributes();
         final int spiVersion = getPluginSpiVersionFromManifest(manifestAttributes);
 

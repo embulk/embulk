@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
-import org.embulk.deps.SelfContainedJarAwareURLClassLoader;
+import org.embulk.cli.SelfContainedJarAwareURLClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
