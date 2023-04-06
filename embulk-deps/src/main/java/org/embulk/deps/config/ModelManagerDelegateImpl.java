@@ -11,6 +11,7 @@ import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
+import org.embulk.config.ModelManagerDelegate;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
 

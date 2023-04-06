@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.embulk.plugin.MavenPluginType;
+import org.embulk.plugin.maven.MavenPluginPaths;
 import org.junit.Test;
 
 public class TestMavenArtifactFinder {

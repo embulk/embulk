@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
-import org.embulk.deps.config.ConfigLoaderDelegate;
 
 public class ConfigLoader {
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304

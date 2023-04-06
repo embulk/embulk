@@ -5,7 +5,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferImpl;
 
-public class PooledBufferAllocatorImpl extends org.embulk.deps.buffer.PooledBufferAllocator {
+public class PooledBufferAllocatorImpl extends org.embulk.exec.PooledBufferAllocator {
     public PooledBufferAllocatorImpl(final int pageSize) {
         this.pageSize = pageSize;
 

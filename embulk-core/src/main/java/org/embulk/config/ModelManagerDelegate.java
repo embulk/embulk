@@ -1,12 +1,7 @@
-package org.embulk.deps.config;
+package org.embulk.config;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.config.ConfigDiff;
-import org.embulk.config.ConfigSource;
-import org.embulk.config.DataSource;
-import org.embulk.config.TaskReport;
-import org.embulk.config.TaskSource;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 
 public abstract class ModelManagerDelegate {

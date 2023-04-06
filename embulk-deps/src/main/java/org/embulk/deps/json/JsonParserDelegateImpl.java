@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.msgpack.value.Value;
 
-public class DepsJsonParserImpl extends org.embulk.deps.json.DepsJsonParser {
-    public DepsJsonParserImpl() {
+public class JsonParserDelegateImpl extends org.embulk.spi.json.JsonParserDelegate {
+    public JsonParserDelegateImpl() {
         this.delegate = new org.embulk.util.json.JsonParser();
     }
 

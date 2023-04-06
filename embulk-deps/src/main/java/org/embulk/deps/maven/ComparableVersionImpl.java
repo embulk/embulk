@@ -1,12 +1,12 @@
 package org.embulk.deps.maven;
 
-public final class ComparableVersionImpl extends org.embulk.deps.maven.ComparableVersion {
+public final class ComparableVersionImpl extends org.embulk.plugin.maven.ComparableVersion {
     public ComparableVersionImpl(final String version) {
         this.version = new org.apache.maven.artifact.versioning.ComparableVersion(version);
     }
 
     @Override
-    public int compareTo(final org.embulk.deps.maven.ComparableVersion other) {
+    public int compareTo(final org.embulk.plugin.maven.ComparableVersion other) {
         if (other instanceof ComparableVersionImpl) {
             return this.version.compareTo(((ComparableVersionImpl) other).getNative());
         }

@@ -1,4 +1,4 @@
-package org.embulk.deps.config;
+package org.embulk.config;
 
 import java.io.InputStream;
 import java.lang.reflect.Constructor;

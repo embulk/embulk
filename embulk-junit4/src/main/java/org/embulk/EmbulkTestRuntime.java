@@ -3,7 +3,7 @@ package org.embulk;
 import java.util.Random;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ModelManager;
-import org.embulk.deps.buffer.PooledBufferAllocator;
+import org.embulk.exec.PooledBufferAllocator;
 import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;

@@ -8,7 +8,6 @@ import java.util.jar.Manifest;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
-import org.embulk.deps.cli.CommandLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.SubstituteLoggingEvent;

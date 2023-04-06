@@ -1,9 +1,8 @@
-package org.embulk.deps.cli;
+package org.embulk.cli;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import org.embulk.cli.CommandLine;
 import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.slf4j.Logger;
 

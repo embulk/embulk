@@ -1,7 +1,5 @@
 package org.embulk.config;
 
-import org.embulk.deps.config.ModelManagerDelegate;
-
 @Deprecated  // https://github.com/embulk/embulk/issues/1304
 public class ModelManager {
     public ModelManager() {

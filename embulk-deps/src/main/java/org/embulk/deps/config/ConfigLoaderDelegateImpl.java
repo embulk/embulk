@@ -14,8 +14,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.embulk.config.ConfigLoaderDelegate;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
+import org.embulk.config.ModelManagerDelegate;
 
 public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
     private final ModelManagerDelegateImpl model;
@@ -57,7 +59,7 @@ public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
 
     @Override
     public ConfigSource fromYamlString(String string) {
-        YamlProcessor yamlProc = YamlProcessor.create(true);
+        final YamlProcessorImpl yamlProc = new YamlProcessorImpl(true);
         JsonNode node = objectToJson(yamlProc.load(string));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
@@ -72,7 +74,7 @@ public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
 
     @Override
     public ConfigSource fromYaml(InputStream stream) throws IOException {
-        YamlProcessor yamlProc = YamlProcessor.create(true);
+        final YamlProcessorImpl yamlProc = new YamlProcessorImpl(true);
         JsonNode node = objectToJson(yamlProc.load(stream));
         validateJsonNode(node);
         return new DataSourceImpl(model, (ObjectNode) node);
@@ -106,7 +108,7 @@ public class ConfigLoaderDelegateImpl extends ConfigLoaderDelegate {
     public ConfigSource fromPropertiesYamlLiteral(Map<String, String> props, String keyPrefix) {
         ObjectNode source = new ObjectNode(JsonNodeFactory.instance);
         DataSource ds = new DataSourceImpl(model, source);
-        YamlProcessor yamlProc = YamlProcessor.create(true);
+        final YamlProcessorImpl yamlProc = new YamlProcessorImpl(true);
         for (Map.Entry<String, String> pair : props.entrySet()) {
             if (!pair.getKey().startsWith(keyPrefix)) {
                 continue;

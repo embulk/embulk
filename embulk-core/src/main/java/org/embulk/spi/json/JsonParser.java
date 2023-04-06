@@ -3,7 +3,6 @@ package org.embulk.spi.json;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import org.embulk.deps.json.DepsJsonParser;
 import org.msgpack.value.Value;
 
 @Deprecated  // Externalized to embulk-util-json
@@ -15,7 +14,7 @@ public class JsonParser {
     }
 
     public JsonParser() {
-        this.delegate = DepsJsonParser.of();
+        this.delegate = JsonParserDelegate.of();
     }
 
     public Stream open(InputStream in) throws IOException {
@@ -34,5 +33,5 @@ public class JsonParser {
         return this.delegate.parseWithOffsetInJsonPointer(json, offsetInJsonPointer);
     }
 
-    private final DepsJsonParser delegate;
+    private final JsonParserDelegate delegate;
 }
