@@ -16,7 +16,8 @@ import static org.msgpack.value.ValueFactory.newString;
 
 import java.time.Instant;
 import java.util.List;
-import org.embulk.EmbulkTestRuntime;
+import org.embulk.test.EmbulkTestRuntime;
+import org.embulk.test.TestPageBuilderReader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

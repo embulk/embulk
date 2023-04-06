@@ -9,12 +9,12 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferImpl;
 import org.embulk.spi.Exec;
 import org.embulk.spi.TestUtils;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
 

@@ -3,10 +3,10 @@ package org.embulk.deps.config;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
 import org.embulk.spi.Exec;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

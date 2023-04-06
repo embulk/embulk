@@ -9,10 +9,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.type.Type;
 import org.embulk.spi.type.Types;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
 

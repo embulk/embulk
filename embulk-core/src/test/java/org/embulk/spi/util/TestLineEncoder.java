@@ -1,12 +1,12 @@
 package org.embulk.spi.util;
 
 import java.io.UnsupportedEncodingException;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileOutput;
-import org.embulk.spi.MockFileOutput;
+import org.embulk.test.EmbulkTestRuntime;
+import org.embulk.test.MockFileOutput;
 import org.junit.Rule;
 import org.junit.Test;
 

@@ -1,10 +1,19 @@
-package org.embulk.spi;
+package org.embulk.test;
 
 import java.time.Instant;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.Buffer;
+import org.embulk.spi.Column;
+import org.embulk.spi.Exec;
+import org.embulk.spi.FileInput;
+import org.embulk.spi.PageBuilder;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.ParserPlugin;
+import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.json.JsonParser;
 import org.embulk.spi.type.Type;
 

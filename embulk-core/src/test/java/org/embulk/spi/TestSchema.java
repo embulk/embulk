@@ -11,10 +11,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.List;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.Schema;
 import org.embulk.spi.type.Types;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
 

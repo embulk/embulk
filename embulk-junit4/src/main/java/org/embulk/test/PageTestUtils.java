@@ -1,9 +1,14 @@
-package org.embulk.spi;
+package org.embulk.test;
 
 import java.time.Instant;
 import java.util.List;
-import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
+import org.embulk.spi.BufferAllocator;
+import org.embulk.spi.Page;
+import org.embulk.spi.PageBuilder;
+import org.embulk.spi.Schema;
+import org.embulk.spi.json.JsonValue;
 import org.embulk.spi.time.Timestamp;
+import org.embulk.test.TestPageBuilderReader.MockPageOutput;
 import org.msgpack.value.Value;
 
 public class PageTestUtils {
@@ -35,6 +40,8 @@ public class PageTestUtils {
                         builder.setTimestamp(column, (Instant) value);
                     } else if (value instanceof Value) {
                         builder.setJson(column, (Value) value);
+                    } else if (value instanceof JsonValue) {
+                        builder.setJson(column, (JsonValue) value);
                     } else {
                         throw new IllegalStateException(
                                 "Unsupported type in test utils: "
