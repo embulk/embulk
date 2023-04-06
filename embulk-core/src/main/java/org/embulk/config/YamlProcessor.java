@@ -3,7 +3,7 @@ package org.embulk.config;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.EmbulkDependencyClassLoader;
 
 public abstract class YamlProcessor {
     public static YamlProcessor create(boolean withResolver) {
@@ -56,7 +56,7 @@ public abstract class YamlProcessor {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.get();
     private static final String CLASS_NAME = "org.embulk.deps.config.YamlProcessorImpl";
 
     static {

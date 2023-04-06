@@ -1,19 +1,26 @@
-package org.embulk.deps;
+package org.embulk;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.embulk.deps.EmbulkSelfContainedJarFiles;
+import org.embulk.deps.SelfContainedJarAwareURLClassLoader;
 
 /**
- * Represents a pre-defined set of class loaders to load dependency libraries for the Embulk core.
+ * A singleton class loader to load classes of embulk-core's hidden dependency libraries, such as Jackson.
  *
- * <p>It is intentionally designed to be a singleton. {@link DependencyClassLoader} is introduced only for dependency
- * visibility, not for customizability. It should not be customizable so flexibly.
+ * <p>This class loader is introduced only to control the visibility from plugins, not for customizability.
+ * It is intentionally designed to be a singleton.
  */
-public final class EmbulkDependencyClassLoaders {
-    private EmbulkDependencyClassLoaders() {
-        // No instantiation.
+public final class EmbulkDependencyClassLoader extends SelfContainedJarAwareURLClassLoader {
+    private EmbulkDependencyClassLoader(
+            final Collection<Path> jarPaths, final ClassLoader parent, final boolean useSelfContainedJarFile) {
+        // The delegation parent ClassLoader is processed by the super class URLClassLoader.
+        super(toUrls(jarPaths), parent, useSelfContainedJarFile ? EmbulkSelfContainedJarFiles.CORE : null);
     }
 
     public static final class StaticInitializer {
@@ -54,15 +61,32 @@ public final class EmbulkDependencyClassLoaders {
         return Holder.DEPENDENCY_CLASS_LOADER;
     }
 
+    @Override
+    protected void addURL(final URL url) {
+        throw new UnsupportedOperationException("EmbulkDependencyClassLoader does not support addURL.");
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        // TODO: Close EmbulkSelfContainedJarFiles?
+    }
+
+    @Override
+    public URL[] getURLs() {
+        return super.getURLs();  // TODO: Add jar: URLs of self-contained JAR files.
+    }
+
     private static class Holder {  // Initialization-on-demand holder
-        public static final DependencyClassLoader DEPENDENCY_CLASS_LOADER;
+        public static final EmbulkDependencyClassLoader DEPENDENCY_CLASS_LOADER;
 
         static {
             if (DEPENDENCIES.isEmpty() && !USE_SELF_CONTAINED_JAR_FILES.get()) {
                 System.err.println(
                         "Hidden dependencies are uninitialized. Maybe using classes loaded by Embulk's top-level ClassLoader.");
             }
-            DEPENDENCY_CLASS_LOADER = new DependencyClassLoader(DEPENDENCIES, CLASS_LOADER, USE_SELF_CONTAINED_JAR_FILES.get());
+            DEPENDENCY_CLASS_LOADER =
+                    new EmbulkDependencyClassLoader(DEPENDENCIES, CLASS_LOADER, USE_SELF_CONTAINED_JAR_FILES.get());
         }
     }
 
@@ -80,7 +104,22 @@ public final class EmbulkDependencyClassLoaders {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.class.getClassLoader();
+    private static URL[] toUrls(final Collection<Path> jarPaths) {
+        final URL[] jarUrls = new URL[jarPaths.size()];
+
+        int index = 0;
+        for (final Path jarPath : jarPaths) {
+            try {
+                jarUrls[index] = jarPath.toUri().toURL();
+            } catch (final MalformedURLException ex) {
+                throw new LinkageError("Invalid path to JAR: " + jarPath.toString(), ex);
+            }
+            ++index;
+        }
+        return jarUrls;
+    }
+
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.class.getClassLoader();
     private static final ArrayList<Path> DEPENDENCIES = new ArrayList<>();
 
     private static final AtomicBoolean USE_SELF_CONTAINED_JAR_FILES = new AtomicBoolean(false);

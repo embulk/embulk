@@ -5,7 +5,7 @@ if deps_classpath.nil?
   raise Java::java.lang.NullPointerException.new("System property \"deps_classpath\" is not set.")
 end
 
-static_initializer = Java::org.embulk.deps.EmbulkDependencyClassLoaders.staticInitializer()
+static_initializer = Java::org.embulk.EmbulkDependencyClassLoader.staticInitializer()
 deps_classpath.split(Regexp.escape(Java::java.io.File::pathSeparator)).each do |path|
   static_initializer.addDependency(java.nio.file.Paths.get(path))
 end

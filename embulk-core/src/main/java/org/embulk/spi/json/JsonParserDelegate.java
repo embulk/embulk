@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.EmbulkDependencyClassLoader;
 import org.msgpack.value.Value;
 
 public abstract class JsonParserDelegate {
@@ -45,7 +45,7 @@ public abstract class JsonParserDelegate {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.get();
     private static final String CLASS_NAME = "org.embulk.deps.json.JsonParserDelegateImpl";
 
     static {

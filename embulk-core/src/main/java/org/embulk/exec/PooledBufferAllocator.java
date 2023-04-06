@@ -2,7 +2,7 @@ package org.embulk.exec;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.EmbulkDependencyClassLoader;
 import org.embulk.spi.Buffer;
 import org.embulk.spi.BufferAllocator;
 
@@ -45,7 +45,7 @@ public abstract class PooledBufferAllocator implements BufferAllocator {
 
     private static final int DEFAULT_PAGE_SIZE = 32 * 1024;
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.get();
     private static final String CLASS_NAME = "org.embulk.deps.buffer.PooledBufferAllocatorImpl";
 
     static {
