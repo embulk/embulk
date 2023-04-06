@@ -1,4 +1,4 @@
-package org.embulk.deps.preview;
+package org.embulk.exec;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -9,10 +9,10 @@ import org.embulk.spi.Page;
 import org.embulk.spi.Schema;
 
 final class TablePreviewPrinter extends PreviewPrinter {
-    TablePreviewPrinter(final PrintStream out, final Schema schema) {
+    private TablePreviewPrinter(final PrintStream out, final Schema schema) {
         this.out = out;
         this.schema = schema;
-        this.valueFormatter = new ValueFormatter();
+        this.valueFormatter = new PreviewValueFormatter();
 
         this.format = null;
         this.border = null;
@@ -27,10 +27,14 @@ final class TablePreviewPrinter extends PreviewPrinter {
         this.samples.add(header);
     }
 
+    static TablePreviewPrinter of(final PrintStream out, final Schema schema) {
+        return new TablePreviewPrinter(out, schema);
+    }
+
     @Override
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1306
     public void printAllPages(final List<Page> pages) throws IOException {
-        final List<Object[]> records = org.embulk.spi.util.Pages.toObjects(schema, pages, true);
+        final List<Object[]> records = org.embulk.spi.util.Pages.toObjects(schema, pages, true, true);
         for (final Object[] record : records) {
             printRecord(record);
         }
@@ -127,7 +131,7 @@ final class TablePreviewPrinter extends PreviewPrinter {
     private final PrintStream out;
     private final Schema schema;
 
-    private final ValueFormatter valueFormatter;
+    private final PreviewValueFormatter valueFormatter;
 
     private List<String[]> samples;
     private int sampleSize;
