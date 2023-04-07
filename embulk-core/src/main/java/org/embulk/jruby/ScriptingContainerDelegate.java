@@ -138,6 +138,8 @@ public abstract class ScriptingContainerDelegate {
     // It is intentionally private. It should return LocalContextProvider while it is Object in the signature.
     abstract Object getProvider() throws JRubyNotLoadedException;
 
+    public abstract Object get(final String key) throws JRubyNotLoadedException;
+
     public abstract Object put(final String key, final Object value) throws JRubyNotLoadedException;
 
     public abstract Object remove(final String key) throws JRubyNotLoadedException;

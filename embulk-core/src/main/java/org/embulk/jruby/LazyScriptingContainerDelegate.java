@@ -286,6 +286,11 @@ public final class LazyScriptingContainerDelegate extends ScriptingContainerDele
     }
 
     @Override
+    public Object get(final String key) throws JRubyInvalidRuntimeException {
+        return getInitialized().get(key);
+    }
+
+    @Override
     public Object put(final String key, final Object value) throws JRubyInvalidRuntimeException {
         return getInitialized().put(key, value);
     }

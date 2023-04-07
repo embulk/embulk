@@ -31,6 +31,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
             final Method method_callMethod_LClass,
             final Method method_callMethod_LObject_LClass,
             final Method method_getProvider,
+            final Method method_get_LString,
             final Method method_put_LString_LObject,
             final Method method_remove_LString,
             final Method method_runScriptlet_LString,
@@ -54,6 +55,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
         this.method_callMethod_LClass = method_callMethod_LClass;
         this.method_callMethod_LObject_LClass = method_callMethod_LObject_LClass;
         this.method_getProvider = method_getProvider;
+        this.method_get_LString = method_get_LString;
         this.method_put_LString_LObject = method_put_LString_LObject;
         this.method_remove_LString = method_remove_LString;
         this.method_runScriptlet_LString = method_runScriptlet_LString;
@@ -80,6 +82,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
             final Method method_callMethod_LClass,
             final Method method_callMethod_LObject_LClass,
             final Method method_getProvider,
+            final Method method_get_LString,
             final Method method_put_LString_LObject,
             final Method method_remove_LString,
             final Method method_runScriptlet_LString,
@@ -92,6 +95,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
              method_callMethod_LClass,
              method_callMethod_LObject_LClass,
              method_getProvider,
+             method_get_LString,
              method_put_LString_LObject,
              method_remove_LString,
              method_runScriptlet_LString,
@@ -106,6 +110,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
 
     private ScriptingContainerDelegateImpl() {
         this(null,
+             null,
              null,
              null,
              null,
@@ -133,6 +138,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
         final Method method_callMethod_LObject_LClass;
         final Method method_callMethod_LClass;
         final Method method_getProvider;
+        final Method method_get_LString;
         final Method method_put_LString_LObject;
         final Method method_remove_LString;
         final Method method_runScriptlet_LString;
@@ -145,6 +151,8 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
                 "callMethod", Object.class, String.class, Class.class);
             method_getProvider = scriptingContainer.getClass().getMethod(
                 "getProvider");
+            method_get_LString = scriptingContainer.getClass().getMethod(
+                "get", String.class);
             method_put_LString_LObject = scriptingContainer.getClass().getMethod(
                 "put", String.class, Object.class);
             method_remove_LString = scriptingContainer.getClass().getMethod(
@@ -193,6 +201,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
                 method_callMethod_LClass,
                 method_callMethod_LObject_LClass,
                 method_getProvider,
+                method_get_LString,
                 method_put_LString_LObject,
                 method_remove_LString,
                 method_runScriptlet_LString,
@@ -216,6 +225,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
                 method_callMethod_LClass,
                 method_callMethod_LObject_LClass,
                 method_getProvider,
+                method_get_LString,
                 method_put_LString_LObject,
                 method_remove_LString,
                 method_runScriptlet_LString,
@@ -731,6 +741,35 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     }
 
     @Override
+    public Object get(final String key) throws JRubyInvalidRuntimeException {
+        if (this.scriptingContainer == null) {
+            throw new JRubyNotLoadedException();
+        }
+        if (this.method_get_LString == null) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#get(String) is unavailable unexpectedly.");
+        }
+
+        try {
+            return this.method_get_LString.invoke(this.scriptingContainer, key);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (IllegalAccessException ex) {
+            throw new JRubyInvalidRuntimeException(
+                    "ScriptingContainer#get(String) is inaccessible unexpectedly.", ex);
+        } catch (InvocationTargetException ex) {
+            final Throwable cause = ex.getCause();
+            if (cause instanceof Error) {
+                throw (Error) cause;
+            } else if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new JRubyRuntimeException(cause);
+            }
+        }
+    }
+
+    @Override
     public Object put(final String key, final Object value) throws JRubyInvalidRuntimeException {
         if (this.scriptingContainer == null) {
             throw new JRubyNotLoadedException();
@@ -891,6 +930,7 @@ public final class ScriptingContainerDelegateImpl extends ScriptingContainerDele
     private final Method method_callMethod_LClass;
     private final Method method_callMethod_LObject_LClass;
     private final Method method_getProvider;
+    private final Method method_get_LString;
     private final Method method_put_LString_LObject;
     private final Method method_remove_LString;
     private final Method method_runScriptlet_LString;
