@@ -14,8 +14,8 @@ import java.util.jar.Manifest;
 /**
  * Represents a pre-defined set of self-contained JAR file resources in the Embulk JAR file.
  *
- * <p>It is intentionally designed to be a singleton. {@link DependencyClassLoader} is introduced only for dependency
- * visibility, not for customizability. It should not be customizable so flexibly.
+ * <p>{@link org.embulk.EmbulkDependencyClassLoader} is introduced only to control the visibility from plugins,
+ * not for customizability. It is intentionally designed to be a singleton.
  */
 public final class EmbulkSelfContainedJarFiles {
     private EmbulkSelfContainedJarFiles() {

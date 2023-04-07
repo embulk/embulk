@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.jar.Manifest;
+import org.embulk.EmbulkDependencyClassLoader;
 import org.embulk.EmbulkSystemProperties;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
 import org.embulk.deps.EmbulkSelfContainedJarFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class Main {
 
         // They are loaded before SLF4J is initialized along with Logback. They don't use SLF4J for error logging.
         EmbulkSelfContainedJarFiles.staticInitializer().addFromManifest(manifest).initialize();
-        EmbulkDependencyClassLoaders.staticInitializer().useSelfContainedJarFiles().initialize();
+        EmbulkDependencyClassLoader.staticInitializer().useSelfContainedJarFiles().initialize();
 
         // Using SubstituteLogger here because SLF4J and Logback are initialized later (CliLogbackConfigurator.configure).
         final LinkedBlockingQueue<SubstituteLoggingEvent> loggingEventQueue = new LinkedBlockingQueue<SubstituteLoggingEvent>();

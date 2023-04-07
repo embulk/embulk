@@ -3,7 +3,7 @@ package org.embulk.spi.time;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.EmbulkDependencyClassLoader;
 
 public abstract class TimestampFormatterDelegate {
     public static TimestampFormatterDelegate of(final String pattern, final String defaultZone, final String defaultDate) {
@@ -44,7 +44,7 @@ public abstract class TimestampFormatterDelegate {
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.get();
     private static final String CLASS_NAME = "org.embulk.deps.timestamp.TimestampFormatterDelegateImpl";
 
     static {

@@ -2,7 +2,7 @@ package org.embulk.plugin.maven;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import org.embulk.deps.EmbulkDependencyClassLoaders;
+import org.embulk.EmbulkDependencyClassLoader;
 
 public abstract class ComparableVersion implements Comparable<ComparableVersion> {
     public static ComparableVersion of(final String version) {
@@ -34,7 +34,7 @@ public abstract class ComparableVersion implements Comparable<ComparableVersion>
         }
     }
 
-    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoaders.get();
+    private static final ClassLoader CLASS_LOADER = EmbulkDependencyClassLoader.get();
     private static final String CLASS_NAME = "org.embulk.deps.maven.ComparableVersionImpl";
 
     static {
