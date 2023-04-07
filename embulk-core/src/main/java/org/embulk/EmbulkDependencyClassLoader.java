@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.embulk.deps.EmbulkSelfContainedJarFiles;
-import org.embulk.deps.SelfContainedJarAwareURLClassLoader;
+import org.embulk.cli.SelfContainedJarAwareURLClassLoader;
+import org.embulk.cli.SelfContainedJarFiles;
 
 /**
  * A singleton class loader to load classes of embulk-core's hidden dependency libraries, such as Jackson.
@@ -20,7 +20,7 @@ public final class EmbulkDependencyClassLoader extends SelfContainedJarAwareURLC
     private EmbulkDependencyClassLoader(
             final Collection<Path> jarPaths, final ClassLoader parent, final boolean useSelfContainedJarFile) {
         // The delegation parent ClassLoader is processed by the super class URLClassLoader.
-        super(toUrls(jarPaths), parent, useSelfContainedJarFile ? EmbulkSelfContainedJarFiles.CORE : null);
+        super(toUrls(jarPaths), parent, useSelfContainedJarFile ? SelfContainedJarFiles.CORE : null);
     }
 
     public static final class StaticInitializer {
@@ -69,7 +69,7 @@ public final class EmbulkDependencyClassLoader extends SelfContainedJarAwareURLC
     @Override
     public void close() throws IOException {
         super.close();
-        // TODO: Close EmbulkSelfContainedJarFiles?
+        // TODO: Close SelfContainedJarFiles?
     }
 
     @Override

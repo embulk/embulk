@@ -1,4 +1,4 @@
-package org.embulk.deps;
+package org.embulk.cli;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,7 +21,7 @@ final class SelfContainedJarFile {
         }
 
         if (CODE_SOURCE_URL_BASE == null) {
-            System.err.println("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.");
+            System.err.println("org.embulk.cli.SelfContainedJarFile is loaded through invalid method or location.");
             this.codeSourceUrl = null;
             this.manifest = null;
             this.innerResources = null;
@@ -210,7 +210,7 @@ final class SelfContainedJarFile {
                 throw new MalformedURLException("Invalid CodeSource URL, neither 'file:' nor 'jar:': " + codeSourceUrl);
             }
         } catch (final Exception ex) {
-            System.err.println("org.embulk.deps.SelfContainedJarFile is loaded through invalid method or location.");
+            System.err.println("org.embulk.cli.SelfContainedJarFile is loaded through invalid method or location.");
             ex.printStackTrace();
             hasFailedInCodeSource = true;
         }
