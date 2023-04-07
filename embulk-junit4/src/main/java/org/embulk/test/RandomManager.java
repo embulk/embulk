@@ -1,4 +1,4 @@
-package org.embulk;
+package org.embulk.test;
 
 import java.util.Map;
 import java.util.Random;

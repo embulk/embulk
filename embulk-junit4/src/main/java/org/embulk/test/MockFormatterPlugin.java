@@ -1,10 +1,18 @@
-package org.embulk.spi;
+package org.embulk.test;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.Task;
 import org.embulk.config.TaskSource;
+import org.embulk.spi.Column;
+import org.embulk.spi.ColumnVisitor;
+import org.embulk.spi.FileOutput;
+import org.embulk.spi.FormatterPlugin;
+import org.embulk.spi.Page;
+import org.embulk.spi.PageOutput;
+import org.embulk.spi.PageReader;
+import org.embulk.spi.Schema;
 
 public class MockFormatterPlugin implements FormatterPlugin {
     public static List<List<Object>> records;

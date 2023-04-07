@@ -9,13 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.ExecInternal;
 import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.type.Types;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
 

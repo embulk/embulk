@@ -1,7 +1,9 @@
-package org.embulk.spi;
+package org.embulk.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.embulk.spi.Buffer;
+import org.embulk.spi.FileOutput;
 
 public class MockFileOutput implements FileOutput {
     private List<List<Buffer>> files = new ArrayList<List<Buffer>>();

@@ -7,8 +7,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.util.InputStreamFileInput;
+import org.embulk.test.EmbulkTestRuntime;
 import org.junit.Rule;
 import org.junit.Test;
 

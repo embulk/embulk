@@ -5,10 +5,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Random;
-import org.embulk.EmbulkTestRuntime;
 import org.embulk.spi.util.FileInputInputStream;
 import org.embulk.spi.util.FileOutputOutputStream;
 import org.embulk.spi.util.ListFileInput;
+import org.embulk.test.EmbulkTestRuntime;
+import org.embulk.test.MockFileOutput;
 import org.junit.Rule;
 import org.junit.Test;
 

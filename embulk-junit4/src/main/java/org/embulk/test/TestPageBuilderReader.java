@@ -1,7 +1,9 @@
-package org.embulk.spi;
+package org.embulk.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.embulk.spi.Page;
+import org.embulk.spi.PageOutput;
 
 public class TestPageBuilderReader {
     public static class MockPageOutput implements PageOutput {
