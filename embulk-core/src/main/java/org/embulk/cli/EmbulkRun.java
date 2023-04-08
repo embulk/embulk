@@ -355,11 +355,25 @@ public class EmbulkRun {
         }
 
         localJRubyContainer.runScriptlet("require 'rubygems/gem_runner'");
+        localJRubyContainer.runScriptlet("__internal_exit_status__ = 0");
         localJRubyContainer.put("__internal_argv_java__", subcommandArguments);
-        localJRubyContainer.runScriptlet("Gem::GemRunner.new.run Array.new(__internal_argv_java__)");
+        localJRubyContainer.runScriptlet(
+                "begin;"
+                + "  Gem::GemRunner.new.run(Array.new(__internal_argv_java__));"
+                + "  rescue SystemExit => __internal_system_exit__;"
+                + "    puts __internal_system_exit__;"
+                + "    __internal_exit_status__ = __internal_system_exit__.exit_code;"
+                + "  end");
+        final Object exitStatus = localJRubyContainer.get("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_system_exit__");
         localJRubyContainer.remove("__internal_argv_java__");
 
-        return 0;
+        if (exitStatus instanceof Number) {
+            return ((Number) exitStatus).intValue();
+        } else {
+            return -1;
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(EmbulkRun.class);
