@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
-import org.embulk.config.ConfigException;
 import org.embulk.config.Task;
 
 class TaskSerDe {
@@ -88,12 +87,6 @@ class TaskSerDe {
             for (Map.Entry<String, Method> getter : TaskInvocationHandler.fieldGetters(iface)) {
                 Method getterMethod = getter.getValue();
                 String fieldName = getter.getKey();
-
-                if (isConfigInjectAnnotated(getterMethod)) {
-                    throw new ConfigException(
-                            "@ConfigInject (org.embulk.config.ConfigInject) has stopped working since Embulk v0.10.29. "
-                            + "Contact a developer of the plugin.");
-                }
 
                 Type fieldType = getterMethod.getGenericReturnType();
 
@@ -194,11 +187,6 @@ class TaskSerDe {
             return (T) Proxy.newProxyInstance(
                     iface.getClassLoader(), new Class<?>[] {iface},
                     new TaskInvocationHandler(model, iface, objects));
-        }
-
-        @SuppressWarnings("deprecation")  // For use of org.embulk.config.ConfigInject
-        private static boolean isConfigInjectAnnotated(final Method getterMethod) {
-            return getterMethod.getAnnotation(org.embulk.config.ConfigInject.class) != null;
         }
 
         private static class FieldEntry {
