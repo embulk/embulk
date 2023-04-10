@@ -81,7 +81,7 @@ public class EmbulkEmbed {
             this.bulkLoader = alternativeBulkLoader;
         }
         this.guessExecutor = new GuessExecutor(embulkSystemProperties);
-        this.previewExecutor = new PreviewExecutor();
+        this.previewExecutor = new PreviewExecutor(embulkSystemProperties);
 
         this.modelManager = createModelManager();
     }
