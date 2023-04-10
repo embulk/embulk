@@ -235,20 +235,39 @@ public class EmbulkRun {
         localJRubyContainer.runScriptlet("require 'bundler/friendly_errors'");
         localJRubyContainer.runScriptlet("require 'bundler/cli'");
 
+        localJRubyContainer.runScriptlet("__internal_exit_status__ = 0");
         localJRubyContainer.put("__internal_argv_java__", arguments);
         if (path == null) {
-            localJRubyContainer.runScriptlet("Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }");
+            localJRubyContainer.runScriptlet(
+                    "begin;"
+                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
+                    + "  rescue SystemExit => __internal_system_exit__;"
+                    + "    puts __internal_system_exit__;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.exit_code;"
+                    + "  end");
         } else {
             localJRubyContainer.put("__internal_working_dir__", path.toString());
             localJRubyContainer.runScriptlet(
-                    "Dir.chdir(__internal_working_dir__) {"
-                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
-                    + "}");
+                    "begin;"
+                    + "  Dir.chdir(__internal_working_dir__) {"
+                    + "    Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
+                    + "  }"
+                    + "  rescue SystemExit => __internal_system_exit__;"
+                    + "    puts __internal_system_exit__;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.exit_code;"
+                    + "  end");
             localJRubyContainer.remove("__internal_working_dir__");
         }
+        final Object exitStatus = localJRubyContainer.get("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_system_exit__");
         localJRubyContainer.remove("__internal_argv_java__");
 
-        return 0;
+        if (exitStatus instanceof Number) {
+            return ((Number) exitStatus).intValue();
+        } else {
+            return -1;
+        }
     }
 
     // TODO: Check if it is required to process JRuby options.
