@@ -66,8 +66,7 @@ public class EmbulkRun {
             case GEM:
                 return callJRubyGem(subcommandArguments, embulkSystemProperties);
             case MKBUNDLE:
-                newBundle(commandLine.getArguments().get(0), embulkSystemProperties);
-                break;
+                return newBundle(commandLine.getArguments().get(0), embulkSystemProperties);
             case RUN:
             case CLEANUP:
             case PREVIEW:
