@@ -66,8 +66,7 @@ public class EmbulkRun {
             case GEM:
                 return callJRubyGem(subcommandArguments, embulkSystemProperties);
             case MKBUNDLE:
-                newBundle(commandLine.getArguments().get(0), embulkSystemProperties);
-                break;
+                return newBundle(commandLine.getArguments().get(0), embulkSystemProperties);
             case RUN:
             case CLEANUP:
             case PREVIEW:
@@ -161,7 +160,6 @@ public class EmbulkRun {
         try {
             // copy embulk/data/bundle/ contents
             copyResourceToFile("org/embulk/jruby/bundler/template/Gemfile", path, "Gemfile");
-            // ".ruby-version" is no longer required since JRuby used is embedded in Embulk.
             copyResourceToFile("org/embulk/jruby/bundler/template/.bundle/config", path, ".bundle/config");
             copyResourceToFile("org/embulk/jruby/bundler/template/embulk/input/example.rb", path, "embulk/input/example.rb");
             copyResourceToFile("org/embulk/jruby/bundler/template/embulk/output/example.rb", path, "embulk/output/example.rb");
@@ -226,7 +224,7 @@ public class EmbulkRun {
             return -1;
         }
 
-        localJRubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
+        localJRubyContainer.runScriptlet("require 'bundler'");
 
         // this hack is necessary to make --help working
         localJRubyContainer.runScriptlet("Bundler.define_singleton_method(:which_orig, Bundler.method(:which))");
@@ -235,20 +233,37 @@ public class EmbulkRun {
         localJRubyContainer.runScriptlet("require 'bundler/friendly_errors'");
         localJRubyContainer.runScriptlet("require 'bundler/cli'");
 
+        localJRubyContainer.runScriptlet("__internal_exit_status__ = 0");
         localJRubyContainer.put("__internal_argv_java__", arguments);
         if (path == null) {
-            localJRubyContainer.runScriptlet("Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }");
+            localJRubyContainer.runScriptlet(
+                    "begin;"
+                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) };"
+                    + "  rescue SystemExit => __internal_system_exit__;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.status;"
+                    + "  end");
         } else {
             localJRubyContainer.put("__internal_working_dir__", path.toString());
             localJRubyContainer.runScriptlet(
-                    "Dir.chdir(__internal_working_dir__) {"
-                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
-                    + "}");
+                    "begin;"
+                    + "  Dir.chdir(__internal_working_dir__) {"
+                    + "    Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
+                    + "  };"
+                    + "  rescue SystemExit => __internal_system_exit__;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.status;"
+                    + "  end");
             localJRubyContainer.remove("__internal_working_dir__");
         }
+        final Object exitStatus = localJRubyContainer.get("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_exit_status__");
+        localJRubyContainer.remove("__internal_system_exit__");
         localJRubyContainer.remove("__internal_argv_java__");
 
-        return 0;
+        if (exitStatus instanceof Number) {
+            return ((Number) exitStatus).intValue();
+        } else {
+            return -1;
+        }
     }
 
     // TODO: Check if it is required to process JRuby options.
