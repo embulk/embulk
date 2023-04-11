@@ -240,10 +240,9 @@ public class EmbulkRun {
         if (path == null) {
             localJRubyContainer.runScriptlet(
                     "begin;"
-                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
+                    + "  Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) };"
                     + "  rescue SystemExit => __internal_system_exit__;"
-                    + "    puts __internal_system_exit__;"
-                    + "    __internal_exit_status__ = __internal_system_exit__.exit_code;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.status;"
                     + "  end");
         } else {
             localJRubyContainer.put("__internal_working_dir__", path.toString());
@@ -251,10 +250,9 @@ public class EmbulkRun {
                     "begin;"
                     + "  Dir.chdir(__internal_working_dir__) {"
                     + "    Bundler.with_friendly_errors { Bundler::CLI.start(Array.new(__internal_argv_java__), debug: true) }"
-                    + "  }"
+                    + "  };"
                     + "  rescue SystemExit => __internal_system_exit__;"
-                    + "    puts __internal_system_exit__;"
-                    + "    __internal_exit_status__ = __internal_system_exit__.exit_code;"
+                    + "    __internal_exit_status__ = __internal_system_exit__.status;"
                     + "  end");
             localJRubyContainer.remove("__internal_working_dir__");
         }
