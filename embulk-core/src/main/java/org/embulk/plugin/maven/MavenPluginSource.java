@@ -47,7 +47,7 @@ public class MavenPluginSource implements PluginSource {
                             "[FATAL/INTERNAL] Plugin class \"" + pluginMainClass.getName() + "\" is not file-input.",
                             ex);
                 }
-                pluginMainObject = new FileInputRunner(fileInputPluginMainObject);
+                pluginMainObject = new FileInputRunner(fileInputPluginMainObject, this.embulkSystemProperties);
             } else if (FileOutputPlugin.class.isAssignableFrom(pluginMainClass)) {
                 final FileOutputPlugin fileOutputPluginMainObject;
                 try {

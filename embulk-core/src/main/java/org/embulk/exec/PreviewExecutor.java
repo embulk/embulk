@@ -2,6 +2,8 @@ package org.embulk.exec;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
+import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigException;
@@ -51,11 +53,13 @@ public class PreviewExecutor {
 
     public interface PreviewExecutorTask extends Task {
         @Config("preview_sample_buffer_bytes")
-        @ConfigDefault("32768") // 32 * 1024
-        public int getSampleBufferBytes();
+        @ConfigDefault("null")
+        public OptionalInt getSampleBufferBytes();
     }
 
-    public PreviewExecutor() {}
+    public PreviewExecutor(final EmbulkSystemProperties embulkSystemProperties) {
+        this.embulkSystemProperties = embulkSystemProperties;
+    }
 
     public PreviewResult preview(ExecSessionInternal exec, final ConfigSource config) {
         try {
@@ -91,17 +95,22 @@ public class PreviewExecutor {
             Buffer sample = SamplingParserPlugin.runFileInputSampling(
                     (FileInputRunner) inputPlugin,
                     config.getNested("in"),
-                    createSampleBufferConfigFromExecConfig(task.getExecConfig()));
-            FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample));
+                    createSampleBufferConfigFromExecConfig(task.getExecConfig(), this.embulkSystemProperties));
+            final FileInputRunner previewRunner = new FileInputRunner(new BufferFileInputPlugin(sample), this.embulkSystemProperties);
             return doPreview(task, previewRunner, filterPlugins);
         } else {
             return doPreview(task, inputPlugin, filterPlugins);
         }
     }
 
-    private static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig) {
+    private static ConfigSource createSampleBufferConfigFromExecConfig(
+            final ConfigSource execConfig, final EmbulkSystemProperties embulkSystemProperties) {
         final PreviewExecutorTask execTask = loadPreviewExecutorTask(execConfig);
-        return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
+        final OptionalInt systemPreviewSampleBufferBytes =
+                embulkSystemProperties.getPropertyAsOptionalInt("preview_sample_buffer_bytes");
+        return Exec.newConfigSource().set(
+                "sample_buffer_bytes",
+                execTask.getSampleBufferBytes().orElse(systemPreviewSampleBufferBytes.orElse(DEAULT_SAMPLE_BUFFER_BYTES)));
     }
 
     @SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
@@ -208,4 +217,8 @@ public class PreviewExecutor {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(PreviewExecutor.class);
+
+    private static final int DEAULT_SAMPLE_BUFFER_BYTES = 32768;  // 32 * 1024
+
+    private final EmbulkSystemProperties embulkSystemProperties;
 }

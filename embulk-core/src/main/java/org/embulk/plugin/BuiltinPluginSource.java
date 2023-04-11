@@ -203,7 +203,7 @@ public class BuiltinPluginSource implements PluginSource {
             final Class<? extends FileInputPlugin> fileInputPluginImpl = this.fileInputPlugins.get(name);
             if (fileInputPluginImpl != null) {
                 return pluginInterface.cast(new FileInputRunner((FileInputPlugin) PluginManager.newPluginInstance(
-                        fileInputPluginImpl, this.embulkSystemProperties)));
+                        fileInputPluginImpl, this.embulkSystemProperties), this.embulkSystemProperties));
             }
         } else if (OutputPlugin.class.isAssignableFrom(pluginInterface)) {
             // Duplications between Output Plugins and File Output Plugins are rejected when registered above.

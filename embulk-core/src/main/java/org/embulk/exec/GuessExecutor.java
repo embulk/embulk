@@ -3,6 +3,7 @@ package org.embulk.exec;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
@@ -30,8 +31,6 @@ import org.embulk.spi.ParserPlugin;
 import org.embulk.spi.Schema;
 
 public class GuessExecutor {
-    private final List<PluginType> defaultGuessPlugins;
-
     private interface GuessExecutorTask extends Task {
         @Config("guess_plugins")
         @ConfigDefault("[]")
@@ -42,19 +41,26 @@ public class GuessExecutor {
         public List<PluginType> getExcludeGuessPlugins();
 
         @Config("guess_sample_buffer_bytes")
-        @ConfigDefault("32768") // 32 * 1024
-        public int getSampleBufferBytes();
+        @ConfigDefault("null")
+        public OptionalInt getSampleBufferBytes();
     }
 
     // Used by FileInputRunner#guess(..)
-    public static ConfigSource createSampleBufferConfigFromExecConfig(ConfigSource execConfig) {
+    public static ConfigSource createSampleBufferConfigFromExecConfig(
+            final ConfigSource execConfig, final EmbulkSystemProperties embulkSystemProperties) {
         final GuessExecutorTask execTask = loadGuessExecutorTask(execConfig);
-        return Exec.newConfigSource().set("sample_buffer_bytes", execTask.getSampleBufferBytes());
+        final OptionalInt systemGuessSampleBufferBytes =
+                embulkSystemProperties.getPropertyAsOptionalInt("guess_sample_buffer_bytes");
+        return Exec.newConfigSource().set(
+                "sample_buffer_bytes",
+                execTask.getSampleBufferBytes().orElse(systemGuessSampleBufferBytes.orElse(DEAULT_SAMPLE_BUFFER_BYTES)));
     }
 
     public GuessExecutor(final EmbulkSystemProperties embulkSystemProperties) {
+        this.embulkSystemProperties = embulkSystemProperties;
         final String defaultGuessPlugins = embulkSystemProperties.getProperty("default_guess_plugins", null);
         final String guessPlugins = embulkSystemProperties.getProperty("guess_plugins", null);
+        this.systemGuessSampleBufferBytes = embulkSystemProperties.getPropertyAsOptionalInt("guess_sample_buffer_bytes");
 
         final ArrayList<PluginType> guessPluginsBuilt = new ArrayList<>();
 
@@ -127,7 +133,8 @@ public class GuessExecutor {
         final GuessExecutorTask task = loadGuessExecutorTask(execConfig);
         guessPlugins.addAll(task.getGuessPlugins());
         guessPlugins.removeAll(task.getExcludeGuessPlugins());
-        final int guessParserSampleBufferBytes = task.getSampleBufferBytes();
+        final int guessParserSampleBufferBytes =
+                task.getSampleBufferBytes().orElse(this.systemGuessSampleBufferBytes.orElse(DEAULT_SAMPLE_BUFFER_BYTES));
 
         return guessParserConfig(sample, inputConfig, guessPlugins, guessParserSampleBufferBytes);
     }
@@ -146,7 +153,7 @@ public class GuessExecutor {
                     .set("guess_parser_sample_buffer_bytes", guessParserSampleBufferBytes);
 
             // run FileInputPlugin
-            final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample));
+            final FileInputRunner input = new FileInputRunner(new BufferFileInputPlugin(sample), this.embulkSystemProperties);
             ConfigDiff guessed;
             try {
                 input.transaction(guessInputConfig, new InputPlugin.Control() {
@@ -297,4 +304,10 @@ public class GuessExecutor {
     private static GuessExecutorTask loadGuessExecutorTask(final ConfigSource config) {
         return config.loadConfig(GuessExecutorTask.class);
     }
+
+    private static final int DEAULT_SAMPLE_BUFFER_BYTES = 32768;  // 32 * 1024
+
+    private final List<PluginType> defaultGuessPlugins;
+    private final EmbulkSystemProperties embulkSystemProperties;
+    private final OptionalInt systemGuessSampleBufferBytes;
 }
