@@ -160,7 +160,6 @@ public class EmbulkRun {
         try {
             // copy embulk/data/bundle/ contents
             copyResourceToFile("org/embulk/jruby/bundler/template/Gemfile", path, "Gemfile");
-            // ".ruby-version" is no longer required since JRuby used is embedded in Embulk.
             copyResourceToFile("org/embulk/jruby/bundler/template/.bundle/config", path, ".bundle/config");
             copyResourceToFile("org/embulk/jruby/bundler/template/embulk/input/example.rb", path, "embulk/input/example.rb");
             copyResourceToFile("org/embulk/jruby/bundler/template/embulk/output/example.rb", path, "embulk/output/example.rb");
@@ -225,7 +224,7 @@ public class EmbulkRun {
             return -1;
         }
 
-        localJRubyContainer.runScriptlet("require 'bundler'");  // bundler is included in embulk-core.jar
+        localJRubyContainer.runScriptlet("require 'bundler'");
 
         // this hack is necessary to make --help working
         localJRubyContainer.runScriptlet("Bundler.define_singleton_method(:which_orig, Bundler.method(:which))");
