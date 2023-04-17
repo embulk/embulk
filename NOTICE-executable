@@ -116,6 +116,13 @@ the Apache License, Version 2.0.
 
 
 The executable distribution of this product includes
+the Bean Validation API 1.1, developed by
+the JSR-349 Expert Group (https://beanvalidation.org/1.1/), licensed under
+the Apache License, Version 2.0.
+
+
+
+The executable distribution of this product includes
 Apache Commons Lang, developed by
 The Apache Software Foundation (http://www.apache.org/), licensed under
 the Apache License, Version 2.0.
