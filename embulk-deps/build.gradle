@@ -53,9 +53,6 @@ dependencies {
     api "com.fasterxml.jackson.core:jackson-databind:2.6.7.5"
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
 
-    api "javax.validation:validation-api:1.1.0.Final"
-    api "org.apache.bval:bval-jsr303:0.5"
-
     // 3.8.1 is required from Apache Maven.
     api "org.apache.commons:commons-lang3:3.8.1"
 
