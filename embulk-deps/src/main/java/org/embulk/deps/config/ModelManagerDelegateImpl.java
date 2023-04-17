@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import javax.validation.Validation;
-import org.apache.bval.jsr303.ApacheValidationProvider;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
@@ -14,11 +12,14 @@ import org.embulk.config.DataSource;
 import org.embulk.config.ModelManagerDelegate;
 import org.embulk.config.TaskReport;
 import org.embulk.config.TaskSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModelManagerDelegateImpl extends ModelManagerDelegate {
+    private final Logger logger = LoggerFactory.getLogger(ModelManagerDelegateImpl.class);
+
     private final ObjectMapper objectMapper;
     private final ObjectMapper configObjectMapper;  // configObjectMapper uses different TaskDeserializer
-    private final TaskValidator taskValidator;
 
     public ModelManagerDelegateImpl() {
         this.objectMapper = new ObjectMapper();
@@ -39,8 +40,6 @@ public class ModelManagerDelegateImpl extends ModelManagerDelegate {
         objectMapper.registerModule(new SchemaJacksonModule());
         objectMapper.registerModule(new Jdk8Module());  // jackson-datatype-jdk8
         this.configObjectMapper = objectMapper.copy();
-        this.taskValidator = new TaskValidator(
-                Validation.byProvider(ApacheValidationProvider.class).configure().buildValidatorFactory().getValidator());
 
         objectMapper.registerModule(new TaskSerDe.TaskSerializerModule(objectMapper));
         objectMapper.registerModule(new TaskSerDe.TaskDeserializerModule(objectMapper, this));
@@ -84,7 +83,6 @@ public class ModelManagerDelegateImpl extends ModelManagerDelegate {
             }
             throw new ConfigException(ex);
         }
-        validate(t);
         return t;
     }
 
@@ -98,7 +96,6 @@ public class ModelManagerDelegateImpl extends ModelManagerDelegate {
             }
             throw new ConfigException(ex);
         }
-        validate(t);
         return t;
     }
 
@@ -128,7 +125,9 @@ public class ModelManagerDelegateImpl extends ModelManagerDelegate {
 
     @Override
     public void validate(Object object) {
-        taskValidator.validateModel(object);
+        logger.warn(
+                "ModelManager#validate is no longer available.",
+                new UnsupportedOperationException("ModelManager#validate is no longer available."));
     }
 
     @Override
