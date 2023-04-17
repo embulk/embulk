@@ -7,7 +7,7 @@ repositories {
 }
 
 group = "org.embulk"
-version = "0.10.49-SNAPSHOT"
+version = "0.10.49"
 
 def subprojectNamesOfCoreArtifacts = [
     "embulk-spi",
