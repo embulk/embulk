@@ -89,16 +89,6 @@ SnakeYAML, licensed under the Apache License, Version 2.0.
 
 
 The executable distribution of this product includes
-Apache Commons BeanUtils, developed by
-The Apache Software Foundation (http://www.apache.org/), licensed under
-the Apache License, Version 2.0.
-
-* Copyright 2000-2010 The Apache Software Foundation
-* The NOTICE.txt file of Apache Commons BeanUtils is embedded in this NOTICE below.
-
-
-
-The executable distribution of this product includes
 Apache Commons CLI, developed by
 The Apache Software Foundation (http://www.apache.org/), licensed under
 the Apache License, Version 2.0.
@@ -122,23 +112,6 @@ The executable distribution of this product includes
 the JSR-330: Dependency Injection for Java, developed by
 The JSR-330 Expert Group (https://code.google.com/archive/p/atinject/), licensed under
 the Apache License, Version 2.0.
-
-
-
-The executable distribution of this product includes
-the Bean Validation API 1.1, developed by
-the JSR-349 Expert Group (https://beanvalidation.org/1.1/), licensed under
-the Apache License, Version 2.0.
-
-
-
-The executable distribution of this product includes
-Apache BVal, developed by
-The Apache Software Foundation (http://www.apache.org/), licensed under
-the Apache License, Version 2.0.
-
-* Copyright 2010-2012 The Apache Software Foundation.
-* The NOTICE files of Apache BVal :: bval-jsr303 and Apache BVal :: bval-core are embedded in this NOTICE below.
 
 
 
@@ -373,56 +346,6 @@ can be obtained at:
     * license/LICENSE.log4j.txt (Apache License 2.0)
   * HOMEPAGE:
     * http://logging.apache.org/log4j/
-
-
-
-NOTICE of Apache BVal :: bval-jsr303
--------------------------------------
-
-Apache BVal :: bval-jsr303
-Copyright 2010-2012 The Apache Software Foundation
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
-
-
-
-
-The following copyright notice(s) were affixed to portions of this code
-with which this file is now or was at one time distributed.
-
-This product includes software developed by agimatec GmbH.
-Copyright 2007-2010 Agimatec GmbH. All rights reserved.
-
-
-
-NOTICE of Apache BVal :: bval-core
------------------------------------
-
-Apache BVal :: bval-core
-Copyright 2010-2012 The Apache Software Foundation
-
-This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
-
-
-
-The following copyright notice(s) were affixed to portions of this code
-with which this file is now or was at one time distributed.
-
-This product includes software developed by agimatec GmbH.
-Copyright 2007-2010 Agimatec GmbH. All rights reserved.
-
-
-
-NOTICE.txt of Apache Commons BeanUtils
----------------------------------------
-
-Apache Commons BeanUtils
-Copyright 2000-2010 The Apache Software Foundation
-
-This product includes software developed by
-The Apache Software Foundation (http://www.apache.org/).
 
 
 
