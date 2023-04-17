@@ -12,7 +12,7 @@ echo. 1>&2
 echo  This v0.11.0 will contain a lot of incompatible changes from v0.9. 1>&2
 echo  Many plugins are expected to stop working with v0.11.0. 1>&2
 echo. 1>&2
-echo  Try v0.10.48, a Release Candidate for v0.11.0, before it actually happens. 1>&2
+echo  Try v0.10.48 or later, Release Candidate for v0.11, before v0.11.0 is official. 1>&2
 echo. 1>&2
 echo  See: https://www.embulk.org/articles/2023/04/13/embulk-v0.11-is-coming-soon.html 1>&2
 echo ================================================================================ 1>&2
