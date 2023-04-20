@@ -23,6 +23,7 @@ import org.embulk.exec.PartialExecutionException;
 import org.embulk.exec.PooledBufferAllocator;
 import org.embulk.exec.PreviewExecutor;
 import org.embulk.exec.PreviewResult;
+import org.embulk.exec.Report;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.SimpleTempFileSpaceAllocator;
 import org.embulk.exec.TransactionStage;
@@ -237,6 +238,10 @@ public class EmbulkEmbed {
     }
 
     public Object dumpObjectFromResumeState(final ResumeState modelObject) {
+        return modelManager.readObject(Object.class, this.modelManager.writeObject(modelObject));
+    }
+
+    public Object dumpObjectFromTaskReports(final Report modelObject) {
         return modelManager.readObject(Object.class, this.modelManager.writeObject(modelObject));
     }
 

@@ -94,6 +94,7 @@ public class EmbulkRun {
                 final Path configDiffPath = getPathFromProperties("config_diff_path", embulkSystemProperties);
                 final Path outputPath = getPathFromProperties("output_path", embulkSystemProperties);
                 final Path resumeStatePath = getPathFromProperties("resume_state_path", embulkSystemProperties);
+                final Path taskReportPath = getPathFromProperties("task_report_path", embulkSystemProperties);
                 final String previewFormat = embulkSystemProperties.getProperty("preview_format");
 
                 try {
@@ -108,7 +109,8 @@ public class EmbulkRun {
                             runner.run(Paths.get(commandLine.getArguments().get(0)),
                                        configDiffPath,
                                        outputPath,
-                                       resumeStatePath);
+                                       resumeStatePath,
+                                       taskReportPath);
                             break;
                         default:  // Do nothing, and just pass through.
                     }

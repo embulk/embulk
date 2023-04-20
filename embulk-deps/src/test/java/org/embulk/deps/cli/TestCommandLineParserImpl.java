@@ -112,6 +112,7 @@ public class TestCommandLineParserImpl {
                 + "   -r, --resume-state PATH     Path to a file to write or read resume state" + NEWLINE
                 + "   -o, --output PATH           (deprecated)" + NEWLINE
                 + "   -c, --config-diff PATH      Path to a file of the next configuration diff" + NEWLINE
+                + "   -t, --task-report PATH      Path to a file of task report" + NEWLINE
                 + NEWLINE,
                 commandLine.getStdOut());
         assertEquals("", commandLine.getStdErr());
