@@ -8,16 +8,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.embulk.config.ConfigDiff;
 import org.embulk.config.ConfigException;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.DataSource;
+import org.embulk.config.TaskReport;
 import org.embulk.config.YamlProcessor;
 import org.embulk.exec.ExecutionResult;
 import org.embulk.exec.PreviewPrinter;
 import org.embulk.exec.PreviewResult;
+import org.embulk.exec.Report;
 import org.embulk.exec.ResumeState;
 import org.embulk.exec.TransactionStage;
 import org.embulk.jruby.LazyScriptingContainerDelegate;
@@ -138,7 +141,8 @@ public class EmbulkRunner {
             final Path configFilePath,
             final Path configDiffPath,
             final Path outputPath,
-            final Path resumeStatePath) {
+            final Path resumeStatePath,
+            final Path reportPath) {
         // TODO: Utilize |templateParams| and |templateIncludePath|.
         // They have not been used in org.embulk.cli while |template_params| and |template_include_path| are implemented
         // in Ruby Embulk::EmbulkRunner.
@@ -150,7 +154,7 @@ public class EmbulkRunner {
         }
 
         try {
-            runInternal(configSource, configDiffPath, outputPath, resumeStatePath);
+            runInternal(configSource, configDiffPath, outputPath, resumeStatePath, reportPath);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -164,11 +168,13 @@ public class EmbulkRunner {
     public void run(final String configFilePathString,
                     final String configDiffPathString,
                     final String outputPathString,
-                    final String resumeStatePathString) {
+                    final String resumeStatePathString,
+                    final String reportPathString) {
         final Path configDiffPath = (configDiffPathString == null ? null : Paths.get(configDiffPathString));
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         final Path resumeStatePath = (resumeStatePathString == null ? null : Paths.get(resumeStatePathString));
-        run(Paths.get(configFilePathString), configDiffPath, outputPath, resumeStatePath);
+        final Path reportPath = (resumeStatePathString == null ? null : Paths.get(reportPathString));
+        run(Paths.get(configFilePathString), configDiffPath, outputPath, resumeStatePath, reportPath);
     }
 
     /**
@@ -179,12 +185,14 @@ public class EmbulkRunner {
     public void run(final ConfigSource configSource,
                     final String configDiffPathString,
                     final String outputPathString,
-                    final String resumeStatePathString) {
+                    final String resumeStatePathString,
+                    final String reportPathString) {
         final Path configDiffPath = (configDiffPathString == null ? null : Paths.get(configDiffPathString));
         final Path outputPath = (outputPathString == null ? null : Paths.get(outputPathString));
         final Path resumeStatePath = (resumeStatePathString == null ? null : Paths.get(resumeStatePathString));
+        final Path reportPath = (resumeStatePathString == null ? null : Paths.get(reportPathString));
         try {
-            runInternal(configSource, configDiffPath, outputPath, resumeStatePath);
+            runInternal(configSource, configDiffPath, outputPath, resumeStatePath, reportPath);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -232,7 +240,8 @@ public class EmbulkRunner {
             final ConfigSource originalConfigSource,
             final Path configDiffPath,
             final Path outputPath,  // deprecated
-            final Path resumeStatePath) throws IOException {
+            final Path resumeStatePath,
+            final Path reportPath) throws IOException {
         try {
             checkFileWritable(outputPath);
         } catch (IOException ex) {
@@ -247,6 +256,11 @@ public class EmbulkRunner {
             checkFileWritable(resumeStatePath);
         } catch (IOException ex) {
             throw new RuntimeException("Not writable: " + resumeStatePath.toString());
+        }
+        try {
+            checkFileWritable(reportPath);
+        } catch (IOException ex) {
+            throw new RuntimeException("Not writable: " + reportPath.toString());
         }
 
         final ConfigSource configSource;
@@ -332,6 +346,7 @@ public class EmbulkRunner {
 
         writeConfig(configDiffPath, configDiff);
         writeConfig(outputPath, configSource.merge(configDiff));  // deprecated
+        writeTaskReport(reportPath, executionResult.getInputTaskReports(), executionResult.getOutputTaskReports());
     }
 
     // def resume_state(config, options={})
@@ -434,6 +449,15 @@ public class EmbulkRunner {
         return yamlString;
     }
 
+    private String writeTaskReport(final Path path, final List<TaskReport> inputTaskReports, List<TaskReport> outputTaskReports) throws IOException {
+        final Report report = new Report(inputTaskReports, outputTaskReports);
+        final String yamlString = dumpTaskReportInYaml(report);
+        if (path != null) {
+            Files.write(path, yamlString.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+        }
+        return yamlString;
+    }
+
     @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
     private String dumpDataSourceInYaml(final DataSource modelObject) {
         final Object object = this.embed.dumpObjectFromDataSource(modelObject);
@@ -448,6 +472,12 @@ public class EmbulkRunner {
         return yamlProc.dump(object);
     }
 
+    private String dumpTaskReportInYaml(final Report modelObject) {
+        final Object object = this.embed.dumpObjectFromTaskReports(modelObject);
+        final YamlProcessor yamlProc = YamlProcessor.create(false);
+        return yamlProc.dump(object);
+    }
+    
     // class Runnable
     //   def initialize(runner, config, options)
     //     @runner = runner

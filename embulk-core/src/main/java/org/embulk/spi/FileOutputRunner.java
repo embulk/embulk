@@ -165,7 +165,16 @@ public class FileOutputRunner implements OutputPlugin {
         @Override
         public TaskReport commit() {
             // TODO check finished
-            return tran.commit();
+            TaskReport taskReport = tran.commit();
+            if (output instanceof TransactionalPageOutput) {
+                TaskReport outputTaskReport = ((TransactionalPageOutput) output).commit();
+                if (taskReport != null && outputTaskReport != null) {
+                    taskReport.setNested("formatter", outputTaskReport);
+                } else if (taskReport == null) {
+                    taskReport = outputTaskReport;
+                }
+            }
+            return taskReport;
         }
     }
 

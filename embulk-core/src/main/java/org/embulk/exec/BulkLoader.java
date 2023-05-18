@@ -313,7 +313,8 @@ public class BulkLoader {
                 ignoredExceptions.add(ex);
             }
 
-            return new ExecutionResult(configDiff, false, Collections.unmodifiableList(ignoredExceptions));
+            return new ExecutionResult(configDiff, false, Collections.unmodifiableList(ignoredExceptions),
+                    this.getAllInputTaskReports(), this.getAllOutputTaskReports());
         }
 
         public ExecutionResult buildExecuteResultOfSkippedExecution(ConfigDiff configDiff) {
@@ -322,7 +323,8 @@ public class BulkLoader {
                 ignoredExceptions.add(e);
             }
 
-            return new ExecutionResult(configDiff, true, Collections.unmodifiableList(ignoredExceptions));
+            return new ExecutionResult(configDiff, true, Collections.unmodifiableList(ignoredExceptions),
+                    this.getAllInputTaskReports(), this.getAllOutputTaskReports());
         }
 
         public ResumeState buildResumeState(ExecSessionInternal exec) {
