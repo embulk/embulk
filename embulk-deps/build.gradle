@@ -57,7 +57,7 @@ dependencies {
     api "org.apache.commons:commons-lang3:3.8.1"
 
     // JSON (embulk-util-json)
-    api("org.embulk:embulk-util-json:0.2.1") {
+    api("org.embulk:embulk-util-json:0.2.2") {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
         exclude group: "org.msgpack", module: "msgpack-core"
     }
