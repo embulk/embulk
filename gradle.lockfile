@@ -46,6 +46,7 @@ org.embulk:embulk-output-null:0.10.42=pluginEmbedded
 org.embulk:embulk-output-stdout:0.10.42=pluginEmbedded
 org.embulk:embulk-parser-csv:0.10.42=pluginEmbedded
 org.embulk:embulk-parser-json:0.10.42=pluginEmbedded
+org.embulk:embulk-spi:0.11=compileClasspath
 org.embulk:embulk-util-config:0.3.3=pluginEmbedded
 org.embulk:embulk-util-csv:0.2.3=pluginEmbedded
 org.embulk:embulk-util-file:0.1.4=pluginEmbedded
