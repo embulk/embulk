@@ -9,12 +9,6 @@ repositories {
 group = "org.embulk"
 version = "0.11.0-SNAPSHOT"
 
-def subprojectNamesOfCoreArtifacts = [
-    "embulk-core",
-    "embulk-deps",
-    "embulk-junit4",
-]
-
 def embeddedPlugins = [
     [ group: "org.embulk", name: "embulk-decoder-bzip2", version: "0.11.0" ],
     [ group: "org.embulk", name: "embulk-decoder-gzip", version: "0.11.0" ],
@@ -78,6 +72,19 @@ dependencies {
 
     embeddedPlugins.each { pluginArtifact ->
         pluginEmbedded pluginArtifact
+    }
+}
+
+// A safer and strict alternative to: "dependencies" (and "dependencies --write-locks")
+//
+// This task fails explicitly when the specified dependency is not available.
+// In contrast, "dependencies (--write-locks)" does not fail even when a part the dependencies are unavailable.
+//
+// https://docs.gradle.org/7.6.1/userguide/dependency_locking.html#generating_and_updating_dependency_locks
+task checkDependencies {
+    notCompatibleWithConfigurationCache("The task \"checkDependencies\" filters configurations at execution time.")
+    doLast {
+        configurations.findAll { it.canBeResolved }.each { it.resolve() }
     }
 }
 
@@ -205,10 +212,22 @@ task releaseCheck {
 
 task release {
     dependsOn "releaseCheck"
+
     dependsOn "executableJar"
-    subprojectNamesOfCoreArtifacts.each { subprojectName ->
-        dependsOn ":${subprojectName}:publishMavenPublicationToMavenCentralRepository"
-        tasks.findByPath(":${subprojectName}:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
-    }
+    tasks.findByPath(":executableJar").mustRunAfter(":releaseCheck")
+
+    dependsOn "embulk-core:publishMavenPublicationToMavenCentralRepository"
+    tasks.findByPath(":embulk-core:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
+
+    dependsOn "embulk-deps:publishMavenPublicationToMavenCentralRepository"
+    tasks.findByPath(":embulk-deps:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
+
+    dependsOn "embulk-junit4:publishMavenPublicationToMavenCentralRepository"
+    tasks.findByPath(":embulk-junit4:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
+
     dependsOn "embulk-ruby:gemPush"
+    tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-core:publishMavenPublicationToMavenCentralRepository")
+    tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-deps:publishMavenPublicationToMavenCentralRepository")
+    tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-junit4:publishMavenPublicationToMavenCentralRepository")
+    tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":executableJar")
 }

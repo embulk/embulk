@@ -20,7 +20,7 @@ configurations {
 }
 
 tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
     options.encoding = "UTF-8"
 }
 
@@ -167,7 +167,7 @@ publishing {
                     }
                     developer {
                         name = "Dai MIKURUBE"
-                        email = "dmikurube@treasure-data.com"
+                        email = "dmikurube@acm.org"
                     }
                     developer {
                         name = "Shinichi Ishimura"
