@@ -41,7 +41,7 @@ java {
 }
 
 dependencies {
-    // The compiled class files of "embulk-spi" are mixed into the "embulk-core" JAR file, and
+    // All the class files of "embulk-spi" are mixed into the "embulk-core" JAR file, and
     // the "embulk-core" Maven artifact has the dependency on "embulk-spi" as "provided" in pom.xml.
     //
     // The artifacts are structured like this so that they can bypass the restriction of Java (9+)
@@ -50,7 +50,7 @@ dependencies {
     // This mixing is not necessary when using Embulk with the executable all-in-one binary. But,
     // it would not work well with Java 9+ in case of using Embulk with self-hosted deployment of
     // the separated artifacts, embulk-spi, embulk-core, and else.
-    spi project(":embulk-spi")
+    spi "org.embulk:embulk-spi:0.11"
 
     // The transitive dependencies of "embulk-spi" are listed explicitly in dependencies { ... }.
     //
@@ -80,9 +80,22 @@ javadoc {
 }
 
 jar {
-    // The compiled class files of "embulk-spi" are mixed into the "embulk-core" JAR file.
-    from {
-        project(":embulk-spi").sourceSets.main.output
+    // All the class files of "embulk-spi" are mixed into the "embulk-core" JAR file.
+    from(configurations.spi.collect { it.isDirectory() ? it : zipTree(it) }) {
+        // META-INF/INDEX.LIST from dependencies should be definitely excluded in the all-in-one executable JAR file.
+        exclude "META-INF/INDEX.LIST"
+
+        // Exclude dependencies' LICENSE and NOTICE files here. They should be included in a different way.
+        exclude "META-INF/LICENSE*"
+        exclude "META-INF/NOTICE*"
+
+        // Exclude module-info.class from dependencies.
+        //
+        // It should be okay while Embulk basically expects Java 8, and it should not break things even for Java 9+.
+        // But, it is nice to revisit module-info.class when Embulk officially supports modern Java versions.
+        //
+        // TODO: Provide module-info.class unified for the all-in-one executable JAR file for the Java 9+ Module System.
+        exclude "META-INF/versions/*/module-info.class"
     }
 
     metaInf {

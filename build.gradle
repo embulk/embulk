@@ -10,7 +10,6 @@ group = "org.embulk"
 version = "0.11.0-SNAPSHOT"
 
 def subprojectNamesOfCoreArtifacts = [
-    "embulk-spi",
     "embulk-core",
     "embulk-deps",
     "embulk-junit4",
@@ -62,7 +61,7 @@ configurations {
 dependencies {
     // The classes of "embulk-spi" are excluded from "embulk-core" below for the consistency as a JAR file.
     // But, they should be included in the compile classpath.
-    compileOnly project(":embulk-spi")
+    compileOnly "org.embulk:embulk-spi:0.11"
 
     implementation(project(":embulk-core")) {
         // The JAR file of "embulk-core" should already contain classes of "embulk-spi".
@@ -114,8 +113,7 @@ def listEmbeddedDependencies = { rootModuleName, prefix ->
 
 // Standard "jar" task to build a JAR with dependency JAR resources embedded.
 jar {
-    dependsOn ":embulk-spi:jar",
-              ":embulk-core:jar",
+    dependsOn ":embulk-core:jar",
               ":embulk-deps:jar"
 
     // Expands all dependencies including "embulk-core"

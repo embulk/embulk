@@ -34,7 +34,7 @@ java {
 }
 
 dependencies {
-    compileOnly project(":embulk-spi")
+    compileOnly "org.embulk:embulk-spi:0.11"
 
     api "junit:junit:4.13.2"
     api "org.hamcrest:hamcrest-library:1.3"
