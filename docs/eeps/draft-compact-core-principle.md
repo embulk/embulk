@@ -1,0 +1,160 @@
+---
+EEP: unnumbered
+Title: The "Compact Core" Principle
+Author: dmikurube
+Status: Draft
+Type: Standards Track
+Created: 2023-06-14
+---
+
+Introduction
+=============
+
+This EEP describes the design principle of Embulk, especially about what kinds of items would be implemented inside the core, or out of the core -- in each plugin, possibly as a Java library. Whenever a new feature is proposed for the Embulk core, the core team members would think about this principle at first.
+
+Motivation
+===========
+
+Embulk has provided several features and utilities for plugins from the core since its beginning. They have made it easier to implement a new plugin in its early stage. However, they have brought unnecessary dependencies on the core from plugins. The dependencies have often blocked making changes in the Embulk core.
+
+Many of such features and utilities have already been marked as deprecated through Embulk v0.10. This EEP explains the motivation to encourage keeping the Embulk core "compact", and to discourage casual ad-hoc expansions that could add unnecessary dependencies.
+
+Examples
+---------
+
+The Embulk history has some painful examples that a core change impacted plugin behaviors unintentionally. Some of them were unavoidable. The core cannot be empty. But, if plugins had depended less on the core details, the plugins would have been affected less by core changes.
+
+Let's see some examples.
+
+### Case #1: Guess, and JRuby
+
+Embulk had embedded JRuby in it. Upgrading the embedded JRuby sometimes brought unintended incompatibility.
+
+When we tried to upgrade the embedded JRuby from 9.1.15.0 to 9.2.0.0, Embulk's "guess" showed a different result. A quoted string like `"foo"` were guessed as `STRING` with 9.1.15.0, but it started to be guessed as `JSON` with 9.2.0.0. What happened?
+
+Its "root" cause was a change in the JSON specification by [RFC 7159](https://datatracker.ietf.org/doc/html/rfc7159#appendix-A).
+
+> ```
+>    o  Changed the definition of "JSON text" so that it can be any JSON
+>       value, removing the constraint that it be an object or array.
+> ```
+
+Embulk's type guess was implemented in (J)Ruby as below at that time. It returned `"json"` when `JSON.parse(str)` succeeded, or `"string"` otherwise.
+
+```ruby
+# ... (snip) ...
+
+begin
+  JSON.parse(str)
+  return "json"
+rescue
+end
+
+return "string"
+```
+
+Looking into JRuby and the Ruby `json` library, we got two findings.
+
+* [JRuby 9.2.0.0 upgraded its bundled `json` library to 2.1.0. (jruby/jruby#5173)](https://github.com/jruby/jruby/pull/5173)
+* [The `json` library started to comply to RFC 7159 from its 2.0.0. (flori/json)](https://github.com/flori/json/blob/master/CHANGES.md#2015-09-11-200)
+
+`JSON.parse('"foo"')` started to succeed after `json` 2.0.0 while it failed before `json` 2.0.0. As a result, `"foo"` was guessed as `JSON` with JRuby 9.2 while it was guessed as `STRING` with JRuby 9.1.
+
+The problem of Embulk was "fixed" along with another effort to reimplement guess in Java. The guess is implemented as a utility library for plugins. See also :
+
+* [Fix SchemaGuess for quoted strings (embulk/embulk-standards#9)](https://github.com/embulk/embulk-standards/pull/9)
+* ["quoted string" is guessed as JSON in embulk-guess-csv, but it was STRING in the old Ruby-based guess (embulk/embulk-util-guess#15)](https://github.com/embulk/embulk-util-guess/issues/15)
+
+In retrospect, guess plugins depended on Embulk core's internal "type guess" mechanism, and the "type guess" mechanism silently depended on the Ruby `json` library, which depended on the JRuby version. Who could have expected this?
+
+Let's think back. Who should have been responsible on it?  The way how a plugin guesses the type of a string should be under control of the plugin. The plugin would not want to be disturbed by its underlying core framework. Then, the plugin should have owned the control, and the responsibility, by itself. The core should not have provided the guess utility implementation which could be depended by plugins.
+
+### Case #2: `TempFileSpace`
+
+Embulk has provided `TempFileSpace` for plugins to allocate a temporary file space managed by Embulk.
+
+Embulk v0.9.20 switched the backend of `TempFileSpace` from older Java standard  [`java.io.File.createTempFile`](https://docs.oracle.com/javase/8/docs/api/java/io/File.html#createTempFile-java.lang.String-java.lang.String-java.io.File-) to newer Java standard [`java.nio.file.Files.createTempFile`](https://docs.oracle.com/javase/8/docs/api/java/nio/file/Files.html#createTempFile-java.nio.file.Path-java.lang.String-java.lang.String-java.nio.file.attribute.FileAttribute...-).
+
+* [Guarantee TempFileSpace to be unique (embulk/embulk#1190)](https://github.com/embulk/embulk/pull/1190)
+
+Indeed, this change caused a regression with some of existing plugins although these two were expected to be equivalent. What happened?
+
+`File.createTempFile` and `Files.createTempFile` had an undocumented difference, unfortunately, in a corner case. `File.createTempFile` succeeds when it is called with a prefix including a separator (such as `'/'`). `Files.createTempFile` fails with `IllegalArgumentException` if the prefix includes a separator.
+
+```java
+import java.io.File;
+import java.nio.file.Files;
+
+File.createTempFile("fooA/barA", ".tmp", new File("/tmp"));
+// ==> A temporary file "/tmp/barA???????????????????.tmp" is created.
+
+Files.createTempFile(Paths.get("/tmp"), "fooB/barB", ".tmp");
+// ==> IllegalArgumentException is thrown.
+```
+
+The difference caused a regression in [embulk-output-ftp](https://github.com/embulk/embulk-output-ftp) and some other plugins, indeed. Those plugins were calling `TempFileSpace#createTempFile` with the user-specified path as-is, which could contain a nested path (such as `path/to/file.csv`). It was working with `File.createTempFile` just luckily, but it started to fail with `Files.createTempFile`.
+
+In this case, we decided to "fix" it in each plugin, not in the core.
+
+* [Do not use prefix in createTempFile, and release 0.2.3 (embulk/embulk-output-ftp#26)](https://github.com/embulk/embulk-output-ftp/pull/26)
+
+Embulk still has a motivation to provide `TempFileSpace` so that Embulk can control the temporary files, for example, cleaning up when a plugin aborts. It was unavoidable. But, this case still explains how difficult to make just a small change in the core. The core should provided just the minimum dependencies for plugins.
+
+### Case #3: Library dependencies of Jackson
+
+Embulk had contained [Jackson](https://github.com/FasterXML/jackson) libraries as dependencies directly in the core. Jackson consisted of multiple artifacts, from the core librarires, to supportive sub libraries. The Embulk core contained only the core libraries of Jackson, such as [`jackson-core`](https://github.com/FasterXML/jackson-core), [`jackson-annotations`](https://github.com/FasterXML/jackson-annotations), and [`jackson-databind`](https://github.com/FasterXML/jackson-databind).
+
+Jackson's sub libraries expect to be used with the same versions of its core libraries. For example, [`jackson-datatype-cbor:2.6.7`](https://github.com/FasterXML/jackson-dataformat-cbor/tree/jackson-dataformat-cbor-2.6.7) expects to be used with `jackson-core:2.6.7`. It has no guarantee to work well with unmatched versions. This is common expectation in multi-artifact libraries like Jackson in general.
+
+The Embulk core contained a certain fixed version of Jackson core libraries. It was Jackson 2.5.3 until Embulk v0.8.21, and it has been Jackson 2.6.7 until Embulk v0.10. Those Jackson core libraries are applied (loaded) for plugins as well. What if a plugin wanted to use another Jackson sub library?  What if they needed a newer version of the sub library?  What if the Embulk core upgraded its Jackson core libraries?
+
+* [Update Jackson v2.6.7 (embulk/embulk#615)](https://github.com/embulk/embulk/pull/615)
+
+It may, or may not work unfortunately. It often works, but it can accidentally fail with no guarantee. Therefore, plugins would have hesitated to adopt newer versions of Jackson sub libraries. The Embulk core has paused to upgrade its Jackson core libraries so that the existing plugins would keep working.
+
+This is a type of so-called leaky abstraction about dependency libraries. The Embulk core has used Jackson for itself, but the Jackson had been leaking to plugins.
+
+The leaky abstraction has been addressed through Embulk v0.10 by concealing Jackson from plugins with a class-loading hack. It brought significant incompatibility between the Embulk core and plugins, but it could not be addressed without the incompatibility. The new class-loading mechanism will be explained in another EEP.
+
+This case showed that leaky abstraction could cause unintended dependencies on the core, and block the entire eco-system from evolution. It would be difficult to eliminate such leaky abstraction once introduced.
+
+### Case #4: `TimestampParser`
+
+Embulk has provided `TimestampParser` for plugins to parse a date/time string with a user-specified format (as well as `TimestampFormatter` to format). It was a horrible combination of the difficulties of the examples above.
+
+`TimestampParser` started from calling JRuby's Ruby method `Date._strptime`. It was just slow, and it had the same potential risk as "guess" above. If JRuby had a silent change in its `Date._strptime`, plugins could have an unintended incompatibility silently.
+
+Furthermore, it depended on [Joda-Time](https://www.joda.org/joda-time/) via JRuby. Joda-Time was leaky abstraction for plugins, too, while Joda-Time users have been asked to migrate to `java.time` (JSR-310) - a core part of the JDK. Joda-Time had to be replaced while it had been depended from plugins.
+
+In the end, the date/time format has been user-specified by Ruby's `strptime` format, such as `%Y-%m-%dT%H:%M:%S%z`. User-level compatibility has been the key point. It was unacceptable to drop Ruby's date/time format from plugins while Java's standard library did not recognize Ruby's format.
+
+We eventually made a decision to build Embulk's own date/time parser/formatter library, and to let plugins use the library by themselves, not to provide the parser/formatter from the Embulk core. The way how a plugin parses a date/time string should be under control of the plugin.
+
+* [`embulk-util-timestamp`](https://github.com/embulk/embulk-util-timestamp) ([Javadoc](https://dev.embulk.org/embulk-util-timestamp/))
+
+Conclusion: the "Compact Core" Principle
+=========================================
+
+In this EEP, we define Embulk's core design principle. The Embulk core should keep as "compact" as possible to avoid plugins to have unnecessary dependencies on the core implementation. The compactness includes classes provided for plugins as SPI, dependency libraries used by the Embulk core, and configuration conventions specified by users.
+
+More practical guidelines follow.
+
+Guidelines
+-----------
+
+When a feature is proposed for the Embulk core, consider the following guidelines.
+
+* Can it be implemented just as a utility library for plugins?
+    * If possible, go as a utility library. Do not expand the core unnecessarily.
+* Could plugins be impacted when the core feature has a change in the future?
+    * If future changes there could impact existing plugins, try minimizing the part to be implemented in the core.
+    * One idea is to add only an interface in the core, and to have implementations in each plugin.
+* Is the expanded item (class, interface, instance, ...) handed over from plugins to plugins?
+    * If the proposal is a data structure conveyed from plugins to plugins, keep it simple, and limit its extensibility.
+    * One idea is to implement the data structure as a `final` class only with simple features.
+    * [The new JSON Column Type (EEP-2)](./eep-0002.md) is an example of this case.
+
+Copyright / License
+====================
+
+This document is placed under the [CC0-1.0-Universal](https://creativecommons.org/publicdomain/zero/1.0/deed.en) license, whichever is more permissive.
