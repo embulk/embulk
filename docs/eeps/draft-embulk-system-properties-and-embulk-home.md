@@ -103,7 +103,7 @@ The Embulk Home directory is determined at runtime, by the following rule, in pr
     * The search starts from the current working directory, moving one by one toward the parent.
     * In each directory, look for a directory, whose name is `.embulk/`, and which contains a regular file named `embulk.properties`.
     * If such a directory `.embulk/` is found, it is the Embulk Home directory.
-    * The search stops at the home directory if the current working directory is under the user's home directory (`user.home`).
+    * The search stops at the home directory if the current working directory is under the user's home directory (identified by the Java property `user.home`).
     * Otherwise, the search continues to the file system root directory.
 4. If none of 1 to 3 matches, `~/.embulk/` is the Embulk Home directory unconditionally.
 
