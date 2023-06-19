@@ -10,9 +10,9 @@ Created: 2023-06-16
 Introduction
 =============
 
-Real operations of Embulk often need system-wide configurations, not just per-plugin user configurations. Embulk had "System Config" for that purpose, but it did not cover sufficient use-cases.
+Real operations of Embulk often need system-wide configurations, not just per-plugin user configurations. Embulk had "System Config" for that purpose, but the System Config did not cover sufficient use-cases.
 
-The new system-wide configuration mechanism, "Embulk System Properties", has been introduced along with a new concept of the "Embulk Home" directory, through Embulk v0.10. This EEP explains the motivation to migrate for the Embulk System Properties from System Config, and the design of Embulk System Properties and Embulk Home.
+The new system-wide configuration mechanism, "Embulk System Properties", has been introduced along with a new concept of the "Embulk Home" directory through Embulk v0.10. This EEP explains the motivation to migrate System Config to the Embulk System Properties, and the design of Embulk System Properties and Embulk Home.
 
 Background
 ===========
@@ -20,11 +20,11 @@ Background
 System Config
 --------------
 
-Embulk had had a system-wide configuration mechanism, called "System Config", since its early age. System Config, however, had some limitations. It was not applicable to everything. On the other hand, it was unnecessarily powerful at the expense of its coverage.
+Embulk had had a system-wide configuration mechanism called "System Config" since its early age. System Config, however, had some limitations. It did not apply to everything. On the other hand, it was unnecessarily powerful at the expense of its coverage.
 
-System Config was based on `org.embulk.config.ConfigSource`. `ConfigSource` was managed in [Guice](https://github.com/google/guice), a dependency injection container, along with all other global objects. As a result, System Config could be used only after a certain initialization of the Embulk process. This limitation narrowed down the coverage of System Config.
+System Config was based on `org.embulk.config.ConfigSource`. `ConfigSource` was managed in [Guice](https://github.com/google/guice), a dependency injection container, along with all other global objects. As a result, System Config could be used only after initialization of the Embulk process. This limitation narrowed down the coverage of System Config.
 
-System Config had powerful representation thanks to Jackson-based `ConfigSource`. It was not just string-based configuration, but it had a tree structure like JSON. However, the power of the representation was not utilized. The actual System Config values were just strings because they were often configured through command-line options.
+System Config had a powerful representation thanks to Jackson-based `ConfigSource`. It was not just a string-based configuration, but it had a tree structure like JSON. However, the power of the representation was not utilized. The actual System Config values were just strings because they were often configured through command-line options.
 
 Use-cases of System-wide Configurations
 ----------------------------------------
@@ -33,17 +33,17 @@ Let's see some actual use-cases of system-wide configurations.
 
 ### Logging
 
-Logging-related configurations are a typical use-case of system-wide configurations. Embulk had configurations for the log level and the log file path in System Config.
+Logging-related configurations are a typical use-case of system-wide configurations. In System Config, Embulk had configurations for the log level and the log file path.
 
-It, however, restricted logging in Embulk. System Config was available only after some initialization, then, logging was avaiable only after the initialization. Messages before the initialization had to be printed by `System.out` or `System.err` out of the control of the SLF4J logging framework.
+It, however, restricted logging in Embulk. System Config was available only after some initialization, then logging was available only after the initialization. Messages before the initialization had to be printed by `System.out` or `System.err` out of the control of the SLF4J logging framework.
 
 ### Plugin installation directories
 
-The directories to load plugins have to be specified before loading plugins, obviously. They were configured by environment variables `GEM_HOME` and `GEM_PATH`, which are the same with Ruby's standard gem loading. They could be overridden by System Configs `gem_home` and `gem_path`.
+Obviously, the directories to load plugins must be specified before loading plugins. They were configured by environment variables `GEM_HOME` and `GEM_PATH`, the same as Ruby's standard gem loading. They could be overridden by System Configs `gem_home` and `gem_path`.
 
-These environment variables sometimes confused users because some users have their own `GEM_HOME` and `GEM_PATH` for their Ruby environments, not for Embulk. They could be mixed up easily.
+These environment variables sometimes confused users because some users had their own `GEM_HOME` and `GEM_PATH` for their Ruby environments, not for Embulk. They could be mixed up easily.
 
-Embulk had some workarounds to mitigate the confusion, including the override by System Config, but the workarounds caused another confusion. Command-line options were required to override them. The plugin installation directories should have been configured by Embulk's own system-wide configurations, not by configurations that conflict with common existing conventions. It is the same for the new Maven-formed plugins.
+Embulk had some workarounds to mitigate the confusion, including the override by System Config, but the workarounds caused another confusion. Command-line options were required to override them. The plugin installation directories should have been configured by Embulk's own system-wide configurations, not by configurations that conflict with existing common conventions. It is the same for the new Maven-formed plugins.
 
 ### JRuby
 
@@ -64,17 +64,17 @@ We wanted an alternative system-wide configuration because System Config was not
 
 * It can be loaded from a file, not only from command-line options.
 * It can be configured from the very beginning of an Embulk process.
-* The configuration file on the file system should be identified by a deterministic and user-friendly rule.
-* The plugin installation directories on the file system should be identified by a deterministic and user-friendly rule.
-* It does not need so powerful representation. A simple string-string key-value mapping would be sufficient.
+* A deterministic and user-friendly rule should identify the configuration file on the file system.
+* A deterministic and user-friendly rule should identify the plugin installation directories on the file system.
+* It does not need such a powerful representation. A simple string-string key-value mapping would be sufficient.
 
 Embulk System Properties
 =========================
 
-The new system-wide configuration is designed as below, to satisfy the requirements above.
+The new system-wide configuration is designed as below to satisfy the requirements above.
 
-* The new system-wide configuration is based on [`java.util.Properties`](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html), named "Embulk System Properties". `Properties` is not very rich, indeed. But, `Properties` can be loaded from a file only with the Java standard class library in the very beginning of a Java process.
-* A new concept of the "Embulk Home" directory is introduced. The Embulk Home directory takes over the older `~/.embulk/` directory that contained plugin installations. The Embulk Home directory includes the Embulk System Properties file, and continues to have plugin installations by default.
+* The new system-wide configuration is based on [`java.util.Properties`](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html), named "Embulk System Properties". `Properties` is not very rich, indeed. But, `Properties` can be loaded from a file only with the Java standard class library at the beginning of a Java process.
+* A new concept of the "Embulk Home" directory is introduced. The Embulk Home directory takes over the older `~/.embulk/` directory that has contained plugin installations. The Embulk Home directory includes the Embulk System Properties file, and continues to have plugin installations by default.
 * The Embulk Home directory and the Embulk System Properties are configured by a deterministic rule at runtime, based on the command-line options, the environment variables, the Embulk System Properties file, and the current working directory.
 
 The details follow.
@@ -95,7 +95,7 @@ The Embulk Home directory is determined at runtime, by the following rule, in pr
 1. If an Embulk System Property `embulk_home` is set by the command-line option `-X`, it is the Embulk Home directory.
     * It would be an absolute path, or a relative path from the current working directory.
     * Ex. `java -jar embulk.jar -Xembulk_home=/var/tmp/foo run ...` (absolute path)
-    * Ex. `java -jar embulk.jar -Xembulk_home=.embulk2/bar run ...` (repative path)
+    * Ex. `java -jar embulk.jar -Xembulk_home=.embulk2/bar run ...` (relative path)
 2. If an environment variable `EMBULK_HOME` is set, it is the Embulk Home directory.
     * It must be an absolute path.
     * Ex. `env EMBULK_HOME=/var/tmp/baz java -jar embulk.jar run ...` (absolute path)
@@ -103,7 +103,7 @@ The Embulk Home directory is determined at runtime, by the following rule, in pr
     * The search starts from the current working directory, moving one by one toward the parent.
     * In each directory, look for a directory, whose name is `.embulk/`, and which contains a regular file named `embulk.properties`.
     * If such a directory `.embulk/` is found, it is the Embulk Home directory.
-    * If the current working directory is under the user's home directory (`user.home`), the search stops at the home directory.
+    * The search stops at the home directory if the current working directory is under the user's home directory (`user.home`).
     * Otherwise, the search continues to the file system root directory.
 4. If none of 1 to 3 matches, `~/.embulk/` is the Embulk Home directory unconditionally.
 
@@ -114,9 +114,9 @@ Then, at last, an Embulk System Property `embulk_home` is overridden with the ab
 Plugin installation directories
 --------------------------------
 
-The plugin installation directories are the directories where Embulk loads plugins from. They are determined along with identifying the Embulk Home directory by the following rule, in priority from top to bottom.
+The plugin installation directories are the directories which Embulk loads plugins from. They are determined along with identifying the Embulk Home directory by the following rule, in priority from top to bottom.
 
-`gem_home` and `gem_path` are used for RubyGems-style plugins, in the same way with `GEM_HOME` and `GEM_PATH` of the official RubyGems. `m2_repo` is used for Maven-style plugins.
+`gem_home` and `gem_path` are used for RubyGems-style plugins, in the same way as `GEM_HOME` and `GEM_PATH` of the official RubyGems. `m2_repo` is used for Maven-style plugins.
 
 1. If Embulk System Properties `gem_home`, `gem_path`, and/or `m2_repo` are set by the command-line option `-X`, they are the plugin installation directories for each.
     * They would be absolute paths, or relative paths from the current working directory.
@@ -136,7 +136,7 @@ On the other hand, environment variables `GEM_HOME`, `GEM_PATH`, and `M2_REPO` a
 Notes
 ======
 
-The rule to determine the Embulk System Properties file and the Embulk Home directory is deterministic, but not very simple, unfortunately. Embulk should log how they are set so that users can be easily aware of their misconfigurations.
+The rule to determine the Embulk System Properties file and the Embulk Home directory is deterministic, but not very simple. Embulk should log how they are determined so that users can easily know their misconfigurations.
 
 Copyright / License
 ====================
