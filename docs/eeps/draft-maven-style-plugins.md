@@ -18,7 +18,7 @@ Motivation
 Embulk's plugins have been distributed as RubyGems, even if they are coded in Java. The RubyGems-style plugins, however, have had several drawbacks.
 
 * RubyGems-style plugins require JRuby.
-    * JRuby need a lot of resources, such as CPU time, Java heap memory, and metaspace.
+    * JRuby needs a lot of resources, such as CPU time, Java heap memory, and metaspace.
     * JRuby takes a long time to initialize itself.
     * Making JRuby optional is another effort to be explained in another EEP. This EEP would compose a part of the effort.
 * Bundler is mandatory to select a specific version of the same RubyGems-style plugin if multiple versions are installed.
@@ -125,7 +125,7 @@ The location of the installation directory is specified by the Embulk System Pro
 User configurations
 --------------------
 
-The existing YAML configuration format does not work for users to select a specific version at runtime.
+The existing YAML configuration format does not allow users to select a specific version at runtime.
 
 ```
 # existing.yaml
@@ -136,7 +136,7 @@ in:
   ...
 ```
 
-The format needs to be extended to specify a version of the plugin. Furthermore, [a Maven artifact has a `groupId`, in addition to the `artifactId`](https://maven.apache.org/guides/mini/guide-naming-conventions.html). Embulk provides two ways to configure with Maven-style plugins.
+The format needs to be extended to specify a version of the plugin. Furthermore, [a Maven artifact has a `groupId` in addition to the `artifactId`](https://maven.apache.org/guides/mini/guide-naming-conventions.html). Embulk provides two ways to configure with Maven-style plugins.
 
 ### Inline configuration for Maven-style plugins
 
@@ -161,13 +161,13 @@ in:
   path_prefix: ...
 ```
 
-Note that the `artifactId` is not fully specified like `embulk-input-s3` there. `name` is the same as `type` of an existing RubyGems-style plugin. The `artifactId` is complemented automaticaly by adding the prefix `embulk-` and the category of the plugin (`input-`).
+Note that the `artifactId` is not fully specified like `embulk-input-s3` there. `name` is the same as `type` of an existing RubyGems-style plugin. The `artifactId` is complemented automatically by adding the prefix `embulk-` and the category of the plugin (`input-`).
 
 ### Configuration for Maven-style plugins through Embulk System Properties
 
 The other way to configure with Maven-style plugins is Embulk System Properties. See [EEP-4](./eep-0004.md) for Embulk System Properties.
 
-Once a user sets an Embulk System Property `plugins.<category>.<type>` in the format of `maven:<group>:<name>:<version>`, the same YAML configuration as RubyGems-style keeps working. The following examples configure the same with the above, to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
+Once a user sets an Embulk System Property `plugins.<category>.<type>` in the format of `maven:<group>:<name>:<version>`, the same YAML configuration as RubyGems-style keeps working. The following examples configure the same with the above to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
 
 ```
 # embulk.properties
@@ -184,16 +184,16 @@ in:
 
 The `artifactId` is not fully specified like `embulk-input-s3` there like the inline configuration explained above.
 
-The latter with Embulk System Properties is expected to be less confusing for users.
+The latter, with Embulk System Properties, is expected to be less confusing for users.
 
 Main class and Manifest
 ------------------------
 
-Once the plugin's installed JAR artifact is determined from user's YAML configuration. its dependencies are identified from `pom.xml` of the plugin artifact. Only the direct dependencies of the plugin artifact are included as explained in "Intended limitation for stable dependency resolution".
+Once the plugin's installed JAR artifact is determined from the user's YAML configuration, its dependencies are identified from `pom.xml` of the plugin artifact. Only the direct dependencies of the plugin artifact are included, as explained in "Intended limitation for stable dependency resolution".
 
-These JAR files are the "class path" to be loaded for the Maven-style plugin. Embulk can load these classes now, but Embulk still needs to identify the "main class" as an Embulk plugin, which implements Embulk SPI's `*Plugin` interface, such as `org.embulk.spi.InputPlugin`, `org.embulk.spi.FilterPlugin`, and else.
+These JAR files are the "classpath" to be loaded for the Maven-style plugin. Embulk can load these classes now, but Embulk still needs to identify the "main class" as an Embulk plugin, which implements Embulk SPI's `*Plugin` interface, such as `org.embulk.spi.InputPlugin`, `org.embulk.spi.FilterPlugin`, and else.
 
-The main class is to be declared in `META-INF/MANIFEST.MF`, [the manifest file](https://docs.oracle.com/javase/tutorial/deployment/jar/manifestindex.html) of the plugin JAR file. The manifest file of Embulk plugin's JAR file must include the following attributes, `Embulk-Plugin-Spi-Version`, `Embulk-Plugin-Category`, `Embulk-Plugin-Main-Class`, and `Embulk-Plugin-Type`.
+The main class is to be declared in `META-INF/MANIFEST.MF`, [the manifest file](https://docs.oracle.com/javase/tutorial/deployment/jar/manifestindex.html) of the plugin JAR file. The manifest file of an Embulk plugin's JAR file must include the following attributes, `Embulk-Plugin-Spi-Version`, `Embulk-Plugin-Category`, `Embulk-Plugin-Main-Class`, and `Embulk-Plugin-Type`.
 
 * `Embulk-Plugin-Spi-Version` must be `0` as of Embulk v0.11 or earlier.
 * `Embulk-Plugin-Category` is the category of the plugin, which is one of `input`, `decoder`, `parser`, `filter`, `formatter`, `encoder`, `output`, or `guess`.
@@ -218,7 +218,7 @@ Helpers
 Helper to build and release an Embulk plugin
 ---------------------------------------------
 
-Building and releasing a compliant Embulk plugin with resolved dependencies is not trivial for plugin developers. The build process needs to resolve transitive dependencies flattened, and to generate a good effective manifest file in the plugin JAR file. Plugin developers would feel bored doing such a thing by themselves.
+Building and releasing a compliant Embulk plugin with resolved dependencies is not trivial for plugin developers. The build process must resolve transitive dependencies to be flattened and generate a good effective manifest file in the plugin JAR file. Plugin developers would feel bored doing such a thing by themselves.
 
 We need to provide kinds of helpers for plugin developers. Java-based Embulk plugins have been built with Gradle. Providing a Gradle plugin to build and release a compliant Embulk plugin is one of the reasonable approaches.
 
@@ -229,7 +229,7 @@ Helper to download and install Embulk plugins
 
 Many users have managed their RubyGems-style plugin installation sets with Bundler. They would want similar tooling for Maven-style plugins.
 
-There can be various possibilities for such toolings. One possibility is another Gradle plugin to download and install Maven-style plugins into the configured plugin installation directory. Such a tooling may also configure Embulk System Properties for specific Maven-style plugin versions.
+There can be various possibilities for such toolings. One possibility is another Gradle plugin to download and install Maven-style plugins into the configured plugin installation directory. Such tooling may also configure Embulk System Properties for specific Maven-style plugin versions.
 
 Copyright / License
 ====================
