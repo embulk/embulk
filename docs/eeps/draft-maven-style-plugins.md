@@ -128,6 +128,7 @@ User configurations
 The existing YAML configuration format does not work for users to select a specific version at runtime.
 
 ```
+# existing.yaml
 in:
   type: s3
   bucket: ...
@@ -135,13 +136,21 @@ in:
   ...
 ```
 
-The format needs to be extended to specify a version of the plugin. In addition, a Maven artifact needs to configure its `groupId`, in addition to its `artifactId`. Embulk provides two ways to configure with Maven-style plugins.
+The format needs to be extended to specify a version of the plugin. Furthermore, [a Maven artifact has a `groupId`, in addition to the `artifactId`](https://maven.apache.org/guides/mini/guide-naming-conventions.html). Embulk provides two ways to configure with Maven-style plugins.
 
 ### Inline configuration for Maven-style plugins
 
-Users can configure the YAML inline for Maven-style plugins under `type` expanded to `source`, `group`, `name`, and `version`. The example below configures to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
+Users can configure the YAML inline for Maven-style plugins. The field `type` is expanded to `source`, `group`, `name`, and `version`.
+
+* `source` is always `maven` for Maven-style plugins.
+* `group` is the `groupId` of the Maven artifact of the plugin.
+* `name` is the "name" of the plugin, which is the same as `type` in case of RubyGems-style plugins.
+* *version` is the `version` of the Maven artifact of the plugin.
+
+The example below configures to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
 
 ```
+# inline.yaml
 in:
   type:
     source: maven
@@ -152,7 +161,7 @@ in:
   path_prefix: ...
 ```
 
-Note that the `artifactId` is not fully specified like `embulk-input-s3` there. `name` is the same as the `type` of an existing RubyGems-style plugin. The `artifactId` is complemented automaticaly by adding the prefix `embulk-` and the category of the plugin (`input-`).
+Note that the `artifactId` is not fully specified like `embulk-input-s3` there. `name` is the same as `type` of an existing RubyGems-style plugin. The `artifactId` is complemented automaticaly by adding the prefix `embulk-` and the category of the plugin (`input-`).
 
 ### Configuration for Maven-style plugins through Embulk System Properties
 
@@ -166,12 +175,14 @@ plugins.input.s3=maven:org.embulk:s3:0.5.3
 ```
 
 ```
-# s3.yaml
+# maven-with-properties.yaml
 in:
   type: s3
   bucket: ...
   path_prefix: ...
 ```
+
+The `artifactId` is not fully specified like `embulk-input-s3` there like the inline configuration explained above.
 
 The latter with Embulk System Properties is expected to be less confusing for users.
 
