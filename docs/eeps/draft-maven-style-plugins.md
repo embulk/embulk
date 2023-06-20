@@ -218,7 +218,7 @@ Helpers
 Helper to build and release an Embulk plugin
 ---------------------------------------------
 
-Building and releasing a compliant Embulk plugin with resolved dependencies is not trivial for plugin developers. Plugin developers would feel bored doing such a thing by themselves.
+Building and releasing a compliant Embulk plugin with resolved dependencies is not trivial for plugin developers. The build process needs to resolve transitive dependencies flattened, and to generate a good effective manifest file in the plugin JAR file. Plugin developers would feel bored doing such a thing by themselves.
 
 We need to provide kinds of helpers for plugin developers. Java-based Embulk plugins have been built with Gradle. Providing a Gradle plugin to build and release a compliant Embulk plugin is one of the reasonable approaches.
 
