@@ -122,6 +122,59 @@ Maven-style plugins must be installed on the local file system in some form. For
 
 The location of the installation directory is specified by the Embulk System Properties and the Embulk Home directory designed and explained in [EEP-4](./eep-0004.md).
 
+User configurations
+--------------------
+
+The existing YAML configuration format does not work for users to select a specific version at runtime.
+
+```
+in:
+  type: s3
+  bucket: ...
+  path_prefix: ...
+  ...
+```
+
+The format needs to be extended to specify a version of the plugin. In addition, a Maven artifact needs to configure its `groupId`, in addition to its `artifactId`. Embulk provides two ways to configure with Maven-style plugins.
+
+### Inline configuration for Maven-style plugins
+
+Users can configure the YAML inline for Maven-style plugins under `type` expanded to `source`, `group`, `name`, and `version`. The example below configures to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
+
+```
+in:
+  type:
+    source: maven
+    group: org.embulk
+    name: s3
+    version: 0.5.3
+  bucket: ...
+  path_prefix: ...
+```
+
+Note that the `artifactId` is not fully specified like `embulk-input-s3` there. `name` is the same as the `type` of an existing RubyGems-style plugin. The `artifactId` is complemented automaticaly by adding the prefix `embulk-` and the category of the plugin (`input-`).
+
+### Configuration for Maven-style plugins through Embulk System Properties
+
+The other way to configure with Maven-style plugins is Embulk System Properties. See [EEP-4](./eep-0004.md) for Embulk System Properties.
+
+Once a user sets an Embulk System Property `plugins.<category>.<type>` in the format of `maven:<group>:<name>:<version>`, the same YAML configuration as RubyGems-style keeps working. The following examples configure the same with the above, to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
+
+```
+# embulk.properties
+plugins.input.s3=maven:org.embulk:s3:0.5.3
+```
+
+```
+# s3.yaml
+in:
+  type: s3
+  bucket: ...
+  path_prefix: ...
+```
+
+The latter with Embulk System Properties is expected to be less confusing for users.
+
 Helpers
 ========
 
@@ -139,7 +192,7 @@ Helper to download and install Embulk plugins
 
 Many users have managed their RubyGems-style plugin installation sets with Bundler. They would want similar tooling for Maven-style plugins.
 
-There can be various possibilities for such toolings. One possibility is another Gradle plugin to download and install Maven-style plugins into the configured plugin installation directory.
+There can be various possibilities for such toolings. One possibility is another Gradle plugin to download and install Maven-style plugins into the configured plugin installation directory. Such a tooling may also configure Embulk System Properties for specific Maven-style plugin versions.
 
 Copyright / License
 ====================
