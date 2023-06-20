@@ -145,7 +145,7 @@ Users can configure the YAML inline for Maven-style plugins. The field `type` is
 * `source` is always `maven` for Maven-style plugins.
 * `group` is the `groupId` of the Maven artifact of the plugin.
 * `name` is the "name" of the plugin, which is the same as `type` in case of RubyGems-style plugins.
-* *version` is the `version` of the Maven artifact of the plugin.
+* `version` is the `version` of the Maven artifact of the plugin.
 
 The example below configures to run with the S3 Input Plugin of the Maven-style plugin artifact `org.embulk:embulk-input-s3:0.5.3`.
 
