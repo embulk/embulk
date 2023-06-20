@@ -175,6 +175,32 @@ in:
 
 The latter with Embulk System Properties is expected to be less confusing for users.
 
+Main class and Manifest
+------------------------
+
+Once the plugin's installed JAR artifact is determined from user's YAML configuration. its dependencies are identified from `pom.xml` of the plugin artifact. Only the direct dependencies of the plugin artifact are included as explained in "Intended limitation for stable dependency resolution".
+
+These JAR files are the "class path" to be loaded for the Maven-style plugin. Embulk can load these classes now, but Embulk still needs to identify the "main class" as an Embulk plugin, which implements Embulk SPI's `*Plugin` interface, such as `org.embulk.spi.InputPlugin`, `org.embulk.spi.FilterPlugin`, and else.
+
+The main class is to be declared in `META-INF/MANIFEST.MF`, [the manifest file](https://docs.oracle.com/javase/tutorial/deployment/jar/manifestindex.html) of the plugin JAR file. The manifest file of Embulk plugin's JAR file must include the following attributes, `Embulk-Plugin-Spi-Version`, `Embulk-Plugin-Category`, `Embulk-Plugin-Main-Class`, and `Embulk-Plugin-Type`.
+
+* `Embulk-Plugin-Spi-Version` must be `0` as of Embulk v0.11 or earlier.
+* `Embulk-Plugin-Category` is the category of the plugin, which is one of `input`, `decoder`, `parser`, `filter`, `formatter`, `encoder`, `output`, or `guess`.
+* `Embulk-Plugin-Main-Class` is the "main class" of the Embulk plugin, which implements Embulk SPI's `*Plugin` interface.
+* `Embulk-Plugin-Type` is the type of the Embulk plugin, such as `file`, `s3`, `csv`, `gzip`, or else.
+
+See the following example of a manifest file.
+
+```
+Manifest-Version: 1.0
+Implementation-Title: embulk-input-file
+Implementation-Version: 0.11.0
+Embulk-Plugin-Spi-Version: 0
+Embulk-Plugin-Category: input
+Embulk-Plugin-Main-Class: org.embulk.input.s3.S3FileInputPlugin
+Embulk-Plugin-Type: s3
+```
+
 Helpers
 ========
 
