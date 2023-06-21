@@ -24,6 +24,8 @@ Embulk's plugins have been distributed as RubyGems, even if they are coded in Ja
 * Bundler is mandatory to select a specific version of the same RubyGems-style plugin if multiple versions are installed.
     * Users sometimes wanted to select a specific version from the same installation set.
     * Reconfiguring Bunlder needs time, and sometimes reinstallation.
+* [The RubyGems.org hosting service](https://rubygems.org/) cannot contain different RubyGems for the same name.
+    * RubyGems do not have a concept of namespaces.
 * A RubyGems-style plugin has to include all the dependency JAR files packaged.
     * The size of a RubyGems-style plugin package tended to be large.
     * Many Embulk plugins are expected to depend on the same Java libraries. They would be duplicated on the network for downloading, and on the file system.
@@ -185,6 +187,13 @@ in:
 The `artifactId` is not fully specified like `embulk-input-s3` there like the inline configuration explained above.
 
 The latter, with Embulk System Properties, is expected to be less confusing for users.
+
+### Type conflicts
+
+The older RubyGems-style plugins can be installed along with the newer Maven-style plugins. It means they conflict. When a user specifies `type` of a plugin that has a conflict between the RubyGems-style and the Maven-style, the priority is determined as follows.
+
+* The Maven-style plugin is prioritized if the corresponding Embulk System Property `plugins.<category>.<type>` is configured, and the Maven artifact with the specified `groupId` and `version` is installed.
+* Otherwise, the RubyGems-style plugin is chosen by definition.
 
 Main class and Manifest
 ------------------------
