@@ -56,7 +56,7 @@ One more point: Maven Central would also be the first option for publishing open
 
 The new plugin style would be called "Maven-style plugins".
 
-Just in case, a single JAR file including its dependency libraries (so-called "fat JAR") is not our choice. Fat JARs do not satisfy the requirement #3.
+Just in case, a single JAR file including its dependency libraries (so-called "fat JAR") is not our choice. Fat JARs do not satisfy the requirement #3. In addition, fat JARs have a potential risk of Java package name conflicts with [the Java Module System in Java 9 or later](https://www.oracle.com/corporate/features/understanding-java-9-modules.html), which will be explained in another EEP.
 
 Tooling in Embulk
 ------------------
