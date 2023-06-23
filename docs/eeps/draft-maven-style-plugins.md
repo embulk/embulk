@@ -221,6 +221,8 @@ Embulk-Plugin-Main-Class: org.embulk.input.s3.S3FileInputPlugin
 Embulk-Plugin-Type: s3
 ```
 
+Note that `Manifest-Version`, `Implementation-Title`, and `Implementation-Version` are Java standard ones. See ["Working with Manifest Files: The Basics"](https://docs.oracle.com/javase/tutorial/deployment/jar/manifestindex.html) for more details.
+
 Helpers
 ========
 
