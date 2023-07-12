@@ -1,5 +1,10 @@
 If your issue is not following the template, the maintainer may close the issue without notifications.
 
+Issue Type: Questions
+----------------------
+Post your question in User forum at GitHub Discussions, instead of submitting an Issue here.
+
+https://github.com/orgs/embulk/discussions
 
 Issue Type: New Feature Request
 --------------------------------
