@@ -28,6 +28,8 @@ final class PreviewValueFormatter {
             return Instants.toString((Instant) obj);
         } else if (obj instanceof JsonValue) {
             return obj.toString();
+        } else if (obj instanceof Boolean) {
+            return obj.toString();
         } else {
             throw new IllegalStateException("Record has a value with an unexpected type: " + obj.getClass().getName());
         }
