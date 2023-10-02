@@ -1,0 +1,85 @@
+name: Publish
+on:
+  push:
+    tags:
+      - "v0.*"
+jobs:
+  publish:
+    environment:
+      name: maven-central-and-ruby-gems
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    permissions:
+      contents: write  # Required to create a GitHub Release, and to upload an Asset
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up OpenJDK 8
+      uses: actions/setup-java@v3
+      with:
+        java-version: 8
+        distribution: "temurin"
+    - name: Get the tag
+      run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+    - name: Print the tag
+      run: echo "${{ env.GIT_TAG }}"
+    - name: Build
+      run: ./gradlew executable embulk-core:jar embulk-deps:jar embulk-junit4:jar embulk-ruby:gem
+    - name: Create a GitHub Release
+      uses: "actions/github-script@v6"
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+        script: |
+          try {
+            const response = await github.rest.repos.createRelease({
+              draft: false,
+              generate_release_notes: false,
+              name: 'Release ${{ env.GIT_TAG }}',
+              owner: context.repo.owner,
+              prerelease: false,
+              repo: context.repo.repo,
+              tag_name: '${{ env.GIT_TAG }}',
+            });
+            core.exportVariable('RELEASE_ID', response.data.id);
+            core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
+          } catch (error) {
+            core.setFailed(error.message);
+          }
+    - name: Print the RELEASE_ID
+      run: echo "${{ env.RELEASE_ID }}"
+    - name: Print the RELEASE_UPLOAD_URL
+      run: echo "${{ env.RELEASE_UPLOAD_URL }}"
+    - name: Upload the executable JAR as an Asset in GitHub Release
+      uses: "actions/github-script@v6"
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const version = '${{ env.GIT_TAG }}'.substring(1);
+          const filename = 'embulk-'.concat(version, '.jar');
+          const localPath = path.join(path.resolve(process.env.GITHUB_WORKSPACE), 'build', 'executable', filename);
+          console.log(localPath);
+          await github.rest.repos.uploadReleaseAsset({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ env.RELEASE_ID }},
+            name: filename,
+            data: await fs.promises.readFile(localPath)
+          });
+    - name: Publish the Maven artifacts
+      run: ./gradlew --stacktrace embulk-core:publishMavenPublicationToMavenCentralRepository embulk-deps:publishMavenPublicationToMavenCentralRepository embulk-junit4:publishMavenPublicationToMavenCentralRepository
+      env:
+        ORG_GRADLE_PROJECT_ossrhUsername: ${{ vars.OSSRH_USERNAME }}
+        ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY_ARMOR }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_PRIVATE_KEY_PASSWORD }}
+    - name: Publish the Ruby gem
+      run: |
+        mkdir -p $HOME/.gem
+        touch $HOME/.gem/credentials
+        chmod 0600 $HOME/.gem/credentials
+        printf -- "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}\n" > $HOME/.gem/credentials
+        ./gradlew --stacktrace embulk-ruby:gemPush
+      env:
+        RUBYGEMS_API_KEY: "${{secrets.RUBYGEMS_API_KEY}}"

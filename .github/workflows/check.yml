@@ -25,6 +25,6 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: 8
-        distribution: "zulu"
+        distribution: "temurin"
     - name: Check
       run: ./gradlew ${{ matrix.gradle_task }}
