@@ -10,7 +10,7 @@ jobs:
       hash-master: ${{ steps.hash-master.outputs.hash-master }}
       hash-main: ${{ steps.hash-main.outputs.hash-main }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - id: hash-master
@@ -30,7 +30,7 @@ jobs:
     if: needs.diff.outputs.hash-master != needs.diff.outputs.hash-main
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Checkout master
