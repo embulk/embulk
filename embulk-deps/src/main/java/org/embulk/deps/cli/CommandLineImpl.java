@@ -59,6 +59,8 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
                 return ofCommand(command, originalArgs, 1, 1, PREVIEW_OPTIONS, PREVIEW_USAGE, PREVIEW_HEADER, logger);
             case GUESS:
                 return ofCommand(command, originalArgs, 1, 1, GUESS_OPTIONS, GUESS_USAGE, GUESS_HEADER, logger);
+            case INSTALL:
+                return ofCommand(command, originalArgs, 1, 1, INSTALL_OPTIONS, INSTALL_USAGE, INSTALL_HEADER, logger);
             case EXAMPLE:
                 return ofCommand(command, originalArgs, 0, 1, EXAMPLE_OPTIONS, EXAMPLE_USAGE, EXAMPLE_HEADER, logger);
             case LICENSE:
@@ -390,6 +392,7 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
             + "   cleanup      Cleanup resume state.\n"
             + "   preview      Dry-run a bulk load transaction, and preview it.\n"
             + "   guess        Guess missing parameters to complete configuration.\n"
+            + "   install      Installs a Maven artifact, typically an Embulk plugin.\n"
             + "   example      Create example files for a quick trial of Embulk.\n"
             + "   license      Print out the license notice.\n"
             + "   selfupdate   Upgrade Embulk to the specified version.\n"
@@ -552,6 +555,15 @@ final class CommandLineImpl extends org.embulk.cli.CommandLine {
     private static final String GUESS_HEADER =
             "\n"
             + "\"embulk guess\" guesses missing parameters to complete configuration.\n"
+            + "\n";
+
+    private static final String INSTALL_USAGE = "embulk [common options] install [command options] <groupId:artifactId:version>";
+
+    private static final OptionsWithPlaceholders INSTALL_OPTIONS = PLUGIN_OPTIONS.clone();
+
+    private static final String INSTALL_HEADER =
+            "\n"
+            + "\"embulk install\" installs a Maven artifact, typically an Embulk plugin.\n"
             + "\n";
 
     private static final String EXAMPLE_USAGE = "embulk [common options] example [command options] [directory]";

@@ -28,6 +28,13 @@ public class EmbulkRun {
         final List<String> subcommandArguments = commandLine.getArguments();
 
         switch (commandLine.getCommand()) {
+            case INSTALL:
+                try {
+                    return Install.install(subcommandArguments, embulkSystemProperties);
+                } catch (final IOException ex) {
+                    ex.printStackTrace(System.err);
+                    return 1;
+                }
             case EXAMPLE:
                 final EmbulkExample embulkExample = new EmbulkExample();
                 try {

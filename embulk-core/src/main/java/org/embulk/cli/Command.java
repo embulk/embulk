@@ -7,6 +7,7 @@ public enum Command {
     EXEC("exec"),
     GEM("gem"),
     GUESS("guess"),
+    INSTALL("install"),
     IRB("irb"),
     LICENSE("license"),
     MIGRATE("migrate"),
