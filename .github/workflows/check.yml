@@ -17,6 +17,7 @@ jobs:
         - ":embulk-core:check"
         - ":embulk-ruby:check"
         - ":embulk-junit4:check"
+        - ":embulk-junit5:check"
         - ":embulk-deps:check"
         - ":executable"
     steps:

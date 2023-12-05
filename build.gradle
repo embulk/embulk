@@ -233,9 +233,13 @@ task release {
     dependsOn "embulk-junit4:publishMavenPublicationToMavenCentralRepository"
     tasks.findByPath(":embulk-junit4:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
 
+    dependsOn "embulk-junit5:publishMavenPublicationToMavenCentralRepository"
+    tasks.findByPath(":embulk-junit5:publishMavenPublicationToMavenCentralRepository").mustRunAfter(":releaseCheck")
+
     dependsOn "embulk-ruby:gemPush"
     tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-core:publishMavenPublicationToMavenCentralRepository")
     tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-deps:publishMavenPublicationToMavenCentralRepository")
     tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-junit4:publishMavenPublicationToMavenCentralRepository")
+    tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":embulk-junit5:publishMavenPublicationToMavenCentralRepository")
     tasks.findByPath(":embulk-ruby:gemPush").mustRunAfter(":executableJar")
 }

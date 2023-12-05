@@ -24,7 +24,7 @@ jobs:
     - name: Print the tag
       run: echo "${{ env.GIT_TAG }}"
     - name: Build
-      run: ./gradlew executable embulk-core:jar embulk-deps:jar embulk-junit4:jar embulk-ruby:gem
+      run: ./gradlew executable embulk-core:jar embulk-deps:jar embulk-junit4:jar embulk-junit5:jar embulk-ruby:gem
     - name: Create a GitHub Release
       uses: "actions/github-script@v6"
       with:
@@ -68,7 +68,7 @@ jobs:
             data: await fs.promises.readFile(localPath)
           });
     - name: Publish the Maven artifacts
-      run: ./gradlew --stacktrace embulk-core:publishMavenPublicationToMavenCentralRepository embulk-deps:publishMavenPublicationToMavenCentralRepository embulk-junit4:publishMavenPublicationToMavenCentralRepository
+      run: ./gradlew --stacktrace embulk-core:publishMavenPublicationToMavenCentralRepository embulk-deps:publishMavenPublicationToMavenCentralRepository embulk-junit4:publishMavenPublicationToMavenCentralRepository embulk-junit5:publishMavenPublicationToMavenCentralRepository
       env:
         ORG_GRADLE_PROJECT_ossrhUsername: ${{ vars.OSSRH_USERNAME }}
         ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.OSSRH_PASSWORD }}
