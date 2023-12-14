@@ -1,0 +1,39 @@
+plugins {
+    id "java"
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = rootProject.group
+version = rootProject.version
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    options.encoding = "UTF-8"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+}
+
+dependencies {
+    testImplementation project(":embulk-junit5-api")
+    testRuntimeOnly project(":embulk-junit5-engine")
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+        showStandardStreams = true
+        outputs.upToDateWhen { false }
+    }
+}

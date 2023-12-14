@@ -1,0 +1,180 @@
+plugins {
+    id "java"
+    id "java-library"
+    id "maven-publish"
+    id "signing"
+    id "checkstyle"
+}
+
+repositories {
+    mavenCentral()
+}
+
+group = rootProject.group
+version = rootProject.version
+description = "Embulk: Test engine for Embulk plugins with JUnit 5"
+
+configurations {
+    compileClasspath.resolutionStrategy.activateDependencyLocking()
+    runtimeClasspath.resolutionStrategy.activateDependencyLocking()
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    options.encoding = "UTF-8"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+dependencies {
+    api project(":embulk-junit5-api")
+
+    api platform("org.junit:junit-bom:5.10.1")
+    api "org.junit.jupiter:junit-jupiter-api"  // Follows junit-bom:5.10.1 => 5.10.1
+    api "org.junit.platform:junit-platform-engine"  // Follows junit-bom:5.10.1 => 1.10.1
+}
+
+javadoc {
+    options {
+        locale = "en_US"
+        encoding = "UTF-8"
+        overview = "src/main/html/overview.html"
+        links "https://docs.oracle.com/javase/8/docs/api/"
+    }
+}
+
+jar {
+    metaInf {
+        from rootProject.file("LICENSE")
+    }
+
+    manifest {
+        attributes "Implementation-Title": project.name,
+                   "Implementation-Version": project.version,
+                   "Implementation-Vendor-Id": project.group,
+                   "Specification-Title": project.name,
+                   "Specification-Version": project.version
+    }
+}
+
+sourcesJar {
+    metaInf {
+        from rootProject.file("LICENSE")
+    }
+}
+
+javadocJar {
+    metaInf {
+        from rootProject.file("LICENSE")
+    }
+}
+
+// It should not publish a `.module` file in Maven Central.
+// https://docs.gradle.org/current/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = project.name
+
+            from components.java
+            // javadocJar and sourcesJar are added by java.withJavadocJar() and java.withSourcesJar() above.
+            // See: https://docs.gradle.org/current/javadoc/org/gradle/api/plugins/JavaPluginExtension.html
+
+            pom {  // https://central.sonatype.org/pages/requirements.html
+                name = project.name
+                afterEvaluate { project ->
+                    // "description" is declared in subproject's build.gradle. It needs to be configured after evaluation.
+                    description = project.description
+                }
+                url = "https://www.embulk.org/"
+
+                licenses {
+                    license {
+                        // http://central.sonatype.org/pages/requirements.html#license-information
+                        name = "The Apache License, Version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = "repo"
+                    }
+                }
+
+                developers {
+                    developer {
+                        name = "Dai MIKURUBE"
+                        email = "dmikurube@acm.org"
+                    }
+                }
+
+                scm {
+                    connection = "scm:git:git://github.com/embulk/embulk.git"
+                    developerConnection = "scm:git:git@github.com:embulk/embulk.git"
+                    url = "https://github.com/embulk/embulk"
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {  // publishMavenPublicationToMavenCentralRepository
+            name = "mavenCentral"
+            if (project.version.endsWith("-SNAPSHOT")) {
+                url "https://oss.sonatype.org/content/repositories/snapshots"
+            } else {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            }
+            credentials {
+                username = project.hasProperty("ossrhUsername") ? ossrhUsername : ""
+                password = project.hasProperty("ossrhPassword") ? ossrhPassword : ""
+            }
+        }
+    }
+}
+
+signing {
+    if (project.hasProperty("signingKey") && project.hasProperty("signingPassword")) {
+        logger.lifecycle("Signing with an in-memory key.")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign publishing.publications.maven
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showCauses = true
+        showExceptions = true
+        showStackTraces = true
+        showStandardStreams = true
+        outputs.upToDateWhen { false }
+    }
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        // Not to skip up-to-date checkstyles.
+        outputs.upToDateWhen { false }
+    }
+}
+
+checkstyle {
+    toolVersion "8.7"
+    configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+    configProperties = [
+        "checkstyle.config.path": file("${projectDir}/config/checkstyle")
+    ]
+    ignoreFailures = false
+    maxWarnings = 0  // https://github.com/gradle/gradle/issues/881
+}
