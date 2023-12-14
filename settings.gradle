@@ -3,4 +3,7 @@ include 'embulk-core'
 include 'embulk-deps'
 include 'embulk-ruby'
 include 'embulk-junit4'
+include "embulk-junit5-api"
+include "embulk-junit5-engine"
 include 'test-helpers'
+include "test-plugin"
