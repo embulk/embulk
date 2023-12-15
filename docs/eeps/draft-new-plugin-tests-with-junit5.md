@@ -25,7 +25,6 @@ We aim the following points in `embulk-junit5` with improvements from `embulk-ju
 1. Being based on JUnit 5 (definitely)
 2. Requiring no other Embulk plugins to test the target Embulk plugin
 3. Reproducing the same class loading structure with the real Embulk's class loading
-4. ...
 
 The following section describes each in details.
 
@@ -132,6 +131,29 @@ test {
 embulkPluginTest {
     // Configurations for the "integrated" Embulk plugin tests.
 }
+```
+
+The source tree would be like below.
+
+```
+.
+|-- build.gradle
+|-- gradle/
+|   |-- ...
+|   `-- ...
+|-- gradlew
+|-- gradlew.bat
+|-- settings.gradle
+`-- src/
+    |-- main/   # The main code of the plugin.
+    |   |-- ...
+    |   `-- ...
+    |-- test/   # The simple unit test code of the plugin.
+    |   |-- ...
+    |   `-- ...
+    `-- embulkPluginTest/   # The "integrated" Embulk plugin test code of the plugin.
+        |-- ...
+        `-- ...
 ```
 
 Alternatives considered
