@@ -107,7 +107,7 @@ Should it have been fixed into the "real dependency injection" with Guice? No, a
 
 Furthermore, Guice drags Guava (explained below), which is often a source of unintended incompatibility.
 
-Hiding Guice behind [`embulk-deps`] is not trivial. And, Guice in the top-level class loader involves Guava also in the top-level class loader. Guice is removed (#2) from the Embulk core as of [Embulk v0.10.33](https://github.com/embulk/embulk/releases/tag/v0.10.33).
+Hiding Guice behind `embulk-deps` is not trivial. And, Guice in the top-level class loader involves Guava also in the top-level class loader. Guice is removed (#2) from the Embulk core as of [Embulk v0.10.33](https://github.com/embulk/embulk/releases/tag/v0.10.33).
 
 Guava
 ------
