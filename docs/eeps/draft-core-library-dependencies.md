@@ -45,6 +45,8 @@ Two of the dependency libraries (MessagePack for Java and Logback) are kept for 
 Walkthrough: each library
 ==========================
 
+Let's walk through each library to analyze, discuss, and explain the design decisions for each case.
+
 Jackson
 --------
 
