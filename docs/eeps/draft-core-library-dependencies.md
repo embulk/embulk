@@ -4,13 +4,13 @@ Title: Core Library Dependencies
 Author: dmikurube
 Status: Draft
 Type: Standards Track
-Created: 2023-12-22
+Created: 2023-12-25
 ---
 
 Problem: dependency conflicts
 ==============================
 
-The Embulk core has several library dependencies of its own because it has to do a certain amount of work itself. For example, [SnakeYAML](https://bitbucket.org/snakeyaml/snakeyaml/) for parsing the user's Embulk configuration YAML, [Jackson](https://github.com/FasterXML/jackson) for processing user configurations, [Guice](https://github.com/google/guice) for managing its own object lifecycles, [Guava](https://github.com/google/guava) for utilities, [SLF4J](https://www.slf4j.org/) and [Logback](https://logback.qos.ch/) for logging, ...
+The Embulk core had several library dependencies of its own because it has to do a certain amount of work itself. For example, [SnakeYAML](https://bitbucket.org/snakeyaml/snakeyaml/) for parsing the user's Embulk configuration YAML, [Jackson](https://github.com/FasterXML/jackson) for processing user configurations, [Guice](https://github.com/google/guice) for managing its own object lifecycles, [Guava](https://github.com/google/guava) for utilities, [SLF4J](https://www.slf4j.org/) and [Logback](https://logback.qos.ch/) for logging, ...
 
 On the other hand, almost all Embulk plugins need their own library dependencies for their own purposes. This includes transitive dependencies. For example, some AWS-related plugins need the [AWS SDK for Java](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/welcome.html), [whose v1 transitively needed Jackson](https://central.sonatype.dev/artifact/com.amazonaws/aws-java-sdk-core/1.12.385/dependencies). Some Google Cloud-related plugins require the [Google Cloud Client Library for Java](https://github.com/googleapis/google-cloud-java), [which transitively requires Jackson and Guava](https://central.sonatype.dev/artifact/com.google.cloud/google-cloud-storage/2.17.1/dependencies).
 
