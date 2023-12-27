@@ -61,6 +61,10 @@ dependencies {
     implementation "org.slf4j:slf4j-api:2.0.7"
     implementation "org.msgpack:msgpack-core:0.8.24"
 
+    // This "embulk-core" should not have any more library dependencies.
+    //
+    // See: EEP-7: Core Library Dependencies (/docs/eeps/eep-0007.md)
+
     testImplementation "junit:junit:4.13.2"
     testImplementation project(":embulk-junit4")
     testImplementation "ch.qos.logback:logback-classic:1.3.6"
