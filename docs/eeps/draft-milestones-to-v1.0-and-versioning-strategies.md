@@ -67,7 +67,7 @@ The Embulk core has three-digit version numbers such as `v1.2.3`. The versioning
 The MAJOR version (the first digit of the version number) is incremented when the Embulk core has an incompatible change, which includes the following cases.
 
 * A breaking SPI change where an existing plugin is expected to stop working. Note that `v1.0.*` to `v1.1.*` is an exception because the plan to drop `msgpack-core` has already been announced.
-* The Java version that Embulk requires at least. In other words, the Embulk core version would be at least v2.*.* when Embulk requires Java 11, 17, or 21.
+* The Java version that Embulk requires at least. In other words, the Embulk core version would be at least `v2.*.*` when Embulk requires Java 11, 17, or 21.
 
 On the other hand, the MAJOR version may or may not be incremented when removing or changing a core feature, which includes the following example cases.
 
