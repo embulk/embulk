@@ -39,11 +39,11 @@ The Embulk core and the Embulk SPI have different versioning strategies. Around 
 
 All of these versions would work with at least Java 8.
 
-| Embulk core version | Embulk SPI version                                        | Required Java version |
-| ------------------- | --------------------------------------------------------- | --------------------- |
-| `v0.11.*`           | `v0.11`                                                   | `8`                   |
-| `v1.0.*`            | `v0.11` (or `v0.12` with some minor compatible fixes)     | `8` or later          |
-| `v1.1.*`            | `v1.0` (with removal of `msgpack-core` from `embulk-spi`) | `8` or later          |
+| Embulk core version | Embulk SPI version                                        | Supported Java version |
+| ------------------- | --------------------------------------------------------- | ---------------------- |
+| `v0.11.*`           | `v0.11`                                                   | `8`                    |
+| `v1.0.*`            | `v0.11` (or `v0.12` with some minor compatible fixes)     | `8` or later           |
+| `v1.1.*`            | `v1.0` (with removal of `msgpack-core` from `embulk-spi`) | `8` or later           |
 
 Versioning strategies to follow v1.0
 =====================================
