@@ -32,8 +32,8 @@ The Embulk core v1.0 would be released when the following criteria are satisfied
 5. Dependency libraries of the built-in plugins are up-to-date.
 6. The Embulk core is tested to work on Java 11 and/or 17 with some major plugins.
 
-The core and SPI versions through v0.11 - v1.1
------------------------------------------------
+The core and SPI version mapping through v0.11 - v1.1
+------------------------------------------------------
 
 The Embulk core and the Embulk SPI have different version strategies. Around v1.0, they would have the following versions.
 
@@ -53,16 +53,37 @@ Embulk SPI
 
 The Embulk SPI has two-digit version numbers such as `v1.2`.
 
+The MAJOR version (the first digit of the version number) is incremented when the Embulk SPI has an incompatible change. The "incompatible change" includes its required Java version.
+
+The MINOR version (the second digit of the version number) is incremented for any change in the Embulk SPI. The SPI has no PATCH version. The MINOR version would be incremented even when the SPI only had a very small trivial change.
+
 Embulk core
 ------------
 
-The Embulk core has three-digit version numbers such as `v1.2.3`. The versioning strategies after Embulk v1.1 would give some respects to the [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) while it may not be very strict.
+The Embulk core has three-digit version numbers such as `v1.2.3`. The versioning strategies after Embulk v1.1.* would give some respects to the [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) while it may not be very strict.
 
-The MAJOR version (the first digit of the version number) is incremented when the Embulk core has an incompatible change. The "incompatible change" includes its required Java version. In other words, the Embulk core version would be v2.*.* or further when Embulk requires Java 11, 17, or 21.
+### The MAJOR version
 
-The MINOR version (the second digit of the version number) is incremented when the Embulk core has something new which is compatible, but not just a fix.
+The MAJOR version (the first digit of the version number) is incremented when the Embulk core has an incompatible change, which includes the following cases.
 
-The PATCH version (the third digit of the version number) is incremented when the Embulk core has a fix.
+* A breaking SPI change where an existing plugin is expected to stop working. Note that `v1.0.*` to `v1.1.*` is an exception because the plan to drop `msgpack-core` has already been announced.
+* The Java version that Embulk requires at least. In other words, the Embulk core version would be at least v2.*.* when Embulk requires Java 11, 17, or 21.
+
+On the other hand, the MAJOR version may or may not be incremented when removing or changing a core feature, which includes the following example cases.
+
+* Removal of a sub-command.
+* A change in the command-line format.
+* A change in interpreting an Embulk System Property.
+
+In such a case, we'll consider whether we should increment the MAJOR version or not, depending on the case.
+
+### The MINOR version
+
+The MINOR version (the second digit of the version number) is incremented when the Embulk core has something new and compatible, but not just a bug fix.
+
+### The PATCH version
+
+The PATCH version (the third digit of the version number) is incremented when the Embulk core has only a bug fix.
 
 Copyright and License
 ======================
