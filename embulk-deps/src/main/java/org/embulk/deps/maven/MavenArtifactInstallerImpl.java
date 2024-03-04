@@ -19,14 +19,17 @@ package org.embulk.deps.maven;
 import java.io.FileNotFoundException;
 import java.io.IOError;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.AbstractRepositoryListener;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -124,12 +127,10 @@ public class MavenArtifactInstallerImpl extends MavenArtifactInstaller {
         }
     }
 
-    private static DependencyRequest buildDependencyRequest(final Artifact artifact, final String... repositoryUrls) {
-        final ArrayList<RemoteRepository> repositories = new ArrayList<>();
-        repositories.add(MAVEN_CENTRAL);
-        for (final String url : repositoryUrls) {
-            repositories.add(new RemoteRepository.Builder(null, null, url).build());
-        }
+    private static DependencyRequest buildDependencyRequest(
+            final Artifact artifact,
+            final String... repositoryUrls) throws IOException {
+        final List<RemoteRepository> repositories = listRemoteRepositories(repositoryUrls);
 
         final DependencyFilter classpathFilter = DependencyFilterUtils.classpathFilter(JavaScopes.RUNTIME);
 
@@ -138,6 +139,33 @@ public class MavenArtifactInstallerImpl extends MavenArtifactInstaller {
         collectRequest.setRepositories(repositories);
 
         return new DependencyRequest(collectRequest, classpathFilter);
+    }
+
+    static List<RemoteRepository> listRemoteRepositories(final String... repositoryUrls) throws IOException {
+        final ArrayList<RemoteRepository> repositories = new ArrayList<>();
+        if (repositoryUrls.length == 0) {
+            installLogger.info("No alternative remote Maven repositories are specified. Downloading artifacts from Maven Central.");
+            repositories.add(MAVEN_CENTRAL);
+        } else {
+            for (final String url : repositoryUrls) {
+                repositories.add(buildRemoteRepositoryFromUrl(url));
+            }
+            installLogger.info(
+                    "Downloading artifacts from alternative remote Maven repositories: {}",
+                    repositories.stream().map(RemoteRepository::getUrl).collect(Collectors.joining(", ")));
+        }
+        return Collections.unmodifiableList(repositories);
+    }
+
+    static RemoteRepository buildRemoteRepositoryFromUrl(final String url) throws IOException {
+        if (url == null) {
+            throw new MalformedURLException("null specified for remote repository.");
+        }
+        if (url.equalsIgnoreCase(MAVEN_CENTRAL.getId()) || url.equals(MAVEN_CENTRAL.getUrl())) {
+            // "central" is interpreted as the Maven Central repository.
+            return MAVEN_CENTRAL;
+        }
+        return new RemoteRepository.Builder(null, null, url).build();
     }
 
     private static class LoggingListener extends AbstractRepositoryListener {
