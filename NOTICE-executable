@@ -143,6 +143,15 @@ the Apache License, Version 2.0.
 
 
 The executable distribution of this product includes
+Eclipse Sisu, developed by
+Sonatype, Inc. and the Eclipse Foundation (https://www.eclipse.org/), licensed under
+the Eclipse Public License v1.0.
+
+* Copyright (c) 2010-present Sonatype, Inc.
+
+
+
+The executable distribution of this product includes
 Codehaus Plexus Utils, developed by
 The Apache Software Foundation (http://www.apache.org/), licensed under
 the Apache License, Version 2.0.
