@@ -38,6 +38,12 @@ dependencies {
     compileOnly "org.slf4j:slf4j-api:2.0.7"
     compileOnly "org.msgpack:msgpack-core:0.8.24"
 
+    // Use the same "jcl-over-slf4j" version with slf4f-api.
+    // "maven-resolver-transport-http(:1.9.16)" needs "org.slf4j:jcl-over-slf4j(:1.7.36)".
+    api("org.slf4j:jcl-over-slf4j:2.0.7") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+
     // Buffer
     api "io.netty:netty-buffer:4.0.44.Final"
 
@@ -67,6 +73,19 @@ dependencies {
     api("org.apache.maven.resolver:maven-resolver-impl:1.9.16") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
+    api("org.apache.maven.resolver:maven-resolver-supplier:1.9.16") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+    api("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.16") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+    api("org.apache.maven.resolver:maven-resolver-transport-file:1.9.16") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+    api("org.apache.maven.resolver:maven-resolver-transport-http:1.9.16") {
+        exclude group: "org.slf4j", module: "slf4j-api"
+        exclude group: "org.slf4j", module: "jcl-over-slf4j"
+    }
 
     // Timestamp
     api "org.embulk:embulk-util-timestamp:0.2.2"
@@ -75,6 +94,7 @@ dependencies {
     testImplementation project(":embulk-core")
     testImplementation project(":embulk-junit4")
     testImplementation "junit:junit:4.13.2"
+    testImplementation "org.slf4j:slf4j-simple:2.0.7"
 }
 
 javadoc {

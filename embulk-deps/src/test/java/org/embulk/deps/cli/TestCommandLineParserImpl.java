@@ -63,6 +63,7 @@ public class TestCommandLineParserImpl {
                 + "   cleanup      Cleanup resume state." + NEWLINE
                 + "   preview      Dry-run a bulk load transaction, and preview it." + NEWLINE
                 + "   guess        Guess missing parameters to complete configuration." + NEWLINE
+                + "   install      Installs a Maven artifact, typically an Embulk plugin." + NEWLINE
                 + "   example      Create example files for a quick trial of Embulk." + NEWLINE
                 + "   license      Print out the license notice." + NEWLINE
                 + "   selfupdate   Upgrade Embulk to the specified version." + NEWLINE
@@ -141,6 +142,7 @@ public class TestCommandLineParserImpl {
                 + "   cleanup      Cleanup resume state." + NEWLINE
                 + "   preview      Dry-run a bulk load transaction, and preview it." + NEWLINE
                 + "   guess        Guess missing parameters to complete configuration." + NEWLINE
+                + "   install      Installs a Maven artifact, typically an Embulk plugin." + NEWLINE
                 + "   example      Create example files for a quick trial of Embulk." + NEWLINE
                 + "   license      Print out the license notice." + NEWLINE
                 + "   selfupdate   Upgrade Embulk to the specified version." + NEWLINE

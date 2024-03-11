@@ -15,7 +15,6 @@ import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.repository.LocalRepository;
 import org.eclipse.aether.resolution.ArtifactDescriptorException;
 import org.eclipse.aether.resolution.ArtifactDescriptorRequest;
@@ -23,6 +22,7 @@ import org.eclipse.aether.resolution.ArtifactDescriptorResult;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.embulk.plugin.MavenPluginType;
 import org.embulk.plugin.maven.MavenArtifactFinder;
 import org.embulk.plugin.maven.MavenExcludeDependency;
@@ -51,11 +51,11 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
                                                        new NotDirectoryException(absolutePath.toString()));
         }
 
-        final RepositorySystem repositorySystem = createRepositorySystem();
-
         this.givenLocalMavenRepositoryPath = localMavenRepositoryPath;
         this.absoluteLocalMavenRepositoryPath = absolutePath;
-        this.repositorySystem = repositorySystem;
+
+        this.repositorySystemSupplier = new RepositorySystemSupplier();
+        this.repositorySystem = this.repositorySystemSupplier.get();
         this.repositorySystemSession = createRepositorySystemSession(repositorySystem, absolutePath);
     }
 
@@ -132,11 +132,6 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
         return this.repositorySystem.readArtifactDescriptor(this.repositorySystemSession, descriptorRequest);
     }
 
-    private static RepositorySystem createRepositorySystem() {
-        final DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator();
-        return locator.getService(RepositorySystem.class);
-    }
-
     private static RepositorySystemSession createRepositorySystemSession(
             final RepositorySystem repositorySystem, final Path localRepositoryPath) {
         final DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
@@ -150,6 +145,7 @@ public class MavenArtifactFinderImpl extends MavenArtifactFinder {
     private final Path givenLocalMavenRepositoryPath;
     private final Path absoluteLocalMavenRepositoryPath;
 
+    private final RepositorySystemSupplier repositorySystemSupplier;
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession repositorySystemSession;
 }
