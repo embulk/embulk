@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.2//EN"
+    "http://checkstyle.sourceforge.net/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+  <suppress checks="JavadocMethod" files=".*"/>
+  <suppress checks="JavadocParagraph" files=".*"/>
+  <suppress checks="JavadocTagContinuationIndentation" files=".*"/>
+  <suppress checks="SingleLineJavadoc" files=".*"/>
+  <suppress checks="SummaryJavadoc" files=".*"/>
+</suppressions>
