@@ -169,6 +169,8 @@ Because of these two problems, a different mechanism for isolating library artif
 
 The `parent_first_resources` file is a similar mechanism for non-class resources, which has the same problems.
 
+The `parent_first_packages` and `parent_first_resources` mechanisms still remain in Embulk as of v0.11, but they will go away once they are no longer needed.
+
 Design
 =======
 
@@ -310,7 +312,7 @@ Embulk's executable JAR file
 
 Almost all the Embulk users use Embulk's packaged executable JAR file while it is possible for users to embed `embulk-core` and `embulk-deps` by themselves. The next question is how to structure the executable JAR file.
 
-The hidden dependency libraries and `embulk-deps` cannot be extracted into the executable JAR file so that they are not loaded by the top-level class loader. Instead, we decided to include these library JAR files "as-is" nested in the executable JAR file. This is called the "JAR-in-JAR" technique, traditionally known for [One-JAR](https://one-jar.sourceforge.net/).
+The hidden dependency libraries and `embulk-deps` cannot be extracted into the executable JAR file so that they are not loaded by the top-level class loader. Instead, we decided to include these library JAR files "as-is" nested in the executable JAR file (as well as the built-in plugins explained below). This is called the "JAR-in-JAR" technique, traditionally known for [One-JAR](https://one-jar.sourceforge.net/).
 
 Let's take a look into [`embulk-0.11.0.jar`](https://github.com/embulk/embulk/releases/tag/v0.11.0) for example.
 
