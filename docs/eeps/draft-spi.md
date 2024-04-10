@@ -212,7 +212,7 @@ Related change:
 
 ### `org.embulk.config.CommitReport`
 
-We have removed `org.embulk.config.CommitReport` as `org.embulk.config.TaskReport` has replaced `CommitReport`, and is deprecated as of Embulk v0.6.24. Related methods have been removed as well.
+We have removed `org.embulk.config.CommitReport` as `org.embulk.config.TaskReport` has replaced `CommitReport`, and is deprecated as of Embulk v0.7.0. Related methods have been removed as well.
 
 Related change:
 * [Remove org.embulk.config.CommitReport (Fix #933) (embulk/embulk#1247)](https://github.com/embulk/embulk/pull/1247)
