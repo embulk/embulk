@@ -75,11 +75,17 @@ dependencies {
 // In contrast, "dependencies (--write-locks)" does not fail even when a part the dependencies are unavailable.
 //
 // https://docs.gradle.org/7.6.1/userguide/dependency_locking.html#generating_and_updating_dependency_locks
-task checkDependencies {
-    notCompatibleWithConfigurationCache("The task \"checkDependencies\" filters configurations at execution time.")
-    doLast {
-        configurations.findAll { it.canBeResolved }.each { it.resolve() }
+allprojects {
+    task checkDependencies {
+        notCompatibleWithConfigurationCache("The task \"checkDependencies\" filters configurations at execution time.")
+        doLast {
+            configurations.findAll { it.canBeResolved }.each { it.resolve() }
+        }
     }
+}
+
+subprojects.each { subProject ->
+    rootProject.tasks.getByPath(":checkDependencies").dependsOn(subProject.tasks.getByPath("checkDependencies"))
 }
 
 def listEmbeddedDependencies = { configurationName, rootModuleName, prefix ->
