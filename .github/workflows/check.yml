@@ -11,7 +11,7 @@ jobs:
       matrix:
         os:
         - ubuntu-latest
-        - macOS-latest
+        - macos-13  # OpenJDK 8 is not supported on macos-14+ (M1).
         - windows-latest
         gradle_task:
         - ":embulk-core:check"
