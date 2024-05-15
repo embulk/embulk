@@ -45,7 +45,7 @@ dependencies {
     }
 
     // Buffer
-    api "io.netty:netty-buffer:4.0.44.Final"
+    api "io.netty:netty-buffer:4.1.109.Final"
 
     // CLI
     api "commons-cli:commons-cli:1.7.0"
