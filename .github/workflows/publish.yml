@@ -26,7 +26,7 @@ jobs:
     - name: Build
       run: ./gradlew executable embulk-core:jar embulk-deps:jar embulk-junit4:jar embulk-ruby:gem
     - name: Create a GitHub Release
-      uses: "actions/github-script@v6"
+      uses: "actions/github-script@v7"
       with:
         github-token: "${{ secrets.GITHUB_TOKEN }}"
         script: |
@@ -50,7 +50,7 @@ jobs:
     - name: Print the RELEASE_UPLOAD_URL
       run: echo "${{ env.RELEASE_UPLOAD_URL }}"
     - name: Upload the executable JAR as an Asset in GitHub Release
-      uses: "actions/github-script@v6"
+      uses: "actions/github-script@v7"
       with:
         github-token: "${{ secrets.GITHUB_TOKEN }}"
         script: |
