@@ -88,7 +88,7 @@ dependencies {
     }
 
     // Timestamp
-    api "org.embulk:embulk-util-timestamp:0.2.2"
+    api "org.embulk:embulk-util-timestamp:0.3.0"
 
     testImplementation "org.embulk:embulk-spi:0.11"
     testImplementation project(":embulk-core")
