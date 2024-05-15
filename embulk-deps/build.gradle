@@ -48,7 +48,7 @@ dependencies {
     api "io.netty:netty-buffer:4.0.44.Final"
 
     // CLI
-    api "commons-cli:commons-cli:1.4"
+    api "commons-cli:commons-cli:1.7.0"
 
     // Config
     api "org.yaml:snakeyaml:1.18"
