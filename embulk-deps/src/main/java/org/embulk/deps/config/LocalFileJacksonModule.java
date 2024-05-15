@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,12 +55,28 @@ public final class LocalFileJacksonModule extends SimpleModule {
                         jp.readBinaryValue(ctxt.getBase64Variant(), out);
                         result = LocalFile.ofContent(out.toByteArray());
                     } else {
-                        throw ctxt.mappingException("Unknown key '" + keyName + "' to deserialize LocalFile");
+                        // This LocalFileJacksonModule is used only with ModelManagerDelegateImpl, whose ObjectMapper is default.
+                        // The default ObjectMapper has FAIL_ON_UNKNOWN_PROPERTIES enabled.
+                        //
+                        // Then, handleUnknownProperty should throw UnrecognizedPropertyException,
+                        // which inherits JsonMappingException.
+                        ctxt.handleUnknownProperty(jp, this, LocalFile.class, keyName);
+
+                        // Should never reach here. Fall-back to follow up the control flow for the Java compiler.
+                        throw UnrecognizedPropertyException.from(jp, LocalFile.class, keyName, null);
                     }
 
                     t = jp.nextToken();
                     if (t != JsonToken.END_OBJECT) {
-                        throw ctxt.mappingException("Unexpected extra map keys to LocalFile");
+                        // This LocalFileJacksonModule is used only with ModelManagerDelegateImpl, whose ObjectMapper is default.
+                        // The default ObjectMapper has no DeserializationProblemHandler configured.
+                        //
+                        // Then, handleUnexpectedToken should throw MismatchedInputException,
+                        // which inherits JsonMappingException.
+                        ctxt.handleUnexpectedToken(LocalFile.class, t, jp, "Unexpected extra map keys to LocalFile");
+
+                        // Should never reach here. Fall-back to follow up the control flow for the Java compiler.
+                        throw MismatchedInputException.from(jp, LocalFile.class, "Unexpected extra map keys to LocalFile");
                     }
                     return result;
                 }
@@ -66,7 +84,15 @@ public final class LocalFileJacksonModule extends SimpleModule {
                 case END_OBJECT:
                 case START_ARRAY:
                 case END_ARRAY:
-                    throw ctxt.mappingException("Attempted unexpected map or array to LocalFile");
+                    // This LocalFileJacksonModule is used only with ModelManagerDelegateImpl, whose ObjectMapper is default.
+                    // The default ObjectMapper has no DeserializationProblemHandler configured.
+                    //
+                    // Then, handleUnexpectedToken should throw MismatchedInputException,
+                    // which inherits JsonMappingException.
+                    ctxt.handleUnexpectedToken(LocalFile.class, t, jp, "Attempted unexpected map or array to LocalFile");
+
+                    // Should never reach here. Fall-back to follow up the control flow for the Java compiler.
+                    throw MismatchedInputException.from(jp, LocalFile.class, "Attempted unexpected map or array to LocalFile");
 
                 case VALUE_EMBEDDED_OBJECT: {
                     Object obj = jp.getEmbeddedObject();
@@ -76,7 +102,20 @@ public final class LocalFileJacksonModule extends SimpleModule {
                     if (LocalFile.class.isAssignableFrom(obj.getClass())) {
                         return (LocalFile) obj;
                     }
-                    throw ctxt.mappingException("Don't know how to convert embedded Object of type " + obj.getClass().getName() + " into LocalFile");
+
+                    // This LocalFileJacksonModule is used only with ModelManagerDelegateImpl, whose ObjectMapper is default.
+                    // The default ObjectMapper has no DeserializationProblemHandler configured.
+                    //
+                    // Then, handleUnexpectedToken should throw MismatchedInputException,
+                    // which inherits JsonMappingException.
+                    ctxt.handleUnexpectedToken(
+                            LocalFile.class, t, jp,
+                            "Don't know how to convert embedded Object of type %s into LocalFile", obj.getClass().getName());
+
+                    // Should never reach here. Fall-back to follow up the control flow for the Java compiler.
+                    throw MismatchedInputException.from(
+                            jp, LocalFile.class,
+                            "Don't know how to convert embedded Object of type " + obj.getClass().getName() + " into LocalFile");
                 }
 
                 default:

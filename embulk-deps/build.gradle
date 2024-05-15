@@ -54,10 +54,10 @@ dependencies {
     api "org.yaml:snakeyaml:1.18"
 
     // Jackson & Config
-    api "com.fasterxml.jackson.core:jackson-annotations:2.6.7"
-    api "com.fasterxml.jackson.core:jackson-core:2.6.7"
-    api "com.fasterxml.jackson.core:jackson-databind:2.6.7.5"
-    api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7"
+    api "com.fasterxml.jackson.core:jackson-annotations:2.16.2"
+    api "com.fasterxml.jackson.core:jackson-core:2.16.2"
+    api "com.fasterxml.jackson.core:jackson-databind:2.16.2"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2"
 
     // Apache Commons Lang 3 is required from Apache Maven.
     api "org.apache.commons:commons-lang3:3.13.0"

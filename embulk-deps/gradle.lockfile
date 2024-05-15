@@ -1,10 +1,11 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-com.fasterxml.jackson.core:jackson-annotations:2.6.7=compileClasspath,runtimeClasspath
-com.fasterxml.jackson.core:jackson-core:2.6.7=compileClasspath,runtimeClasspath
-com.fasterxml.jackson.core:jackson-databind:2.6.7.5=compileClasspath,runtimeClasspath
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-annotations:2.16.2=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-core:2.16.2=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.core:jackson-databind:2.16.2=compileClasspath,runtimeClasspath
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2=compileClasspath,runtimeClasspath
+com.fasterxml.jackson:jackson-bom:2.16.2=compileClasspath,runtimeClasspath
 commons-cli:commons-cli:1.4=compileClasspath,runtimeClasspath
 commons-codec:commons-codec:1.16.0=runtimeClasspath
 io.netty:netty-buffer:4.0.44.Final=compileClasspath,runtimeClasspath

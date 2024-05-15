@@ -165,8 +165,8 @@ public class TestConfigSource {
             this.config.getListOf(String.class, "variety_list");
         } catch (final RuntimeException ex) {
             assertTrue(ex.getMessage().startsWith(
-                    "com.fasterxml.jackson.databind.JsonMappingException: "
-                    + "Can not deserialize instance of java.lang.String out of START_OBJECT token"));
+                    "com.fasterxml.jackson.databind.exc.MismatchedInputException: "
+                    + "Cannot deserialize value of type `java.lang.String` from Object value (token `JsonToken.START_OBJECT`)"));
         }
     }
 
