@@ -10,6 +10,19 @@ public class PooledBufferAllocatorImpl extends org.embulk.exec.PooledBufferAlloc
         this.pageSize = pageSize;
 
         // PooledByteBufAllocator(preferDirect = false): buffers are allocated on Java heap.
+        //
+        // Embulk's PooledBufferAllocator respects Netty's default parameters although
+        // Netty's default parameters have had some changes in its history.
+        //
+        // Embulk started to use Netty 4.0.44.Final since Embulk v0.8.18.
+        // https://github.com/embulk/embulk/pull/549
+        //
+        // Netty 4.1.75.Final changed the default chunk size from 16 MiB to 4MiB.
+        // https://github.com/netty/netty/pull/12180
+        // The default numbers of heap arenas and direct arenas could have been changed along with this change.
+        //
+        // Netty 4.1.75.Final also changed NOT to use a thread local cache for every thread.
+        // https://github.com/netty/netty/pull/12109
         this.nettyByteBufAllocator = new PooledByteBufAllocator(false);
     }
 
