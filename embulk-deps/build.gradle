@@ -60,29 +60,29 @@ dependencies {
     api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.16.2"
 
     // Apache Commons Lang 3 is required from Apache Maven.
-    api "org.apache.commons:commons-lang3:3.13.0"
+    api "org.apache.commons:commons-lang3:3.14.0"
 
     // Maven
     api "org.apache.maven:maven-artifact:3.9.6"
     api("org.apache.maven:maven-resolver-provider:3.9.6") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    api "org.apache.maven.resolver:maven-resolver-api:1.9.18"
-    api "org.apache.maven.resolver:maven-resolver-spi:1.9.18"
-    api "org.apache.maven.resolver:maven-resolver-util:1.9.18"
-    api("org.apache.maven.resolver:maven-resolver-impl:1.9.18") {
+    api "org.apache.maven.resolver:maven-resolver-api:1.9.20"
+    api "org.apache.maven.resolver:maven-resolver-spi:1.9.20"
+    api "org.apache.maven.resolver:maven-resolver-util:1.9.20"
+    api("org.apache.maven.resolver:maven-resolver-impl:1.9.20") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    api("org.apache.maven.resolver:maven-resolver-supplier:1.9.18") {
+    api("org.apache.maven.resolver:maven-resolver-supplier:1.9.20") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    api("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18") {
+    api("org.apache.maven.resolver:maven-resolver-connector-basic:1.9.20") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    api("org.apache.maven.resolver:maven-resolver-transport-file:1.9.18") {
+    api("org.apache.maven.resolver:maven-resolver-transport-file:1.9.20") {
         exclude group: "org.slf4j", module: "slf4j-api"
     }
-    api("org.apache.maven.resolver:maven-resolver-transport-http:1.9.18") {
+    api("org.apache.maven.resolver:maven-resolver-transport-http:1.9.20") {
         exclude group: "org.slf4j", module: "slf4j-api"
         exclude group: "org.slf4j", module: "jcl-over-slf4j"
     }
