@@ -69,5 +69,5 @@ org.embulk:embulk-util-timestamp:0.3.0=deps,embulk-formatter-csv,embulk-guess-cs
 org.msgpack:msgpack-core:0.8.24=compileClasspath,runtimeClasspath
 org.slf4j:jcl-over-slf4j:2.0.7=deps
 org.slf4j:slf4j-api:2.0.7=compileClasspath,runtimeClasspath
-org.yaml:snakeyaml:1.18=deps
+org.yaml:snakeyaml:2.2=deps
 empty=

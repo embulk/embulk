@@ -51,7 +51,7 @@ dependencies {
     api "commons-cli:commons-cli:1.7.0"
 
     // Config
-    api "org.yaml:snakeyaml:1.18"
+    api "org.yaml:snakeyaml:2.2"
 
     // Jackson & Config
     api "com.fasterxml.jackson.core:jackson-annotations:2.16.2"
