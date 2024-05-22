@@ -87,6 +87,10 @@ dependencies {
         exclude group: "org.slf4j", module: "jcl-over-slf4j"
     }
 
+    // Apache Maven (maven-resolver-transport-http) depends on commons-codec,
+    // but they do not always catch up with the latest commons-codec.
+    api "commons-codec:commons-codec:1.17.0"
+
     // Timestamp
     api "org.embulk:embulk-util-timestamp:0.3.0"
 
