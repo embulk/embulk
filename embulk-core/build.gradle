@@ -58,7 +58,7 @@ dependencies {
     // especially after "embulk-spi" goes out for another Git repository. Note that "embulk-core"
     // may need to have newer versions of "slf4j-api" or "msgpack-core" before updating them in
     // "embulk-spi".
-    implementation "org.slf4j:slf4j-api:2.0.7"
+    implementation "org.slf4j:slf4j-api:2.0.13"
     implementation "org.msgpack:msgpack-core:0.8.24"
 
     // This "embulk-core" should not have any more library dependencies.
@@ -67,7 +67,7 @@ dependencies {
 
     testImplementation "junit:junit:4.13.2"
     testImplementation project(":embulk-junit4")
-    testImplementation "ch.qos.logback:logback-classic:1.3.6"
+    testImplementation "ch.qos.logback:logback-classic:1.3.14"
 
     // TODO: Remove this, and load it with EmbulkDependencyClassLoader.
     // This statement gets it loaded by the top-level ClassLoader.

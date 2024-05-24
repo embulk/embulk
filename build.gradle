@@ -50,17 +50,25 @@ dependencies {
     // The classes of "embulk-spi" are excluded from "embulk-core" below for the consistency as a JAR file.
     // But, they should be included in the compile classpath.
     compileOnly "org.embulk:embulk-spi:0.11"
+    compileOnly "org.slf4j:slf4j-api:2.0.13"
+    compileOnly "org.msgpack:msgpack-core:0.8.24"
 
     implementation(project(":embulk-core")) {
         // The JAR file of "embulk-core" should already contain classes of "embulk-spi".
         exclude group: "org.embulk", module: "embulk-spi"
     }
 
-    // Logback 1.4.x seems to be the latest as of Feb, 2023. But actually, their version strategy is:
+    // Logback 1.5.x seems to be the latest as of May, 2024, but we use the Logback 1.3.x as of now because
+    // Logback 1.5.x requires JDK 11. It also expects Jakarta EE (jakarta.*), not Java EE (javax.*).
+    // https://logback.qos.ch/download.html
+    //
+    // Embulk still needs to work on JDK 8 for a while.
+    //
+    // Logback 1.3.x and 1.4.x are both older stable versions, but still a kind of maintained. Their version strategy is:
     // * Logback 1.3.x for Java 8 and Java EE (javax.*)
     // * Logback 1.4.x for Java 11 and Jakarta EE (jakarta.*)
     // https://logback.qos.ch/dependencies.html
-    implementation "ch.qos.logback:logback-classic:1.3.6"
+    implementation "ch.qos.logback:logback-classic:1.3.14"
 
     deps project(":embulk-deps")
 
