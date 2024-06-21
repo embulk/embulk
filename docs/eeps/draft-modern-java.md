@@ -1,0 +1,110 @@
+---
+EEP: unnumbered
+Title: Moving Forward Together with Modern Java
+Author: dmikurube
+Status: Draft
+Type: Standards Track
+---
+
+Moving Forward Together with Modern Java
+=========================================
+
+Introduction
+-------------
+
+Java is moving forward. Embulk needs to move forward together with Java. However, Embulk has been expecting Java 8 for a long time since Embulk v0.9.
+
+Java has usually been backward-compatible enough in a reasonable manner, but sometimes there have been large gaps such as the gap between Java 8 and 9+.
+
+The goal of this EEP is to clarify Embulk's design decisions for Java's incompatibilities from Java 8, and to explain Embulk's fundamental policies for future incompatibilities.
+
+Incompatibilities of modern Java from Java 8
+---------------------------------------------
+
+The major breaking changes in modern Java from Java 8 were the module system and the removal of Java EE modules from the Java standard. This section discusses these incompatibilities.
+
+### Java Platform Module System (JPMS)
+
+One of the biggest changes in Java 9+ from Java 8 was [the module system (Java Platform Module System; JPMS)](https://www.oracle.com/corporate/features/understanding-java-9-modules.html). The module system introduced some critical incompatibilities and real concerns. Embulk had to make some design decisions based on the limitations of the module system.
+
+For example, we did not choose the "single JAR file" Embulk plugin distribution for non-RubyGems plugins, which could be an alternative to Maven-style plugins, according to the module system considerations clarified in [EEP-5: Maven-style Plugins](./eep-0005.md).
+
+If a distributed JAR file of an Embulk plugin contains its dependency library classes (such as a so-called "far JAR"), the dependency library's expectations about the module system would not be met, which could lead to unexpected behavior.
+
+> Just in case, a single JAR file including its dependency libraries (so-called "fat JAR") is not our choice. Fat JARs do not satisfy the requirement #3. In addition, fat JARs have a potential risk of Java package name conflicts with [the Java Module System in Java 9 or later](https://www.oracle.com/corporate/features/understanding-java-9-modules.html), ...
+>
+> ([EEP-5: Maven-style Plugins](./eep-0005.md))
+
+We also did a tricky `embulk-spi` separation where the `embulk-spi` classes end up being mixed into the `embulk-core` JAR file. The module system does not accept the "split packages" situation, as explained in [EEP-10: SPI Separation for Compatibility Contract](./eep-0010.md).
+
+> The `embulk-core` JAR file includes `embulk-spi` classes extracted in it, not just depends on `embulk-spi`.
+>
+> This is to prepare for the Java module system in Java 9 and later. The Java module system does not accept the "split packages" situation, in which a Java package and two different JARs each have a class in that package. (See "Migrating Your Library to Java Modules" in [Java Magazine, July/August 2018](https://www.oracle.com/a/ocom/docs/corporate/java-magazine-jul-aug-2018.pdf), pp.53-64, by Nicolai Parlog for handling split packages in the Java module system.)
+>
+> ([EEP-10: SPI Separation for Compatibility Contract](./eep-0010.md))
+
+On the other hand, fortunately, the module system would not immediately block nor break the entire existing Embulk architecture.
+
+As of Embulk v0.11, the top-level Embulk core still expects to be loaded in the class path as an "unnamed module" even when running on Java 9+. Loading in the class path is still supported in modern Java.
+
+However, the Java ecosystem is gradually transitioning to the module system. Loading a JAR file in the class path (as an "unnamed module"), and loading a JAR file that does not have `module-info.class` (as an "automatic module"), are "transitive measures". Embulk may have to expect that one day it will need to be loaded in the module path, but it is in no hurry yet because we do not see any specific discussion about unsupporting "unnamed modules" (and "automatic modules") in future Java. This is briefly discussed below in the "Future" section, but the details will be determined in another EEP in the future.
+
+### JEP 320: Remove the Java EE and CORBA Modules
+
+In addition to the module system, the other big breaking change in Java 9 through 11 was the removal of the Java EE and CORBA classes from the JDK. See [JEP 320: Remove the Java EE and CORBA Modules](https://openjdk.org/jeps/320) for details.
+
+For example, the Bean Validation API (`javax.validation.*`) and JAXB (`javax.xml.*`) were impacted by the change. Since these were used in the Embulk core and many plugins, they had the biggest impact on Embulk. This is discussed in [EEP-7: Core Library Dependencies](./eep-0007.md).
+
+In short, Embulk avoided this impact by dropping them from the core. This drop was done during Embulk v0.10 because it was definitely incompatible. Each plugin is responsible for including them (or the successor `jakarta.*` packages) by themselves when it needs to use them.
+
+Future
+-------
+
+Java usually does a very good job of maintaining compatibility, so moving forward together with modern Java **should not** be very difficult. Unexpected breaking changes may come, of course, but unexpected changes are unexpected, hard to expect.
+
+However, at least we know that the module system still has some potential for breaking changes. Let's discuss the module system again.
+
+### Loading the Embulk core as a "named module"
+
+When Java requires the Embulk core to be loaded in the module path as a "named module", Embulk has some risk to stop working depending on the couple of the direct dependencies of the Embulk core (`embulk-spi` and `embulk-core`). For example, `embulk-spi` directly depends on `slf4j-api` and `msgpack-core` as shown in [EEP-7](./eep-0007.md). However, `msgpack-core` is not yet module-ready as of v0.9.8 (Jan, 2024). The module system has some limitations when referencing an "unnamed module" or an "automatic module" from a "named module". Also, the executable Embulk core distribution embeds Logback in it. Because [Logback has adopted the split version strategy for the Java versions, Java EE v.s. Jakarta EE, and the module system](https://logback.qos.ch/dependencies.html), running Embulk on the module system may cause some conflicts with the embedded Logback versions.
+
+On the other hand, we do not expect problems with plugins and many other dependency libraries behind `embulk-deps`, even if the top-level Embulk core is loaded as a "named module". Embulk plugins are loaded by `PluginClassLoader` and the Embulk core library dependencies are loaded by `EmbulkDependencyClassLoader`. Both class loaders extend [`URLClassLoader`](https://docs.oracle.com/javase/8/docs/api/java/net/URLClassLoader.html). See [Java Language Specification: Chapter 7. Packages and Modules](https://docs.oracle.com/javase/specs/jls/se11/html/jls-7.html), [EEP-7: Core Library Dependencies](./eep-0007.md) and [EEP-9: Class Loading, and Executable JAR File Structure](./eep-0009.md) for more details.
+
+Even in Java 9+ with the module system, `URLClassLoader` loads JAR files like in the class path (as "unnamed modules"), not like in the module path (as "named modules" or "automatic modules"). Both plugins and the core library dependencies will still be loaded like in the class path (as "unnamed modules") even if the top-level Embulk core is loaded in the module path as a "named module" or an "automatic module" in Java 9+.
+
+In light of the foregoing, we will consider loading the Embulk core as a "named module" when the following conditions are satisfied.
+
+* After Embulk removes `msgpack-core` from `embulk-spi`.
+* After Embulk unsupports Java 8.
+* After Embulk makes some decision about the logging driver.
+
+In other words, this will happen after Embulk v2.0 at the earliest. See also [EEP-8: Milestones to Embulk v1.0, and versioning strategies to follow](./eep-0008.md).
+
+However, even before the transition happens and the JAR files start having `module-info.class`, we may anyway want to start adding [the `Automatic-Module-Name` manifest attribute earlier in `META-INF/MANIFEST.MF`](https://docs.oracle.com/en/java/javase/11/docs/specs/jar/jar.html#modular-jar-files) to every JAR file, including `embulk-spi`, `embulk-core`, `embulk-deps`, many other `embulk-util-*` libraries, and plugins. At the same time, we'll have to take care of the merge of `embulk-spi` into `embulk-core` when adding the `Automatic-Module-Name` attribute.
+
+### Loading other core dependencies as "named modules"
+
+As explained above, other core dependencies behind `embulk-deps` will still be able to run as "unnamed modules" even when the Embulk core is loaded as a "named module". We are in no rush.
+
+When we eventually want to load other core dependencies as "named modules", we expect to use [`ModuleLayer`](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ModuleLayer.html) instead of `EmbulkDependencyClassLoader` via `URLClassLoader`.
+
+Note that this will happen at the earliest after the Embulk core supports to be loaded as a "named module", i.e. Embulk v2.0, and all the dependency libraries are ready for the module system. Further details would be discussed and determined in another EEP in the future.
+
+### Loading plugins as "named modules"
+
+Also as explained above, plugins should still be able to run as "unnamed modules" even when the Embulk core is loaded as a "named module". However, plugins would have more varieties of dependency libraries, and some libraries may require to be loaded as "named modules" in the future. Then there is a little more motivation to support loading plugins as "named modules". On the other hand, some plugins may still need to remain in "unnamed modules", so Embulk may need to support both at the same time for a while.
+
+Similar to `embulk-deps`, [`ModuleLayer`](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/ModuleLayer.html) would be required instead of `PluginClassLoader` over `URLClassLoader`, and it would be worth considering to combinate [`ServiceLoader`](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ServiceLoader.html) with `ModuleLayer`.
+
+However, as with other core dependencies, this will not happen until the Embulk core supports to be loaded as a "named module", i.e. Embulk v2.0. Further details would be discussed and determined in another EEP in the future.
+
+### Loading JRuby as a "named module"
+
+JRuby is optionally loaded by the special `JRubyClassLoader`, which also extends `URLClassLoader`. See [EEP-6: JRuby as Optional](./eep-0006.md) for details.
+
+We may consider a different approach for JRuby now that it is considered just optional. Further details would be discussed and determined in another EEP in the future.
+
+Copyright / License
+====================
+
+This document is placed under the [CC0-1.0-Universal](https://creativecommons.org/publicdomain/zero/1.0/deed.en) license, whichever is more permissive.
