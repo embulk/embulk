@@ -79,8 +79,9 @@ final class MavenPluginRegistry {
                 throw new PluginSourceNotMatchException(ex);
             }
 
-            logger.info("Loaded plugin {} ({})",
-                        "embulk-" + this.category + "-" + mavenPluginType.getName(),
+            logger.info("Loaded plugin embulk-{}-{} ({})", 
+                        this.category, 
+                        mavenPluginType.getName(), 
                         mavenPluginType.getFullName());
 
             this.cacheMap.put(mavenPluginType, loadedPluginMainClass);
