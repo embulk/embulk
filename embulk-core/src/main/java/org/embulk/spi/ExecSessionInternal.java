@@ -22,6 +22,7 @@ import org.embulk.jruby.JRubyPluginSource;
 import org.embulk.jruby.LazyScriptingContainerDelegate;
 import org.embulk.jruby.ScriptingContainerDelegate;
 import org.embulk.plugin.BuiltinPluginSource;
+import org.embulk.plugin.JarPluginSource;
 import org.embulk.plugin.PluginClassLoaderFactory;
 import org.embulk.plugin.PluginClassLoaderFactoryImpl;
 import org.embulk.plugin.PluginManager;
@@ -261,6 +262,7 @@ public class ExecSessionInternal extends ExecSession {
         this.pluginManager = PluginManager.with(
                 embulkSystemProperties,
                 builtinPluginSource,
+                JarPluginSource.of(embulkSystemProperties),
                 new MavenPluginSource(embulkSystemProperties, pluginClassLoaderFactory),
                 new SelfContainedPluginSource(embulkSystemProperties, pluginClassLoaderFactory),
                 new JRubyPluginSource(this.jrubyScriptingContainerDelegate, pluginClassLoaderFactory));
