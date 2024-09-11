@@ -359,8 +359,6 @@ public class EmbulkEmbed {
                 .setModelManager(this.modelManager)
                 .setEmbulkSystemProperties(this.embulkSystemProperties)
                 .setGuessExecutor(this.guessExecutor)
-                .setParentFirstPackages(PARENT_FIRST_PACKAGES)
-                .setParentFirstResources(PARENT_FIRST_RESOURCES)
                 .fromExecConfig(execConfig)
                 .build();
     }
@@ -524,10 +522,6 @@ public class EmbulkEmbed {
     private static org.embulk.config.ModelManager createModelManager() {
         return new org.embulk.config.ModelManager();
     }
-
-    // TODO: Remove them finally.
-    static final Set<String> PARENT_FIRST_PACKAGES = readPropertyKeys("/embulk/parent_first_packages.properties");
-    static final Set<String> PARENT_FIRST_RESOURCES = readPropertyKeys("/embulk/parent_first_resources.properties");
 
     private static final Pattern BYTE_SIZE_PATTERN = Pattern.compile("\\A(\\d+(?:\\.\\d+)?)\\s?([a-zA-Z]*)\\z");
 
