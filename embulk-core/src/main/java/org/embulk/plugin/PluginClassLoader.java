@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import java.util.stream.Collectors;
 import org.embulk.cli.SelfContainedJarAwareURLClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +25,6 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         super(jarUrls.toArray(new URL[0]), parentClassLoader, selfContainedPluginName);
 
         this.hasJep320LoggedWithStackTrace = false;
-
-        this.parentFirstPackagePrefixes = Collections.unmodifiableList(
-                PARENT_FIRST_PACKAGES.stream().map(pkg -> pkg + ".").collect(Collectors.toList()));
-        this.parentFirstResourcePrefixes = Collections.unmodifiableList(
-                PARENT_FIRST_RESOURCES.stream().map(pkg -> pkg + "/").collect(Collectors.toList()));
     }
 
     /**
@@ -210,8 +204,8 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return resources.elements();
     }
 
-    private boolean isParentFirstPackage(String name) {
-        for (String pkg : parentFirstPackagePrefixes) {
+    private boolean isParentFirstPackage(final String name) {
+        for (final String pkg : PARENT_FIRST_PACKAGE_PREFIXES) {
             if (name.startsWith(pkg)) {
                 return true;
             }
@@ -219,8 +213,8 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return false;
     }
 
-    private boolean isParentFirstPath(String name) {
-        for (String path : parentFirstResourcePrefixes) {
+    private boolean isParentFirstPath(final String name) {
+        for (final String path : PARENT_FIRST_RESOURCE_PREFIXES) {
             if (name.startsWith(path)) {
                 return true;
             }
@@ -350,27 +344,23 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
     private static Set<String> JEP_320_PACKAGES =
             Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(JEP_320_PACKAGES_ARRAY)));
 
-    // TODO: Remove them finally.
-    private static final Set<String> PARENT_FIRST_PACKAGES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "ch.qos.logback.classic",
-            "ch.qos.logback.core",
-            "java",
-            "org.embulk",
-            "org.msgpack.core",
-            "org.msgpack.value",
-            "org.slf4j"
-            )));
+    private static final List<String> PARENT_FIRST_PACKAGE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
+            "ch.qos.logback.classic.",
+            "ch.qos.logback.core.",
+            "java.",
+            "org.embulk.",
+            "org.msgpack.core.",
+            "org.msgpack.value.",
+            "org.slf4j."
+            ));
 
-    private static final Set<String> PARENT_FIRST_RESOURCES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            "ch/qos/logback/classic/boolex",
-            "ch/qos/logback/classic/db/script",
-            "embulk",
-            "msgpack",
-            "org/embulk"
-            )));
-
-    private final List<String> parentFirstPackagePrefixes;
-    private final List<String> parentFirstResourcePrefixes;
+    private static final List<String> PARENT_FIRST_RESOURCE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
+            "ch/qos/logback/classic/boolex/",
+            "ch/qos/logback/classic/db/script/",
+            "embulk/",
+            "msgpack/",
+            "org/embulk/"
+            ));
 
     private boolean hasJep320LoggedWithStackTrace;
 }
