@@ -204,7 +204,7 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return resources.elements();
     }
 
-    private boolean isParentFirstPackage(final String name) {
+    static boolean isParentFirstPackage(final String name) {
         for (final String pkg : PARENT_FIRST_PACKAGE_PREFIXES) {
             if (name.startsWith(pkg)) {
                 return true;
@@ -213,7 +213,7 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return false;
     }
 
-    private boolean isParentFirstPath(final String name) {
+    static boolean isParentFirstPath(final String name) {
         for (final String path : PARENT_FIRST_RESOURCE_PREFIXES) {
             if (name.startsWith(path)) {
                 return true;
