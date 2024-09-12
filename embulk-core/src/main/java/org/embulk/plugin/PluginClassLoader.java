@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import org.embulk.cli.SelfContainedJarAwareURLClassLoader;
@@ -205,20 +204,57 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
     }
 
     static boolean isParentFirstPackage(final String name) {
-        for (final String pkg : PARENT_FIRST_PACKAGE_PREFIXES) {
-            if (name.startsWith(pkg)) {
-                return true;
-            }
+        final int dotIndex = name.lastIndexOf(".");
+
+        final String packageNameWithLastDot;
+        if (dotIndex < 0) {
+            packageNameWithLastDot = "";
+        } else {
+            packageNameWithLastDot = name.substring(0, dotIndex + 1);
         }
+
+        if (packageNameWithLastDot.startsWith("ch.qos.logback.classic.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("ch.qos.logback.core.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("java.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.msgpack.core.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.msgpack.value.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.slf4j.")) {
+            return true;
+        }
+
         return false;
     }
 
     static boolean isParentFirstPath(final String name) {
-        for (final String path : PARENT_FIRST_RESOURCE_PREFIXES) {
-            if (name.startsWith(path)) {
-                return true;
-            }
+        if (name.startsWith("ch/qos/logback/classic/boolex/")) {
+            return true;
         }
+        if (name.startsWith("ch/qos/logback/classic/db/script/")) {
+            return true;
+        }
+        if (name.startsWith("embulk/")) {
+            return true;
+        }
+        if (name.startsWith("msgpack/")) {
+            return true;
+        }
+        if (name.startsWith("org/embulk/")) {
+            return true;
+        }
+
         return false;
     }
 
@@ -343,24 +379,6 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
 
     private static Set<String> JEP_320_PACKAGES =
             Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(JEP_320_PACKAGES_ARRAY)));
-
-    private static final List<String> PARENT_FIRST_PACKAGE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
-            "ch.qos.logback.classic.",
-            "ch.qos.logback.core.",
-            "java.",
-            "org.embulk.",
-            "org.msgpack.core.",
-            "org.msgpack.value.",
-            "org.slf4j."
-            ));
-
-    private static final List<String> PARENT_FIRST_RESOURCE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
-            "ch/qos/logback/classic/boolex/",
-            "ch/qos/logback/classic/db/script/",
-            "embulk/",
-            "msgpack/",
-            "org/embulk/"
-            ));
 
     private boolean hasJep320LoggedWithStackTrace;
 }
