@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
-import java.util.stream.Collectors;
 import org.embulk.cli.SelfContainedJarAwareURLClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,17 +21,10 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
     private PluginClassLoader(
             final ClassLoader parentClassLoader,
             final Collection<URL> jarUrls,
-            final String selfContainedPluginName,
-            final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
+            final String selfContainedPluginName) {
         super(jarUrls.toArray(new URL[0]), parentClassLoader, selfContainedPluginName);
 
         this.hasJep320LoggedWithStackTrace = false;
-
-        this.parentFirstPackagePrefixes = Collections.unmodifiableList(
-                parentFirstPackages.stream().map(pkg -> pkg + ".").collect(Collectors.toList()));
-        this.parentFirstResourcePrefixes = Collections.unmodifiableList(
-                parentFirstResources.stream().map(pkg -> pkg + "/").collect(Collectors.toList()));
     }
 
     /**
@@ -40,34 +32,24 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
      *
      * @param parentClassLoader  the parent ClassLoader of this PluginClassLoader instance
      * @param jarUrls  collection of "file:" URLs of all JARs related to the plugin
-     * @param parentFirstPackages  collection of package names that are to be loaded first before the plugin's
-     * @param parentFirstResources  collection of resource names that are to be loaded first before the plugin's
      * @return {@code PluginClassLoader} instance created
      */
     public static PluginClassLoader create(
             final ClassLoader parentClassLoader,
-            final Collection<URL> jarUrls,
-            final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
+            final Collection<URL> jarUrls) {
         return new PluginClassLoader(
                 parentClassLoader,
                 jarUrls,
-                null,
-                parentFirstPackages,
-                parentFirstResources);
+                null);
     }
 
     public static PluginClassLoader forSelfContainedPlugin(
             final ClassLoader parentClassLoader,
-            final String selfContainedPluginName,
-            final Collection<String> parentFirstPackages,
-            final Collection<String> parentFirstResources) {
+            final String selfContainedPluginName) {
         return new PluginClassLoader(
                 parentClassLoader,
                 new ArrayList<>(),
-                selfContainedPluginName,
-                parentFirstPackages,
-                parentFirstResources);
+                selfContainedPluginName);
     }
 
     /**
@@ -222,8 +204,8 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return resources.elements();
     }
 
-    private boolean isParentFirstPackage(String name) {
-        for (String pkg : parentFirstPackagePrefixes) {
+    private boolean isParentFirstPackage(final String name) {
+        for (final String pkg : PARENT_FIRST_PACKAGE_PREFIXES) {
             if (name.startsWith(pkg)) {
                 return true;
             }
@@ -231,8 +213,8 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         return false;
     }
 
-    private boolean isParentFirstPath(String name) {
-        for (String path : parentFirstResourcePrefixes) {
+    private boolean isParentFirstPath(final String name) {
+        for (final String path : PARENT_FIRST_RESOURCE_PREFIXES) {
             if (name.startsWith(path)) {
                 return true;
             }
@@ -362,8 +344,23 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
     private static Set<String> JEP_320_PACKAGES =
             Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(JEP_320_PACKAGES_ARRAY)));
 
-    private final List<String> parentFirstPackagePrefixes;
-    private final List<String> parentFirstResourcePrefixes;
+    private static final List<String> PARENT_FIRST_PACKAGE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
+            "ch.qos.logback.classic.",
+            "ch.qos.logback.core.",
+            "java.",
+            "org.embulk.",
+            "org.msgpack.core.",
+            "org.msgpack.value.",
+            "org.slf4j."
+            ));
+
+    private static final List<String> PARENT_FIRST_RESOURCE_PREFIXES = Collections.unmodifiableList(Arrays.asList(
+            "ch/qos/logback/classic/boolex/",
+            "ch/qos/logback/classic/db/script/",
+            "embulk/",
+            "msgpack/",
+            "org/embulk/"
+            ));
 
     private boolean hasJep320LoggedWithStackTrace;
 }

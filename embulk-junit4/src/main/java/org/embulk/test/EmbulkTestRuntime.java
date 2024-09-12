@@ -61,7 +61,7 @@ public class EmbulkTestRuntime implements TestRule {
     }
 
     public static PluginClassLoaderFactory buildPluginClassLoaderFactory() {
-        return PluginClassLoaderFactoryImpl.of(PARENT_FIRST_PACKAGES, PARENT_FIRST_RESOURCES);
+        return PluginClassLoaderFactoryImpl.of();
     }
 
     @Override
@@ -120,11 +120,4 @@ public class EmbulkTestRuntime implements TestRule {
             throw new UncheckedIOException(ex);
         }
     }
-
-    // EmbulkEmbed.PARENT_FIRST_PACKAGES and EmbulkEmbed.PARENT_FIRST_RESOURCES are package-private.
-    // They are not accessible from org.embulk.test.
-    //
-    // TODO: Remove them finally.
-    private static final Set<String> PARENT_FIRST_PACKAGES = readPropertyKeys("/embulk/parent_first_packages.properties");
-    private static final Set<String> PARENT_FIRST_RESOURCES = readPropertyKeys("/embulk/parent_first_resources.properties");
 }

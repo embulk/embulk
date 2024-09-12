@@ -3,12 +3,9 @@ package org.embulk.spi;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import org.embulk.EmbulkSystemProperties;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
@@ -78,8 +75,6 @@ public class ExecSessionInternal extends ExecSession {
         private EmbulkSystemProperties embulkSystemProperties;
         private GuessExecutor guessExecutor;
         private BuiltinPluginSource.Builder builtinPluginSourceBuilder;
-        private Set<String> parentFirstPackages;
-        private Set<String> parentFirstResources;
         private Instant transactionTime;
 
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1304
@@ -92,8 +87,6 @@ public class ExecSessionInternal extends ExecSession {
             this.tempFileSpaceAllocator = tempFileSpaceAllocator;
             this.embulkSystemProperties = null;
             this.builtinPluginSourceBuilder = BuiltinPluginSource.builder();
-            this.parentFirstPackages = null;
-            this.parentFirstResources = null;
             this.transactionTime = null;
             this.modelManager = null;
         }
@@ -179,16 +172,6 @@ public class ExecSessionInternal extends ExecSession {
             return this;
         }
 
-        public Builder setParentFirstPackages(final Set<String> parentFirstPackages) {
-            this.parentFirstPackages = Collections.unmodifiableSet(new HashSet<>(parentFirstPackages));
-            return this;
-        }
-
-        public Builder setParentFirstResources(final Set<String> parentFirstResources) {
-            this.parentFirstResources = Collections.unmodifiableSet(new HashSet<>(parentFirstResources));
-            return this;
-        }
-
         @Deprecated  // TODO: Add setTransactionTime(Instant) if needed. But no one looks using it. May not be needed.
         @SuppressWarnings("deprecation")  // https://github.com/embulk/embulk/issues/1292
         public Builder setTransactionTime(final org.embulk.spi.time.Timestamp timestamp) {
@@ -216,8 +199,6 @@ public class ExecSessionInternal extends ExecSession {
                     this.tempFileSpaceAllocator,
                     this.guessExecutor,
                     this.builtinPluginSourceBuilder.build(),
-                    this.parentFirstPackages,
-                    this.parentFirstResources,
                     this.modelManager);
         }
     }
@@ -236,18 +217,7 @@ public class ExecSessionInternal extends ExecSession {
             final TempFileSpaceAllocator tempFileSpaceAllocator,
             final GuessExecutor guessExecutor,
             final BuiltinPluginSource builtinPluginSource,
-            final Set<String> parentFirstPackages,
-            final Set<String> parentFirstResources,
             final org.embulk.config.ModelManager modelManager) {
-        if (parentFirstPackages == null) {
-            logger.warn("Parent-first packages are not set when building ExecSession. "
-                        + "Use ExecSession.Builder#setParentFirstPackages.");
-        }
-        if (parentFirstResources == null) {
-            logger.warn("Parent-first resources are not set when building ExecSession. "
-                        + "Use ExecSession.Builder#setParentFirstResources.");
-        }
-
         this.embulkSystemProperties = embulkSystemProperties;
         this.guessExecutor = guessExecutor;
         this.modelManager = modelManager;
@@ -255,9 +225,7 @@ public class ExecSessionInternal extends ExecSession {
         this.jrubyScriptingContainerDelegate = LazyScriptingContainerDelegate.withEmbulkSpecific(
                 LoggerFactory.getLogger("init"), this.embulkSystemProperties);
 
-        this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of(
-                (parentFirstPackages != null) ? parentFirstPackages : Collections.unmodifiableSet(new HashSet<>()),
-                (parentFirstResources != null) ? parentFirstResources : Collections.unmodifiableSet(new HashSet<>()));
+        this.pluginClassLoaderFactory = PluginClassLoaderFactoryImpl.of();
         this.pluginManager = PluginManager.with(
                 embulkSystemProperties,
                 builtinPluginSource,
