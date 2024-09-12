@@ -222,7 +222,34 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         if (packageNameWithLastDot.startsWith("java.")) {
             return true;
         }
-        if (packageNameWithLastDot.startsWith("org.embulk.")) {
+        if (packageNameWithLastDot.equals("org.embulk.")) {  // Exact the package "org.embulk"
+            return true;
+        }
+        // Some packages under "org.embulk." are intentionally excluded, for example,
+        // - Packages for plugins, such as "org.embulk.input." and "org.embulk.parser."
+        // - Packages under "org.embulk.base.", "org.embulk.deps.", and "org.embulk.util."
+        if (packageNameWithLastDot.startsWith("org.embulk.cli.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.config.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.exec.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.jruby.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.plugin.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.spi.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.test.")) {
+            return true;
+        }
+        if (packageNameWithLastDot.startsWith("org.embulk.junit5.")) {
             return true;
         }
         if (packageNameWithLastDot.startsWith("org.msgpack.core.")) {
