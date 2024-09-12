@@ -275,9 +275,6 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         if (name.startsWith("embulk/")) {
             return true;
         }
-        if (name.startsWith("msgpack/")) {
-            return true;
-        }
         if (name.startsWith("org/embulk/")) {
             return true;
         }

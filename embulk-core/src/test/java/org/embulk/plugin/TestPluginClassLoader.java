@@ -115,8 +115,8 @@ public class TestPluginClassLoader {
         assertTrue(PluginClassLoader.isParentFirstPath("embulk/logback-file.xml"));
         assertFalse(PluginClassLoader.isParentFirstPath("embulkdummy/logback-file.xml"));
         assertFalse(PluginClassLoader.isParentFirstPath("msgpack"));
-        assertTrue(PluginClassLoader.isParentFirstPath("msgpack/"));
-        assertTrue(PluginClassLoader.isParentFirstPath("msgpack/dummy.txt"));
+        assertFalse(PluginClassLoader.isParentFirstPath("msgpack/"));
+        assertFalse(PluginClassLoader.isParentFirstPath("msgpack/dummy.txt"));
         assertFalse(PluginClassLoader.isParentFirstPath("msgpacker/dummy.txt"));
         assertFalse(PluginClassLoader.isParentFirstPath("org/embulk"));
         assertTrue(PluginClassLoader.isParentFirstPath("org/embulk/"));
