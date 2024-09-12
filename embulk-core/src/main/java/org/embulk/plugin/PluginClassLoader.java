@@ -142,6 +142,29 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
         }
     }
 
+    /**
+     * Loads the class with the specified binary name, forcibly in this {@code PluginClassLoader}, never in the parent class loader.
+     *
+     * @param name  The binary name of the class
+     * @param resolve  If true then resolve the class
+     * @return The resulting Class object
+     * @throws ClassNotFoundException  If the class could not be found
+     *
+     * @deprecated Do not use this method. This method is only for internal use by Embulk's own testing framework.
+     */
+    @Deprecated
+    public Class<?> loadClassInThisClassLoader(final String name, final boolean resolve) throws ClassNotFoundException {
+        synchronized (this.getClassLoadingLock(name)) {
+            final Class<?> loadedClass = this.findLoadedClass(name);
+
+            if (loadedClass != null) {
+                return this.resolveClass(loadedClass, resolve);
+            }
+
+            return this.resolveClass(this.findClass(name), resolve);
+        }
+    }
+
     private Class<?> resolveClass(Class<?> clazz, boolean resolve) {
         if (resolve) {
             resolveClass(clazz);
