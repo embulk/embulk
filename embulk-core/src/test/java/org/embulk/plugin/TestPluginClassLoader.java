@@ -39,6 +39,7 @@ public class TestPluginClassLoader {
         assertFalse(PluginClassLoader.isParentFirstPackage("org.embulkdummy.DummyClass"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.EmbulkVersion"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.dummy.DummyClass"));
+        assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.base.restclient.RestClientTaskBase"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.cli.CommandLine"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.client.DummyClient"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.config.Config"));
@@ -68,6 +69,7 @@ public class TestPluginClassLoader {
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.testing.EmbulkTester"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.junit5.EmbulkTest"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.junit51.EmbulkTest51"));
+        assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.util.timestamp.TimestampFormatter"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.decoder.gzip.GzipDecoderPlugin"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.decoders.Dummy"));
         assertTrue(PluginClassLoader.isParentFirstPackage("org.embulk.encoder.gzip.GzipEncoderPlugin"));
