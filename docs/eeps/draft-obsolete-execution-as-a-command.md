@@ -15,18 +15,15 @@ Background
 Embulk has provided a method to run it as a simple command `embulk` on the command line as illustrated by the examples below.
 
 ```
-$ embulk run postgresql-example.yml
-...
+embulk run postgresql-example.yml
 ```
 
 ```
-$ embulk guess s3-incomplete-example.yml -o s3-example.yml
-...
+embulk guess s3-incomplete-example.yml -o s3-example.yml
 ```
 
 ```
-$ embulk gem install embulk-input-s3
-...
+embulk gem install embulk-input-s3
 ```
 
 It has been implemented by embedding a shell script since [v0.4.6](https://github.com/embulk/embulk/commit/38b000d5c6be13ad4ea2818d3cf6ea67e9d86c51) (a batch file for Windows since [v0.6.11](https://github.com/embulk/embulk/pull/192)) in Embulk's distributed "executable" JAR files to emit a `java` command with some command-line options configured.
@@ -59,18 +56,15 @@ Looking through the recent background situation, we have decided to no longer ma
 The `embulk` command has been really just "syntax sugar". Embulk's "executable" JAR files are JAR files. Users have already been able to run Embulk with their own `java` commands as illustrated by the examples below.
 
 ```
-$ java -XX:+AggressiveOpts -XX:+UseConcMarkSweepGC -jar embulk-0.11.5.jar run postgresql-example.yml
-...
+java -XX:+AggressiveOpts -XX:+UseConcMarkSweepGC -jar embulk-0.11.5.jar run postgresql-example.yml
 ```
 
 ```
-$ java -XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none -jar embulk-0.11.5.jar guess s3-incomplete-example.yml -o s3-example.yml
-...
+java -XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none -jar embulk-0.11.5.jar guess s3-incomplete-example.yml -o s3-example.yml
 ```
 
 ```
-$ java -jar embulk-0.11.5.jar -Xjruby=file:///home/user/jruby-complete-9.1.15.0.jar gem install embulk-input-s3
-...
+java -jar embulk-0.11.5.jar -Xjruby=file:///home/user/jruby-complete-9.1.15.0.jar gem install embulk-input-s3
 ```
 
 Users won't need any special migration period, as they have already been able to run Embulk with the `java` command for a long time. Users would simply need to change their `embulk` commands to `java`-based commands before upgrading their Embulk to a version that no longer provides the `embulk` command.
@@ -81,7 +75,7 @@ The `java`-based commands would also benefit users by giving them more explicit 
 
 Even though we don't technically need a special migration period, users would still need a clear announcement before the `embulk` command is removed, and a grace period before it is enforced.
 
-First, a GitHub Issue [#1496: "Deprecate running Embulk by a single 'embulk' command"](https://github.com/embulk/embulk/issues/1496) has been filed since February 2022, and we have received no complaints there as of September 2024.
+First, [a GitHub Issue #1496: "Deprecate running Embulk by a single 'embulk' command"](https://github.com/embulk/embulk/issues/1496) has been filed since February 2022, and we have received no complaints there as of September 2024.
 
 Second, since [Embulk v0.10.36](https://github.com/embulk/embulk/releases/tag/v0.10.36) as of June 2022, Embulk has started to display the following warning message when run with the `embulk` command .
 
@@ -103,9 +97,13 @@ Second, since [Embulk v0.10.36](https://github.com/embulk/embulk/releases/tag/v0
 
 Finally, an announcement has been made at "[Embulk v0.11 is coming soon](https://www.embulk.org/articles/2023/04/13/embulk-v0.11-is-coming-soon.html)" on `www.embulk.org` as of April 2023.
 
+As of this EEP, a year has already passed since Embulk v0.11 was released, and the announcement was made on `www.embulk.org`.
+
 ### Enforcement
 
-As announced in the article above, the removal of the `embulk` command will be enforced at some point during Embulk v0.11.
+Sufficient announcements have been already made.
+
+The `embulk` command will be actually removed along with releasing some version during Embulk v0.11.
 
 Copyright and License
 ======================
