@@ -95,11 +95,13 @@ public class PluginClassLoader extends SelfContainedJarAwareURLClassLoader {
      * @see <a href="http://hg.openjdk.java.net/jdk7u/jdk7u/jdk/file/jdk7u141-b02/src/share/classes/java/lang/ClassLoader.java">OpenJDK7's ClassLoader</a>
      */
     @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-        synchronized (getClassLoadingLock(name)) {
-            // If the class has already been loaded by this {@code ClassLoader} or the parent's {@code ClassLoader},
-            // find the loaded class and return it.
-            final Class<?> loadedClass = findLoadedClass(name);
+    protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+        synchronized (this.getClassLoadingLock(name)) {
+            // If the class with the specified binary name has already been loaded exactly by this PluginClassLoader instance,
+            // find the loaded class, and return it.
+            //
+            // Note that ClassLoader#findLoadedClass(String) does not find the class from its parent class loader.
+            final Class<?> loadedClass = this.findLoadedClass(name);
 
             if (loadedClass != null) {
                 return resolveClass(loadedClass, resolve);
