@@ -77,7 +77,7 @@ Even though we don't technically need a special migration period, users would st
 
 First, [a GitHub Issue #1496: "Deprecate running Embulk by a single 'embulk' command"](https://github.com/embulk/embulk/issues/1496) has been filed since February 2022, and we have received no complaints there as of September 2024.
 
-Second, since [Embulk v0.10.36](https://github.com/embulk/embulk/releases/tag/v0.10.36) as of June 2022, Embulk has started to display the following warning message when run with the `embulk` command .
+Second, since [Embulk v0.10.36](https://github.com/embulk/embulk/releases/tag/v0.10.36) as of June 2022, Embulk has started to display the following warning message when run with the `embulk` command.
 
 ```
 ================================== [ NOTICE ] ==================================
