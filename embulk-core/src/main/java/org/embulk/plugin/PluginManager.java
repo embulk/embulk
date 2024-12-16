@@ -19,11 +19,13 @@ public class PluginManager {
     private PluginManager(
             final EmbulkSystemProperties embulkSystemProperties,
             final BuiltinPluginSource builtinSource,
+            final JarPluginSource jarSource,
             final MavenPluginSource mavenSource,
             final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
         this.embulkSystemProperties = embulkSystemProperties;
         this.builtinSource = builtinSource;
+        this.jarSource = jarSource;
         this.mavenSource = mavenSource;
         this.selfContainedSource = selfContainedSource;
         this.jrubySource = jrubySource;
@@ -32,12 +34,14 @@ public class PluginManager {
     public static PluginManager with(
             final EmbulkSystemProperties embulkSystemProperties,
             final BuiltinPluginSource builtinSource,
+            final JarPluginSource jarSource,
             final MavenPluginSource mavenSource,
             final SelfContainedPluginSource selfContainedSource,
             final JRubyPluginSource jrubySource) {
         return new PluginManager(
                 embulkSystemProperties,
                 builtinSource,
+                jarSource,
                 mavenSource,
                 selfContainedSource,
                 jrubySource);
@@ -74,6 +78,12 @@ public class PluginManager {
 
         try {
             return this.builtinSource.newPlugin(iface, type);
+        } catch (final PluginSourceNotMatchException e) {
+            exceptions.add(e);
+        }
+
+        try {
+            return this.jarSource.newPlugin(iface, type);
         } catch (final PluginSourceNotMatchException e) {
             exceptions.add(e);
         }
@@ -161,7 +171,9 @@ public class PluginManager {
 
     private final EmbulkSystemProperties embulkSystemProperties;
     private final BuiltinPluginSource builtinSource;
+    private final JarPluginSource jarSource;
     private final MavenPluginSource mavenSource;
     private final SelfContainedPluginSource selfContainedSource;
     private final JRubyPluginSource jrubySource;
+
 }
