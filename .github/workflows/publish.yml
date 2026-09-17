@@ -12,6 +12,9 @@ jobs:
       fail-fast: true
     permissions:
       contents: write  # Required to create a GitHub Release, and to upload an Asset
+    env:
+      # github.ref_name should be a tag because this workflow is triggered by: "on: push: tags:"
+      RELEASE_VERSION_TAG: ${{ github.ref_name }}
     steps:
     - uses: actions/checkout@v7
     - name: Set up OpenJDK 8
@@ -19,10 +22,6 @@ jobs:
       with:
         java-version: 8
         distribution: "temurin"
-    - name: Get the tag
-      run: echo "GIT_TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-    - name: Print the tag
-      run: echo "${{ env.GIT_TAG }}"
     - name: Build
       run: ./gradlew executable embulk-core:jar embulk-deps:jar embulk-junit4:jar embulk-ruby:gem
     - name: Create a GitHub Release
@@ -34,11 +33,11 @@ jobs:
             const response = await github.rest.repos.createRelease({
               draft: false,
               generate_release_notes: false,
-              name: 'Release ${{ env.GIT_TAG }}',
+              name: `Release ${process.env.RELEASE_VERSION_TAG}`,
               owner: context.repo.owner,
               prerelease: false,
               repo: context.repo.repo,
-              tag_name: '${{ env.GIT_TAG }}',
+              tag_name: process.env.RELEASE_VERSION_TAG,
             });
             core.exportVariable('RELEASE_ID', response.data.id);
             core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
@@ -56,7 +55,7 @@ jobs:
         script: |
           const fs = require('fs');
           const path = require('path');
-          const version = '${{ env.GIT_TAG }}'.substring(1);
+          const version = process.env.RELEASE_VERSION_TAG.substring(1);
           const filename = 'embulk-'.concat(version, '.jar');
           const localPath = path.join(path.resolve(process.env.GITHUB_WORKSPACE), 'build', 'executable', filename);
           console.log(localPath);
