@@ -11,7 +11,8 @@ jobs:
       matrix:
         os:
         - ubuntu-latest
-        - macos-13  # OpenJDK 8 is not supported on macos-14+ (M1).
+        # Use Intel-based macOS because Temurin 8 does not support macOS on Apple Silicon.
+        - macos-26-intel
         - windows-latest
         gradle_task:
         - ":embulk-core:check"
