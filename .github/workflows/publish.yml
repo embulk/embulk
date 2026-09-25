@@ -2,7 +2,7 @@ name: Publish
 on:
   push:
     tags:
-      - "v0.*"
+      - "v*"
 jobs:
   publish:
     environment:
